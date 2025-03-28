@@ -310,13 +310,12 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupTagSelector{}, database.ErrNotFound).Times(1)
+						Return(model.AssetGroupTagSelectors{}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
-					apitest.BodyContains(output, api.ErrorResponseDetailsResourceNotFound)
+					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
 			{
@@ -337,7 +336,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupTagSelector{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
+						Return(model.AssetGroupTagSelectors{{Name: "Test1", AssetGroupTagId: 1}}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
 
@@ -360,7 +359,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return([]model.AssetGroupTagSelector{
+						Return(model.AssetGroupTagSelectors{
 							{
 								Name:            "Test1",
 								AssetGroupTagId: 1,

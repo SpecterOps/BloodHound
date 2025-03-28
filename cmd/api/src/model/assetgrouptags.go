@@ -160,5 +160,5 @@ func (s AssetGroupTagSelector) GetFilterableColumns() []string {
 }
 
 type ListSelectorsResponse struct {
-	Selectors []AssetGroupTagSelector `json:"selectors"`
+	Selectors AssetGroupTagSelectors `json:"selectors"`
 }
