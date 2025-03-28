@@ -45,7 +45,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 		queryParams    = request.URL.Query()
 		sortByColumns  = queryParams[api.QueryParameterSortBy]
 		order          []string
-		fileUploadJobs model.FileUploadJobs
+		fileUploadJobs model.IngestJobs
 	)
 
 	for _, column := range sortByColumns {

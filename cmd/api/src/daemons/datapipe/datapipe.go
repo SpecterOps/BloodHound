@@ -190,7 +190,7 @@ func (s *Daemon) deleteData() {
 
 	slog.Info("Begin Purge Graph Data")
 
-	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
+	if err := s.db.CancelAllIngestJobs(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
