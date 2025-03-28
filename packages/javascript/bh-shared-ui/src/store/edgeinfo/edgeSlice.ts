@@ -42,6 +42,7 @@ export const EdgeSections = {
     references: 'References',
     composition: 'Composition',
     relaytargets: 'Relay Targets',
+    coerciontargets: 'Coercion Targets'
 } as const;
 
 export const initialState: EdgeInfoState = {
@@ -57,6 +58,7 @@ export const initialState: EdgeInfoState = {
         references: false,
         composition: false,
         relaytargets: false,
+        coerciontargets: false
     },
 };
 

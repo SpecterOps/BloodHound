@@ -21,7 +21,7 @@ import { apiClient } from '../../../utils';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
 import { EdgeInfoProps } from '../index';
 
-const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onNodeClick }) => {
+const CoercionTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onNodeClick }) => {
     const { data, isLoading, isError } = useQuery(['relayTargets', sourceDBId, targetDBId, edgeName], () =>
         apiClient.getRelayTargets(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
@@ -40,12 +40,12 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onN
 
     return (
         <>
-            <Typography variant='body2'>The nodes in this list are valid relay targets for this attack</Typography>
+            <Typography variant='body2'>The nodes in this list are valid coercion targets for this attack</Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
                 ) : isError ? (
-                    <Alert severity='error'>Couldn't load relay targets</Alert>
+                    <Alert severity='error'>Couldn't load coercion targets</Alert>
                 ) : (
                     <VirtualizedNodeList nodes={nodesArray} />
                 )}
@@ -54,4 +54,4 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onN
     );
 };
 
-export default RelayTargets;
+export default CoercionTargets;
