@@ -162,5 +162,5 @@ def main(cliargs: Optional[List[str]] = None) -> int:
         return 0
 
     except (ValueError, TypeError) as err:
-        print("ERROR", err, file=sys.stderr)
+        print("err", err, file=sys.stderr)
         return 2

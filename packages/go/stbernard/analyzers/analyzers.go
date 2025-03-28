@@ -61,7 +61,7 @@ func Run(cwd string, modPaths []string, jsPaths []string, env environment.Enviro
 	for idx, entry := range codeClimateReport {
 		// We're using err == nil here because we want to do nothing if an error occurs
 		if path, err := filepath.Rel(cwd, entry.Location.Path); err != nil {
-			slog.Debug("File path is either already relative or cannot be relative to workspace root", "error", err)
+			slog.Debug("File path is either already relative or cannot be relative to workspace root", "err", err)
 		} else {
 			codeClimateReport[idx].Location.Path = path
 		}

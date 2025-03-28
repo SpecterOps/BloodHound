@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
@@ -38,7 +39,8 @@ func Register(driverName string, constructor DriverConstructor) {
 
 type Config struct {
 	GraphQueryMemoryLimit size.Size
-	DriverCfg             string
+	ConnectionString      string
+	Pool                  *pgxpool.Pool
 }
 
 func Open(ctx context.Context, driverName string, config Config) (graph.Database, error) {

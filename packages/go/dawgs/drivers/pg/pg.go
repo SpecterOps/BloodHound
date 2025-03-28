@@ -18,13 +18,8 @@ package pg
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -32,72 +27,14 @@ import (
 const (
 	DriverName = "pg"
 
-	poolInitConnectionTimeout = time.Second * 10
 	defaultTransactionTimeout = time.Minute * 15
-
 	// defaultBatchWriteSize is currently set to 2k. This is meant to strike a balance between the cost of thousands
 	// of round-trips against the cost of locking tables for too long.
 	defaultBatchWriteSize = 2_000
 )
 
-func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {
-	for _, dataType := range pgsql.CompositeTypes {
-		if definition, err := conn.LoadType(ctx, dataType.String()); err != nil {
-			if !StateObjectDoesNotExist.ErrorMatches(err) {
-				return fmt.Errorf("failed to match composite type %s to database: %w", dataType, err)
-			}
-		} else {
-			conn.TypeMap().RegisterType(definition)
-		}
-	}
-
-	return nil
-}
-
-func afterPooledConnectionRelease(conn *pgx.Conn) bool {
-	for _, dataType := range pgsql.CompositeTypes {
-		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
-			// This connection should be destroyed since it does not contain information regarding the schema's
-			// composite types
-			slog.Warn(fmt.Sprintf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType))
-			return false
-		}
-	}
-
-	return true
-}
-
-func newDatabase(connectionString string) (*Driver, error) {
-	poolCtx, done := context.WithTimeout(context.Background(), poolInitConnectionTimeout)
-	defer done()
-
-	if poolCfg, err := pgxpool.ParseConfig(connectionString); err != nil {
-		return nil, err
-	} else {
-		// TODO: Min and Max connections for the pool should be configurable
-		poolCfg.MinConns = 5
-		poolCfg.MaxConns = 50
-
-		// Bind functions to the AfterConnect and AfterRelease hooks to ensure that composite type registration occurs.
-		// Without composite type registration, the pgx connection type will not be able to marshal PG OIDs to their
-		// respective Golang structs.
-		poolCfg.AfterConnect = afterPooledConnectionEstablished
-		poolCfg.AfterRelease = afterPooledConnectionRelease
-
-		if pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg); err != nil {
-			return nil, err
-		} else {
-			return NewDriver(pool, defaultTransactionTimeout, defaultBatchWriteSize), nil
-		}
-	}
-}
-
 func init() {
 	dawgs.Register(DriverName, func(ctx context.Context, cfg dawgs.Config) (graph.Database, error) {
-		if graphDB, err := newDatabase(cfg.DriverCfg); err != nil {
-			return nil, err
-		} else {
-			return graphDB, nil
-		}
+		return NewDriver(cfg.Pool, defaultTransactionTimeout, defaultBatchWriteSize), nil
 	})
 }
