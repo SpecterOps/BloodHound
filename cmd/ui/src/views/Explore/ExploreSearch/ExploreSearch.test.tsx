@@ -21,6 +21,7 @@ import {
     PRIMARY_SEARCH,
     searchbarActions as actions,
     initialSearchState,
+    mockCodemirrorLayoutMethods,
 } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -56,11 +57,15 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+});
 afterAll(() => server.close());
 
 describe('ExploreSearch rendering per tab', async () => {
     beforeEach(async () => {
+        mockCodemirrorLayoutMethods();
+
         await act(async () => {
             render(<ExploreSearch />);
         });

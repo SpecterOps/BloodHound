@@ -20,6 +20,7 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearchV2';
 
 import userEvent from '@testing-library/user-event';
+import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
 
 const comboboxLookaheadOptions = {
@@ -51,6 +52,7 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
+beforeEach(() => mockCodemirrorLayoutMethods());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
