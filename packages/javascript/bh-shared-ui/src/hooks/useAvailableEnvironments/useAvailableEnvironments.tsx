@@ -17,7 +17,7 @@
 import { Environment } from 'js-client-library';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { apiClient } from '../../utils/api';
-import { useEnvironmentParams } from '../useEnvironmentParams';
+import { EnvironmentQueryParams, useEnvironmentParams } from '../useEnvironmentParams';
 
 export const availableEnvironmentKeys = {
     all: ['available-environments'],
@@ -40,23 +40,33 @@ export function useAvailableEnvironments<T = Environment[]>(options?: QueryOptio
     });
 }
 
-export const selectEnvironment = (environmentId: Environment['id']): QueryOptions<Environment>['select'] => {
-    return (data) => data.find((domain) => domain.id === environmentId);
-};
-
-export const useEnvironment = (
+export const useSelectedEnvironment = (
     environmentId?: Environment['id'] | null,
     options?: Omit<QueryOptions<Environment>, 'select'>
 ) => {
-    const { environmentId: environmentIdParam, environmentAggregation } = useEnvironmentParams();
-    const selectedEnvironment = environmentId ?? environmentIdParam;
+    const { environmentId: environmentIdParam, environmentAggregation, setEnvironmentParams } = useEnvironmentParams();
+    const searchedEnvironmentId = environmentId ?? environmentIdParam;
 
     const environmentQuery = useAvailableEnvironments({
-        select: selectEnvironment(selectedEnvironment!),
+        select: (data) => data.find((domain) => domain.id === searchedEnvironmentId),
         refetchOnWindowFocus: false,
-        enabled: !!selectedEnvironment,
+        enabled: !!searchedEnvironmentId,
         ...options,
     });
 
-    return { ...environmentQuery, environment: environmentQuery.data, environmentAggregation };
+    const selectEnvironment = (environmentId: EnvironmentQueryParams['environmentId']) => {
+        setEnvironmentParams({ environmentId, environmentAggregation: null });
+    };
+
+    const selectEnvironmentAggregation = (aggregation: EnvironmentQueryParams['environmentAggregation']) => {
+        setEnvironmentParams({ environmentAggregation: aggregation });
+    };
+
+    return {
+        ...environmentQuery,
+        environment: environmentQuery.data,
+        environmentAggregation,
+        selectEnvironment,
+        selectEnvironmentAggregation,
+    };
 };
