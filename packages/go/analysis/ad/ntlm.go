@@ -625,6 +625,7 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
 	var (
 		startNode *graph.Node
+		endNode   *graph.Node
 		nodes     graph.NodeSet
 	)
 
@@ -632,27 +633,46 @@ func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Datab
 		var err error
 		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
 			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		} else if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
+			return err
+		} else if innerNodes, err := ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+			Root:      endNode,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.MemberOf, ad.AdminTo)
+			},
+			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				if segment.Depth() > 1 && segment.Trunk.Node.Kinds.ContainsOneOf(ad.Computer, ad.User) {
+					return false
+				}
+
+				return true
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				node := segment.Node
+				if node.Kinds.ContainsOneOf(ad.User) {
+					return false
+				} else if nodeDomainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					return false
+				} else if nodeDomainSid != domainsid {
+					return false
+				} else if smbSigning, err := node.Properties.Get(ad.SMBSigning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) || smbSigning {
+					return false
+				} else if restrictNtlm, err := node.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil || restrictNtlm {
+					return false
+				} else {
+					return true
+				}
+			},
+		}); err != nil {
+			return err
 		} else {
+			nodes = innerNodes
 			return nil
 		}
-	}); err != nil {
-		return nil, err
-	}
-
-	if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
-		slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
-		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		var ierr error
-		nodes, ierr = ops.FetchNodeSet(tx.Nodes().Filter(
-			query.And(
-				query.Kind(query.Node(), ad.Computer),
-				query.Equals(query.NodeProperty(ad.DomainSID.String()), domainsid),
-				query.Equals(query.NodeProperty(ad.SMBSigning.String()), false),
-			),
-		))
-
-		return ierr
 	}); err != nil {
 		return nil, err
 	} else {

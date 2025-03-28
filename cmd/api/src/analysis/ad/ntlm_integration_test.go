@@ -300,7 +300,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
-				require.True(t, relayTargets.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer2))
+				require.True(t, relayTargets.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer1))
 			}
 			return nil
 		})
@@ -319,7 +319,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
-				require.True(t, relayTargets.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer6))
+				require.True(t, relayTargets.Contains(harness.NTLMCoerceAndRelayNTLMToSMB.Computer8))
 			}
 			return nil
 		})
