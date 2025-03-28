@@ -29,6 +29,7 @@ get:
   summary: Get Asset Group Tag
   description: Retrieves an asset group tag by ID
   tags:
+    - Asset Isolation
     - Enterprise
     - Community
   responses:
