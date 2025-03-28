@@ -169,8 +169,8 @@
               {
                 "group": "BloodHound API",
                 "pages": [
-                  "integrations/bloodhound-api/json-formats",
-                  "integrations/bloodhound-api/working-with-api"
+                  "integrations/bloodhound-api/working-with-api",
+                  "integrations/bloodhound-api/json-formats"
                 ]
               },
               {
@@ -424,6 +424,12 @@
       {
         "tab": "API Reference",
         "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "reference/overview"
+            ]
+          },
           {
             "group": "Auth",
             "pages": [
