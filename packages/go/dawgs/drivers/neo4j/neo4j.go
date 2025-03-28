@@ -35,7 +35,7 @@ const (
 )
 
 func newNeo4jDB(_ context.Context, cfg dawgs.Config) (graph.Database, error) {
-	if connectionURL, err := url.Parse(cfg.DriverCfg); err != nil {
+	if connectionURL, err := url.Parse(cfg.ConnectionString); err != nil {
 		return nil, err
 	} else if connectionURL.Scheme != DriverName {
 		return nil, fmt.Errorf("expected connection URL scheme %s for Neo4J but got %s", DriverName, connectionURL.Scheme)
