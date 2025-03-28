@@ -290,15 +290,28 @@ type BoolAPIResult struct {
 
 type SMBSigningAPIResult struct {
 	APIResult
-	SigningEnabled  bool
-	OSVersion       string
-	OSBuild         string
-	DnsComputerName string
+	Result SMBSigningResult
 }
 
-type RegistryDataAPIResult struct {
+type SMBSigningResult struct {
+	SigningEnabled bool
+}
+
+type NTLMRegistryDataAPIResult struct {
 	APIResult
-	RestrictSendingNtlmTraffic uint
+	Result NTLMRegistryInfo
+}
+
+type NTLMRegistryInfo struct {
+	RestrictSendingNtlmTraffic   uint
+	RequireSecuritySignature     uint
+	EnableSecuritySignature      uint
+	RestrictReceivingNTLMTraffic uint
+	NtlmMinServerSec             uint
+	NtlmMinClientSec             uint
+	LmCompatibilityLevel         uint
+	UseMachineId                 uint
+	ClientAllowedNTLMServers     []string
 }
 
 type Computer struct {
@@ -320,7 +333,7 @@ type Computer struct {
 	UnconstrainedDelegation bool
 	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
-	NTLMRegistryData        RegistryDataAPIResult
+	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
 type OU struct {
