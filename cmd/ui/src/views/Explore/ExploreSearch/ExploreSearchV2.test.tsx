@@ -20,6 +20,7 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearchV2';
 
 import userEvent from '@testing-library/user-event';
+import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
 
 const comboboxLookaheadOptions = {
@@ -51,6 +52,7 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
+beforeEach(() => mockCodemirrorLayoutMethods());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
@@ -96,7 +98,7 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
