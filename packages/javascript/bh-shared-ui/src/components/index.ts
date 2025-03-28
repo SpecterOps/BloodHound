@@ -20,6 +20,9 @@ export { default as AppNotifications } from './AppNotifications';
 export * from './AssetGroupEdit';
 export { default as AssetGroupEdit } from './AssetGroupEdit';
 
+export * from './AssetGroupManagement/AssetGroupSelectorObjectSelect';
+export { default as AssetGroupSelectorObjectSelect } from './AssetGroupManagement/AssetGroupSelectorObjectSelect';
+
 export * from './AssetGroupMemberList';
 export { default as AssetGroupMemberList } from './AssetGroupMemberList';
 
@@ -78,6 +81,9 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
+
+export * from './ExploreSearchCombobox';
+export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 
 export * from './FeatureFlag';
 export { default as FeatureFlag } from './FeatureFlag';
