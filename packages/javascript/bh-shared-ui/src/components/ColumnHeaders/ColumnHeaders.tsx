@@ -81,7 +81,9 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>
-                                <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
+                                <div>
+                                    <FontAwesomeIcon className={cn('m-1')} size={'sm'} icon={faInfoCircle} />
+                                </div>
                             </TooltipTrigger>
                             <TooltipPortal>
                                 <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
