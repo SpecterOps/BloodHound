@@ -25,7 +25,7 @@ export interface UseInitialEnvironmentParams {
     handleInitialEnvironment?: (env: Environment | null) => void;
     queryOptions?: Omit<
         UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
-        'queryFn' | 'onError' | 'onSuccess'
+        'queryFn' | 'select'
     >;
 }
 
