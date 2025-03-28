@@ -477,6 +477,64 @@ func isCertTemplateValidForADCSRelay(ct *graph.Node) (bool, error) {
 	}
 }
 
+func GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		startNode *graph.Node
+		endNode   *graph.Node
+		pathSet   graph.PathSet
+	)
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if startNode, err = ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		} else if domainsid, err := startNode.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+			slog.WarnContext(ctx, fmt.Sprintf("Error getting domain SID for domain %d: %v", startNode.ID, err))
+			return err
+		} else if innerPathSet, err := ops.TraversePaths(tx, ops.TraversalPlan{
+			Root:      endNode,
+			Direction: graph.DirectionInbound,
+			BranchQuery: func() graph.Criteria {
+				return query.KindIn(query.Relationship(), ad.MemberOf, ad.AdminTo)
+			},
+			DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				if segment.Depth() > 1 && segment.Trunk.Node.Kinds.ContainsOneOf(ad.Computer, ad.User) {
+					return false
+				}
+
+				return true
+			},
+			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+				node := segment.Node
+				if node.Kinds.ContainsOneOf(ad.User) {
+					return false
+				} else if nodeDomainSid, err := node.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					return false
+				} else if nodeDomainSid != domainsid {
+					return false
+				} else if smbSigning, err := node.Properties.Get(ad.SMBSigning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) || smbSigning {
+					return false
+				} else if restrictNtlm, err := node.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil || restrictNtlm {
+					return false
+				} else {
+					return true
+				}
+			},
+		}); err != nil {
+			return err
+		} else {
+			pathSet = innerPathSet
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return pathSet, nil
+	}
+}
+
 // PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
@@ -669,6 +727,7 @@ func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Datab
 		}); err != nil {
 			return err
 		} else {
+			innerNodes.Remove(endNode.ID)
 			nodes = innerNodes
 			return nil
 		}

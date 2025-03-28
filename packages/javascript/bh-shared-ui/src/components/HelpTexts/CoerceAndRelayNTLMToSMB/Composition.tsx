@@ -17,35 +17,32 @@
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
-import { apiClient } from '../../../utils';
+import { EdgeInfoProps } from '..';
+import { apiClient } from '../../../utils/api';
 import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
-import { EdgeInfoProps } from '../index';
 
-const CoercionTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onNodeClick }) => {
-    const { data, isLoading, isError } = useQuery(['relayTargets', sourceDBId, targetDBId, edgeName], () =>
-        apiClient.getRelayTargets(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
+const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
+    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], () =>
+        apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
-
-    const handleNodeClick = (item: any) => {
-        const node = nodesArray[item];
-        onNodeClick?.(node);
-    };
 
     const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
         name: node.label,
         objectId: node.objectId,
         kind: node.kind,
-        onClick: handleNodeClick,
     }));
 
     return (
         <>
-            <Typography variant='body2'>The nodes in this list are valid coercion targets for this attack</Typography>
+            <Typography variant='body2'>
+                The relationship represents the effective outcome of the configuration and relationships between several
+                different objects. All objects involved in the creation of this relationship are listed here:
+            </Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
                 ) : isError ? (
-                    <Alert severity='error'>Couldn't load coercion targets</Alert>
+                    <Alert severity='error'>Couldn't load edge composition</Alert>
                 ) : (
                     <VirtualizedNodeList nodes={nodesArray} />
                 )}
@@ -54,4 +51,4 @@ const CoercionTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, 
     );
 };
 
-export default CoercionTargets;
+export default Composition;
