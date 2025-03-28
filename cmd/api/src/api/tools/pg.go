@@ -83,7 +83,12 @@ func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
 		return err
 	}
 
-	_, err := pgDB.(*pg.Driver).KindMapper().AssertKinds(ctx, append(neoNodeKinds, neoEdgeKinds...))
+	driver, ok := pgDB.(*pg.Driver)
+	if !ok {
+		return fmt.Errorf("current graph database is not a pg driver")
+	}
+
+	_, err := driver.KindMapper().AssertKinds(ctx, append(neoNodeKinds, neoEdgeKinds...))
 	return err
 }
 

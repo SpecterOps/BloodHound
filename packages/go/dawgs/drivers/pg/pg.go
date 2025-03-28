@@ -87,25 +87,14 @@ func newDatabase(connectionString string) (*Driver, error) {
 		if pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg); err != nil {
 			return nil, err
 		} else {
-			driverInst := &Driver{
-				pool:                      pool,
-				defaultTransactionTimeout: defaultTransactionTimeout,
-				batchWriteSize:            defaultBatchWriteSize,
-			}
-
-			// Because the schema manager will act on the database on its own it needs a reference to the driver
-			// TODO: This cyclical dependency might want to be unwound
-			driverInst.schemaManager = NewSchemaManager(driverInst)
-			return driverInst, nil
+			return NewDriver(pool, defaultTransactionTimeout, defaultBatchWriteSize), nil
 		}
 	}
 }
 
 func init() {
 	dawgs.Register(DriverName, func(ctx context.Context, cfg dawgs.Config) (graph.Database, error) {
-		if connectionString, typeOK := cfg.DriverCfg.(string); !typeOK {
-			return nil, fmt.Errorf("expected string for configuration type but got %T", cfg)
-		} else if graphDB, err := newDatabase(connectionString); err != nil {
+		if graphDB, err := newDatabase(cfg.DriverCfg); err != nil {
 			return nil, err
 		} else {
 			return graphDB, nil
