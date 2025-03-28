@@ -159,7 +159,9 @@ func TestConvertComputerToNode(t *testing.T) {
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
-			SigningEnabled: true,
+			Result: ein.SMBSigningResult{
+				SigningEnabled: true,
+			},
 		},
 	}
 

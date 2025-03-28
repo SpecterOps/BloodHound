@@ -183,8 +183,11 @@ func BuildNTLMCache(ctx context.Context, db graph.Database, groupExpansions impa
 						continue
 					} else if ldapSigningForDomain, ok := ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
 						continue
-					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
-						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
+					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+						if !errors.Is(err, graph.ErrPropertyNotFound) {
+							slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
+						}
+						continue
 					} else if restrictOutboundNtlm {
 						continue
 					} else {

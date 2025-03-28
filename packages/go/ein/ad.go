@@ -80,11 +80,15 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 				1: Audit All
 				2: Deny All
 		*/
-		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 0 {
-			itemProps[ad.RestrictOutboundNTLM.String()] = false
-		} else {
-			itemProps[ad.RestrictOutboundNTLM.String()] = true
-		}
+		itemProps[ad.RestrictOutboundNTLM.String()] = item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
+		itemProps[ad.RequireSecuritySignature.String()] = item.NTLMRegistryData.Result.RequireSecuritySignature != 0
+		itemProps[ad.EnableSecuritySignature.String()] = item.NTLMRegistryData.Result.EnableSecuritySignature != 0
+		itemProps[ad.NTLMMinClientSec.String()] = item.NTLMRegistryData.Result.NtlmMinClientSec
+		itemProps[ad.NTLMMinServerSec.String()] = item.NTLMRegistryData.Result.NtlmMinServerSec
+		itemProps[ad.LMCompatibilityLevel.String()] = item.NTLMRegistryData.Result.LmCompatibilityLevel
+		itemProps[ad.UseMachineID.String()] = item.NTLMRegistryData.Result.UseMachineId != 0
+		itemProps[ad.ClientAllowedNTLMServers.String()] = item.NTLMRegistryData.Result.ClientAllowedNTLMServers
 	}
 
 	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {

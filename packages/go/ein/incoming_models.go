@@ -294,10 +294,7 @@ type SMBSigningAPIResult struct {
 }
 
 type SMBSigningResult struct {
-	SigningEnabled  bool
-	OSVersion       string
-	OSBuild         string
-	DnsComputerName string
+	SigningEnabled bool
 }
 
 type NTLMRegistryDataAPIResult struct {
@@ -306,7 +303,15 @@ type NTLMRegistryDataAPIResult struct {
 }
 
 type NTLMRegistryInfo struct {
-	RestrictSendingNtlmTraffic uint
+	RestrictSendingNtlmTraffic   uint
+	RequireSecuritySignature     uint
+	EnableSecuritySignature      uint
+	RestrictReceivingNTLMTraffic uint
+	NtlmMinServerSec             uint
+	NtlmMinClientSec             uint
+	LmCompatibilityLevel         uint
+	UseMachineId                 uint
+	ClientAllowedNTLMServers     []string
 }
 
 type Computer struct {

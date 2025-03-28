@@ -138,11 +138,7 @@ const QualityAssuranceV2: React.FC = () => {
                     <Alert severity='warning'>
                         <AlertTitle>Data Quality Warning</AlertTitle>
                         It looks like data is incomplete or has not been collected yet. See the{' '}
-                        <Link
-                            target='_blank'
-                            href={
-                                'https://bloodhound.specterops.io/collect-data/overview'
-                            }>
+                        <Link target='_blank' href={'https://bloodhound.specterops.io/collect-data/overview'}>
                             Data Collection
                         </Link>{' '}
                         page to view instructions on how to begin data collection.
