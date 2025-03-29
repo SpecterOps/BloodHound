@@ -349,6 +349,10 @@ export interface LoginResponse {
     };
 }
 
+export type CommunityCollectorType = 'sharphound' | 'azurehound';
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
+export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
+
 export interface GetCollectorsResponse {
     data: {
         latest: string;
@@ -358,6 +362,36 @@ export interface GetCollectorsResponse {
             deprecated: boolean;
         }[];
     };
+}
+
+export interface GetCommunityCollectorsResponse {
+    data: Record<CommunityCollectorType, CollectorManifest[]>;
+}
+
+export interface GetEnterpriseCollectorsResponse {
+    data: Record<EnterpriseCollectorType, CollectorManifest[]>;
+}
+
+export interface CollectorManifest {
+    version: string;
+    version_meta: VersionMeta;
+    release_date: string;
+    release_assets: CollectorAsset[];
+}
+
+interface VersionMeta {
+    major: number;
+    minor: number;
+    patch: number;
+    prerelease: string;
+}
+
+interface CollectorAsset {
+    name: string;
+    download_url: string;
+    checksum_download_url: string;
+    os: string;
+    arch: string;
 }
 
 export type PostureRequest = {

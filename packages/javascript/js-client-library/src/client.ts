@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupLabelResponse,
@@ -854,10 +854,16 @@ class BHEAPIClient {
     toggleFeatureFlag = (flagId: string | number, options?: types.RequestOptions) =>
         this.baseClient.put(`/api/v2/features/${flagId}/toggle`, options);
 
-    getCollectors = (collectorType: 'sharphound' | 'azurehound', options?: types.RequestOptions) =>
+    getCollectors = (collectorType: types.CommunityCollectorType, options?: types.RequestOptions) =>
         this.baseClient.get<types.GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
-    downloadCollector = (collectorType: 'sharphound' | 'azurehound', version: string, options?: types.RequestOptions) =>
+    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetCommunityCollectorsResponse>> =>
+        this.baseClient.get<types.GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
+
+    getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetEnterpriseCollectorsResponse>> =>
+        this.baseClient.get<types.GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
+
+    downloadCollector = (collectorType: types.CommunityCollectorType, version: string, options?: types.RequestOptions) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}`,
             Object.assign(
@@ -869,12 +875,23 @@ class BHEAPIClient {
         );
 
     downloadCollectorChecksum = (
-        collectorType: 'sharphound' | 'azurehound',
+        collectorType: types.CommunityCollectorType,
         version: string,
         options?: types.RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}/checksum`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
+    downloadCollectorManifestAsset = (fileName: string, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/kennel/download/${fileName}`,
             Object.assign(
                 {
                     responseType: 'blob',
