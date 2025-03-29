@@ -74,3 +74,5 @@ export * from './store';
 export * from './mocks';
 
 export * from './types';
+
+export * from './routes';

@@ -22,7 +22,7 @@ import {
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
-    transformToFlatGraphResponse,
+    sharedGraphQueryOptions,
 } from './utils';
 
 const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
@@ -49,6 +49,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
         };
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, relationshipQueryItemId],
         queryFn: ({ signal }) =>
             apiClient.getEdgeComposition(Number(sourceId), Number(targetId), edgeType, { signal }).then((res) => {
@@ -57,7 +58,7 @@ const compositionSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
                     throw new Error('empty result set');
                 }
 
-                return transformToFlatGraphResponse(data);
+                return data;
             }),
         refetchOnWindowFocus: false,
     };

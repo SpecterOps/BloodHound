@@ -38,6 +38,8 @@ export { default as CollectorCard } from './CollectorCard';
 export * from './CollectorCardList';
 export { default as CollectorCardList } from './CollectorCardList';
 
+export * from './ColumnHeaders';
+
 export * from './CommunityIcon';
 export { default as CommunityIcon } from './CommunityIcon';
 
@@ -56,6 +58,9 @@ export { default as CreateUserDialog } from './CreateUserDialog';
 export * from './DataTable';
 export { default as DataTable } from './DataTable';
 
+export * from './DeleteConfirmationDialog';
+export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
+
 export * from './Disable2FADialog';
 export { default as Disable2FADialog } from './Disable2FADialog';
 
@@ -65,6 +70,7 @@ export { default as DocumentationLinks } from './DocumentationLinks';
 export * from './DropdownSelector';
 export { default as DropdownSelector } from './DropdownSelector';
 
+export * from './HelpTexts/index';
 export { default as EdgeInfoComponents } from './HelpTexts/index';
 
 export * from './Enable2FADialog';

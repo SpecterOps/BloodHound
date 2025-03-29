@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/openapi"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
@@ -37,9 +38,18 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		managementResource = authapi.NewManagementResource(resources.Config, resources.DB, resources.Authorizer, resources.Authenticator)
 	)
 
-	routerInst.POST("/api/v2/login", loginResource.Login).Use(middleware.DefaultRateLimitMiddleware(), middleware.LoginTimer())
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.RateLimitMiddleware(resources.DB, 1)
+	},
+		// Login resource
+		routerInst.POST("/api/v2/login", func(response http.ResponseWriter, request *http.Request) {
+			middleware.LoginTimer()(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
+		}),
+	)
 
-	router.With(middleware.DefaultRateLimitMiddleware,
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.DefaultRateLimitMiddleware(resources.DB)
+	},
 		// Login resources
 		routerInst.GET("/api/v2/self", managementResource.GetSelf),
 		routerInst.POST("/api/v2/logout", loginResource.Logout),
@@ -118,7 +128,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
-	router.With(middleware.DefaultRateLimitMiddleware,
+	router.With(func() mux.MiddlewareFunc {
+		return middleware.DefaultRateLimitMiddleware(resources.DB)
+	},
 		// Version API
 		routerInst.GET("/api/version", v2.GetVersion).RequireAuth(),
 
@@ -165,6 +177,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead),
+		routerInst.GET("/api/v2/graphs/kinds", resources.ListKinds).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/shortest-path", resources.GetShortestPath).Queries(params.StartNode.String(), params.StartNode.RouteMatcher(), params.EndNode.String(), params.EndNode.RouteMatcher()).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/edge-composition", resources.GetEdgeComposition).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET("/api/v2/graphs/relay-targets", resources.GetEdgeRelayTargets).RequirePermissions(permissions.GraphDBRead),

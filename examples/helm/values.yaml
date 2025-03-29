@@ -55,7 +55,7 @@ graphdb:
   appName: graphdb
   container:
     name: neo4j
-    image: docker.io/library/neo4j:4.4
+    image: docker.io/library/neo4j:4.4.42
     env:
       NEO4J_AUTH_USER: "neo4j"
       NEO4J_AUTH_PASS: "bloodhoundcommunityedition"

@@ -444,7 +444,7 @@ type Result struct {
 func Translate(ctx context.Context, cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, parameters map[string]any) (Result, error) {
 	translator := NewTranslator(ctx, kindMapper, parameters)
 
-	if err := walk.WalkCypher(cypherQuery, translator); err != nil {
+	if err := walk.Cypher(cypherQuery, translator); err != nil {
 		return Result{}, err
 	}
 
