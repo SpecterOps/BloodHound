@@ -4395,7 +4395,7 @@
         "summary": "Get Asset Group Tag selectors",
         "description": "Get a list of selectors for this group.",
         "tags": [
-          "Tiering Management",
+          "Asset Isolation",
           "Enterprise",
           "Community"
         ],
@@ -4416,19 +4416,15 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "data": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selectors"
-                          }
-                        }
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.asset-group-tags-selectors"
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
@@ -4455,7 +4451,7 @@
         "summary": "Create Asset Group Tag Selector",
         "description": "Creates an asset group tag selector.",
         "tags": [
-          "Tiering Management",
+          "Asset Isolation",
           "Community",
           "Enterprise"
         ],
@@ -15722,7 +15718,7 @@
         }
       },
       "model.asset-group-tags-selector-seed": {
-        "allOf": [
+        "schema": [
           {
             "type": "object",
             "properties": {

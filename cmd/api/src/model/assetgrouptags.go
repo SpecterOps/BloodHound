@@ -154,14 +154,6 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-func (s AssetGroupTagSelector) GetFilterableColumns() []string {
-	var columns = make([]string, 0)
-	for column := range s.ValidFilters() {
-		columns = append(columns, column)
-	}
-	return columns
-}
-
 type ListSelectorsResponse struct {
 	Selectors AssetGroupTagSelectors `json:"selectors"`
 }
