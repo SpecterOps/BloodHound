@@ -4374,6 +4374,133 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to create a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelectors",
+        "summary": "Get Asset Group Tag selectors",
+        "description": "Get a list of selectors for this group.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.asset-group-tags-selectors"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateAssetGroupTagSelector",
+        "summary": "Create Asset Group Tag Selector",
+        "description": "Creates an asset group tag selector.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for creating an asset group tag selector",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "items": {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
@@ -15576,6 +15703,89 @@
             "type": "boolean"
           }
         }
+      },
+      "model.asset-group-tags-selectors": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "./model.asset-group-tags-selector.yaml"
+              }
+            }
+          }
+        }
+      },
+      "model.asset-group-tags-selector-seed": {
+        "schema": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "integer"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "model.asset-group-tags-selector": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "asset_group_tag_id": {
+                "type": "integer"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "date-time"
+              },
+              "updated_by": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "date-time"
+              },
+              "disabled_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "disabled_by": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "is_default": {
+                "type": "boolean"
+              },
+              "auto_certify": {
+                "type": "boolean"
+              },
+              "allow_disable": {
+                "type": "boolean"
+              },
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                }
+              }
+            }
+          }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",

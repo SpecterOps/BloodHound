@@ -49,6 +49,7 @@ const (
 	NotEqualsSymbol           string = "<>"
 	ApproximatelyEqualSymbol  string = "ILIKE"
 
+	NullString     = "null"
 	TrueString     = "true"
 	FalseString    = "false"
 	IdString       = "id"
@@ -145,15 +146,14 @@ type QueryParameterFilterMap map[string]QueryParameterFilters
 
 func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 	var (
-		result      strings.Builder
-		firstFilter = true
-		predicate   string
-		params      []any
+		result    strings.Builder
+		predicate string
+		params    []any
 	)
 
 	for _, filters := range s {
 		for _, filter := range filters {
-			if !firstFilter {
+			if result.Len() > 0 {
 				result.WriteString(" AND ")
 			}
 
@@ -168,8 +168,18 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				predicate = LessThanOrEqualsSymbol
 			case Equals:
 				predicate = EqualsSymbol
+				// This would need to be updated for a nullable string column
+				if filter.Value == NullString && !filter.IsStringData {
+					result.WriteString(filter.Name + " IS NULL")
+					continue
+				}
 			case NotEquals:
 				predicate = NotEqualsSymbol
+				// This would need to be updated for a nullable string column
+				if filter.Value == NullString && !filter.IsStringData {
+					result.WriteString(filter.Name + " IS NOT NULL")
+					continue
+				}
 			case ApproximatelyEquals:
 				predicate = ApproximatelyEqualSymbol
 				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
@@ -177,13 +187,8 @@ func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
 				return SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
 			}
 
-			result.WriteString(filter.Name)
-			result.WriteString(" ")
-			result.WriteString(predicate)
-			result.WriteString(" ?")
-
+			_, _ = result.WriteString(fmt.Sprintf("%s %s ?", filter.Name, predicate))
 			params = append(params, filter.Value)
-			firstFilter = false
 		}
 	}
 
