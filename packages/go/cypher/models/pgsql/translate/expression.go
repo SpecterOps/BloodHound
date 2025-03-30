@@ -154,28 +154,34 @@ type PropertyLookup struct {
 	Field     string
 }
 
-func asPropertyLookup(expression pgsql.Expression) (*pgsql.BinaryExpression, bool) {
-	switch typedExpression := expression.(type) {
-	case pgsql.AnyExpression:
-		// This is here to unwrap Any expressions that have been passed in as a property lookup. This is
-		// common when dealing with array operators. In the future this check should be handled by the
-		// caller to simplify the logic here.
-		return asPropertyLookup(typedExpression.Expression)
+func expressionToPropertyLookupBinaryExpression(expression pgsql.Expression) (*pgsql.BinaryExpression, bool) {
+	if nextExpression := expression; nextExpression != nil {
+		for {
+			switch typedExpression := nextExpression.(type) {
+			case pgsql.AnyExpression:
+				// This is here to unwrap Any expressions that have been passed in as a property lookup. This is
+				// common when dealing with array operators. In the future this check should be handled by the
+				// caller to simplify the logic here.
+				nextExpression = typedExpression.Expression
+				continue
 
-	case *pgsql.BinaryExpression:
-		return typedExpression, pgsql.OperatorIsPropertyLookup(typedExpression.Operator)
+			case *pgsql.BinaryExpression:
+				return typedExpression, pgsql.OperatorIsPropertyLookup(typedExpression.Operator)
+			}
+
+			// Break this loop on all other matches so that flow hits the outer return
+			break
+		}
 	}
 
 	return nil, false
 }
 
-func decomposePropertyLookup(expression pgsql.Expression) (PropertyLookup, error) {
-	if propertyLookup, isPropertyLookup := asPropertyLookup(expression); !isPropertyLookup {
-		return PropertyLookup{}, fmt.Errorf("expected binary expression for property lookup decomposition but found type: %T", expression)
-	} else if reference, typeOK := propertyLookup.LOperand.(pgsql.CompoundIdentifier); !typeOK {
-		return PropertyLookup{}, fmt.Errorf("expected left operand for property lookup to be a compound identifier but found type: %T", propertyLookup.LOperand)
-	} else if field, typeOK := propertyLookup.ROperand.(pgsql.Literal); !typeOK {
-		return PropertyLookup{}, fmt.Errorf("expected right operand for property lookup to be a literal but found type: %T", propertyLookup.ROperand)
+func binaryExpressionToPropertyLookup(expression *pgsql.BinaryExpression) (PropertyLookup, error) {
+	if reference, typeOK := expression.LOperand.(pgsql.CompoundIdentifier); !typeOK {
+		return PropertyLookup{}, fmt.Errorf("expected left operand for property lookup to be a compound identifier but found type: %T", expression.LOperand)
+	} else if field, typeOK := expression.ROperand.(pgsql.Literal); !typeOK {
+		return PropertyLookup{}, fmt.Errorf("expected right operand for property lookup to be a literal but found type: %T", expression.ROperand)
 	} else if field.CastType != pgsql.Text {
 		return PropertyLookup{}, fmt.Errorf("expected property lookup field a string literal but found data type: %s", field.CastType)
 	} else if stringField, typeOK := field.Value.(string); !typeOK {
@@ -185,6 +191,14 @@ func decomposePropertyLookup(expression pgsql.Expression) (PropertyLookup, error
 			Reference: reference,
 			Field:     stringField,
 		}, nil
+	}
+}
+
+func decomposePropertyLookup(expression pgsql.Expression) (PropertyLookup, error) {
+	if propertyLookupBinExp, isPropertyLookup := expressionToPropertyLookupBinaryExpression(expression); !isPropertyLookup {
+		return PropertyLookup{}, fmt.Errorf("expected binary expression for property lookup decomposition but found type: %T", expression)
+	} else {
+		return binaryExpressionToPropertyLookup(propertyLookupBinExp)
 	}
 }
 
@@ -223,7 +237,7 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 }
 
 func applyUnaryExpressionTypeHints(expression *pgsql.UnaryExpression) error {
-	if propertyLookup, isPropertyLookup := asPropertyLookup(expression.Operand); isPropertyLookup {
+	if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(expression.Operand); isPropertyLookup {
 		expression.Operand = rewritePropertyLookupOperator(propertyLookup, pgsql.Boolean)
 	}
 
@@ -413,7 +427,7 @@ func lookupRequiresElementType(typeHint pgsql.DataType, operator pgsql.Operator,
 }
 
 func TypeCastExpression(expression pgsql.Expression, dataType pgsql.DataType) (pgsql.Expression, error) {
-	if propertyLookup, isPropertyLookup := asPropertyLookup(expression); isPropertyLookup {
+	if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(expression); isPropertyLookup {
 		var lookupTypeHint = dataType
 
 		if lookupRequiresElementType(dataType, propertyLookup.Operator, propertyLookup.ROperand) {
@@ -429,8 +443,8 @@ func TypeCastExpression(expression pgsql.Expression, dataType pgsql.DataType) (p
 
 func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 	var (
-		leftPropertyLookup, hasLeftPropertyLookup   = asPropertyLookup(expression.LOperand)
-		rightPropertyLookup, hasRightPropertyLookup = asPropertyLookup(expression.ROperand)
+		leftPropertyLookup, hasLeftPropertyLookup   = expressionToPropertyLookupBinaryExpression(expression.LOperand)
+		rightPropertyLookup, hasRightPropertyLookup = expressionToPropertyLookupBinaryExpression(expression.ROperand)
 	)
 
 	// Ensure that direct property comparisons prefer JSONB - JSONB
@@ -762,7 +776,7 @@ func (s *ExpressionTreeTranslator) popExpressionAsConstraint() error {
 	} else if identifierDeps, err := ExtractSyntaxNodeReferences(nextExpression); err != nil {
 		return err
 	} else {
-		if propertyLookup, isPropertyLookup := asPropertyLookup(nextExpression); isPropertyLookup {
+		if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(nextExpression); isPropertyLookup {
 			// If this is a bare property lookup rewrite it with the intended type of boolean
 			nextExpression = rewritePropertyLookupOperator(propertyLookup, pgsql.Boolean)
 		}
@@ -1171,7 +1185,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 		case pgsql.TypeCast:
 			switch typedInnerOperand := typedROperand.Expression.(type) {
 			case *pgsql.BinaryExpression:
-				if propertyLookup, isPropertyLookup := asPropertyLookup(typedInnerOperand); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(typedInnerOperand); isPropertyLookup {
 					// Attempt to figure out the cast by looking at the left operand
 					if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
 						return err

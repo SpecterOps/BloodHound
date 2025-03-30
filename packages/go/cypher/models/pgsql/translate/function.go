@@ -124,7 +124,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 		} else if argument, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
 		} else {
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Rewrite the property lookup operator with a JSON text field lookup
 				propertyLookup.Operator = pgsql.OperatorJSONTextField
 			}
@@ -144,7 +144,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 		} else {
 			var functionCall pgsql.FunctionCall
 
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Ensure that the JSONB array length function receives the JSONB type
 				propertyLookup.Operator = pgsql.OperatorJSONField
 
@@ -170,7 +170,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 		} else if argument, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
 		} else {
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Rewrite the property lookup operator with a JSON text field lookup
 				propertyLookup.Operator = pgsql.OperatorJSONTextField
 			}
@@ -346,7 +346,7 @@ func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.Functi
 		if expectedType.IsKnown() {
 			// Rewrite any property lookup operators now that we have some type information
 			for idx, argument := range arguments {
-				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 					arguments[idx] = rewritePropertyLookupOperator(propertyLookup, expectedType)
 				}
 			}

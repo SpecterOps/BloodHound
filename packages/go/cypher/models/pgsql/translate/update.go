@@ -211,7 +211,7 @@ func (s *Translator) buildUpdates() error {
 					return err
 				}
 
-				if propertyLookup, isPropertyLookup := asPropertyLookup(propertyAssignment.ValueExpression); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(propertyAssignment.ValueExpression); isPropertyLookup {
 					// Ensure that property lookups in JSONB build functions use the JSONB field type
 					propertyLookup.Operator = pgsql.OperatorJSONField
 				}

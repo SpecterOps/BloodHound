@@ -450,7 +450,7 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 		case *pgsql.BinaryExpression:
 			// Binary expressions are used when properties are returned from a result projection
 			// e.g. match (n) return n.prop
-			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(typedSelectItem); isPropertyLookup {
 				// Ensure that projections maintain the raw JSONB type of the field
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}

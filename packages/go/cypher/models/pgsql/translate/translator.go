@@ -277,7 +277,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		} else if err := RewriteFrameBindings(s.scope, lookupExpression); err != nil {
 			s.SetError(err)
 		} else {
-			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(lookupExpression); isPropertyLookup {
 				// If sorting, use the raw type of the JSONB field
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}
@@ -334,7 +334,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 						// operand references in coalesce functions. While this will kick out index acceleration
 						// the negation will already damage the query planner's ability to utilize an index lookup.
 
-						if leftPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.LOperand); isPropertyLookup {
+						if leftPropertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(typedCursor.LOperand); isPropertyLookup {
 							typedCursor.LOperand = pgsql.FunctionCall{
 								Function: pgsql.FunctionCoalesce,
 								Parameters: []pgsql.Expression{
@@ -345,7 +345,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 							}
 						}
 
-						if rightPropertyLookup, isPropertyLookup := asPropertyLookup(typedCursor.ROperand); isPropertyLookup {
+						if rightPropertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(typedCursor.ROperand); isPropertyLookup {
 							typedCursor.ROperand = pgsql.FunctionCall{
 								Function: pgsql.FunctionCoalesce,
 								Parameters: []pgsql.Expression{
