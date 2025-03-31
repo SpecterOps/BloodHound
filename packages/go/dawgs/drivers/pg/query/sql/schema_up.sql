@@ -94,7 +94,7 @@ $$
     create type nodeComposite as
     (
       id         bigint,
-      kind_ids   smallint[8],
+      kind_ids   smallint[],
       properties jsonb
     );
   exception
@@ -103,12 +103,12 @@ $$
 $$;
 
 -- The node table is a partitioned table view that partitions over the graph ID that each node belongs to. Nodes may
--- contain a disjunction of up to 8 kinds for creating clique subsets without requiring edges.
+-- contain a disjunction of kinds for creating node subsets without requiring edges.
 create table if not exists node
 (
   id         bigserial   not null,
   graph_id   integer     not null,
-  kind_ids   smallint[8] not null,
+  kind_ids   smallint[] not null,
   properties jsonb       not null,
 
   primary key (id, graph_id),
@@ -481,7 +481,7 @@ $$
 declare
   forward_front_depth int4 := 0;
 begin
-  raise notice 'unidirectional_asp_harness start';
+  raise debug 'unidirectional_asp_harness start';
 
   -- Defines two tables to represent pathspace of the recursive expansion
   perform create_unidirectional_pathspace_tables();
@@ -490,7 +490,7 @@ begin
   forward_front_depth = forward_front_depth + 1;
   execute forward_primer;
 
-  raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+  raise debug 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
   -- Return all satisfied paths from the next frontier, if any
   if exists(select 1 from next_front r where r.satisfied) then
@@ -510,7 +510,7 @@ begin
       forward_front_depth = forward_front_depth + 1;
       execute forward_recursive;
 
-      raise notice 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+      raise debug 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
       -- Check to see if the root front is satisfied
       if exists(select 1
@@ -548,7 +548,7 @@ declare
   forward_front_depth  int4 := 0;
   backward_front_depth int4 := 0;
 begin
-  raise notice 'bidirectional_asp_harness start';
+  raise debug 'bidirectional_asp_harness start';
 
   -- Defines three tables to represent pathspace of the recursive expansion
   perform create_bidirectional_pathspace_tables();
@@ -557,7 +557,7 @@ begin
   forward_front_depth = forward_front_depth + 1;
   execute forward_primer;
 
-  raise notice 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+  raise debug 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
   -- Early check to make sure there's something to expand toward from the backward frontier
   if not exists(select 1 from next_front) then
@@ -580,7 +580,7 @@ begin
   backward_front_depth = backward_front_depth + 1;
   execute backward_primer;
 
-  raise notice 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+  raise debug 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
   -- Swap the next frontier to the backward frontier
   perform swap_backward_front();
@@ -610,7 +610,7 @@ begin
         forward_front_depth = forward_front_depth + 1;
         execute forward_recursive;
 
-        raise notice 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+        raise debug 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
         -- Check to see if the next frontier is satisfied
         if exists(select 1 from next_front r where r.satisfied) then
@@ -625,7 +625,7 @@ begin
         backward_front_depth = backward_front_depth + 1;
         execute backward_recursive;
 
-        raise notice 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+        raise debug 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
         -- Check to see if the next frontier is satisfied
         if exists(select 1 from next_front r where r.satisfied) then
