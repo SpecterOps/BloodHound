@@ -17,10 +17,10 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Link, Typography } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
+import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
+import { useState } from 'react';
 import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
@@ -29,59 +29,12 @@ import {
     AzureNodeKind,
     AzureRelationshipKind,
     CommonKindProperties,
-    useCreateSavedQuery,
-} from 'bh-shared-ui';
-import { useState } from 'react';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
+} from '../../../graphSchema';
+import { useCreateSavedQuery } from '../../../hooks';
+import { useNotifications } from '../../../providers';
+import { cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
-
-const useStyles = makeStyles((theme) => ({
-    button: {
-        minWidth: '35px',
-        height: '35px',
-    },
-    iconButton: {
-        padding: 0,
-    },
-    cypherEditor: {
-        display: 'flex',
-        flexGrow: 1,
-        flexDirection: 'column',
-        border: '1px solid',
-        borderColor: 'rgba(0,0,0,.23)',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: 'white',
-        minHeight: '94px',
-        maxHeight: '94px',
-        overflow: 'auto',
-        '@media (min-height: 720px)': {
-            maxHeight: '276px',
-        },
-        '& .cm-tooltip': {
-            maxWidth: '512px',
-        },
-    },
-    cypherEditorDark: {
-        display: 'flex',
-        flexGrow: 1,
-        flexDirection: 'column',
-        border: '1px solid',
-        borderColor: 'rgba(0,0,0,.23)',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: '#002b36',
-        minHeight: '94px',
-        maxHeight: '94px',
-        overflow: 'auto',
-        '@media (min-height: 720px)': {
-            maxHeight: '278px',
-        },
-        '& .cm-tooltip': {
-            maxWidth: '512px',
-        },
-    },
-}));
 
 const schema = {
     labels: [
@@ -106,25 +59,19 @@ type CypherSearchState = {
 };
 
 const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchState }) => {
-    const classes = useStyles();
+    // Still using the MUI theme here to check for dark mode -- we need a better solution for this
+    const theme = useTheme();
 
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-    const [showEgg, setShowEgg] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
-    const dispatch = useAppDispatch();
-    const darkMode = useAppSelector((state) => state.global.view.darkMode);
+
+    const { addNotification } = useNotifications();
 
     const handleCypherSearch = () => {
         if (cypherQuery) {
-            // Easter Egg Trigger
-            if (cypherQuery.toLowerCase().includes('match (n) return n limit 5')) {
-                setShowEgg(true);
-            } else {
-                setShowEgg(false);
-            }
             performSearch();
         }
     };
@@ -135,7 +82,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
             {
                 onSuccess: () => {
                     setShowSaveQueryDialog(false);
-                    dispatch(addSnackbar(`${data.name} saved!`, 'userSavedQuery'));
+                    addNotification(`${data.name} saved!`, 'userSavedQuery');
                 },
             }
         );
@@ -156,10 +103,10 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
     return (
         <>
-            <Box display='flex' flexDirection='column' height='100%'>
-                <Box display={'flex'} gap={1} flexShrink={0}>
+            <div className='flex flex-col h-full'>
+                <div className='flex gap-2 shrink-0'>
                     <Button
-                        className={`${classes.button} ${classes.iconButton}`}
+                        className='min-w-9 h-9 p-0'
                         variant={'secondary'}
                         onClick={() => {
                             setShowCommonQueries((v) => !v);
@@ -168,14 +115,14 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                         <FontAwesomeIcon icon={faFolderOpen} />
                     </Button>
 
-                    <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
+                    <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                         <CypherEditor
-                            className={darkMode ? classes.cypherEditorDark : classes.cypherEditor}
+                            className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                             value={cypherQuery}
                             onValueChanged={(val: string) => {
                                 setCypherQuery(val);
                             }}
-                            theme={darkMode ? 'dark' : 'light'}
+                            theme={theme.palette.mode}
                             onKeyDown={(e: any) => {
                                 // if enter and shift key is pressed, execute cypher search
                                 if (e.key === 'Enter' && e.shiftKey) {
@@ -190,46 +137,45 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                             tooltipAbsolute={false}
                         />
                     </div>
-                </Box>
+                </div>
 
-                <Box display={'flex'} gap={1} mt={1} justifyContent={'end'} flexShrink={0}>
+                <div className='flex gap-2 mt-2 justify-end shrink-0'>
                     <Button
                         variant='secondary'
                         onClick={() => {
                             setShowSaveQueryDialog(true);
                         }}
                         size={'small'}>
-                        <Box display={'flex'} alignItems={'center'}>
+                        <div className='flex items-center'>
                             <FontAwesomeIcon icon={faSave} />
-                            <Typography ml='8px'>Save Query</Typography>
-                        </Box>
+                            <p className='ml-2 text-base'>Save Query</p>
+                        </div>
                     </Button>
 
-                    <Button asChild variant='secondary' rel='noreferrer' size={'small'}>
-                        <Link
+                    <Button asChild variant='secondary' size={'small'}>
+                        <a
                             href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                            rel='noreferrer'
                             target='_blank'>
-                            <Box display={'flex'} alignItems={'center'}>
+                            <div className='flex items-center'>
                                 <FontAwesomeIcon icon={faQuestion} />
-                                <Typography ml='8px'>Help</Typography>
-                            </Box>
-                        </Link>
+                                <p className='ml-2 text-base'>Help</p>
+                            </div>
+                        </a>
                     </Button>
 
                     <Button onClick={() => handleCypherSearch()} size={'small'}>
-                        <Box display={'flex'} alignItems={'center'}>
+                        <div className='flex items-center'>
                             <FontAwesomeIcon icon={faPlay} />
-                            <Typography ml='8px'>Run</Typography>
-                        </Box>
+                            <p className='ml-2 text-base'>Run</p>
+                        </div>
                     </Button>
-                </Box>
+                </div>
 
-                <Box display={showCommonQueries ? 'initial' : 'none'} flexGrow={1} minHeight={0}>
+                <div className={cn('grow min-h-0', { hidden: !showCommonQueries })}>
                     <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />
-                </Box>
-
-                {showEgg && <EasterEgg />}
-            </Box>
+                </div>
+            </div>
             <SaveQueryDialog
                 open={showSaveQueryDialog}
                 onClose={handleCloseSaveQueryDialog}
@@ -238,19 +184,6 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                 error={createSavedQueryMutation.error}
             />
         </>
-    );
-};
-
-/*What is graphed will never die*/
-const EasterEgg = () => {
-    return (
-        <div style={{ display: 'block', marginLeft: 'auto', marginRight: 'auto', marginTop: '1em' }}>
-            <img
-                src={`${import.meta.env.BASE_URL}/img/logo-animated.gif`}
-                alt='What is graphed will never die'
-                style={{ width: '64px' }}
-            />
-        </div>
     );
 };
 
