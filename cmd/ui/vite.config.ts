@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
                 '@mui/lab',
                 'downshift',
                 'notistack',
+                '@bloodhoundenterprise/doodleui',
                 'msw',
                 'react',
                 'react-error-boundary',

@@ -18,10 +18,17 @@ import { faCode, faDirections, faMinus, faPlus, faSearch } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { CYPHER_SEARCH, Icon, PATHFINDING_SEARCH, PRIMARY_SEARCH, cn, searchbarActions } from 'bh-shared-ui';
+import {
+    CYPHER_SEARCH,
+    CypherSearch,
+    Icon,
+    PATHFINDING_SEARCH,
+    PRIMARY_SEARCH,
+    cn,
+    searchbarActions,
+} from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import CypherSearch from './CypherSearch';
 import NodeSearch from './NodeSearch';
 import PathfindingSearch from './PathfindingSearch';
 import { useCypherSearchSwitch, useNodeSearchSwitch, usePathfindingSearchSwitch } from './switches';
