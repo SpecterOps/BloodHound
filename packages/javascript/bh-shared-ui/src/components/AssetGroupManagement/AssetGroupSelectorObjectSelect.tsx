@@ -72,7 +72,7 @@ const AssetGroupSelectorObjectSelect: FC<{
                         <Button
                             className='rounded-full ml-5 mt-1'
                             variant={'icon'}
-                            onClick={() => setShowDeleteIcons(!showDeleteIcons)}
+                            onClick={() => setShowDeleteIcons((prev) => !prev)}
                             aria-label='Edit selected objects'>
                             <FontAwesomeIcon icon={faPencil} size='lg' />
                         </Button>
