@@ -38,7 +38,7 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	t.Run("Has Jobs Waiting for Analysis", func(t *testing.T) {
 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{}}, nil)
 
-		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
+		hasJobs, err := datapipe.HasIngestJobsWaitingForAnalysis(context.Background(), dbMock)
 
 		require.True(t, hasJobs)
 		require.Nil(t, err)
@@ -47,7 +47,7 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	t.Run("Has No Jobs Waiting for Analysis", func(t *testing.T) {
 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{}, nil)
 
-		hasJobs, err := datapipe.HasFileUploadJobsWaitingForAnalysis(context.Background(), dbMock)
+		hasJobs, err := datapipe.HasIngestJobsWaitingForAnalysis(context.Background(), dbMock)
 
 		require.False(t, hasJobs)
 		require.Nil(t, err)
@@ -77,7 +77,7 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 			return nil
 		})
 
-		datapipe.FailAnalyzedFileUploadJobs(context.Background(), dbMock)
+		datapipe.FailAnalyzedIngestJobs(context.Background(), dbMock)
 	})
 }
 
@@ -104,7 +104,7 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 			return nil
 		})
 
-		datapipe.CompleteAnalyzedFileUploadJobs(context.Background(), dbMock)
+		datapipe.CompleteAnalyzedIngestJobs(context.Background(), dbMock)
 	})
 }
 
@@ -132,7 +132,7 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 			return nil
 		})
 
-		datapipe.ProcessIngestedFileUploadJobs(context.Background(), dbMock)
+		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
 	})
 
 	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
@@ -145,6 +145,6 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 
 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{{}}, nil)
 
-		datapipe.ProcessIngestedFileUploadJobs(context.Background(), dbMock)
+		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
 	})
 }

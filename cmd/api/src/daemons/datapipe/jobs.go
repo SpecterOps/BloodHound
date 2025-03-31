@@ -35,61 +35,61 @@ import (
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
-func HasFileUploadJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
-	if fileUploadJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
+func HasIngestJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
+	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		return false, err
 	} else {
-		return len(fileUploadJobsUnderAnalysis) > 0, nil
+		return len(ingestJobsUnderAnalysis) > 0, nil
 	}
 }
 
-func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
+func FailAnalyzedIngestJobs(ctx context.Context, db database.Database) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when we are shutting down.
 	if ctx.Err() != nil {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
+	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
-		for _, job := range fileUploadJobsUnderAnalysis {
+		for _, job := range ingestJobsUnderAnalysis {
 			if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating file upload job %d to failed status: %v", job.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating ingest job %d to failed status: %v", job.ID, err))
 			}
 		}
 	}
 }
 
-func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
+func PartialCompleteIngestJobs(ctx context.Context, db database.Database) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when we are shutting down.
 	if ctx.Err() != nil {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
+	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
 	} else {
-		for _, job := range fileUploadJobsUnderAnalysis {
+		for _, job := range ingestJobsUnderAnalysis {
 			if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating file upload job %d to partially completed status: %v", job.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating ingest job %d to partially completed status: %v", job.ID, err))
 			}
 		}
 	}
 }
 
-func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
+func CompleteAnalyzedIngestJobs(ctx context.Context, db database.Database) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when we are shutting down.
 	if ctx.Err() != nil {
 		return
 	}
 
-	if fileUploadJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
+	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
 	} else {
-		for _, job := range fileUploadJobsUnderAnalysis {
+		for _, job := range ingestJobsUnderAnalysis {
 			var (
 				status  = model.JobStatusComplete
 				message = "Complete"
@@ -106,13 +106,14 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 			}
 
 			if err := ingest.UpdateIngestJobStatus(ctx, db, job, status, message); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Error updating file upload job %d: %v", job.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
 			}
 		}
 	}
 }
 
-func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
+// ProcessFinishedIngestJobs transitions all jobs in an ingesting state to an analyzing state, if there are no further tasks associated with the job in question
+func ProcessFinishedIngestJobs(ctx context.Context, db database.Database) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when shutting down.
 	if ctx.Err() != nil {

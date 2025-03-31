@@ -39,17 +39,6 @@ const jobActivityTimeout = time.Minute * 20
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-// type IngestData interface {
-// CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
-// UpdateIngestJob(ctx context.Context, job model.IngestJob) error
-// GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
-// GetAllIngestJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
-// GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
-// DeleteAllIngestJobs(ctx context.Context) error
-// CancelAllIngestJobs(ctx context.Context) error
-// DeleteAllIngestTasks(ctx context.Context) error
-// }
-
 // ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
 func ProcessStaleIngestJobs(ctx context.Context, db IngestData) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
