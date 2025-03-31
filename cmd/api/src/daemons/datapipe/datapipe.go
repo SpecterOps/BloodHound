@@ -154,13 +154,13 @@ func (s *Daemon) Start(ctx context.Context) {
 			// Ingest all available ingest tasks
 			s.ingestAvailableTasks()
 
-			// Manage time-out state progression for file upload jobs
+			// Manage time-out state progression for ingest jobs
 			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
 
-			// Manage nominal state transitions for file upload jobs
+			// Manage nominal state transitions for ingest jobs
 			ProcessFinishedIngestJobs(s.ctx, s.db)
 
-			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
+			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
@@ -205,7 +205,7 @@ func (s *Daemon) Stop(ctx context.Context) error {
 
 func (s *Daemon) clearOrphanedData() {
 	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available file upload ingest tasks: %v", err))
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 

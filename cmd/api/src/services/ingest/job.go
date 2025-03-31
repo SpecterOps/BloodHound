@@ -63,7 +63,7 @@ func ProcessStaleIngestJobs(ctx context.Context, db IngestData) {
 					job.LastIngest.Format(time.RFC3339)))
 
 				if err := TimeOutIngestJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error marking file upload job %d as timed out: %v", job.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
 				}
 			}
 		}
@@ -148,7 +148,7 @@ func EndIngestJob(ctx context.Context, db IngestData, job model.IngestJob) error
 	job.Status = model.JobStatusIngesting
 
 	if err := db.UpdateIngestJob(ctx, job); err != nil {
-		return fmt.Errorf("error ending file upload job: %w", err)
+		return fmt.Errorf("error ending ingest job: %w", err)
 	}
 
 	return nil

@@ -64,7 +64,7 @@ func TestFailAnalyzedIngestJobs(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	t.Run("Fail Analyzed File Upload Jobs", func(t *testing.T) {
+	t.Run("Fail Analyzed Ingest Jobs", func(t *testing.T) {
 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
@@ -91,7 +91,7 @@ func TestCompleteAnalyzedIngestJobs(t *testing.T) {
 
 	defer mockCtrl.Finish()
 
-	t.Run("Complete Analyzed File Upload Jobs", func(t *testing.T) {
+	t.Run("Complete Analyzed Ingest Jobs", func(t *testing.T) {
 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
 			BigSerial: model.BigSerial{
 				ID: jobID,
