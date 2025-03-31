@@ -282,29 +282,6 @@ CREATE TABLE IF NOT EXISTS datapipe_status (
     last_complete_analysis_at timestamp with time zone,
     CONSTRAINT singleton_uni CHECK (singleton)
 );
-CREATE TABLE IF NOT EXISTS domain_collection_results (
-    job_id bigint,
-    domain_name text,
-    success boolean,
-    message text,
-    user_count bigint,
-    group_count bigint,
-    computer_count bigint,
-    gpo_count bigint,
-    ou_count bigint,
-    container_count bigint,
-    deleted_count bigint,
-    id bigint NOT NULL,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-CREATE SEQUENCE IF NOT EXISTS domain_collection_results_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-ALTER SEQUENCE domain_collection_results_id_seq OWNED BY domain_collection_results.id;
 
 CREATE TABLE IF NOT EXISTS feature_flags (
     id integer NOT NULL,
@@ -521,7 +498,6 @@ ALTER TABLE ONLY audit_logs ALTER COLUMN id SET DEFAULT nextval('audit_logs_id_s
 ALTER TABLE ONLY auth_secrets ALTER COLUMN id SET DEFAULT nextval('auth_secrets_id_seq'::regclass);
 ALTER TABLE ONLY azure_data_quality_aggregations ALTER COLUMN id SET DEFAULT nextval('azure_data_quality_aggregations_id_seq'::regclass);
 ALTER TABLE ONLY azure_data_quality_stats ALTER COLUMN id SET DEFAULT nextval('azure_data_quality_stats_id_seq'::regclass);
-ALTER TABLE ONLY domain_collection_results ALTER COLUMN id SET DEFAULT nextval('domain_collection_results_id_seq'::regclass);
 ALTER TABLE ONLY feature_flags ALTER COLUMN id SET DEFAULT nextval('feature_flags_id_seq'::regclass);
 ALTER TABLE ONLY file_upload_jobs ALTER COLUMN id SET DEFAULT nextval('file_upload_jobs_id_seq'::regclass);
 ALTER TABLE ONLY ingest_tasks ALTER COLUMN id SET DEFAULT nextval('ingest_tasks_id_seq'::regclass);
@@ -549,7 +525,6 @@ ALTER TABLE ONLY auth_tokens Add CONSTRAINT auth_tokens_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY azure_data_quality_aggregations ADD CONSTRAINT azure_data_quality_aggregations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY azure_data_quality_stats Add CONSTRAINT azure_data_quality_stats_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY datapipe_status Add CONSTRAINT datapipe_status_pkey PRIMARY KEY (singleton);
-ALTER TABLE ONLY domain_collection_results Add CONSTRAINT domain_collection_results_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY feature_flags Add CONSTRAINT feature_flags_key_key UNIQUE (key);
 ALTER TABLE ONLY feature_flags Add CONSTRAINT feature_flags_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY file_upload_jobs Add CONSTRAINT file_upload_jobs_pkey PRIMARY KEY (id);
