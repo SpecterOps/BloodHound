@@ -23,11 +23,13 @@ allOf:
       created_by:
         type: string
       created_at:
-        type: date-time
+        type: string
+        format: date-time
       updated_by:
         type: string
       updated_at:
-        type: date-time
+        type: string
+        format: date-time
       disabled_at:
         type: string
         format: date-time

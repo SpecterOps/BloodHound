@@ -34,7 +34,7 @@ get:
     - Enterprise
   parameters:
     - name: Accept
-      in: './../parameters/header.prefer.yaml'
+      in: query
       description: Media type to determine the response format (application/json or text/csv).
       required: false
       schema:
@@ -108,9 +108,9 @@ get:
     - $ref: './../parameters/query.deleted-at.yaml'
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-  produces:
-    - application/json
-    - text/csv
+      enum:
+        - application/json
+        - text/csv
   responses:
     200:
       description: OK

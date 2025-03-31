@@ -4415,19 +4415,14 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "./../schemas/model.asset-group-tags-selectors.yaml"
-                        }
-                      }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selectors"
                     }
                   }
-                ]
+                }
               }
             }
           },
@@ -4464,8 +4459,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                  }
                 }
               }
             }
@@ -4478,8 +4475,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "items": {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                    }
                   }
                 }
               }
@@ -13100,7 +13099,7 @@
         "parameters": [
           {
             "name": "Accept",
-            "in": "./../parameters/header.prefer.yaml",
+            "in": "query",
             "description": "Media type to determine the response format (application/json or text/csv).",
             "required": false,
             "schema": {
@@ -13221,12 +13220,12 @@
             "$ref": "#/components/parameters/query.skip"
           },
           {
-            "$ref": "#/components/parameters/query.limit"
+            "$ref": "#/components/parameters/query.limit",
+            "enum": [
+              "application/json",
+              "text/csv"
+            ]
           }
-        ],
-        "produces": [
-          "application/json",
-          "text/csv"
         ],
         "responses": {
           "200": {
@@ -15707,19 +15706,15 @@
         }
       },
       "model.asset-group-tags-selector-seed": {
-        "schema": [
-          {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "integer"
-              },
-              "value": {
-                "type": "string"
-              }
-            }
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "string"
           }
-        ]
+        }
       },
       "model.asset-group-tags-selector": {
         "allOf": [
@@ -15736,13 +15731,15 @@
                 "type": "string"
               },
               "created_at": {
-                "type": "date-time"
+                "type": "string",
+                "format": "date-time"
               },
               "updated_by": {
                 "type": "string"
               },
               "updated_at": {
-                "type": "date-time"
+                "type": "string",
+                "format": "date-time"
               },
               "disabled_at": {
                 "type": "string",
@@ -15775,6 +15772,17 @@
             }
           }
         ]
+      },
+      "model.asset-group-tags-selectors": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector"
+            }
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",

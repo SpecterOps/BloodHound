@@ -45,12 +45,10 @@ get:
       content:
         application/json:
           schema:
-            - type: object
-              properties:
+            type: object
+            properties:
                 data:
-                  type: array
-                  items:
-                    $ref: './../schemas/model.asset-group-tags-selectors.yaml'
+                  $ref: './../schemas/model.asset-group-tags-selectors.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -78,8 +76,9 @@ post:
       application/json:
         schema:
           type: object
-          items:
-            $ref: './../schemas/model.asset-group-tags-selector.yaml'
+          properties:
+            data:
+              $ref: './../schemas/model.asset-group-tags-selector.yaml'
   responses:
     201:
       description: Created
@@ -87,8 +86,9 @@ post:
         application/json:
           schema:
             type: object
-            items:
-              $ref: './../schemas/model.asset-group-tags-selector.yaml'
+            properties:
+                data:
+                  $ref: './../schemas/model.asset-group-tags-selector.yaml'
 
     400:
       $ref: './../responses/bad-request.yaml'

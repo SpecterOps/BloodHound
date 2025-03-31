@@ -371,11 +371,11 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Name: "Success - Selector Types",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.SetURLVar(input, "type", "eq:2")
+					apitest.AddQueryParam(input, "type", "eq:2")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), model.SQLFilter{SQLString: "type = ?", Params: []any{2}}).
 						Return(model.AssetGroupTagSelectors{
 							{
 								Name:            "Test1",
@@ -384,9 +384,9 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 									{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 								},
 							},
-						}, nil).Times(1)
+						}, nil)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-						Return(model.AssetGroupTag{}, nil).Times(1)
+						Return(model.AssetGroupTag{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
