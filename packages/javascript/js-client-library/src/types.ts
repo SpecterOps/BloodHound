@@ -140,6 +140,15 @@ export interface AssetGroupTagSelectorNode {
     name: string;
 }
 
+export interface AssetGroupTagMemberInfo {
+    member_id: number;
+    node_id: string;
+    certified: AssetGroupTagCertifiedValues;
+    certified_by: string | System | null;
+    id: number;
+    name: string;
+}
+
 export interface CreateSharpHoundClientRequest {
     domain_controller: string;
     name: string;

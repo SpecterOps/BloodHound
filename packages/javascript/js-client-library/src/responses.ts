@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from './types';
+import { AssetGroupTag, AssetGroupTagMemberInfo, AssetGroupTagSelector, AssetGroupTagSelectorNode } from './types';
 import { ConfigurationPayload } from './utils/config';
 
 export type BasicResponse<T> = {
@@ -163,6 +163,7 @@ export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 export type AssetGroupLabelResponse = BasicResponse<{ asset_group_labels: AssetGroupTag[] }>;
 export type AssetGroupSelectorResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupMemberResponse = PaginatedResponse<{ members: AssetGroupTagSelectorNode[] }>;
+export type AssetGroupMemberInfoResponse = PaginatedResponse<{ member: AssetGroupTagMemberInfo[] }>;
 
 export type AssetGroupSelector = TimestampFields & {
     id: number;
