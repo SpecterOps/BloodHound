@@ -17,10 +17,15 @@
 package v2_test
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -28,6 +33,8 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/queries/mocks"
+	"github.com/specterops/bloodhound/src/utils"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -693,4 +700,162 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
+	t.Parallel()
+	type mock struct {
+		mockGraphQuery *mocks.MockGraph
+	}
+	type args struct {
+		request          *http.Request
+		requestParameter map[string]string
+	}
+	type expected struct {
+		responseBody   any
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		args           args
+		name           string
+		establishMocks func(t *testing.T, mock *mock)
+		expected       expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: Bad Request ParseOptionalBool",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{
+						RawQuery: "counts=`",
+					},
+				},
+				requestParameter: map[string]string{
+					"object_id": "311016",
+				},
+			},
+			establishMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
+			},
+		},
+		{
+			name: "Error: Bad Request GetEntityObjectIDFromRequestPath",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{
+						RawQuery: "counts=true",
+					},
+				},
+				requestParameter: map[string]string{
+					"not_object_id": "",
+				},
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
+			},
+			establishMocks: func(t *testing.T, mock *mock) {},
+		},
+		{
+			name: "Success: hydrateCounts",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{
+						RawQuery: "counts=true",
+					},
+				},
+				requestParameter: map[string]string{
+					"object_id": "311016",
+				},
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
+			},
+			establishMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]any{"results": "output"})
+			},
+		},
+		{
+			name: "Success: !hydrateCounts",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{
+						RawQuery: "counts=false",
+					},
+				},
+				requestParameter: map[string]string{
+					"object_id": "311016",
+				},
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
+			},
+			establishMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
+
+			mocks := &mock{
+				mockGraphQuery: mocks.NewMockGraph(ctrl),
+			}
+
+			testCase.establishMocks(t, mocks)
+
+			resouces := v2.Resources{
+				GraphQuery: mocks.mockGraphQuery,
+			}
+
+			response := httptest.NewRecorder()
+
+			resouces.GetBaseEntityInfo(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := processResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			require.Equal(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func processResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, []byte) {
+	t.Helper()
+	if response.Code != http.StatusOK {
+		responseBytes, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+		require.NoError(t, err)
+
+		response.Body = bytes.NewBuffer([]byte(responseBytes))
+	}
+
+	if response.Body != nil {
+		res, err := io.ReadAll(response.Body)
+		if err != nil {
+			t.Fatalf("error reading response body: %v", err)
+		}
+
+		return response.Code, response.Header(), res
+	}
+
+	return response.Code, response.Header(), nil
 }
