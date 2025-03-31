@@ -54,7 +54,7 @@ func TestHasJobsWaitingForAnalysis(t *testing.T) {
 	})
 }
 
-func TestFailAnalyzedFileUploadJobs(t *testing.T) {
+func TestFailAnalyzedIngestJobs(t *testing.T) {
 	const jobID int64 = 1
 
 	var (
@@ -72,8 +72,8 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
-			require.Equal(t, model.JobStatusFailed, fileUploadJob.Status)
+		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, job model.IngestJob) error {
+			require.Equal(t, model.JobStatusFailed, job.Status)
 			return nil
 		})
 
@@ -81,7 +81,7 @@ func TestFailAnalyzedFileUploadJobs(t *testing.T) {
 	})
 }
 
-func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
+func TestCompleteAnalyzedIngestJobs(t *testing.T) {
 	const jobID int64 = 1
 
 	var (
@@ -99,8 +99,8 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 			Status: model.JobStatusAnalyzing,
 		}}, nil)
 
-		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
-			require.Equal(t, model.JobStatusComplete, fileUploadJob.Status)
+		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
+			require.Equal(t, model.JobStatusComplete, IngestJob.Status)
 			return nil
 		})
 
@@ -108,7 +108,7 @@ func TestCompleteAnalyzedFileUploadJobs(t *testing.T) {
 	})
 }
 
-func TestProcessIngestedFileUploadJobs(t *testing.T) {
+func TestProcessFinishedIngestJobs(t *testing.T) {
 	const jobID int64 = 1
 
 	var (
@@ -127,8 +127,8 @@ func TestProcessIngestedFileUploadJobs(t *testing.T) {
 		}}, nil)
 
 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
-		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fileUploadJob model.IngestJob) error {
-			require.Equal(t, model.JobStatusAnalyzing, fileUploadJob.Status)
+		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
+			require.Equal(t, model.JobStatusAnalyzing, IngestJob.Status)
 			return nil
 		})
 

@@ -51,7 +51,7 @@ func FailAnalyzedIngestJobs(ctx context.Context, db database.Database) {
 	}
 
 	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
 			if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
@@ -120,25 +120,25 @@ func ProcessFinishedIngestJobs(ctx context.Context, db database.Database) {
 		return
 	}
 
-	if ingestingFileUploadJobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusIngesting); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failed to look up finished file upload jobs: %v", err))
+	if jobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusIngesting); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed to look up finished ingest jobs: %v", err))
 	} else {
-		for _, ingestingFileUploadJob := range ingestingFileUploadJobs {
-			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err))
+		for _, job := range jobs {
+			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, job.ID); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up remaining ingest tasks for ingest job %d: %v", job.ID, err))
 			} else if len(remainingIngestTasks) == 0 {
-				if err := ingest.UpdateIngestJobStatus(ctx, db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err))
+				if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
 				}
 			}
 		}
 	}
 }
 
-// clearFileTask removes a generic file upload task for ingested data.
+// clearFileTask removes a generic ingest task for ingested data.
 func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error removing file upload task from db: %v", err))
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error removing ingest task from db: %v", err))
 	}
 }
 
@@ -233,7 +233,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 	}
 }
 
-// processIngestTasks covers the generic file upload case for ingested data.
+// processIngestTasks covers the generic ingest case for ingested data.
 func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
@@ -264,7 +264,7 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			job.TotalFiles = total
 			job.FailedFiles += failed
 			if err = s.db.UpdateIngestJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for file upload job ID %d: %v", job.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
 			}
 		}
 
