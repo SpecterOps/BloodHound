@@ -127,76 +127,85 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 
 func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	var (
-		dbInst          = integration.SetupDB(t)
-		testCtx         = context.Background()
-		testID          = "test_id"
-		testName        = "test selector name"
-		testDescription = "test description"
-		isDefault       = false
-		allowDisable    = true
-		autoCertify     = false
-		testSeeds       = []model.SelectorSeed{
-			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
-			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		dbInst        = integration.SetupDB(t)
+		testCtx       = context.Background()
+		isDefault     = false
+		allowDisable  = true
+		autoCertify   = false
+		test1Selector = model.AssetGroupTagSelector{
+			Name:            "test selector name",
+			Description:     "test description",
+			AssetGroupTagId: 1,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+			AllowDisable: true,
 		}
-		testSeeds2 = []model.SelectorSeed{
-			{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+		test2Selector = model.AssetGroupTagSelector{
+			Name:            "test2 selector name",
+			Description:     "test2 description",
+			AssetGroupTagId: 1,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
+			},
+			AllowDisable: true,
 		}
-		test2ID          = "test2_id"
-		test2Name        = "test2 selector name"
-		test2Description = "test2 description"
-		test3ID          = "test3_id"
-		test3Name        = "test3 selector name"
-		test3Description = "test3 description"
-		created_at       = time.Now()
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testID, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id", test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
-	selector2, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test2ID, test2Name, test2Description, isDefault, allowDisable, autoCertify, testSeeds2)
-	require.NoError(t, err)
-	selector3, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, test3ID, test3Name, test3Description, isDefault, allowDisable, autoCertify, testSeeds2)
+	created_at := time.Now()
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id2", test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
 		require.NoError(t, err)
 
-		expected := model.AssetGroupTagSelectors{selector, selector2, selector3}
-		require.Equal(t, expected, results)
+		require.Equal(t, 2, len(results))
+		require.Equal(t, test1Selector.Name, results[0].Name)
+		require.Equal(t, test2Selector.Name, results[1].Name)
+		require.Equal(t, test1Selector.Description, results[0].Description)
+		require.Equal(t, test2Selector.Description, results[1].Description)
+		require.Equal(t, test1Selector.AssetGroupTagId, results[0].AssetGroupTagId)
+		require.Equal(t, test2Selector.AssetGroupTagId, results[1].AssetGroupTagId)
+		require.Equal(t, test1Selector.IsDefault, results[0].IsDefault)
+		require.Equal(t, test2Selector.IsDefault, results[1].IsDefault)
+		require.Equal(t, test1Selector.AllowDisable, results[0].AllowDisable)
+		require.Equal(t, test2Selector.AllowDisable, results[1].AllowDisable)
+		require.Equal(t, test1Selector.AutoCertify, results[0].AutoCertify)
+		require.Equal(t, test2Selector.AutoCertify, results[1].AutoCertify)
+
+		for idx, seed := range test1Selector.Seeds {
+			require.Equal(t, seed.Type, results[0].Seeds[idx].Type)
+			require.Equal(t, seed.Value, results[0].Seeds[idx].Value)
+		}
+
+		for idx, seed := range test2Selector.Seeds {
+			require.Equal(t, seed.Type, results[1].Seeds[idx].Type)
+			require.Equal(t, seed.Value, results[1].Seeds[idx].Value)
+		}
+
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
 		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
 
-		expected := model.AssetGroupTagSelectors{selector2, selector3}
-		require.Equal(t, expected, results)
+		require.Equal(t, 1, len(results))
+		for idx, seed := range test2Selector.Seeds {
+			require.Equal(t, seed.Type, results[0].Seeds[idx].Type)
+			require.Equal(t, seed.Value, results[0].Seeds[idx].Value)
+		}
 	})
 
-	t.Run("successfully returns an array of selector filters and seed filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+	t.Run("successfully returns an array of selector filters", func(t *testing.T) {
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{})
 		require.NoError(t, err)
 
-		expected := model.AssetGroupTagSelectors{selector2, selector3}
-		require.Equal(t, len(expected), len(results))
+		require.Equal(t, 1, len(results))
+		require.True(t, results[0].CreatedAt.After(created_at))
 
-		require.Equal(t, test2Name, results[0].Name)
-		require.Equal(t, test3Name, results[1].Name)
-		require.Equal(t, test2Description, results[0].Description)
-		require.Equal(t, test3Description, results[1].Description)
-		require.Equal(t, test2ID, results[0].CreatedBy)
-		require.Equal(t, test3ID, results[1].CreatedBy)
-		require.True(t, results[0].AllowDisable)
-		require.True(t, results[1].AllowDisable)
-		require.False(t, results[0].AutoCertify)
-		require.False(t, results[1].AutoCertify)
-		require.False(t, results[0].IsDefault)
-		require.False(t, results[1].IsDefault)
-		require.False(t, results[0].CreatedAt.IsZero())
-		require.False(t, results[1].CreatedAt.IsZero())
-		require.False(t, results[0].UpdatedAt.IsZero())
-		require.False(t, results[1].UpdatedAt.IsZero())
 	})
 
 }

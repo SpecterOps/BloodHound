@@ -47,8 +47,13 @@ get:
           schema:
             type: object
             properties:
-                data:
-                  $ref: './../schemas/model.asset-group-tags-selectors.yaml'
+              data:
+                type: object
+                properties: 
+                  selectors:
+                    type: array
+                    items:
+                      $ref: './../schemas/model.asset-group-tags-selector.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -57,6 +62,8 @@ get:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
 
@@ -77,8 +84,12 @@ post:
         schema:
           type: object
           properties:
-            data:
-              $ref: './../schemas/model.asset-group-tags-selector.yaml'
+            name:
+              type: string
+            seeds:
+              type: array
+              items:
+                $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
   responses:
     201:
       description: Created
@@ -87,8 +98,8 @@ post:
           schema:
             type: object
             properties:
-                data:
-                  $ref: './../schemas/model.asset-group-tags-selector.yaml'
+              data:
+                $ref: './../schemas/model.asset-group-tags-selector.yaml'
 
     400:
       $ref: './../responses/bad-request.yaml'
@@ -98,5 +109,7 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
