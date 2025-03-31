@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . FileUploadData
-package fileupload
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . IngestData
+package ingest
 
 import (
 	"context"
@@ -39,19 +39,19 @@ const jobActivityTimeout = time.Minute * 20
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-type IngestJobData interface {
-	CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
-	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
-	GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
-	GetAllIngestJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
-	GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
-	DeleteAllIngestJobs(ctx context.Context) error
-	CancelAllIngestJobs(ctx context.Context) error
-	DeleteAllIngestTasks(ctx context.Context) error
-}
+// type IngestData interface {
+// CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
+// UpdateIngestJob(ctx context.Context, job model.IngestJob) error
+// GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
+// GetAllIngestJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
+// GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
+// DeleteAllIngestJobs(ctx context.Context) error
+// CancelAllIngestJobs(ctx context.Context) error
+// DeleteAllIngestTasks(ctx context.Context) error
+// }
 
 // ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
-func ProcessStaleIngestJobs(ctx context.Context, db IngestJobData) {
+func ProcessStaleIngestJobs(ctx context.Context, db IngestData) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when shutting down.
 	if ctx.Err() != nil {
@@ -81,11 +81,11 @@ func ProcessStaleIngestJobs(ctx context.Context, db IngestJobData) {
 	}
 }
 
-func GetAllIngestJobs(ctx context.Context, db IngestJobData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
+func GetAllIngestJobs(ctx context.Context, db IngestData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	return db.GetAllIngestJobs(ctx, skip, limit, order, filter)
 }
 
-func StartIngestJob(ctx context.Context, db IngestJobData, user model.User) (model.IngestJob, error) {
+func StartIngestJob(ctx context.Context, db IngestData, user model.User) (model.IngestJob, error) {
 	job := model.IngestJob{
 		UserID:     user.ID,
 		User:       user,
@@ -96,7 +96,7 @@ func StartIngestJob(ctx context.Context, db IngestJobData, user model.User) (mod
 	return db.CreateIngestJob(ctx, job)
 }
 
-func GetIngestJobByID(ctx context.Context, db IngestJobData, jobID int64) (model.IngestJob, error) {
+func GetIngestJobByID(ctx context.Context, db IngestData, jobID int64) (model.IngestJob, error) {
 	return db.GetIngestJob(ctx, jobID)
 }
 
@@ -150,12 +150,12 @@ func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationF
 	}
 }
 
-func TouchIngestJobLastIngest(ctx context.Context, db IngestJobData, job model.IngestJob) error {
+func TouchIngestJobLastIngest(ctx context.Context, db IngestData, job model.IngestJob) error {
 	job.LastIngest = time.Now().UTC()
 	return db.UpdateIngestJob(ctx, job)
 }
 
-func EndIngestJob(ctx context.Context, db IngestJobData, job model.IngestJob) error {
+func EndIngestJob(ctx context.Context, db IngestData, job model.IngestJob) error {
 	job.Status = model.JobStatusIngesting
 
 	if err := db.UpdateIngestJob(ctx, job); err != nil {
@@ -165,7 +165,7 @@ func EndIngestJob(ctx context.Context, db IngestJobData, job model.IngestJob) er
 	return nil
 }
 
-func UpdateIngestJobStatus(ctx context.Context, db IngestJobData, job model.IngestJob, status model.JobStatus, message string) error {
+func UpdateIngestJobStatus(ctx context.Context, db IngestData, job model.IngestJob, status model.JobStatus, message string) error {
 	job.Status = status
 	job.StatusMessage = message
 	job.EndTime = time.Now().UTC()
@@ -173,7 +173,7 @@ func UpdateIngestJobStatus(ctx context.Context, db IngestJobData, job model.Inge
 	return db.UpdateIngestJob(ctx, job)
 }
 
-func TimeOutIngestJob(ctx context.Context, db IngestJobData, jobID int64, message string) error {
+func TimeOutIngestJob(ctx context.Context, db IngestData, jobID int64, message string) error {
 	if job, err := db.GetIngestJob(ctx, jobID); err != nil {
 		return err
 	} else {

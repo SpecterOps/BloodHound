@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/fileupload"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 func HasFileUploadJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
@@ -54,7 +54,7 @@ func FailAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateIngestJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
+			if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating file upload job %d to failed status: %v", job.ID, err))
 			}
 		}
@@ -72,7 +72,7 @@ func PartialCompleteFileUploadJobs(ctx context.Context, db database.Database) {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed to load file upload jobs under analysis: %v", err))
 	} else {
 		for _, job := range fileUploadJobsUnderAnalysis {
-			if err := fileupload.UpdateIngestJobStatus(ctx, db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
+			if err := ingest.UpdateIngestJobStatus(ctx, db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed updating file upload job %d to partially completed status: %v", job.ID, err))
 			}
 		}
@@ -105,7 +105,7 @@ func CompleteAnalyzedFileUploadJobs(ctx context.Context, db database.Database) {
 				}
 			}
 
-			if err := fileupload.UpdateIngestJobStatus(ctx, db, job, status, message); err != nil {
+			if err := ingest.UpdateIngestJobStatus(ctx, db, job, status, message); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error updating file upload job %d: %v", job.ID, err))
 			}
 		}
@@ -126,7 +126,7 @@ func ProcessIngestedFileUploadJobs(ctx context.Context, db database.Database) {
 			if remainingIngestTasks, err := db.GetIngestTasksForJob(ctx, ingestingFileUploadJob.ID); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up remaining ingest tasks for file upload job %d: %v", ingestingFileUploadJob.ID, err))
 			} else if len(remainingIngestTasks) == 0 {
-				if err := fileupload.UpdateIngestJobStatus(ctx, db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+				if err := ingest.UpdateIngestJobStatus(ctx, db, ingestingFileUploadJob, model.JobStatusAnalyzing, "Analyzing"); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error updating fileupload job %d: %v", ingestingFileUploadJob.ID, err))
 				}
 			}

@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/fileupload"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const (
@@ -155,7 +155,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for file upload jobs
-			fileupload.ProcessStaleIngestJobs(s.ctx, s.db)
+			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
 
 			// Manage nominal state transitions for file upload jobs
 			ProcessIngestedFileUploadJobs(s.ctx, s.db)
