@@ -17,6 +17,8 @@
         "noUnusedLocals": true,
         "noUnusedParameters": false,
         "noFallthroughCasesInSwitch": true,
+        "declaration": true,
+        "declarationMap": true,
         "baseUrl": ".",
         "paths": {
             "src/*": ["./src/*"]

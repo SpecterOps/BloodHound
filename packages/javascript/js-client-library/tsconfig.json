@@ -3,9 +3,10 @@
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
-        "declaration": true,
         "outDir": "dist",
         "declarationDir": "dist",
+        "declaration": true,
+        "declarationMap": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "skipLibCheck": true

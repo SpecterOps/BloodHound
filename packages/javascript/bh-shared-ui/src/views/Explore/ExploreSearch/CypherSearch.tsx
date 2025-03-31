@@ -20,37 +20,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { useState } from 'react';
-import {
-    ActiveDirectoryKindProperties,
-    ActiveDirectoryNodeKind,
-    ActiveDirectoryRelationshipKind,
-    AzureKindProperties,
-    AzureNodeKind,
-    AzureRelationshipKind,
-    CommonKindProperties,
-} from '../../../graphSchema';
+import { useRef, useState } from 'react';
+import { useQuery } from 'react-query';
+import { graphSchema } from '../../../constants';
 import { useCreateSavedQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
-import { cn } from '../../../utils';
+import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
-
-const schema = {
-    labels: [
-        ...Object.values(ActiveDirectoryNodeKind).map((nodeLabel) => `:${nodeLabel}`),
-        ...Object.values(AzureNodeKind).map((nodeLabel) => `:${nodeLabel}`),
-    ],
-    relationshipTypes: [
-        ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
-        ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
-    ],
-    propertyKeys: [
-        ...Object.values(CommonKindProperties),
-        ...Object.values(ActiveDirectoryKindProperties),
-        ...Object.values(AzureKindProperties),
-    ],
-};
 
 type CypherSearchState = {
     cypherQuery: string;
@@ -67,6 +44,13 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
+
+    const cypherEditorRef = useRef<CypherEditor | null>(null);
+
+    const kindsQuery = useQuery({
+        queryKey: ['graph-kinds'],
+        queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
+    });
 
     const { addNotification } = useNotifications();
 
@@ -93,13 +77,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         createSavedQueryMutation.reset();
     };
 
-    // work-around handler for user clicking within code-mirror <CypherEditor />
-    const setFocusOnCypherEditor = () => {
-        const input = document.querySelector('.cm-content') as HTMLElement;
-        if (input) {
-            input.focus();
-        }
-    };
+    const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     return (
         <>
@@ -117,6 +95,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
                     <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                         <CypherEditor
+                            ref={cypherEditorRef}
                             className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
                             value={cypherQuery}
                             onValueChanged={(val: string) => {
@@ -130,7 +109,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                                     handleCypherSearch();
                                 }
                             }}
-                            schema={schema}
+                            schema={graphSchema(kindsQuery.data)}
                             lineWrapping
                             lint
                             placeholder='Cypher Query'
