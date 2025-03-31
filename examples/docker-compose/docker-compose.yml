@@ -39,7 +39,7 @@ services:
       start_period: 30s
 
   graph-db:
-    image: docker.io/library/neo4j:4.4
+    image: docker.io/library/neo4j:4.4.42
     environment:
       - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_SECRET:-bloodhoundcommunityedition}
       - NEO4J_dbms_allow__upgrade=${NEO4J_ALLOW_UPGRADE:-true}

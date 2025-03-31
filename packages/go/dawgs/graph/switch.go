@@ -208,3 +208,16 @@ func (s *DatabaseSwitch) Close(ctx context.Context) error {
 		return s.currentDB.Close(ctx)
 	}
 }
+
+func (s *DatabaseSwitch) FetchKinds(ctx context.Context) (Kinds, error) {
+	if internalCtx, err := s.newInternalContext(ctx); err != nil {
+		return nil, err
+	} else {
+		defer s.retireInternalContext(internalCtx)
+
+		s.currentDBLock.RLock()
+		defer s.currentDBLock.RUnlock()
+
+		return s.currentDB.FetchKinds(ctx)
+	}
+}
