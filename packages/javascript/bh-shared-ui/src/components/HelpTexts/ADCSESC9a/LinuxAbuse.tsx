@@ -94,10 +94,7 @@ const LinuxAbuse: FC = () => {
                 </Link>
                 ). Alternatively, you can obtain a session as SYSTEM on the host, which allows you to interact with AD
                 as the computer account, by abusing control over the computer AD object (see{' '}
-                <Link
-                    target='blank'
-                    rel='noopener'
-                    href='https://bloodhound.specterops.io/resources/edges/generic-all'>
+                <Link target='blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/generic-all'>
                     GenericAll edge documentation
                 </Link>
                 ).
