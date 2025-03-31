@@ -150,7 +150,7 @@ type Database interface {
 	DeleteAllDataQuality(ctx context.Context) error
 
 	// File Upload
-	fileupload.FileUploadData
+	fileupload.IngestJobData
 
 	// Saved Queries
 	SavedQueriesData
