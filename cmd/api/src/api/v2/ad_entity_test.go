@@ -747,7 +747,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -827,7 +827,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -850,7 +850,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -927,7 +927,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1007,7 +1007,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1030,7 +1030,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1107,7 +1107,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1187,7 +1187,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1210,7 +1210,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1287,7 +1287,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1367,7 +1367,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1390,7 +1390,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1467,7 +1467,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1547,7 +1547,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1570,7 +1570,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1647,7 +1647,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1727,7 +1727,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1750,7 +1750,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1827,7 +1827,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1907,7 +1907,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -1930,7 +1930,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -2007,7 +2007,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 
 	tt := []testData{
 		{
-			name: "Error: Bad Request ParseOptionalBool",
+			name: "Error: ParseOptionalBool - Bad Request",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -2087,7 +2087,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: hydrateCounts",
+			name: "Success: hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
@@ -2110,7 +2110,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: !hydrateCounts",
+			name: "Success: !hydrateCounts - OK",
 			args: args{
 				request: &http.Request{
 					URL: &url.URL{
