@@ -27,7 +27,7 @@ const LinuxAbuse: FC = () => {
 
             <Typography variant='body2'>
                 Please refer to the abuse info for the specific granted permissions at
-                https://support.bloodhoundenterprise.io/hc/en-us/articles/17224136169371-About-BloodHound-Edges
+                https://bloodhound.specterops.io/home/articles/17224136169371-About-BloodHound-Edges
             </Typography>
         </>
     );

@@ -2,7 +2,7 @@
 title: Install and Upgrade AzureHound (Windows, Docker, or Kubernetes)
 ---
 
-<img src="/assets/community-edition-pill-tag.svg"/> 
+<img src="/assets/enterprise-edition-pill-tag.svg"/>
 
 _You will need your AzureHound Enterprise configuration file from [Create an AzureHound Configuration](/install-data-collector/install-azurehound/create-configuration) prior to beginning this process.
 
@@ -140,7 +140,7 @@ Instead of installing AzureHound as a service, it is also possible to run AzureH
 ```
     kubectl create secret generic azurehound-secret --from-literal tokenId=&lt;bloodhound enterprise token id&gt; --from-literal token=&lt;bloodhound enterprise token&gt; --from-literal keypass=&lt;private key passphrase&gt;
 ```
-3.  A sample deployment.yaml file is attached to this article [here](https://support.bloodhoundenterprise.io/assets/9326136548635).
+3.  A sample deployment.yaml file is attached to this article ([here](/assets/deployment.yaml)).
 4.  Edit the provided deployment.yaml file. Read comments and replace instances of \[ INSERT HERE \] with appropriate values
 5.  Deploy AzureHound on k8s:
 ```
