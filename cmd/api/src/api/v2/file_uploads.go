@@ -100,7 +100,7 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if fileUploadJobs, count, err := fileupload.GetAllFileUploadJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if fileUploadJobs, count, err := fileupload.GetAllIngestJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), fileUploadJobs, limit, skip, count, http.StatusOK, response)

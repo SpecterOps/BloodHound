@@ -50,7 +50,8 @@ type FileUploadData interface {
 	DeleteAllIngestTasks(ctx context.Context) error
 }
 
-func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
+// ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
+func ProcessStaleIngestJobs(ctx context.Context, db FileUploadData) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when shutting down.
 	if ctx.Err() != nil {
@@ -80,15 +81,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 	}
 }
 
-func CancelAllFileUploads(ctx context.Context, db FileUploadData) error {
-	return db.CancelAllIngestJobs(ctx)
-}
-
-func DeleteAllIngestTasks(ctx context.Context, db FileUploadData) error {
-	return db.DeleteAllIngestTasks(ctx)
-}
-
-func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
+func GetAllIngestJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	return db.GetAllIngestJobs(ctx, skip, limit, order, filter)
 }
 

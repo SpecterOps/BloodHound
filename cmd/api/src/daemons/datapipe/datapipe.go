@@ -155,7 +155,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for file upload jobs
-			fileupload.ProcessStaleFileUploadJobs(s.ctx, s.db)
+			fileupload.ProcessStaleIngestJobs(s.ctx, s.db)
 
 			// Manage nominal state transitions for file upload jobs
 			ProcessIngestedFileUploadJobs(s.ctx, s.db)
