@@ -80,7 +80,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.query.CurrentPart().currentPattern = &Pattern{}
 
 	case graph.Kinds:
-		s.treeTranslator.Push(pgsql.KindListLiteral{
+		s.treeTranslator.PushOperand(pgsql.KindListLiteral{
 			Values: typedExpression,
 		})
 
@@ -120,7 +120,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			}
 		}
 
-		s.treeTranslator.Push(binding.Parameter.Value)
+		s.treeTranslator.PushOperand(binding.Parameter.Value)
 
 	case *cypher.Variable:
 		identifier := pgsql.Identifier(typedExpression.Symbol)
@@ -128,7 +128,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		if binding, resolved := s.scope.AliasedLookup(identifier); !resolved {
 			s.SetErrorf("unable to resolve or otherwise lookup identifer %s", identifier)
 		} else {
-			s.treeTranslator.Push(binding.Identifier)
+			s.treeTranslator.PushOperand(binding.Identifier)
 		}
 
 	case *cypher.Literal:
@@ -143,7 +143,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.SetError(err)
 		} else {
 			newLiteral.Null = typedExpression.Null
-			s.treeTranslator.Push(newLiteral)
+			s.treeTranslator.PushOperand(newLiteral)
 		}
 
 	case *cypher.Parenthetical:
@@ -173,19 +173,19 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.PartialComparison:
-		s.treeTranslator.PushOperator(pgsql.Operator(typedExpression.Operator))
+		s.treeTranslator.VisitOperator(pgsql.Operator(typedExpression.Operator))
 
 	case *cypher.PartialArithmeticExpression:
-		s.treeTranslator.PushOperator(pgsql.Operator(typedExpression.Operator))
+		s.treeTranslator.VisitOperator(pgsql.Operator(typedExpression.Operator))
 
 	case *cypher.Disjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			s.treeTranslator.PushOperator(pgsql.OperatorOr)
+			s.treeTranslator.VisitOperator(pgsql.OperatorOr)
 		}
 
 	case *cypher.Conjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			s.treeTranslator.PushOperator(pgsql.OperatorAnd)
+			s.treeTranslator.VisitOperator(pgsql.OperatorAnd)
 		}
 
 	default:
@@ -206,7 +206,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.MapItem:
-		if value, err := s.treeTranslator.Pop(); err != nil {
+		if value, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
 			s.query.CurrentPart().AddProperty(typedExpression.Key, value)
@@ -247,7 +247,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		)
 
 		for idx := numExpressions - 1; idx >= 0; idx-- {
-			if nextExpression, err := s.treeTranslator.Pop(); err != nil {
+			if nextExpression, err := s.treeTranslator.PopOperand(); err != nil {
 				s.SetError(err)
 			} else {
 				if typeHint, isTypeHinted := nextExpression.(pgsql.TypeHinted); isTypeHinted {
@@ -267,12 +267,12 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		if literal.CastType == pgsql.UnsetDataType {
 			s.SetErrorf("array literal has no available type hints")
 		} else {
-			s.treeTranslator.Push(literal)
+			s.treeTranslator.PushOperand(literal)
 		}
 
 	case *cypher.SortItem:
 		// Rewrite the order by constraints
-		if lookupExpression, err := s.treeTranslator.Pop(); err != nil {
+		if lookupExpression, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else if err := RewriteFrameBindings(s.scope, lookupExpression); err != nil {
 			s.SetError(err)
@@ -286,38 +286,38 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.KindMatcher:
-		if matcher, err := s.treeTranslator.Pop(); err != nil {
+		if matcher, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			s.treeTranslator.Push(matcher)
+			s.treeTranslator.PushOperand(matcher)
 		}
 
 	case *cypher.Parenthetical:
 		// Pull the sub-expression we wrap
-		if wrappedExpression, err := s.treeTranslator.Pop(); err != nil {
+		if wrappedExpression, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else if parenthetical, err := s.treeTranslator.PopParenthetical(); err != nil {
 			s.SetError(err)
 		} else {
 			parenthetical.Expression = wrappedExpression
-			s.treeTranslator.Push(*parenthetical)
+			s.treeTranslator.PushOperand(*parenthetical)
 		}
 
 	case *cypher.FunctionInvocation:
 		s.translateFunction(typedExpression)
 
 	case *cypher.UnaryAddOrSubtractExpression:
-		if operand, err := s.treeTranslator.Pop(); err != nil {
+		if operand, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			s.treeTranslator.Push(&pgsql.UnaryExpression{
+			s.treeTranslator.PushOperand(&pgsql.UnaryExpression{
 				Operator: pgsql.Operator(typedExpression.Operator),
 				Operand:  operand,
 			})
 		}
 
 	case *cypher.Negation:
-		if operand, err := s.treeTranslator.Pop(); err != nil {
+		if operand, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
 			for cursor := operand; cursor != nil; {
@@ -361,7 +361,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 				break
 			}
 
-			s.treeTranslator.Push(&pgsql.UnaryExpression{
+			s.treeTranslator.PushOperand(&pgsql.UnaryExpression{
 				Operator: pgsql.OperatorNot,
 				Operand:  operand,
 			})
@@ -379,25 +379,25 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.PartialComparison:
-		if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+		if err := s.treeTranslator.CompleteBinaryExpression(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.PartialArithmeticExpression:
-		if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+		if err := s.treeTranslator.CompleteBinaryExpression(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.Disjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorOr); err != nil {
+			if err := s.treeTranslator.CompleteBinaryExpression(s.scope, pgsql.OperatorOr); err != nil {
 				s.SetError(err)
 			}
 		}
 
 	case *cypher.Conjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorAnd); err != nil {
+			if err := s.treeTranslator.CompleteBinaryExpression(s.scope, pgsql.OperatorAnd); err != nil {
 				s.SetError(err)
 			}
 		}

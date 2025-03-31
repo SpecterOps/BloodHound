@@ -38,7 +38,7 @@ const (
 	selectivityWeightNotEquals = 1
 
 	// Disjunctions expand search space by adding a secondary, conditional operation
-	selectivityWeightDisjunction = -10
+	selectivityWeightDisjunction = -100
 )
 
 // knownNodePropertySelectivity is a hack to enable the selectivity measurement to take advantage of known property indexes
@@ -46,17 +46,57 @@ const (
 //
 // Eventually, this should be replaced by a tool that can introspect a graph schema and derive this map.
 var knownNodePropertySelectivity = map[string]int{
-	"objectid": selectivityWeightUniqueNodeProperty, // Object ID contains a unique constraint giving this a high degree of selectivity
-	"name":     selectivityWeightUniqueNodeProperty, // Name contains a unique constraint giving this a high degree of selectivity
+	"objectid":    selectivityWeightUniqueNodeProperty, // Object ID contains a unique constraint giving this a high degree of selectivity
+	"name":        selectivityWeightUniqueNodeProperty, // Name contains a unique constraint giving this a high degree of selectivity
+	"system_tags": selectivityWeightNarrowSearch,       // Searches that use the system_tags property are likely to have a higher degree of selectivity.
 }
 
 type measureSelectivityVisitor struct {
-	scope       *Scope
-	selectivity int
+	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+
+	scope            *Scope
+	selectivityStack []int
 }
 
-func (s *measureSelectivityVisitor) Measure(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+func newMeasureSelectivityVisitor(scope *Scope) *measureSelectivityVisitor {
+	return &measureSelectivityVisitor{
+		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
+		scope:               scope,
+		selectivityStack:    []int{0},
+	}
+}
+
+func (s *measureSelectivityVisitor) Selectivity() int {
+	return s.selectivityStack[0]
+}
+
+func (s *measureSelectivityVisitor) popSelectivity() int {
+	value := s.Selectivity()
+	s.selectivityStack = s.selectivityStack[:len(s.selectivityStack)-1]
+
+	return value
+}
+
+func (s *measureSelectivityVisitor) pushSelectivity(value int) {
+	s.selectivityStack = append(s.selectivityStack, value)
+}
+
+func (s *measureSelectivityVisitor) addSelectivity(value int) {
+	if len(s.selectivityStack) == 0 {
+		s.pushSelectivity(value)
+	} else {
+		s.selectivityStack[len(s.selectivityStack)-1] += value
+	}
+}
+
+func (s *measureSelectivityVisitor) Enter(node pgsql.SyntaxNode) {
 	switch typedNode := node.(type) {
+	case *pgsql.UnaryExpression:
+		switch typedNode.Operator {
+		case pgsql.OperatorNot:
+			s.pushSelectivity(0)
+		}
+
 	case *pgsql.BinaryExpression:
 		switch typedLOperand := typedNode.LOperand.(type) {
 		case pgsql.CompoundIdentifier:
@@ -65,7 +105,7 @@ func (s *measureSelectivityVisitor) Measure(node pgsql.SyntaxNode, errorHandler 
 				case pgsql.ColumnID:
 					// Identifier references typically have high selectivity. This might be a nested reference, reducing the
 					// effectiveness of the heuristic but the benefits outweigh this deficiency
-					s.selectivity += selectivityWeightEntityIDReference
+					s.addSelectivity(selectivityWeightEntityIDReference)
 				}
 			}
 		}
@@ -77,49 +117,60 @@ func (s *measureSelectivityVisitor) Measure(node pgsql.SyntaxNode, errorHandler 
 				case pgsql.ColumnID:
 					// Identifier references typically have high selectivity. This might be a nested reference, reducing the
 					// effectiveness of the heuristic but the benefits outweigh this deficiency
-					s.selectivity += selectivityWeightEntityIDReference
+					s.addSelectivity(selectivityWeightEntityIDReference)
 				}
 			}
 		}
 
 		switch typedNode.Operator {
 		case pgsql.OperatorOr:
-			s.selectivity -= selectivityWeightDisjunction
+			s.addSelectivity(selectivityWeightDisjunction)
 
 		case pgsql.OperatorNotEquals:
-			s.selectivity += selectivityWeightNotEquals
+			s.addSelectivity(selectivityWeightNotEquals)
 
 		case pgsql.OperatorAnd:
-			s.selectivity += selectivityWeightConjunction
+			s.addSelectivity(selectivityWeightConjunction)
 
 		case pgsql.OperatorLessThan, pgsql.OperatorGreaterThan, pgsql.OperatorLessThanOrEqualTo, pgsql.OperatorGreaterThanOrEqualTo:
-			s.selectivity += selectivityWeightRangeComparison
+			s.addSelectivity(selectivityWeightRangeComparison)
 
 		case pgsql.OperatorLike, pgsql.OperatorILike, pgsql.OperatorRegexMatch, pgsql.OperatorSimilarTo:
-			s.selectivity += selectivityWeightStringSearch
+			s.addSelectivity(selectivityWeightStringSearch)
 
 		case pgsql.OperatorIn, pgsql.OperatorEquals, pgsql.OperatorIs, pgsql.OperatorPGArrayOverlap, pgsql.OperatorArrayOverlap:
-			s.selectivity += selectivityWeightNarrowSearch
+			s.addSelectivity(selectivityWeightNarrowSearch)
 
 		case pgsql.OperatorJSONField, pgsql.OperatorJSONTextField, pgsql.OperatorPropertyLookup:
 			if propertyLookup, err := binaryExpressionToPropertyLookup(typedNode); err != nil {
-				errorHandler.SetError(err)
+				s.SetError(err)
 			} else {
 				// Lookup the reference
 				leftIdentifier := propertyLookup.Reference.Root()
 
 				if binding, bound := s.scope.Lookup(leftIdentifier); !bound {
-					errorHandler.SetErrorf("unable to lookup identifier %s", leftIdentifier)
+					s.SetErrorf("unable to lookup identifier %s", leftIdentifier)
 				} else {
 					switch binding.DataType {
 					case pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode, pgsql.NodeComposite:
 						// This is a node property, search through the available node property selectivity weights
 						if selectivity, hasKnownSelectivity := knownNodePropertySelectivity[propertyLookup.Field]; hasKnownSelectivity {
-							s.selectivity += selectivity
+							s.addSelectivity(selectivity)
 						}
 					}
 				}
 			}
+		}
+	}
+}
+
+func (s *measureSelectivityVisitor) Exit(node pgsql.SyntaxNode) {
+	switch typedNode := node.(type) {
+	case *pgsql.UnaryExpression:
+		switch typedNode.Operator {
+		case pgsql.OperatorNot:
+			selectivity := s.popSelectivity()
+			s.addSelectivity(-selectivity)
 		}
 	}
 }
@@ -134,15 +185,16 @@ func (s *measureSelectivityVisitor) Measure(node pgsql.SyntaxNode, errorHandler 
 //
 // Many numbers are magic values selected based on implementor's perception of selectivity of certain operators.
 func MeasureSelectivity(scope *Scope, owningIdentifierBound bool, expression pgsql.Expression) (int, error) {
-	visitor := &measureSelectivityVisitor{
-		scope:       scope,
-		selectivity: 0,
-	}
+	visitor := newMeasureSelectivityVisitor(scope)
 
 	// If the identifier is reified at this stage in the query then it's already selected
 	if owningIdentifierBound {
-		visitor.selectivity += 1000
+		visitor.addSelectivity(selectivityWeightNarrowSearch)
 	}
 
-	return visitor.selectivity, walk.PgSQL(expression, walk.NewSimpleVisitor[pgsql.SyntaxNode](visitor.Measure))
+	if err := walk.PgSQL(expression, visitor); err != nil {
+		return 0, err
+	}
+
+	return visitor.Selectivity(), nil
 }

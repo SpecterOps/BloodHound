@@ -423,7 +423,7 @@ func (s *Translator) buildTailProjection() error {
 func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cypher.ProjectionItem) error {
 	if alias, hasAlias, err := extractIdentifierFromCypherExpression(projectionItem); err != nil {
 		return err
-	} else if nextExpression, err := s.treeTranslator.Pop(); err != nil {
+	} else if nextExpression, err := s.treeTranslator.PopOperand(); err != nil {
 		return err
 	} else if selectItem, isProjection := nextExpression.(pgsql.SelectItem); !isProjection {
 		s.SetErrorf("invalid type for select item: %T", nextExpression)

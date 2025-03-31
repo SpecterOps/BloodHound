@@ -21,6 +21,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"io"
 	"io/fs"
 	"os"
@@ -188,6 +189,33 @@ func (s *TranslationTestCase) Assert(t *testing.T, expectedSQL string, kindMappe
 			if s.PgSQLParams != nil {
 				require.Equal(t, s.PgSQLParams, translation.Parameters)
 			}
+		}
+	}
+}
+
+func (s *TranslationTestCase) AssertLive(ctx context.Context, t *testing.T, driver *pg.Driver) {
+	if regularQuery, err := frontend.ParseCypher(frontend.NewContext(), s.Cypher); err != nil {
+		t.Fatalf("Failed to compile cypher query: %s - %v", s.Cypher, err)
+	} else {
+		if s.CypherParams != nil {
+			if err := walk.Cypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedNode := node.(type) {
+				case *cypher.Parameter:
+					if value, hasValue := s.CypherParams[typedNode.Symbol]; hasValue {
+						typedNode.Value = value
+					}
+				}
+			})); err != nil {
+				t.Fatalf("Error attempting to set parameter values in cypher query: %v", err)
+			}
+		}
+
+		if translation, err := translate.Translate(context.Background(), regularQuery, driver.KindMapper(), s.CypherParams); err != nil {
+			t.Fatalf("Failed to translate cypher query: %s - %v", s.Cypher, err)
+		} else if formattedQuery, err := translate.Translated(translation); err != nil {
+			t.Fatalf("Failed to format SQL translatedQuery: %v", err)
+		} else {
+			require.Nil(t, driver.Run(ctx, "explain " + formattedQuery, translation.Parameters))
 		}
 	}
 }
