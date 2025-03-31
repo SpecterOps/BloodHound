@@ -133,3 +133,19 @@ export const createAssetGroupMembersCount = (selectorId: number = 0) => {
 
     return data;
 };
+
+export const createAssetGroupMemberInfo = (assetGroupId: number, memberId: number | undefined) => {
+    const data = [];
+
+    for (let i = 0; i < 10; i++) {
+        const name = `selector-${memberId && memberId + i}`;
+
+        data.push({
+            id: assetGroupId,
+            member_id: memberId || 0,
+            name: name,
+        });
+    }
+
+    return data;
+};

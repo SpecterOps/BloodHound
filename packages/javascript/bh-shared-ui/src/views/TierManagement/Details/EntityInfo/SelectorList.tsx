@@ -1,12 +1,25 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { useState } from 'react';
+import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components/AppIcon';
+import { apiClient } from '../../../../utils';
+import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
-const selectors = ['Selector A', 'Selector B', 'Selector C'];
+type SelectorListProps = {
+    selectedObjectData: { selectedTier: number; selectedObject: number };
+};
 
-const SelectorList = () => {
+const SelectorList: React.FC<SelectorListProps> = ({ selectedObjectData }) => {
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
+
+    const selectorsQuery = useQuery(['asset-group-member-info'], () => {
+        return apiClient
+            .getAssetGroupLabelMemberInfo(selectedObjectData.selectedTier, selectedObjectData.selectedObject)
+            .then((res) => {
+                return res.data.data['member'];
+            });
+    });
 
     const handleMenuClick = (index: number) => {
         setMenuOpen((prev) => ({
@@ -19,46 +32,61 @@ const SelectorList = () => {
     const handleEditClick = () => {};
     const handleDeleteClick = () => {};
 
-    return (
-        <EntityInfoCollapsibleSection label='Selectors' count={selectors.length}>
-            {selectors.map((selector, index) => {
-                return (
-                    <div
-                        className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA] dark:bg-[#272727]' : ''}`}
-                        key={index}>
-                        <Popover open={!!menuOpen[index]}>
-                            <PopoverTrigger asChild>
-                                <button onClick={() => handleMenuClick(index)}>
-                                    <AppIcon.VerticalEllipsis />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                                className='w-80 px-4 py-2 flex flex-col gap-2'
-                                onInteractOutside={() => setMenuOpen({})}
-                                onEscapeKeyDown={() => setMenuOpen({})}>
-                                <div
-                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
-                                    onClick={handleViewClick}>
-                                    View
-                                </div>
-                                <div
-                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
-                                    onClick={handleEditClick}>
-                                    Edit
-                                </div>
-                                <div
-                                    className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
-                                    onClick={handleDeleteClick}>
-                                    Delete
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                        {selector}
-                    </div>
-                );
-            })}
-        </EntityInfoCollapsibleSection>
-    );
+    if (selectorsQuery.isLoading) {
+        return itemSkeletons.map((skeleton, index) => {
+            return skeleton('object-selector', index);
+        });
+    }
+    if (selectorsQuery.isError) {
+        return (
+            <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+                <span className='text-base'>There was an error fetching this data</span>
+            </li>
+        );
+    }
+
+    if (selectorsQuery.isSuccess) {
+        return (
+            <EntityInfoCollapsibleSection label='Selectors' count={selectorsQuery.data.length}>
+                {selectorsQuery.data.map((selector, index) => {
+                    return (
+                        <div
+                            className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA] dark:bg-[#272727]' : ''}`}
+                            key={index}>
+                            <Popover open={!!menuOpen[index]}>
+                                <PopoverTrigger asChild>
+                                    <button onClick={() => handleMenuClick(index)}>
+                                        <AppIcon.VerticalEllipsis />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className='w-80 px-4 py-2 flex flex-col gap-2'
+                                    onInteractOutside={() => setMenuOpen({})}
+                                    onEscapeKeyDown={() => setMenuOpen({})}>
+                                    <div
+                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                        onClick={handleViewClick}>
+                                        View
+                                    </div>
+                                    <div
+                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                        onClick={handleEditClick}>
+                                        Edit
+                                    </div>
+                                    <div
+                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                        onClick={handleDeleteClick}>
+                                        Delete
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                            {selector.name}
+                        </div>
+                    );
+                })}
+            </EntityInfoCollapsibleSection>
+        );
+    }
 };
 
 export default SelectorList;

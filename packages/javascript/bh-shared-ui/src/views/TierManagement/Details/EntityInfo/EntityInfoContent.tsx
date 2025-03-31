@@ -24,12 +24,13 @@ export interface EntityInfoContentProps {
     id: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
+    selectedObjectData?: any;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
         <Box>
-            <EntityObjectInformation {...props} /> <SelectorList />
+            <EntityObjectInformation {...props} /> <SelectorList selectedObjectData={props.selectedObjectData} />
         </Box>
     );
 };

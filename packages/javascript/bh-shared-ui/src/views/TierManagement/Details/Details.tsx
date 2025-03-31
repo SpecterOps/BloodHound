@@ -55,6 +55,7 @@ type SelectedDetailsProps = {
     id: number;
     data?: AssetGroupTagSelectorNode | AssetGroupTag | AssetGroupTagSelector;
     cypher?: boolean;
+    selectedObjectData?: { selectedTier: number; selectedObject: number | null };
 };
 
 const isObject = (data: any): data is AssetGroupTagSelectorNode => {
@@ -62,7 +63,7 @@ const isObject = (data: any): data is AssetGroupTagSelectorNode => {
     return 'node_id' in objectData;
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data }) => {
+const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data, selectedObjectData }) => {
     if (isObject(data)) {
         const selectedNode = {
             id: '3',
@@ -73,7 +74,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data }) =
         };
         return (
             <>
-                <EntityInfoPanel selectedNode={selectedNode} />
+                <EntityInfoPanel selectedNode={selectedNode} selectedObjectData={selectedObjectData} />
             </>
         );
     }
@@ -90,7 +91,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data }) =
             return (
                 <>
                     <DynamicDetails data={data} />
-                    {/* <ObjectCountPanel data={objectsCount} /> */}
+                    <ObjectCountPanel selectedTier={id} />
                 </>
             );
     }
@@ -211,7 +212,7 @@ const Details: FC = () => {
                 </div>
             </div>
             <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg max-h-[564px]'>
                     <div className='min-h-96 grow-0 basis-1/3'>
                         <DetailsList
                             title='Tiers'
@@ -258,7 +259,13 @@ const Details: FC = () => {
                     </div>
                 </div>
                 <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails type={type} id={id} cypher={showCypher} data={data} />
+                    <SelectedDetails
+                        type={type}
+                        id={id}
+                        cypher={showCypher}
+                        data={data}
+                        selectedObjectData={{ selectedObject, selectedTier }}
+                    />
                 </div>
             </div>
         </div>

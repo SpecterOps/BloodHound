@@ -1,15 +1,44 @@
-// import { render, screen } from '../../../test-utils';
-// import ObjectCountPanel from './ObjectCountPanel';
+import { render, screen } from '@testing-library/react';
+import { useQuery } from 'react-query';
+import { vi } from 'vitest';
+import ObjectCountPanel from './ObjectCountPanel';
 
-// const testCountsResponse = {
-//     counts: [{ name: 'Test Object', count: '10' }],
-// };
+vi.mock('react-query', () => ({
+    useQuery: vi.fn(),
+}));
 
-// describe('ObjectCountPanel', () => {
-//     it('renders counts panel for a selected tier', () => {
-//         render(<ObjectCountPanel data={testCountsResponse} />);
+vi.mock('../../../utils', () => ({
+    apiClient: {
+        getAssetGroupMembersCount: vi.fn(),
+    },
+}));
 
-//         expect(screen.getByText('Test Object')).toBeInTheDocument();
-//         expect(screen.getByText('10')).toBeInTheDocument();
-//     });
-// });
+describe('ObjectCountPanel', () => {
+    it('renders error message on error', () => {
+        (useQuery as jest.Mock).mockReturnValue({ isError: true });
+        render(<ObjectCountPanel selectedTier={1} />);
+
+        expect(screen.getByText('There was an error fetching this data')).toBeInTheDocument();
+    });
+
+    it('renders the total count and object counts on success', () => {
+        (useQuery as jest.Mock).mockReturnValue({
+            isSuccess: true,
+            data: {
+                total_count: 100,
+                counts: { 'Object A': 50, 'Object B': 30, 'Object C': 20 },
+            },
+        });
+
+        render(<ObjectCountPanel selectedTier={1} />);
+
+        expect(screen.getByText('Total Count')).toBeInTheDocument();
+        expect(screen.getByText('100')).toBeInTheDocument();
+        expect(screen.getByText('Object A')).toBeInTheDocument();
+        expect(screen.getByText('50')).toBeInTheDocument();
+        expect(screen.getByText('Object B')).toBeInTheDocument();
+        expect(screen.getByText('30')).toBeInTheDocument();
+        expect(screen.getByText('Object C')).toBeInTheDocument();
+        expect(screen.getByText('20')).toBeInTheDocument();
+    });
+});

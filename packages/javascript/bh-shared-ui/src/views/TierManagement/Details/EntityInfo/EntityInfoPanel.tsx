@@ -33,10 +33,11 @@ export type SelectedNode = {
 
 interface EntityInfoPanelProps {
     selectedNode: SelectedNode | null;
+    selectedObjectData: any;
     sx?: SxProps;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selectedObjectData, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();
@@ -71,6 +72,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        selectedObjectData={selectedObjectData}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
