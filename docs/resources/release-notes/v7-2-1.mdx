@@ -1,0 +1,45 @@
+---
+title: "2025-04-01 Release Notes (v7.2.1)"
+---
+
+## Summary
+
+- **BloodHound (v7.2.1)**
+  - New and Improved Features
+    - Added the "Composition" accordion to CoerceandRelayNTLMtoSMB edges to aid defenders in remediation.
+    - Renamed "Relay Targets" to "Coercion Targets" edge accordion on CoerceandRelayNTLMtoSMB to more accurately describe the contained objects.
+  - Bug Fixes
+    - Resolved an issue where "Composition," "Relay Targets," or "Coercion Targets" accordions would fail immediately in very large environments.
+    - Note: CoerceandRelayNTLMtoLDAP and CoerceandRelayNTLMtoLDAPs post-processing was fixed in v7.2.0, apologies for the missed release note.
+    - Performance improvements on `shortestpath` and `allshortestpath`queries in Cypher on PostgreSQL graph database backends.
+- **SharpHound (v2.6.2)**
+  - New and Improved Features
+    - Added support for properly filtering NTLM relay edges for members of the Protected Users group.
+  - Bug Fixes
+    - SMB Signing requirements will now be reported correctly
+- **AzureHound (v2.3.0)**
+  - _No new release._
+
+## BloodHound (v7.2.1)
+
+### New and Improved Features
+
+- 
+
+### Bug Fixes
+
+- 
+
+## SharpHound (v2.6.2)
+
+### New and Improved Features
+
+- 
+
+### Bug Fixes
+
+- 
+
+## AzureHound (v2.3.0)
+
+_No new release._
