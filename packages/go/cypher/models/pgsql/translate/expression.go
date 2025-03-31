@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
@@ -184,7 +185,6 @@ func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataT
 		return pgsql.NewTypeCast(propertyLookup, dataType)
 	}
 }
-
 
 func lookupRequiresElementType(typeHint pgsql.DataType, operator pgsql.Operator, otherOperand pgsql.SyntaxNode) bool {
 	if typeHint.IsArrayType() {

@@ -21,7 +21,6 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"io"
 	"io/fs"
 	"os"
@@ -29,6 +28,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 
 	"cuelang.org/go/pkg/regexp"
 	"github.com/specterops/bloodhound/cypher/frontend"
@@ -215,7 +216,7 @@ func (s *TranslationTestCase) AssertLive(ctx context.Context, t *testing.T, driv
 		} else if formattedQuery, err := translate.Translated(translation); err != nil {
 			t.Fatalf("Failed to format SQL translatedQuery: %v", err)
 		} else {
-			require.Nil(t, driver.Run(ctx, "explain " + formattedQuery, translation.Parameters))
+			require.Nil(t, driver.Run(ctx, "explain "+formattedQuery, translation.Parameters))
 		}
 	}
 }
