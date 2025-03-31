@@ -17,9 +17,9 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: GetKennelEnterpriseManifest
-  summary: Get kennel enterprise manifest
-  description: Retrieves a manifest of enterprise collectors
+  operationId: GetKennelManifest
+  summary: Get kennel manifest
+  description: Retrieves a manifest of community collectors
   tags:
     - Collectors
     - Enterprise
@@ -32,7 +32,7 @@ get:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.kennel-enterprise-manifest.yaml'
+                $ref: './../schemas/model.kennel-manifest.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

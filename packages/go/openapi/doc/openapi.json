@@ -2407,6 +2407,48 @@
         }
       }
     },
+    "/api/v2/kennel/manifest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelManifest",
+        "summary": "Get kennel manifest",
+        "description": "Retrieves a manifest of community collectors",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.kennel-manifest"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/kennel/enterprise-manifest": {
       "parameters": [
         {
@@ -2430,7 +2472,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.kennel-manifest"
+                      "$ref": "#/components/schemas/model.kennel-enterprise-manifest"
                     }
                   }
                 }
@@ -15257,6 +15299,23 @@
             }
           },
           "azurehound": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          }
+        }
+      },
+      "model.kennel-enterprise-manifest": {
+        "type": "object",
+        "properties": {
+          "sharphound_enterprise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          },
+          "azurehound_enterprise": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.kennel-version"
