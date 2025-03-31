@@ -70,6 +70,7 @@ const AssetGroupSelectorObjectSelect: FC<{
                             />
                         </div>
                         <Button
+                            data-testid='selector-object-search_edit-button'
                             className='rounded-full ml-5 mt-1'
                             variant={'icon'}
                             onClick={() => setShowDeleteIcons((prev) => !prev)}
