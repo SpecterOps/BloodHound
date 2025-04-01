@@ -29,7 +29,10 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    GetCollectorsResponse,
+    GetCommunityCollectorsResponse,
     GetConfigurationResponse,
+    GetEnterpriseCollectorsResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
@@ -855,13 +858,13 @@ class BHEAPIClient {
         this.baseClient.put(`/api/v2/features/${flagId}/toggle`, options);
 
     getCollectors = (collectorType: types.CommunityCollectorType, options?: types.RequestOptions) =>
-        this.baseClient.get<types.GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
+        this.baseClient.get<GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
-    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetCommunityCollectorsResponse>> =>
-        this.baseClient.get<types.GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
+    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetCommunityCollectorsResponse>> =>
+        this.baseClient.get<GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
 
-    getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<types.GetEnterpriseCollectorsResponse>> =>
-        this.baseClient.get<types.GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
+    getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
+        this.baseClient.get<GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
 
     downloadCollector = (collectorType: types.CommunityCollectorType, version: string, options?: types.RequestOptions) =>
         this.baseClient.get(
