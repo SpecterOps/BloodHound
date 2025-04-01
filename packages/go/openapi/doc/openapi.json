@@ -4419,7 +4419,15 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selectors"
+                      "type": "object",
+                      "properties": {
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -4437,6 +4445,9 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -4460,8 +4471,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "data": {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                  "name": {
+                    "type": "string"
+                  },
+                  "seeds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                    }
                   }
                 }
               }
@@ -4495,6 +4512,9 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -15708,6 +15728,9 @@
       "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
+          "selector_id": {
+            "type": "integer"
+          },
           "data": {
             "type": "integer"
           },
@@ -15719,34 +15742,33 @@
       "model.asset-group-tags-selector": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
-          {
             "type": "object",
             "properties": {
-              "asset_group_tag_id": {
+              "id": {
                 "type": "integer"
               },
-              "created_by": {
-                "type": "string"
+              "asset_group_tag_id": {
+                "type": "integer"
               },
               "created_at": {
                 "type": "string",
                 "format": "date-time"
               },
-              "updated_by": {
+              "created_by": {
                 "type": "string"
               },
               "updated_at": {
                 "type": "string",
                 "format": "date-time"
               },
+              "updated_by": {
+                "type": "string"
+              },
               "disabled_at": {
-                "type": "string",
-                "format": "date-time"
+                "$ref": "#/components/schemas/null.time"
               },
               "disabled_by": {
-                "type": "string"
+                "$ref": "#/components/schemas/null.string"
               },
               "name": {
                 "type": "string"
@@ -15754,10 +15776,10 @@
               "description": {
                 "type": "string"
               },
-              "is_default": {
+              "auto_certify": {
                 "type": "boolean"
               },
-              "auto_certify": {
+              "is_default": {
                 "type": "boolean"
               },
               "allow_disable": {
@@ -15772,17 +15794,6 @@
             }
           }
         ]
-      },
-      "model.asset-group-tags-selectors": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector"
-            }
-          }
-        }
       },
       "model.bh-graph.item-border": {
         "type": "object",
