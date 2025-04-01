@@ -13344,7 +13344,7 @@
                     {
                       "allOf": [
                         {
-                          "$ref": "#/components/schemas/api.response.pagination"
+                          "$ref": "./../schemas/api.response.pagination.yaml"
                         },
                         {
                           "type": "object",
@@ -13354,7 +13354,7 @@
                               "items": {
                                 "allOf": [
                                   {
-                                    "$ref": "#/components/schemas/model.relationship-finding"
+                                    "$ref": "./../schemas/model.relationship-finding.yaml"
                                   },
                                   {
                                     "type": "object",
@@ -13374,7 +13374,7 @@
                     {
                       "allOf": [
                         {
-                          "$ref": "#/components/schemas/api.response.pagination"
+                          "$ref": "./../schemas/api.response.pagination.yaml"
                         },
                         {
                           "type": "object",
@@ -13384,7 +13384,7 @@
                               "items": {
                                 "allOf": [
                                   {
-                                    "$ref": "#/components/schemas/model.list-finding"
+                                    "$ref": "./../schemas/model.list-finding.yaml"
                                   },
                                   {
                                     "type": "object",
@@ -13440,7 +13440,7 @@
                             "additionalProp3": {}
                           },
                           "ComboGraphRelationID": {
-                            "int64": 0,
+                            "int64": "0,",
                             "valid": true
                           },
                           "Finding": "string",
@@ -13493,7 +13493,7 @@
                             "additionalProp3": {}
                           },
                           "ComboGraphRelationID": {
-                            "int64": 0,
+                            "int64": "0,",
                             "valid": true
                           },
                           "Finding": "string",
@@ -13504,7 +13504,8 @@
                           "ImpactCount": 0,
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13537,7 +13538,8 @@
                           "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "Severity": "high"
+                          "Severity": "high",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13570,16 +13572,15 @@
                           "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
                   }
                 }
               }
-            }
-          },
-          "400": {
+            },
             "$ref": "#/components/responses/bad-request"
           },
           "401": {
@@ -16893,6 +16894,92 @@
           ""
         ]
       },
+      "model.risk-counts": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "CompositeRisk": {
+                "type": "number",
+                "format": "double"
+              },
+              "FindingCount": {
+                "type": "integer"
+              },
+              "ImpactedAssetCount": {
+                "type": "integer"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "model.list-finding": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "Principal": {
+                "type": "string"
+              },
+              "PrincipalKind": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Props": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "AcceptedUntil": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "ImpactPercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ImpactCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "Severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "moderate",
+                  "low",
+                  ""
+                ]
+              }
+            }
+          }
+        ]
+      },
       "model.relationship-finding": {
         "allOf": [
           {
@@ -16975,92 +17062,6 @@
                   "low",
                   ""
                 ]
-              }
-            }
-          }
-        ]
-      },
-      "model.list-finding": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Principal": {
-                "type": "string"
-              },
-              "PrincipalKind": {
-                "type": "string"
-              },
-              "Finding": {
-                "type": "string"
-              },
-              "DomainSID": {
-                "type": "string"
-              },
-              "Props": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object"
-                }
-              },
-              "AcceptedUntil": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "ImpactPercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Severity": {
-                "type": "string",
-                "enum": [
-                  "critical",
-                  "high",
-                  "moderate",
-                  "low",
-                  ""
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "model.risk-counts": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int64.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "CompositeRisk": {
-                "type": "number",
-                "format": "double"
-              },
-              "FindingCount": {
-                "type": "integer"
-              },
-              "ImpactedAssetCount": {
-                "type": "integer"
-              },
-              "DomainSID": {
-                "type": "string"
-              },
-              "Finding": {
-                "type": "string"
               }
             }
           }
