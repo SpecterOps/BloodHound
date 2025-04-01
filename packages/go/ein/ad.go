@@ -146,10 +146,10 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
 		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
 		itemProps[ad.HasVulnerableEndpoint.String()] = true
 	} else if len(httpEndpoints) > 0 {
-		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HTTPEnrollmentEndpoints.String()] = httpEndpoints
 		itemProps[ad.HasVulnerableEndpoint.String()] = true
 	} else if hasCollectedData {
-		//If we have collected data but no endpoints, we can mark this enterprise CA as not having a vulnerable endpoint
+		// If we have collected data but no endpoints, we can mark this enterprise CA as not having a vulnerable endpoint
 		itemProps[ad.HasVulnerableEndpoint.String()] = false
 	}
 
