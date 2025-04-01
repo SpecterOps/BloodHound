@@ -13344,7 +13344,7 @@
                     {
                       "allOf": [
                         {
-                          "$ref": "./../schemas/api.response.pagination.yaml"
+                          "$ref": "#/components/schemas/api.response.pagination"
                         },
                         {
                           "type": "object",
@@ -13352,19 +13352,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "./../schemas/model.relationship-finding.yaml"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.relationship-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13374,7 +13368,7 @@
                     {
                       "allOf": [
                         {
-                          "$ref": "./../schemas/api.response.pagination.yaml"
+                          "$ref": "#/components/schemas/api.response.pagination"
                         },
                         {
                           "type": "object",
@@ -13382,19 +13376,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "./../schemas/model.list-finding.yaml"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.list-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13440,7 +13428,7 @@
                             "additionalProp3": {}
                           },
                           "ComboGraphRelationID": {
-                            "int64": "0,",
+                            "int64": 0,
                             "valid": true
                           },
                           "Finding": "string",
@@ -13493,7 +13481,7 @@
                             "additionalProp3": {}
                           },
                           "ComboGraphRelationID": {
-                            "int64": "0,",
+                            "int64": 0,
                             "valid": true
                           },
                           "Finding": "string",
@@ -13514,9 +13502,9 @@
                     "summary": "Butterfly List Finding",
                     "description": "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13548,9 +13536,9 @@
                     "summary": "Metatree List Finding",
                     "description": "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13580,7 +13568,9 @@
                   }
                 }
               }
-            },
+            }
+          },
+          "400": {
             "$ref": "#/components/responses/bad-request"
           },
           "401": {
@@ -16894,92 +16884,6 @@
           ""
         ]
       },
-      "model.risk-counts": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int64.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "CompositeRisk": {
-                "type": "number",
-                "format": "double"
-              },
-              "FindingCount": {
-                "type": "integer"
-              },
-              "ImpactedAssetCount": {
-                "type": "integer"
-              },
-              "DomainSID": {
-                "type": "string"
-              },
-              "Finding": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
-      "model.list-finding": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.components.int32.id"
-          },
-          {
-            "$ref": "#/components/schemas/model.components.timestamps"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "Principal": {
-                "type": "string"
-              },
-              "PrincipalKind": {
-                "type": "string"
-              },
-              "Finding": {
-                "type": "string"
-              },
-              "DomainSID": {
-                "type": "string"
-              },
-              "Props": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object"
-                }
-              },
-              "AcceptedUntil": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "ImpactPercentage": {
-                "type": "number",
-                "format": "double"
-              },
-              "ImpactCount": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "Severity": {
-                "type": "string",
-                "enum": [
-                  "critical",
-                  "high",
-                  "moderate",
-                  "low",
-                  ""
-                ]
-              }
-            }
-          }
-        ]
-      },
       "model.relationship-finding": {
         "allOf": [
           {
@@ -17062,6 +16966,92 @@
                   "low",
                   ""
                 ]
+              }
+            }
+          }
+        ]
+      },
+      "model.list-finding": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int32.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "Principal": {
+                "type": "string"
+              },
+              "PrincipalKind": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Props": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "AcceptedUntil": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "ImpactPercentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "ImpactCount": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "Severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "moderate",
+                  "low",
+                  ""
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "model.risk-counts": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.components.int64.id"
+          },
+          {
+            "$ref": "#/components/schemas/model.components.timestamps"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "CompositeRisk": {
+                "type": "number",
+                "format": "double"
+              },
+              "FindingCount": {
+                "type": "integer"
+              },
+              "ImpactedAssetCount": {
+                "type": "integer"
+              },
+              "DomainSID": {
+                "type": "string"
+              },
+              "Finding": {
+                "type": "string"
               }
             }
           }
