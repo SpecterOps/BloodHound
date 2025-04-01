@@ -136,8 +136,9 @@ export interface AssetGroupTagSelectorNode {
     node_id: string;
     certified: AssetGroupTagCertifiedValues;
     certified_by: string | System | null;
+    properties: Record<string, any>;
+    type: string;
     id: number;
-    name: string;
 }
 
 export interface AssetGroupTagMemberInfo {
