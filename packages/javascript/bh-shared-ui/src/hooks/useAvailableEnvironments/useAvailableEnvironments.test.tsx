@@ -59,7 +59,7 @@ describe('useAvailableEnvironments', () => {
         });
     });
 
-    describe('useEnvironment', () => {
+    describe('useSelectedEnvironment', () => {
         it('returns the full environment for the environmentid passed', async () => {
             const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id));
 
