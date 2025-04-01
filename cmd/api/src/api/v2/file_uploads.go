@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 
-	// ingestService "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
