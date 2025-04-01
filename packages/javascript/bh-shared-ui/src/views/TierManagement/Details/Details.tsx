@@ -20,7 +20,6 @@ import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
-import { ActiveDirectoryNodeKind } from '../../../graphSchema';
 import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
 import { apiClient } from '../../../utils';
 import { DetailsList } from './DetailsList';
@@ -29,33 +28,14 @@ import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 import { MembersList } from './MembersList';
 import ObjectCountPanel from './ObjectCountPanel';
 
-const innerDetail = (
-    selectedObjectId: number | null,
-    selectedSelectorId: number | null,
-    selectedLabelId: number,
-    selectedObjectData: AssetGroupTagSelectorNode | null,
-    labelsList: AssetGroupTag[],
-    selectorsList: AssetGroupTagSelector[]
-): SelectedDetailsProps => {
-    if (selectedObjectId !== null && selectedObjectData !== null) {
-        return { id: selectedObjectId, type: 'object', data: selectedObjectData };
-    }
-
-    if (selectedSelectorId !== null) {
-        const selectedSelector = selectorsList.find((object) => object.id === selectedSelectorId);
-        return { id: selectedSelectorId, type: 'selector', data: selectedSelector };
-    }
-
-    const selectedLabel = labelsList.find((object) => object.id === selectedLabelId);
-    return { id: selectedLabelId, type: 'tier', data: selectedLabel };
-};
-
 type SelectedDetailsProps = {
-    type: 'tier' | 'label' | 'selector' | 'object';
-    id: number;
-    data?: AssetGroupTagSelectorNode | AssetGroupTag | AssetGroupTagSelector;
     cypher?: boolean;
-    selectedObjectData?: { selectedTier: number; selectedObject: number | null };
+    selectedTierId: number;
+    selectedSelectorId: number | null;
+    selectedObjectId: number | null;
+    selectedTier: AssetGroupTag | undefined;
+    selectedSelector: AssetGroupTagSelector | undefined;
+    selectedObject: AssetGroupTagSelectorNode | null;
 };
 
 const isObject = (data: any): data is AssetGroupTagSelectorNode => {
@@ -63,43 +43,48 @@ const isObject = (data: any): data is AssetGroupTagSelectorNode => {
     return 'node_id' in objectData;
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher, data, selectedObjectData }) => {
-    if (isObject(data)) {
-        const selectedNode = {
-            id: '3',
-            type: ActiveDirectoryNodeKind.User,
-            //properties: data.properties
-            properties: {},
-            name: data.name,
-        };
-        return (
-            <>
-                <EntityInfoPanel selectedNode={selectedNode} selectedObjectData={selectedObjectData} />
-            </>
-        );
+const SelectedDetails: FC<SelectedDetailsProps> = ({
+    cypher,
+    selectedTierId,
+    selectedSelectorId,
+    selectedObjectId,
+    selectedTier,
+    selectedSelector,
+    selectedObject,
+}) => {
+    if (selectedObjectId !== null) {
+        if (isObject(selectedObject)) {
+            return (
+                <EntityInfoPanel
+                    selectedNode={selectedObject}
+                    selectedTag={selectedTierId}
+                    selectedObject={selectedObjectId}
+                />
+            );
+        }
     }
 
-    if (type === 'selector') {
+    if (selectedSelectorId !== null) {
         if (cypher)
             return (
                 <>
-                    <DynamicDetails data={data} isCypher={cypher} />
+                    <DynamicDetails data={selectedSelector} isCypher={cypher} />
                     <div>Cypher Input</div>
                 </>
             );
         else
             return (
                 <>
-                    <DynamicDetails data={data} />
-                    <ObjectCountPanel selectedTier={id} />
+                    <DynamicDetails data={selectedSelector} />
+                    <ObjectCountPanel selectedTier={selectedTierId} />
                 </>
             );
     }
 
     return (
         <>
-            <DynamicDetails data={data} />
-            <ObjectCountPanel selectedTier={id} />
+            <DynamicDetails data={selectedTier} />
+            <ObjectCountPanel selectedTier={selectedTierId} />
         </>
     );
 };
@@ -139,15 +124,6 @@ const Details: FC = () => {
         selectedObject !== null ||
         (selectorsQuery.isLoading && labelsQuery.isLoading) ||
         (selectorsQuery.isError && labelsQuery.isError);
-
-    const { type, id, data } = innerDetail(
-        selectedObject,
-        selectedSelector,
-        selectedTier,
-        selectedObjectData,
-        labelsQuery.data || [],
-        selectorsQuery.data || []
-    );
 
     return (
         <div>
@@ -203,7 +179,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     <Button
                         onClick={() => {
-                            navigate(ROUTE_TIER_MANAGEMENT_EDIT, { state: { type: type, id: id } });
+                            navigate(ROUTE_TIER_MANAGEMENT_EDIT);
                         }}
                         variant={'secondary'}
                         disabled={disableEditButton}>
@@ -260,11 +236,13 @@ const Details: FC = () => {
                 </div>
                 <div className='flex flex-col basis-1/3'>
                     <SelectedDetails
-                        type={type}
-                        id={id}
                         cypher={showCypher}
-                        data={data}
-                        selectedObjectData={{ selectedObject, selectedTier }}
+                        selectedTierId={selectedTier}
+                        selectedSelectorId={selectedSelector}
+                        selectedObjectId={selectedObject}
+                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTier)}
+                        selectedSelector={selectorsQuery.data?.find((selector) => selector.id === selectedSelector)}
+                        selectedObject={selectedObjectData}
                     />
                 </div>
             </div>

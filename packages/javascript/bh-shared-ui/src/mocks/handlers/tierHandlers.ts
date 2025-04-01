@@ -103,9 +103,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         const { assetGroupId, memberId } = req.params;
         const url = new URL(req.url);
         const skip = url.searchParams.get('skip');
-        console.log('🚀 ~ rest.get ~ skip:', skip);
         const limit = url.searchParams.get('limit');
-        console.log('🚀 ~ rest.get ~ limit:', limit);
 
         return res(
             ctx.json({

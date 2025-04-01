@@ -14,46 +14,40 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper, SxProps, Typography } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
+import { AssetGroupTagSelectorNode } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { usePreviousValue } from '../../../../hooks';
-import { EntityKinds, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../../utils';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../../utils';
 import { usePaneStyles } from '../../../Explore/InfoStyles';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
-export type SelectedNode = {
-    id: string;
-    type: EntityKinds;
-    name: string;
-    graphId?: string;
-};
-
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
-    selectedObjectData: any;
-    sx?: SxProps;
+    selectedNode: AssetGroupTagSelectorNode | null;
+    selectedTag: number;
+    selectedObject: number;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selectedObjectData, sx }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selectedTag, selectedObject }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (previousSelectedNode?.id !== selectedNode?.id) {
+        if (previousSelectedNode?.node_id !== selectedNode?.node_id) {
             setExpandedSections({ 'Object Information': true });
         }
     }, [setExpandedSections, previousSelectedNode, selectedNode]);
 
     return (
-        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
+        <Box className={styles.container} data-testid='explore_entity-information-panel'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedNode?.name || NoEntitySelectedHeader}
+                    name={selectedNode?.properties?.name || NoEntitySelectedHeader}
                     nodeType={selectedNode?.type}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
@@ -69,10 +63,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selecte
                 }}>
                 {selectedNode ? (
                     <EntityInfoContent
-                        id={selectedNode.id}
+                        id={selectedNode.node_id}
                         nodeType={selectedNode.type}
-                        databaseId={selectedNode.graphId}
-                        selectedObjectData={selectedObjectData}
+                        properties={selectedNode.properties}
+                        selectedTag={selectedTag}
+                        selectedObject={selectedObject}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>

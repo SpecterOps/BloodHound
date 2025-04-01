@@ -7,18 +7,17 @@ import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 type SelectorListProps = {
-    selectedObjectData: { selectedTier: number; selectedObject: number };
+    selectedTag: number;
+    selectedObject: number;
 };
 
-const SelectorList: React.FC<SelectorListProps> = ({ selectedObjectData }) => {
+const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject }) => {
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const selectorsQuery = useQuery(['asset-group-member-info'], () => {
-        return apiClient
-            .getAssetGroupLabelMemberInfo(selectedObjectData.selectedTier, selectedObjectData.selectedObject)
-            .then((res) => {
-                return res.data.data['member'];
-            });
+        return apiClient.getAssetGroupLabelMemberInfo(selectedTag, selectedObject).then((res) => {
+            return res.data.data['member'];
+        });
     });
 
     const handleMenuClick = (index: number) => {

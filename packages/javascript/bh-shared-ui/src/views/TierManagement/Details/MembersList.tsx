@@ -20,18 +20,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NodeIcon, SortableHeader } from '../../../components';
+import { usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
 import { ItemSkeleton, SelectedHighlight } from './utils';
-
-// TODO: Move this out and pull from shared-ui hooks once it is brought in with in progress changes in 5231
-const usePreviousValue = <T,>(value: T): T | undefined => {
-    const ref = useRef<T>();
-    useEffect(() => {
-        ref.current = value;
-    });
-    return ref.current;
-};
 
 const ITEM_SIZE = 40;
 
@@ -43,7 +35,7 @@ const Row = ({
     selected: number | null;
     title: string;
     onClick: (id: number, data: AssetGroupTagSelectorNode) => void;
-    items: any;
+    items: Record<number, AssetGroupTagSelectorNode>;
 }>) => {
     const { items, onClick, selected, title } = data;
     const listItem = items[index];
@@ -65,8 +57,8 @@ const Row = ({
                 onClick={() => {
                     onClick(listItem.id, listItem);
                 }}>
-                <NodeIcon nodeType={listItem.kind || 'Unknown'} />
-                <span className='text-base ml-2'>{listItem.name}</span>
+                <NodeIcon nodeType={listItem.type || 'Unknown'} />
+                <span className='text-base ml-2'>{listItem.properties.name}</span>
             </Button>
         </li>
     );

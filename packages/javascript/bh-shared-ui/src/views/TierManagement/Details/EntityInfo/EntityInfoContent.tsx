@@ -16,21 +16,22 @@
 
 import { Box } from '@mui/material';
 import React from 'react';
-import { EntityKinds } from '../../../../utils';
 import EntityObjectInformation from './EntityObjectInformation';
 import SelectorList from './SelectorList';
 
 export interface EntityInfoContentProps {
     id: string;
-    nodeType: EntityKinds | string;
-    databaseId?: string;
-    selectedObjectData?: any;
+    nodeType: string;
+    properties: Record<string, any>;
+    selectedTag: number;
+    selectedObject: number;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
     return (
         <Box>
-            <EntityObjectInformation {...props} /> <SelectorList selectedObjectData={props.selectedObjectData} />
+            <EntityObjectInformation {...props} />{' '}
+            <SelectorList selectedTag={props.selectedTag} selectedObject={props.selectedObject} />
         </Box>
     );
 };

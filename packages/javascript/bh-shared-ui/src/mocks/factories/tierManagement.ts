@@ -111,9 +111,10 @@ export const createSelectorNodes = (
             selector_id: selectorId || 0,
             node_id: i.toString(),
             id: i,
+            properties: { ...JSON.parse(faker.datatype.json()), name, objectid: i },
             certified: faker.datatype.number({ min: -1, max: 2 }) as AssetGroupTagCertifiedValues,
             certified_by: faker.internet.email(),
-            name: name,
+            type: 'User',
         });
     }
 

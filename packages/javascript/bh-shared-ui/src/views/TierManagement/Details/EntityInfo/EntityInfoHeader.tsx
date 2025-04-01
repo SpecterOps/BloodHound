@@ -19,7 +19,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 import { Icon, NodeIcon } from '../../../../components';
-import { EntityKinds } from '../../../../utils';
 import { useHeaderStyles } from '../../../Explore/InfoStyles';
 import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
@@ -27,7 +26,7 @@ interface HeaderProps {
     expanded: boolean;
     name: string;
     onToggleExpanded: (expanded: boolean) => void;
-    nodeType?: EntityKinds;
+    nodeType?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {

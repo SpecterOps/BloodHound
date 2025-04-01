@@ -14,39 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Skeleton } from '@mui/material';
 import React from 'react';
-import { useFetchEntityProperties } from '../../../../hooks';
 import { EntityField, formatObjectInfoFields } from '../../../../utils';
 import { FieldsContainer, ObjectInfoFields } from '../../../Explore/fragments';
 import { BasicObjectInfoFields } from './BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
-const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
-    const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
-        objectId: id,
-        nodeType,
-        databaseId,
-    });
-
-    if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
-
-    if (isError || !informationAvailable)
-        return (
-            <EntityInfoCollapsibleSection label='Object Information'>
-                <FieldsContainer>
-                    <Alert severity='error'>Unable to load object information for this node.</Alert>
-                </FieldsContainer>
-            </EntityInfoCollapsibleSection>
-        );
-
-    const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
+const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ properties }) => {
+    const formattedObjectFields: EntityField[] = formatObjectInfoFields(properties);
+    const nodeProperties = { ...properties, objectid: properties.objectid || '' };
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
             <FieldsContainer>
-                <BasicObjectInfoFields {...entityProperties} />
+                <BasicObjectInfoFields {...nodeProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
