@@ -353,25 +353,6 @@ export type CommunityCollectorType = 'sharphound' | 'azurehound';
 export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
 export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
 
-export interface GetCollectorsResponse {
-    data: {
-        latest: string;
-        versions: {
-            version: string;
-            sha256sum: string;
-            deprecated: boolean;
-        }[];
-    };
-}
-
-export interface GetCommunityCollectorsResponse {
-    data: Record<CommunityCollectorType, CollectorManifest[]>;
-}
-
-export interface GetEnterpriseCollectorsResponse {
-    data: Record<EnterpriseCollectorType, CollectorManifest[]>;
-}
-
 export interface CollectorManifest {
     version: string;
     version_meta: VersionMeta;
