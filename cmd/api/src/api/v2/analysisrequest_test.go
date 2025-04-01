@@ -17,15 +17,26 @@
 package v2_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -69,4 +80,285 @@ func TestResources_GetAnalysisRequest(t *testing.T) {
 			Require().
 			ResponseStatusCode(http.StatusInternalServerError)
 	})
+}
+
+func TestManagementResource_RequestAnalysis(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *dbMocks.MockDatabase
+	}
+	type args struct {
+		request          *http.Request
+		requestParameter map[string]string
+		withAuthCtx      func(*http.Request) *http.Request
+	}
+	type expected struct {
+		responseBody   any
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		args             args
+		name             string
+		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
+		expected         expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: error finding scheduled analysis parameter - Status Not Found",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: GetConfigurationParameter database error - Internal Server Error",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"request timed out"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: scheduled analysis parameter enabled - Bad Request",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: true, RRule: "rule"},
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"analysis is configured to run on a schedule, unable to run just in time"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: RequestAnalysis database error - Internal Server Error",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: analysis request accepted - OK",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseBody:   []byte(``),
+				responseHeader: http.Header{"Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: user - analysis request accepted - OK",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					requestCtx := ctx.Context{
+						RequestID: "id",
+						AuthCtx: auth.Context{
+							Owner:   model.User{},
+							Session: model.UserSession{},
+						},
+					}
+					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseBody:   []byte(``),
+				responseHeader: http.Header{"Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: unknown user - analysis request accepted - OK",
+			args: args{
+				request: &http.Request{
+					URL: &url.URL{},
+				},
+				requestParameter: map[string]string{
+					"object_id": "id",
+				},
+				withAuthCtx: func (req *http.Request) *http.Request {
+					return req
+				},
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+					Key: "key",
+					Value: types.JSONBObject{
+						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "unknown-user").Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseBody:   []byte(``),
+				responseHeader: http.Header{"Location": []string{"/"}},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
+			request = testCase.args.withAuthCtx(request)
+			mocks := &mock{
+				mockDatabase: dbMocks.NewMockDatabase(ctrl),
+			}
+
+			testCase.emulateWithMocks(t, mocks, request)
+
+			resouces := v2.Resources{
+				DB: mocks.mockDatabase,
+			}
+
+			response := httptest.NewRecorder()
+
+			resouces.RequestAnalysis(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := processResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			require.Equal(t, testCase.expected.responseBody, body)
+		})
+	}
 }

@@ -704,7 +704,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 
 func processResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, []byte) {
 	t.Helper()
-	if response.Code != http.StatusOK {
+	if response.Code != http.StatusOK && response.Code != http.StatusAccepted {
 		responseBytes, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
 		require.NoError(t, err)
 
