@@ -157,3 +157,17 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		}
 	}
 }
+
+type getAssetGroupTagResponse struct {
+	Tag model.AssetGroupTag `json:"tag"`
+}
+
+func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	if tagId, err := strconv.ParseInt(mux.Vars(request)[api.URIPathVariableAssetGroupTagID], 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), int(tagId)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}

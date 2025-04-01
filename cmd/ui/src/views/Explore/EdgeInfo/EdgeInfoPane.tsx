@@ -15,21 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import {
-    EdgeSections,
-    collapseAllSections,
-    edgeSectionToggle,
-    useExploreParams,
-    useFeatureFlag,
-    usePaneStyles,
-} from 'bh-shared-ui';
+import { SelectedEdge, collapseAllSections, useExploreParams, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import { useAppDispatch } from 'src/store';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 
-const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, selectedEdge }) => {
+const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge: SelectedEdge | null }> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { expandedPanelSections } = useExploreParams();
@@ -38,14 +31,7 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, sele
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        if (previousSelectedEdge?.id !== selectedEdge?.id && backButtonFlag?.enabled && expandedPanelSections) {
-            dispatch(
-                edgeSectionToggle({
-                    section: expandedPanelSections?.at(0) as keyof typeof EdgeSections,
-                    expanded: true,
-                })
-            );
-        } else if (!backButtonFlag?.enabled && previousSelectedEdge?.id !== selectedEdge?.id) {
+        if (!backButtonFlag?.enabled && previousSelectedEdge?.id !== selectedEdge?.id) {
             dispatch(collapseAllSections());
         }
     }, [expandedPanelSections, dispatch, backButtonFlag, previousSelectedEdge, selectedEdge]);
@@ -54,7 +40,7 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge?: any }> = ({ sx, sele
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
-                    name={selectedEdge.name || 'None'}
+                    name={selectedEdge?.name || 'None'}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);
