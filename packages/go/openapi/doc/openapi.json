@@ -4522,6 +4522,73 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTag",
+        "summary": "Get Asset Group Tag",
+        "description": "Retrieves an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tag": {
+                          "$ref": "#/components/schemas/model.asset-group-tag"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
@@ -13111,7 +13178,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
+        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -14499,7 +14566,7 @@
             "type": "string"
           },
           "valid": {
-            "description": "Valid is true if `string`` is not `null`",
+            "description": "Valid is true if `string` is not `null`",
             "type": "boolean"
           }
         }
@@ -15794,6 +15861,64 @@
             }
           }
         ]
+      },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "$ref": "#/components/schemas/null.time"
+          },
+          "deleted_by": {
+            "$ref": "#/components/schemas/null.string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",

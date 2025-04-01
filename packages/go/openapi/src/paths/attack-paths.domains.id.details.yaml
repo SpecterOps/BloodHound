@@ -28,7 +28,7 @@ get:
   description: |
     Lists detailed data about attack paths for a domain.
 
-    __Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
+    __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
   tags:
     - Attack Paths
     - Enterprise
@@ -182,20 +182,20 @@ get:
                       time: "2024-08-28T21:21:40.845Z",
                       valid: true
                     },
-                    FromPrincipal: string,
-                    ToPrincipal: string,
+                    FromPrincipal: "string",
+                    ToPrincipal: "string",
                     FromPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    FromPrincipalKind: string,
+                    FromPrincipalKind: "string",
                     ToPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    ToPrincipalKind: string,
+                    ToPrincipalKind: "string",
                     RelProps: {
                       additionalProp1: {},
                       additionalProp2: {},
@@ -205,15 +205,16 @@ get:
                       int64: 0,
                       valid: true
                     },
-                    Finding: string,
-                    DomainSID: string,
-                    PrincipalHash: string,
+                    Finding: "string",
+                    DomainSID: "string",
+                    PrincipalHash: "string",
                     AcceptedUntil: "2024-08-28T21:21:40.845Z",
                     ImpactPercentage: 0.12,
                     ImpactCount: 2,
                     ExposurePercentage: 0.24,
                     ExposureCount: 4,
                     Severity: 'high',
+                    Accepted: true
                   }
                 ]
             Metatree Relationship Finding:
@@ -232,20 +233,20 @@ get:
                       time: "2024-08-28T21:21:40.845Z",
                       valid: true
                     },
-                    FromPrincipal: string,
-                    ToPrincipal: string,
+                    FromPrincipal: "string",
+                    ToPrincipal: "string",
                     FromPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    FromPrincipalKind: string,
+                    FromPrincipalKind: "string",
                     ToPrincipalProps: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    ToPrincipalKind: string,
+                    ToPrincipalKind: "string",
                     RelProps: {
                       additionalProp1: {},
                       additionalProp2: {},
@@ -255,9 +256,9 @@ get:
                       int64: 0,
                       valid: true
                     },
-                    Finding: string,
-                    DomainSID: string,
-                    PrincipalHash: string,
+                    Finding: "string",
+                    DomainSID: "string",
+                    PrincipalHash: "string",
                     AcceptedUntil: "2024-08-28T21:21:40.845Z",
                     ImpactPercentage: 0,
                     ImpactCount: 0,
@@ -282,16 +283,16 @@ get:
                       time: "2024-08-28T21:42:18.844Z",
                       valid: true
                     },
-                    Principal: string,
-                    PrincipalKind: string,
-                    Finding: string,
-                    DomainSID: string,
+                    Principal: "string",
+                    PrincipalKind: "string",
+                    Finding: "string",
+                    DomainSID: "string",
                     Props: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    accepted_until: "2024-08-28T21:42:18.844Z",
+                    AcceptedUntil: "2024-08-28T21:42:18.844Z",
                     ImpactPercentage: 0.12,
                     ImpactCount: 2,
                     Severity: 'high',
@@ -313,16 +314,16 @@ get:
                       time: "2024-08-28T21:42:18.844Z",
                       valid: true
                     },
-                    Principal: string,
-                    PrincipalKind: string,
-                    Finding: string,
-                    DomainSID: string,
+                    Principal: "string",
+                    PrincipalKind: "string",
+                    Finding: "string",
+                    DomainSID: "string",
                     Props: {
                       additionalProp1: {},
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    accepted_until: "2024-08-28T21:42:18.844Z",
+                    AcceptedUntil: "2024-08-28T21:42:18.844Z",
                     ImpactPercentage: 0,
                     ImpactCount: 0,
                     Severity: '',

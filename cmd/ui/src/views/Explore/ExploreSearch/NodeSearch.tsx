@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchValue } from 'bh-shared-ui';
-import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import { ExploreSearchCombobox, SearchValue } from 'bh-shared-ui';
 
 type NodeSearchState = {
     searchTerm: string;
