@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
   node_id bigint NOT NULL,
   certified int NOT NULL DEFAULT 0,
   certified_by text,
+  source int,
   CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_nodes FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE,
   CONSTRAINT selector_id_node_id_key UNIQUE (selector_id, node_id)
 );
