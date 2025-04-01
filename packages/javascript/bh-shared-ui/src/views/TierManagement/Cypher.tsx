@@ -84,7 +84,7 @@ export const Cypher: FC<{
                                 {preview ? 'Cypher Preview' : 'Cypher Search'}
                             </header>
                             <div className='flex gap-6'>
-                                <Button variant={'text'} className='p-0 text-base' asChild>
+                                <Button variant={'text'} className='p-0 text-sm' asChild>
                                     <a href={exploreUrl} target='_blank' rel='noreferrer'>
                                         View in Explore
                                     </a>
@@ -92,7 +92,7 @@ export const Cypher: FC<{
                                 {!preview && (
                                     <Button
                                         variant={'text'}
-                                        className='p-0 text-base text-secondary dark:text-secondary-variant-2'
+                                        className='p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline'
                                         onClick={handleCypherSearch}>
                                         Run
                                     </Button>
@@ -100,7 +100,7 @@ export const Cypher: FC<{
                             </div>
                         </div>
                         <div className='mt-4'>
-                            <div onClick={setFocusOnCypherEditor} style={{ flex: 1 }} role='textbox'>
+                            <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                                 <CypherEditor
                                     className='flex flex-col border-solid border border-black border-opacity-25 rounded-lg bg-white min-h-64 overflow-auto dark:bg-[#002b36] grow-1'
                                     ref={cypherEditorRef}
