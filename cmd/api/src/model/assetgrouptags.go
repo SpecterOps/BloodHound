@@ -52,6 +52,14 @@ const (
 	AssetGroupCertificationAuto    AssetGroupCertification = 2
 )
 
+type AssetGroupSelectorNodeSource int
+
+const (
+	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
+	AssetGroupSelectorNodeSourceExpand AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
+)
+
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
 	Type           AssetGroupTagType `json:"type"`
@@ -179,10 +187,11 @@ type ListSelectorsResponse struct {
 }
 
 type AssetGroupSelectorNode struct {
-	SelectorId  int                     `json:"selector_id"`
-	NodeId      graph.ID                `json:"node_id"`
-	Certified   AssetGroupCertification `json:"certified"`
-	CertifiedBy null.String             `json:"certified_by"`
+	SelectorId  int                          `json:"selector_id"`
+	NodeId      graph.ID                     `json:"node_id"`
+	Certified   AssetGroupCertification      `json:"certified"`
+	CertifiedBy null.String                  `json:"certified_by"`
+	Source      AssetGroupSelectorNodeSource `json:"source"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
