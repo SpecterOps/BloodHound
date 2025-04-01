@@ -112,7 +112,6 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 		} else if result := tx.Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ?", (model.SelectorSeed{}).TableName()), selector.ID).Find(&selector.Seeds); result.Error != nil {
 			return CheckError(result)
 		}
-		//TODO: do we need to CreateAssetGroupHistoryRecord() here or is that only for writes to the DB?
 		return nil
 	}); err != nil {
 		return model.AssetGroupTagSelector{}, err
