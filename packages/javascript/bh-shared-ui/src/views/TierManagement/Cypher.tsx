@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { GraphNodes } from 'js-client-library';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../constants';
 import { encodeCypherQuery } from '../../hooks';
@@ -29,10 +28,8 @@ export const Cypher: FC<{
     preview?: boolean;
     initialInput?: string;
     setCypherSearchResults?: (nodes: GraphNodes | null) => void;
-}> = ({ preview = true, initialInput: previewText = '', setCypherSearchResults }) => {
-    const theme = useTheme();
-    const [cypherQuery, setCypherQuery] = useState(previewText);
-    const [encodedQuery, setEncodedQuery] = useState(encodeCypherQuery(cypherQuery));
+}> = ({ preview = true, initialInput = '', setCypherSearchResults }) => {
+    const [cypherQuery, setCypherQuery] = useState(initialInput);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
     const cypherUseQuery = useQuery({
@@ -62,6 +59,19 @@ export const Cypher: FC<{
         if (cypherQuery) cypherUseQuery.refetch();
     }, [cypherUseQuery, cypherQuery, preview]);
 
+    const onValueChanged = useCallback(
+        (value: string) => {
+            if (preview) return;
+            setCypherQuery(value);
+        },
+        [preview, setCypherQuery]
+    );
+
+    const exploreUrl = useMemo(
+        () => `/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodeCypherQuery(cypherQuery)}`,
+        [cypherQuery]
+    );
+
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     return (
@@ -75,10 +85,7 @@ export const Cypher: FC<{
                             </header>
                             <div className='flex gap-6'>
                                 <Button variant={'text'} className='p-0 text-base' asChild>
-                                    <a
-                                        href={`/ui/explore?searchType=cypher&exploreSearchTab=cypher&cypherSearch=${encodedQuery}`}
-                                        target='_blank'
-                                        rel='noreferrer'>
+                                    <a href={exploreUrl} target='_blank' rel='noreferrer'>
                                         View in Explore
                                     </a>
                                 </Button>
@@ -98,12 +105,8 @@ export const Cypher: FC<{
                                     className='flex flex-col border-solid border border-black border-opacity-25 rounded-lg bg-white min-h-64 overflow-auto dark:bg-[#002b36] grow-1'
                                     ref={cypherEditorRef}
                                     value={cypherQuery}
-                                    onValueChanged={(val: string) => {
-                                        if (preview) return;
-                                        setCypherQuery(val);
-                                        setEncodedQuery(encodeCypherQuery(val));
-                                    }}
-                                    theme={theme.palette.mode}
+                                    onValueChanged={onValueChanged}
+                                    theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                                     schema={schema()}
                                     readOnly={preview}
                                     lineWrapping
