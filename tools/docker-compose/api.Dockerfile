@@ -34,8 +34,8 @@ RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
 RUN apk --no-cache add p7zip
 
 # Package Sharphound
-RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip -O sharphound-$SHARPHOUND_VERSION.zip
-RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256 -O sharphound-$SHARPHOUND_VERSION.zip.sha256
+RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip -O sharphound-${SHARPHOUND_VERSION}.zip
+RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256 -O sharphound-${SHARPHOUND_VERSION}.zip.sha256
 
 WORKDIR /tmp/azurehound
 
