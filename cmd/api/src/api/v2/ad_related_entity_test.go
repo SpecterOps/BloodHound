@@ -497,18 +497,14 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		mockGraphQuery *mocks.MockGraph
 		mockDatabase   *dbMocks.MockDatabase
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -516,15 +512,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 	tt := []testData{
 		{
 			name: "Error: missing object ID parameter - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -535,15 +534,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Error: database error - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{}, errors.New("error"))
@@ -556,15 +558,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Error: grapy query error queries.ErrGraphUnsupported - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -578,15 +583,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Error: graph query error op.ErrGraphQueryMemoryLimit - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -600,15 +608,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Error: graph query error undefined error type - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -622,15 +633,18 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Success: Data type graph query without pagination - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -644,13 +658,16 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		},
 		{
 			name: "Success: Data type list query with pagination - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
@@ -668,13 +685,12 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockDatabase:   dbMocks.NewMockDatabase(ctrl),
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{

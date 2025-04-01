@@ -88,19 +88,14 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 	type mock struct {
 		mockDatabase *dbMocks.MockDatabase
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-		withAuthCtx      func(*http.Request) *http.Request
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -108,23 +103,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: error finding scheduled analysis parameter - Status Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
@@ -137,23 +134,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Error: GetConfigurationParameter database error - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
@@ -166,23 +165,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Error: scheduled analysis parameter enabled - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
@@ -200,23 +201,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Error: RequestAnalysis database error - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
@@ -235,23 +238,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Success: analysis request accepted - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
@@ -270,23 +275,25 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Success: user - analysis request accepted - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					requestCtx := ctx.Context{
-						RequestID: "id",
-						AuthCtx: auth.Context{
-							Owner:   model.User{},
-							Session: model.UserSession{},
-						},
-					}
-					return req.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
-				},
+				}
+
+				requestCtx := ctx.Context{
+					RequestID: "id",
+					AuthCtx: auth.Context{
+						Owner:   model.User{},
+						Session: model.UserSession{},
+					},
+				}
+
+				request = mux.SetURLVars(request, param)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
@@ -305,16 +312,16 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		},
 		{
 			name: "Success: unknown user - analysis request accepted - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
-				withAuthCtx: func (req *http.Request) *http.Request {
-					return req
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
@@ -337,12 +344,11 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-			request = testCase.args.withAuthCtx(request)
 			mocks := &mock{
 				mockDatabase: dbMocks.NewMockDatabase(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{

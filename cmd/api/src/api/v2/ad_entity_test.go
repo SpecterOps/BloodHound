@@ -729,18 +729,14 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -748,15 +744,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -767,15 +766,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -786,15 +788,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Base")).Return(nil, graph.ErrNoResultsFound)
@@ -807,15 +812,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Base")).Return(nil, errors.New("error"))
@@ -828,15 +836,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -851,15 +862,18 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -877,12 +891,11 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
@@ -909,18 +922,14 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -928,15 +937,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -947,15 +959,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -966,15 +981,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Container")).Return(nil, graph.ErrNoResultsFound)
@@ -987,15 +1005,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Container")).Return(nil, errors.New("error"))
@@ -1008,15 +1029,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1031,15 +1055,18 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1057,12 +1084,11 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
@@ -1089,18 +1115,14 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -1108,15 +1130,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1127,15 +1152,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1146,15 +1174,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("AIACA")).Return(nil, graph.ErrNoResultsFound)
@@ -1167,15 +1198,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("AIACA")).Return(nil, errors.New("error"))
@@ -1188,15 +1222,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1211,15 +1248,18 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1237,11 +1277,10 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
+			request := testCase.buildRequest()
 
 			testCase.emulateWithMocks(t, mocks, request)
 
@@ -1269,18 +1308,14 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -1288,15 +1323,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1307,15 +1345,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1326,15 +1367,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("RootCA")).Return(nil, graph.ErrNoResultsFound)
@@ -1347,15 +1391,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("RootCA")).Return(nil, errors.New("error"))
@@ -1368,15 +1415,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1391,15 +1441,18 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1417,11 +1470,11 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
+
+			request := testCase.buildRequest()
 
 			testCase.emulateWithMocks(t, mocks, request)
 
@@ -1449,18 +1502,14 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -1468,15 +1517,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1487,15 +1539,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1506,15 +1561,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("EnterpriseCA")).Return(nil, graph.ErrNoResultsFound)
@@ -1527,15 +1585,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("EnterpriseCA")).Return(nil, errors.New("error"))
@@ -1548,15 +1609,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1571,15 +1635,18 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1597,12 +1664,11 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
@@ -1629,18 +1695,14 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -1648,15 +1710,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1667,15 +1732,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1686,15 +1754,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("NTAuthStore")).Return(nil, graph.ErrNoResultsFound)
@@ -1707,15 +1778,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("NTAuthStore")).Return(nil, errors.New("error"))
@@ -1728,15 +1802,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1751,15 +1828,18 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1777,12 +1857,11 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
@@ -1809,18 +1888,14 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -1828,15 +1903,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1847,15 +1925,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -1866,15 +1947,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("CertTemplate")).Return(nil, graph.ErrNoResultsFound)
@@ -1887,15 +1971,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("CertTemplate")).Return(nil, errors.New("error"))
@@ -1908,15 +1995,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -1931,15 +2021,18 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -1957,12 +2050,11 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
@@ -1989,18 +2081,14 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 	type mock struct {
 		mockGraphQuery *mocks.MockGraph
 	}
-	type args struct {
-		request          *http.Request
-		requestParameter map[string]string
-	}
 	type expected struct {
 		responseBody   any
 		responseCode   int
 		responseHeader http.Header
 	}
 	type testData struct {
-		args             args
 		name             string
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -2008,15 +2096,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: ParseOptionalBool - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=`",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -2027,15 +2118,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"not_object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
@@ -2046,15 +2140,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("IssuancePolicy")).Return(nil, graph.ErrNoResultsFound)
@@ -2067,15 +2164,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Error: GetEntityByObjectId - Internal Server Error",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("IssuancePolicy")).Return(nil, errors.New("error"))
@@ -2088,15 +2188,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=true",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
@@ -2111,15 +2214,18 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		},
 		{
 			name: "Success: !hydrateCounts - OK",
-			args: args{
-				request: &http.Request{
+			buildRequest: func() *http.Request {
+				request := &http.Request{
 					URL: &url.URL{
 						RawQuery: "counts=false",
 					},
-				},
-				requestParameter: map[string]string{
+				}
+
+				param := map[string]string{
 					"object_id": "id",
-				},
+				}
+
+				return mux.SetURLVars(request, param)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
@@ -2137,12 +2243,11 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
-			request := mux.SetURLVars(testCase.args.request, testCase.args.requestParameter)
-
 			mocks := &mock{
 				mockGraphQuery: mocks.NewMockGraph(ctrl),
 			}
 
+			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
