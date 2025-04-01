@@ -151,6 +151,11 @@ export const NODE_ICON: IconDictionary = {
         color: '#F57C9B',
     },
 
+    [AzureNodeKind.Group365]: {
+        icon: faUsers,
+        color: '#34D2EB',
+    },
+
     [AzureNodeKind.Tenant]: {
         icon: faCloud,
         color: '#54F2F2',

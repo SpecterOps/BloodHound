@@ -332,6 +332,12 @@ Group: types.#Kind & {
 	representation: "AZGroup"
 }
 
+Group365: types.#Kind & {
+	symbol:         "Group365"
+	schema:         "azure"
+	representation: "AZGroup365"
+}
+
 KeyVault: types.#Kind & {
 	symbol:         "KeyVault"
 	schema:         "azure"
@@ -418,6 +424,7 @@ NodeKinds: [
 	Device,
 	FunctionApp,
 	Group,
+	Group365,
 	KeyVault,
 	ManagementGroup,
 	ResourceGroup,

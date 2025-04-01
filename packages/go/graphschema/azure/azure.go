@@ -32,6 +32,7 @@ var (
 	Device                               = graph.StringKind("AZDevice")
 	FunctionApp                          = graph.StringKind("AZFunctionApp")
 	Group                                = graph.StringKind("AZGroup")
+	Group365                             = graph.StringKind("AZGroup365")
 	KeyVault                             = graph.StringKind("AZKeyVault")
 	ManagementGroup                      = graph.StringKind("AZManagementGroup")
 	ResourceGroup                        = graph.StringKind("AZResourceGroup")
@@ -371,5 +372,5 @@ func PathfindingRelationships() []graph.Kind {
 	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, Contains}
 }
 func NodeKinds() []graph.Kind {
-	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount}
+	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, Group365, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount}
 }

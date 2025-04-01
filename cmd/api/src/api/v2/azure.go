@@ -45,6 +45,7 @@ const (
 	entityTypeBase                = "az-base"
 	entityTypeUsers               = "users"
 	entityTypeGroups              = "groups"
+	entityTypeGroups365           = "groups365"
 	entityTypeTenants             = "tenants"
 	entityTypeManagementGroups    = "management-groups"
 	entityTypeSubscriptions       = "subscriptions"
@@ -338,6 +339,9 @@ func GetAZEntityInformation(ctx context.Context, db graph.Database, entityType, 
 
 	case entityTypeGroups:
 		return azure.GroupEntityDetails(db, objectID, hydrateCounts)
+
+	case entityTypeGroups365:
+		return azure.Group365EntityDetails(db, objectID, hydrateCounts)
 
 	case entityTypeTenants:
 		return azure.TenantEntityDetails(db, objectID, hydrateCounts)

@@ -116,6 +116,16 @@ type GroupDetails struct {
 	InboundObjectControl  int `json:"inbound_object_control"`
 }
 
+type Group365Details struct {
+	Node
+
+	//Roles 			   	  int `json:"roles"`
+	//GroupMembers          int `json:"group_members"`
+	//GroupMembership       int `json:"group_membership"`
+	//OutboundObjectControl int `json:"outbound_object_control"`
+	InboundObjectControl int `json:"inbound_object_control"`
+}
+
 type TenantDetails struct {
 	Node
 

@@ -55,6 +55,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureFunctionAppRoleAssignment
 	case enums.KindAZGroup:
 		return convertAzureGroup
+	case enums.KindAZGroup365:
+		return convertAzureGroup365
 	case enums.KindAZGroupMember:
 		return convertAzureGroupMember
 	case enums.KindAZGroupOwner:
@@ -280,6 +282,24 @@ func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData) {
 		}
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupToRel(data))
 	}
+}
+
+func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
+
+	var data models.Group365
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+
+		slog.Error(fmt.Sprintf(SerialError, "azure group365", err))
+
+	} else {
+
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroup365ToNode(data))
+
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365ToRel(data))
+
+	}
+
 }
 
 func convertAzureGroupMember(raw json.RawMessage, converted *ConvertedAzureData) {

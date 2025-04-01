@@ -39,6 +39,7 @@ const useStyles = makeStyles((theme) => ({
 export const TenantMap = {
     users: { displayText: 'Users', kind: AzureNodeKind.User },
     groups: { displayText: 'Groups', kind: AzureNodeKind.Group },
+    groups365: { displayText: 'Microsoft 365', kind: AzureNodeKind.Group365 },
     apps: { displayText: 'Apps', kind: AzureNodeKind.App },
     service_principals: {
         displayText: 'Service Principals',
