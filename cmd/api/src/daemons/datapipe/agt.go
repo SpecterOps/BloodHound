@@ -38,11 +38,51 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed) (graph.ThreadSafeNodeSet, error) {
+// Below is a thread safe way to track the source of why a node was selected by a selector
+type srcSet struct {
+	srcMap map[graph.ID]model.AssetGroupSelectorNodeSource
+	lock   *sync.Mutex
+}
+
+func (s srcSet) AddSet(set graph.NodeSet, src model.AssetGroupSelectorNodeSource) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	for id := range set {
+		if _, ok := s.srcMap[id]; !ok {
+			s.srcMap[id] = src
+		}
+	}
+}
+
+func (s srcSet) AddIfNotExists(id graph.ID, src model.AssetGroupSelectorNodeSource) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if _, ok := s.srcMap[id]; !ok {
+		s.srcMap[id] = src
+	}
+}
+
+func (s srcSet) GetSrc(id graph.ID) model.AssetGroupSelectorNodeSource {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	return s.srcMap[id]
+}
+
+func newSrcSet() *srcSet {
+	lock := sync.Mutex{}
+	return &srcSet{
+		srcMap: make(map[graph.ID]model.AssetGroupSelectorNodeSource),
+		lock:   &lock,
+	}
+}
+
+func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed) (graph.ThreadSafeNodeSet, srcSet, error) {
 	var (
-		seedNodes = graph.NodeSet{}
-		result    = graph.NewThreadSafeNodeSet(graph.NodeSet{})
-		err       error
+		seedNodes    = graph.NodeSet{}
+		result       = graph.NewThreadSafeNodeSet(graph.NodeSet{})
+		resultSrcSet = newSrcSet()
+		err          error
 	)
 
 	if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -53,12 +93,14 @@ func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 				if seedNodes, err = ops.FetchNodeSet(tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value))); err != nil {
 					return err
 				} else {
+					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
 					seedNodes.AddSet(seedNodes)
 				}
 			case model.SelectorTypeCypher:
 				if seedNodes, err = ops.FetchNodesByQuery(tx, seed.Value); err != nil {
 					return err
 				} else {
+					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
 					seedNodes.AddSet(seedNodes)
 				}
 			default:
@@ -67,38 +109,48 @@ func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		}
 		return nil
 	}); err != nil {
-		return *result, err
+		return *result, *resultSrcSet, err
 	}
 
 	traversalInst := traversal.New(graphDb, analysis.MaximumDatabaseParallelWorkers)
 	// Expand to child nodes recursively as needed based on kind
 	for _, node := range seedNodes {
-		if err = expandChildNodes(ctx, traversalInst, node, result); err != nil {
-			return *result, err
+		if err = expandChildNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
+			return *result, *resultSrcSet, err
 		}
 	}
 
 	// Expand to parent nodes as needed
 	for _, node := range result.Copy().Slice() {
-		if err = findParentNodes(ctx, traversalInst, node, result); err != nil {
-			return *result, err
+		if err = findParentNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
+			return *result, *resultSrcSet, err
 		}
 	}
 
-	return *result, err
+	return *result, *resultSrcSet, err
 }
 
-func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet) error {
+func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
 	if node.Kinds.ContainsOneOf(ad.Entity) {
 		// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
 		if err := tx.BreadthFirst(ctx, traversal.Plan{
 			Root: node,
-			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.End(), ad.OU),
-			)).Do(func(path *graph.PathSegment) error {
+			Driver: traversal.NewPattern().InboundWithDepth(0, 0,
+				query.And(
+					query.Kind(query.Relationship(), ad.Contains),
+					query.Kind(query.Start(), ad.OU),
+				)).InboundWithDepth(0, 1,
+				query.And(
+					query.Kind(query.Relationship(), ad.GPLink),
+					query.Kind(query.Start(), ad.GPO),
+				)).Do(func(path *graph.PathSegment) error {
 				if path.Trunk != nil {
-					result.AddIfNotExists(path.Trunk.Node)
+					if result.AddIfNotExists(path.Trunk.Node) {
+						resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+					}
+				}
+				if result.AddIfNotExists(path.Node) {
+					resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 				}
 
 				return nil
@@ -112,10 +164,15 @@ func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 				Root: node,
 				Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
 					query.Kind(query.Relationship(), ad.Contains),
-					query.Kind(query.End(), ad.Container),
+					query.Kind(query.Start(), ad.Container),
 				)).Do(func(path *graph.PathSegment) error {
 					if path.Trunk != nil {
-						result.AddIfNotExists(path.Trunk.Node)
+						if result.AddIfNotExists(path.Trunk.Node) {
+							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						}
+					}
+					if result.AddIfNotExists(path.Node) {
+						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 					return nil
 				})}); err != nil {
@@ -123,30 +180,42 @@ func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 			}
 		}
 
-		// MATCH (n:GPO)-[:GPLink]->(m:Base) RETURN n
-		if err := tx.BreadthFirst(ctx, traversal.Plan{
-			Root: node,
-			Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
-				query.Kind(query.Relationship(), ad.GPLink),
-				query.Kind(query.End(), ad.GPO),
-			)).Do(func(path *graph.PathSegment) error {
-				if path.Trunk != nil {
-					result.AddIfNotExists(path.Trunk.Node)
-				}
-				return nil
-			})}); err != nil {
-			return err
+		// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
+		if node.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
+			if err := tx.BreadthFirst(ctx, traversal.Plan{
+				Root: node,
+				Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
+					query.Kind(query.Relationship(), ad.GPLink),
+					query.Kind(query.Start(), ad.GPO),
+				)).Do(func(path *graph.PathSegment) error {
+					if path.Trunk != nil {
+						if result.AddIfNotExists(path.Trunk.Node) {
+							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						}
+					}
+					if result.AddIfNotExists(path.Node) {
+						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+					}
+					return nil
+				})}); err != nil {
+				return err
+			}
 		}
 	} else if node.Kinds.ContainsOneOf(azure.Entity) {
-		// MATCH (n:AZBase)-[:AZContains*..]->(m:AZBase) RETURN n
+		// MATCH (n:AZBase)-[:AZContains*..]->(m:AZBase) WHERE (n:Subscription) OR (n:ResourceGroup) OR (n:ManagementGroup) RETURN n
 		if err := tx.BreadthFirst(ctx, traversal.Plan{
 			Root: node,
 			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
 				query.KindIn(query.Relationship(), azure.Contains),
-				query.KindIn(query.End(), azure.Entity),
+				query.KindIn(query.Start(), azure.Subscription, azure.ResourceGroup, azure.ManagementGroup),
 			)).Do(func(path *graph.PathSegment) error {
 				if path.Trunk != nil {
-					result.AddIfNotExists(path.Trunk.Node)
+					if result.AddIfNotExists(path.Trunk.Node) {
+						resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+					}
+				}
+				if result.AddIfNotExists(path.Node) {
+					resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 				}
 				return nil
 			})}); err != nil {
@@ -159,10 +228,15 @@ func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 				Root: node,
 				Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
 					query.Kind(query.Relationship(), azure.RunsAs),
-					query.Kind(query.End(), azure.App),
+					query.Kind(query.Start(), azure.App),
 				)).Do(func(path *graph.PathSegment) error {
 					if path.Trunk != nil {
-						result.AddIfNotExists(path.Trunk.Node)
+						if result.AddIfNotExists(path.Trunk.Node) {
+							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						}
+					}
+					if result.AddIfNotExists(path.Node) {
+						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 					return nil
 				})}); err != nil {
@@ -174,7 +248,7 @@ func findParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 	return nil
 }
 
-func expandChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet) error {
+func expandChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
 	var pattern traversal.PatternContinuation
 
 	// Add visited node to result set
@@ -215,10 +289,12 @@ func expandChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 		Driver: pattern.Do(func(path *graph.PathSegment) error {
 			if path.Trunk != nil {
 				if result.AddIfNotExists(path.Trunk.Node) {
+					resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceExpand)
 					addedNodes.Add(path.Trunk.Node)
 				}
 			}
 			if result.AddIfNotExists(path.Node) {
+				resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceExpand)
 				addedNodes.Add(path.Node)
 			}
 
@@ -229,8 +305,9 @@ func expandChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 
 	if addedNodes != nil && addedNodes.Len() > 0 {
 		for _, node := range addedNodes.Slice() {
+			resultSrcSet.AddIfNotExists(node.ID, model.AssetGroupSelectorNodeSourceExpand)
 			// Expand to child nodes as needed based on kind
-			if err := expandChildNodes(ctx, tx, node, result); err != nil {
+			if err := expandChildNodes(ctx, tx, node, result, resultSrcSet); err != nil {
 				return err
 			}
 		}
@@ -258,7 +335,7 @@ func selectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	}
 
 	// 1. Grab the graph nodes
-	if nodes, err := fetchNodesFromSeeds(ctx, graphDb, selector.Seeds); err != nil {
+	if nodes, srcSet, err := fetchNodesFromSeeds(ctx, graphDb, selector.Seeds); err != nil {
 		return err
 		// 2. Grab the already selected nodes
 	} else if oldSelectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selector.ID); err != nil {
@@ -273,7 +350,7 @@ func selectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		for _, id := range nodes.IDs() {
 			// Missing, insert the record
 			if oldSelectedNodesByNodeId[id] == nil {
-				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy); err != nil {
+				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, srcSet.GetSrc(id)); err != nil {
 					return err
 				}
 				countInserted++
@@ -431,6 +508,8 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 }
 
 func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging asset group nodes")()
+
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
 		return err
 	} else {
