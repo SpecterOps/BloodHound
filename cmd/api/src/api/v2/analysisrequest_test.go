@@ -360,7 +360,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			resouces.RequestAnalysis(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)

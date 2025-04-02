@@ -15,6 +15,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/queries/mocks"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -270,7 +271,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			resouces.GetAZRelatedEntities(context.Background(), response, request, "id")
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -609,7 +610,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.LogicAppDetails(azure.LogicAppDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				res: azure.LogicAppDetails(azure.LogicAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -635,7 +636,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.AutomationAccountDetails(azure.AutomationAccountDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				res: azure.AutomationAccountDetails(azure.AutomationAccountDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -661,7 +662,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.KeyVaultDetails(azure.KeyVaultDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, Readers:azure.KeyVaultReaderCounts{KeyReaders:0, CertificateReaders:0, SecretReaders:0, AllReaders:0}, InboundObjectControl:0}),
+				res: azure.KeyVaultDetails(azure.KeyVaultDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Readers: azure.KeyVaultReaderCounts{KeyReaders: 0, CertificateReaders: 0, SecretReaders: 0, AllReaders: 0}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -687,7 +688,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.DeviceDetails(azure.DeviceDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundExecutionPrivileges:0, InboundObjectControl:0}),
+				res: azure.DeviceDetails(azure.DeviceDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -713,7 +714,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ApplicationDetails(azure.ApplicationDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				res: azure.ApplicationDetails(azure.ApplicationDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -739,7 +740,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.VMScaleSetDetails(azure.VMScaleSetDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				res: azure.VMScaleSetDetails(azure.VMScaleSetDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -765,7 +766,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.ServicePrincipalDetails(azure.ServicePrincipalDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, Roles:0, InboundObjectControl:0, OutboundObjectControl:0, InboundAbusableAppRoleAssignments:0, OutboundAbusableAppRoleAssignments:0}),
+				res: azure.ServicePrincipalDetails(azure.ServicePrincipalDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, InboundObjectControl: 0, OutboundObjectControl: 0, InboundAbusableAppRoleAssignments: 0, OutboundAbusableAppRoleAssignments: 0}),
 				err: nil,
 			},
 		},
@@ -791,7 +792,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.RoleDetails(azure.RoleDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, ActiveAssignments:0, PIMAssignments:0}),
+				res: azure.RoleDetails(azure.RoleDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, ActiveAssignments: 0, PIMAssignments: 0}),
 				err: nil,
 			},
 		},
@@ -817,7 +818,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
-				res: azure.FunctionAppDetails(azure.FunctionAppDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				res: azure.FunctionAppDetails(azure.FunctionAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
 				err: nil,
 			},
 		},
@@ -1014,7 +1015,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			resouces.GetAZEntity(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)

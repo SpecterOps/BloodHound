@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/mediatypes"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -201,7 +202,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			createCollectorFile: func(t *testing.T) *os.File {
 				err := os.Mkdir("azurehound", 0755)
 				if err != nil {
-					if !errors.Is(err, os.ErrExist){
+					if !errors.Is(err, os.ErrExist) {
 						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
 					}
 				}
@@ -234,7 +235,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			createCollectorFile: func(t *testing.T) *os.File {
 				err := os.Mkdir("azurehound", 0755)
 				if err != nil {
-					if !errors.Is(err, os.ErrExist){
+					if !errors.Is(err, os.ErrExist) {
 						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
 					}
 				}
@@ -282,7 +283,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			resouces.DownloadCollectorByVersion(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -386,7 +387,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			createCollectorFile: func(t *testing.T) *os.File {
 				err := os.Mkdir("azurehound", 0755)
 				if err != nil {
-					if !errors.Is(err, os.ErrExist){
+					if !errors.Is(err, os.ErrExist) {
 						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
 					}
 				}
@@ -419,7 +420,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			createCollectorFile: func(t *testing.T) *os.File {
 				err := os.Mkdir("azurehound", 0755)
 				if err != nil {
-					if !errors.Is(err, os.ErrExist){
+					if !errors.Is(err, os.ErrExist) {
 						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
 					}
 				}
@@ -467,7 +468,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			resouces.DownloadCollectorChecksumByVersion(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)

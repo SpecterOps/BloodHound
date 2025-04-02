@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -504,7 +505,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 	}
 	type testData struct {
 		name             string
-		buildRequest func() *http.Request
+		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
 	}
@@ -703,7 +704,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			resouces.ListADIssuancePolicyLinkedCertTemplates(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
