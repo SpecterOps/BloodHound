@@ -4374,6 +4374,154 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to create a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelectors",
+        "summary": "Get Asset Group Tag selectors",
+        "description": "Get a list of selectors for this group.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateAssetGroupTagSelector",
+        "summary": "Create Asset Group Tag Selector",
+        "description": "Creates an asset group tag selector.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for creating an asset group tag selector",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "seeds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-group-tags/{asset_group_tag_id}": {
       "parameters": [
         {
@@ -13204,19 +13352,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "#/components/schemas/model.relationship-finding"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.relationship-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13234,19 +13376,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "#/components/schemas/model.list-finding"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.list-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13303,7 +13439,8 @@
                           "ImpactCount": 2,
                           "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
-                          "Severity": "high"
+                          "Severity": "high",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13355,7 +13492,8 @@
                           "ImpactCount": 0,
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13364,9 +13502,9 @@
                     "summary": "Butterfly List Finding",
                     "description": "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13385,10 +13523,11 @@
                             "additionalProp2": {},
                             "additionalProp3": {}
                           },
-                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "Severity": "high"
+                          "Severity": "high",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13397,9 +13536,9 @@
                     "summary": "Metatree List Finding",
                     "description": "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13418,10 +13557,11 @@
                             "additionalProp2": {},
                             "additionalProp3": {}
                           },
-                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -15643,6 +15783,76 @@
             "type": "boolean"
           }
         }
+      },
+      "model.asset-group-tags-selector-seed": {
+        "type": "object",
+        "properties": {
+          "selector_id": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "model.asset-group-tags-selector": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "asset_group_tag_id": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_by": {
+                "type": "string"
+              },
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "auto_certify": {
+                "type": "boolean"
+              },
+              "is_default": {
+                "type": "boolean"
+              },
+              "allow_disable": {
+                "type": "boolean"
+              },
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                }
+              }
+            }
+          }
+        ]
       },
       "null.boolean": {
         "type": "object",
