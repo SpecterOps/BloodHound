@@ -317,5 +317,8 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
+
+		// Node Icon Management
+
 	)
 }
