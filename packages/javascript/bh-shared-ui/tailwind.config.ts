@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-declare module '@neo4j-cypher/react-codemirror' {
-    type EditorApi = import('@neo4j-cypher/codemirror/src/codemirror.d.ts').EditorApi;
+import { DoodleUIPlugin, DoodleUIPreset } from '@bloodhoundenterprise/doodleui';
+import type { Config } from 'tailwindcss';
 
-    type CypherEditorProps = import('@neo4j-cypher/react-codemirror/src/react-codemirror.d.ts').CypherEditorProps;
-
-    export class CypherEditor extends React.Component<CypherEditorProps, any> {
-        cypherEditor: EditorApi;
-    }
-}
+export default {
+    content: ['./src/**/*.{js,ts,jsx,tsx}', './node_modules/@bloodhoundenterprise/doodleui/dist/doodleui.js'],
+    darkMode: ['class'],
+    plugins: [DoodleUIPlugin],
+    presets: [DoodleUIPreset],
+} satisfies Config;

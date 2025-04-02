@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
 import { apiClient } from '../../../utils';
+import { Cypher } from '../Cypher';
 import { DetailsList } from './DetailsList';
 import DynamicDetails from './DynamicDetails';
 import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
@@ -69,7 +70,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({
             return (
                 <>
                     <DynamicDetails data={selectedSelector} isCypher={cypher} />
-                    <div>Cypher Input</div>
+                    <Cypher />
                 </>
             );
         else
@@ -90,7 +91,7 @@ const SelectedDetails: FC<SelectedDetailsProps> = ({
 };
 
 const Details: FC = () => {
-    const [selectedTier, setSelectedTier] = useState(1);
+    const [selectedTag, setSelectedTag] = useState(1);
     const [selectedSelector, setSelectedSelector] = useState<number | null>(null);
     const [selectedObject, setSelectedObject] = useState<number | null>(null);
     const [selectedObjectData, setSelectedObjectData] = useState<AssetGroupTagSelectorNode | null>(null);
@@ -103,19 +104,19 @@ const Details: FC = () => {
         });
     });
 
-    const selectorsQuery = useQuery(['asset-group-selectors', selectedTier], () => {
-        return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
+    const selectorsQuery = useQuery(['asset-group-selectors', selectedTag], () => {
+        return apiClient.getAssetGroupSelectors(selectedTag).then((res) => {
             return res.data.data['selectors'];
         });
     });
 
-    const objectsQuery = useQuery(['asset-group-members', selectedTier, selectedSelector], async () => {
+    const objectsQuery = useQuery(['asset-group-members', selectedTag, selectedSelector], async () => {
         if (selectedSelector === null)
-            return apiClient.getAssetGroupLabelMembers(selectedTier, 0, 1).then((res) => {
+            return apiClient.getAssetGroupLabelMembers(selectedTag, 0, 1).then((res) => {
                 return res.data.count;
             });
 
-        return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector, 0, 1).then((res) => {
+        return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, 0, 1).then((res) => {
             return res.data.count;
         });
     });
@@ -149,7 +150,7 @@ const Details: FC = () => {
                                     title: 'Selector',
                                     onClick: () => {
                                         navigate(ROUTE_TIER_MANAGEMENT_CREATE, {
-                                            state: { type: 'Selector', within: selectedTier },
+                                            state: { type: 'Selector', within: selectedTag },
                                         });
                                     },
                                 },
@@ -187,22 +188,22 @@ const Details: FC = () => {
                     </Button>
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg max-h-[564px]'>
-                    <div className='min-h-96 grow-0 basis-1/3'>
+            <div className='flex gap-8 mt-4 grow-1'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg max-h-[560px] *:grow-0 *:basis-1/3 *:min-h-96'>
+                    <div className='max-h-[518px]'>
                         <DetailsList
                             title='Tiers'
                             listQuery={labelsQuery}
-                            selected={selectedTier}
+                            selected={selectedTag}
                             onSelect={(id: number) => {
-                                setSelectedTier(id);
+                                setSelectedTag(id);
                                 setSelectedSelector(null);
                                 setSelectedObject(null);
                                 setShowCypher(false);
                             }}
                         />
                     </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 min-h-96 grow-0 basis-1/3'>
+                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 max-h-[518px]'>
                         <DetailsList
                             title='Selectors'
                             listQuery={selectorsQuery}
@@ -220,7 +221,7 @@ const Details: FC = () => {
                             }}
                         />
                     </div>
-                    <div className='min-h-96 grow-0 basis-1/3'>
+                    <div>
                         <MembersList
                             itemCount={objectsQuery.data || 1000}
                             onClick={(id, data) => {
@@ -230,17 +231,17 @@ const Details: FC = () => {
                             }}
                             selected={selectedObject}
                             selectedSelector={selectedSelector}
-                            selectedTier={selectedTier}
+                            selectedTag={selectedTag}
                         />
                     </div>
                 </div>
                 <div className='flex flex-col basis-1/3'>
                     <SelectedDetails
                         cypher={showCypher}
-                        selectedTierId={selectedTier}
+                        selectedTierId={selectedTag}
                         selectedSelectorId={selectedSelector}
                         selectedObjectId={selectedObject}
-                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTier)}
+                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTag)}
                         selectedSelector={selectorsQuery.data?.find((selector) => selector.id === selectedSelector)}
                         selectedObject={selectedObjectData}
                     />

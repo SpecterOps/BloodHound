@@ -100,7 +100,7 @@ const getFetchCallback = (selectedTier: number, selectedSelector: number | null)
 };
 
 interface MembersListProps {
-    selectedTier: number;
+    selectedTag: number;
     selectedSelector: number | null;
     selected: number | null;
     onClick: (id: number, data: AssetGroupTagSelectorNode) => void;
@@ -110,7 +110,7 @@ interface MembersListProps {
 /**
  * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
  * @param props
- * @param {selectedTier} props.selectedTier The currently selected Tier/Label. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection
+ * @param {selectedTier} props.selectedTag The currently selected Tier/Label. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection
  * @param {selectedSelector} props.selectedSelector The currently selected Selector. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection. Unlike a selectedTier, this param can be null if there is no Selector selected.
  * @param {selected} props.selected The currently selected Object/Member. This selection can be null.
  * @param {onClick} props.onClick The click handler for when a particular member is selected. This is primarily used for setting the selected entity in the parent component.
@@ -118,7 +118,7 @@ interface MembersListProps {
  * @returns The MembersList component for rendering in the Tier Management page.
  */
 export const MembersList: React.FC<MembersListProps> = ({
-    selectedTier,
+    selectedTag,
     selectedSelector,
     selected,
     onClick,
@@ -129,7 +129,7 @@ export const MembersList: React.FC<MembersListProps> = ({
     const [items, setItems] = useState<Record<number, AssetGroupTagSelectorNode>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
     const previousSelector = usePreviousValue<number | null>(selectedSelector);
-    const previousTier = usePreviousValue<number>(selectedTier);
+    const previousTier = usePreviousValue<number>(selectedTag);
 
     const itemData = { onClick, selected, items, title: 'Members' };
 
@@ -145,7 +145,7 @@ export const MembersList: React.FC<MembersListProps> = ({
 
             const limit = stopIndex - startIndex + 1;
 
-            const fetchData = getFetchCallback(selectedTier, selectedSelector);
+            const fetchData = getFetchCallback(selectedTag, selectedSelector);
 
             return fetchData({ skip: startIndex, limit: limit })
                 .then((data) => {
@@ -161,7 +161,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                     setIsFetching(false);
                 });
         },
-        [items, isFetching, selectedSelector, selectedTier]
+        [items, isFetching, selectedSelector, selectedTag]
     );
 
     // Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
@@ -170,12 +170,12 @@ export const MembersList: React.FC<MembersListProps> = ({
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (previousSelector !== selectedSelector || previousTier !== selectedTier) {
+        if (previousSelector !== selectedSelector || previousTier !== selectedTag) {
             if (infiniteLoaderRef?.current?.resetloadMoreItemsCache)
                 infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
             loadMoreItems(0, 128);
         }
-    }, [selectedSelector, selectedTier, loadMoreItems, previousSelector, previousTier]);
+    }, [selectedSelector, selectedTag, loadMoreItems, previousSelector, previousTier]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>
@@ -199,7 +199,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                 loadMoreItems={loadMoreItems}>
                 {({ onItemsRendered, ref }) => (
                     <FixedSizeList
-                        height={500}
+                        height={522}
                         itemCount={itemCount}
                         itemData={itemData}
                         itemSize={ITEM_SIZE}

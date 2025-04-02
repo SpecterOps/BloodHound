@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . FileUploadData
-package fileupload
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . IngestData
+package ingest
 
 import (
 	"context"
@@ -39,18 +39,8 @@ const jobActivityTimeout = time.Minute * 20
 
 var ErrInvalidJSON = errors.New("file is not valid json")
 
-type FileUploadData interface {
-	CreateFileUploadJob(ctx context.Context, job model.FileUploadJob) (model.FileUploadJob, error)
-	UpdateFileUploadJob(ctx context.Context, job model.FileUploadJob) error
-	GetFileUploadJob(ctx context.Context, id int64) (model.FileUploadJob, error)
-	GetAllFileUploadJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error)
-	GetFileUploadJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.FileUploadJob, error)
-	DeleteAllFileUploads(ctx context.Context) error
-	CancelAllFileUploads(ctx context.Context) error
-	DeleteAllIngestTasks(ctx context.Context) error
-}
-
-func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
+// ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
+func ProcessStaleIngestJobs(ctx context.Context, db IngestData) {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when shutting down.
 	if ctx.Err() != nil {
@@ -62,7 +52,7 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 		threshold = now.Add(-jobActivityTimeout)
 	)
 
-	if jobs, err := db.GetFileUploadJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
+	if jobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting running jobs: %v", err))
 	} else {
 		for _, job := range jobs {
@@ -72,39 +62,31 @@ func ProcessStaleFileUploadJobs(ctx context.Context, db FileUploadData) {
 					now.Sub(threshold).Minutes(),
 					job.LastIngest.Format(time.RFC3339)))
 
-				if err := TimeOutUploadJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error marking file upload job %d as timed out: %v", job.ID, err))
+				if err := TimeOutIngestJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
 				}
 			}
 		}
 	}
 }
 
-func CancelAllFileUploads(ctx context.Context, db FileUploadData) error {
-	return db.CancelAllFileUploads(ctx)
+func GetAllIngestJobs(ctx context.Context, db IngestData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
+	return db.GetAllIngestJobs(ctx, skip, limit, order, filter)
 }
 
-func DeleteAllIngestTasks(ctx context.Context, db FileUploadData) error {
-	return db.DeleteAllIngestTasks(ctx)
-}
-
-func GetAllFileUploadJobs(ctx context.Context, db FileUploadData, skip int, limit int, order string, filter model.SQLFilter) ([]model.FileUploadJob, int, error) {
-	return db.GetAllFileUploadJobs(ctx, skip, limit, order, filter)
-}
-
-func StartFileUploadJob(ctx context.Context, db FileUploadData, user model.User) (model.FileUploadJob, error) {
-	job := model.FileUploadJob{
+func StartIngestJob(ctx context.Context, db IngestData, user model.User) (model.IngestJob, error) {
+	job := model.IngestJob{
 		UserID:     user.ID,
 		User:       user,
 		Status:     model.JobStatusRunning,
 		StartTime:  time.Now().UTC(),
 		LastIngest: time.Now().UTC(),
 	}
-	return db.CreateFileUploadJob(ctx, job)
+	return db.CreateIngestJob(ctx, job)
 }
 
-func GetFileUploadJobByID(ctx context.Context, db FileUploadData, jobID int64) (model.FileUploadJob, error) {
-	return db.GetFileUploadJob(ctx, jobID)
+func GetIngestJobByID(ctx context.Context, db IngestData, jobID int64) (model.IngestJob, error) {
+	return db.GetIngestJob(ctx, jobID)
 }
 
 func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
@@ -157,37 +139,37 @@ func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationF
 	}
 }
 
-func TouchFileUploadJobLastIngest(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob) error {
-	fileUploadJob.LastIngest = time.Now().UTC()
-	return db.UpdateFileUploadJob(ctx, fileUploadJob)
+func TouchIngestJobLastIngest(ctx context.Context, db IngestData, job model.IngestJob) error {
+	job.LastIngest = time.Now().UTC()
+	return db.UpdateIngestJob(ctx, job)
 }
 
-func EndFileUploadJob(ctx context.Context, db FileUploadData, job model.FileUploadJob) error {
+func EndIngestJob(ctx context.Context, db IngestData, job model.IngestJob) error {
 	job.Status = model.JobStatusIngesting
 
-	if err := db.UpdateFileUploadJob(ctx, job); err != nil {
-		return fmt.Errorf("error ending file upload job: %w", err)
+	if err := db.UpdateIngestJob(ctx, job); err != nil {
+		return fmt.Errorf("error ending ingest job: %w", err)
 	}
 
 	return nil
 }
 
-func UpdateFileUploadJobStatus(ctx context.Context, db FileUploadData, fileUploadJob model.FileUploadJob, status model.JobStatus, message string) error {
-	fileUploadJob.Status = status
-	fileUploadJob.StatusMessage = message
-	fileUploadJob.EndTime = time.Now().UTC()
+func UpdateIngestJobStatus(ctx context.Context, db IngestData, job model.IngestJob, status model.JobStatus, message string) error {
+	job.Status = status
+	job.StatusMessage = message
+	job.EndTime = time.Now().UTC()
 
-	return db.UpdateFileUploadJob(ctx, fileUploadJob)
+	return db.UpdateIngestJob(ctx, job)
 }
 
-func TimeOutUploadJob(ctx context.Context, db FileUploadData, jobID int64, message string) error {
-	if job, err := db.GetFileUploadJob(ctx, jobID); err != nil {
+func TimeOutIngestJob(ctx context.Context, db IngestData, jobID int64, message string) error {
+	if job, err := db.GetIngestJob(ctx, jobID); err != nil {
 		return err
 	} else {
 		job.Status = model.JobStatusTimedOut
 		job.StatusMessage = message
 		job.EndTime = time.Now().UTC()
 
-		return db.UpdateFileUploadJob(ctx, job)
+		return db.UpdateIngestJob(ctx, job)
 	}
 }

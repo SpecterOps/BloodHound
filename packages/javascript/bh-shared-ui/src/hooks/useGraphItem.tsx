@@ -22,7 +22,7 @@ export interface BaseItemResponse {
     kind: string;
     label: string;
     lastSeen: string;
-    properties: any;
+    properties?: any;
 }
 
 export interface NodeResponse extends BaseItemResponse {
@@ -38,13 +38,15 @@ export interface EdgeResponse extends BaseItemResponse {
     targetNode: NodeResponse;
 }
 
-export type ItemResponse = NodeResponse | EdgeResponse;
+export type ItemResponse = NodeResponse | EdgeResponse | undefined;
 
 export const isNode = (response: ItemResponse): response is NodeResponse => {
+    if (!response) return false;
     return 'objectId' in response;
 };
 
 export const isEdge = (response: ItemResponse): response is EdgeResponse => {
+    if (!response) return false;
     return 'source' in response;
 };
 

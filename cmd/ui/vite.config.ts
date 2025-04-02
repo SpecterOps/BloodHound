@@ -61,6 +61,7 @@ export default defineConfig(({ mode }) => {
                 'react-hook-form',
                 'react-query',
                 'react-router-dom',
+                'tailwindcss',
             ],
             preserveSymlinks: true,
         },

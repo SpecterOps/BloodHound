@@ -25,7 +25,7 @@ import {
     SeedTypeValues,
 } from 'js-client-library';
 
-export const createAssetGroupLabels = (count: number = 10) => {
+export const createAssetGroupLabels = (count: number = 100) => {
     const data: AssetGroupTag[] = [];
 
     for (let i = 1; i < count; i++) {
