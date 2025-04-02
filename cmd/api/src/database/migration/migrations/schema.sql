@@ -256,7 +256,6 @@ CREATE TABLE IF NOT EXISTS domain_collection_results (
     message text,
     user_count bigint,
     group_count bigint,
-    group365_count bigint,
     computer_count bigint,
     gpo_count bigint,
     ou_count bigint,

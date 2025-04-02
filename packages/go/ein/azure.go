@@ -482,67 +482,39 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
 
 	return IngestibleNode{
-
 		ObjectID: strings.ToUpper(data.Id),
-
 		PropertyMap: map[string]any{
-
 			common.Name.String(): strings.ToUpper(fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName)),
-
 			/* common.WhenCreated.String():       ParseISO8601(data.CreatedDateTime),
-
-
 			common.Description.String():       data.Description,
-
-
 			common.DisplayName.String():       data.DisplayName,
-
-
 			azure.IsAssignableToRole.String(): data.IsAssignableToRole,
-
-
 			azure.OnPremID.String():           data.OnPremisesSecurityIdentifier,
-
-
 			azure.OnPremSyncEnabled.String():  data.OnPremisesSyncEnabled,
-
-
 			azure.SecurityEnabled.String():    data.SecurityEnabled,
-
-
 			azure.SecurityIdentifier.String(): data.SecurityIdentifier, */
-
 			azure.TenantID.String(): strings.ToUpper(data.TenantId),
 		},
-
 		Label: azure.Group365,
 	}
-
 }
 
 func ConvertAzureGroup365ToRel(data models.Group365) IngestibleRelationship {
 
 	return NewIngestibleRelationship(
-
 		IngestibleSource{
-
-			Source: strings.ToUpper(data.TenantId),
-
+			Source:     strings.ToUpper(data.TenantId),
 			SourceType: azure.Tenant,
 		},
 
 		IngestibleTarget{
-
 			TargetType: azure.Group365,
-
-			Target: strings.ToUpper(data.Id),
+			Target:     strings.ToUpper(data.Id),
 		},
 
 		IngestibleRel{
-
 			RelProps: map[string]any{},
-
-			RelType: azure.Contains,
+			RelType:  azure.Contains,
 		},
 	)
 
