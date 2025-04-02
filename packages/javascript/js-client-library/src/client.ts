@@ -33,6 +33,7 @@ import {
     GetCommunityCollectorsResponse,
     GetConfigurationResponse,
     GetEnterpriseCollectorsResponse,
+    GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
@@ -84,7 +85,11 @@ class BHEAPIClient {
     };
 
     cypherSearch = (query: string, options?: types.RequestOptions, includeProperties?: boolean) => {
-        return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
+        return this.baseClient.post<GraphResponse>(
+            '/api/v2/graphs/cypher',
+            { query, include_properties: includeProperties },
+            options
+        );
     };
 
     getUserSavedQueries = (options?: types.RequestOptions) => {
@@ -108,6 +113,9 @@ class BHEAPIClient {
     deleteUserQuery = (queryId: number, options?: types.RequestOptions) => {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
+
+    getKinds = (options?: types.RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
     clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
@@ -2372,7 +2380,7 @@ class BHEAPIClient {
         relationshipKinds?: string,
         options?: types.RequestOptions
     ) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/shortest-path',
             Object.assign(
                 {
@@ -2387,7 +2395,7 @@ class BHEAPIClient {
         );
 
     getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/edge-composition',
             Object.assign(
                 {
@@ -2402,7 +2410,7 @@ class BHEAPIClient {
         );
 
     getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/relay-targets',
             Object.assign(
                 {

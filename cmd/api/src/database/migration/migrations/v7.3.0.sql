@@ -102,3 +102,7 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
     value text NOT NULL,
     CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_seeds FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE
 );
+
+-- generic ingest
+ALTER TABLE file_upload_jobs RENAME TO ingest_jobs;
+ALTER TABLE ingest_tasks ADD COLUMN is_generic BOOLEAN NOT NULL DEFAULT FALSE;
