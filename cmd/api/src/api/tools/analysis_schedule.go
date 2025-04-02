@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/teambition/rrule-go"
@@ -48,7 +47,7 @@ func (s ToolContainer) SetScheduledAnalysisConfiguration(response http.ResponseW
 	var config ScheduledAnalysisConfiguration
 
 	if err := api.ReadJSONRequestPayloadLimited(&config, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, v2.ErrorParseParams, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorParseParams, request), response)
 	} else if !config.Enabled {
 		nextParameter := appcfg.ScheduledAnalysisParameter{
 			Enabled: false,

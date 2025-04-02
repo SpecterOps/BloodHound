@@ -1,26 +1,34 @@
 ---
-title: Configure SAML with Auth0
-description: Configure SAML authentication with Auth0
+title: "SAML: Auth0 Configuration"
+description: "This document provides instructions for creating an application within Auth0 for compatibility with BloodHound Enterprise."
 ---
 
-# Configure SAML with Auth0
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
-For general information about SAML in BloodHound Enterprise, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
+For general instructions on adding a SAML provider to BloodHound Enterprise, or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
 
 See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml) before starting.
 
-## Configure Auth0
+## Create an Auth0 Application
 
-1.  Log in to your Auth0 dashboard.
-
-2.  Navigate to **Applications** > **Applications**.
-
-3.  Click **Create Application**.
-
-4.  Enter the following information:
-    * **Name**: BloodHound Enterprise
-    * **Choose an application type**: Regular Web Application
-
-5.  Click **Create**.
-
+1.  Create an authentication application for BloodHound Enterprise in Auth0.
+ <Frame>
+  <img src="/assets/image-2-39.png"/>
+</Frame>
+2.  Assign a recognizable name to the application and select the integration option for "Regular Web Application."
+<Frame>
+  <img src="/assets/image-2-40.png"/>
+</Frame>
+3.  After the creation of the application in Auth0 you should see the application details page.
+<Frame>
+  <img src="/assets/image-2-41.png"/>
+</Frame>
+4.  Click on the "Addons" tab.
+<Frame>
+  <img src="/assets/image-2-42.png"/>
+</Frame>
+5.  Enable the "SAML2 Webapp" toggle and download the Identify Provider Metadata file.
+<Frame>
+  <img src="/assets/image-2-43.png"/>
+</Frame>
 6.  Follow the instructions at [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml) to create the SAML provider in BloodHound Enterprise.

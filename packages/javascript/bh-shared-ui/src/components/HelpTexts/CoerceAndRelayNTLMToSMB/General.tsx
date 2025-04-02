@@ -29,7 +29,7 @@ const General: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Click on Relay Targets to view victim computers with administrative rights on the target computer.
+                Click on Composition to view victim computers with administrative rights on the target computer.
             </Typography>
         </>
     );

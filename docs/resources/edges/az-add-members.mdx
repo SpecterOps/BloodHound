@@ -1,0 +1,31 @@
+---
+title: AZAddMembers
+description: "The ability to add other principals to an Azure security group"
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+## Abuse Info
+
+Via the Azure portal:
+
+1.  Find the group in your tenant (Microsoft Entra ID -> Manage -> Groups -> Find Group in list)
+2.  Click the group from the list
+3.  In the overview, click “View group memberships”
+4.  At the top, click “Add memberships”
+5.  Find the principals you want to add to the group and click them, then click “select” at the bottom
+6.  You should see a message in the top right saying “Successfully added membership”
+
+Via PowerZure:
+
+Add-AzureADGroup -User \[UPN\] -Group \[Group name\]
+
+## Opsec Considerations
+
+The Azure activity log for the tenant will log who added what principal to what group, including the date and time.
+
+## References
+
+* [https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadgroup](https://powerzure.readthedocs.io/en/latest/Functions/operational.html#add-azureadgroup)
+* [https://docs.microsoft.com/en-us/powershell/module/azuread/add-azureadgroupmember?view=azureadps-2.0-preview](https://docs.microsoft.com/en-us/powershell/module/azuread/add-azureadgroupmember?view=azureadps-2.0-preview)

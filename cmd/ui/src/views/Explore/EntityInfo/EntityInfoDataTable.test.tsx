@@ -109,6 +109,13 @@ const handlers: Array<RequestHandler> = [
             return res(ctx.json(keyVaultTest.CertificateReaders));
         }
     }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
 ];
 
 const server = setupServer(...handlers);

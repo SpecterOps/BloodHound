@@ -1,42 +1,13 @@
 ---
-title: Configure SAML with Entra ID
-description: Configure SAML authentication with Microsoft Entra ID (formerly Azure AD)
+Title: "SAML: Entra ID Configuration"
+description: "This document provides instructions for creating an application within Entra ID for compatibility with BloodHound Enterprise."
 ---
 
-# Configure SAML with Entra ID
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
-For general information about SAML in BloodHound Enterprise, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
+For general instructions on adding a SAML provider to BloodHound Enterprise or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
 
 See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml) before starting.
-
-## Configure Entra ID
-
-1.  Log in to the Azure portal.
-
-2.  Navigate to **Microsoft Entra ID** > **Enterprise applications** > **New application**.
-
-3.  Click **Create your own application**.
-
-4.  Enter the following information:
-    * **Name**: BloodHound Enterprise
-    * **Integration type**: Non-gallery application
-
-5.  Click **Create**.
-
-6.  Navigate to **Single sign-on** and select **SAML**.
-
-7.  Under **Basic SAML Configuration**, enter the following information:
-    * **Identifier (Entity ID)**: `https://<your-bloodhound-url>/api/v2/saml/metadata`
-    * **Reply URL (Assertion Consumer Service URL)**: `https://<your-bloodhound-url>/api/v2/saml/acs`
-    * **Sign on URL**: `https://<your-bloodhound-url>`
-    * **Relay State**: Leave blank
-
-8.  Under **User Attributes & Claims**, ensure the following claims are present:
-    * **Unique User Identifier (Name ID)**: user.userprincipalname
-    * **email**: user.mail
-    * **groups**: user.groups
-
-9.  Use the downloaded metadata.xml file and follow the instructions at [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml) to Create the SAML Configuration in BloodHound.
 
 ## SAML Settings
 
