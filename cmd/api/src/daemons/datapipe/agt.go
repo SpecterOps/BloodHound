@@ -322,7 +322,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 }
 
 // TODO Batching?
-func selectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
+func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
 
@@ -400,16 +400,6 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 			if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 				return err
 			} else {
-				// Expand based on tag type
-				// TODO Make customizable in future
-				expansionMethod := model.AssetGroupExpansionMethodNone
-				switch tag.Type {
-				case model.AssetGroupTagTypeTier:
-					expansionMethod = model.AssetGroupExpansionMethodAll
-				case model.AssetGroupTagTypeLabel:
-					expansionMethod = model.AssetGroupExpansionMethodChildren
-				}
-
 				wg := sync.WaitGroup{}
 				for _, selector := range selectors {
 					if !selector.DisabledAt.IsZero() {
@@ -418,7 +408,7 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					// Parallelize the selection of nodes
 					go func() {
 						defer wg.Done()
-						if err = selectNodes(ctx, db, graphDb, selector, expansionMethod); err != nil {
+						if err = SelectNodes(ctx, db, graphDb, selector, tag.GetExpansionMethod()); err != nil {
 							slog.Error("AGT: Error selecting nodes", "selector", selector, "err", err)
 						}
 					}()
