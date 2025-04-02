@@ -302,7 +302,11 @@ func Generic[E any](node E, visitor HierarchicalVisitor[E], cursorConstructor fu
 	return nil
 }
 
-func WalkPgSQL(node pgsql.SyntaxNode, visitors ...HierarchicalVisitor[pgsql.SyntaxNode]) error {
+func PgSQL(node pgsql.SyntaxNode, visitors ...HierarchicalVisitor[pgsql.SyntaxNode]) error {
+	if node == nil {
+		return nil
+	}
+
 	if len(visitors) == 1 {
 		// If there's only one visitor no need to wrap and add indirection to visit calls
 		return Generic(node, visitors[0], newSQLWalkCursor)
@@ -311,7 +315,11 @@ func WalkPgSQL(node pgsql.SyntaxNode, visitors ...HierarchicalVisitor[pgsql.Synt
 	return Generic(node, NewOrderedVisitors[pgsql.SyntaxNode](visitors...), newSQLWalkCursor)
 }
 
-func WalkCypher(node cypher.SyntaxNode, visitors ...HierarchicalVisitor[cypher.SyntaxNode]) error {
+func Cypher(node cypher.SyntaxNode, visitors ...HierarchicalVisitor[cypher.SyntaxNode]) error {
+	if node == nil {
+		return nil
+	}
+
 	if len(visitors) == 1 {
 		// If there's only one visitor no need to wrap and add indirection to visit calls
 		return Generic(node, visitors[0], newCypherWalkCursor)

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Routable } from 'bh-shared-ui';
 import React from 'react';
 import * as routes from 'src/routes/constants';
 
@@ -29,7 +30,7 @@ const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
 const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
 
-export const ROUTES = [
+export const ROUTES: Routable[] = [
     {
         path: routes.ROUTE_USER_DISABLED,
         component: DisabledUser,
@@ -97,5 +98,39 @@ export const ROUTES = [
         component: NotFound,
         authenticationRequired: false,
         navigation: false,
+    },
+];
+
+const TierManagement = React.lazy(() =>
+    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.TierManagement }))
+);
+const TierManagementEdit = React.lazy(() =>
+    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.Edit }))
+);
+const TierManagementCreate = React.lazy(() =>
+    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.Create }))
+);
+
+export const TIER_MANAGEMENT_ROUTES: Routable[] = [
+    {
+        exact: true,
+        path: routes.ROUTE_TIER_MANAGEMENT,
+        component: TierManagement,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        exact: true,
+        path: routes.ROUTE_TIER_MANAGEMENT_EDIT,
+        component: TierManagementEdit,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        exact: true,
+        path: routes.ROUTE_TIER_MANAGEMENT_CREATE,
+        component: TierManagementCreate,
+        authenticationRequired: true,
+        navigation: true,
     },
 ];
