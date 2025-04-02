@@ -203,11 +203,6 @@ func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 		return err
 	}
 
-	// Assert that the base graph schema exists and has a matching schema definition
-	if err := s.AssertSchema(ctx, schema); err != nil {
-		return err
-	}
-
 	if schema.DefaultGraph.Name != "" {
 		// There's a default graph defined. Assert that it exists and has a matching schema
 		if err := s.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
