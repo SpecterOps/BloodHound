@@ -493,7 +493,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   []byte(`{"data":{"kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
 			},
 		},
