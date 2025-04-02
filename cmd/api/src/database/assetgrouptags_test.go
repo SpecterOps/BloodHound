@@ -229,7 +229,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		testCtx       = context.Background()
 		isDefault     = false
 		allowDisable  = true
-		autoCertify   = false
+		autoCertify   = null.BoolFrom(false)
 		test1Selector = model.AssetGroupTagSelector{
 			Name:            "test selector name",
 			Description:     "test description",
@@ -238,6 +238,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			},
 			AllowDisable: true,
+			AutoCertify:  autoCertify,
 		}
 		test2Selector = model.AssetGroupTagSelector{
 			Name:            "test2 selector name",
@@ -247,6 +248,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 				{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 			},
 			AllowDisable: true,
+			AutoCertify:  autoCertify,
 		}
 	)
 

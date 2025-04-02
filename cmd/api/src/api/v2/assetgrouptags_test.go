@@ -687,7 +687,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 							{Type: model.SelectorTypeCypher, Value: "MATCH (n:User) RETURN n LIMIT 1;"},
 						},
 						IsDefault:   false,
-						AutoCertify: false,
+						AutoCertify: null.BoolFrom(false),
 					})
 				},
 				Setup: func() {
