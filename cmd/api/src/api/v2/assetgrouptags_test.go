@@ -556,6 +556,31 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 				},
 			},
 			{
+				Name: "CannotUpdateNameOnDefaultSelector",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagSelectorID, "1")
+					apitest.BodyStruct(input, model.AssetGroupTagSelector{
+						Name: "TestSelector",
+					})
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupTagSelectorBySelectorId(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelector{IsDefault: true}, nil).Times(1)
+
+					mockGraphDb.EXPECT().
+						PrepareCypherQuery(gomock.Any(), gomock.Any()).
+						Return(queries.PreparedQuery{}, nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "cannot update name on a default selector")
+				},
+			},
+			{
 				Name: "DatabaseError",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
@@ -572,8 +597,6 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockGraphDb.EXPECT().PrepareCypherQuery(gomock.Any(), gomock.Any()).
-						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockDB.EXPECT().UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).

@@ -116,15 +116,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		// PATCH requests may not contain every field, only update if fields exist
-		if selUpdateReq.Name != "" {
-			selector.Name = selUpdateReq.Name
-		}
-
-		if selUpdateReq.Description != "" {
-			selector.Description = selUpdateReq.Description
-		}
-
+		// we can update DisabledAt on a default selector
 		if selUpdateReq.DisabledAt.Valid {
 			if selector.AllowDisable {
 				selector.DisabledAt = selUpdateReq.DisabledAt
@@ -136,17 +128,42 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 				}
 			} else {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
+				return
 			}
 		}
 
+		// we can update AutoCertify on a default selector
 		if selUpdateReq.AutoCertify.Valid {
 			selector.AutoCertify = selUpdateReq.AutoCertify
+		}
+
+		if selUpdateReq.Name != "" {
+			if !selector.IsDefault {
+				selector.Name = selUpdateReq.Name
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update name on a default selector", request), response)
+				return
+			}
+		}
+
+		if selUpdateReq.Description != "" {
+			if !selector.IsDefault {
+				selector.Description = selUpdateReq.Description
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update description on a default selector", request), response)
+				return
+			}
 		}
 
 		// if seeds are not included, call the DB update with them set to nil
 		var seedsTemp []model.SelectorSeed
 		if len(selUpdateReq.Seeds) > 0 {
-			selector.Seeds = selUpdateReq.Seeds
+			if !selector.IsDefault {
+				selector.Seeds = selUpdateReq.Seeds
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update seeds on a default selector", request), response)
+				return
+			}
 		} else {
 			// the DB update function will skip updating the seeds in this case
 			seedsTemp = selector.Seeds
