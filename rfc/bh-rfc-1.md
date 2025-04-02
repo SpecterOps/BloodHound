@@ -7,7 +7,7 @@ authors: |
     [@mistahj67](github.com/mistahj67)
     [Lees, Dillon](dlees@specterops.io)
     [Rangel, Ulises](urangel@specterops.io)
-status: DRAFT
+status: ACCEPTED
 created: 2025-01-14
 ---
 
@@ -92,7 +92,7 @@ This document provides a comprehensive overview of the BloodHound branching and 
 
 - Stabilization branches are short-lived branches used to fix bugs/defects in a given release or staged release.
 - Stabilization branches are named by combining the project management issue number and an optional, short, human-readable, and hyphenated description of the work.
-    - E.g. - For issue number `bed-1234` the feature branch name could be either `bed-1234` or `bed-1234-my-short-description`.
+    - E.g. - For issue number `bed-1234` the stabilization branch name could be either `bed-1234` or `bed-1234-my-short-description`.
 - Stabilization branches are branched from the corresponding staging branch.
 - Stabilization branches are merged into the corresponding staging branch and deleted after their corresponding development work has been tested, reviewed, and approved.
 - Stabilization branches should squash commits prior to merging into the corresponding staging branch when possible.

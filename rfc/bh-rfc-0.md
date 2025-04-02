@@ -3,7 +3,7 @@ bh-rfc: 0
 title: BloodHound RFC Structure & Style Guide
 authors: |
     [Lees, Dillon](dlees@specterops.io)
-status: DRAFT
+status: ACCEPTED
 created: 2025-01-21
 ---
 
