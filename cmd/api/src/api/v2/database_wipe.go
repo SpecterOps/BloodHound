@@ -194,7 +194,7 @@ func (s Resources) deleteHighValueSelectors(ctx context.Context, auditEntry *mod
 }
 
 func (s Resources) deleteFileIngestHistory(ctx context.Context, auditEntry *model.AuditEntry) (failure bool) {
-	if err := s.DB.DeleteAllFileUploads(ctx); err != nil {
+	if err := s.DB.DeleteAllIngestJobs(ctx); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("%s: %s", "there was an error deleting file ingest history", err.Error()))
 		s.handleAuditLogForDatabaseWipe(ctx, auditEntry, false, "file ingest history")
 		return true
