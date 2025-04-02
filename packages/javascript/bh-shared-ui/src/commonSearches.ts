@@ -397,7 +397,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'ESC8-vulnerable Enterprise CAs',
-                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.adcswebenrollmenthttp = True\nOR (n.adcswebenrollmenthttps = True AND n.adcswebenrollmenthttpsepa = False)\nRETURN n',
+                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n',
             },
             {
                 description: 'Computers with the outgoing NTLM setting set to Deny all',
