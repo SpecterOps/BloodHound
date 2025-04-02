@@ -100,7 +100,10 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
 
-	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -110,9 +113,6 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
@@ -128,7 +128,12 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		if selUpdateReq.DisabledAt.Valid {
 			if selector.AllowDisable {
 				selector.DisabledAt = selUpdateReq.DisabledAt
-				selector.DisabledBy = null.StringFrom(actor.ID.String())
+				if selector.DisabledAt.Time.IsZero() {
+					// clear DisabledBy if DisabledAt is set to zero
+					selector.DisabledBy = null.String{}
+				} else {
+					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				}
 			} else {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
 			}

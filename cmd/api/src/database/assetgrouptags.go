@@ -96,14 +96,9 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 		selector = model.AssetGroupTagSelector{
 			ID: assetGroupTagSelectorId,
 		}
-
-		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionGetAssetGroupTagSelector,
-			Model:  &selector, // Pointer is required to ensure success log contains updated fields after transaction
-		}
 	)
 
-	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
 			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify 
 			FROM %s WHERE id = ?`,
