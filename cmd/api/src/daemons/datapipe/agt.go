@@ -400,9 +400,13 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 			if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 				return err
 			} else {
-				wg := sync.WaitGroup{}
+				var (
+					disabledSelectorIds []int
+					wg                  = sync.WaitGroup{}
+				)
 				for _, selector := range selectors {
 					if !selector.DisabledAt.IsZero() {
+						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
 						continue
 					}
 					// Parallelize the selection of nodes
@@ -415,6 +419,10 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					wg.Add(1)
 				}
 				wg.Wait()
+				// Remove any disabled selector nodes
+				if len(disabledSelectorIds) > 0 {
+					err = db.DeleteSelectorNodesBySelectorIds(ctx, disabledSelectorIds...)
+				}
 			}
 		}
 	}
@@ -438,11 +446,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			newTaggedNodes = cardinality.NewBitmap64()
 		)
 
-		disabledSelectors := cardinality.NewBitmap32()
 		for _, selector := range selectors {
-			if !selector.DisabledAt.IsZero() {
-				disabledSelectors.Add(uint32(selector.ID))
-			}
 			selectorIds = append(selectorIds, selector.ID)
 		}
 
@@ -461,7 +465,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			for _, nodeDb := range selectedNodes {
 				if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
 					// Skip any that are not certified when tag requires certification or are selected by disabled selectors
-					if tag.RequireCertify.Bool && nodeDb.Certified <= 0 || disabledSelectors.Contains(uint32(nodeDb.SelectorId)) {
+					if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
 						continue
 					}
 

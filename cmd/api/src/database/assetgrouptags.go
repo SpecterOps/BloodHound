@@ -51,6 +51,7 @@ type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeIds ...graph.ID) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeIds ...graph.ID) error
+	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 }
 
@@ -317,11 +318,23 @@ func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, selector
 }
 
 func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeIds ...graph.ID) error {
+	if len(nodeIds) == 0 {
+		return nil
+	}
 	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ? AND node_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeIds))
+}
+
+func (s *BloodhoundDB) DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) error {
+	if len(selectorIds) == 0 {
+		return nil
+	}
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds))
 }
 
 func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error) {
 	var nodes []model.AssetGroupSelectorNode
-
+	if len(selectorIds) == 0 {
+		return nodes, nil
+	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }

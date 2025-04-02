@@ -701,6 +701,25 @@ func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesByNodeId(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesByNodeId), varargs...)
 }
 
+// DeleteSelectorNodesBySelectorIds mocks base method.
+func (m *MockDatabase) DeleteSelectorNodesBySelectorIds(arg0 context.Context, arg1 ...int) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteSelectorNodesBySelectorIds", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSelectorNodesBySelectorIds indicates an expected call of DeleteSelectorNodesBySelectorIds.
+func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesBySelectorIds(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesBySelectorIds), varargs...)
+}
+
 // DeleteUser mocks base method.
 func (m *MockDatabase) DeleteUser(ctx context.Context, user model.User) error {
 	m.ctrl.T.Helper()
