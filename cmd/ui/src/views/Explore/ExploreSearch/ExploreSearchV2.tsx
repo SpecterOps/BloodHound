@@ -75,8 +75,9 @@ const ExploreSearchV2: React.FC = () => {
 
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
-    const pathfindingFilterState = usePathfindingFilters();
     const cypherSearchState = useCypherSearch();
+    // We can move this back down into the filter modal once we remove the redux implementation
+    const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
 
