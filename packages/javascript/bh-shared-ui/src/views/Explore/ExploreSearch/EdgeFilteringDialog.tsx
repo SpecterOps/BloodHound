@@ -36,8 +36,8 @@ import {
     ListItemText,
     SvgIcon,
     Typography,
+    useTheme,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useState } from 'react';
 import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
 

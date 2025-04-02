@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
-import { EdgeCheckboxType } from '../../../edgeTypes';
+import { EdgeCheckboxType } from '../../..';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 
 export type PathfindingFilterState = {
