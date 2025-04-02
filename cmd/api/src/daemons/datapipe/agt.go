@@ -77,9 +77,8 @@ func newSrcSet() *srcSet {
 	}
 }
 
-func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expand bool) (graph.ThreadSafeNodeSet, srcSet, error) {
+func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) (graph.ThreadSafeNodeSet, srcSet, error) {
 	var (
-		allSeedNodes = graph.NodeSet{}
 		result       = graph.NewThreadSafeNodeSet(graph.NodeSet{})
 		resultSrcSet = newSrcSet()
 		err          error
@@ -94,14 +93,14 @@ func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 					return err
 				} else {
 					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
-					allSeedNodes.AddSet(seedNodes)
+					result.AddSet(seedNodes)
 				}
 			case model.SelectorTypeCypher:
 				if seedNodes, err := ops.FetchNodesByQuery(tx, seed.Value); err != nil {
 					return err
 				} else {
 					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
-					allSeedNodes.AddSet(seedNodes)
+					result.AddSet(seedNodes)
 				}
 			default:
 				slog.WarnContext(ctx, fmt.Sprintf("AGT: Unsupported selector type: %d", seed.Type))
@@ -112,22 +111,27 @@ func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		return *result, *resultSrcSet, err
 	}
 
-	if !expand {
-		return *graph.NewThreadSafeNodeSet(allSeedNodes), *resultSrcSet, nil
+	if expansionMethod == model.AssetGroupExpansionMethodNone {
+		return *result, *resultSrcSet, nil
 	}
 
 	traversalInst := traversal.New(graphDb, analysis.MaximumDatabaseParallelWorkers)
-	// Expand to child nodes recursively as needed based on kind
-	for _, node := range allSeedNodes {
-		if err = fetchChildNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
-			return *result, *resultSrcSet, err
+
+	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodChildren {
+		// Expand to child nodes recursively as needed based on kind
+		for _, node := range result.Copy().Slice() {
+			if err = fetchChildNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
+				return *result, *resultSrcSet, err
+			}
 		}
 	}
 
-	// Expand to parent nodes as needed
-	for _, node := range result.Copy().Slice() {
-		if err = fetchParentNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
-			return *result, *resultSrcSet, err
+	if expansionMethod == model.AssetGroupExpansionMethodAll || expansionMethod == model.AssetGroupExpansionMethodParents {
+		// Expand to parent nodes as needed
+		for _, node := range result.Copy().Slice() {
+			if err = fetchParentNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
+				return *result, *resultSrcSet, err
+			}
 		}
 	}
 
@@ -255,9 +259,6 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
 	var pattern traversal.PatternContinuation
 
-	// Add visited node to result set
-	result.AddIfNotExists(node)
-
 	switch {
 	case node.Kinds.ContainsOneOf(ad.Group, azure.Group):
 		// MATCH (m:Group)<-[:MemberOf*..]-(n:Base) RETURN n
@@ -321,7 +322,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 }
 
 // TODO Batching?
-func selectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expand bool) error {
+func selectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
 
@@ -339,7 +340,7 @@ func selectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	}
 
 	// 1. Grab the graph nodes
-	if nodes, srcSet, err := fetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expand); err != nil {
+	if nodes, srcSet, err := fetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod); err != nil {
 		return err
 		// 2. Grab the already selected nodes
 	} else if oldSelectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selector.ID); err != nil {
@@ -399,8 +400,16 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 			if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 				return err
 			} else {
-				// We only want to expand the results set of tiers
-				expand := tag.Type == model.AssetGroupTagTypeTier
+				// Expand based on tag type
+				// TODO Make customizable in future
+				expansionMethod := model.AssetGroupExpansionMethodNone
+				switch tag.Type {
+				case model.AssetGroupTagTypeTier:
+					expansionMethod = model.AssetGroupExpansionMethodAll
+				case model.AssetGroupTagTypeLabel:
+					expansionMethod = model.AssetGroupExpansionMethodChildren
+				}
+
 				wg := sync.WaitGroup{}
 				for _, selector := range selectors {
 					if !selector.DisabledAt.IsZero() {
@@ -409,7 +418,7 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 					// Parallelize the selection of nodes
 					go func() {
 						defer wg.Done()
-						if err = selectNodes(ctx, db, graphDb, selector, expand); err != nil {
+						if err = selectNodes(ctx, db, graphDb, selector, expansionMethod); err != nil {
 							slog.Error("AGT: Error selecting nodes", "selector", selector, "err", err)
 						}
 					}()
