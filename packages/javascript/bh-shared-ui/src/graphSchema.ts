@@ -1,25 +1,9 @@
-// Copyright 2025 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
 
 export enum ActiveDirectoryNodeKind {
 Entity = 'Base',
 User = 'User',
 Computer = 'Computer',
 Group = 'Group',
-Group365 = 'Group365',
 GPO = 'GPO',
 OU = 'OU',
 Container = 'Container',
@@ -43,8 +27,6 @@ case ActiveDirectoryNodeKind.Computer:
 return 'Computer'
 case ActiveDirectoryNodeKind.Group: 
 return 'Group'
-case ActiveDirectoryNodeKind.Group365:
-return 'Group365'
 case ActiveDirectoryNodeKind.GPO: 
 return 'GPO'
 case ActiveDirectoryNodeKind.OU: 
@@ -759,6 +741,7 @@ GetKeys = 'AZGetKeys',
 GetSecrets = 'AZGetSecrets',
 HasRole = 'AZHasRole',
 MemberOf = 'AZMemberOf',
+O365MemberOf = 'AZGroup365Member',
 Owner = 'AZOwner',
 RunsAs = 'AZRunsAs',
 VMContributor = 'AZVMContributor',
@@ -817,6 +800,8 @@ case AzureRelationshipKind.HasRole:
 return 'HasRole'
 case AzureRelationshipKind.MemberOf: 
 return 'MemberOf'
+case AzureRelationshipKind.O365MemberOf: 
+return 'O365MemberOf'
 case AzureRelationshipKind.Owner: 
 return 'Owner'
 case AzureRelationshipKind.RunsAs: 
@@ -1005,7 +990,7 @@ return undefined
 }
 }
 export function AzurePathfindingEdges (): AzureRelationshipKind[] {
-return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.Contains]
+return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.O365MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.Contains]
 }
 export enum CommonNodeKind {
 MigrationData = 'MigrationData',

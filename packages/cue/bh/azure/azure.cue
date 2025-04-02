@@ -602,6 +602,12 @@ Owns: types.#Kind & {
 	representation: "AZOwns"
 }
 
+O365MemberOf: types.#Kind & {
+	symbol:         "O365MemberOf"
+	schema:         "azure"
+	representation: "AZGroup365Member"
+}
+
 ScopedTo: types.#Kind & {
 	symbol:         "ScopedTo"
 	schema:         "azure"
@@ -743,6 +749,7 @@ RelationshipKinds: [
 	GetSecrets,
 	HasRole,
 	MemberOf,
+	O365MemberOf,
 	Owner,
 	RunsAs,
 	VMContributor,
@@ -851,6 +858,7 @@ InboundOutboundRelationshipKinds: [
 	GetSecrets,
 	HasRole,
 	MemberOf,
+	O365MemberOf,
 	Owner,
 	RunsAs,
 	VMContributor,

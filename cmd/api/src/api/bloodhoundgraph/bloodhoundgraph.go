@@ -150,7 +150,7 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fa-users",
 		}
-	case "AZGroup3650":
+	case "AZGroup365":
 		s.FontIcon = &BloodHoundGraphFontIcon{
 			Text: "fa-users",
 		}
