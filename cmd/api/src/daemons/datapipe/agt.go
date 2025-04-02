@@ -521,15 +521,15 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 	} else {
 		// Tiers are hierarchical and must be handled synchronously while labels can be tagged in parallel
 		var (
-			labels       []model.AssetGroupTag
-			tiersOrdered []model.AssetGroupTag
+			labelsOrOwned []model.AssetGroupTag
+			tiersOrdered  []model.AssetGroupTag
 		)
 		for _, tag := range tags {
 			switch tag.Type {
 			case model.AssetGroupTagTypeTier:
 				tiersOrdered = append(tiersOrdered, tag)
-			case model.AssetGroupTagTypeLabel:
-				labels = append(labels, tag)
+			case model.AssetGroupTagTypeLabel, model.AssetGroupTagTypeOwned:
+				labelsOrOwned = append(labelsOrOwned, tag)
 			default:
 				slog.WarnContext(ctx, fmt.Sprintf("AGT: Tag type %d is not supported", tag.Type), "tag", tag)
 			}
@@ -542,12 +542,12 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Fire off the label tagging
 		wg := sync.WaitGroup{}
-		for _, label := range labels {
+		for _, tag := range labelsOrOwned {
 			// Parallelize the tagging of label nodes
 			go func() {
 				defer wg.Done()
-				if err = tagAssetGroupNodes(ctx, db, graphDb, label); err != nil {
-					slog.Error("AGT: Error tagging nodes", "label", label, "err", err)
+				if err = tagAssetGroupNodes(ctx, db, graphDb, tag); err != nil {
+					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
 				}
 			}()
 			wg.Add(1)
