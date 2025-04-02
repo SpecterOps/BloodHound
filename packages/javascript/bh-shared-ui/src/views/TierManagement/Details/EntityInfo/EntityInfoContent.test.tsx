@@ -67,11 +67,15 @@ afterAll(() => server.close());
 
 describe('EntityInfoContent', () => {
     it('AZRole information panel will not display a section for PIM Assignments', async () => {
-        const testId = '1';
-
         render(
             <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={AzureNodeKind.Role} />
+                <EntityInfoContent
+                    id='1'
+                    nodeType={AzureNodeKind.Role}
+                    selectedObject={1}
+                    selectedTag={0}
+                    properties={{ name: 'Test User' }}
+                />
             </EntityInfoPanelContextProvider>
         );
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
@@ -81,12 +85,17 @@ describe('EntityInfoContent', () => {
 
 describe('EntityObjectInformation', () => {
     it('Calls the `Base` endpoint for a LocalGroup type node', async () => {
-        const testId = '1';
         const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalGroup} />
+                <EntityInfoContent
+                    id='1'
+                    nodeType={ActiveDirectoryNodeKind.LocalGroup}
+                    selectedObject={1}
+                    selectedTag={0}
+                    properties={{ name: 'Test User' }}
+                />
             </EntityInfoPanelContextProvider>
         );
 
@@ -98,12 +107,17 @@ describe('EntityObjectInformation', () => {
     });
 
     it('Calls the `Base` endpoint for a LocalUser type node', async () => {
-        const testId = '1';
         const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalUser} />
+                <EntityInfoContent
+                    id='1'
+                    nodeType={ActiveDirectoryNodeKind.LocalUser}
+                    selectedObject={1}
+                    selectedTag={0}
+                    properties={{ name: 'Test User' }}
+                />
             </EntityInfoPanelContextProvider>
         );
 
@@ -115,12 +129,17 @@ describe('EntityObjectInformation', () => {
     });
 
     it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
-        const testId = '1';
         const user = userEvent.setup();
 
         render(
             <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={'Unknown'} databaseId='42' />
+                <EntityInfoContent
+                    id='1'
+                    nodeType={'Unknown'}
+                    selectedObject={1}
+                    selectedTag={0}
+                    properties={{ name: 'Test User' }}
+                />
             </EntityInfoPanelContextProvider>
         );
 
