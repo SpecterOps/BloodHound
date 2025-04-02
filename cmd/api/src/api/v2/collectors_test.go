@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -185,7 +186,40 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 		},
 		{
-			name: "Success",
+			name: "Success: download collector not-latest release - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+				param := map[string]string{
+					"release_tag":    "1.0.0",
+					"collector_type": "azurehound",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				err := os.Mkdir("azurehound", 0755)
+				if err != nil {
+					if !errors.Is(err, os.ErrExist){
+						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
+					}
+				}
+
+				file, err := os.Create("azurehound/azurehound-1.0.0.zip")
+				if err != nil {
+					t.Fatalf("error using os.Create to create test file: %v", err)
+				}
+				return file
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   []uint8{},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-1.0.0.zip\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: download collector latest release - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -200,7 +234,9 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			createCollectorFile: func(t *testing.T) *os.File {
 				err := os.Mkdir("azurehound", 0755)
 				if err != nil {
-					t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
+					if !errors.Is(err, os.ErrExist){
+						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
+					}
 				}
 
 				file, err := os.Create("azurehound/azurehound-latest.zip")
@@ -244,6 +280,191 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			resouces.DownloadCollectorByVersion(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := processResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			require.Equal(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		responseBody   any
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name                string
+		buildRequest        func() *http.Request
+		createCollectorFile func(t *testing.T) *os.File
+		expected            expected
+	}
+	tt := []testData{
+		{
+			name: "Error: invalid collector type - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						RawQuery: "",
+					},
+				}
+
+				return request
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				return nil
+			},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   []uint8([]byte{}),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: collector type does not exist in collector manifest map - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+				param := map[string]string{
+					"release_tag":    "latest",
+					"collector_type": "sharphound",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				return nil
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: os.ReadFile error when retrieving collector file - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+				param := map[string]string{
+					"release_tag":    "latest",
+					"collector_type": "azurehound",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				return nil
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: download collector not-latest release - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+				param := map[string]string{
+					"release_tag":    "1.0.0",
+					"collector_type": "azurehound",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				err := os.Mkdir("azurehound", 0755)
+				if err != nil {
+					if !errors.Is(err, os.ErrExist){
+						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
+					}
+				}
+
+				file, err := os.Create("azurehound/azurehound-1.0.0.zip.sha256")
+				if err != nil {
+					t.Fatalf("error using os.Create to create test file: %v", err)
+				}
+				return file
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   []uint8{},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-1.0.0.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: download collector latest release - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+				param := map[string]string{
+					"release_tag":    "latest",
+					"collector_type": "azurehound",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			createCollectorFile: func(t *testing.T) *os.File {
+				err := os.Mkdir("azurehound", 0755)
+				if err != nil {
+					if !errors.Is(err, os.ErrExist){
+						t.Fatalf("error using os.Mkdir to create test file directory: %v", err)
+					}
+				}
+
+				file, err := os.Create("azurehound/azurehound-latest.zip.sha256")
+				if err != nil {
+					t.Fatalf("error using os.Create to create test file: %v", err)
+				}
+				return file
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   []uint8{},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-latest.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			request := testCase.buildRequest()
+			testFile := testCase.createCollectorFile(t)
+			if testFile != nil {
+				defer func() {
+					err := os.RemoveAll("azurehound")
+					if err != nil {
+						t.Fatalf("error removing test file: %v", err)
+					}
+				}()
+			}
+
+			collectorManifests := map[string]config.CollectorManifest{
+				"azurehound": {
+					Latest:   "latest",
+					Versions: []config.CollectorVersion{},
+				},
+			}
+
+			resouces := v2.Resources{
+				CollectorManifests: collectorManifests,
+			}
+
+			response := httptest.NewRecorder()
+
+			resouces.DownloadCollectorChecksumByVersion(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := processResponse(t, response)
