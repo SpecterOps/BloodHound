@@ -119,6 +119,19 @@ func (s AssetGroupTag) ToType() string {
 	}
 }
 
+func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return AssetGroupExpansionMethodAll
+	case AssetGroupTagTypeLabel:
+		return AssetGroupExpansionMethodChildren
+	case AssetGroupTagTypeOwned:
+		return AssetGroupExpansionMethodNone
+	default:
+		return AssetGroupExpansionMethodNone
+	}
+}
+
 type SelectorSeed struct {
 	SelectorId int          `json:"selector_id"`
 	Type       SelectorType `json:"type"`
