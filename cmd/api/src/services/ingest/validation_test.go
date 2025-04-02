@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package fileupload_test
+package ingest_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/services/fileupload"
+	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,7 +75,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 	}
 
 	for _, assertion := range assertions {
-		meta, err := fileupload.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
+		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
 			assert.Equal(t, meta.Type, assertion.expectedType)
