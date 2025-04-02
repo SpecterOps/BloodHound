@@ -4522,6 +4522,109 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to update a selector on",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "Selector ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "UpdateAssetGroupTagSelector",
+        "summary": "Update Asset Group Tag Selector",
+        "description": "Update an asset group tag selector's properties",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating an asset group tag selector. One or more fields must be provided. Only provided fields will be updated.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "disabled_at": {
+                    "$ref": "#/components/schemas/null.time"
+                  },
+                  "auto_certify": {
+                    "type": "boolean"
+                  },
+                  "seeds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-group-tags/{asset_group_tag_id}": {
       "parameters": [
         {
