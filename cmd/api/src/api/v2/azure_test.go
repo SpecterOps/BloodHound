@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -22,12 +23,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDB         *graphmocks.MockDatabase
-		mockGraphQuery *mocks.MockGraph
-	}
-	type args struct {
-		context  context.Context
-		objectID string
+		mockDB *graphmocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   any
@@ -36,7 +32,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	}
 	type testData struct {
 		name             string
-		args             args
 		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
@@ -45,10 +40,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: empty relatedEntityType - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -65,10 +56,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: invalid type - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -87,10 +74,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: malformed query parameter skip - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -109,10 +92,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: malformed query parameter limit - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -131,10 +110,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: graphRelatedEntityType database error - Internal Server Error",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -155,10 +130,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Success: graphRelatedEntityType - OK",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -179,10 +150,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: invalid skip parameter - 400",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -203,10 +170,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: related entity type not found - Not Found",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -227,10 +190,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: graph query memory limit - Internal Server Error",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -251,10 +210,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Error: ReadTransaction database error - Internal Server Error",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -275,10 +230,6 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		},
 		{
 			name: "Success: listRelatedEntityType - OK",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -304,21 +255,19 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockGraphQuery: mocks.NewMockGraph(ctrl),
-				mockDB:         graphmocks.NewMockDatabase(ctrl),
+				mockDB: graphmocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				Graph:      mocks.mockDB,
+				Graph: mocks.mockDB,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetAZRelatedEntities(testCase.args.context, response, request, testCase.args.objectID)
+			resouces.GetAZRelatedEntities(context.Background(), response, request, "id")
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := processResponse(t, response)
@@ -330,7 +279,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetAZEntity(t *testing.T) {
+func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -338,8 +287,579 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type args struct {
-		context  context.Context
-		objectID string
+		entityType string
+	}
+	type want struct {
+		res any
+		err error
+	}
+	type testData struct {
+		name             string
+		args             args
+		emulateWithMocks func(t *testing.T, mock *mock)
+		want             want
+	}
+
+	tt := []testData{
+		{
+			name: "Error: entityTypeBase",
+			args: args{
+				entityType: "az-base",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeBase",
+			args: args{
+				entityType: "az-base",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.BaseDetails(azure.BaseDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, OutboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeUsers",
+			args: args{
+				entityType: "users",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeUsers",
+			args: args{
+				entityType: "users",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.UserDetails(azure.UserDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, GroupMembership: 0, Roles: 0, ExecutionPrivileges: 0, OutboundObjectControl: 0, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeGroups",
+			args: args{
+				entityType: "groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeGroups",
+			args: args{
+				entityType: "groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.GroupDetails(azure.GroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Roles: 0, GroupMembers: 0, GroupMembership: 0, OutboundObjectControl: 0, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeTenants",
+			args: args{
+				entityType: "tenants",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeTenants",
+			args: args{
+				entityType: "tenants",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.TenantDetails(azure.TenantDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeManagementGroups",
+			args: args{
+				entityType: "management-groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeManagementGroups",
+			args: args{
+				entityType: "management-groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ManagementGroupDetails(azure.ManagementGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeSubscriptions",
+			args: args{
+				entityType: "subscriptions",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeSubscriptions",
+			args: args{
+				entityType: "subscriptions",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.SubscriptionDetails(azure.SubscriptionDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeResourceGroups",
+			args: args{
+				entityType: "resource-groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeResourceGroups",
+			args: args{
+				entityType: "resource-groups",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ResourceGroupDetails(azure.ResourceGroupDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, Descendents: azure.Descendents{DescendentCounts: map[string]int(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeVMs",
+			args: args{
+				entityType: "vms",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeVMs",
+			args: args{
+				entityType: "vms",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.VMDetails(azure.VMDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundExecutionPrivileges: 0, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeManagedClusters",
+			args: args{
+				entityType: "managed-clusters",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeManagedClusters",
+			args: args{
+				entityType: "managed-clusters",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ManagedClusterDetails(azure.ManagedClusterDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeContainerRegistries",
+			args: args{
+				entityType: "container-registries",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeContainerRegistries",
+			args: args{
+				entityType: "container-registries",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ContainerRegistryDetails(azure.ContainerRegistryDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeWebApps",
+			args: args{
+				entityType: "web-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeWebApps",
+			args: args{
+				entityType: "web-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.WebAppDetails(azure.WebAppDetails{Node: azure.Node{Kind: "", Properties: map[string]interface{}(nil)}, InboundObjectControl: 0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeLogicApps",
+			args: args{
+				entityType: "logic-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeLogicApps",
+			args: args{
+				entityType: "logic-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.LogicAppDetails(azure.LogicAppDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeAutomationAccounts",
+			args: args{
+				entityType: "automation-accounts",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeAutomationAccounts",
+			args: args{
+				entityType: "automation-accounts",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.AutomationAccountDetails(azure.AutomationAccountDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeKeyVaults",
+			args: args{
+				entityType: "key-vaults",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeKeyVaults",
+			args: args{
+				entityType: "key-vaults",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.KeyVaultDetails(azure.KeyVaultDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, Readers:azure.KeyVaultReaderCounts{KeyReaders:0, CertificateReaders:0, SecretReaders:0, AllReaders:0}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeDevices",
+			args: args{
+				entityType: "devices",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeDevices",
+			args: args{
+				entityType: "devices",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.DeviceDetails(azure.DeviceDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundExecutionPrivileges:0, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeApplications",
+			args: args{
+				entityType: "applications",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeApplications",
+			args: args{
+				entityType: "applications",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ApplicationDetails(azure.ApplicationDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeVMScaleSets",
+			args: args{
+				entityType: "vm-scale-sets",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeVMScaleSets",
+			args: args{
+				entityType: "vm-scale-sets",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.VMScaleSetDetails(azure.VMScaleSetDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeServicePrincipals",
+			args: args{
+				entityType: "service-principals",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeServicePrincipals",
+			args: args{
+				entityType: "service-principals",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.ServicePrincipalDetails(azure.ServicePrincipalDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, Roles:0, InboundObjectControl:0, OutboundObjectControl:0, InboundAbusableAppRoleAssignments:0, OutboundAbusableAppRoleAssignments:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeRoles",
+			args: args{
+				entityType: "roles",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeRoles",
+			args: args{
+				entityType: "roles",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.RoleDetails(azure.RoleDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, ActiveAssignments:0, PIMAssignments:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: entityTypeFunctionApps",
+			args: args{
+				entityType: "function-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+			},
+			want: want{
+				res: nil,
+				err: errors.New("error"),
+			},
+		},
+		{
+			name: "Success: entityTypeFunctionApps",
+			args: args{
+				entityType: "function-apps",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			want: want{
+				res: azure.FunctionAppDetails(azure.FunctionAppDetails{Node:azure.Node{Kind:"", Properties:map[string]interface {}(nil)}, InboundObjectControl:0}),
+				err: nil,
+			},
+		},
+		{
+			name: "Error: unknown azure entity",
+			args: args{
+				entityType: "unknown",
+			},
+			emulateWithMocks: func(t *testing.T, mocks *mock) {},
+			want: want{
+				res: nil,
+				err: errors.New("unknown azure entity unknown"),
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDB: graphmocks.NewMockDatabase(ctrl),
+			}
+
+			testCase.emulateWithMocks(t, mocks)
+
+			res, err := v2.GetAZEntityInformation(context.Background(), mocks.mockDB, testCase.args.entityType, "id", false)
+
+			if err != nil && testCase.want.err != nil {
+				require.Equal(t, testCase.want.err, err)
+			} else {
+				require.Equal(t, testCase.want.res, res)
+			}
+		})
+	}
+}
+
+func TestManagementResource_GetAZEntity(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDB *graphmocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   any
@@ -348,7 +868,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 	}
 	type testData struct {
 		name             string
-		args             args
 		buildRequest     func() *http.Request
 		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
 		expected         expected
@@ -357,10 +876,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 	tt := []testData{
 		{
 			name: "Error: missing parameter object ID - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -377,10 +892,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		},
 		{
 			name: "Error: related entity type not found - Not Found",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -399,10 +910,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		},
 		{
 			name: "Error: invalid query parameter counts - Bad Request",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -421,10 +928,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		},
 		{
 			name: "Error: database error no results found - Not Found",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -449,10 +952,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		},
 		{
 			name: "Error: GetAZEntityInformation unknown azure entity - Internal Server Error", // TODO: Should this actually be a 500 or a 400?
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -471,10 +970,6 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		},
 		{
 			name: "Success: GetAZEntity - OK",
-			args: args{
-				context:  context.Background(),
-				objectID: "id",
-			},
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -504,16 +999,14 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockGraphQuery: mocks.NewMockGraph(ctrl),
-				mockDB:         graphmocks.NewMockDatabase(ctrl),
+				mockDB: graphmocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
 			resouces := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				Graph:      mocks.mockDB,
+				Graph: mocks.mockDB,
 			}
 
 			response := httptest.NewRecorder()
