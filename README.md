@@ -16,12 +16,6 @@ BloodHound CE is created and maintained by the [BloodHound Enterprise Team](http
 ## Running BloodHound Community Edition
 Please refer to the [Quickstart Guide for BloodHound Community Edition](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart), which is part of the [BloodHound documentation](https://bloodhound.specterops.io).
 
-### Upgrade BloodHound CE
-Once installed, upgrade BloodHound CE to the latest version with the following steps:
-
-1. Navigate to the folder with the saved `docker-compose.yml` file and run `docker compose pull && docker compose up`.
-2. In a browser, navigate to `http://localhost:8080/ui/login` and log in with your previously configured username and password.
-
 ## Useful Links
 
 - [BloodHound Documentation](https://bloodhound.specterops.io/)
