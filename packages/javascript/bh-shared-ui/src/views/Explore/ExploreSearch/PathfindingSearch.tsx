@@ -16,7 +16,6 @@
 
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, useTheme } from '@mui/material';
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
 import { SearchValue } from '../../../store';
 import { EdgeFilter, PathfindingFilterState } from './EdgeFilter';
@@ -54,10 +53,10 @@ const PathfindingSearch = ({
     } = pathfindingSearchState;
 
     return (
-        <Box display={'flex'} alignItems={'center'} gap={1}>
+        <div className='flex items-center gap-2'>
             <SourceToBullseyeIcon />
 
-            <Box flexGrow={1} gap={1} display={'flex'} flexDirection={'column'}>
+            <div className='flex flex-col flex-grow gap-2'>
                 <ExploreSearchCombobox
                     handleNodeEdited={handleSourceNodeEdited}
                     handleNodeSelected={handleSourceNodeSelected}
@@ -72,30 +71,24 @@ const PathfindingSearch = ({
                     selectedItem={destinationSelectedItem || null}
                     labelText='Destination Node'
                 />
-            </Box>
+            </div>
 
             <PathfindingSwapButton
                 disabled={!sourceSelectedItem || !destinationSelectedItem}
                 onSwapPathfindingInputs={handleSwapPathfindingInputs}
             />
             <EdgeFilter pathfindingFilterState={pathfindingFilterState} />
-        </Box>
+        </div>
     );
 };
 
 const SourceToBullseyeIcon = () => {
-    const theme = useTheme();
     return (
-        <Box display={'flex'} flexDirection={'column'} alignItems={'center'}>
+        <div className='flex flex-col items-center'>
             <FontAwesomeIcon icon={faCircle} size='xs' />
-            <Box
-                border={'none'}
-                borderLeft={`1px dotted ${theme.palette.color.primary}`}
-                marginTop={'0.5em'}
-                marginBottom={'0.5em'}
-                height='1em'></Box>
+            <div className='border-l border-dotted border-primary dark:border-white my-2 h-4'></div>
             <FontAwesomeIcon icon={faBullseye} size='xs' />
-        </Box>
+        </div>
     );
 };
 
