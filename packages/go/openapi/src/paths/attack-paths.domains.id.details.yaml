@@ -28,13 +28,13 @@ get:
   description: |
     Lists detailed data about attack paths for a domain.
 
-    __Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
+    __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.
   tags:
     - Attack Paths
     - Enterprise
   parameters:
     - name: Accept
-      in: './../parameters/header.prefer.yaml'
+      in: query
       description: Media type to determine the response format (application/json or text/csv).
       required: false
       schema:
@@ -108,9 +108,9 @@ get:
     - $ref: './../parameters/query.deleted-at.yaml'
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
-  produces:
-    - application/json
-    - text/csv
+      enum:
+        - application/json
+        - text/csv
   responses:
     200:
       description: OK
@@ -146,12 +146,11 @@ get:
                       data:
                         type: array
                         items:
-                          allOf:
-                            - $ref: './../schemas/model.relationship-finding.yaml'
-                            - type: object
-                              properties:
-                                Accepted:
-                                  type: boolean
+                          $ref: './../schemas/model.relationship-finding.yaml'
+                          type: object
+                          properties:
+                            Accepted:
+                              type: boolean
               - allOf: # display list finding with pagination
                   - $ref: './../schemas/api.response.pagination.yaml'
                   - type: object
@@ -159,12 +158,11 @@ get:
                       data:
                         type: array
                         items:
-                          allOf:
-                            - $ref: './../schemas/model.list-finding.yaml'
-                            - type: object
-                              properties:
-                                Accepted:
-                                  type: boolean
+                          $ref: './../schemas/model.list-finding.yaml'
+                          type: object
+                          properties:
+                            Accepted:
+                              type: boolean
           examples:
             Butterfly Relationship Finding:
               summary: "Butterfly Relationship Finding"
@@ -214,6 +212,7 @@ get:
                     ExposurePercentage: 0.24,
                     ExposureCount: 4,
                     Severity: 'high',
+                    Accepted: true,
                   }
                 ]
             Metatree Relationship Finding:
@@ -264,15 +263,16 @@ get:
                     ExposurePercentage: 0,
                     ExposureCount: 0,
                     Severity: '',
+                    Accepted: true,
                   }
                 ]
             Butterfly List Finding:
               summary: "Butterfly List Finding"
               description: "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero."
               value:
-                count: 0,
-                skip: 0,
-                limit: 0,
+                count: 0
+                skip: 0
+                limit: 0
                 data: [
                   {
                     id: 0,
@@ -291,19 +291,20 @@ get:
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    accepted_until: "2024-08-28T21:42:18.844Z",
+                    AcceptedUntil: "2024-08-28T21:42:18.844Z",
                     ImpactPercentage: 0.12,
                     ImpactCount: 2,
                     Severity: 'high',
+                    Accepted: true,
                   }
                 ]
             Metatree List Finding:
               summary: "Metatree List Finding"
               description: "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero."
               value:
-                count: 0,
-                skip: 0,
-                limit: 0,
+                count: 0
+                skip: 0
+                limit: 0
                 data: [
                   {
                     id: 0,
@@ -322,10 +323,11 @@ get:
                       additionalProp2: {},
                       additionalProp3: {}
                     },
-                    accepted_until: "2024-08-28T21:42:18.844Z",
+                    AcceptedUntil: "2024-08-28T21:42:18.844Z",
                     ImpactPercentage: 0,
                     ImpactCount: 0,
                     Severity: '',
+                    Accepted: true,
                   }
                 ]
     400:

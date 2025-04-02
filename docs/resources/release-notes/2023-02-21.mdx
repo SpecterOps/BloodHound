@@ -16,7 +16,7 @@ Instructions to upgrade your collector may be found [here](/install-data-collect
 
 Join us Tuesday, 2/28 at 1 PM ET for our next webinar, A Taste of Kerberos Abuse, presented by Elad Shamir. You'll get a taste of our Adversary Tactics: Red Team Operations training, with highlights from the Kerberos modules covering every step of the Kerberos authentication flow.
 
-Sign up here: [https://support.bloodhoundenterprise.io/hc/en-us/articles/ghst.ly/3X4leNV](https://support.bloodhoundenterprise.io/hc/en-us/articles/ghst.ly/3X4leNV)
+Sign up here: [https://ghst.ly/3X4leNV](https://ghst.ly/3X4leNV)
 
 ## Summary
 
@@ -31,8 +31,8 @@ Sign up here: [https://support.bloodhoundenterprise.io/hc/en-us/articles/ghst.ly
 ### BloodHound Enterprise
 
 * Improved Functionality
-    * Entity Panels for AD objects have undergone restructuring and should load significantly faster now! Previously, each panel would load all data elements at once; this meant that a big query like "Outbound Control" could take a long time and prevent you from seeing data. These now load separately and will allow you to view available data faster - _way faster._ Note, very large / complex environments may still hit constraints pulling information back from specific queries within the panel but this will no longer prevent the rest of the panel from loading.  Future work is planned in this area to provide partial results where applicable. 
-    * Explore node searches will also return much faster due to query optimizations and post-processing improvements. 
+    * Entity Panels for AD objects have undergone restructuring and should load significantly faster now! Previously, each panel would load all data elements at once; this meant that a big query like "Outbound Control" could take a long time and prevent you from seeing data. These now load separately and will allow you to view available data faster - _way faster._ Note, very large / complex environments may still hit constraints pulling information back from specific queries within the panel but this will no longer prevent the rest of the panel from loading.  Future work is planned in this area to provide partial results where applicable.
+    * Explore node searches will also return much faster due to query optimizations and post-processing improvements.
         _Note: Azure Entity Panels are undergoing the same improvements and will be available soon!_
 * Bug Fixes
     * Cleaned up logging in AzureHound related to stalled data collection jobs
@@ -54,3 +54,4 @@ _Minimum version of AzureHound Service to support all current functionality: v1.
 
 * Bug Fixes
     * Fixed a bug in retry logic during ingest upload
+

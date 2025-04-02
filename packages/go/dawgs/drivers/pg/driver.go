@@ -200,3 +200,12 @@ func (s *Driver) Run(ctx context.Context, query string, parameters map[string]an
 		return result.Error()
 	})
 }
+
+func (s *Driver) FetchKinds(_ context.Context) (graph.Kinds, error) {
+	var kinds graph.Kinds
+	for _, kind := range s.schemaManager.GetKindIDsByKind() {
+		kinds = append(kinds, kind)
+	}
+
+	return kinds, nil
+}

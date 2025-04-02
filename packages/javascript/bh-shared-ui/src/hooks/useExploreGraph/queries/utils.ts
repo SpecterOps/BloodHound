@@ -21,7 +21,12 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
-export type ExploreGraphQueryOptions = UseQueryOptions<FlatGraphResponse, unknown, FlatGraphResponse, QueryKeys>;
+export type ExploreGraphQueryOptions = UseQueryOptions<
+    GraphResponse | FlatGraphResponse,
+    unknown,
+    GraphResponse | FlatGraphResponse,
+    QueryKeys
+>;
 
 export type GraphItemMutationFn = (items: any) => unknown;
 
@@ -137,4 +142,8 @@ const isLink = (item: any): boolean => {
 
 const isNode = (item: any): boolean => {
     return !isLink(item);
+};
+
+export const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
+    return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
 };

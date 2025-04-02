@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const QualityAssuranceV2: React.FC = () => {
-    const { data: initialEnvironment, isLoading } = useInitialEnvironment();
+    const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
         initialEnvironment ?? null
@@ -138,11 +138,7 @@ const QualityAssuranceV2: React.FC = () => {
                     <Alert severity='warning'>
                         <AlertTitle>Data Quality Warning</AlertTitle>
                         It looks like data is incomplete or has not been collected yet. See the{' '}
-                        <Link
-                            target='_blank'
-                            href={
-                                'https://support.bloodhoundenterprise.io/hc/en-us/categories/9270370014875-Data-Collection'
-                            }>
+                        <Link target='_blank' href={'https://bloodhound.specterops.io/collect-data/overview'}>
                             Data Collection
                         </Link>{' '}
                         page to view instructions on how to begin data collection.

@@ -21,78 +21,28 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/didip/tollbooth/v6"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api/middleware"
+	"github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/model/appcfg"
+	"go.uber.org/mock/gomock"
 )
 
-func TestRateLimitHandler(t *testing.T) {
-
-	// Limit to 1 req/s
-	limiter := tollbooth.NewLimiter(1, nil)
-
-	count_429 := 0
-	limiter.SetOnLimitReached(func(response http.ResponseWriter, request *http.Request) {
-		count_429++
-	})
-
-	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
-		t.Fatal(err)
-	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
-		handler := middleware.RateLimitHandler(limiter, &CountingHandler{})
-		router := mux.NewRouter()
-		router.Handle("/teapot", handler)
-
-		rr := httptest.NewRecorder()
-		router.ServeHTTP(rr, req)
-
-		// Expect a 200
-		if status := rr.Code; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		}
-
-		ch := make(chan int)
-		go func() {
-			rr := httptest.NewRecorder()
-			router.ServeHTTP(rr, req)
-
-			// Expect a 429
-			if status := rr.Code; status != http.StatusTooManyRequests {
-				t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusTooManyRequests)
-			}
-
-			if count_429 == 0 {
-				t.Error("OnLimitReached callback function should have been called")
-			}
-
-			close(ch)
-		}()
-		<-ch
-	}
-}
-
 func TestRateLimitMiddleware(t *testing.T) {
-
 	allowedReqsPerSecond := 5
-	limiter := tollbooth.NewLimiter(float64(allowedReqsPerSecond), nil)
 
-	count_429 := 0
-	limiter.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) {
-		count_429++
-	})
+	mockCtl := gomock.NewController(t)
+	mockDB := mocks.NewMockDatabase(mockCtl)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.TrustedProxiesConfig).Return(appcfg.Parameter{}, nil).AnyTimes()
 
 	testHandler := &CountingHandler{}
 	router := mux.NewRouter()
-	router.Use(middleware.RateLimitMiddleware(limiter))
+	router.Use(middleware.RateLimitMiddleware(mockDB, int64(allowedReqsPerSecond)))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
 		// simulate exceeding the limit as fast as possible
 		for i := 0; i <= allowedReqsPerSecond; i++ {
 			rr := httptest.NewRecorder()
@@ -103,24 +53,22 @@ func TestRateLimitMiddleware(t *testing.T) {
 	if testHandler.Count != allowedReqsPerSecond {
 		t.Errorf("invalid HTTP 200 count: got %v want %v", testHandler.Count, 5)
 	}
-
-	if count_429 != 1 {
-		t.Errorf("invalid HTTP 429 count: got %v want %v", count_429, 1)
-	}
 }
 
 func TestDefaultRateLimitMiddleware(t *testing.T) {
 	testHandler := &CountingHandler{}
 
+	mockCtl := gomock.NewController(t)
+	mockDB := mocks.NewMockDatabase(mockCtl)
+	mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.TrustedProxiesConfig).Return(appcfg.Parameter{}, nil).AnyTimes()
+
 	router := mux.NewRouter()
-	router.Use(middleware.DefaultRateLimitMiddleware())
+	router.Use(middleware.DefaultRateLimitMiddleware(mockDB))
 	router.Handle("/teapot", testHandler)
 
 	if req, err := http.NewRequest("GET", "/teapot", nil); err != nil {
 		t.Fatal(err)
 	} else {
-		req.Header.Set("X-Real-IP", "8.8.8.8")
-
 		// simulate exceeding the limit as fast as possible
 		for i := 0; i <= middleware.DefaultRateLimit; i++ {
 			rr := httptest.NewRecorder()

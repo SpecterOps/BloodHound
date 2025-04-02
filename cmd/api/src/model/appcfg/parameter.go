@@ -46,6 +46,8 @@ const (
 
 	ReconciliationKey = "analysis.reconciliation"
 	ScheduledAnalysis = "analysis.scheduled" //This key is not intended to be user updateable, so should not be added to IsValidKey
+
+	TrustedProxiesConfig = "http.trusted_proxies"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -301,4 +303,22 @@ func GetScheduledAnalysisParameter(ctx context.Context, service ParameterService
 	}
 
 	return result, nil
+}
+
+type TrustedProxiesParameters struct {
+	TrustedProxies int `json:"trusted_proxies,omitempty"`
+}
+
+func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) int {
+	var result = TrustedProxiesParameters{
+		TrustedProxies: 0,
+	}
+
+	if trustedProxiesParametersCfg, err := service.GetConfigurationParameter(ctx, TrustedProxiesConfig); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch trusted proxies configuration; returning default values")
+	} else if err = trustedProxiesParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid trusted proxies configuration supplied; returning default values")
+	}
+
+	return result.TrustedProxies
 }

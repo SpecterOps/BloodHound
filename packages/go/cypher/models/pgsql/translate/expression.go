@@ -33,9 +33,9 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 		return fmt.Errorf("unable to find identifier %s", variable.Symbol)
 	} else if kindIDs, err := s.kindMapper.MapKinds(s.ctx, kindMatcher.Kinds); err != nil {
 		s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
-	} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
-		return err
 	} else {
+		kindIDsLiteral := pgsql.NewLiteral(kindIDs, pgsql.Int2Array)
+
 		switch binding.DataType {
 		case pgsql.NodeComposite, pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindIDs})
@@ -47,7 +47,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 
 		case pgsql.EdgeComposite, pgsql.ExpansionEdge:
 			s.treeTranslator.Push(pgsql.CompoundIdentifier{binding.Identifier, pgsql.ColumnKindID})
-			s.treeTranslator.Push(pgsql.NewAnyExpression(kindIDsLiteral))
+			s.treeTranslator.Push(pgsql.NewAnyExpressionHinted(kindIDsLiteral))
 
 			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorEquals); err != nil {
 				s.SetError(err)
@@ -202,7 +202,7 @@ func translateCypherAssignmentOperator(operator cypher.AssignmentOperator) (pgsq
 func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, error) {
 	dependencies := pgsql.NewIdentifierSet()
 
-	return dependencies, walk.WalkPgSQL(root, walk.NewSimpleVisitor[pgsql.SyntaxNode](
+	return dependencies, walk.PgSQL(root, walk.NewSimpleVisitor[pgsql.SyntaxNode](
 		func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 			switch typedNode := node.(type) {
 			case pgsql.Identifier:
@@ -444,7 +444,7 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 	if hasLeftPropertyLookup {
 		// This check exists here to prevent from overwriting a property lookup that's part of a <value> in <list>
 		// binary expression. This may want for better ergonomics in the future
-		if anyExpression, isAnyExpression := expression.ROperand.(pgsql.AnyExpression); isAnyExpression {
+		if anyExpression, isAnyExpression := expression.ROperand.(*pgsql.AnyExpression); isAnyExpression {
 			expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, anyExpression.CastType.ArrayBaseType())
 		} else if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
 			return err
@@ -1181,7 +1181,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 						// Ensure the lookup uses the JSONB type
 						propertyLookup.Operator = pgsql.OperatorJSONField
 
-						newExpression.ROperand = pgsql.NewAnyExpression(
+						newExpression.ROperand = pgsql.NewAnyExpressionHinted(
 							pgsql.FunctionCall{
 								Function:   pgsql.FunctionJSONBToTextArray,
 								Parameters: []pgsql.Expression{propertyLookup},
@@ -1199,10 +1199,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.Operator = pgsql.OperatorPGArrayOverlap
 			} else {
 				newExpression.Operator = pgsql.OperatorEquals
-				newExpression.ROperand = pgsql.AnyExpression{
-					Expression: newExpression.ROperand,
-					CastType:   typedROperand.TypeHint(),
-				}
+				newExpression.ROperand = pgsql.NewAnyExpression(newExpression.ROperand, typedROperand.TypeHint())
 			}
 
 		default:
@@ -1210,12 +1207,8 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 			if leftHint, err := InferExpressionType(newExpression.LOperand); err != nil {
 				return err
 			} else {
-				newExpression.ROperand = pgsql.AnyExpression{
-					Expression: newExpression.ROperand,
-					CastType:   leftHint,
-				}
+				newExpression.ROperand = pgsql.NewAnyExpression(newExpression.ROperand, leftHint)
 			}
-
 		}
 
 		s.Push(newExpression)

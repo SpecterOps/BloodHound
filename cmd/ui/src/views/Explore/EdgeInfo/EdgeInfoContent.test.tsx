@@ -15,11 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SelectedEdge } from 'bh-shared-ui';
+import * as bhSharedUi from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
+
+const useExploreParamsSpy = vi.spyOn(bhSharedUi, 'useExploreParams');
+const mockSetExploreParams = vi.fn();
+const testSelectedItem = 'fake_edge_id';
+useExploreParamsSpy.mockReturnValue({
+    expandedPanelSections: [],
+    selectedItem: testSelectedItem,
+    setExploreParams: mockSetExploreParams,
+} as any);
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
@@ -87,7 +96,7 @@ const server = setupServer(
     })
 );
 
-const selectedEdge: SelectedEdge = {
+const selectedEdge: bhSharedUi.SelectedEdge = {
     id: '1',
     name: 'CustomEdge',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -100,7 +109,7 @@ const selectedEdge: SelectedEdge = {
     targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
 };
 
-const selectedEdgeHasLapsEnabled: SelectedEdge = {
+const selectedEdgeHasLapsEnabled: bhSharedUi.SelectedEdge = {
     id: '2',
     name: 'GenericAll',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -113,7 +122,7 @@ const selectedEdgeHasLapsEnabled: SelectedEdge = {
     targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
 };
 
-const selectedEdgeHasLapsDisabled: SelectedEdge = {
+const selectedEdgeHasLapsDisabled: bhSharedUi.SelectedEdge = {
     id: '3',
     name: 'GenericAll',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -124,6 +133,11 @@ const selectedEdgeHasLapsDisabled: SelectedEdge = {
         type: 'User',
     },
     targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
+};
+
+const selectedEdgeADCSESC4: bhSharedUi.SelectedEdge = {
+    ...selectedEdge,
+    name: 'ADCSESC4',
 };
 
 const windowsAbuseHasLapsText = (sourceName: string, targetName: string) => {
@@ -185,5 +199,56 @@ describe('EdgeInfoContent', () => {
         await user.click(windowAbuseAccordion);
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
+    });
+
+    describe('EdgeInfoContent support for Deep Linking', () => {
+        const setup = () => {
+            const screen = render(<EdgeInfoContent selectedEdge={selectedEdgeADCSESC4} />);
+            const user = userEvent.setup();
+
+            server.use(
+                rest.get('/api/v2/features', (req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            data: [{ key: 'back_button_support', enabled: true }],
+                        })
+                    );
+                }),
+                rest.get('/api/v2/graphs/edge-composition', (req, res, ctx) => {
+                    return res(
+                        ctx.json({
+                            data: [],
+                        })
+                    );
+                })
+            );
+
+            return { screen, user };
+        };
+
+        it('calls setExploreParams with searchType and relationshipQueryItemId when selecting a composition accordion', async () => {
+            const { user, screen } = setup();
+
+            const compositionAccordion = screen.getByText('Composition');
+            await user.click(compositionAccordion);
+
+            await waitFor(() =>
+                expect(mockSetExploreParams).toBeCalledWith(
+                    expect.objectContaining({ searchType: 'composition', relationshipQueryItemId: testSelectedItem })
+                )
+            );
+        });
+        it('calls setExploreParams with only the expandedSection label when selecting any accordion that is not composition', async () => {
+            const { user, screen } = setup();
+
+            const generalAccordion = screen.getByText('General');
+            await user.click(generalAccordion);
+
+            await waitFor(() => expect(mockSetExploreParams).toBeCalledWith({ expandedPanelSections: ['general'] }));
+            expect(mockSetExploreParams).not.toBeCalledWith({
+                searchType: null,
+                relationshipQueryItemId: testSelectedItem,
+            });
+        });
     });
 });

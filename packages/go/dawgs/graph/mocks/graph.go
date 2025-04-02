@@ -722,6 +722,21 @@ func (mr *MockDatabaseMockRecorder) Close(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockDatabase)(nil).Close), ctx)
 }
 
+// FetchKinds mocks base method.
+func (m *MockDatabase) FetchKinds(ctx context.Context) (graph.Kinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchKinds", ctx)
+	ret0, _ := ret[0].(graph.Kinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchKinds indicates an expected call of FetchKinds.
+func (mr *MockDatabaseMockRecorder) FetchKinds(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchKinds", reflect.TypeOf((*MockDatabase)(nil).FetchKinds), ctx)
+}
+
 // ReadTransaction mocks base method.
 func (m *MockDatabase) ReadTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
 	m.ctrl.T.Helper()

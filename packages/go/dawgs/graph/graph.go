@@ -428,4 +428,7 @@ type Database interface {
 
 	// Close closes the database context and releases any pooled resources held by the instance.
 	Close(ctx context.Context) error
+
+	// FetchKinds retrieves the complete list of kinds available to the database.
+	FetchKinds(ctx context.Context) (Kinds, error)
 }

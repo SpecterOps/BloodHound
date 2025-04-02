@@ -87,15 +87,12 @@ const LinuxAbuse: FC = () => {
                 <Link
                     target='blank'
                     rel='noopener'
-                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17358104809499-AddKeyCredentialLink'>
+                    href='https://bloodhound.specterops.io/resources/edges/add-key-credential-link'>
                     AddKeyCredentialLink edge documentation
                 </Link>
                 ). Alternatively, you can obtain a session as SYSTEM on the host, which allows you to interact with AD
                 as the computer account, by abusing control over the computer AD object (see{' '}
-                <Link
-                    target='blank'
-                    rel='noopener'
-                    href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17312347318043-GenericAll'>
+                <Link target='blank' rel='noopener' href='https://bloodhound.specterops.io/resources/edges/generic-all'>
                     GenericAll edge documentation
                 </Link>
                 ).
@@ -109,7 +106,7 @@ const LinuxAbuse: FC = () => {
                     <Link
                         target='blank'
                         rel='noopener'
-                        href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17358104809499-AddKeyCredentialLink'>
+                        href='https://bloodhound.specterops.io/resources/edges/add-key-credential-link'>
                         AddKeyCredentialLink edge documentation
                     </Link>
                     )
@@ -119,7 +116,7 @@ const LinuxAbuse: FC = () => {
                     <Link
                         target='blank'
                         rel='noopener'
-                        href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17223286750747-ForceChangePassword'>
+                        href='https://bloodhound.specterops.io/resources/edges/force-change-password'>
                         ForceChangePassword edge documentation
                     </Link>
                     )
@@ -129,7 +126,7 @@ const LinuxAbuse: FC = () => {
                     <Link
                         target='blank'
                         rel='noopener'
-                        href='https://support.bloodhoundenterprise.io/hc/en-us/articles/17222775975195-WriteSPN'>
+                        href='https://bloodhound.specterops.io/resources/edges/write-spn'>
                         WriteSPN edge documentation
                     </Link>
                     )

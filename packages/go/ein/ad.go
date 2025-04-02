@@ -56,7 +56,7 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	}
 }
 
-func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
+func ConvertComputerToNode(item Computer) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
@@ -87,10 +87,72 @@ func ConvertComputerToNode(item Computer, itemType graph.Kind) IngestibleNode {
 		}
 	}
 
+	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {
+		delete(itemProps, "ldapenabled")
+		itemProps[ad.LDAPAvailable.String()] = ldapEnabled
+	}
+
+	if ldapsEnabled, ok := itemProps["ldapsenabled"]; ok {
+		delete(itemProps, "ldapsenabled")
+		itemProps[ad.LDAPSAvailable.String()] = ldapsEnabled
+	}
+
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       itemType,
+		Label:       ad.Computer,
+	}
+}
+
+func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+
+	var (
+		httpEndpoints    = make([]string, 0)
+		httpsEndpoints   = make([]string, 0)
+		hasCollectedData bool
+	)
+
+	for _, endpoint := range item.HttpEnrollmentEndpoints {
+		if !endpoint.Collected {
+			continue
+		}
+
+		hasCollectedData = true
+
+		if endpoint.Result.ADCSWebEnrollmentHTTP {
+			httpEndpoints = append(httpEndpoints, endpoint.Result.Url)
+		}
+
+		if endpoint.Result.ADCSWebEnrollmentHTTPS && !endpoint.Result.ADCSWebEnrollmentEPA {
+			httpsEndpoints = append(httpsEndpoints, endpoint.Result.Url)
+		}
+	}
+
+	if len(httpEndpoints) > 0 && len(httpsEndpoints) > 0 {
+		itemProps[ad.HTTPEnrollmentEndpoints.String()] = httpEndpoints
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	} else if len(httpsEndpoints) > 0 {
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	} else if len(httpEndpoints) > 0 {
+		itemProps[ad.HTTPSEnrollmentEndpoints.String()] = httpsEndpoints
+		itemProps[ad.HasVulnerableEndpoint.String()] = true
+	} else if hasCollectedData {
+		//If we have collected data but no endpoints, we can mark this enterprise CA as not having a vulnerable endpoint
+		itemProps[ad.HasVulnerableEndpoint.String()] = false
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Label:       ad.EnterpriseCA,
 	}
 }
 
@@ -285,16 +347,13 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		} else if !ad.IsACLKind(rightKind) {
 			slog.Error(fmt.Sprintf("Non-ace edge type given to process aces: %s", ace.RightName))
 			continue
-
 		} else if rightKind.Is(ad.Owns) || rightKind.Is(ad.OwnsRaw) {
 			// Get Owner SID from ACE granting Owns permission
 			ownerPrincipalInfo = ace.GetCachedValue().SourceData
-
 		} else if rightKind.Is(ad.WriteOwner) || rightKind.Is(ad.WriteOwnerRaw) {
 			// Don't convert every WriteOwner permission to an edge, as they are not always abusable
 			// Cache ACEs where WriteOwner permission is granted
 			potentialWriteOwnerLimitedPrincipals = append(potentialWriteOwnerLimitedPrincipals, ace.GetCachedValue())
-
 		} else if strings.HasSuffix(ace.PrincipalSID, "S-1-3-4") {
 			// Cache ACEs where the OWNER RIGHTS SID is granted explicit abusable permissions
 			ownerLimitedPrivs = append(ownerLimitedPrivs, rightKind.String())
@@ -306,7 +365,6 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 				// If the ACE is not inherited, it not abusable after abusing WriteOwner
 				continue
 			}
-
 		} else {
 			// Create edges for all other ACEs
 			converted = append(converted, NewIngestibleRelationship(

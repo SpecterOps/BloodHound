@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Switch } from '@bloodhoundenterprise/doodleui';
-import { AppIcon, GloballySupportedSearchParams, MainNavData, useFeatureFlag } from 'bh-shared-ui';
+import { AppIcon, GloballySupportedSearchParams, MainNavData, useFeatureFlag, useFeatureFlags } from 'bh-shared-ui';
 import { fullyAuthenticatedSelector, logout } from 'src/ducks/auth/authSlice';
 import { setDarkMode } from 'src/ducks/global/actions.ts';
 import * as routes from 'src/routes/constants';
@@ -59,25 +59,34 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
 export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
     const authState = useAppSelector((state) => state.auth);
     const fullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
-    const { data: flag } = useFeatureFlag('back_button_support', {
-        enabled: !!authState.isInitialized && fullyAuthenticated,
+    const enableFeatureFlagRequests = !!authState.isInitialized && fullyAuthenticated;
+    const featureFlags = useFeatureFlags({ enabled: enableFeatureFlagRequests });
+    const backButtonFlag = featureFlags?.data?.find((flag) => {
+        return flag.key === 'back_button_support';
     });
-    return [
+    const tierFlag = featureFlags?.data?.find((flag) => {
+        return flag.key === 'tier_management_engine';
+    });
+
+    const primaryList = [
         {
             label: 'Explore',
             icon: <AppIcon.LineChart size={24} />,
             route: routes.ROUTE_EXPLORE,
             testId: 'global_nav-explore',
-            supportedSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
+            supportedSearchParams: backButtonFlag?.enabled ? GloballySupportedSearchParams : undefined,
         },
         {
-            label: 'Group Management',
+            label: tierFlag?.enabled ? 'Tier Management' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: routes.ROUTE_GROUP_MANAGEMENT,
-            testId: 'global_nav-group-management',
-            supportedSearchParams: flag?.enabled ? GloballySupportedSearchParams : undefined,
+            route: tierFlag?.enabled ? routes.ROUTE_TIER_MANAGEMENT : routes.ROUTE_GROUP_MANAGEMENT,
+            testId: tierFlag?.enabled ? 'global_nav-tier-management' : 'global_nav-group-management',
+            supportedSearchParams:
+                backButtonFlag?.enabled && !tierFlag?.enabled ? GloballySupportedSearchParams : undefined,
         },
     ];
+
+    return primaryList;
 };
 
 export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
@@ -99,7 +108,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
     };
 
     const handleGoToSupport = () => {
-        window.open('https://support.bloodhoundenterprise.io/hc', '_blank');
+        window.open('https://bloodhound.specterops.io', '_blank');
     };
 
     return [

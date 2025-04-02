@@ -81,6 +81,12 @@ func (s *SchemaManager) fetch(tx graph.Transaction) error {
 	return nil
 }
 
+func (s *SchemaManager) GetKindIDsByKind() map[int16]graph.Kind {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.kindIDsByKind
+}
+
 func (s *SchemaManager) Fetch(ctx context.Context) error {
 	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		return s.fetch(tx)

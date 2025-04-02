@@ -22,7 +22,7 @@ import {
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
     ExploreGraphQueryOptions,
-    transformToFlatGraphResponse,
+    sharedGraphQueryOptions,
 } from './utils';
 
 export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
@@ -35,9 +35,9 @@ export const cypherSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>
     const decoded = decodeCypherQuery(cypherSearch);
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, cypherSearch],
-        queryFn: ({ signal }) =>
-            apiClient.cypherSearch(decoded, { signal }).then((res) => transformToFlatGraphResponse(res.data)),
+        queryFn: ({ signal }) => apiClient.cypherSearch(decoded, { signal }).then((res) => res.data),
         retry: false,
         enabled: !!(searchType && cypherSearch),
     };
