@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters } from '../../../hooks';
@@ -43,10 +42,7 @@ const WrappedEdgeFilter = () => {
 
 describe('EdgeFilter', () => {
     beforeEach(async () => {
-        const history = createMemoryHistory({ initialEntries: ['/'] });
-        await act(async () => {
-            render(<WrappedEdgeFilter />, undefined, { history });
-        });
+        await act(async () => render(<WrappedEdgeFilter />));
     });
 
     it('should open edge filtering dialog', async () => {
@@ -135,6 +131,7 @@ describe('EdgeFilter', () => {
         expect(categoryAzureCheckbox).toBeChecked();
 
         await user.click(categoryADCheckbox);
+        await user.click(categoryAzureCheckbox);
 
         expect(categoryADCheckbox).not.toBeChecked();
         expect(categoryAzureCheckbox).not.toBeChecked();
