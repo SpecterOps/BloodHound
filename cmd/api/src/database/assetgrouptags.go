@@ -34,13 +34,17 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
-	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
+}
+
+// AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
+type AssetGroupTagSelectorNodeData interface {
 	InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error
 	UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeIds ...graph.ID) error
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeIds ...graph.ID) error
@@ -122,6 +126,10 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		}
 	)
 
+	if tag.ToType() == "unknown" {
+		return model.AssetGroupTag{}, fmt.Errorf("unknown asset group tag")
+	}
+
 	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
 	}
@@ -201,7 +209,10 @@ SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY 
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {
 	var tags []model.AssetGroupTag
-	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE deleted_at IS NULL AND (type = ? OR position = 1)", model.AssetGroupTag{}.TableName())).Find(&tags))
+	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`WITH
+tier AS (SELECT id FROM asset_group_tags WHERE type = 1 AND position = 1 AND deleted_at IS NULL LIMIT 1),
+owned AS (SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1)
+SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`, model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
 func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error {
