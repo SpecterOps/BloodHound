@@ -806,7 +806,7 @@ func (s *AZBaseHarness) Setup(testCtx *GraphTestContext) {
 	s.ServicePrincipal = testCtx.NewAzureServicePrincipal(HarnessServicePrincipalName, RandomObjectID(testCtx.testCtx), tenantID)
 	s.Nodes.Add(s.Tenant, s.User, s.Application, s.ServicePrincipal)
 	s.UserFirstDegreeGroups = graph.NewNodeSet()
-	s.NumPaths = 1287
+	s.NumPaths = 1307
 
 	// Tie the user to the tenant and vice-versa
 	// Note: This will cause a full re-traversal of paths outbound from the user object
@@ -816,6 +816,7 @@ func (s *AZBaseHarness) Setup(testCtx *GraphTestContext) {
 	// Create some MemberOf relationships for the new user
 	for nestingDepth := numGroups; nestingDepth > 0; nestingDepth-- {
 		newGroups := s.CreateAzureNestedGroupChain(testCtx, tenantID, nestingDepth)
+		newGroups.AddSet(s.CreateAzureNestedGroup365Chain(testCtx, tenantID, nestingDepth))
 		s.Nodes.Add(newGroups.Slice()...)
 
 		for _, newGroup := range newGroups {
@@ -892,12 +893,38 @@ func (s *AZBaseHarness) CreateAzureNestedGroupChain(testCtx *GraphTestContext, t
 	return groupNodes
 }
 
+func (s *AZBaseHarness) CreateAzureNestedGroup365Chain(testCtx *GraphTestContext, tenantID string, chainDepth int) graph.NodeSet {
+	var (
+		previousGroup *graph.Node
+		groupNodes    = graph.NewNodeSet()
+	)
+
+	for groupIdx := 0; groupIdx < chainDepth; groupIdx++ {
+		var (
+			objectID = RandomObjectID(testCtx.testCtx)
+			newGroup = testCtx.NewAzureGroup365(fmt.Sprintf("AZGroup365_%s", objectID), objectID, tenantID)
+		)
+
+		if previousGroup == nil {
+			testCtx.NewRelationship(s.User, newGroup, azure.O365MemberOf)
+			s.UserFirstDegreeGroups.Add(newGroup)
+		} else {
+			testCtx.NewRelationship(previousGroup, newGroup, azure.O365MemberOf)
+		}
+
+		groupNodes.Add(newGroup)
+		previousGroup = newGroup
+	}
+	return groupNodes
+}
+
 type AZGroupMembershipHarness struct {
-	Tenant *graph.Node
-	UserA  *graph.Node
-	UserB  *graph.Node
-	UserC  *graph.Node
-	Group  *graph.Node
+	Tenant   *graph.Node
+	UserA    *graph.Node
+	UserB    *graph.Node
+	UserC    *graph.Node
+	Group    *graph.Node
+	Group365 *graph.Node
 }
 
 func (s *AZGroupMembershipHarness) Setup(testCtx *GraphTestContext) {
@@ -907,12 +934,17 @@ func (s *AZGroupMembershipHarness) Setup(testCtx *GraphTestContext) {
 	s.UserB = testCtx.NewAzureUser("UserB", "UserB", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
 	s.UserC = testCtx.NewAzureUser("UserC", "UserC", "", RandomObjectID(testCtx.testCtx), "", tenantID, false)
 	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Group365 = testCtx.NewAzureGroup365("Group365", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.Tenant, s.Group, azure.Contains)
+	testCtx.NewRelationship(s.Tenant, s.Group365, azure.Contains)
 
 	testCtx.NewRelationship(s.UserA, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserB, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserC, s.Group, azure.MemberOf)
+	testCtx.NewRelationship(s.UserA, s.Group365, azure.O365MemberOf)
+	testCtx.NewRelationship(s.UserB, s.Group365, azure.O365MemberOf)
+	testCtx.NewRelationship(s.UserC, s.Group365, azure.O365MemberOf)
 }
 
 type AZManagementGroupHarness struct {
@@ -941,6 +973,7 @@ type AZEntityPanelHarness struct {
 	Application      *graph.Node
 	Device           *graph.Node
 	Group            *graph.Node
+	Group365         *graph.Node
 	ManagementGroup  *graph.Node
 	ResourceGroup    *graph.Node
 	KeyVault         *graph.Node
@@ -957,6 +990,7 @@ func (s *AZEntityPanelHarness) Setup(testCtx *GraphTestContext) {
 	s.Application = testCtx.NewAzureApplication("App", RandomObjectID(testCtx.testCtx), tenantID)
 	s.Device = testCtx.NewAzureDevice("Device", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), tenantID)
 	s.Group = testCtx.NewAzureGroup("Group", RandomObjectID(testCtx.testCtx), tenantID)
+	s.Group365 = testCtx.NewAzureGroup("Group365", RandomObjectID(testCtx.testCtx), tenantID)
 	s.ManagementGroup = testCtx.NewAzureResourceGroup("Mgmt Group", RandomObjectID(testCtx.testCtx), tenantID)
 	s.ResourceGroup = testCtx.NewAzureResourceGroup("Resource Group", RandomObjectID(testCtx.testCtx), tenantID)
 	s.KeyVault = testCtx.NewAzureKeyVault("Key Vault", RandomObjectID(testCtx.testCtx), tenantID)
@@ -978,6 +1012,7 @@ func (s *AZEntityPanelHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.User, s.Group, azure.Owns)
 	testCtx.NewRelationship(s.User, s.ResourceGroup, azure.Owns)
 	testCtx.NewRelationship(s.User, s.ManagementGroup, azure.Owner)
+	testCtx.NewRelationship(s.User, s.Group365, azure.Owns)
 
 	// Key Vault
 	testCtx.NewRelationship(s.User, s.KeyVault, azure.Owns)
@@ -1209,6 +1244,8 @@ type AZInboundControlHarness struct {
 	AZAppA              *graph.Node
 	AZGroupA            *graph.Node
 	AZGroupB            *graph.Node
+	AZGroup365A         *graph.Node
+	AZGroup365B         *graph.Node
 	AZUserA             *graph.Node
 	AZUserB             *graph.Node
 	AZServicePrincipalA *graph.Node
@@ -1222,20 +1259,27 @@ func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 	s.AZAppA = testCtx.NewAzureApplication("AZAppA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZGroupA = testCtx.NewAzureGroup("AZGroupA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZGroupB = testCtx.NewAzureGroup("AZGroupB", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZGroup365A = testCtx.NewAzureGroup365("AZGroup365A", RandomObjectID(testCtx.testCtx), tenantID)
+	s.AZGroup365B = testCtx.NewAzureGroup365("AZGroup365B", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZUserA = testCtx.NewAzureUser("AZUserA", "AZUserA", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
 	s.AZUserB = testCtx.NewAzureUser("AZUserB", "AZUserB", "", RandomObjectID(testCtx.testCtx), HarnessUserLicenses, tenantID, HarnessUserMFAEnabled)
 	s.AZServicePrincipalA = testCtx.NewAzureServicePrincipal("AZServicePrincipalA", RandomObjectID(testCtx.testCtx), tenantID)
 	s.AZServicePrincipalB = testCtx.NewAzureServicePrincipal("AZServicePrincipalB", RandomObjectID(testCtx.testCtx), tenantID)
 
 	testCtx.NewRelationship(s.AZTenant, s.AZGroupA, azure.Contains)
+	testCtx.NewRelationship(s.AZTenant, s.AZGroup365A, azure.Contains)
 
 	testCtx.NewRelationship(s.AZUserA, s.AZGroupA, azure.MemberOf)
 	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroupB, azure.MemberOf)
+	testCtx.NewRelationship(s.AZUserA, s.AZGroup365A, azure.O365MemberOf)
+	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroup365B, azure.O365MemberOf)
 
 	testCtx.NewRelationship(s.AZAppA, s.AZServicePrincipalA, azure.RunsAs)
 
 	testCtx.NewRelationship(s.AZGroupA, s.ControlledAZUser, azure.ResetPassword)
 	testCtx.NewRelationship(s.AZGroupB, s.ControlledAZUser, azure.ResetPassword)
+	testCtx.NewRelationship(s.AZGroup365A, s.ControlledAZUser, azure.ResetPassword)
+	testCtx.NewRelationship(s.AZGroup365B, s.ControlledAZUser, azure.ResetPassword)
 	testCtx.NewRelationship(s.AZUserB, s.ControlledAZUser, azure.ResetPassword)
 	testCtx.NewRelationship(s.AZServicePrincipalA, s.ControlledAZUser, azure.ResetPassword)
 }

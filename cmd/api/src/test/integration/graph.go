@@ -228,6 +228,17 @@ func (s *GraphTestContext) NewAzureGroup(name, objectID, tenantID string) *graph
 	}), azure.Entity, azure.Group)
 }
 
+func (s *GraphTestContext) NewAzureGroup365(name, objectID, tenantID string) *graph.Node {
+
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+
+		common.Name:              name,
+		common.ObjectID:          objectID,
+		azure.TenantID:           tenantID,
+		azure.IsAssignableToRole: true,
+	}), azure.Entity, azure.Group365)
+}
+
 func (s *GraphTestContext) NewAzureVM(name, objectID, tenantID string) *graph.Node {
 	return s.NewNode(graph.AsProperties(graph.PropertyMap{
 		common.Name:     name,

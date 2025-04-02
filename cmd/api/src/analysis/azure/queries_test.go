@@ -41,6 +41,7 @@ func TestAnalysisAzure_GraphStats(t *testing.T) {
 		assert.NotZero(t, agg.Tenants)
 		assert.NotZero(t, agg.Users)
 		assert.NotZero(t, agg.Groups)
+		assert.NotZero(t, agg.Groups365)
 		assert.NotZero(t, agg.Apps)
 		assert.NotZero(t, agg.ServicePrincipals)
 		assert.NotZero(t, agg.Devices)
