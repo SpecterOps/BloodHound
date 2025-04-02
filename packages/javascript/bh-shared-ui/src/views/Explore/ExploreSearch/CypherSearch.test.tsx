@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { render } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
@@ -35,8 +37,24 @@ describe('CypherSearch', () => {
         return { state, screen, user };
     };
 
+    const server = setupServer(
+        rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: ['Tier Zero', 'Tier One', 'Tier Two'],
+                })
+            );
+        })
+    );
+
+    beforeAll(() => {
+        server.listen();
+    });
     beforeEach(mockCodemirrorLayoutMethods);
     afterEach(vi.restoreAllMocks);
+    afterAll(() => {
+        server.close();
+    });
 
     it('should render', async () => {
         const { screen } = await setup();
