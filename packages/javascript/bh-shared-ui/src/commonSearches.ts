@@ -409,7 +409,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'DCs vulnerable to NTLM relay to LDAP attacks',
-                cypher: 'MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE NOT dc.ldapsigning = True\nOR (dc.ldapsavailable = True AND NOT dc.ldapsepa = True)\nRETURN p',
+                cypher: 'MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE (dc.ldapavailable = True AND dc.ldapsigning = False)\nOR (dc.ldapsavailable = True AND dc.ldapsepa = False)\nOR (dc.ldapavailable = True AND dc.ldapsavailable = True AND dc.ldapsigning = False and dc.ldapsepa = True)\nRETURN p',
             },
             {
                 description: 'Computers with the WebClient running',
