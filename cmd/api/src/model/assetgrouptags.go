@@ -61,6 +61,15 @@ const (
 	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
 )
 
+type AssetGroupExpansionMethod int
+
+const (
+	AssetGroupExpansionMethodNone     AssetGroupExpansionMethod = 0
+	AssetGroupExpansionMethodAll      AssetGroupExpansionMethod = 1
+	AssetGroupExpansionMethodChildren AssetGroupExpansionMethod = 2
+	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
+)
+
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
 	Type           AssetGroupTagType `json:"type"`
