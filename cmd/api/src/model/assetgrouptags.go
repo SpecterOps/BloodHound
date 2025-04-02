@@ -41,6 +41,7 @@ type AssetGroupTagType int
 const (
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
+	AssetGroupTagTypeOwned AssetGroupTagType = 3
 )
 
 type AssetGroupCertification int
@@ -102,8 +103,10 @@ func (s AssetGroupTag) ToType() string {
 		return "tier"
 	case AssetGroupTagTypeLabel:
 		return "label"
+	case AssetGroupTagTypeOwned:
+		return "owned"
 	default:
-		return "unknown tag type"
+		return "unknown"
 	}
 }
 
