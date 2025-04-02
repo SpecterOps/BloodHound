@@ -17,10 +17,7 @@
 package v2_test
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -34,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/queries/mocks"
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -703,30 +700,6 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 		})
 }
 
-func processResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, []byte) {
-	t.Helper()
-	if response.Code != http.StatusOK && response.Code != http.StatusAccepted {
-		responseBytes, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-		if err != nil {
-			// not every error response contains a timestamp so print output and move along
-			fmt.Printf("error replacing field value in json string: %v\n", err)
-		}
-
-		response.Body = bytes.NewBuffer([]byte(responseBytes))
-	}
-
-	if response.Body != nil {
-		res, err := io.ReadAll(response.Body)
-		if err != nil {
-			t.Fatalf("error reading response body: %v", err)
-		}
-
-		return response.Code, response.Header(), res
-	}
-
-	return response.Code, response.Header(), nil
-}
-
 func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 	t.Parallel()
 
@@ -911,7 +884,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			resouces.GetBaseEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -1104,7 +1077,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			resouces.GetContainerEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -1297,7 +1270,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			resouces.GetAIACAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -1491,7 +1464,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			resouces.GetRootCAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -1684,7 +1657,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			resouces.GetEnterpriseCAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -1877,7 +1850,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			resouces.GetNTAuthStoreEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -2070,7 +2043,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			resouces.GetCertTemplateEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
@@ -2263,7 +2236,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			resouces.GetIssuancePolicyEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
-			status, header, body := processResponse(t, response)
+			status, header, body := test.ProcessResponse(t, response)
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
