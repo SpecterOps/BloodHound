@@ -19,6 +19,7 @@ package v2_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -706,7 +707,10 @@ func processResponse(t *testing.T, response *httptest.ResponseRecorder) (int, ht
 	t.Helper()
 	if response.Code != http.StatusOK && response.Code != http.StatusAccepted {
 		responseBytes, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-		require.NoError(t, err)
+		if err != nil {
+			// not every error response contains a timestamp so print output and move along
+			fmt.Printf("error replacing field value in json string: %v\n", err)
+		}
 
 		response.Body = bytes.NewBuffer([]byte(responseBytes))
 	}
