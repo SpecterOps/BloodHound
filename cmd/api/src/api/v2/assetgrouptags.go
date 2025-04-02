@@ -127,7 +127,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 					selector.DisabledBy = null.StringFrom(actor.ID.String())
 				}
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "this selector cannot be disabled", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
 				return
 			}
 		}
@@ -141,7 +141,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			if !selector.IsDefault {
 				selector.Name = selUpdateReq.Name
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update name on a default selector", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update name on a default selector", request), response)
 				return
 			}
 		}
@@ -150,7 +150,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			if !selector.IsDefault {
 				selector.Description = selUpdateReq.Description
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update description on a default selector", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update description on a default selector", request), response)
 				return
 			}
 		}
@@ -161,7 +161,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			if !selector.IsDefault {
 				selector.Seeds = selUpdateReq.Seeds
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "cannot update seeds on a default selector", request), response)
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update seeds on a default selector", request), response)
 				return
 			}
 		} else {

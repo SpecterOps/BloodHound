@@ -576,7 +576,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 						Return(queries.PreparedQuery{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.StatusCode(output, http.StatusForbidden)
 					apitest.BodyContains(output, "cannot update name on a default selector")
 				},
 			},
