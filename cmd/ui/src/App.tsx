@@ -33,7 +33,6 @@ import {
 import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useQueryClient } from 'react-query';
 import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTES, TIER_MANAGEMENT_ROUTES } from 'src/routes';
@@ -50,7 +49,6 @@ import { setDarkMode } from './ducks/global/actions';
 
 export const Inner: React.FC = () => {
     const classes = useStyles();
-    const queryClient = useQueryClient();
 
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
@@ -78,7 +76,7 @@ export const Inner: React.FC = () => {
         if (!darkModeFeatureFlag?.enabled) {
             dispatch(setDarkMode(false));
         }
-    }, [dispatch, queryClient, featureFlagsRes.data, darkMode]);
+    }, [dispatch, featureFlagsRes.data, darkMode]);
 
     // initialize authentication state and BHE client request/response handlers
     useEffect(() => {
