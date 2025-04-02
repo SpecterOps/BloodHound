@@ -97,9 +97,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				},
 			},
 			{
-				Name: "TagTypeTag",
+				Name: "TagTypeLabel",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "tag")
+					apitest.AddQueryParam(input, queryParamTagType, "label")
 				},
 				Setup: func() {
 					mockDB.EXPECT().

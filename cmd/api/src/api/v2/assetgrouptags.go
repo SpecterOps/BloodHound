@@ -50,9 +50,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 	)
 	var (
 		pvalsTagType = map[string]model.AssetGroupTagType{
-			"tag":  model.AssetGroupTagTypeLabel,
-			"tier": model.AssetGroupTagTypeTier,
-			"":     model.AssetGroupTagTypeAll, // default
+			"label": model.AssetGroupTagTypeLabel,
+			"tier":  model.AssetGroupTagTypeTier,
+			"":      model.AssetGroupTagTypeAll, // default
 		}
 		pvalsIncludeCounts = map[string]bool{
 			"false": false,

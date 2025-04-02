@@ -138,13 +138,13 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 	)
 
 	var (
-		err          error
-		tag1, tag2   model.AssetGroupTag
-		tier1, tier2 model.AssetGroupTag
+		err            error
+		label1, label2 model.AssetGroupTag
+		tier1, tier2   model.AssetGroupTag
 	)
-	tag1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "tag 1", testDescription, null.Int32{}, null.Bool{})
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "label 1", testDescription, null.Int32{}, null.Bool{})
 	require.NoError(t, err)
-	tag2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "tag 2", testDescription, null.Int32{}, null.Bool{})
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "label 2", testDescription, null.Int32{}, null.Bool{})
 	require.NoError(t, err)
 	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 1", testDescription, null.Int32From(1), null.BoolFrom(false))
 	require.NoError(t, err)
@@ -153,8 +153,8 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 
 	t.Run("AssetGroupTagTypeLabel returns labels", func(t *testing.T) {
 		ids := []int{
-			tag1.ID,
-			tag2.ID,
+			label1.ID,
+			label2.ID,
 		}
 
 		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeLabel)
@@ -189,8 +189,8 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 
 	t.Run("AssetGroupTagTypeAll returns everything", func(t *testing.T) {
 		ids := []int{
-			tag1.ID,
-			tag2.ID,
+			label1.ID,
+			label2.ID,
 			tier1.ID,
 			tier2.ID,
 		}
