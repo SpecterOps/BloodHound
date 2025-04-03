@@ -43,6 +43,10 @@ const (
 
 type GetAssetGroupTagsResponse struct {
 	AssetGroupTags model.AssetGroupTags `json:"asset_group_tags"`
+	Counts         struct {
+		Selectors map[int]int `json:"selectors"`
+		Members   map[int]int `json:"members"`
+	} `json:"counts,omitempty"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -74,6 +78,16 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 	} else {
 		resp := GetAssetGroupTagsResponse{AssetGroupTags: tags}
 		if paramIncludeCounts {
+			ids := make([]int, 0, len(tags))
+			for i := range tags {
+				ids = append(ids, tags[i].ID)
+			}
+			if selectorCounts, err := s.DB.GetAssetGroupTagSelectorCounts(request.Context(), ids); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				resp.Counts.Selectors = selectorCounts
+			}
 		}
 		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 	}

@@ -182,6 +182,49 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.Equal(output, 2, tierCount)
 				},
 			},
+			{
+				Name: "IncludeCounts",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamIncludeCounts, "true")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeTier},
+							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeTier},
+						}, nil).Times(1)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2, 3, 4}).
+						Return(map[int]int{
+							1: 5,
+							2: 10,
+							3: 0,
+							4: 8,
+						}, nil).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					expectedCounts := map[int]int{
+						1: 5,
+						2: 10,
+						3: 0,
+						4: 8,
+					}
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 4, len(resp.AssetGroupTags))
+					for _, t := range resp.AssetGroupTags {
+						expCount, ok := expectedCounts[t.ID]
+						apitest.Equal(output, true, ok)
+						_, ok = resp.Counts.Selectors[t.ID]
+						apitest.Equal(output, true, ok)
+						apitest.Equal(output, expCount, resp.Counts.Selectors[t.ID])
+					}
+				},
+			},
 		})
 }
 

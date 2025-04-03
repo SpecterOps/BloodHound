@@ -39,6 +39,7 @@ type AssetGroupTagData interface {
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
 
@@ -116,6 +117,33 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.Asse
 		}
 	}
 	return tags, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error) {
+	var counts = make(map[int]int, len(tagIds))
+	// initalize values to 0 for any ids that end up with no rows
+	for _, i := range tagIds {
+		counts[i] = 0
+	}
+	if rows, err := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf("SELECT asset_group_tag_id, COUNT(*) FROM %s WHERE asset_group_tag_id IN (?) AND disabled_at IS NULL GROUP BY asset_group_tag_id", model.AssetGroupTagSelector{}.TableName()),
+		tagIds,
+	).Rows(); err != nil {
+		return map[int]int{}, err
+	} else {
+		defer rows.Close()
+		var id, val int
+		for rows.Next() {
+			if err := rows.Scan(&id, &val); err != nil {
+				return map[int]int{}, err
+			}
+			counts[id] = val
+		}
+		if err := rows.Err(); err != nil {
+			return map[int]int{}, err
+		}
+	}
+	return counts, nil
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
