@@ -679,7 +679,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+				slog.Warn(fmt.Sprintf("Error converting trust attributes with a string value of %s to an int", converted))
 				invalidTrustAttribute = true
 			} else {
 				convertedTrustAttributes = i
@@ -691,7 +691,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		case float64:
 			convertedTrustAttributes = int(converted)
 		default:
-			slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
+			slog.Warn(fmt.Sprintf("Unexpected trust attributes type of %T, failed to convert to an int", converted))
 			invalidTrustAttribute = true
 		}
 
