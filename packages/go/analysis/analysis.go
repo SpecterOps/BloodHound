@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 	"sync/atomic"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
@@ -57,6 +56,7 @@ func NewCompositionCounter() CompositionCounter {
 var (
 	metaKind       = graph.StringKind("Meta")
 	metaDetailKind = graph.StringKind("MetaDetail")
+	ValidKinds     = buildValidKinds()
 )
 
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
@@ -94,7 +94,7 @@ func GetNodeKind(node *graph.Node) graph.Kind {
 			if resultKind.String() == NodeKindUnknown {
 				resultKind = kind
 			}
-		} else if slices.Contains(ValidKinds(), kind) {
+		} else if ValidKinds[kind] {
 			resultKind = kind
 		}
 	}
@@ -126,16 +126,17 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 	})
 }
 
-func ValidKinds() []graph.Kind {
-	var (
-		metaKinds = []graph.Kind{metaKind, metaDetailKind}
-	)
+func buildValidKinds() map[graph.Kind]bool {
+	validKinds := make(map[graph.Kind]bool)
+	for _, kind := range slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), []graph.Kind{metaKind, metaDetailKind}) {
+		validKinds[kind] = true
+	}
 
-	return slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), metaKinds)
+	return validKinds
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
-	for _, kind := range ValidKinds() {
+	for kind := range ValidKinds {
 		if kind.String() == rawKind {
 			return kind, nil
 		}
