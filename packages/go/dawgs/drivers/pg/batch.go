@@ -55,7 +55,7 @@ func (s *Int2ArrayEncoder) Encode(values []int16) string {
 type batch struct {
 	ctx                        context.Context
 	innerTransaction           *transaction
-	driver                     *Driver
+	schemaManager              *SchemaManager
 	nodeDeletionBuffer         []graph.ID
 	relationshipDeletionBuffer []graph.ID
 	nodeCreateBuffer           []*graph.Node
@@ -66,13 +66,13 @@ type batch struct {
 	kindIDEncoder              Int2ArrayEncoder
 }
 
-func newBatch(ctx context.Context, conn *pgxpool.Conn, driver *Driver, cfg *Config) (*batch, error) {
-	if tx, err := newTransactionWrapper(ctx, conn, driver, cfg, false); err != nil {
+func newBatch(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config) (*batch, error) {
+	if tx, err := newTransactionWrapper(ctx, conn, schemaManager, cfg, false); err != nil {
 		return nil, err
 	} else {
 		return &batch{
 			ctx:              ctx,
-			driver:           driver,
+			schemaManager:    schemaManager,
 			innerTransaction: tx,
 			batchWriteSize:   cfg.BatchWriteSize,
 			kindIDEncoder: Int2ArrayEncoder{
@@ -162,7 +162,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 	for idx, nextNode := range s.nodeCreateBuffer {
 		nodeIDs[idx] = nextNode.ID.Uint64()
 
-		if mappedKindIDs, err := s.driver.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
+		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
 			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
 			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
@@ -196,7 +196,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 	)
 
 	for idx, nextNode := range s.nodeCreateBuffer {
-		if mappedKindIDs, err := s.driver.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
+		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
 			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
 			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
@@ -222,7 +222,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 func (s *batch) flushNodeUpsertBatch(updates *sql.NodeUpdateBatch) error {
 	parameters := NewNodeUpsertParameters(len(updates.Updates))
 
-	if err := parameters.AppendAll(s.ctx, updates, s.driver, s.kindIDEncoder); err != nil {
+	if err := parameters.AppendAll(s.ctx, updates, s.schemaManager, s.kindIDEncoder); err != nil {
 		return err
 	}
 
@@ -284,10 +284,10 @@ func (s *NodeUpsertParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdate, driver *Driver, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdate, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
 	s.IDFutures = append(s.IDFutures, update.IDFuture)
 
-	if mappedKindIDs, err := driver.AssertKinds(ctx, update.Node.Kinds); err != nil {
+	if mappedKindIDs, err := schemaManager.AssertKinds(ctx, update.Node.Kinds); err != nil {
 		return fmt.Errorf("unable to map kinds %w", err)
 	} else {
 		s.KindIDSlices = append(s.KindIDSlices, kindIDEncoder.Encode(mappedKindIDs))
@@ -302,9 +302,9 @@ func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdat
 	return nil
 }
 
-func (s *NodeUpsertParameters) AppendAll(ctx context.Context, updates *sql.NodeUpdateBatch, driver *Driver, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) AppendAll(ctx context.Context, updates *sql.NodeUpdateBatch, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
 	for _, nextUpdate := range updates.Updates {
-		if err := s.Append(ctx, nextUpdate, driver, kindIDEncoder); err != nil {
+		if err := s.Append(ctx, nextUpdate, schemaManager, kindIDEncoder); err != nil {
 			return err
 		}
 	}
@@ -338,11 +338,11 @@ func (s *RelationshipUpdateByParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql.RelationshipUpdate, driver *Driver) error {
+func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql.RelationshipUpdate, schemaManager *SchemaManager) error {
 	s.StartIDs = append(s.StartIDs, update.StartID.Value)
 	s.EndIDs = append(s.EndIDs, update.EndID.Value)
 
-	if mappedKindID, err := driver.MapKind(ctx, update.Relationship.Kind); err != nil {
+	if mappedKindID, err := schemaManager.MapKind(ctx, update.Relationship.Kind); err != nil {
 		return err
 	} else {
 		s.KindIDs = append(s.KindIDs, mappedKindID)
@@ -356,9 +356,9 @@ func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql
 	return nil
 }
 
-func (s *RelationshipUpdateByParameters) AppendAll(ctx context.Context, updates *sql.RelationshipUpdateBatch, driver *Driver) error {
+func (s *RelationshipUpdateByParameters) AppendAll(ctx context.Context, updates *sql.RelationshipUpdateBatch, schemaManager *SchemaManager) error {
 	for _, nextUpdate := range updates.Updates {
-		if err := s.Append(ctx, nextUpdate, driver); err != nil {
+		if err := s.Append(ctx, nextUpdate, schemaManager); err != nil {
 			return err
 		}
 	}
@@ -373,7 +373,7 @@ func (s *batch) flushRelationshipUpdateByBuffer(updates *sql.RelationshipUpdateB
 
 	parameters := NewRelationshipUpdateByParameters(len(updates.Updates))
 
-	if err := parameters.AppendAll(s.ctx, updates, s.driver); err != nil {
+	if err := parameters.AppendAll(s.ctx, updates, s.schemaManager); err != nil {
 		return err
 	}
 
@@ -492,7 +492,7 @@ func (s *batch) flushRelationshipCreateBuffer() error {
 	batchBuilder := newRelationshipCreateBatchBuilder(len(s.relationshipCreateBuffer))
 
 	for _, nextRel := range s.relationshipCreateBuffer {
-		if err := batchBuilder.Add(s.ctx, s.driver, nextRel); err != nil {
+		if err := batchBuilder.Add(s.ctx, s.schemaManager, nextRel); err != nil {
 			return err
 		}
 	}

@@ -33,33 +33,33 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
-type querier interface {
+type driver interface {
 	Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error)
 	Query(ctx context.Context, sql string, arguments ...any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, arguments ...any) pgx.Row
 }
 
-type inspectingQuerier struct {
-	upstreamQuerier querier
+type inspectingDriver struct {
+	upstreamDriver driver
 }
 
-func (s inspectingQuerier) Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error) {
+func (s inspectingDriver) Exec(ctx context.Context, sql string, arguments ...any) (commandTag pgconn.CommandTag, err error) {
 	inspector().Inspect(sql, arguments)
-	return s.upstreamQuerier.Exec(ctx, sql, arguments...)
+	return s.upstreamDriver.Exec(ctx, sql, arguments...)
 }
 
-func (s inspectingQuerier) Query(ctx context.Context, sql string, arguments ...any) (pgx.Rows, error) {
+func (s inspectingDriver) Query(ctx context.Context, sql string, arguments ...any) (pgx.Rows, error) {
 	inspector().Inspect(sql, arguments)
-	return s.upstreamQuerier.Query(ctx, sql, arguments...)
+	return s.upstreamDriver.Query(ctx, sql, arguments...)
 }
 
-func (s inspectingQuerier) QueryRow(ctx context.Context, sql string, arguments ...any) pgx.Row {
+func (s inspectingDriver) QueryRow(ctx context.Context, sql string, arguments ...any) pgx.Row {
 	inspector().Inspect(sql, arguments)
-	return s.upstreamQuerier.QueryRow(ctx, sql, arguments...)
+	return s.upstreamDriver.QueryRow(ctx, sql, arguments...)
 }
 
 type transaction struct {
-	driver             *Driver
+	schemaManager      *SchemaManager
 	queryExecMode      pgx.QueryExecMode
 	queryResultsFormat pgx.QueryResultFormats
 	ctx                context.Context
@@ -69,9 +69,9 @@ type transaction struct {
 	targetSchemaSet    bool
 }
 
-func newTransactionWrapper(ctx context.Context, conn *pgxpool.Conn, driver *Driver, cfg *Config, allocateTransaction bool) (*transaction, error) {
+func newTransactionWrapper(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config, allocateTransaction bool) (*transaction, error) {
 	wrapper := &transaction{
-		driver:             driver,
+		schemaManager:      schemaManager,
 		queryExecMode:      cfg.QueryExecMode,
 		queryResultsFormat: cfg.QueryResultFormats,
 		ctx:                ctx,
@@ -90,15 +90,15 @@ func newTransactionWrapper(ctx context.Context, conn *pgxpool.Conn, driver *Driv
 	return wrapper, nil
 }
 
-func (s *transaction) querier() querier {
+func (s *transaction) driver() driver {
 	if s.tx != nil {
-		return inspectingQuerier{
-			upstreamQuerier: s.tx,
+		return inspectingDriver{
+			upstreamDriver: s.tx,
 		}
 	}
 
-	return inspectingQuerier{
-		upstreamQuerier: s.conn,
+	return inspectingDriver{
+		upstreamDriver: s.conn,
 	}
 }
 
@@ -123,20 +123,20 @@ func (s *transaction) Close() {
 func (s *transaction) getTargetGraph() (model.Graph, error) {
 	if !s.targetSchemaSet {
 		// Look for a default graph target
-		if defaultGraph, hasDefaultGraph := s.driver.DefaultGraph(); !hasDefaultGraph {
+		if defaultGraph, hasDefaultGraph := s.schemaManager.DefaultGraph(); !hasDefaultGraph {
 			return model.Graph{}, fmt.Errorf("driver operation requires a graph target to be set")
 		} else {
 			return defaultGraph, nil
 		}
 	}
 
-	return s.driver.AssertGraph(s, s.targetSchema)
+	return s.schemaManager.AssertGraph(s, s.targetSchema)
 }
 
 func (s *transaction) CreateNode(properties *graph.Properties, kinds ...graph.Kind) (*graph.Node, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.driver.AssertKinds(s.ctx, kinds); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, kinds); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
@@ -190,14 +190,14 @@ func (s *transaction) UpdateNode(node *graph.Node) error {
 
 func (s *transaction) Nodes() graph.NodeQuery {
 	return &nodeQuery{
-		liveQuery: newLiveQuery(s.ctx, s, s.driver),
+		liveQuery: newLiveQuery(s.ctx, s, s.schemaManager),
 	}
 }
 
 func (s *transaction) CreateRelationshipByIDs(startNodeID, endNodeID graph.ID, kind graph.Kind, properties *graph.Properties) (*graph.Relationship, error) {
 	if graphTarget, err := s.getTargetGraph(); err != nil {
 		return nil, err
-	} else if kindIDSlice, err := s.driver.AssertKinds(s.ctx, graph.Kinds{kind}); err != nil {
+	} else if kindIDSlice, err := s.schemaManager.AssertKinds(s.ctx, graph.Kinds{kind}); err != nil {
 		return nil, err
 	} else if propertiesJSONB, err := pgsql.PropertiesToJSONB(properties); err != nil {
 		return nil, err
@@ -262,13 +262,13 @@ func (s *transaction) UpdateRelationship(relationship *graph.Relationship) error
 		statement = edgePropertyDeleteOnlyStatement
 	}
 
-	_, err := s.querier().Exec(s.ctx, statement, append(arguments, relationship.ID)...)
+	_, err := s.driver().Exec(s.ctx, statement, append(arguments, relationship.ID)...)
 	return err
 }
 
 func (s *transaction) Relationships() graph.RelationshipQuery {
 	return &relationshipQuery{
-		liveQuery: newLiveQuery(s.ctx, s, s.driver),
+		liveQuery: newLiveQuery(s.ctx, s, s.schemaManager),
 	}
 }
 
@@ -279,13 +279,13 @@ func (s *transaction) query(query string, parameters map[string]any) (pgx.Rows, 
 		queryArgs = append(queryArgs, pgx.NamedArgs(parameters))
 	}
 
-	return s.querier().Query(s.ctx, query, queryArgs...)
+	return s.driver().Query(s.ctx, query, queryArgs...)
 }
 
 func (s *transaction) Query(query string, parameters map[string]any) graph.Result {
 	if parsedQuery, err := frontend.ParseCypher(frontend.NewContext(), query); err != nil {
 		return graph.NewErrorResult(err)
-	} else if translated, err := translate.Translate(s.ctx, parsedQuery, s.driver, parameters); err != nil {
+	} else if translated, err := translate.Translate(s.ctx, parsedQuery, s.schemaManager, parameters); err != nil {
 		return graph.NewErrorResult(err)
 	} else if sqlQuery, err := translate.Translated(translated); err != nil {
 		return graph.NewErrorResult(err)
@@ -301,7 +301,7 @@ func (s *transaction) Raw(query string, parameters map[string]any) graph.Result 
 		return &queryResult{
 			ctx:        s.ctx,
 			rows:       rows,
-			kindMapper: s.driver,
+			kindMapper: s.schemaManager,
 		}
 	}
 }

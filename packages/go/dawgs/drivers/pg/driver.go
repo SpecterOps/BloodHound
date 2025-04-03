@@ -19,12 +19,10 @@ package pg
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -55,33 +53,17 @@ func OptionSetQueryExecMode(queryExecMode pgx.QueryExecMode) graph.TransactionOp
 
 type Driver struct {
 	pool                      *pgxpool.Pool
+	schemaManager             *SchemaManager
 	defaultTransactionTimeout time.Duration
 	batchWriteSize            int
-	defaultGraph              model.Graph
-	hasDefaultGraph           bool
-	graphs                    map[string]model.Graph
-	kindsByID                 map[graph.Kind]int16
-	kindIDsByKind             map[int16]graph.Kind
-	lock                      *sync.RWMutex
-	managerLock               *sync.RWMutex
 }
 
-func NewDriver(pool *pgxpool.Pool, defaultTransactionTimeout time.Duration, batchWriteSize int) *Driver {
-	return &Driver{
-		pool:                      pool,
-		defaultTransactionTimeout: defaultTransactionTimeout,
-		batchWriteSize:            batchWriteSize,
-		hasDefaultGraph:           false,
-		graphs:                    map[string]model.Graph{},
-		kindsByID:                 map[graph.Kind]int16{},
-		kindIDsByKind:             map[int16]graph.Kind{},
-		lock:                      &sync.RWMutex{},
-		managerLock:               &sync.RWMutex{},
-	}
+func (s *Driver) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
+	return s.schemaManager.SetDefaultGraph(ctx, graphSchema)
 }
 
 func (s *Driver) KindMapper() KindMapper {
-	return s
+	return s.schemaManager
 }
 
 func (s *Driver) SetBatchWriteSize(size int) {
@@ -100,7 +82,7 @@ func (s *Driver) BatchOperation(ctx context.Context, batchDelegate graph.BatchDe
 	} else {
 		defer conn.Release()
 
-		if batch, err := newBatch(ctx, conn, s, cfg); err != nil {
+		if batch, err := newBatch(ctx, conn, s.schemaManager, cfg); err != nil {
 			return err
 		} else {
 			defer batch.Close()
@@ -153,7 +135,7 @@ func (s *Driver) ReadTransaction(ctx context.Context, txDelegate graph.Transacti
 		defer conn.Release()
 
 		return txDelegate(&transaction{
-			driver:          s,
+			schemaManager:   s.schemaManager,
 			queryExecMode:   cfg.QueryExecMode,
 			ctx:             ctx,
 			conn:            conn,
@@ -170,7 +152,7 @@ func (s *Driver) WriteTransaction(ctx context.Context, txDelegate graph.Transact
 	} else {
 		defer conn.Release()
 
-		if tx, err := newTransactionWrapper(ctx, conn, s, cfg, true); err != nil {
+		if tx, err := newTransactionWrapper(ctx, conn, s.schemaManager, cfg, true); err != nil {
 			return err
 		} else {
 			defer tx.Close()
@@ -195,19 +177,14 @@ func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 	// Resetting the pool must be done on every schema assertion as composite types may have changed OIDs
 	defer s.pool.Reset()
 
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	err := s.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		return s.assertSchema(tx, schema)
-	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
-	if err != nil {
+	// Assert that the base graph schema exists and has a matching schema definition
+	if err := s.schemaManager.AssertSchema(ctx, schema); err != nil {
 		return err
 	}
 
 	if schema.DefaultGraph.Name != "" {
 		// There's a default graph defined. Assert that it exists and has a matching schema
-		if err := s.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
+		if err := s.schemaManager.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
 			return err
 		}
 	}
@@ -226,7 +203,7 @@ func (s *Driver) Run(ctx context.Context, query string, parameters map[string]an
 
 func (s *Driver) FetchKinds(_ context.Context) (graph.Kinds, error) {
 	var kinds graph.Kinds
-	for _, kind := range s.GetKindIDsByKind() {
+	for _, kind := range s.schemaManager.GetKindIDsByKind() {
 		kinds = append(kinds, kind)
 	}
 
