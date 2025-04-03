@@ -947,7 +947,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Error getting quality stat: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
 		{
@@ -966,7 +966,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   []byte(`{"data":{}}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
 	}
@@ -982,13 +982,13 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				Graph: mocks.mockGraph,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetDatabaseCompleteness(response, request)
+			resources.GetDatabaseCompleteness(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

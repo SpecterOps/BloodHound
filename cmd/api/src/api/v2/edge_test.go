@@ -47,7 +47,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected edge_type parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected source_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test"}},
 			},
 		},
 		{
@@ -83,7 +83,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected target_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test&source_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test&source_node=test"}},
 			},
 		},
 		{
@@ -101,7 +101,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected only one edge_type."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test&edge_type=test2&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test&edge_type=test2&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -119,7 +119,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected only one source_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test&source_node=test2&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test&source_node=test2&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -137,7 +137,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Expected only one target_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test&target_node=test2&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test&target_node=test2&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -155,7 +155,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Invalid edge requested: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=test&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=test&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -173,7 +173,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Invalid value for startID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=Meta&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -191,7 +191,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Invalid value for endID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=Meta&source_node=1&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=test"}},
 			},
 		},
 		{
@@ -212,7 +212,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Could not find edge matching criteria: error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
 			},
 		},
 		{
@@ -234,7 +234,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   []byte(`{"errors":[{"context":"","message":"Error getting composition for edge: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
 			},
 		},
 		{
@@ -256,7 +256,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   []byte(`{"data":{"nodes":{},"edges":[]}}`),
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
 			},
 		},
 	}
@@ -272,13 +272,13 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				Graph: mocks.mockGraph,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetEdgeComposition(response, request)
+			resources.GetEdgeComposition(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

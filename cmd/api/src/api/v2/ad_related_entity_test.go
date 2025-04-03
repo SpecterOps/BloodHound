@@ -700,14 +700,14 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.ListADIssuancePolicyLinkedCertTemplates(response, request)
+			resources.ListADIssuancePolicyLinkedCertTemplates(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

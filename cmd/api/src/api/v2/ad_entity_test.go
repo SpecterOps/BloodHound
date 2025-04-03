@@ -877,13 +877,13 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetBaseEntityInfo(response, request)
+			resources.GetBaseEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1072,13 +1072,13 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetContainerEntityInfo(response, request)
+			resources.GetContainerEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1267,13 +1267,13 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetAIACAEntityInfo(response, request)
+			resources.GetAIACAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1463,13 +1463,13 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetRootCAEntityInfo(response, request)
+			resources.GetRootCAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1658,13 +1658,13 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetEnterpriseCAEntityInfo(response, request)
+			resources.GetEnterpriseCAEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1853,13 +1853,13 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetNTAuthStoreEntityInfo(response, request)
+			resources.GetNTAuthStoreEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -2048,13 +2048,13 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetCertTemplateEntityInfo(response, request)
+			resources.GetCertTemplateEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -2243,13 +2243,13 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetIssuancePolicyEntityInfo(response, request)
+			resources.GetIssuancePolicyEntityInfo(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

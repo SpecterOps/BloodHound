@@ -358,13 +358,13 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				DB: mocks.mockDatabase,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.RequestAnalysis(response, request)
+			resources.RequestAnalysis(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

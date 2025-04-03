@@ -274,13 +274,13 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 				},
 			}
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				CollectorManifests: collectorManifests,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.DownloadCollectorByVersion(response, request)
+			resources.DownloadCollectorByVersion(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -459,13 +459,13 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 				},
 			}
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				CollectorManifests: collectorManifests,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.DownloadCollectorChecksumByVersion(response, request)
+			resources.DownloadCollectorChecksumByVersion(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
