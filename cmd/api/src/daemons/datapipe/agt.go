@@ -140,14 +140,16 @@ func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 
 func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
 	if node.Kinds.ContainsOneOf(ad.Entity) {
+		// Verify aclprotected false for OUs as well?
 		// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
+		// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
 		if err := tx.BreadthFirst(ctx, traversal.Plan{
 			Root: node,
 			Driver: traversal.NewPattern().InboundWithDepth(0, 0,
 				query.And(
 					query.Kind(query.Relationship(), ad.Contains),
 					query.Kind(query.Start(), ad.OU),
-				)).InboundWithDepth(0, 1,
+				)).InboundWithDepth(1, 1,
 				query.And(
 					query.Kind(query.Relationship(), ad.GPLink),
 					query.Kind(query.Start(), ad.GPO),
@@ -187,43 +189,23 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 				return err
 			}
 		}
-
-		// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
-		if node.Kinds.ContainsOneOf(ad.OU, ad.Domain) {
-			if err := tx.BreadthFirst(ctx, traversal.Plan{
-				Root: node,
-				Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
-					query.Kind(query.Relationship(), ad.GPLink),
-					query.Kind(query.Start(), ad.GPO),
-				)).Do(func(path *graph.PathSegment) error {
-					if path.Trunk != nil {
-						if result.AddIfNotExists(path.Trunk.Node) {
-							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
-						}
-					}
-					if result.AddIfNotExists(path.Node) {
-						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
-					}
-					return nil
-				})}); err != nil {
-				return err
-			}
-		}
 	} else if node.Kinds.ContainsOneOf(azure.Entity) {
 		// MATCH (n:AZBase)-[:AZContains*..]->(m:AZBase) WHERE (n:Subscription) OR (n:ResourceGroup) OR (n:ManagementGroup) RETURN n
 		if err := tx.BreadthFirst(ctx, traversal.Plan{
 			Root: node,
 			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
 				query.KindIn(query.Relationship(), azure.Contains),
-				query.KindIn(query.Start(), azure.Subscription, azure.ResourceGroup, azure.ManagementGroup),
+				query.KindIn(query.Start(), azure.Entity),
 			)).Do(func(path *graph.PathSegment) error {
-				if path.Trunk != nil {
+				if path.Trunk != nil && path.Trunk.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
 					if result.AddIfNotExists(path.Trunk.Node) {
 						resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 				}
-				if result.AddIfNotExists(path.Node) {
-					resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+				if path.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
+					if result.AddIfNotExists(path.Node) {
+						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+					}
 				}
 				return nil
 			})}); err != nil {
@@ -234,7 +216,7 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 			// MATCH (n:AZApp)-[:AZRunsAs]->(m:AZServicePrincipal) RETURN n
 			if err := tx.BreadthFirst(ctx, traversal.Plan{
 				Root: node,
-				Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
+				Driver: traversal.NewPattern().InboundWithDepth(1, 1, query.And(
 					query.Kind(query.Relationship(), azure.RunsAs),
 					query.Kind(query.Start(), azure.App),
 				)).Do(func(path *graph.PathSegment) error {
@@ -261,9 +243,9 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 
 	switch {
 	case node.Kinds.ContainsOneOf(ad.Group, azure.Group):
-		// MATCH (m:Group)<-[:MemberOf*..]-(n:Base) RETURN n
-		// MATCH (m:AZGroup)<-[:AZMemberOf*..]-(n:AZBase)RETURN n
-		pattern = traversal.NewPattern().InboundWithDepth(0, 0, query.And(
+		// MATCH (n:Group)<-[:MemberOf*..]-(m:Base) RETURN m
+		// MATCH (n:AZGroup)<-[:AZMemberOf*..]-(m:AZBase) RETURN m
+		pattern = traversal.NewPattern().InboundWithDepth(1, 0, query.And(
 			query.KindIn(query.Relationship(), ad.MemberOf, azure.MemberOf),
 			query.KindIn(query.End(), ad.Entity, azure.Entity),
 		))
@@ -273,13 +255,13 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 		// MATCH (n:AZResourceGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZManagementGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZSubscription)-[:AZContains*..]->(m:AZBase) RETURN m
-		pattern = traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+		pattern = traversal.NewPattern().OutboundWithDepth(1, 0, query.And(
 			query.KindIn(query.Relationship(), ad.Contains, azure.Contains),
 			query.KindIn(query.End(), ad.Entity, azure.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Role):
-		// MATCH (m:AZRole)<-[:AZHasRole]-(n:AZBase) RETURN n
-		pattern = traversal.NewPattern().InboundWithDepth(0, 0, query.And(
+		// MATCH (n:AZRole)<-[:AZHasRole]-(m:AZBase) RETURN m
+		pattern = traversal.NewPattern().InboundWithDepth(1, 1, query.And(
 			query.KindIn(query.Relationship(), azure.HasRole),
 			query.KindIn(query.End(), azure.Entity),
 		))
