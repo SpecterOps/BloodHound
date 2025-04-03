@@ -26,7 +26,7 @@ import (
 
 func (s *Translator) translateDelete(scope *Scope, cypherDelete *cypher.Delete) error {
 	for range cypherDelete.Expressions {
-		if expression, err := s.treeTranslator.Pop(); err != nil {
+		if expression, err := s.treeTranslator.PopOperand(); err != nil {
 			return err
 		} else {
 			switch typedExpression := expression.(type) {
@@ -114,7 +114,7 @@ func (s *Translator) translateRemoveItem(removeItem *cypher.RemoveItem) error {
 	}
 
 	if removeItem.Property != nil {
-		if propertyLookupExpression, err := s.treeTranslator.Pop(); err != nil {
+		if propertyLookupExpression, err := s.treeTranslator.PopOperand(); err != nil {
 			return err
 		} else if propertyLookup, err := decomposePropertyLookup(propertyLookupExpression); err != nil {
 			return err
