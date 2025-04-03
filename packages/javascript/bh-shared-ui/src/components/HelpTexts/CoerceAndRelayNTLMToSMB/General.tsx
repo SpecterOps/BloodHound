@@ -29,7 +29,9 @@ const General: FC<EdgeInfoProps> = () => {
             </Typography>
 
             <Typography variant='body2'>
-                Click on Relay Targets to view victim computers with administrative rights on the target computer.
+                Click on Relay Sources to view valid computers with administrative rights on the target computer that
+                can be relayed. Click on Composition to view the full paths that lead to administrative rights on the
+                target computer.
             </Typography>
         </>
     );
