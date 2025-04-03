@@ -39,6 +39,7 @@ type AssetGroupTagData interface {
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
+	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
@@ -191,4 +192,10 @@ SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY 
 	}
 
 	return results, nil
+}
+
+func (s *BloodhoundDB) GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
+	var selectors model.AssetGroupTagSelectors
+
+	return selectors, CheckError(s.db.WithContext(ctx).Raw("SELECT s.* from asset_group_tag_selectors s JOIN asset_group_tag_selector_nodes n ON s.id = n.node_id JOIN asset_group_tags t ON s.asset_group_tag_id = t.id WHERE t.id = ? AND n.node_id = ?", assetGroupTagId, memberId).Find(&selectors))
 }

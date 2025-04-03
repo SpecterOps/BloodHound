@@ -1367,6 +1367,21 @@ func (mr *MockDatabaseMockRecorder) GetScopeForSavedQuery(arg0, arg1, arg2 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeForSavedQuery", reflect.TypeOf((*MockDatabase)(nil).GetScopeForSavedQuery), arg0, arg1, arg2)
 }
 
+// GetSelectorsByMemberId mocks base method.
+func (m *MockDatabase) GetSelectorsByMemberId(arg0 context.Context, arg1, arg2 int) (model.AssetGroupTagSelectors, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSelectorsByMemberId", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSelectorsByMemberId indicates an expected call of GetSelectorsByMemberId.
+func (mr *MockDatabaseMockRecorder) GetSelectorsByMemberId(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorsByMemberId", reflect.TypeOf((*MockDatabase)(nil).GetSelectorsByMemberId), arg0, arg1, arg2)
+}
+
 // GetSharedSavedQueries mocks base method.
 func (m *MockDatabase) GetSharedSavedQueries(arg0 context.Context, arg1 uuid.UUID) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()

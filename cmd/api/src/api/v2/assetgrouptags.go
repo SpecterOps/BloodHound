@@ -26,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/bhlog/measure"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -88,6 +89,10 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
+type listSelectorsResponse struct {
+	Selectors model.AssetGroupTagSelectors `json:"selectors"`
+}
+
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
@@ -140,7 +145,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+			api.WriteBasicResponse(request.Context(), listSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
 		}
 	}
 }
@@ -156,5 +161,37 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}
+
+type listNodeSelectorsResponse struct {
+	Member Member `json:"member"`
+}
+
+type Member struct {
+	*graph.Node
+	Selectors model.AssetGroupTagSelectors
+}
+
+func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWriter, request *http.Request) {
+	var (
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
+	)
+
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Node Selectors Id")()
+
+	if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+	} else if memberID, err := strconv.Atoi(memberStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if entity, err := s.GraphQuery.GetEntityByObjectId(request.Context(), memberStr, nil); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectors, err := s.DB.GetSelectorsByMemberId(request.Context(), memberID, assetGroupTagID); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{entity, selectors}}, http.StatusOK, response)
 	}
 }
