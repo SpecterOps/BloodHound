@@ -36,8 +36,6 @@ type IngestJob struct {
 	LastIngest       time.Time   `json:"last_ingest"`
 	TotalFiles       int         `json:"total_files"`
 	FailedFiles      int         `json:"failed_files"`
-	//DomainResults []DomainCollectionResult `json:"domain_results" gorm:"-"`
-
 	BigSerial
 }
 
@@ -197,25 +195,4 @@ func (s JobStatus) IsValidEndState() error {
 	default:
 		return fmt.Errorf("invalid job end state (%s|%s): %s", JobStatusComplete, JobStatusFailed, s)
 	}
-}
-
-type DomainCollectionResult struct {
-	JobID             int64  `json:"job_id"` // TODO remove this field to enable moving this model to FOSS
-	DomainName        string `json:"domain_name"`
-	Success           bool   `json:"success"`
-	Message           string `json:"message"`
-	UserCount         int    `json:"user_count"`
-	GroupCount        int    `json:"group_count"`
-	ComputerCount     int    `json:"computer_count"`
-	GPOCount          int    `json:"gpo_count"`
-	OUCount           int    `json:"ou_count"`
-	ContainerCount    int    `json:"container_count"`
-	AIACACount        int    `json:"aiaca_count" gorm:"column:aiaca_count"`
-	RootCACount       int    `json:"rootca_count" gorm:"column:rootca_count"`
-	EnterpriseCACount int    `json:"enterpriseca_count" gorm:"column:enterpriseca_count"`
-	NTAuthStoreCount  int    `json:"ntauthstore_count" gorm:"column:ntauthstore_count"`
-	CertTemplateCount int    `json:"certtemplate_count" gorm:"column:certtemplate_count"`
-	DeletedCount      int    `json:"deleted_count"`
-
-	BigSerial
 }
