@@ -55,7 +55,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "InvalidTagType",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "blah")
+					apitest.AddQueryParam(input, queryParamTagType, "123456")
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -99,7 +99,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "TagTypeLabel",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "label")
+					apitest.AddQueryParam(input, queryParamTagType, "2") // model.AssetGroupTagTypeLabel
 				},
 				Setup: func() {
 					mockDB.EXPECT().
@@ -122,7 +122,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "TagTypeTier",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "tier")
+					apitest.AddQueryParam(input, queryParamTagType, "1") // model.AssetGroupTagTypeTier
 				},
 				Setup: func() {
 					mockDB.EXPECT().
