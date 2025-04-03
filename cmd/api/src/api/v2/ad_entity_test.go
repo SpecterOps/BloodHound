@@ -779,6 +779,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Base")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -803,6 +804,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Base")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -972,6 +974,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Container")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -996,6 +999,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("Container")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -1165,6 +1169,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("AIACA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1189,6 +1194,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("AIACA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -1358,6 +1364,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("RootCA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1382,6 +1389,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("RootCA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -1552,6 +1560,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("EnterpriseCA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1576,6 +1585,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("EnterpriseCA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -1745,6 +1755,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("NTAuthStore")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1769,6 +1780,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("NTAuthStore")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -1938,6 +1950,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("CertTemplate")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -1962,6 +1975,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("CertTemplate")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
@@ -2131,6 +2145,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("IssuancePolicy")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -2155,6 +2170,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(req.Context(), "id", graph.StringKind("IssuancePolicy")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
