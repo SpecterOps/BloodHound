@@ -15,4 +15,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { default as CypherSearch } from './CypherSearch';
+export { default as NodeSearch } from './NodeSearch';
 export { default as PathfindingSearch } from './PathfindingSearch';
