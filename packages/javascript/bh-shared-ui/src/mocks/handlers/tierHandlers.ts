@@ -46,6 +46,14 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
             })
         );
     }),
+    // GET Kinds
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
+            })
+        );
+    }),
 
     // GET Labels
     rest.get('/api/v2/asset-group-labels', async (_req, res, ctx) => {
