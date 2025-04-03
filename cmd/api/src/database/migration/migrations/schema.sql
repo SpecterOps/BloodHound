@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     source_ip_address text DEFAULT NULL::character varying,
     status character varying(15) DEFAULT 'intent'::character varying,
     commit_id text,
-    CONSTRAINT status_check CHECK (((status)::text = ANY ((ARRAY['intent'::character varying, 'success'::character varying, 'failure'::character varying])::text[])))
+    CONSTRAINT status_check CHECK (status IN ('intent', 'success', 'failure'))
 );
 CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
     START WITH 1
