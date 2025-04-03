@@ -41,7 +41,7 @@ describe('CypherSearch', () => {
         rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: ['Tier Zero', 'Tier One', 'Tier Two'],
+                    data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
                 })
             );
         })
