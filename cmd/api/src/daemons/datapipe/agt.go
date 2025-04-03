@@ -242,22 +242,32 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 	var pattern traversal.PatternContinuation
 
 	switch {
-	case node.Kinds.ContainsOneOf(ad.Group, azure.Group):
+	case node.Kinds.ContainsOneOf(ad.Group):
 		// MATCH (n:Group)<-[:MemberOf*..]-(m:Base) RETURN m
-		// MATCH (n:AZGroup)<-[:AZMemberOf*..]-(m:AZBase) RETURN m
 		pattern = traversal.NewPattern().InboundWithDepth(1, 0, query.And(
-			query.KindIn(query.Relationship(), ad.MemberOf, azure.MemberOf),
-			query.KindIn(query.End(), ad.Entity, azure.Entity),
+			query.KindIn(query.Relationship(), ad.MemberOf),
+			query.KindIn(query.End(), ad.Entity),
 		))
-	case node.Kinds.ContainsOneOf(ad.OU, ad.Container, azure.ResourceGroup, azure.ManagementGroup, azure.Subscription):
+	case node.Kinds.ContainsOneOf(ad.OU, ad.Container):
 		// MATCH (n:Container)-[:Contains*..]->(m:Base) RETURN m
 		// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN m
+		pattern = traversal.NewPattern().OutboundWithDepth(1, 0, query.And(
+			query.KindIn(query.Relationship(), ad.Contains),
+			query.KindIn(query.End(), ad.Entity),
+		))
+	case node.Kinds.ContainsOneOf(azure.Group):
+		// MATCH (n:AZGroup)<-[:AZMemberOf*..]-(m:AZBase) RETURN m
+		pattern = traversal.NewPattern().InboundWithDepth(1, 0, query.And(
+			query.KindIn(query.Relationship(), azure.MemberOf),
+			query.KindIn(query.End(), azure.Entity),
+		))
+	case node.Kinds.ContainsOneOf(azure.ResourceGroup, azure.ManagementGroup, azure.Subscription):
 		// MATCH (n:AZResourceGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZManagementGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZSubscription)-[:AZContains*..]->(m:AZBase) RETURN m
 		pattern = traversal.NewPattern().OutboundWithDepth(1, 0, query.And(
-			query.KindIn(query.Relationship(), ad.Contains, azure.Contains),
-			query.KindIn(query.End(), ad.Entity, azure.Entity),
+			query.KindIn(query.Relationship(), azure.Contains),
+			query.KindIn(query.End(), azure.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Role):
 		// MATCH (n:AZRole)<-[:AZHasRole]-(m:AZBase) RETURN m
