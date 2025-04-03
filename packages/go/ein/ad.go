@@ -725,7 +725,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
 						ad.TrustAttributes.String():      finalTrustAttributes,
 						ad.TrustType.String():            trust.TrustType,
-						"transitive":                     trust.IsTransitive},
+						ad.Transitive.String():           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))
@@ -748,7 +748,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
 						ad.TrustAttributes.String():      finalTrustAttributes,
 						ad.TrustType.String():            trust.TrustType,
-						"transitive":                     trust.IsTransitive},
+						ad.Transitive.String():           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))

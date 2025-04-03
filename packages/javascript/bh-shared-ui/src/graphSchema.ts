@@ -444,6 +444,7 @@ export enum ActiveDirectoryKindProperties {
     HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
     HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
+    Transitive = 'transitive',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -685,6 +686,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'HTTPS Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HasVulnerableEndpoint:
             return 'Has Vulnerable Endpoint';
+        case ActiveDirectoryKindProperties.Transitive:
+            return 'Is Transitive';
         default:
             return undefined;
     }

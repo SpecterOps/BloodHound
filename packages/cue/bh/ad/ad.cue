@@ -887,6 +887,12 @@ HasVulnerableEndpoint: types.#StringEnum & {
 	representation: "hasvulnerableendpoint"
 }
 
+Transitive: types.#StringEnum & {
+	symbol: "Transitive"
+	schema: "ad"
+	name:"Is Transitive"
+	representation: "transitive"
+}
 
 Properties: [
 	AdminCount,
@@ -1007,7 +1013,8 @@ Properties: [
 	IsDC,
 	HTTPEnrollmentEndpoints,
 	HTTPSEnrollmentEndpoints,
-	HasVulnerableEndpoint
+	HasVulnerableEndpoint,
+	Transitive
 ]
 
 // Kinds
