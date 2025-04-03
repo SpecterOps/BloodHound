@@ -17,6 +17,7 @@
 package ingest_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -80,5 +81,77 @@ func Test_ValidateMetaTag(t *testing.T) {
 		if assertion.err == nil {
 			assert.Equal(t, meta.Type, assertion.expectedType)
 		}
+	}
+}
+
+type genericAssertion struct {
+	name  string
+	input string
+	err   error
+}
+
+func Test_ValidateGenericIngest(t *testing.T) {
+
+	positiveCases := []genericAssertion{
+		{
+			name: "payload contains realistic node",
+			input: `{"graph": {"nodes": [
+			{
+			"id": "1234",
+			"kinds": ["a","b"],
+			"properties": {"thing_one": "thing_two","num": 1,"bool": true}
+			 }
+			]
+			 }}`,
+			err: nil,
+		},
+		{
+			name:  "payload contains nodes only",
+			input: `{"graph": {"nodes": [{"id": "1234"}]}}`,
+			err:   nil,
+		},
+		{
+			name:  "payload contains edges only",
+			input: `{"graph": {"edges": [{"id": "1234"}]}}`,
+			err:   nil,
+		},
+		{
+			name:  "payload specifies edges before nodes",
+			input: `{"graph": {"edges": [{"id": "1234"}], "nodes": [{"id": "1234"}]}}`,
+			err:   nil,
+		},
+	}
+
+	negativeCases := []genericAssertion{
+		{
+			name:  "payload doesn't contain nodes or edges",
+			input: `{"graph": {}`,
+			err:   ingest.ErrEmptyIngest,
+		},
+		{
+			name:  "payload contains a node that doesn't conform to spec",
+			input: `{"graph": {"nodes": [{"id": 1234}]}}`,
+			err:   ingest.ErrNodeSchema,
+		},
+		{
+			name:  "payload contains an edge that doesn't conform to spec",
+			input: `{"graph": {"edges": [{"source_id": 1234}]}}`,
+			err:   ingest.ErrEdgeSchema,
+		},
+		{
+			name:  "payload contains a node that has invalid json",
+			input: `{"graph": {"nodes": [{"id": "1234}]}}`,
+			err:   errors.New("unexpected EOF"), // TODO
+		},
+	}
+
+	for _, assertion := range positiveCases {
+		err := ingest_service.ValidateGenericIngest(strings.NewReader(assertion.input), true)
+		assert.Nil(t, err)
+	}
+
+	for _, assertion := range negativeCases {
+		err := ingest_service.ValidateGenericIngest(strings.NewReader(assertion.input), true)
+		assert.ErrorContains(t, err, assertion.err.Error())
 	}
 }

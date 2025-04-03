@@ -19,6 +19,7 @@ package ingest
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 
@@ -96,6 +97,130 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 	}
 
 	return meta, nil
+}
+
+/*
+	"graph": {
+		"nodes": [],
+		"edges": [],
+	}
+
+	or
+
+	"graph": {
+		"edges": [],
+		"nodes": [],
+	}
+*/
+
+type Node struct {
+	Kinds      []string       `json:"kinds"`
+	ID         string         `json:"id"`         // Will be copied into Properties["objectid"]
+	Properties map[string]any `json:"properties"` // Arbitrary key-value store
+}
+
+type Edge struct {
+	SourceID string `json:"source_id"`
+}
+
+// TODO: a payload can contain just edges or just nodes, or both
+func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
+
+	var (
+		decoder    = NewStreamDecoder(reader)
+		nodesFound = false
+		edgesFound = false
+	)
+
+	var validateNodes = func() error {
+		nodesFound = true
+
+		if err := decoder.EatOpeningBracket(); err != nil {
+			return err
+		}
+
+		// churn through array
+		for decoder.More() {
+			var node Node
+			if err := decoder.DecodeNext(&node); err != nil {
+				return err
+			}
+
+			fmt.Println(node)
+		}
+
+		if err := decoder.EatClosingBracket(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	var validateEdges = func() error {
+		edgesFound = true
+
+		if err := decoder.EatOpeningBracket(); err != nil {
+			return err
+		}
+
+		// churn through array
+		for decoder.More() {
+			var edge Edge
+			if err := decoder.DecodeNext(&edge); err != nil {
+				return err
+			}
+
+			fmt.Println(edge)
+		}
+
+		if err := decoder.EatClosingBracket(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// consume JSON until we get to the graph tag
+	for {
+		if token, err := decoder.dec.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				if !nodesFound && !edgesFound { // if payload empty, reject
+					return ingest.ErrEmptyIngest
+				}
+				// TODO: may need more checking here for closing delims
+				break
+			}
+		} else {
+			switch typedToken := token.(type) {
+			case string:
+				if typedToken == "graph" {
+					tok, _ := decoder.dec.Token() // '{' // TODO: validate close bracket exists
+					if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenBracket {
+						return fmt.Errorf("expected opening bracket '{' following 'graph', but got %v", tok)
+					}
+				}
+
+				if typedToken == "nodes" {
+					if err := validateNodes(); err != nil {
+						return err
+					}
+				}
+
+				if typedToken == "edges" {
+					if err := validateEdges(); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	if readToEnd {
+		if _, err := io.Copy(io.Discard, reader); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ValidateZipFile(reader io.Reader) error {

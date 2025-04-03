@@ -221,4 +221,9 @@ var (
 	ErrInvalidDataTag      = errors.New("invalid data tag found")
 	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
+
+	// generic ingest related errors
+	ErrEmptyIngest = errors.New("empty graph tag")
+	ErrNodeSchema  = errors.New("node does not conform to schema")
+	ErrEdgeSchema  = errors.New("edge does not conform to schema")
 )
