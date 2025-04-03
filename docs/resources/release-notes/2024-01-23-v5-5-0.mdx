@@ -1,0 +1,105 @@
+---
+title: 2024-01-23 Release Notes (v5.5.0)
+---
+
+## Announcements
+
+### Active Directory Certificate Services Early Access
+
+BloodHound v5.5.0 includes early access support for collection, processing, and analysis of Active Directory Certificate Services (ADCS) Attack Paths! First included in v5.4.0, Early Access now includes coverage for ESC1, ESC3, and GoldenCert Attack Paths. We will continue to expand this coverage throughout the coming weeks and months.
+
+To ingest and analyze ADCS paths in this version:
+
+1.  Enable the Early Access flag in the Administration section of the app (requires Administrator role).
+2.  Ingest data collected via SharpHound v2.3.3+.
+3.  Allow post-processing to complete.
+
+### SpecterOps Training: In-person and remote
+
+Join one of our upcoming virtual training sessions during SO-CON and learn from in-the-field experts to develop your skills based on current adversary TTPs - all in the comfort of your own home/office!
+
+Courses run March 12-15 from 9AM - 5PM ET:
+
+* Adversary Tactics: Detection
+* Adversary Tactics: Red Team Operations
+* Adversary Tactics: Tradecraft Analysis
+* **\*NEW\* **Azure Security Fundamentals
+
+Register today: [https://events.humanitix.com/tours/so-con-2024](https://events.humanitix.com/tours/so-con-2024)
+
+## Summary
+
+* **BloodHound (v5.5.0****)**
+    * New and Improved Features
+        * AD Certificate Services ESC3 Early Access support (Requires latest version of SharpHound)
+        * Expanded memory limit for query execution (Including Cypher and Entity Panel queries)
+        * Added Group Management tab for reviewing and modifying members of Tier Zero / High Value / Owned
+        * Improved performance of AZResetPassword paths
+        * The Azure role Partner Tier2 Support is now a default member of Tier Zero / High Value asset groups.
+        * _\[CE Only\]_ Added ability to mark objects as "Owned"
+    * Bug Fixes
+        * Container nodes will now properly display an Entity Panel when selected in Explore.
+        * The "Affected Objects" section of GPO Entity Panels will no longer display "NaN" when no objects are affected.
+        * _\[BHE Only\]_ Attack Paths table and path view now use the same boundaries for severity highlighting.
+        * _\[BHE Only\]_ The AzureT0MgmtGroupControl finding will no longer appear, and historical records have been removed.
+        * _\[CE Only\]_ Resolved an issue impacting the use of multi-underscore environment variables when running an environment.
+* **SharpHound (v2.3.3 - BHE, v2.3.1 - CE)**
+    * New and Improved Features
+        * Additional support for ADCS collection capabilities.
+    * Bug Fixes
+        * Updated logic for collection and reconciliation of ADCS objects.
+        * Resolving a SID to a domain will now appropriately utilize cache entries (@uidzeroo).
+        * _\[CE Only\]_ GPO Local Group processing will no longer stop processing on a failed account name resolution (@nurfed1).
+        * _\[CE Only\]_ Updated use of LDAP credentials when collecting domain details to prevent invalid username/password issues (@nurfed1).
+* **AzureHound (v2.1.6)**
+    * _No new release._
+
+## BloodHound (v5.5.0)
+
+#### New and Improved Features
+
+* **AD Certificate Services ESC3 Early Access support -** Coverage for ADCS paths expands in Early access! BloodHound now supports both ESC1 and ESC3 in Early Access, including the new Composition feature in Entity Panels for both!
+
+    _Note: To analyze ADCS Attack Paths, you must first enable the Early Access setting under Administration and then perform and import a collection using SharpHound v2.3.0+._
+* **Expanded memory limit for query execution -** We have doubled the default memory available for executing queries within BloodHound (including Cypher and Entity Panel queries). This should expand the possibility of returning results without running into out-of-memory issues.
+* **Group Management tab -** Completely new to CE and an additional view of Tier Zero resources for BHE, the Group Management view will let you review and modify current asset group members for Tier Zero / High Value as well as for Owned group in CE. We have additional enhancements coming to this view soon to filter and search the list!
+<Frame>
+  <img src="/assets/image-23.png" alt=""/>
+</Frame>
+* **Improved performance of AZResetPassword paths -** Prior to today's update, AZResetPassword edges were generated between principals based on their assigned roles; each path was created from a principal holding a role that granted it the ability to reset the password of another principal. This resulted in an explosion of the number of edges created in the database. Starting with this release, AZResetPassword edges will be created between a role and a principal for which it can reset passwords.
+
+    With these changes, paths crossing the AZResetPassword edge will look something like this:
+
+    (n:AZUser)-\[:AZHasRole\]->(r:AZRole)-\[:AZResetPassword\]->(t:AZUser)
+
+    With n as the attacking principal, r as a role with password reset capabilities, and t as the target of the attack.
+* **Azure role Partner Tier2 Support is now a default member of Tier Zero / High Value asset groups**.
+* **_\[CE Only\]_ Added ability to mark objects as "Owned" -** As promised when we released BloodHound: CE, the "Mark as Owned" feature has returned to BloodHound! Just like before, you may right-click on an object in the Explore pane and add it to the Owned group. Additionally, you may directly add or remove objects from the new Group Management view, added in this release.
+<Frame>
+  <img src="/assets/image-24.png" alt=""/>
+</Frame>
+
+#### Bug Fixes
+
+* Container nodes will now properly display an Entity Panel when selected in Explore.
+* The "Affected Objects" section of GPO Entity Panels will no longer display "NaN" when no objects are affected.
+* _\[BHE Only\]_ Attack Paths table and path view now use the same boundaries for severity highlighting.
+* _\[BHE Only\]_ The AzureT0MgmtGroupControl finding will no longer appear, and historical records have been removed.
+* _\[CE Only\]_ Resolved an issue impacting the use of multi-underscore environment variables when running an environment.
+
+### SharpHound (v2.3.3 - BHE, v2.3.1 - CE)
+
+#### New and Improved Features
+
+* **Additional support for ADCS collection capabilities _-_**SharpHound will now collect additional information required to analyze and generate ADCS Attack Paths.
+
+#### Bug Fixes
+
+* Updated logic for collection and reconciliation of ADCS objects.
+* Resolving a SID to a domain will now appropriately utilize cache entries (@uidzeroo).
+* _\[CE Only\] _GPO Local Group processing will no longer stop processing on a failed account name resolution (@nurfed1).
+* _\[CE Only\] _Updated use of LDAP credentials when collecting domain details to prevent invalid username/password issues (@nurfed1).
+
+### AzureHound (v2.1.6)
+
+_No new release._

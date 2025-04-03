@@ -1,0 +1,57 @@
+---
+title: 2023-02-21 Release Notes
+---
+
+## Announcements
+
+### SharpHound Upgrades Required
+
+SharpHound v2 is officially generally available. If you have not already done so, please make sure you upgrade your SharpHound collectors to v2.1+. SharpHound v1 will officially be end-of-life on May 1, 2023.
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “Enable post processing of local groups” early access feature simultaneously.
+
+Instructions to upgrade your collector may be found [here](/install-data-collector/install-sharphound/installation-upgrade). Our Customer Success team will begin reaching out to all customers still running SharpHound v1 and would be happy to help if you require it.
+
+### A Taste of Kerberos Abuse Webinar
+
+Join us Tuesday, 2/28 at 1 PM ET for our next webinar, A Taste of Kerberos Abuse, presented by Elad Shamir. You'll get a taste of our Adversary Tactics: Red Team Operations training, with highlights from the Kerberos modules covering every step of the Kerberos authentication flow.
+
+Sign up here: [https://ghst.ly/3X4leNV](https://ghst.ly/3X4leNV)
+
+## Summary
+
+* BloodHound Enterprise
+    * New and Improved Features - Massive performance improvements for AD Entity Panels and Explore node searches
+    * Bug Fixes -  AzureHound checkins, API response fixes
+* SharpHound Enterprise (v2.1.1)
+    * Bug Fixes - WriteAccountRestrictions edge fix, Service now properly marks domains as collected
+* AzureHound Enterprise (v1.2.4)
+    * Bug Fixes - Fixed a bug in retry logic during ingest upload
+
+### BloodHound Enterprise
+
+* Improved Functionality
+    * Entity Panels for AD objects have undergone restructuring and should load significantly faster now! Previously, each panel would load all data elements at once; this meant that a big query like "Outbound Control" could take a long time and prevent you from seeing data. These now load separately and will allow you to view available data faster - _way faster._ Note, very large / complex environments may still hit constraints pulling information back from specific queries within the panel but this will no longer prevent the rest of the panel from loading.  Future work is planned in this area to provide partial results where applicable.
+    * Explore node searches will also return much faster due to query optimizations and post-processing improvements.
+        _Note: Azure Entity Panels are undergoing the same improvements and will be available soon!_
+* Bug Fixes
+    * Cleaned up logging in AzureHound related to stalled data collection jobs
+    * Cleaned up where API responses included skip, limit, and count where they were not in use
+
+### SharpHound Enterprise (v2.1.1 GA)
+
+_Minimum version of SharpHound Service to support all current functionality: v2.1.1_
+
+* Bug Fixes
+    * Fixed a bug which prevented SharpHound Enterprise from creating WriteAccountRestrictions edges
+    * Fixed a bug that prevented domains from being marked as collected during cross domain trust collections
+
+**NOTE:** Upgrading to SharpHound v2+ must occur concurrently on all services and requires enabling the “User Rights Assignment Collection” experimental feature at the same time. Please contact your TAM or respond to this email for assistance.
+
+### AzureHound Enterprise (v1.2.4 GA)
+
+_Minimum version of AzureHound Service to support all current functionality: v1.2.4_
+
+* Bug Fixes
+    * Fixed a bug in retry logic during ingest upload
+

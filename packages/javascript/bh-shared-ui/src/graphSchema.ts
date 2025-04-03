@@ -437,11 +437,13 @@ export enum ActiveDirectoryKindProperties {
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
     LDAPSigning = 'ldapsigning',
-    LDAPSAvailable = 'ldasavailable',
+    LDAPAvailable = 'ldapavailable',
+    LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
-    RelayableToDCLDAP = 'replayabletodcldap',
-    RelayableToDCLDAPS = 'replayabletodcldaps',
     IsDC = 'isdc',
+    HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
+    HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
+    HasVulnerableEndpoint = 'hasvulnerableendpoint',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -669,16 +671,20 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'ADCS Web Enrollment HTTPS EPA';
         case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
+        case ActiveDirectoryKindProperties.LDAPAvailable:
+            return 'LDAP Available';
         case ActiveDirectoryKindProperties.LDAPSAvailable:
             return 'LDAPS Available';
         case ActiveDirectoryKindProperties.LDAPSEPA:
             return 'LDAPS EPA';
-        case ActiveDirectoryKindProperties.RelayableToDCLDAP:
-            return 'Relayable To DC LDAP';
-        case ActiveDirectoryKindProperties.RelayableToDCLDAPS:
-            return 'Relayable To DC LDAPS';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
+        case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
+            return 'HTTP Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
+            return 'HTTPS Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HasVulnerableEndpoint:
+            return 'Has Vulnerable Endpoint';
         default:
             return undefined;
     }
@@ -1132,6 +1138,7 @@ export enum CommonKindProperties {
     Title = 'title',
     Email = 'email',
     IsInherited = 'isinherited',
+    CompositionID = 'compositionid',
 }
 export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
@@ -1167,6 +1174,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Email';
         case CommonKindProperties.IsInherited:
             return 'Is Inherited';
+        case CommonKindProperties.CompositionID:
+            return 'Composition ID';
         default:
             return undefined;
     }

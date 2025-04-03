@@ -259,3 +259,24 @@ func IsValidEmail(maybeEmail string) bool {
 	_, err := mail.ParseAddress(maybeEmail)
 	return err == nil
 }
+
+// ReplaceFieldValueInJsonString replaces a field value at the root of a JSON object
+// If the field does not exist in jsonString, it will effectively do nothing
+func ReplaceFieldValueInJsonString(jsonString string, field string, value any) (string, error) {
+	var unmarshaled map[string]any
+	err := json.Unmarshal([]byte(jsonString), &unmarshaled)
+	if err != nil {
+		return "", err
+	}
+
+	if _, exists := unmarshaled[field]; exists {
+		unmarshaled[field] = value
+	}
+
+	modifiedJson, err := json.Marshal(unmarshaled)
+	if err != nil {
+		return "", err
+	}
+
+	return string(modifiedJson), nil
+}

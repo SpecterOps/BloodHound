@@ -1,0 +1,25 @@
+---
+title: AZVMAdminLogin
+description: "When a virtual machine is configured to allow logon with Azure credentials, the VM automatically has certain principals added to its local administrators group, including any principal granted the Virtual Machine Administrator Login (or “VMAL”) admin role."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+Any principal granted this role, scoped to the affected VM, can connect to the VM via RDP and will be granted local admin rights on the VM.
+
+## Abuse Info
+
+Connect to the VM via RDP and you will be granted local admin rights on the VM.
+
+## Opsec Considerations
+
+If the target computer is a workstation and a user is currently logged on, one of two things will happen. If the user you are abusing is the same user as the one logged on, you will effectively take over their session and kick the logged on user off, resulting in a message to the user. If the users are different, you will be prompted to kick the currently logged on user off the system and log on. If the target computer is a server, you will be able to initiate the connection without issue provided the user you are abusing is not currently logged in.
+
+Remote desktop will create Logon and Logoff events with the access type RemoteInteractive.
+
+## References
+
+* [https://attack.mitre.org/tactics/TA0008/](https://attack.mitre.org/tactics/TA0008/)
+* [https://attack.mitre.org/techniques/T1021/](https://attack.mitre.org/techniques/T1021/)
+* [https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows](https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows)

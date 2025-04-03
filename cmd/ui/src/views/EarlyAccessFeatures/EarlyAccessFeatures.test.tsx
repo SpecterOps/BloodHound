@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { Flag } from 'bh-shared-ui';
+import { createAuthStateWithPermissions, Flag, Permission } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
@@ -49,6 +49,13 @@ const testFeatureFlags: Flag[] = [
 ];
 
 const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([Permission.AUTH_MANAGE_APPLICATION_CONFIGURATIONS]).user,
+            })
+        );
+    }),
     rest.get(`/api/v2/features`, (req, res, ctx) => {
         return res(
             ctx.json({
@@ -162,5 +169,19 @@ describe('EarlyAccessFeatures', () => {
         expect(screen.getByText('Early Access Features')).toBeInTheDocument();
 
         expect(await screen.findByText('Could Not Display Early Access Features')).toBeInTheDocument();
+    });
+
+    it('disables any available button toggles if the user lacks the permission', async () => {
+        render(<EarlyAccessFeatures />);
+        const user = userEvent.setup();
+
+        // Close (accept) warning dialog
+        await user.click(screen.getByRole('button', { name: 'I understand, show me the new stuff!' }));
+
+        const buttons = screen.getAllByRole('button');
+
+        buttons.forEach((button) => {
+            expect(button).toBeDisabled;
+        });
     });
 });

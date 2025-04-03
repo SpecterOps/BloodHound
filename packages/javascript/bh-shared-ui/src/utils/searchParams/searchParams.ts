@@ -14,7 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SetURLSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { EnvironmentQueryParams, ExploreQueryParams } from '../..';
+
+// FUTURE DEV: SetURLSearchParams is in both v6 and v7, but v6 uses this type internally and v7 exports it.
+// When we upgrade to v7, we can import SetURLSearchParams from react-router-dom
+type SetURLSearchParams = ReturnType<typeof useSearchParams>[1];
+
+export type SearchParamKeys = keyof EnvironmentQueryParams | keyof ExploreQueryParams;
+export const GloballySupportedSearchParams = ['environmentId', 'environmentAggregation'] satisfies SearchParamKeys[];
 
 type EmptyParam = undefined | null | '';
 
@@ -65,4 +73,16 @@ export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availab
             return params;
         });
     };
+};
+
+export const persistSearchParams = (persistentSearchParams: string[]) => {
+    const prevParams = new URLSearchParams(location.search);
+    const newParams = new URLSearchParams();
+
+    persistentSearchParams.forEach((param) => {
+        const prevParam = prevParams.get(param);
+        if (prevParam) newParams.set(param, prevParam);
+    });
+
+    return newParams;
 };

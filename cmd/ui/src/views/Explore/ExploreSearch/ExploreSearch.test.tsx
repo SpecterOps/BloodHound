@@ -21,14 +21,58 @@ import {
     PRIMARY_SEARCH,
     searchbarActions as actions,
     initialSearchState,
+    mockCodemirrorLayoutMethods,
 } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from '.';
 
+const server = setupServer(
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    {
+                        name: 'admin',
+                        objectid: '1',
+                        type: 'User',
+                    },
+                    {
+                        name: 'computer',
+                        objectid: '2',
+                        type: 'Computer',
+                    },
+                ],
+            })
+        );
+    }),
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => {
+    server.resetHandlers();
+});
+afterAll(() => server.close());
+
 describe('ExploreSearch rendering per tab', async () => {
     beforeEach(async () => {
+        mockCodemirrorLayoutMethods();
+
         await act(async () => {
             render(<ExploreSearch />);
         });
@@ -63,7 +107,7 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
@@ -146,36 +190,11 @@ describe('ExploreSearch handles search on tab changing', async () => {
 describe('ExploreSearch interaction', () => {
     const user = userEvent.setup();
 
-    const comboboxLookaheadOptions = {
-        data: [
-            {
-                name: 'admin',
-                objectid: '1',
-                type: 'User',
-            },
-            {
-                name: 'computer',
-                objectid: '2',
-                type: 'Computer',
-            },
-        ],
-    };
-
-    const server = setupServer(
-        rest.get('/api/v2/search', (req, res, ctx) => {
-            return res(ctx.json(comboboxLookaheadOptions));
-        })
-    );
-
     beforeEach(async () => {
         await act(async () => {
             render(<ExploreSearch />);
         });
     });
-
-    beforeAll(() => server.listen());
-    afterEach(() => server.resetHandlers());
-    afterAll(() => server.close());
 
     it('when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab', async () => {
         const searchInput = screen.getByPlaceholderText(/search nodes/i);

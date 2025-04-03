@@ -1,0 +1,72 @@
+---
+title: 2024-07-17 Release Notes (v5.12.0)
+---
+
+## Announcements
+
+### SO-CON Recordings are Now Live!
+
+We had an absolute blast hosting SO-CON earlier this year and were incredibly impressed with the caliber of knowledge shared within the community. At last, the recordings of those talks are now live and captured in a single, convenient playlist for your consumption. Enjoy!
+
+Check out all those talks [here](https://www.youtube.com/playlist?list=PLJK0fZNGiFU_Zh8PkjCws_Rw_8WdWKyd7)!
+
+### Join us for training at BlackHat USA 2024!
+Whether you're a blue- or red-teamer, our courses are designed to elevate your skills and prepare you to tackle advanced threat actors. Don't miss this opportunity to learn from the experts and gain hands-on experience in simulated environments! Courses offered this year include:
+
+* Adversary Tactics: Tradecraft Analysis
+* Adversary Tactics: Red Team Operations
+* Adversary Tactics: Detection
+* Active Directory Security Fundamentals
+
+[Click here to learn more, or register](https://specterops.io/specterops-at-black-hat-usa-2024/) now and take your expertise to the next level!
+
+## Summary
+
+* **BloodHound (v5.12.0****)**
+    * New and Improved Features
+        * _\[BHE Only\]_ Visual overhaul of the Attack Paths view
+        * Added documentation hints to all administrative pages
+        * Improved analysis performance - SyncLAPSPassword
+        * Example Azure data is now available
+    * Bug Fixes
+        * Improved resolution of AzApp object names
+        * Reverted a change in Azure ingest that was resulting in inconsistent results in BloodHound
+* **SharpHound (v2.4.1 - BHE, v2.4.1 - CE)**
+    * _No new release._
+* **AzureHound (v2.1.9)**
+    * _No new release._
+
+### BloodHound (v5.12.0)
+
+#### New and Improved Features
+
+* **\[BHE Only\] Attack Paths view visual overhaul** \- The Attack Paths page has undergone a pretty significant overhaul. These changes include a better use of screen real-estate, and bring several key metrics to the forefront of the page, making it easier to rapidly identify current posture and recent changes.
+<Frame>
+  <img src="/assets/image-7.png" alt=""/>
+</Frame>
+
+<Frame>
+  <img src="/assets/image-8.png" alt=""/>
+</Frame>
+* **Administrative page documentation** \- Each of the administrative pages now has a handy explainer for the purpose of the page and links directly to BloodHound Enterprise documentation relevant to the page. These changes will make it easier to find details around the changes you're making to your environment.**
+<Frame>
+  <img src="/assets/image-9.png" alt=""/>
+</Frame>
+* **Improved analysis performance: SyncLAPSPassword** \- We've updated the logic which results in the SyncLAPSPassword edges in BloodHound. With this change, these edges will more commonly begin from Groups which have this Attack Path primitive within an environment, rather than beginning directly from each user. The result of these changes is the creation of fewer edges during analysis, and improved performance during this step.
+    _
+    Note: This may result in some changes for Attack Path findings in BloodHound Enterprise environments._
+* **Example Azure data is now available** \- Looking for sample data to try out BloodHound? We've got both AD and Azure sets hosted on [GitHub](https://github.com/SpecterOps/BloodHound/wiki/Example-Data)!
+
+#### Bug Fixes
+
+* Improved resolution of AzApp object names
+* Reverted a change in Azure ingest that was resulting in inconsistent results in BloodHound
+
+### SharpHound (v2.4.1 - BHE, v2.4.1 - CE)
+
+_No new release._
+
+### AzureHound (v2.1.9)
+
+_No new release._
+

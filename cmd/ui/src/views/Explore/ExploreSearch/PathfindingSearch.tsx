@@ -17,41 +17,34 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, useTheme } from '@mui/material';
-import {
-    DestinationNodeEditedAction,
-    DestinationNodeSelectedAction,
-    SearchValue,
-    SourceNodeEditedAction,
-    SourceNodeSelectedAction,
-    searchbarActions,
-} from 'bh-shared-ui';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import { ExploreSearchCombobox, SearchValue } from 'bh-shared-ui';
 import EdgeFilter from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
 
-const PathfindingSearch = () => {
-    const dispatch = useAppDispatch();
+type PathfindingSearchState = {
+    sourceSearchTerm: string;
+    destinationSearchTerm: string;
+    sourceSelectedItem: SearchValue | undefined;
+    destinationSelectedItem: SearchValue | undefined;
+    handleSourceNodeEdited: (edit: string) => void;
+    handleDestinationNodeEdited: (edit: string) => void;
+    handleSourceNodeSelected: (selected: SearchValue) => void;
+    handleDestinationNodeSelected: (selected: SearchValue) => void;
+    handleSwapPathfindingInputs: () => void;
+};
 
-    const primary = useAppSelector((state) => state.search.primary);
-    const secondary = useAppSelector((state) => state.search.secondary);
-
-    const { searchTerm: sourceInputValue, value: sourceSelectedItem } = primary;
-    const { searchTerm: destinationInputValue, value: destinationSelectedItem } = secondary;
-
-    const handleSourceNodeEdited = (edit: string): SourceNodeEditedAction =>
-        dispatch(searchbarActions.sourceNodeEdited(edit));
-
-    const handleDestinationNodeEdited = (edit: string): DestinationNodeEditedAction =>
-        dispatch(searchbarActions.destinationNodeEdited(edit));
-
-    const handleSourceNodeSelected = (selected: SearchValue): SourceNodeSelectedAction => {
-        const doPathfindSearch = !!destinationSelectedItem;
-        return dispatch(searchbarActions.sourceNodeSelected(selected, doPathfindSearch));
-    };
-
-    const handleDestinationNodeSelected = (selected: SearchValue): DestinationNodeSelectedAction =>
-        dispatch(searchbarActions.destinationNodeSelected(selected));
+const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState: PathfindingSearchState }) => {
+    const {
+        sourceSearchTerm,
+        destinationSearchTerm,
+        sourceSelectedItem,
+        destinationSelectedItem,
+        handleSourceNodeEdited,
+        handleDestinationNodeEdited,
+        handleSourceNodeSelected,
+        handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
+    } = pathfindingSearchState;
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>
@@ -61,20 +54,23 @@ const PathfindingSearch = () => {
                 <ExploreSearchCombobox
                     handleNodeEdited={handleSourceNodeEdited}
                     handleNodeSelected={handleSourceNodeSelected}
-                    inputValue={sourceInputValue}
+                    inputValue={sourceSearchTerm}
                     selectedItem={sourceSelectedItem || null}
                     labelText='Start Node'
                 />
                 <ExploreSearchCombobox
                     handleNodeEdited={handleDestinationNodeEdited}
                     handleNodeSelected={handleDestinationNodeSelected}
-                    inputValue={destinationInputValue}
+                    inputValue={destinationSearchTerm}
                     selectedItem={destinationSelectedItem || null}
                     labelText='Destination Node'
                 />
             </Box>
 
-            <PathfindingSwapButton />
+            <PathfindingSwapButton
+                disabled={!sourceSelectedItem || !destinationSelectedItem}
+                onSwapPathfindingInputs={handleSwapPathfindingInputs}
+            />
             <EdgeFilter />
         </Box>
     );

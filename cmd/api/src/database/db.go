@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
-	"github.com/specterops/bloodhound/src/services/fileupload"
 	"github.com/specterops/bloodhound/src/services/ingest"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -149,9 +148,6 @@ type Database interface {
 	GetAzureDataQualityAggregations(ctx context.Context, start time.Time, end time.Time, sort_by string, limit int, skip int) (model.AzureDataQualityAggregations, int, error)
 	DeleteAllDataQuality(ctx context.Context) error
 
-	// File Upload
-	fileupload.FileUploadData
-
 	// Saved Queries
 	SavedQueriesData
 
@@ -163,6 +159,11 @@ type Database interface {
 
 	// Datapipe Status
 	DatapipeStatusData
+
+	// Asset Group Tags
+	AssetGroupHistoryData
+	AssetGroupTagData
+	AssetGroupTagSelectorData
 }
 
 type BloodhoundDB struct {

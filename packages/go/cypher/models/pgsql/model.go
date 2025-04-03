@@ -454,18 +454,18 @@ type AnyExpression struct {
 	CastType DataType
 }
 
-func NewAnyExpression(inner Expression) AnyExpression {
-	newAnyExpression := AnyExpression{
+func NewAnyExpression(inner Expression, castType DataType) *AnyExpression {
+	return &AnyExpression{
 		Expression: inner,
+		CastType:   castType,
 	}
+}
 
-	// This is a guard to prevent recursive wrapping of an expression in an Any expression
-	switch innerTypeHint := inner.(type) {
-	case TypeHinted:
-		newAnyExpression.CastType = innerTypeHint.TypeHint()
+func NewAnyExpressionHinted(inner TypeHinted) *AnyExpression {
+	return &AnyExpression{
+		Expression: inner,
+		CastType:   inner.TypeHint(),
 	}
-
-	return newAnyExpression
 }
 
 func (s AnyExpression) AsExpression() Expression {
@@ -569,6 +569,10 @@ func AsIdentifiers(strs ...string) []Identifier {
 	}
 
 	return identifiers
+}
+
+func (s Identifier) AsCompoundIdentifier() CompoundIdentifier {
+	return CompoundIdentifier{s}
 }
 
 func (s Identifier) AsSelectItem() SelectItem {
@@ -1180,7 +1184,7 @@ func (s Query) NodeType() string {
 	return "query"
 }
 
-func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {
+func OptionalBinaryExpressionJoin(optional Expression, operator Operator, conjoined Expression) Expression {
 	if optional == nil {
 		return conjoined
 	}
@@ -1192,6 +1196,12 @@ func BinaryExpressionJoin(optional Expression, operator Operator, conjoined Expr
 	)
 }
 
-func OptionalAnd(optional Expression, conjoined Expression) Expression {
-	return BinaryExpressionJoin(optional, OperatorAnd, conjoined)
+func OptionalAnd(leftOperand Expression, rightOperand Expression) Expression {
+	if leftOperand == nil {
+		return rightOperand
+	} else if rightOperand == nil {
+		return leftOperand
+	}
+
+	return NewBinaryExpression(leftOperand, OperatorAnd, rightOperand)
 }

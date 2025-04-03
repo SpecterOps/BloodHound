@@ -19,30 +19,37 @@ import {
     DropdownOption,
     EntityKinds,
     GroupManagementContent,
+    HIGH_VALUE_LABEL,
     Permission,
-    searchbarActions,
-    TIER_ZERO_LABEL,
     TIER_ZERO_TAG,
+    searchbarActions,
+    useExploreParams,
+    useFeatureFlag,
+    useNodeByObjectId,
+    usePermissions,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
-import usePermissions from 'src/hooks/usePermissions/usePermissions';
+import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const backButtonFlagQuery = useFeatureFlag('back_button_support');
 
-    const globalDomain = useAppSelector((state) => state.global.options.domain);
+    const { data: environment } = useInitialEnvironment({ orderBy: 'name' });
 
     // Kept out of the shared UI due to diff between GraphNodeTypes across apps
     const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
+    const getGraphNodeByObjectId = useNodeByObjectId(openNode?.id);
+    const { setExploreParams } = useExploreParams();
 
     const { checkPermission } = usePermissions();
 
@@ -52,6 +59,9 @@ const GroupManagement = () => {
             type: member.primary_kind as EntityKinds,
             name: member.name,
         });
+        if (backButtonFlagQuery.data?.enabled) {
+            setExploreParams({ expandedPanelSections: null });
+        }
     };
 
     const handleShowNodeInExplore = () => {
@@ -61,10 +71,17 @@ const GroupManagement = () => {
                 label: openNode.name,
                 ...openNode,
             };
-            dispatch(searchbarActions.sourceNodeSelected(searchNode));
-            dispatch(setSelectedNode(openNode));
 
-            navigate(ROUTE_EXPLORE);
+            if (backButtonFlagQuery.data?.enabled) {
+                navigate({
+                    pathname: ROUTE_EXPLORE,
+                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}&exploreSearchTab=node`,
+                });
+            } else {
+                dispatch(searchbarActions.sourceNodeSelected(searchNode));
+                dispatch(setSelectedNode(openNode));
+                navigate(ROUTE_EXPLORE);
+            }
         }
     };
 
@@ -74,7 +91,7 @@ const GroupManagement = () => {
             const isTierZero = assetGroup.tag === TIER_ZERO_TAG;
             return {
                 key: assetGroup.id,
-                value: isTierZero ? TIER_ZERO_LABEL : assetGroup.name,
+                value: isTierZero ? HIGH_VALUE_LABEL : assetGroup.name,
                 icon: isTierZero ? faGem : undefined,
             };
         });
@@ -82,9 +99,9 @@ const GroupManagement = () => {
 
     return (
         <GroupManagementContent
-            globalDomain={globalDomain}
+            globalEnvironment={environment ?? null}
             showExplorePageLink={!!openNode}
-            tierZeroLabel={TIER_ZERO_LABEL}
+            tierZeroLabel={HIGH_VALUE_LABEL}
             tierZeroTag={TIER_ZERO_TAG}
             // Both these components should eventually be moved into the shared UI library
             entityPanelComponent={<EntityInfoPanel selectedNode={openNode} />}

@@ -1,0 +1,31 @@
+---
+title: About BloodHound Nodes
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+Nodes represent principals and other objects in the directory. BloodHound stores certain information about each node on the node itself in the neo4j database, and the GUI automatically performs several queries to gather insights about the node, such as how privileged the node is, or which GPOs apply to the node, etc. Simply click the node in the BloodHound GUI, and the "Node Info" tab will populate with all that information for the node.
+
+Nodes are part of the graph construct, and are represented as circles with an illustration.
+
+For example, the image below shows three User nodes (left side) connected to one Group node (right side). The nodes are connected via the "MemberOf" edge. Read more about edges in the article [About BloodHound Edges](/resources/edges/overview).
+
+<Frame>
+  <img src="/assets/image-189.png" alt=""/>
+</Frame>
+Clicking on a node will display the node's Entity Panel in the BloodHound UI:
+
+<Frame>
+  <img src="/assets/image-190.png" alt=""/>
+</Frame>
+Each article in this section documents an individual node and each contains:
+
+* **Node Properties:** Names and descriptions of properties the node can contain. Properties are found by expanding Object Information within the Entity Panel.
+* **References:** External references that contain more details about the node.
+
+Note that edge names are always capitalized even through the directory it is collected from stores in a different case.
+
+## Node Icon Glossary
+<Frame>
+  <img src="/assets/image-191.png" alt=""/>
+</Frame>

@@ -39,43 +39,6 @@ func (s *Translator) translateNodePattern(nodePattern *cypher.NodePattern) error
 	return nil
 }
 
-func (s *Translator) translateNodePatternSegment(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
-	// Make this the node select of the pattern part
-	part.NodeSelect.Binding = bindingResult.Binding
-	return nil
-}
-
-func (s *Translator) translateNodePatternSegmentWithTraversal(currentSegment *PatternSegment) error {
-	// Note: The order below matters as it will change the order of projections in the resulting translation
-
-	// If either of the nodes are not bound at this point then this traversal must materialize them
-	if !currentSegment.LeftNodeBound {
-		currentSegment.Definitions = append(currentSegment.Definitions, currentSegment.LeftNode)
-	}
-
-	// Add the edge symbol as part of the definitions that are being materialized by this expansion
-	currentSegment.Definitions = append(currentSegment.Definitions, currentSegment.Edge)
-
-	// If there's an expansion attached to this traversal, ensure that the symbol for the expansion's scope frame
-	// is part of the definitions that are being materialized by this expansion
-	if currentSegment.Expansion.Set {
-		currentSegment.Definitions = append(currentSegment.Definitions, currentSegment.Expansion.Value.PathBinding)
-	}
-
-	// If the right node has not been bound before add it to the pattern part's list of new definitions
-	if !currentSegment.RightNodeBound {
-		currentSegment.Definitions = append(currentSegment.Definitions, currentSegment.RightNode)
-	}
-
-	if currentSegment.Expansion.Set {
-		// Update the data type of the right node so that it reflects that it is now the terminal node of
-		// an expansion
-		currentSegment.RightNode.DataType = pgsql.ExpansionTerminalNode
-	}
-
-	return nil
-}
-
 func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
 	currentQueryPart := s.query.CurrentPart()
 
@@ -117,7 +80,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	if part.IsTraversal {
 		if numSteps := len(part.TraversalSteps); numSteps == 0 {
 			// This is the traversal step's left node
-			part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+			part.TraversalSteps = append(part.TraversalSteps, &TraversalStep{
 				LeftNode:      bindingResult.Binding,
 				LeftNodeBound: bindingResult.AlreadyBound,
 			})
@@ -128,51 +91,43 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			currentStep.RightNode = bindingResult.Binding
 			currentStep.RightNodeBound = bindingResult.AlreadyBound
 
-			// Finish setting up this traversal step
-			return s.translateNodePatternSegmentWithTraversal(currentStep)
+			// Finish setting up this traversal step for the expansion
+			if currentStep.Expansion.Set {
+				// Set the right node data type to the terminal of an expansion
+				currentStep.RightNode.DataType = pgsql.ExpansionTerminalNode
+
+				// TODO: This is a little recursive and could use some refactor love
+				currentExpansion := currentStep.Expansion.Value
+
+				if err := currentExpansion.CompletePattern(currentStep); err != nil {
+					return err
+				}
+			}
 		}
 	} else {
-		return s.translateNodePatternSegment(nodePattern, part, bindingResult)
+		// Make this the node select of the pattern part
+		part.NodeSelect.Binding = bindingResult.Binding
 	}
 
 	return nil
 }
 
-func consumeConstraintsFrom(visible *pgsql.IdentifierSet, trackers ...*ConstraintTracker) (*Constraint, error) {
-	constraint := &Constraint{
-		Dependencies: pgsql.NewIdentifierSet(),
-	}
-
-	for _, constraintTracker := range trackers {
-		if trackedConstraint, err := constraintTracker.ConsumeSet(visible); err != nil {
-			return nil, err
-		} else if err := constraint.Merge(trackedConstraint); err != nil {
-			return nil, err
-		}
-	}
-
-	return constraint, nil
-}
-
-func (s *Translator) buildNodePattern(part *PatternPart) error {
+func (s *Translator) buildNodePatternPart(part *PatternPart) error {
 	var (
 		partFrame  = part.NodeSelect.Frame
-		nextSelect pgsql.Select
+		nextSelect = pgsql.Select{
+			Projection: part.NodeSelect.Select.Projection,
+			Where:      part.NodeSelect.Constraints,
+		}
 	)
 
 	// The current query part may not have a frame associated with it if is a single part query component
-	if partFrame.Previous != nil && (s.query.CurrentPart().Frame == nil || partFrame.Previous.Binding.Identifier != s.query.CurrentPart().Frame.Binding.Identifier) {
+	if previousFrame, hasPrevious := s.previousValidFrame(partFrame); hasPrevious {
 		nextSelect.From = append(nextSelect.From, pgsql.FromClause{
 			Source: pgsql.TableReference{
-				Name: pgsql.CompoundIdentifier{partFrame.Previous.Binding.Identifier},
+				Name: pgsql.CompoundIdentifier{previousFrame.Binding.Identifier},
 			},
 		})
-	}
-
-	nextSelect.Projection = part.NodeSelect.Select.Projection
-
-	if part.NodeSelect.Constraint != nil {
-		nextSelect.Where = part.NodeSelect.Constraint.Expression
 	}
 
 	nextSelect.From = append(nextSelect.From, pgsql.FromClause{

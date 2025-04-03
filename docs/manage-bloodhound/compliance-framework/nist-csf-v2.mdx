@@ -1,0 +1,293 @@
+---
+title: BloodHound Enterprise NIST CSF v2 Compliance Resource
+description: "The Following information is meant to provide a more detailed and in-depth view of compliance items that BloodHound Enterprise can provide coverage for."
+---
+
+## Identify(ID)Asset Management(ID.AM)
+
+
+Assets (e.g., data, hardware, software, systems, facilities, services, people) that enable the organization to achieve business purposes are identified and managed consistent with their relative importance to organizational objectives and the organization’s risk strategy
+
+### ID.AM-01
+
+##### Requirement
+
+Inventories of hardware managed by the organization are maintained.
+
+##### Solution
+
+BloodHound Enterprise collects information on all physical systems operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprise monitors the addition/removal of physical assets connecting to the organizations environment.
+
+##### **References/Previous Versions**
+
+NIST Cybersecurity Framework v1.1: ID.AM-1: Physical devices and systems within the organization are inventoried
+
+### ID.AM-02[](#ID.AM-02)
+
+##### Requirement
+
+Inventories of software, services, and systems managed by the organization
+are maintained
+
+##### Solution
+
+BloodHound Enterprise collects information on all Systems in a domain that are connected to the organizations Active Directory/Azure Environment. BloodHound Enterprise monitors the environment for the addition/removal of systems from the organizations environment.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: ID.AM-2: Software platforms and applications within the organization are inventoried
+
+### ID.AM-05
+
+##### Requirement
+
+Assets are prioritized based on classification, criticality, resources, and impact on the mission
+
+##### Solution
+
+BloodHound Enterprise allows organizations to assign assets to Tier Zero (T0) based on the organizations classification, criticality, and business value. Prioritized resources are audited and accounted for during BloodHound Enterprise collection scans.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: ID.AM-5: Resources (e.g., hardware, devices, data, time, personnel, and software) are prioritized based on their classification, criticality, and business value
+
+## Identity(ID)Risk Assessment(ID.RA)
+
+
+The organization understands the cybersecurity risk to organizational operations (including mission, functions, image, or reputation), organizational assets, and individuals.
+
+### ID.RA-01
+
+##### Requirement
+
+Vulnerabilities in assets are identified, validated, and recorded
+
+##### Solution
+
+BloodHound Enterprise analyzes the Active Directory/Azure environment for identity attack paths that potentially impact an organizations security posture. All Identity vulnerabilities are identified during BloodHound collection activities and presented in the reporting dashboard with additional information to support documenting threats.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: ID.RA-1: Asset vulnerabilities are identified and documented
+
+### ID.RA-03
+
+##### Requirement
+
+Internal and external threats to the organization are identified and recorded.
+
+##### Solution
+
+BloodHound Enterprise analyzes the Active Directory/Azure environment for identity attack paths that potentially impact an organizations security posture. All Identity threat vectors are identified during BloodHound collection activities and presented in the reporting dashboard with additional information to support documenting threats.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: ID.RA-3: Threats, both internal and external, are identified and documented
+
+### ID.RA-05
+
+##### Requirement
+
+Threats, vulnerabilities, likelihoods, and impacts are used to understand inherent risk and inform risk response prioritization.
+
+##### Solution
+
+BloodHound Enterprise analyzes the organizational environment for identity attack path vectors and assigns a quantifiable risk metric and category to each detected identity attack path. The assigned risk metric is calculated by determining what percentage of the environment could be impacted by a specific identity vulnerability which will be quantified as percentage and assigned a criticality rating.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: ID.RA-5: Threats, vulnerabilities, likelihoods, and impacts are used to determine risk
+
+## Protect(PR) Identity Management, Authentication, and Access Control (PR.AA)
+
+
+Access to physical and logical assets and associated facilities is limited to authorized users, processes, and devices, and is managed consistent with the assessed risk of unauthorized access to authorized activities and transactions.
+
+### PR.AA-5
+
+#### Requirement
+
+Access permissions, entitlements, and authorizations are defined in a policy, managed, enforced, and reviewed, and incorporate the principles of least privilege and separation of duties
+
+#### Solution
+
+BloodHound Enterprise audits and reports the health of organizational privilege access models and identifies potential vulnerable attack paths and misconfigurations within the privilege access architecture scheme.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: PR.AC-1: Identities and credentials are issued, managed, verified, revoked, and audited for authorized devices, users and processes
+
+NIST Cybersecurity Framework v1.1: PR.AC-3: Remote access is managed
+
+NIST Cybersecurity Framework v1.1: PR.AC-4: Access permissions and authorizations are managed, incorporating the principles of least privilege and separation of duties.
+
+CSC v8 : 3.3, 6.8
+
+## Protect(PR) Platform Security(PR.PS)
+
+The hardware, software (e.g., firmware, operating systems, applications), and services of physical and virtual platforms are managed consistent with the organization’s risk strategy to protect their confidentiality, integrity, and availability
+
+### PR.PS-01
+
+#### Requirement
+
+Configuration management practices are established and applied
+
+#### Solution
+
+BloodHound Enterprise’s data collection activities gathers and audits asset configurations for identity attack path analysis. The collected data can be used to validate configuration architecture throughout the Active Directory/Azure environment. BloodHound Enterprise automatically highlights misconfigurations in your environment and assigns them a quantifiable risk metric and criticality rating based on the level of exposure detected.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: PR.IP-1: A baseline configuration of information technology/industrial control systems is created and maintained incorporating security principles (e.g. concept of least functionality)
+
+NIST Cybersecurity Framework v1.1: PR.IP-3: Configuration change control processes are in place
+
+NIST Cybersecurity Framework v1.1: PR.PT-2: Removable media is protected and its use restricted according to policy
+
+NIST Cybersecurity Framework v1.1: PR.PT-3: The principle of least functionality is incorporated by configuring systems to provide only essential capabilities
+
+CSC v8: 4.1, 4.2
+
+## Detect(PR) Adverse Event Analysis(DE.AE)
+
+
+Anomalies, indicators of compromise, and other potentially adverse events are analyzed to characterize the events and detect cybersecurity incidents
+
+### DE.AE-02
+
+#### Requirement
+
+Potentially adverse events are analyzed to better understand associated activities
+
+#### Solution
+
+BloodHound Enterprise reports identity attack paths and assigns a risk exposure severity rating to each vector based on the percentage of the organizations environment that is exposed to risk. Additional information pertaining to specific events is included in the BloodHound Enterprise GUI.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: DE.AE-2: Detected events are analyzed to understand attack targets and methods
+
+CSC v8: 8.11
+
+### DE.AE-04
+
+#### Requirement
+
+The estimated impact and scope of adverse events are understood.
+
+#### Solution
+
+BloodHound Enterprise reports identity attack paths and assigns a risk exposure severity rating to each vector based on the percentage of the organizations environment that is exposed to risk. Additional information pertaining to specific events is included in the BloodHound Enterprise GUI.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: DE.AE-4: Impact of events is determined
+
+### DE.AE-08
+
+#### Requirement
+
+Incidents are declared when adverse events meet the defined incident criteria.
+
+#### Solution
+
+BloodHound Enterprise allows Tier Zero to be defined per the needs of the organization in order to correctly define the individual organizations Tier Zero asset group. During analysis, BloodHound Enterprise will enumerate all detectable identity attack paths and assign and risk exposure rating to each vulnerable identity/asset/object allowing for the establishment of organizational incident alert thresholds and aid in the definition of incident alert criteria.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: DE.AE-5: Incident alert thresholds are established.
+
+## Detect(DE) Adverse Event Analysis(DE.CM)
+
+
+Assets are monitored to find anomalies, indicators of compromise, and other potentially adverse events.
+
+### DE.CM-01
+
+#### Requirement
+
+Networks and network services are monitored to find potentially adverse events.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems and Active Directory/Azure users operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprises configurable scan options allows organizations to establish and monitor their organizational baseline of systems, users, and groups and monitor that baseline via the reporting dashboard to identify adverse and unsafe events.
+
+##### **References**
+
+NIST Cybersecurity Framework v2.0: DE.CM-01: Networks and network services are monitored to find potentially adverse events
+
+### DE.CM-09
+
+#### Requirement
+
+Computing hardware and software, runtime environments, and their data are monitored to find potentially adverse events
+
+#### Solution
+
+BloodHound Enterprise collects information on all Active Directory/Azure systems operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprise monitors the various assets for trust violations and other identity based events.
+
+##### **References**
+
+Subcategory is new to this version of the framework and incorporates the following items from the previous version:
+
+PR.DS-6: Integrity checking mechanisms are used to verify software, firmware, and information integrity
+
+PR.DS-8: Integrity checking mechanisms are used to verify hardware integrity
+
+DE.CM-4: Malicious code is detected
+
+DE.CM-5: Unauthorized mobile code is detected
+
+DE.CM-7: Monitoring for unauthorized personnel, connections, devices, and software is performed.
+
+## Risk(RS) Incident Analysis(RS.AN)
+
+Assets are monitored to find anomalies, indicators of compromise, and other potentially adverse events.
+
+### RS.AN-03
+
+#### Requirement
+
+Analysis is performed to establish what has taken place during an incident and the root cause of the incident.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems and Active Directory/Azure users operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprises configurable scan options and reporting features provide insights for determining the impact of an incident and understanding the root cause.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: RS.AN-3: Forensics are performed
+
+### RS.AN-08
+
+#### Requirement
+
+An incident’s magnitude is estimated and validated
+
+#### Solution
+
+BloodHound Enterprise will audit all identities and objects within your AD environment/Azure environment and provide risk metrics quantifying exposure to identity vulnerabilities as part of your incident validation and estimation activities.
+
+##### **References**
+
+NIST Special Publication 800-53 Revision 5: IR-4, IR-8, RA-3. RA-7
+
+## Risk(RS) Incident Mitigation(RS.MI)
+
+
+Assets are monitored to find anomalies, indicators of compromise, and other potentially adverse events and remediation guidance is provided to mitigate incidents when risk is detected.
+
+### RS.MI-02
+
+#### Requirement
+
+Mitigation is performed to restore what has taken place during an incident and address root cause of the incident.
+
+#### Solution
+
+BloodHound Enterprise collects information on all physical systems and Active Directory/Azure users operating within a Windows Active Directory environment/Azure Environment. BloodHound Enterprises configurable scan options and reporting features provide insights for determining the impact of an incident and understanding the root cause. BloodHound Enterprise provides actionable remediation guidance which enables analysts and responders to proactively prevent and mitigate incidents as they are discovered.
+
+##### **References**
+
+NIST Cybersecurity Framework v1.1: RS.AN-3: Forensics are performed

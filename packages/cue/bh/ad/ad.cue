@@ -817,11 +817,18 @@ LDAPSigning: types.#StringEnum & {
 	representation: "ldapsigning"
 }
 
+LDAPAvailable: types.#StringEnum & {
+	symbol: "LDAPAvailable"
+	schema: "ad"
+	name: "LDAP Available"
+	representation: "ldapavailable"
+}
+
 LDAPSAvailable: types.#StringEnum & {
 	symbol: "LDAPSAvailable"
 	schema: "ad"
 	name: "LDAPS Available"
-	representation: "ldasavailable"
+	representation: "ldapsavailable"
 }
 
 LDAPSEPA: types.#StringEnum & {
@@ -857,6 +864,27 @@ IsDC: types.#StringEnum & {
 	schema: "ad"
 	name: "Is Domain Controller"
 	representation: "isdc"
+}
+
+HTTPEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPEnrollmentEndpoints"
+	schema: "ad"
+	name:"HTTP Enrollment Endpoints"
+	representation: "httpenrollmentendpoints"
+}
+
+HTTPSEnrollmentEndpoints: types.#StringEnum & {
+	symbol: "HTTPSEnrollmentEndpoints"
+	schema: "ad"
+	name:"HTTPS Enrollment Endpoints"
+	representation: "httpsenrollmentendpoints"
+}
+
+HasVulnerableEndpoint: types.#StringEnum & {
+	symbol: "HasVulnerableEndpoint"
+	schema: "ad"
+	name:"Has Vulnerable Endpoint"
+	representation: "hasvulnerableendpoint"
 }
 
 
@@ -973,11 +1001,13 @@ Properties: [
 	ADCSWebEnrollmentHTTPS,
 	ADCSWebEnrollmentHTTPSEPA,
 	LDAPSigning,
+	LDAPAvailable,
 	LDAPSAvailable,
 	LDAPSEPA,
-	RelayableToDCLDAP,
-	RelayableToDCLDAPS,
-	IsDC
+	IsDC,
+	HTTPEnrollmentEndpoints,
+	HTTPSEnrollmentEndpoints,
+	HasVulnerableEndpoint
 ]
 
 // Kinds
@@ -1579,8 +1609,6 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
-	OwnsRaw,
-	WriteOwnerRaw
 ]
 
 // these edges are common to inbound/outbound/pathfinding

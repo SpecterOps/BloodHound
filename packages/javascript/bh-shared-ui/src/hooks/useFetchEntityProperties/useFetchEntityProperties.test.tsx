@@ -16,14 +16,8 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import { renderHook, waitFor } from '../../test-utils';
 import { EntityProperties, FetchEntityPropertiesParams, useFetchEntityProperties } from './useFetchEntityProperties';
-
-const queryClient = new QueryClient();
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
 
 const entityObjectIdRequest = () => {
     return rest.get(`/api/v2/${EntityApiPathType}/:id`, async (_req, res, ctx) => {
@@ -89,9 +83,8 @@ describe('useFetchEntityProperties', () => {
         const { result } = renderHook(
             (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
             {
-                wrapper,
                 initialProps,
-            }
+            } as any
         );
 
         await waitFor(() => {
@@ -110,9 +103,8 @@ describe('useFetchEntityProperties', () => {
         const { result } = renderHook(
             (nodeItemParams: FetchEntityPropertiesParams) => useFetchEntityProperties(nodeItemParams),
             {
-                wrapper,
                 initialProps,
-            }
+            } as any
         );
 
         await waitFor(() => {

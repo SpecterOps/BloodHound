@@ -34,6 +34,7 @@ type Translator struct {
 	translation    Result
 	treeTranslator *ExpressionTreeTranslator
 	query          *Query
+	scope          *Scope
 }
 
 func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters map[string]any) *Translator {
@@ -49,9 +50,8 @@ func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters 
 		ctx:            ctx,
 		kindMapper:     kindMapper,
 		treeTranslator: NewExpressionTreeTranslator(),
-		query: &Query{
-			Scope: NewScope(),
-		},
+		query:          &Query{},
+		scope:          NewScope(),
 	}
 }
 
@@ -63,21 +63,16 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		*cypher.ReadingClause, *cypher.UnaryAddOrSubtractExpression, *cypher.PropertyLookup,
 		*cypher.Negation, *cypher.Create, *cypher.Where, *cypher.ListLiteral,
 		*cypher.FunctionInvocation, *cypher.Order, *cypher.RemoveItem, *cypher.SetItem,
-		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete:
-	// No operation for these syntax nodes
+		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete, *cypher.With,
+		*cypher.Return, *cypher.MultiPartQuery, *cypher.Properties:
 
-	case *cypher.Return:
-	case *cypher.MultiPartQuery:
 	case *cypher.MultiPartQueryPart:
-		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), true); err != nil {
+		if err := s.prepareMultiPartQueryPart(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
-	case *cypher.With:
-		s.SetError(nil)
-
 	case *cypher.SinglePartQuery:
-		if err := s.query.PreparePart(len(typedExpression.ReadingClauses), len(typedExpression.UpdatingClauses), false); err != nil {
+		if err := s.prepareSinglePartQueryPart(typedExpression); err != nil {
 			s.SetError(err)
 		}
 
@@ -97,16 +92,16 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 	case *cypher.Parameter:
 		var (
 			cypherIdentifier = pgsql.Identifier(typedExpression.Symbol)
-			binding, bound   = s.query.Scope.AliasedLookup(cypherIdentifier)
+			binding, bound   = s.scope.AliasedLookup(cypherIdentifier)
 		)
 
 		if !bound {
-			if parameterBinding, err := s.query.Scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
+			if parameterBinding, err := s.scope.DefineNew(pgsql.ParameterIdentifier); err != nil {
 				s.SetError(err)
 			} else {
 				// Alias the old parameter identifier to the synthetic one
 				if cypherIdentifier != "" {
-					s.query.Scope.Alias(cypherIdentifier, parameterBinding)
+					s.scope.Alias(cypherIdentifier, parameterBinding)
 				}
 
 				// Create a new container for the parameter and its value
@@ -130,7 +125,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 	case *cypher.Variable:
 		identifier := pgsql.Identifier(typedExpression.Symbol)
 
-		if binding, resolved := s.query.Scope.AliasedLookup(identifier); !resolved {
+		if binding, resolved := s.scope.AliasedLookup(identifier); !resolved {
 			s.SetErrorf("unable to resolve or otherwise lookup identifer %s", identifier)
 		} else {
 			s.treeTranslator.Push(binding.Identifier)
@@ -193,7 +188,6 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.treeTranslator.PushOperator(pgsql.OperatorAnd)
 		}
 
-	case *cypher.Properties:
 	default:
 		s.SetErrorf("unable to translate cypher type: %T", expression)
 	}
@@ -229,7 +223,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.Delete:
-		if err := s.translateDelete(s.query.Scope, typedExpression); err != nil {
+		if err := s.translateDelete(s.scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
@@ -280,7 +274,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		// Rewrite the order by constraints
 		if lookupExpression, err := s.treeTranslator.Pop(); err != nil {
 			s.SetError(err)
-		} else if err := RewriteFrameBindings(s.query.Scope, lookupExpression); err != nil {
+		} else if err := RewriteFrameBindings(s.scope, lookupExpression); err != nil {
 			s.SetError(err)
 		} else {
 			if propertyLookup, isPropertyLookup := asPropertyLookup(lookupExpression); isPropertyLookup {
@@ -380,35 +374,36 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.PropertyLookup:
-		s.translatePropertyLookup(typedExpression)
+		if err := s.translatePropertyLookup(typedExpression); err != nil {
+			s.SetError(err)
+		}
 
 	case *cypher.PartialComparison:
-		if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+		if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.PartialArithmeticExpression:
-		if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.Operator(typedExpression.Operator)); err != nil {
+		if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.Operator(typedExpression.Operator)); err != nil {
 			s.SetError(err)
 		}
 
 	case *cypher.Disjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorOr); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorOr); err != nil {
 				s.SetError(err)
 			}
 		}
 
 	case *cypher.Conjunction:
 		for idx := 0; idx < typedExpression.Len()-1; idx++ {
-			if err := s.treeTranslator.PopPushOperator(s.query.Scope, pgsql.OperatorAnd); err != nil {
+			if err := s.treeTranslator.PopPushOperator(s.scope, pgsql.OperatorAnd); err != nil {
 				s.SetError(err)
 			}
 		}
 
-	case *cypher.Projection:
 	case *cypher.ProjectionItem:
-		if err := s.translateProjectionItem(s.query.Scope, typedExpression); err != nil {
+		if err := s.translateProjectionItem(s.scope, typedExpression); err != nil {
 			s.SetError(err)
 		}
 
@@ -423,7 +418,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.MultiPartQueryPart:
-		if err := s.translateMultiPartQueryPart(s.query.Scope, typedExpression); err != nil {
+		if err := s.translateMultiPartQueryPart(); err != nil {
 			s.SetError(err)
 		}
 
@@ -449,7 +444,7 @@ type Result struct {
 func Translate(ctx context.Context, cypherQuery *cypher.RegularQuery, kindMapper pgsql.KindMapper, parameters map[string]any) (Result, error) {
 	translator := NewTranslator(ctx, kindMapper, parameters)
 
-	if err := walk.WalkCypher(cypherQuery, translator); err != nil {
+	if err := walk.Cypher(cypherQuery, translator); err != nil {
 		return Result{}, err
 	}
 

@@ -30,16 +30,16 @@ type BindingResult struct {
 func (s *Translator) bindPatternExpression(cypherExpression cypher.Expression, dataType pgsql.DataType) (BindingResult, error) {
 	if cypherBinding, hasCypherBinding, err := extractIdentifierFromCypherExpression(cypherExpression); err != nil {
 		return BindingResult{}, err
-	} else if existingBinding, bound := s.query.Scope.AliasedLookup(cypherBinding); bound {
+	} else if existingBinding, bound := s.scope.AliasedLookup(cypherBinding); bound {
 		return BindingResult{
 			Binding:      existingBinding,
 			AlreadyBound: true,
 		}, nil
-	} else if binding, err := s.query.Scope.DefineNew(dataType); err != nil {
+	} else if binding, err := s.scope.DefineNew(dataType); err != nil {
 		return BindingResult{}, err
 	} else {
 		if hasCypherBinding {
-			s.query.Scope.Alias(cypherBinding, binding)
+			s.scope.Alias(cypherBinding, binding)
 		}
 
 		return BindingResult{
@@ -59,11 +59,11 @@ func (s *Translator) translatePatternPart(patternPart *cypher.PatternPart) error
 	if cypherBinding, hasCypherSymbol, err := extractIdentifierFromCypherExpression(patternPart); err != nil {
 		return err
 	} else if hasCypherSymbol {
-		if pathBinding, err := s.query.Scope.DefineNew(pgsql.PathComposite); err != nil {
+		if pathBinding, err := s.scope.DefineNew(pgsql.PathComposite); err != nil {
 			return err
 		} else {
 			// Generate an alias for this binding
-			s.query.Scope.Alias(cypherBinding, pathBinding)
+			s.scope.Alias(cypherBinding, pathBinding)
 
 			// Record the new binding in the traversal pattern being built
 			newPatternPart.PatternBinding = models.ValueOptional(pathBinding)
@@ -75,51 +75,72 @@ func (s *Translator) translatePatternPart(patternPart *cypher.PatternPart) error
 
 func (s *Translator) buildPatternPart(part *PatternPart) error {
 	if part.IsTraversal {
-		return s.buildTraversalPattern(part)
+		return s.buildTraversalPatternPart(part)
 	} else {
-		return s.buildNodePattern(part)
+		return s.buildNodePatternPart(part)
 	}
 }
 
-func (s *Translator) buildTraversalPattern(part *PatternPart) error {
-	for idx, traversalStep := range part.TraversalSteps {
-		if traversalStep.Expansion.Set {
-			if idx == 0 {
-				if traversalStepQuery, err := s.buildExpansionPatternRoot(part, traversalStep); err != nil {
-					return err
-				} else {
-					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
-						Alias: pgsql.TableAlias{
-							Name: traversalStep.Frame.Binding.Identifier,
-						},
-						Query: traversalStepQuery,
-					})
-				}
-			} else {
-				if traversalStepQuery, err := s.buildExpansionPatternStep(part, traversalStep); err != nil {
-					return err
-				} else {
-					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
-						Alias: pgsql.TableAlias{
-							Name: traversalStep.Frame.Binding.Identifier,
-						},
-						Query: traversalStepQuery,
-					})
-				}
-			}
-		} else if idx > 0 {
-			if traversalStepQuery, err := s.buildTraversalPatternStep(traversalStep.Frame, part, traversalStep); err != nil {
-				return err
-			} else {
-				s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
-					Alias: pgsql.TableAlias{
-						Name: traversalStep.Frame.Binding.Identifier,
-					},
-					Query: traversalStepQuery,
-				})
-			}
+func (s *Translator) buildTraversalPattern(traversalStep *TraversalStep, isRootStep bool) error {
+	if isRootStep {
+		if traversalStepQuery, err := s.buildTraversalPatternRoot(traversalStep.Frame, traversalStep); err != nil {
+			return err
 		} else {
-			if traversalStepQuery, err := s.buildTraversalPatternRoot(traversalStep.Frame, part, traversalStep); err != nil {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	} else {
+		if traversalStepQuery, err := s.buildTraversalPatternStep(traversalStep.Frame, traversalStep); err != nil {
+			return err
+		} else {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	}
+
+	return nil
+}
+
+func (s *Translator) buildExpansionPattern(traversalStep *TraversalStep, expansion *ExpansionBuilder, isRootStep bool) error {
+	if isRootStep {
+		if traversalStepQuery, err := s.buildExpansionPatternRoot(traversalStep, expansion); err != nil {
+			return err
+		} else {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	} else {
+		if traversalStepQuery, err := s.buildExpansionPatternStep(traversalStep, expansion); err != nil {
+			return err
+		} else {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	}
+
+	return nil
+}
+
+func (s *Translator) buildShortestPathsExpansionPattern(traversalStep *TraversalStep, expansion *ExpansionBuilder, isRootStep bool) error {
+	if isRootStep {
+		if traversalStep.Expansion.Value.CanExecuteBidirectionalSearch() {
+			if traversalStepQuery, err := expansion.BuildBiDirectionalAllShortestPathsRoot(); err != nil {
 				return err
 			} else {
 				s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
@@ -129,6 +150,48 @@ func (s *Translator) buildTraversalPattern(part *PatternPart) error {
 					Query: traversalStepQuery,
 				})
 			}
+		} else if traversalStepQuery, err := expansion.BuildAllShortestPathsRoot(); err != nil {
+			return err
+		} else {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	} else {
+		if traversalStepQuery, err := s.buildExpansionPatternStep(traversalStep, expansion); err != nil {
+			return err
+		} else {
+			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+				Alias: pgsql.TableAlias{
+					Name: traversalStep.Frame.Binding.Identifier,
+				},
+				Query: traversalStepQuery,
+			})
+		}
+	}
+
+	return nil
+}
+
+func (s *Translator) buildTraversalPatternPart(part *PatternPart) error {
+	for idx, traversalStep := range part.TraversalSteps {
+		isRootStep := idx == 0
+
+		if traversalStep.Expansion.Set {
+			if expansion, err := NewExpansionBuilder(s.translation.Parameters, traversalStep); err != nil {
+				return err
+			} else if part.ShortestPath || part.AllShortestPaths {
+				if err := s.buildShortestPathsExpansionPattern(traversalStep, expansion, isRootStep); err != nil {
+					return err
+				}
+			} else if err := s.buildExpansionPattern(traversalStep, expansion, isRootStep); err != nil {
+				return err
+			}
+		} else if err := s.buildTraversalPattern(traversalStep, isRootStep); err != nil {
+			return err
 		}
 	}
 

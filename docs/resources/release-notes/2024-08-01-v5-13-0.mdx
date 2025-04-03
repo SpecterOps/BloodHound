@@ -1,0 +1,117 @@
+---
+title: 2024-08-01 Release Notes (v5.13.0)
+---
+
+## Announcements
+
+### Join Specters at BlackHat USA 2024
+
+
+Are you interested in chatting with the creators of your beloved open-source tools, such as BloodHound Community Edition, Mythic, and Nemesis?
+
+Visit us at **Booth #2600** at Black Hat USA or [register](https://events.humanitix.com/specterops-black-hat-happy-hour-at-brooklyn-bowl) for our Aug 7th bowling party!
+
+Join our courses to elevate your skills and prepare you to tackle advanced threat actors.  Don’t miss this opportunity to learn from the experts and gain hands-on experience in simulated environments! Courses offered this year include:
+
+* Adversary Tactics: Tradecraft Analysis
+* Adversary Tactics: Red Team Operations
+* Adversary Tactics: Detection
+* Active Directory Security Fundamentals
+
+### Join Us in Denver for October Trainings
+
+We’re excited to ring in the spooky season this October with in-person and virtual training, including our brand-new **Identity-driven Offensive Tradecraft** course! Level up your blue- or red-team tricks at a fun event full of treats. 🎃 Keep an eye out for more details coming soon.
+
+[Register](https://ticketing.humanitix.com/tours/october-2024-public-trainings-in-person-and-virtual) before Aug 8th to receive 25% off your ticket!
+
+## Summary
+
+
+* **BloodHound (v5.13.0****)**
+    * New and Improved Features
+        * New Attack Paths: Entra-AD User Syncing
+        * Improved analysis performance - DCSync
+        * Added visibility of the current API version to the My Profile page
+        * _\[Early Access\]_ BloodHound dark mode
+    * Bug Fixes
+        * Resolved an issue that resulted in objects having multiple types after import to BloodHound (A collection will be required to reintroduce appropriate object types on affected principals)
+        * File ingest will now show partial errors on upload
+        * Hovering errors in the Cypher query editor will no longer overflow the viewable area
+        * Negative numbers will now compare properly in Cypher
+        * Fixed a logic issue on composition panels for ESC3, 4, and 6 for multi-tier PKI environments
+        * Updated logic for EnrollOnBehalfOf to utilize the proper EKU property
+        * Improved error handling in specific circumstances on file ingest
+        * _\[BHE Only\]_ Resolved an issue with collectors improperly incrementing job counts
+* **SharpHound (v2.5.4 - BHE, v2.5.4 - CE)**
+    * _Note: SharpHound's LDAP libraries have undergone a complete rewrite to improve stability and resolve issues. This will resolve issues that are not explicitly captured in these release notes. We will continue to iterate as we find more issues. Please work with your TAM if you have any questions about upgrading.
+        _
+    * New and Improved Features
+        * Improved logic for identifying and querying available DCs (when a DC is not specified)
+        * Reduced reliance on paged LDAP queries for improved LDAP query performance
+        * Introduced a connection pool for improved LDAP query performance
+        * Improved fallback and retry logic for LDAP ServerDown message
+        * Computer availability for Local Group and Session collection will now be based on the last logon instead of the last password rotation
+        * Improved logging levels and message outputs
+    * Bug Fixes
+        * _\[BHE Only\]_ Resolved an issue where allowing LDAPS connections would only attempt connections on the LDAPS-specified port
+        * _\[CE Only\]_ Improved handling of control characters using the "collectallproperties" flag to resolve ingestion issues
+* **AzureHound (v2.1.9)**
+    * _No new release._
+
+### BloodHound (v5.13.0)
+#### New and Improved Features
+
+* **New Attack Paths: Entra-AD User Syncing** \- Introduced to the BloodHound graph in April 2022 as a fully supported feature, Entra has remained a dissociated data set from AD. Ever since we've wanted to connect the graphs to show risk across those connection points. In this release, we're adding coverage of user synchronization - showing where Entra and AD users are synced to each other across those environments. This release will enable users to identify and validate paths across those links via pathfinding and cypher. With this work complete, we're starting a project in BloodHound Enterprise to measure the cross-platform risk from these paths!
+<Frame>
+  <img src="/assets/mceclip0-1.png" alt=""/>
+</Frame>
+* **Improved analysis performance: DCSync** \- We've updated the logic that results in the DCSync edges in BloodHound. With this change, these edges will more commonly begin from Groups with this Attack Path primitive within an environment rather than beginning directly from each user. These changes result in BloodHound creating fewer edges during analysis and improved performance during this step.
+    _
+    Note: This may change Attack Path findings in BloodHound Enterprise environments._
+* **API version on My Profile page** \- When BloodHound CE users report bugs, we ask, "What version are you running?" We never made that easily visible in the application - until now! Browse to the My Profile page under the configuration gear at the top right, and you'll see what version you're running at the bottom of the page.
+<Frame>
+  <img src="/assets/mceclip1-2.png" alt=""/>
+</Frame>
+
+
+* **_\[Early Access\]_ BloodHound dark mode** \- Dark mode lovers rejoice! With a quick flip of a switch, BloodHound now supports dark mode! We've introduced a new theme within BloodHound for those who prefer light text on a dark background. To enable dark mode support, an administrator must enable the early access feature on the Administration page. Afterward, all users may select their preferred ones from the Configuration gear in the top right.
+
+    We're pretty confident we migrated all the different areas to use the theme switcher, but please let us know if we missed anything! We're excited to get this feature tested and generally available; afterward, we look forward to adding additional themes, most notably better support for our color-blind users!
+<Frame>
+  <img src="/assets/mceclip2-3.png" alt=""/>
+</Frame>
+<Frame>
+  <img src="/assets/mceclip3-4.png" alt=""/>
+</Frame>
+
+#### Bug Fixes
+
+* Resolved an issue that resulted in objects having multiple types after import to BloodHound (A collection will be required to reintroduce appropriate object types on affected principals)
+* File ingest will now show partial errors on upload
+* Hovering errors in the Cypher query editor will no longer overflow the viewable area
+* Negative numbers will now compare properly in Cypher
+* Fixed a logic issue on composition panels for ESC3, 4, and 6 for multi-tier PKI environments
+* Updated logic for EnrollOnBehalfOf to utilize the proper EKU property
+* Improved error handling in specific circumstances on file ingest
+* _\[BHE Only\]_ Resolved an issue with collectors improperly incrementing job counts
+
+### SharpHound (v2.5.4 - BHE, v2.5.4 - CE)
+
+_Note: SharpHound's LDAP libraries have undergone a complete rewrite to improve stability and resolve issues. This will resolve issues that are not explicitly captured in these release notes. We will continue to iterate as we find more issues. Please work with your TAM if you have any questions about upgrading._
+
+#### New and Improved Features
+
+* Improved logic for identifying and querying available DCs (when a DC is not specified)
+* Reduced reliance on paged LDAP queries for improved LDAP query performance
+* Introduced a connection pool for improved LDAP query performance
+* Improved fallback and retry logic for LDAP ServerDown message
+* Computer availability for Local Group and Session collection will now be based on last logon, instead of last password rotation
+* Improved logging levels and message outputs
+
+#### Bug Fixes
+
+* _\[BHE Only\]_ Resolved an issue where allowing LDAPS connections would only attempt connections on the LDAPS-specified port.
+
+### AzureHound (v2.1.9)
+_No new release._
+

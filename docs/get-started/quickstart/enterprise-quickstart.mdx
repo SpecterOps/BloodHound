@@ -1,0 +1,86 @@
+---
+title: BloodHound Enterprise Quickstart
+---
+
+   <img src="/assets/enterprise-edition-pill-tag.svg"/>
+
+Get started with your BloodHound Enterprise instance and start identifying and remediating security risks.
+
+# Prerequisites
+
+To complete this quickstart, you must have a BloodHound Enterprise instance. To connect with the SpecterOps team and receive an instance, [request a demo of BloodHound Enterprise](https://specterops.io/get-a-demo/).
+
+# Get data into BloodHound
+
+BloodHound Enterprise analyzes data collected by its two collector services, each collecting from a specific directory:
+
+* Active Directory, collected by SharpHound Enterprise
+* Entra ID (formerly Azure AD) and Azure IaaS, collected by AzureHound Enterprise
+
+You can run the two services from the same Windows system. AzureHound Enterprise also supports Docker and Kubernetes.
+
+## Ingest with SharpHound Enterprise (Active Directory)
+
+SharpHound Enterprise collects [multiple data types](/collect-data/enterprise-collection/data-retention) from Active Directory and its domain-joined systems. We recommend collecting all types for full risk identification and accurate risk assessment calculation.
+
+<Frame>
+  <img src="/assets/30567820642459.png"/>
+</Frame>
+
+Install the SharpHound Enterprise collector service on a domain-joined Windows system and run it as an Active Directory account.
+
+  1. Review the [SharpHound Enterprise System Requirements](/install-data-collector/install-sharphound/system-requirements) and [SharpHound Service Hardening Guidelines](/manage-bloodhound/securing-bloodhound-and-collectors/sharphound-hardening).
+  2. [Install and Upgrade SharpHound Enterprise](/install-data-collector/install-sharphound/installation-upgrade).
+  3. To fully secure a domain, collect data from all other domains with a trust relationship to it (in- and outgoing trust). Configure SharpHound Enterprise for [Cross-Trust Collection](/collect-data/enterprise-collection/cross-trust).
+
+## Ingest with AzureHound Enterprise (Entra ID and Azure)
+
+Install and run the AzureHound Enterprise collector service on Windows, Docker, or Kubernetes.
+
+  1. Review the [AzureHound Enterprise System Requirements and Deployment Process](/install-data-collector/install-azurehound/system-requirements).
+  2. [Configure Azure](/install-data-collector/install-azurehound/azure-configuration).
+  3. [Create your AzureHound configuration](/install-data-collector/install-azurehound/create-configuration).
+  4. [Deploy and maintain AzureHound](/install-data-collector/install-azurehound/installation-options).
+
+# Verify data quality
+
+After collecting data, to verify data quality:
+
+  1. Go to settings (⚙️) → **Administration** and select **Data Quality**.
+  2. Verify that the collectors have collected the expected amount of data and the number of principal types in each directory.
+  3. If using privileged collection, verify that the charts **Local Group Completeness Over Time** and **Session Completeness Over Time** report higher than 0%.
+
+      Obtaining 100% completeness is not possible in most environments due to things like workstations being offline during collection.
+
+  4. If you see lower-than-expected data quality examine the data collection logs and contact your SpecterOps representative if you need assistance.
+
+# Scope Tier Zero objects
+
+BloodHound Enterprise identifies and prioritizes attack paths. To get the most accurate assessment scope your Tier Zero objects.
+
+  1. [Scope Tier Zero for your environment](/get-started/security-boundaries/tier-zero-members).
+  2. [Mark your environment's Tier Zero objects in BloodHound](/get-started/security-boundaries/modifying-tier-zero).
+
+# Grant users access
+
+Your BloodHound Enterprise instance has a few administrative users by default. To bring your team into your instance, grant your team access with dedicated users and roles.
+
+To grant users access to your instance, [create users and set access control roles](/manage-bloodhound/auth/users-and-roles).
+
+BloodHound Enterprise supports two authentication methods for users:
+
+* Built-in authentication via username and password, supporting TOTP-based multi-factor authentication
+* [SAML 2.0-based Single-Sign-On](/manage-bloodhound/auth/saml)
+
+Your default users are configured with built-in authentication. For your team, you can also configure SAML authentication.
+
+<Tip>Enable multi-factor authentication for all users, no matter the authentication method and user role. If using SAML authentication, your connected identity provider will handle multi-factor authentication.</Tip>
+
+# Explore and remediate attack paths
+
+Go to the **Attack Paths**, **Explore**, and **Posture** pages to see identified attack paths, prioritization, and recommended mitigations.
+
+# Next steps
+
+* Learn how to work with the [BloodHound Enterprise API](/integrations/bloodhound-api/working-with-api)
+* [Configure BloodHound integrations](/integrations/integrations/overview)

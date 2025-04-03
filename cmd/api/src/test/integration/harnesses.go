@@ -8901,7 +8901,8 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
-	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer, s.EnterpriseCA1, ad.Enroll)
 	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
@@ -8909,7 +8910,12 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 
-	s.EnterpriseCA1.Properties.Set(ad.ADCSWebEnrollmentHTTP.String(), true)
+	endpoints := make([]string, 0)
+	u := "https://test.com"
+	endpoints = append(endpoints, u)
+
+	s.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), endpoints)
+	s.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)
@@ -8978,7 +8984,7 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain1)
 
 	s.Domain2 = graphTestContext.NewActiveDirectoryDomain("Domain2", domain2Sid, false, true)
-	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	s.Domain2.Properties.Set(ad.FunctionalLevel.String(), "2008")
 	graphTestContext.UpdateNode(s.Domain2)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
@@ -8994,16 +9000,18 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
 	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", adAnalysis.ProtectedUsersSuffix))
 	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
+	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
 	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", adAnalysis.ProtectedUsersSuffix))
 	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
+	graphTestContext.UpdateNode(s.Group6)
 
 	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domain2Sid)
 	s.Group8 = graphTestContext.NewActiveDirectoryGroup("Group8", domain2Sid)
-	graphTestContext.NewRelationship(s.Group1, s.Computer2, ad.CoerceAndRelayNTLMToSMB)
+
 	graphTestContext.NewRelationship(s.Computer1, s.Computer2, ad.AdminTo)
 	graphTestContext.NewRelationship(s.Computer1, s.Group4, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Computer3, s.Group5, ad.MemberOf)
@@ -9014,8 +9022,40 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group8, s.Computer9, ad.AdminTo)
 	graphTestContext.NewRelationship(s.Computer8, s.Group7, ad.MemberOf)
 	graphTestContext.NewRelationship(s.Group7, s.Group8, ad.MemberOf)
-	graphTestContext.NewRelationship(s.Group2, s.Computer9, ad.CoerceAndRelayNTLMToSMB)
 	graphTestContext.NewRelationship(s.Computer10, s.Computer6, ad.AdminTo)
+}
+
+type CoerceAndRelayNTLMToSMBSelfRelay struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+	Domain1   *graph.Node
+	Group1    *graph.Node
+	Group2    *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToSMBSelfRelay) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.SMBSigning.String(), false)
+	s.Computer1.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2008")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+	graphTestContext.NewRelationship(s.Computer1, s.Group1, ad.MemberOf)
+	graphTestContext.NewRelationship(s.Group1, s.Computer1, ad.AdminTo)
 }
 
 type OwnsWriteOwner struct {
@@ -9462,8 +9502,9 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	domain3Sid := RandomDomainSID()
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPAvailable.String(), true)
 	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
-	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer1)
 
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
@@ -9483,8 +9524,9 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Computer5)
 
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
-	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.IsDC.String(), true)
 	s.Computer6.Properties.Set(ad.LDAPSigning.String(), false)
+	s.Computer6.Properties.Set(ad.LDAPAvailable.String(), true)
 	graphTestContext.UpdateNode(s.Computer6)
 
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
@@ -9494,11 +9536,11 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
 	s.Computer8.Properties.Set(ad.LDAPSigning.String(), true)
 	s.Computer8.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer8.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer8)
 
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
-	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer9.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer9)
 
 	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain1Sid)
@@ -9547,6 +9589,38 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer9, s.Domain3, ad.DCFor)
 }
 
+type CoerceAndRelayNTLMToLDAPSelfRelay struct {
+	Computer1 *graph.Node
+	Domain1   *graph.Node
+	Group1    *graph.Node
+	Group2    *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAPSelfRelay) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.LDAPAvailable.String(), true)
+	s.Computer1.Properties.Set(ad.LDAPSigning.String(), false)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
+	s.Computer1.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
+}
+
 type CoerceAndRelayNTLMToLDAPS struct {
 	Computer1  *graph.Node
 	Computer10 *graph.Node
@@ -9578,7 +9652,7 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	domain3Sid := RandomDomainSID()
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
-	s.Computer1.Properties.Set(ad.IsDC.String(), domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
 	s.Computer1.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer1.Properties.Set(ad.LDAPSAvailable.String(), true)
 	graphTestContext.UpdateNode(s.Computer1)
@@ -9602,7 +9676,7 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
 	s.Computer6.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer6.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer6.Properties.Set(ad.IsDC.String(), domain2Sid)
+	s.Computer6.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer6)
 
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
@@ -9611,30 +9685,30 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain3Sid)
 	s.Computer8.Properties.Set(ad.LDAPSEPA.String(), false)
-	s.Computer8.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer8.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer8)
 
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain3Sid)
 	s.Computer9.Properties.Set(ad.LDAPSEPA.String(), true)
 	s.Computer9.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer9.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer9.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer9)
 
 	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain3Sid)
 	s.Computer10.Properties.Set(ad.LDAPSEPA.String(), false)
 	s.Computer10.Properties.Set(ad.LDAPSAvailable.String(), false)
-	s.Computer10.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer10.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer10)
 
 	s.Computer11 = graphTestContext.NewActiveDirectoryComputer("Computer11", domain3Sid)
 	s.Computer11.Properties.Set(ad.LDAPSEPA.String(), true)
 	s.Computer11.Properties.Set(ad.LDAPSAvailable.String(), false)
-	s.Computer11.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer11.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer11)
 
 	s.Computer12 = graphTestContext.NewActiveDirectoryComputer("Computer12", domain3Sid)
 	s.Computer12.Properties.Set(ad.LDAPSAvailable.String(), true)
-	s.Computer12.Properties.Set(ad.IsDC.String(), domain3Sid)
+	s.Computer12.Properties.Set(ad.IsDC.String(), true)
 	graphTestContext.UpdateNode(s.Computer12)
 
 	s.Computer13 = graphTestContext.NewActiveDirectoryComputer("Computer13", domain1Sid)
@@ -9686,6 +9760,38 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer10, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer11, s.Domain3, ad.DCFor)
 	graphTestContext.NewRelationship(s.Computer12, s.Domain3, ad.DCFor)
+}
+
+type CoerceAndRelayNTLMToLDAPSSelfRelay struct {
+	Computer1 *graph.Node
+	Domain1   *graph.Node
+	Group1    *graph.Node
+	Group2    *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.IsDC.String(), true)
+	s.Computer1.Properties.Set(ad.LDAPSEPA.String(), false)
+	s.Computer1.Properties.Set(ad.LDAPSAvailable.String(), true)
+	s.Computer1.Properties.Set(ad.WebClientRunning.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
+	s.Domain1.Properties.Set(ad.FunctionalLevel.String(), "2016")
+	graphTestContext.UpdateNode(s.Domain1)
+
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group1)
+
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, adAnalysis.AuthenticatedUsersSuffix))
+	graphTestContext.UpdateNode(s.Group2)
+
+	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
 type HarnessDetails struct {
@@ -9793,5 +9899,8 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
+	NTLMCoerceAndRelayToLDAPSelfRelay               CoerceAndRelayNTLMToLDAPSelfRelay
+	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
+	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
 }

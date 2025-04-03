@@ -395,7 +395,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, typedNextExpr.Expression)
 			}
 
-		case pgsql.AnyExpression:
+		case *pgsql.AnyExpression:
 			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
 			exprStack = append(exprStack, typedNextExpr.Expression)
 			exprStack = append(exprStack, pgsql.FormattingLiteral("any ("))
@@ -623,10 +623,12 @@ func formatFromClauses(builder *OutputBuilder, fromClauses []pgsql.FromClause) e
 				return err
 			}
 
-			builder.Write(" on ")
+			if join.JoinOperator.Constraint != nil {
+				builder.Write(" on ")
 
-			if err := formatNode(builder, join.JoinOperator.Constraint); err != nil {
-				return err
+				if err := formatNode(builder, join.JoinOperator.Constraint); err != nil {
+					return err
+				}
 			}
 		}
 	}

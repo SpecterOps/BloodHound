@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/fileupload"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const (
@@ -85,21 +85,21 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
-			FailAnalyzedFileUploadJobs(s.ctx, s.db)
+			FailAnalyzedIngestJobs(s.ctx, s.db)
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			PartialCompleteFileUploadJobs(s.ctx, s.db)
+			PartialCompleteIngestJobs(s.ctx, s.db)
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
 	} else {
-		CompleteAnalyzedFileUploadJobs(s.ctx, s.db)
+		CompleteAnalyzedIngestJobs(s.ctx, s.db)
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
@@ -154,14 +154,14 @@ func (s *Daemon) Start(ctx context.Context) {
 			// Ingest all available ingest tasks
 			s.ingestAvailableTasks()
 
-			// Manage time-out state progression for file upload jobs
-			fileupload.ProcessStaleFileUploadJobs(s.ctx, s.db)
+			// Manage time-out state progression for ingest jobs
+			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
 
-			// Manage nominal state transitions for file upload jobs
-			ProcessIngestedFileUploadJobs(s.ctx, s.db)
+			// Manage nominal state transitions for ingest jobs
+			ProcessFinishedIngestJobs(s.ctx, s.db)
 
-			// If there are completed file upload jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasFileUploadJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
+			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
+			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
@@ -190,7 +190,7 @@ func (s *Daemon) deleteData() {
 
 	slog.Info("Begin Purge Graph Data")
 
-	if err := s.db.CancelAllFileUploads(s.ctx); err != nil {
+	if err := s.db.CancelAllIngestJobs(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error cancelling jobs during data deletion: %v", err))
 	} else if err := s.db.DeleteAllIngestTasks(s.ctx); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting ingest tasks during data deletion: %v", err))
@@ -205,7 +205,7 @@ func (s *Daemon) Stop(ctx context.Context) error {
 
 func (s *Daemon) clearOrphanedData() {
 	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available file upload ingest tasks: %v", err))
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
 	} else {
 		expectedFiles := make([]string, len(ingestTasks))
 

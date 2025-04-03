@@ -1,0 +1,71 @@
+---
+title: 2024-01-04 Release Notes (v5.4.0)
+---
+
+## Announcements
+
+Active Directory Certificate Services Early Access
+
+BloodHound v5.4.0 includes early access support for collection, processing, and analysis of Active Directory Certificate Services (ADCS) Attack Paths! Our first Early Access release includes coverage for ESC1 and DPERSIST1 (hereafter referenced as "GoldenCert"). We will continue to expand this coverage throughout the coming weeks and months.
+
+To ingest and analyze ADCS paths in this version:
+
+1.  Enable the Early Access flag in the Administration section of the app (requires Administrator role).
+2.  Ingest data collected via SharpHound v2.3.0+.
+3.  Allow post-processing to complete.
+
+Speaking of ADCS...
+
+### SO-CON 2024
+
+SO-CON is rapidly approaching, and we've got three tracks of incredible presentations announced for Monday's summit, including a talk by Andy Robbins and Jonas Bülow Knudsen on ADCS Support within BloodHound! More details:
+
+* 🏔️ March 11, 2024 - Full-day, multi-track summit with presentations on a variety of security topics
+* 🎓 March 12 - 15, 2024 - Four days of training classes, including our first-ever Azure Security Fundamentals course!
+* 📍Location - Convene in Arlington, VA
+
+Training students will receive free entry to the summit, and summit entry is available now for a 50% early registration discount!
+
+See all talks and sign up at [https://specterops.io/so-con/#talks](https://specterops.io/so-con/#talks)!
+
+## Summary
+
+* **BloodHound (v5.4.0****)**
+    * New and Improved Features
+        * Early access for ADCS Attack Paths!
+        * Edge composition support
+        * _\[CE Only\] _Modified default docker compose example to bind only to localhost for improved security defaults
+* **SharpHound (v2.3.2 - BHE, v2.3.0 - CE)**
+    * New and Improved Features
+        * Support for ADCS collection capabilities
+* **AzureHound (v2.1.6)**
+    * _No new release._
+
+### BloodHound (v5.4.0)
+
+#### New and Improved Features
+
+* **Early access support for ADCS Attack Paths - **Starting with Will Schroeder and Lee Chagolla-Christensen's research, it became clear that ADCS represents a massive attack surface within any Active Directory environment. Starting with this early access release, BloodHound will now natively support ADCS Attack Paths! This includes a significant number of new node and edge types, as well as the two post-processed edges representing escalation opportunity, ADCSESC1 and GoldenCert.
+
+    _Note: To analyze ADCS Attack Paths, you must first enable the Early Access setting under Administration and then perform and import a collection using SharpHound v2.3.0+._
+* **Edge composition support - **While not the first post-processed edges created based on behind-the-scenes logic, ADCS Attack Paths represent the most complexity represented in a single edge in BloodHound by a very large margin. To make this complexity clear, we have introduced a new feature to edge context menus called "Composition". Clicking on this panel will expand out the edges utilized by BloodHound during post-processing necessary to create the selected edge.
+
+    For now, this feature only supports the ADCSESC1 and GoldenCert edges; however, we will add support to other post-processed edges over time.
+<Frame>
+  <img src="/assets/image-21.png" alt=""/>
+</Frame>
+    Clicking "Composition" will show:
+<Frame>
+  <img src="/assets/image-22.png" alt=""/>
+</Frame>
+* **_\[CE Only\]_ Improved default security on BloodHound CE -** Modified default docker compose example to bind only to localhost for improved security defaults.
+
+### SharpHound (v2.3.2 - BHE, v2.3.0 - CE)
+
+#### New and Improved Features
+
+* **Support for ADCS collection capabilities _-_**SharpHound will now collect information required to analyze and generate ADCS Attack Paths.
+
+### AzureHound (v2.1.6)
+
+_No new release._

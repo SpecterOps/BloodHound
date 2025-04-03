@@ -1,0 +1,25 @@
+---
+title: GetChanges
+description: "The principal is granted the GetChanges right on the domain."
+---
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+## Abuse Info
+
+This edge is not abuseable by itself.
+
+When combined with [GetChangesAll](/resources/edges/get-changes-all), BloodHound will create the abuseable edge [DCSync](/resources/edges/dc-sync).
+
+When combined with [GetChangesInFilteredSet](/resources/edges/get-changes-in-filtered-set), BloodHound will create the abuseable edge [SyncLAPSPassword](/resources/edges/sync-laps-password).
+
+## Opsec Considerations
+
+This edge has no opsec considerations.
+
+## References
+
+* [https://adsecurity.org/?p=1729](https://adsecurity.org/?p=1729)
+* [https://blog.harmj0y.net/redteaming/mimikatz-and-dcsync-and-extrasids-oh-my/](https://blog.harmj0y.net/redteaming/mimikatz-and-dcsync-and-extrasids-oh-my/)
+* [https://simondotsh.com/infosec/2022/07/11/dirsync.html](https://simondotsh.com/infosec/2022/07/11/dirsync.html)
+

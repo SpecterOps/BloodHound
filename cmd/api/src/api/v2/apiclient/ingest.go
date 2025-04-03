@@ -47,8 +47,8 @@ func (s Client) SendIngestObject(payload map[string]any, userAgent string) error
 	return nil
 }
 
-func (s Client) CreateFileUploadTask() (model.FileUploadJob, error) {
-	var job model.FileUploadJob
+func (s Client) CreateFileUploadTask() (model.IngestJob, error) {
+	var job model.IngestJob
 	if response, err := s.Request(http.MethodPost, "api/v2/file-upload/start", nil, nil); err != nil {
 		return job, err
 	} else {

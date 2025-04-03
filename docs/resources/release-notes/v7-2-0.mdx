@@ -1,0 +1,62 @@
+---
+title: "2025-03-25 Release Notes (v7.2.0)"
+---
+
+## Announcements
+
+### New BloodHound Documentation Site is Live\!
+
+After months of interviewing BloodHound users and community members, we’re pleased to announce our new BloodHound documentation portal -  [https://bloodhound.specterops.io/home](https://bloodhound.specterops.io/home)\! This new site includes a fresh look and should make finding the content you’re looking for easier. For our extra-dedicated users, this site is once again backed by GitHub. If you see an issue or opportunity in the docs, bring on the pull requests\!
+
+For our BloodHound Enterprise customers, the support portal and tickets will continue to be hosted at https://support.bloodhoundenterprise.io.
+
+This is just the beginning. We’re developing new resources and guides to help everyone get the most out of our tools\!
+
+Please let us know if you have any feedback – we’d love to hear it.
+
+## Summary
+
+- **BloodHound (v7.2.0)**
+  - New and Improved Features
+    - _[CE Only]_ Deep-linking Early Access\! (Coming to BHE next release)
+    - Added early access support for an additional NTLM relay Attack Path primitive, ADCS.
+    - New BloodHound documentation portal.
+    - Performance improvements for Pathfinding and Cypher searches with PostgreSQL backend graph databases.
+    - Added support for ACEs on EnterpriseCA objects.
+    - Updated finding and entity panel texts for NTLM relay paths.
+  - Bug Fixes
+    - Administrators may no longer delete themselves.
+- **SharpHound (v2.6.1)**
+  - _No new release. v2.6.1 was released in a hotfix, resolving several performance issues with NTLM collection._
+- **AzureHound (v2.3.0)**
+  - _No new release._
+
+## BloodHound (v7.2.0)
+
+### New and Improved Features
+
+- **_[CE Only] Deep-linking Early Access_** - Not content with "just a back button," we went all-in, adding full deep-link support to the application. This supports going "forward" and "back" in the application and allows sharing links among teams when something interesting is discovered. This functionality may be enabled within the "Early Access" configuration section of the "Administration" section. Deep-linking support is targeted to be added to BloodHound Enterprise in the v7.3.0 release.\
+  \
+  Within the Explore view, links should include:
+  - Currently selected search tab
+  - The content searched within that tab (objects, cypher, etc)
+  - Any selected object or edge on the graph
+  - Selected Entity panel exp
+  - Selected graph layout
+- **NTLM relay to ADCS added to Early Access** - In our last release, we introduced support for NTLM relay Attack Path primitives that relayed to LDAP, LDAPS, and SMB. In this release, we're extending that support to  include relay Attack Paths to ADCS. SharpHound v2.6.0\+ already collects all the necessary information to identify these new paths. However, this remains an "Early Access" feature and can be enabled from the "Administration" section.
+- **New BloodHound documentation portal is live** - As noted in this week's announcements, our new documentation portal is live\! BloodHound Enterprise customers will continue to receive support at https://support.bloodhoundenterprise.io, while our documentation is now hosted at https://bloodhound.specterops.io. While redirects will help to point folks to our new location, we recommend updating any stored links or bookmarks to the new site\!
+- **PostgreSQL graph database performance improvements** - Customers running with PostgreSQL backends for their graph database will notice several significant performance improvements, most notably while performing pathfinding via the UI. Additionally, this release adds enhanced query optimization for non-directed paths and improved profiling for query selection in WHERE clauses.
+- **Added support for ACEs on EnterpriseCA objects** - BloodHound will now ingest and process ACEs on EnterpriseCA objects. This will introduce additional Attack Paths within environments with ADCS deployed and may appear as new findings for BloodHound Enterprise customers.
+- **Updated finding and entity panel texts for NTLM relay paths** - We expanded on the help texts for NTLM relay paths to provide better guidance and accuracy.
+
+### Bug Fixes
+
+- Administrators may no longer delete themselves.
+
+## SharpHound (v2.6.1)
+
+- _No new release. v2.6.1 was released in a hotfix, resolving several performance issues with NTLM collection._
+
+## AzureHound (v2.3.0)
+
+_No new release._

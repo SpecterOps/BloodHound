@@ -1,0 +1,85 @@
+---
+title: 2023-09-19 Release Notes (v5.0.9)
+---
+
+## Announcements
+
+### ICYMI: Tier Zero Webinar, Part 2
+
+Elad Shamir (Director of Research, SpecterOps), Jonas Bülow Knudsen (Product Architect, SpecterOps), and Alex Schmitt (Co-Founder, Teal Security) sat down together for part two in our "What is Tier Zero" webinar series. This webinar continues to dive into default objects and talks read-only domain controllers, GPOs, and more. Check it out here: [ghst.ly/47Ru3RI](https://ghst.ly/47Ru3RI)
+
+### Up to some Risky Business
+
+Justin Kohler (VP of Products) sat down with Patrick Grey from the Risky Business podcast for an episode of Snake Oilers. They discussed BloodHound, BloodHound Enterprise, and how we're looking to help our customers solve challenges with Attack Paths in Azure and Active Directory. Check it out here: [https://risky.biz/snakeoilers18pt1/](https://risky.biz/snakeoilers18pt1/)
+
+## Summary
+
+* **BloodHound (v5.0.9)**
+    * New and Improved Features
+        * Explore tab now supports the ability to search for and highlight specific objects in the canvas.
+        * Edge context menus will now display properties associated with the edge.
+        * Administrators may now disable end-users' MFA tokens.
+        * Users may now manage their API keys.
+        * BloodHound will now utilize opportunistic GZip compression for data in transit.
+        * _\[BHE Only\]_ Improved accuracy in exposure calculations.
+    * Bug Fixes
+        * _\[BHE Only\]_ Fixed an issue with the reconciliation of Azure roles.
+        * Deconflicted and fixed post-processing of AZOwns and AZOwner edges (_Note: In BHE, this may result in changes in Attack Path findings)_
+        * Users may, once again, be reverted to username/password login once set to SAML.
+        * In specific circumstances, built-in groups (such as Account Operators) would not appear in search results. This has been fixed.
+        * Expanded Cypher memory protections to prevent over-aggressive traversals.
+        * Resolved an issue where HasSession edges were not always ingested correctly.
+        * Full error messages resulting from running queries will once again display properly.
+* **SharpHound (v2.1.7)**
+    * _No new release._
+* **AzureHound (v2.1.0)**
+    * New and Improved Features
+        * _\[BHE Only\] _AzureHound will now compress data in transit when uploading to BloodHound Enterprise.
+    * Bug Fixes
+        * Fixed collection of multiple properties and resolved a socket exhaustion issue in collecting specific large environments.
+
+### BloodHound (v5.0.9)
+
+#### New and Improved Features
+
+* **Search current results** \- If you've ever found yourself searching for that one node you're _certain_ is in your results, you'll be pleased to see that you can now search through the current object set, and select the object you're looking for to highlight it in the graph! 
+<Frame>
+  <img src="/assets/image-13.png" alt=""/>
+</Frame>
+* **Edge context menus will now display properties** \- Edges in BloodHound also have properties that can significantly impact Attack Paths in the product. These properties are now pulled into the context menus to make them easier to consume and understand.
+<Frame>
+  <img src="/assets/image-14.png" alt=""/>
+</Frame>
+* **Administrators may now disable end-users' MFA tokens** \- Admin lives just got a lot easier when someone replaced their phone and needs an MFA reset. Administrators can now disable MFA on an account directly in the Manage Users page.
+<Frame>
+  <img src="/assets/image-15.png" alt=""/>
+</Frame>
+* **Users may now manage their API keys** \- Users who want to work on their own integrations to BloodHound Enterprise no longer need Admin support to generate API credentials; it can be done directly within the "My profile" section of the application. _Note: API credentials will function with the same role as the user account they are tied to._
+<Frame>
+  <img src="/assets/image-16.png" alt=""/>
+</Frame>
+* **BloodHound will now utilize opportunistic GZip compression for data in transit** \- BloodHound now supports GZip compression of data in transit and will opportunistically support it if the client does as well. AzureHound Enterprise v2.1.0 takes advantage of this capability (SharpHound Enterprise support coming soon), but all interaction with the APIs will support compression if the client library does as well.
+
+#### Bug Fixes
+
+* _\[BHE Only\]_ Fixed an issue with the reconciliation of Azure roles.
+* Deconflicted and fixed post-processing of AZOwns and AZOwner edges. (_Note: In BHE, this may result in changes in Attack Path findings)._
+* Users may, once again, be reverted to username/password login once set to SAML.
+* In specific circumstances, built-in groups (such as Account Operators) would not appear in search results. This has been fixed.
+* Expanded Cypher memory protections to prevent over-aggressive traversals.
+* Resolved an issue where sessions were not always ingested correctly.
+* Full error messages resulting from running queries will once again display properly.
+
+### SharpHound (v2.1.7)
+
+_No new release._
+
+### AzureHound (v2.1.0)
+
+#### New and Improved Features
+
+* _\[BHE Only\] _AzureHound will now compress data in transit when uploading to BloodHound Enterprise.
+
+#### Bug Fixes
+
+* Fixed collection of multiple properties and resolved a socket exhaustion issue in collecting specific large environments.

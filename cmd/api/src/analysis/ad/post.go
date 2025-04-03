@@ -26,7 +26,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
-func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
+func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
@@ -38,9 +38,11 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnable
 		return &aggregateStats, err
 	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err
-	} else if adcsStats, _, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
+	} else if adcsStats, adcsCache, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
 		return &aggregateStats, err
 	} else if ownsStats, err := adAnalysis.PostOwnsAndWriteOwner(ctx, db, groupExpansions); err != nil {
+		return &aggregateStats, err
+	} else if ntlmStats, err := adAnalysis.PostNTLM(ctx, db, groupExpansions, adcsCache, ntlmEnabled, compositionCounter); err != nil {
 		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
@@ -49,6 +51,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled bool, citrixEnable
 		aggregateStats.Merge(localGroupStats)
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
+		aggregateStats.Merge(ntlmStats)
 		return &aggregateStats, nil
 	}
 }

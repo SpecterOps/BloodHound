@@ -15,15 +15,119 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
+import { DefaultTheme, makeStyles } from '@mui/styles';
+import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    AzureKindProperties,
+    AzureNodeKind,
+    AzureRelationshipKind,
+    CommonKindProperties,
+} from './graphSchema';
 import { addOpacityToHex } from './utils/colors';
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
 export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 
-export const TIER_ZERO_TAG = 'admin_tier_0';
-export const TIER_ZERO_LABEL = 'High Value';
+// These tags are values associated with the `system_tags` property of a node
 export const OWNED_OBJECT_TAG = 'owned';
+export const TIER_ZERO_TAG = 'admin_tier_0';
+
+// These labels are used as display values
+export const TIER_ZERO_LABEL = 'Admin Tier Zero';
+export const HIGH_VALUE_LABEL = 'High Value';
+
+export const useStyles = makeStyles((theme: DefaultTheme) => ({
+    applicationContainer: {
+        display: 'flex',
+        position: 'relative',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+        '@global': {
+            '.api-explorer .swagger-ui': {
+                [`& a.nostyle,
+                    & div.renderedMarkdown > p,
+                    & .response-col_status,
+                    & .col_header,
+                    & div.parameter__name,
+                    & .parameter__in,
+                    & div.opblock-summary-description,
+                    & div > small,
+                    & li.tabitem,
+                    & .response-col_links,
+                    & .opblock-description-wrapper > p,
+                    & .btn-group > button,
+                    & textarea,
+                    & select,
+                    & .parameter__type,
+                    & .prop-format,
+                    `]: {
+                    color: theme.palette.color.primary,
+                },
+                ['& input, & textarea, & select, & .models, & .filter-container .operation-filter-input']: {
+                    backgroundColor: theme.palette.neutral.primary,
+                    border: `1px solid ${theme.palette.grey[700]}`,
+
+                    '&:hover, &:focus': {
+                        borderColor: theme.palette.color.links,
+                    },
+                    '&:focus': {
+                        outline: `1px solid ${theme.palette.color.links}`,
+                    },
+                },
+                '& .models': {
+                    '& h4': {
+                        borderBottomColor: theme.palette.grey[700],
+                    },
+                    '& span, & table': {
+                        color: theme.palette.color.primary,
+                    },
+                    '& svg': {
+                        fill: theme.palette.color.primary,
+                    },
+                    '& model-box': {
+                        backgroundColor: theme.palette.neutral.primary,
+                    },
+                },
+                '& .parameter__name.required::after': {
+                    color: theme.palette.color.error,
+                },
+                '& .responses-inner': {
+                    [`& h4, & h5`]: {
+                        color: theme.palette.color.primary,
+                    },
+                },
+                '& svg': {
+                    fill: theme.palette.color.primary,
+                },
+                '& .opblock-deprecated': {
+                    '& .opblock-title_normal': {
+                        color: theme.palette.color.primary,
+                    },
+                },
+                '& .opblock-section-header': {
+                    backgroundColor: theme.palette.neutral.primary,
+                    '& h4, & .btn': {
+                        color: theme.palette.color.primary,
+                    },
+                },
+            },
+        },
+    },
+    applicationHeader: {
+        flexGrow: 0,
+        zIndex: theme.zIndex.drawer + 1,
+    },
+    applicationContent: {
+        backgroundColor: theme.palette.neutral.primary,
+        flexGrow: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+    },
+}));
 
 export const lightPalette = {
     primary: {
@@ -312,3 +416,26 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         },
     },
 });
+
+export const graphSchema = (labels: string[] | undefined) => {
+    const schema = {
+        labels: [
+            ...Object.values(ActiveDirectoryNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+            ...Object.values(AzureNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+        ],
+        relationshipTypes: [
+            ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+            ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+        ],
+        propertyKeys: [
+            ...Object.values(CommonKindProperties),
+            ...Object.values(ActiveDirectoryKindProperties),
+            ...Object.values(AzureKindProperties),
+        ],
+    };
+
+    if (!!labels && labels.length > 0)
+        schema.labels = [...schema.labels, ...labels.map((nodeLabel) => `:${nodeLabel}`)];
+
+    return schema;
+};

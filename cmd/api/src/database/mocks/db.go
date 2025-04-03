@@ -27,6 +27,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	database "github.com/specterops/bloodhound/src/database"
+	null "github.com/specterops/bloodhound/src/database/types/null"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
@@ -69,18 +70,18 @@ func (mr *MockDatabaseMockRecorder) AppendAuditLog(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendAuditLog", reflect.TypeOf((*MockDatabase)(nil).AppendAuditLog), arg0, arg1)
 }
 
-// CancelAllFileUploads mocks base method.
-func (m *MockDatabase) CancelAllFileUploads(arg0 context.Context) error {
+// CancelAllIngestJobs mocks base method.
+func (m *MockDatabase) CancelAllIngestJobs(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CancelAllFileUploads", arg0)
+	ret := m.ctrl.Call(m, "CancelAllIngestJobs", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CancelAllFileUploads indicates an expected call of CancelAllFileUploads.
-func (mr *MockDatabaseMockRecorder) CancelAllFileUploads(arg0 interface{}) *gomock.Call {
+// CancelAllIngestJobs indicates an expected call of CancelAllIngestJobs.
+func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).CancelAllFileUploads), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), arg0)
 }
 
 // Close mocks base method.
@@ -169,6 +170,50 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupCollection), arg0, arg1, arg2)
 }
 
+// CreateAssetGroupHistoryRecord mocks base method.
+func (m *MockDatabase) CreateAssetGroupHistoryRecord(arg0 context.Context, arg1, arg2 string, arg3 model.AssetGroupHistoryAction, arg4 int, arg5, arg6 null.String) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAssetGroupHistoryRecord indicates an expected call of CreateAssetGroupHistoryRecord.
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+}
+
+// CreateAssetGroupTag mocks base method.
+func (m *MockDatabase) CreateAssetGroupTag(arg0 context.Context, arg1 model.AssetGroupTagType, arg2, arg3, arg4 string, arg5 null.Int32, arg6 null.Bool) (model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAssetGroupTag", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret0, _ := ret[0].(model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAssetGroupTag indicates an expected call of CreateAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupTag(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTag), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+}
+
+// CreateAssetGroupTagSelector mocks base method.
+func (m *MockDatabase) CreateAssetGroupTagSelector(arg0 context.Context, arg1 int, arg2, arg3, arg4 string, arg5, arg6, arg7 bool, arg8 []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAssetGroupTagSelector", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+	ret0, _ := ret[0].(model.AssetGroupTagSelector)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAssetGroupTagSelector indicates an expected call of CreateAssetGroupTagSelector.
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupTagSelector(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupTagSelector), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+}
+
 // CreateAuditLog mocks base method.
 func (m *MockDatabase) CreateAuditLog(arg0 context.Context, arg1 model.AuditLog) error {
 	m.ctrl.T.Helper()
@@ -243,19 +288,35 @@ func (mr *MockDatabaseMockRecorder) CreateAzureDataQualityStats(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAzureDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).CreateAzureDataQualityStats), arg0, arg1)
 }
 
-// CreateFileUploadJob mocks base method.
-func (m *MockDatabase) CreateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) (model.FileUploadJob, error) {
+// CreateCompositionInfo mocks base method.
+func (m *MockDatabase) CreateCompositionInfo(arg0 context.Context, arg1 model.EdgeCompositionNodes, arg2 model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateFileUploadJob", arg0, arg1)
-	ret0, _ := ret[0].(model.FileUploadJob)
+	ret := m.ctrl.Call(m, "CreateCompositionInfo", arg0, arg1, arg2)
+	ret0, _ := ret[0].(model.EdgeCompositionNodes)
+	ret1, _ := ret[1].(model.EdgeCompositionEdges)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CreateCompositionInfo indicates an expected call of CreateCompositionInfo.
+func (mr *MockDatabaseMockRecorder) CreateCompositionInfo(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompositionInfo", reflect.TypeOf((*MockDatabase)(nil).CreateCompositionInfo), arg0, arg1, arg2)
+}
+
+// CreateIngestJob mocks base method.
+func (m *MockDatabase) CreateIngestJob(arg0 context.Context, arg1 model.IngestJob) (model.IngestJob, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateIngestJob", arg0, arg1)
+	ret0, _ := ret[0].(model.IngestJob)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateFileUploadJob indicates an expected call of CreateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) CreateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
+// CreateIngestJob indicates an expected call of CreateIngestJob.
+func (mr *MockDatabaseMockRecorder) CreateIngestJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).CreateFileUploadJob), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIngestJob", reflect.TypeOf((*MockDatabase)(nil).CreateIngestJob), arg0, arg1)
 }
 
 // CreateIngestTask mocks base method.
@@ -427,18 +488,18 @@ func (mr *MockDatabaseMockRecorder) DeleteAllDataQuality(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllDataQuality", reflect.TypeOf((*MockDatabase)(nil).DeleteAllDataQuality), arg0)
 }
 
-// DeleteAllFileUploads mocks base method.
-func (m *MockDatabase) DeleteAllFileUploads(arg0 context.Context) error {
+// DeleteAllIngestJobs mocks base method.
+func (m *MockDatabase) DeleteAllIngestJobs(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllFileUploads", arg0)
+	ret := m.ctrl.Call(m, "DeleteAllIngestJobs", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAllFileUploads indicates an expected call of DeleteAllFileUploads.
-func (mr *MockDatabaseMockRecorder) DeleteAllFileUploads(arg0 interface{}) *gomock.Call {
+// DeleteAllIngestJobs indicates an expected call of DeleteAllIngestJobs.
+func (mr *MockDatabaseMockRecorder) DeleteAllIngestJobs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllFileUploads", reflect.TypeOf((*MockDatabase)(nil).DeleteAllFileUploads), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).DeleteAllIngestJobs), arg0)
 }
 
 // DeleteAllIngestTasks mocks base method.
@@ -718,22 +779,6 @@ func (mr *MockDatabaseMockRecorder) GetAllConfigurationParameters(arg0 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllConfigurationParameters", reflect.TypeOf((*MockDatabase)(nil).GetAllConfigurationParameters), arg0)
 }
 
-// GetAllFileUploadJobs mocks base method.
-func (m *MockDatabase) GetAllFileUploadJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.FileUploadJob, int, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllFileUploadJobs", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].([]model.FileUploadJob)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetAllFileUploadJobs indicates an expected call of GetAllFileUploadJobs.
-func (mr *MockDatabaseMockRecorder) GetAllFileUploadJobs(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFileUploadJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllFileUploadJobs), arg0, arg1, arg2, arg3, arg4)
-}
-
 // GetAllFlags mocks base method.
 func (m *MockDatabase) GetAllFlags(arg0 context.Context) ([]appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
@@ -747,6 +792,22 @@ func (m *MockDatabase) GetAllFlags(arg0 context.Context) ([]appcfg.FeatureFlag, 
 func (mr *MockDatabaseMockRecorder) GetAllFlags(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllFlags", reflect.TypeOf((*MockDatabase)(nil).GetAllFlags), arg0)
+}
+
+// GetAllIngestJobs mocks base method.
+func (m *MockDatabase) GetAllIngestJobs(arg0 context.Context, arg1, arg2 int, arg3 string, arg4 model.SQLFilter) ([]model.IngestJob, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllIngestJobs", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].([]model.IngestJob)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetAllIngestJobs indicates an expected call of GetAllIngestJobs.
+func (mr *MockDatabaseMockRecorder) GetAllIngestJobs(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).GetAllIngestJobs), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetAllIngestTasks mocks base method.
@@ -884,6 +945,21 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(arg0, arg1, arg2, a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupCollections", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupCollections), arg0, arg1, arg2, arg3)
 }
 
+// GetAssetGroupHistoryRecords mocks base method.
+func (m *MockDatabase) GetAssetGroupHistoryRecords(arg0 context.Context) ([]model.AssetGroupHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", arg0)
+	ret0, _ := ret[0].([]model.AssetGroupHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupHistoryRecords indicates an expected call of GetAssetGroupHistoryRecords.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), arg0)
+}
+
 // GetAssetGroupSelector mocks base method.
 func (m *MockDatabase) GetAssetGroupSelector(arg0 context.Context, arg1 int32) (model.AssetGroupSelector, error) {
 	m.ctrl.T.Helper()
@@ -897,6 +973,36 @@ func (m *MockDatabase) GetAssetGroupSelector(arg0 context.Context, arg1 int32) (
 func (mr *MockDatabaseMockRecorder) GetAssetGroupSelector(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupSelector", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupSelector), arg0, arg1)
+}
+
+// GetAssetGroupTag mocks base method.
+func (m *MockDatabase) GetAssetGroupTag(arg0 context.Context, arg1 int) (model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTag", arg0, arg1)
+	ret0, _ := ret[0].(model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupTag indicates an expected call of GetAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTag), arg0, arg1)
+}
+
+// GetAssetGroupTagSelectorsByTagId mocks base method.
+func (m *MockDatabase) GetAssetGroupTagSelectorsByTagId(arg0 context.Context, arg1 int, arg2, arg3 model.SQLFilter) (model.AssetGroupTagSelectors, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectorsByTagId", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupTagSelectorsByTagId indicates an expected call of GetAssetGroupTagSelectorsByTagId.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectorsByTagId", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectorsByTagId), arg0, arg1, arg2, arg3)
 }
 
 // GetAuthSecret mocks base method.
@@ -991,36 +1097,6 @@ func (mr *MockDatabaseMockRecorder) GetDatapipeStatus(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDatapipeStatus", reflect.TypeOf((*MockDatabase)(nil).GetDatapipeStatus), arg0)
 }
 
-// GetFileUploadJob mocks base method.
-func (m *MockDatabase) GetFileUploadJob(arg0 context.Context, arg1 int64) (model.FileUploadJob, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJob", arg0, arg1)
-	ret0, _ := ret[0].(model.FileUploadJob)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFileUploadJob indicates an expected call of GetFileUploadJob.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJob), arg0, arg1)
-}
-
-// GetFileUploadJobsWithStatus mocks base method.
-func (m *MockDatabase) GetFileUploadJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.FileUploadJob, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFileUploadJobsWithStatus", arg0, arg1)
-	ret0, _ := ret[0].([]model.FileUploadJob)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetFileUploadJobsWithStatus indicates an expected call of GetFileUploadJobsWithStatus.
-func (mr *MockDatabaseMockRecorder) GetFileUploadJobsWithStatus(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileUploadJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetFileUploadJobsWithStatus), arg0, arg1)
-}
-
 // GetFlag mocks base method.
 func (m *MockDatabase) GetFlag(arg0 context.Context, arg1 int32) (appcfg.FeatureFlag, error) {
 	m.ctrl.T.Helper()
@@ -1049,6 +1125,36 @@ func (m *MockDatabase) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.F
 func (mr *MockDatabaseMockRecorder) GetFlagByKey(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockDatabase)(nil).GetFlagByKey), arg0, arg1)
+}
+
+// GetIngestJob mocks base method.
+func (m *MockDatabase) GetIngestJob(arg0 context.Context, arg1 int64) (model.IngestJob, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIngestJob", arg0, arg1)
+	ret0, _ := ret[0].(model.IngestJob)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIngestJob indicates an expected call of GetIngestJob.
+func (mr *MockDatabaseMockRecorder) GetIngestJob(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestJob", reflect.TypeOf((*MockDatabase)(nil).GetIngestJob), arg0, arg1)
+}
+
+// GetIngestJobsWithStatus mocks base method.
+func (m *MockDatabase) GetIngestJobsWithStatus(arg0 context.Context, arg1 model.JobStatus) ([]model.IngestJob, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIngestJobsWithStatus", arg0, arg1)
+	ret0, _ := ret[0].([]model.IngestJob)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIngestJobsWithStatus indicates an expected call of GetIngestJobsWithStatus.
+func (mr *MockDatabaseMockRecorder) GetIngestJobsWithStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestJobsWithStatus", reflect.TypeOf((*MockDatabase)(nil).GetIngestJobsWithStatus), arg0, arg1)
 }
 
 // GetIngestTasksForJob mocks base method.
@@ -1694,18 +1800,18 @@ func (mr *MockDatabaseMockRecorder) UpdateAuthToken(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), arg0, arg1)
 }
 
-// UpdateFileUploadJob mocks base method.
-func (m *MockDatabase) UpdateFileUploadJob(arg0 context.Context, arg1 model.FileUploadJob) error {
+// UpdateIngestJob mocks base method.
+func (m *MockDatabase) UpdateIngestJob(arg0 context.Context, arg1 model.IngestJob) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateFileUploadJob", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateIngestJob", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateFileUploadJob indicates an expected call of UpdateFileUploadJob.
-func (mr *MockDatabaseMockRecorder) UpdateFileUploadJob(arg0, arg1 interface{}) *gomock.Call {
+// UpdateIngestJob indicates an expected call of UpdateIngestJob.
+func (mr *MockDatabaseMockRecorder) UpdateIngestJob(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFileUploadJob", reflect.TypeOf((*MockDatabase)(nil).UpdateFileUploadJob), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIngestJob", reflect.TypeOf((*MockDatabase)(nil).UpdateIngestJob), arg0, arg1)
 }
 
 // UpdateOIDCProvider mocks base method.
