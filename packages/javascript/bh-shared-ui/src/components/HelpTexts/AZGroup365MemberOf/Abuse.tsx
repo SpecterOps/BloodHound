@@ -20,7 +20,8 @@ import { FC } from 'react';
 const Abuse: FC = () => {
     return (
         <Typography variant='body2'>
-            No abuse is necessary. This edge simply indicates that a principal belongs to a security group.
+            This edge simply indicates that the user is a member of the Microsoft 365 group. Potential abuses will depend on the group and its permissions.
+
         </Typography>
     );
 };

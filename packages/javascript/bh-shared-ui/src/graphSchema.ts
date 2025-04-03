@@ -918,6 +918,7 @@ IsAssignableToRole = 'isassignabletorole',
 PublisherDomain = 'publisherdomain',
 SignInAudience = 'signinaudience',
 RoleTemplateID = 'templateid',
+Visibility = 'visibility',
 }
 export function AzureKindPropertiesToDisplay (value : AzureKindProperties): string | undefined {
 switch (value) {
@@ -985,6 +986,8 @@ case AzureKindProperties.SignInAudience:
 return 'Sign In Audience'
 case AzureKindProperties.RoleTemplateID: 
 return 'Role Template ID'
+case AzureKindProperties.Visibility: 
+return 'Visibility'
 default:
 return undefined
 }

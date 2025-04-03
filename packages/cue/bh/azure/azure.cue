@@ -254,6 +254,13 @@ TenantID: types.#StringEnum & {
 	representation: "tenantid"
 }
 
+Visibility: types.#StringEnum & {
+	symbol:         "Visibility"
+	schema:         "azure"
+	name:           "Visibility"
+	representation: "visibility"
+}
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -287,6 +294,7 @@ Properties: [
 	PublisherDomain,
 	SignInAudience,
 	RoleTemplateID,
+	Visibility,
 ]
 
 // Kinds

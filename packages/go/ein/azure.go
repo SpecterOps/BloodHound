@@ -493,7 +493,8 @@ func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
 			azure.OnPremSyncEnabled.String():  data.OnPremisesSyncEnabled,
 			azure.SecurityEnabled.String():    data.SecurityEnabled,
 			azure.SecurityIdentifier.String(): data.SecurityIdentifier, */
-			azure.TenantID.String(): strings.ToUpper(data.TenantId),
+			azure.Visibility.String(): data.Visibility,
+			azure.TenantID.String():   strings.ToUpper(data.TenantId),
 		},
 		Label: azure.Group365,
 	}

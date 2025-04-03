@@ -115,10 +115,11 @@ const (
 	PublisherDomain         Property = "publisherdomain"
 	SignInAudience          Property = "signinaudience"
 	RoleTemplateID          Property = "templateid"
+	Visibility              Property = "visibility"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, Visibility}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -186,6 +187,8 @@ func ParseProperty(source string) (Property, error) {
 		return SignInAudience, nil
 	case "templateid":
 		return RoleTemplateID, nil
+	case "visibility":
+		return Visibility, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -256,6 +259,8 @@ func (s Property) String() string {
 		return string(SignInAudience)
 	case RoleTemplateID:
 		return string(RoleTemplateID)
+	case Visibility:
+		return string(Visibility)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -326,6 +331,8 @@ func (s Property) Name() string {
 		return "Sign In Audience"
 	case RoleTemplateID:
 		return "Role Template ID"
+	case Visibility:
+		return "Visibility"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

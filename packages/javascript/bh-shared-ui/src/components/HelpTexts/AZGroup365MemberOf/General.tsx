@@ -25,14 +25,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName }) => {
         <>
             <Typography variant='body2'>
  
-                The {typeFormat(sourceType)} {sourceName} is a member of the group {targetName}.
+                The {typeFormat(sourceType)} {sourceName} is a member of the Microsoft 365 group {targetName}.
 
             </Typography>
  
             <Typography variant='body2'>
  
-                Groups in Azure Active Directory grant their direct members any privileges the group itself has. If a
-                group has an AzureAD admin role, direct members of the group inherit those permissions.
+                Microsoft 365 groups in Azure Active Directory grant their direct members any privileges the group itself has. It includes
+                access to shared resources such as SharePoint sites, Microsoft Teams, Emails and OneNote notebooks.
 
             </Typography>
         </>
