@@ -121,6 +121,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
@@ -141,6 +142,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -161,6 +163,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
@@ -181,6 +184,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
 			},
 			expected: expected{
@@ -201,6 +205,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
@@ -221,6 +226,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
@@ -241,6 +247,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 				return request
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
@@ -308,6 +315,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "az-base",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -321,6 +329,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "az-base",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -334,6 +343,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "users",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -347,6 +357,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "users",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -360,6 +371,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -373,6 +385,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -386,6 +399,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "tenants",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -399,6 +413,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "tenants",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -412,6 +427,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "management-groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -425,6 +441,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "management-groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -438,6 +455,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "subscriptions",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -451,6 +469,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "subscriptions",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -464,6 +483,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "resource-groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -477,6 +497,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "resource-groups",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -490,6 +511,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "vms",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -503,6 +525,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "vms",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -516,6 +539,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "managed-clusters",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -529,6 +553,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "managed-clusters",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -542,6 +567,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "container-registries",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -555,6 +581,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "container-registries",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -568,6 +595,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "web-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -581,6 +609,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "web-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -594,6 +623,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "logic-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -607,6 +637,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "logic-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -620,6 +651,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "automation-accounts",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -633,6 +665,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "automation-accounts",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -646,6 +679,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "key-vaults",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -659,6 +693,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "key-vaults",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -672,6 +707,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "devices",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -685,6 +721,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "devices",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -698,6 +735,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "applications",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -711,6 +749,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "applications",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -724,6 +763,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "vm-scale-sets",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -737,6 +777,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "vm-scale-sets",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -750,6 +791,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "service-principals",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -763,6 +805,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "service-principals",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -776,6 +819,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "roles",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -789,6 +833,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "roles",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -802,6 +847,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "function-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			want: want{
@@ -815,6 +861,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 				entityType: "function-apps",
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			want: want{
@@ -943,6 +990,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(graph.ErrNoResultsFound)
 			},
 			expected: expected{
@@ -985,6 +1033,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				t.Helper()
 				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 			},
 			expected: expected{

@@ -124,6 +124,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
 			},
 			expected: expected{
@@ -155,6 +156,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
 			},
 			expected: expected{
@@ -186,6 +188,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
@@ -222,6 +225,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
@@ -259,6 +263,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
@@ -296,6 +301,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
@@ -324,6 +330,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{

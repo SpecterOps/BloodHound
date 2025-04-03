@@ -549,6 +549,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{}, errors.New("error"))
 			},
 			expected: expected{
@@ -573,6 +574,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, queries.ErrGraphUnsupported)
 			},
@@ -598,6 +600,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, ops.ErrGraphQueryMemoryLimit)
 			},
@@ -623,6 +626,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, errors.New("error"))
 			},
@@ -648,6 +652,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("results", 1, nil)
 			},
@@ -671,6 +676,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 1, nil)
 			},
