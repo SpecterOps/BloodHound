@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -35,6 +36,7 @@ import (
 
 const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+	ErrInvalidSelectorType    = "invalid selector type"
 )
 
 // Checks that the selector seeds are valid.
@@ -83,6 +85,63 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
+	var (
+		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		selectorQueryFilter      = make(model.QueryParameterFilterMap)
+		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
+		selectorSeed             = model.SelectorSeed{}
+		assetGroupTagSelector    = model.AssetGroupTagSelector{}
+	)
+
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		// The below is a workaround to split the query filters by the two tables to be used in the subsequent db calls
+		for name, filters := range queryFilters {
+			// get valid selector predicates and valid selector seed predicates.
+			validSelectorPredicates, selectorFilterErr := api.GetValidFilterPredicatesAsStrings(assetGroupTagSelector, name)
+			validSelectorSeedPredicates, seedFilterErr := api.GetValidFilterPredicatesAsStrings(selectorSeed, name)
+			// return an error if both attempts fail, as either one could be used to build separate queries.
+			if selectorFilterErr != nil && seedFilterErr != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			}
+
+			for _, filter := range filters {
+				if !slices.Contains(validSelectorPredicates, string(filter.Operator)) && !slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+					return
+				}
+				if slices.Contains(validSelectorPredicates, string(filter.Operator)) {
+					selectorQueryFilter.AddFilter(filter)
+					selectorQueryFilter[name][len(selectorQueryFilter[name])-1].IsStringData = assetGroupTagSelector.IsStringColumn(filter.Name)
+				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					selectorSeedsQueryFilter.AddFilter(filter)
+					// There are no string columns on asset group selector seeds table
+				}
+			}
+		}
+
+		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		} else if selectorSqlFilter, err := selectorQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+		}
 	}
 }
 

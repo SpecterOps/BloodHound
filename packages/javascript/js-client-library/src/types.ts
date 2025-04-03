@@ -402,10 +402,6 @@ export type GraphEdges = GraphEdge[];
 
 export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
 
-export type GraphResponse = {
-    data: GraphData;
-};
-
 export type StyledGraphNode = {
     color: string;
     data: Record<string, any>;
