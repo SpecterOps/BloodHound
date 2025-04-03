@@ -63,6 +63,7 @@ type Driver struct {
 	kindsByID                 map[graph.Kind]int16
 	kindIDsByKind             map[int16]graph.Kind
 	lock                      *sync.RWMutex
+	managerLock               *sync.RWMutex
 }
 
 func NewDriver(pool *pgxpool.Pool, defaultTransactionTimeout time.Duration, batchWriteSize int) *Driver {
@@ -75,6 +76,7 @@ func NewDriver(pool *pgxpool.Pool, defaultTransactionTimeout time.Duration, batc
 		kindsByID:                 map[graph.Kind]int16{},
 		kindIDsByKind:             map[int16]graph.Kind{},
 		lock:                      &sync.RWMutex{},
+		managerLock:               &sync.RWMutex{},
 	}
 }
 

@@ -60,8 +60,8 @@ func (s *Driver) fetch(tx graph.Transaction) error {
 }
 
 func (s *Driver) GetKindIDsByKind() map[int16]graph.Kind {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+	s.managerLock.RLock()
+	defer s.managerLock.RUnlock()
 	return s.kindIDsByKind
 }
 
@@ -102,16 +102,16 @@ func (s *Driver) mapKinds(kinds graph.Kinds) ([]int16, graph.Kinds) {
 }
 
 func (s *Driver) MapKind(ctx context.Context, kind graph.Kind) (int16, error) {
-	s.lock.RLock()
+	s.managerLock.RLock()
 
 	if id, hasID := s.kindsByID[kind]; hasID {
-		s.lock.RUnlock()
+		s.managerLock.RUnlock()
 		return id, nil
 	}
 
-	s.lock.RUnlock()
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.RUnlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	if err := s.Fetch(ctx); err != nil {
 		return -1, err
@@ -125,16 +125,16 @@ func (s *Driver) MapKind(ctx context.Context, kind graph.Kind) (int16, error) {
 }
 
 func (s *Driver) MapKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
-	s.lock.RLock()
+	s.managerLock.RLock()
 
 	if mappedKinds, missingKinds := s.mapKinds(kinds); len(missingKinds) == 0 {
-		s.lock.RUnlock()
+		s.managerLock.RUnlock()
 		return mappedKinds, nil
 	}
 
-	s.lock.RUnlock()
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.RUnlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	if err := s.Fetch(ctx); err != nil {
 		return nil, err
@@ -173,16 +173,16 @@ func (s *Driver) MapKindID(ctx context.Context, kindID int16) (graph.Kind, error
 }
 
 func (s *Driver) MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error) {
-	s.lock.RLock()
+	s.managerLock.RLock()
 
 	if kinds, missingKinds := s.mapKindIDs(kindIDs); len(missingKinds) == 0 {
-		s.lock.RUnlock()
+		s.managerLock.RUnlock()
 		return kinds, nil
 	}
 
-	s.lock.RUnlock()
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.RUnlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	if err := s.Fetch(ctx); err != nil {
 		return nil, err
@@ -197,8 +197,8 @@ func (s *Driver) MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds,
 
 func (s *Driver) assertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
 	// Acquire a write-lock and release on-exit
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
 	// in between release of the read-lock and acquisition of the write-lock for this operation
@@ -217,22 +217,22 @@ func (s *Driver) assertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, e
 
 func (s *Driver) AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error) {
 	// Acquire a read-lock first to fast-pass validate if we're missing any kind definitions
-	s.lock.RLock()
+	s.managerLock.RLock()
 
 	if kindIDs, missingKinds := s.mapKinds(kinds); len(missingKinds) == 0 {
 		// All kinds are defined. Release the read-lock here before returning
-		s.lock.RUnlock()
+		s.managerLock.RUnlock()
 		return kindIDs, nil
 	}
 
 	// Release the read-lock here so that we can acquire a write-lock
-	s.lock.RUnlock()
+	s.managerLock.RUnlock()
 	return s.assertKinds(ctx, kinds)
 }
 
 func (s *Driver) setDefaultGraph(defaultGraph model.Graph, schema graph.Graph) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	if s.hasDefaultGraph {
 		// Another actor has already asserted or otherwise set a default graph
@@ -270,8 +270,8 @@ func (s *Driver) AssertDefaultGraph(ctx context.Context, schema graph.Graph) err
 }
 
 func (s *Driver) DefaultGraph() (model.Graph, bool) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+	s.managerLock.RLock()
+	defer s.managerLock.RUnlock()
 
 	return s.defaultGraph, s.hasDefaultGraph
 }
@@ -305,19 +305,19 @@ func (s *Driver) assertGraph(tx graph.Transaction, schema graph.Graph) (model.Gr
 
 func (s *Driver) AssertGraph(tx graph.Transaction, schema graph.Graph) (model.Graph, error) {
 	// Acquire a read-lock first to fast-pass validate if we're missing the graph definitions
-	s.lock.RLock()
+	s.managerLock.RLock()
 
 	if graphInstance, isDefined := s.graphs[schema.Name]; isDefined {
 		// The graph is defined. Release the read-lock here before returning
-		s.lock.RUnlock()
+		s.managerLock.RUnlock()
 		return graphInstance, nil
 	}
 
 	// Release the read-lock here so that we can acquire a write-lock next
-	s.lock.RUnlock()
+	s.managerLock.RUnlock()
 
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.managerLock.Lock()
+	defer s.managerLock.Unlock()
 
 	if graphInstance, isDefined := s.graphs[schema.Name]; isDefined {
 		// The graph was defined by a different actor between the read unlock and the write lock, return it
