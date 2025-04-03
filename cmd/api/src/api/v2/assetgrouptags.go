@@ -25,6 +25,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -240,5 +241,29 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}
+
+type getAssetGroupTagMemberCountsResponse struct {
+	TotalCount int            `json:"total_count"`
+	Counts     map[string]int `json:"counts"`
+}
+
+func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	if tagId, err := strconv.ParseInt(mux.Vars(request)[api.URIPathVariableAssetGroupTagID], 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), int(tagId)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if nodes, err := s.GraphQuery.GetNodesByKind(request.Context(), tag.ToKind()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		data := getAssetGroupTagMemberCountsResponse{Counts: make(map[string]int)}
+		for _, node := range nodes {
+			primaryKind := analysis.GetNodeKindDisplayLabel(node)
+			data.Counts[primaryKind]++
+			data.TotalCount++
+		}
+
+		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
 }
