@@ -887,6 +887,61 @@ HasVulnerableEndpoint: types.#StringEnum & {
 	representation: "hasvulnerableendpoint"
 }
 
+RequireSecuritySignature: types.#StringEnum & {
+	symbol: "RequireSecuritySignature"
+	schema: "ad"
+	name: "Require Security Signature"
+	representation: "requiresecuritysignature"
+}
+
+EnableSecuritySignature: types.#StringEnum & {
+	symbol: "EnableSecuritySignature"
+	schema: "ad"
+	name: "Enable Security Signature"
+	representation: "enablesecuritysignature"
+}
+
+RestrictReceivingNTLMTraffic: types.#StringEnum & {
+	symbol: "RestrictReceivingNTLMTraffic"
+	schema: "ad"
+	name: "Restrict Receiving NTLM Traffic"
+	representation: "restrictreceivingntmltraffic"
+}
+
+NTLMMinServerSec: types.#StringEnum & {
+	symbol: "NTLMMinServerSec"
+	schema: "ad"
+	name: "NTLM Min Server Sec"
+	representation: "ntlmminserversec"
+}
+
+NTLMMinClientSec: types.#StringEnum & {
+	symbol: "NTLMMinClientSec"
+	schema: "ad"
+	name: "NTLM Min Client Sec"
+	representation: "ntlmminclientsec"
+}
+LMCompatibilityLevel: types.#StringEnum & {
+	symbol: "LMCompatibilityLevel"
+	schema: "ad"
+	name: "LM Compatibility Level"
+	representation: "lmcompatibilitylevel"
+}
+
+UseMachineID: types.#StringEnum & {
+	symbol: "UseMachineID"
+	schema: "ad"
+	name: "Use Machine ID"
+	representation: "usemachineid"
+}
+
+ClientAllowedNTLMServers: types.#StringEnum & {
+	symbol: "ClientAllowedNTLMServers"
+	schema: "ad"
+	name: "Client Allowed NTLM Servers"
+	representation: "clientallowedntlmservers"
+}
+
 Transitive: types.#StringEnum & {
 	symbol: "Transitive"
 	schema: "ad"
@@ -1014,6 +1069,14 @@ Properties: [
 	HTTPEnrollmentEndpoints,
 	HTTPSEnrollmentEndpoints,
 	HasVulnerableEndpoint,
+	RequireSecuritySignature,
+	EnableSecuritySignature,
+	RestrictReceivingNTLMTraffic,
+	NTLMMinServerSec,
+	NTLMMinClientSec,
+	LMCompatibilityLevel,
+	UseMachineID,
+	ClientAllowedNTLMServers,
 	Transitive
 ]
 

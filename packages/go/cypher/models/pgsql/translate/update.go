@@ -31,9 +31,9 @@ func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 	} else {
 		switch operator {
 		case pgsql.OperatorAssignment:
-			if rightOperand, err := s.treeTranslator.Pop(); err != nil {
+			if rightOperand, err := s.treeTranslator.PopOperand(); err != nil {
 				return err
-			} else if leftOperand, err := s.treeTranslator.Pop(); err != nil {
+			} else if leftOperand, err := s.treeTranslator.PopOperand(); err != nil {
 				return err
 			} else if leftPropertyLookup, err := decomposePropertyLookup(leftOperand); err != nil {
 				return err
@@ -42,9 +42,9 @@ func (s *Translator) translateSetItem(setItem *cypher.SetItem) error {
 			}
 
 		case pgsql.OperatorKindAssignment:
-			if rightOperand, err := s.treeTranslator.Pop(); err != nil {
+			if rightOperand, err := s.treeTranslator.PopOperand(); err != nil {
 				return err
-			} else if leftOperand, err := s.treeTranslator.Pop(); err != nil {
+			} else if leftOperand, err := s.treeTranslator.PopOperand(); err != nil {
 				return err
 			} else if targetIdentifier, isIdentifier := leftOperand.(pgsql.Identifier); !isIdentifier {
 				return fmt.Errorf("expected an identifier for kind assignment left operand but got: %T", leftOperand)
@@ -211,7 +211,7 @@ func (s *Translator) buildUpdates() error {
 					return err
 				}
 
-				if propertyLookup, isPropertyLookup := asPropertyLookup(propertyAssignment.ValueExpression); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(propertyAssignment.ValueExpression); isPropertyLookup {
 					// Ensure that property lookups in JSONB build functions use the JSONB field type
 					propertyLookup.Operator = pgsql.OperatorJSONField
 				}

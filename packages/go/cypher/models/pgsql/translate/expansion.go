@@ -1227,7 +1227,9 @@ func (s *Translator) translateExpansionConstraints(isFirstTraversalStep bool, st
 	} else {
 		// If one side of the expansion has constraints but the other does not this may be an opportunity to reorder the traversal
 		// to start with tighter search bounds
-		constraints.OptimizePatternConstraintBalance(step)
+		if err := constraints.OptimizePatternConstraintBalance(s.scope, step); err != nil {
+			return err
+		}
 
 		// Left node
 		if leftNodeJoinCondition, err := leftNodeTraversalStepConstraint(step); err != nil {
