@@ -41,7 +41,7 @@ func ParseGraphFixtureJsonFile(fh fs.File) (GraphFixture, error) {
 }
 
 func LoadGraphFixture(db graph.Database, g GraphFixture) error {
-	var nodeMap map[string]graph.ID
+	var nodeMap = make(map[string]graph.ID)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 		for _, node := range g.Nodes {
 			if dbNode, err := tx.CreateNode(graph.AsProperties(node.Properties), graph.StringsToKinds(node.Labels)...); err != nil {
