@@ -463,6 +463,19 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     updated_at timestamp with time zone,
     flags jsonb
 );
+
+---
+--- NOTE: This is bad, and will be removed in a future migration. We should 
+---       consider using a foriegn key for query_id as well.
+---
+CREATE SEQUENCE saved_queries_permissions_query_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER SEQUENCE saved_queries_permissions_query_id_seq OWNED BY saved_queries_permissions.query_id;
+
 CREATE SEQUENCE IF NOT EXISTS user_sessions_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -507,6 +520,7 @@ ALTER TABLE ONLY roles ALTER COLUMN id SET DEFAULT nextval('roles_id_seq'::regcl
 ALTER TABLE ONLY saml_providers ALTER COLUMN id SET DEFAULT nextval('saml_providers_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries ALTER COLUMN id SET DEFAULT nextval('saved_queries_id_seq'::regclass);
 ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN id SET DEFAULT nextval('saved_queries_permissions_id_seq'::regclass);
+ALTER TABLE ONLY saved_queries_permissions ALTER COLUMN query_id SET DEFAULT nextval('saved_queries_permissions_query_id_seq'::regclass);
 ALTER TABLE ONLY user_sessions ALTER COLUMN id SET DEFAULT nextval('user_sessions_id_seq'::regclass);
 
 ALTER TABLE ONLY ad_data_quality_aggregations ADD CONSTRAINT ad_data_quality_aggregations_pkey PRIMARY KEY (id);
