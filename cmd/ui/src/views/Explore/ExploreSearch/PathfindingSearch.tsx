@@ -17,8 +17,7 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, useTheme } from '@mui/material';
-import { SearchValue } from 'bh-shared-ui';
-import ExploreSearchCombobox from '../ExploreSearchCombobox';
+import { ExploreSearchCombobox, SearchValue } from 'bh-shared-ui';
 import EdgeFilter from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
 
@@ -31,6 +30,7 @@ type PathfindingSearchState = {
     handleDestinationNodeEdited: (edit: string) => void;
     handleSourceNodeSelected: (selected: SearchValue) => void;
     handleDestinationNodeSelected: (selected: SearchValue) => void;
+    handleSwapPathfindingInputs: () => void;
 };
 
 const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState: PathfindingSearchState }) => {
@@ -43,14 +43,8 @@ const PathfindingSearch = ({ pathfindingSearchState }: { pathfindingSearchState:
         handleDestinationNodeEdited,
         handleSourceNodeSelected,
         handleDestinationNodeSelected,
+        handleSwapPathfindingInputs,
     } = pathfindingSearchState;
-
-    const handleSwapPathfindingInputs = () => {
-        if (sourceSelectedItem && destinationSelectedItem) {
-            handleSourceNodeSelected(destinationSelectedItem);
-            handleDestinationNodeSelected(sourceSelectedItem);
-        }
-    };
 
     return (
         <Box display={'flex'} alignItems={'center'} gap={1}>

@@ -24,7 +24,7 @@ info:
   title: BloodHound API
   contact:
     name: BloodHound Enterprise Support
-    url: https://support.bloodhoundenterprise.io/
+    url: https://bloodhound.specterops.io/
     email: support@specterops.io
   license:
     name: Apache-2.0
@@ -80,7 +80,7 @@ info:
 
     For more documentation about how to work with authentication in the API, including examples
     of how to generate an API token in the BloodHound UI, please refer to this support doc:
-    [Working with the BloodHound API](https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API).
+    [Working with the BloodHound API](https://bloodhound.specterops.io/integrations/bloodhound-api/working-with-api).
 
     #### Signed Request Pseudo-code Example
 
@@ -320,6 +320,12 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
+    $ref: './paths/asset-isolation.asset-group-tags.selectors.id.yaml'
+
+  # asset group management
+  /api/v2/asset-group-tags/{asset_group_tag_id}:
+    $ref: './paths/asset-isolation.asset-group-tags.id.yaml'
 
   # graph
   /api/v2/graphs/kinds:

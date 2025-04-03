@@ -30,6 +30,8 @@ export const usePathfindingFilters = () => {
         if (pathFilters?.length) {
             const mapped = mapParamsToFilters(pathFilters, INITIAL_FILTERS);
             updateSelectedFilters(mapped);
+        } else {
+            updateSelectedFilters(INITIAL_FILTERS);
         }
     };
 
@@ -46,10 +48,9 @@ export const usePathfindingFilters = () => {
         }
     };
 
-    const handleCancelFilters = () => {
-        const previous = pathFilters ? mapParamsToFilters(pathFilters, INITIAL_FILTERS) : INITIAL_FILTERS;
-        updateSelectedFilters(previous);
-    };
+    // In our new implementation, these two functions are equivalent. Once we no longer need to support the old approach,
+    // we can consider removing this.
+    const handleCancelFilters = () => initialize();
 
     return {
         selectedFilters,
