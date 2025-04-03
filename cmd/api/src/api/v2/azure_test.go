@@ -269,13 +269,13 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				Graph: mocks.mockDB,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetAZRelatedEntities(context.Background(), response, request, "id")
+			resources.GetAZRelatedEntities(context.Background(), response, request, "id")
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -1055,13 +1055,13 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			request := testCase.buildRequest()
 			testCase.emulateWithMocks(t, mocks, request)
 
-			resouces := v2.Resources{
+			resources := v2.Resources{
 				Graph: mocks.mockDB,
 			}
 
 			response := httptest.NewRecorder()
 
-			resouces.GetAZEntity(response, request)
+			resources.GetAZEntity(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
