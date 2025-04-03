@@ -4424,7 +4424,7 @@
                         "selectors": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
                           }
                         }
                       }
@@ -4464,23 +4464,23 @@
           "Enterprise"
         ],
         "requestBody": {
-          "description": "The request body for creating an asset group tag selector",
+          "description": "The request body for creating an asset group tag selector. Only the name and seeds fields are required.",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
-                  "seeds": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-                    }
+                  {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "seeds"
+                    ]
                   }
-                }
+                ]
               }
             }
           }
@@ -4494,7 +4494,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
                     }
                   }
                 }
@@ -4558,32 +4558,24 @@
           "Enterprise"
         ],
         "requestBody": {
-          "description": "The request body for updating an asset group tag selector. One or more fields must be provided. Only provided fields will be updated.",
+          "description": "The request body for updating an asset group tag selector. At least one field must be provided in the request body. Any combination of fields from the original schema can be included, and only the fields that are provided will be updated.",
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
                   },
-                  "description": {
-                    "type": "string"
-                  },
-                  "disabled_at": {
-                    "$ref": "#/components/schemas/null.time"
-                  },
-                  "auto_certify": {
-                    "type": "boolean"
-                  },
-                  "seeds": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "disabled_at": {
+                        "$ref": "#/components/schemas/null.time"
+                      }
                     }
                   }
-                }
+                ]
               }
             }
           }
@@ -4597,7 +4589,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector"
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
                     }
                   }
                 }
@@ -15887,13 +15879,10 @@
           }
         }
       },
-      "model.asset-group-tags-selector-seed": {
+      "model.asset-group-tags-selector-seed-request": {
         "type": "object",
         "properties": {
-          "selector_id": {
-            "type": "integer"
-          },
-          "data": {
+          "type": {
             "type": "integer"
           },
           "value": {
@@ -15901,8 +15890,46 @@
           }
         }
       },
-      "model.asset-group-tags-selector": {
+      "model.asset-group-tags-selector-request": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+            }
+          }
+        }
+      },
+      "model.asset-group-tags-selector-seed-response": {
+        "type": "object",
         "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+          },
+          {
+            "properties": {
+              "selector_id": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.asset-group-tags-selector-response": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+          },
           {
             "type": "object",
             "properties": {
@@ -15932,15 +15959,6 @@
               "disabled_by": {
                 "$ref": "#/components/schemas/null.string"
               },
-              "name": {
-                "type": "string"
-              },
-              "description": {
-                "type": "string"
-              },
-              "auto_certify": {
-                "type": "boolean"
-              },
               "is_default": {
                 "type": "boolean"
               },
@@ -15950,7 +15968,7 @@
               "seeds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-response"
                 }
               }
             }
