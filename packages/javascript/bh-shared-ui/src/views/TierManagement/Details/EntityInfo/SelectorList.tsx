@@ -62,8 +62,8 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
 
     if (selectorsQuery.isSuccess) {
         return (
-            <EntityInfoCollapsibleSection label='Selectors' count={selectorsQuery.data.length}>
-                {selectorsQuery.data.map((selector, index) => {
+            <EntityInfoCollapsibleSection label='Selectors' count={selectorsQuery.data.selectors.length}>
+                {selectorsQuery.data.selectors.map((selector, index) => {
                     return (
                         <div
                             className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA] dark:bg-[#272727]' : ''}`}

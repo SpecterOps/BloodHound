@@ -50,13 +50,13 @@ const ObjectCountPanel: FC<ObjectCountPanelProps> = ({ selectedTier }) => {
             <Card className='flex flex-col  h-[478px] px-6 pt-6 select-none overflow-y-auto'>
                 <div className='flex justify-between mb-4'>
                     <p>Total Count</p>
-                    <Badge label={total_count.toString()} />
+                    <Badge label={total_count.toLocaleString()} />
                 </div>
                 {Object.entries(counts).map(([key, value]) => {
                     return (
                         <div className='flex justify-between mb-4' key={key}>
                             <p>{key}</p>
-                            <Badge label={value.toString()} />
+                            <Badge label={value.toLocaleString()} />
                         </div>
                     );
                 })}

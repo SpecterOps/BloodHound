@@ -142,12 +142,11 @@ export interface AssetGroupTagSelectorNode {
 }
 
 export interface AssetGroupTagMemberInfo {
-    member_id: number;
     node_id: string;
     certified: AssetGroupTagCertifiedValues;
     certified_by: string | System | null;
-    id: number;
     name: string;
+    selectors: AssetGroupTagSelector[];
 }
 
 export interface CreateSharpHoundClientRequest {
