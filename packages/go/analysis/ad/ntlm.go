@@ -679,7 +679,11 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 	}
 }
 
-func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+func GetVulnerableCertificateAuthoritiesForRelayNTLMtoADCS(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+
+}
+
+func GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
 	var (
 		startNode *graph.Node
 		endNode   *graph.Node
