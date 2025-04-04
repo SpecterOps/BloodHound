@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
+
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -601,6 +602,49 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
 			require.Equal(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func TestIsValidContentTypeForUpload(t *testing.T) {
+	tests := []struct {
+		name string
+		header http.Header
+		want bool
+	}{
+		{
+			name: "Empty Content-Type",
+			header: http.Header{
+				"nope": []string{""},
+			},
+			want: false,
+		},
+		{
+			name: "Invalid Content-Type",
+			header: http.Header{
+				"Content-Type": []string{"invalid"},
+			},
+			want: false,
+		},
+		{
+			name: "Invalid Content Type - invalid media type",
+			header: http.Header{
+				"Content-Type": []string{";", ""},
+			},
+			want: false,
+		},
+		{
+			name: "Valid Content-Type",
+			header: http.Header{
+				"Content-Type": []string{"application/json"},
+			},
+			want: true,
+		},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := v2.IsValidContentTypeForUpload(testCase.header)
+			require.Equal(t, testCase.want, got)
 		})
 	}
 }
