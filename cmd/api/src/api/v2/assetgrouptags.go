@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -169,7 +170,7 @@ type listNodeSelectorsResponse struct {
 }
 
 type Member struct {
-	*graph.Node
+	graph.Node
 	Selectors model.AssetGroupTagSelectors
 }
 
@@ -177,6 +178,7 @@ func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWrite
 	var (
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
+		entity        = &graph.Node{}
 	)
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Node Selectors Id")()
@@ -187,11 +189,17 @@ func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWrite
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if entity, err := s.GraphQuery.GetEntityByObjectId(request.Context(), memberStr, nil); err != nil {
+	} else if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
+		entity.ID = graph.ID(memberID)
+		if entity, err = ops.FetchNode(tx, entity.ID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectors, err := s.DB.GetSelectorsByMemberId(request.Context(), memberID, assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{entity, selectors}}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{*entity, selectors}}, http.StatusOK, response)
 	}
 }
