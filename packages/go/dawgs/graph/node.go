@@ -19,6 +19,7 @@ package graph
 import (
 	"encoding/json"
 	"math"
+	"strings"
 	"sync"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -56,6 +57,17 @@ type Node struct {
 	AddedKinds   Kinds       `json:"added_kinds"`
 	DeletedKinds Kinds       `json:"deleted_kinds"`
 	Properties   *Properties `json:"properties"`
+}
+
+// TODO Cleanup after Tiering GA
+func (s *Node) IsTierZero() bool {
+	if s.Kinds.ContainsOneOf(StringKind("Tag_Tier_Zero")) {
+		return true
+	} else {
+		// We can safely ignore the error here
+		startSystemTags, _ := s.Properties.Get("system_tags").String()
+		return strings.Contains(startSystemTags, "admin_tier_0")
+	}
 }
 
 func (s *Node) Merge(other *Node) {
