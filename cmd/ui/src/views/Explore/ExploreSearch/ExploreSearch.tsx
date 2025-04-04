@@ -22,6 +22,7 @@ import {
     CYPHER_SEARCH,
     CypherSearch,
     Icon,
+    NodeSearch,
     PATHFINDING_SEARCH,
     PRIMARY_SEARCH,
     PathfindingSearch,
@@ -30,7 +31,6 @@ import {
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import NodeSearch from './NodeSearch';
 import {
     useCypherSearchSwitch,
     useNodeSearchSwitch,
