@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 // Below is a thread safe way to track the source of why a node was selected by a selector
@@ -382,7 +383,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	return nil
 }
 
-func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
+func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished selecting asset group nodes via new selectors")()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
@@ -422,7 +423,7 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // TODO Batching?
-func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag) error {
 	if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 		return err
 	} else {
@@ -508,7 +509,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 	return nil
 }
 
-func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
+func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging asset group nodes")()
 
 	if tags, err := db.GetAssetGroupTagForSelection(ctx); err != nil {
@@ -541,7 +542,7 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			// Parallelize the tagging of label nodes
 			go func() {
 				defer wg.Done()
-				if err = tagAssetGroupNodes(ctx, db, graphDb, tag); err != nil {
+				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag); err != nil {
 					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
 				}
 			}()
@@ -550,7 +551,7 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Process the tier tagging synchronously
 		for _, tier := range tiersOrdered {
-			if err := tagAssetGroupNodes(ctx, db, graphDb, tier); err != nil {
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier); err != nil {
 				slog.Error("AGT: Error tagging nodes", "tier", tier, "err", err)
 			}
 		}
@@ -558,5 +559,77 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		// Wait for labels to finish
 		wg.Wait()
 	}
+	return nil
+}
+
+func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb graph.Database) error {
+	if tags, err := db.GetAssetGroupTags(ctx); err != nil {
+		return err
+	} else {
+		for _, tag := range tags {
+			tagKind := tag.ToKind()
+			if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+				if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
+					return err
+				} else {
+					for _, node := range taggedNodeSet {
+						node.DeleteKinds(tagKind)
+						return tx.UpdateNode(node)
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFiltersToClear ...graph.Criteria) error {
+	if appcfg.GetTieringEnabled(ctx, db) {
+		// Tiering enabled, we don't want system tags present
+		if err := clearSystemTags(ctx, graphDb, additionalFiltersToClear...); err != nil {
+			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
+			return err
+		}
+		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
+			return err
+		}
+
+		if err := tagAssetGroupNodes(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: tagging failed: %v", err))
+			return err
+		}
+	} else {
+		// Tiering disabled, we don't want nodes with tagged kinds
+		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: clearing tags failed: %v", err))
+			return err
+		}
+
+		if err := clearSystemTags(ctx, graphDb, additionalFiltersToClear...); err != nil {
+			slog.Error(fmt.Sprintf("Failed clearing system tags: %v", err))
+			return err
+		}
+
+		if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("Failed updating asset group isolation tags: %v", err))
+			return err
+		}
+
+		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("Failed tagging Active Directory attack path roots: %v", err))
+			return err
+		}
+
+		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("Failed tagging Azure attack path roots: %v", err))
+			return err
+		}
+	}
+
 	return nil
 }
