@@ -296,7 +296,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
@@ -315,7 +315,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)

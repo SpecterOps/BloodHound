@@ -215,6 +215,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	var (
 		endNode    *graph.Node
 		domainNode *graph.Node
+		startNodes = graph.NodeSet{}
 
 		traversalInst      = traversal.New(db, analysis.MaximumDatabaseParallelWorkers)
 		paths              = graph.PathSet{}
@@ -225,10 +226,13 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		var err error
-		if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
+		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
+			return err
+		} else if endNode, err = ops.FetchNode(tx, edge.EndID); err != nil {
 			return err
 		} else {
+			startNodes.AddSet(nodeSet)
+			startNodes.Add(endNode)
 			return nil
 		}
 	}); err != nil {
@@ -245,44 +249,48 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 		return nil, err
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: endNode,
-		Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
-			var enterpriseCANode *graph.Node
-			terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-				if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
-					enterpriseCANode = nextSegment.Node
-				}
-				return true
-			})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
+				var enterpriseCANode *graph.Node
+				terminal.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					if nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA) {
+						enterpriseCANode = nextSegment.Node
+					}
+					return true
+				})
 
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
-			lock.Unlock()
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path1EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				lock.Unlock()
 
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
-	if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
-		Root: endNode,
-		Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
-			enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
-				return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
-			})
+	for _, n := range startNodes.Slice() {
+		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
+			Root: n,
+			Driver: coerceAndRelayNTLMtoADCSPath2Pattern(domainNode.ID, path1EnterpriseCAs).Do(func(terminal *graph.PathSegment) error {
+				enterpriseCANode := terminal.Search(func(nextSegment *graph.PathSegment) bool {
+					return nextSegment.Node.Kinds.ContainsOneOf(ad.EnterpriseCA)
+				})
 
-			lock.Lock()
-			candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
-			path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
-			lock.Unlock()
+				lock.Lock()
+				candidateSegments[enterpriseCANode.ID] = append(candidateSegments[enterpriseCANode.ID], terminal)
+				path2EnterpriseCAs.Add(enterpriseCANode.ID.Uint64())
+				lock.Unlock()
 
-			return nil
-		}),
-	}); err != nil {
-		return nil, err
+				return nil
+			}),
+		}); err != nil {
+			return nil, err
+		}
 	}
 
 	// Intersect the CAs and take only those seen in both paths
@@ -578,7 +586,7 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.Crea
 
 func GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
 	var (
-		nodes graph.NodeSet
+		nodes = graph.NodeSet{}
 	)
 
 	if composition, err := GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge); err != nil {
@@ -679,7 +687,7 @@ func GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx context.Context, db g
 	}
 }
 
-func GetVulnerableComputersForRelayNTLMToSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+func GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
 	var (
 		startNode *graph.Node
 		endNode   *graph.Node
