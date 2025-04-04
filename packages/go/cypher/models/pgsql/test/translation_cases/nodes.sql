@@ -24,10 +24,10 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234') select s0.n0 as n from s0;
 
 -- case: match (n) where n.name = '1234' return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234') select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = '1234') select s0.n0 as n from s0;
 
 -- case: match (n:NodeKind1 {name: "SOME NAME"}) return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and coalesce(n0.properties ->> 'name', '')::text = 'SOME NAME') select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.properties ->> 'name' = 'SOME NAME') select s0.n0 as n from s0;
 
 -- case: match (n) where n.objectid in $p return n
 -- cypher_params: {"p":["1","2","3"]}
@@ -37,7 +37,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (s) where s.name = $myParam return s
 -- cypher_params: {"myParam":"123"}
 -- pgsql_params:{"pi0":"123"}
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = @pi0::text) select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = @pi0::text) select s0.n0 as s from s0;
 
 -- case: match (s) return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0;
@@ -58,7 +58,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.kind_ids operator (pg_catalog.&&) array [2]::int2[]) select s0.n0 as s from s0;
 
 -- case: match (s) where s.name = '1234' return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234') select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = '1234') select s0.n0 as s from s0;
 
 -- case: match (s:NodeKind1), (e:NodeKind2) where s.selected or s.tid = e.tid and e.enabled return s, e
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and ((s0.n0).properties ->> 'selected')::bool or (s0.n0).properties -> 'tid' = n1.properties -> 'tid' and (n1.properties ->> 'enabled')::bool) select s1.n0 as s, s1.n1 as e from s1;
@@ -67,7 +67,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (n0.properties ->> 'value')::int8 + 2 / 3 > 10) select s0.n0 as s from s0;
 
 -- case: match (s), (e) where s.name = 'n1' return s, e.name as othername
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = 'n1'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1) select s1.n0 as s, (s1.n1).properties -> 'name' as othername from s1;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = 'n1'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1) select s1.n0 as s, (s1.n1).properties -> 'name' as othername from s1;
 
 -- case: match (s) where s.name in ['option 1', 'option 2'] return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = any (array ['option 1', 'option 2']::text[])) select s0.n0 as s from s0;
@@ -82,13 +82,13 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ? 'system_tags' and not (n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] or n0.kind_ids operator (pg_catalog.&&) array [2]::int2[])) select (s0.n0).id from s0;
 
 -- case: match (s), (e) where s.name = '1234' and e.other = 1234 return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where (n1.properties ->> 'other')::int8 = 1234) select s1.n0 as s from s1;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = '1234'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where (n1.properties ->> 'other')::int8 = 1234) select s1.n0 as s from s1;
 
 -- case: match (s), (e) where s.name = '1234' or e.other = 1234 return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where coalesce((s0.n0).properties ->> 'name', '')::text = '1234' or (n1.properties ->> 'other')::int8 = 1234) select s1.n0 as s from s1;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where (s0.n0).properties ->> 'name' = '1234' or (n1.properties ->> 'other')::int8 = 1234) select s1.n0 as s from s1;
 
 -- case: match (n), (k) where n.name = '1234' and k.name = '1234' match (e) where e.name = n.name return k, e
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where coalesce(n1.properties ->> 'name', '')::text = '1234'), s2 as (select s1.n0 as n0, s1.n1 as n1, (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2 from s1, node n2 where n2.properties -> 'name' = (s1.n0).properties -> 'name') select s2.n1 as k, s2.n2 as e from s2;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = '1234'), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.properties ->> 'name' = '1234'), s2 as (select s1.n0 as n0, s1.n1 as n1, (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2 from s1, node n2 where n2.properties -> 'name' = (s1.n0).properties -> 'name') select s2.n1 as k, s2.n2 as e from s2;
 
 -- case: match (n) return n skip 5 limit 10
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as n from s0 offset 5 limit 10;
@@ -121,7 +121,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (n0.properties ->> 'created_at')::timestamp without time zone = ('2019-06-01T18:40:32.142')::timestamp without time zone) select s0.n0 as s from s0;
 
 -- case: match (s) where not (s.name = '123') return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where not (coalesce(n0.properties ->> 'name', '')::text = '123')) select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where not (n0.properties ->> 'name' = '123')) select s0.n0 as s from s0;
 
 -- case: match (s) return s.value + 1
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select ((s0.n0).properties ->> 'value')::int8 + 1 from s0;
@@ -142,34 +142,34 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ? 'created_at') select s0.n0 as s from s0;
 
 -- case: match (s) where s.name starts with '123' return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text like '123%') select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like '123%') select s0.n0 as s from s0;
 
 -- case: match (s) where not s.name starts with '123' return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where not coalesce(n0.properties ->> 'name', '')::text like '123%') select s0.n0 as s from s0;
 
 -- case: match (s) where s.name contains '123' return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text like '%123%') select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like '%123%') select s0.n0 as s from s0;
 
 -- case: match (s) where not s.name contains '123' return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where not coalesce(n0.properties ->> 'name', '')::text like '%123%') select s0.n0 as s from s0;
 
 -- case: match (s) where s.name ends with '123' return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text like '%123') select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like '%123') select s0.n0 as s from s0;
 
 -- case: match (s) where not s.name ends with '123' return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where not coalesce(n0.properties ->> 'name', '')::text like '%123') select s0.n0 as s from s0;
 
 -- case: match (s) where s.name starts with s.other return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties -> 'name', '')::text like ((n0.properties ->> 'other') || '%')::text) select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like ((n0.properties ->> 'other') || '%')::text) select s0.n0 as s from s0;
 
 -- case: match (s) where s.name contains s.other return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties -> 'name', '')::text like ('%' || (n0.properties ->> 'other') || '%')::text) select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like ('%' || (n0.properties ->> 'other') || '%')::text) select s0.n0 as s from s0;
 
 -- case: match (s) where s.name ends with s.other return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties -> 'name', '')::text like ('%' || (n0.properties ->> 'other'))::text) select s0.n0 as s from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' like ('%' || (n0.properties ->> 'other'))::text) select s0.n0 as s from s0;
 
 -- case: match (n) where n:NodeKind1 and toLower(n.tenantid) contains 'myid' and n.system_tags contains 'tag' return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and lower(n0.properties ->> 'tenantid')::text like '%myid%' and coalesce(n0.properties ->> 'system_tags', '')::text like '%tag%') select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and lower(n0.properties ->> 'tenantid')::text like '%myid%' and n0.properties ->> 'system_tags' like '%tag%') select s0.n0 as n from s0;
 
 -- case: match (s) where not (s)-[]-() return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not exists (select 1 from edge e0 where e0.start_id = (s0.n0).id or e0.end_id = (s0.n0).id);
@@ -178,38 +178,38 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0 join edge e0 on (s0.n0).id = e0.start_id join node n1 on n1.id = e0.end_id), s2 as (select s1.e0 as e0, (e1.id, e1.start_id, e1.end_id, e1.kind_id, e1.properties)::edgecomposite as e1, s1.n0 as n0, s1.n1 as n1, (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2 from s1 join edge e1 on (s1.n1).id = e1.start_id join node n2 on n2.id = e1.end_id) select count(*) > 0 from s2);
 
 -- case: match (s) where not (s)-[{prop: 'a'}]-({name: 'n3'}) return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, edge e0 join node n0 on (s0.n0).id = e0.end_id or (s0.n0).id = e0.start_id join node n1 on n1.id = e0.end_id or n1.id = e0.start_id where coalesce(n1.properties ->> 'name', '')::text = 'n3' and coalesce(e0.properties ->> 'prop', '')::text = 'a') select count(*) > 0 from s1);
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, edge e0 join node n0 on (s0.n0).id = e0.end_id or (s0.n0).id = e0.start_id join node n1 on n1.id = e0.end_id or n1.id = e0.start_id where n1.properties ->> 'name' = 'n3' and e0.properties ->> 'prop' = 'a') select count(*) > 0 from s1);
 
 -- case: match (s) where not (s)<-[{prop: 'a'}]-({name: 'n3'}) return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0 join edge e0 on (s0.n0).id = e0.end_id join node n1 on n1.id = e0.start_id where coalesce(n1.properties ->> 'name', '')::text = 'n3' and coalesce(e0.properties ->> 'prop', '')::text = 'a') select count(*) > 0 from s1);
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0 join edge e0 on (s0.n0).id = e0.end_id join node n1 on n1.id = e0.start_id where n1.properties ->> 'name' = 'n3' and e0.properties ->> 'prop' = 'a') select count(*) > 0 from s1);
 
 -- case: match (n:NodeKind1) where n.distinguishedname = toUpper('admin') return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'distinguishedname', '')::text = upper('admin')::text and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'distinguishedname' = upper('admin')::text and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
 -- case: match (n:NodeKind1) where n.distinguishedname starts with toUpper('admin') return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'distinguishedname', '')::text like upper('admin')::text || '%' and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'distinguishedname' like upper('admin')::text || '%' and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
 -- case: match (n:NodeKind1) where n.distinguishedname contains toUpper('admin') return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'distinguishedname', '')::text like '%' || upper('admin')::text || '%' and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'distinguishedname' like '%' || upper('admin')::text || '%' and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
 -- case: match (n:NodeKind1) where n.distinguishedname ends with toUpper('admin') return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'distinguishedname', '')::text like '%' || upper('admin')::text and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'distinguishedname' like '%' || upper('admin')::text and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
 -- case: match (s) where not (s)-[{prop: 'a'}]->({name: 'n3'}) return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0 join edge e0 on (s0.n0).id = e0.start_id join node n1 on n1.id = e0.end_id where coalesce(n1.properties ->> 'name', '')::text = 'n3' and coalesce(e0.properties ->> 'prop', '')::text = 'a') select count(*) > 0 from s1);
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 where not (with s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0 join edge e0 on (s0.n0).id = e0.start_id join node n1 on n1.id = e0.end_id where n1.properties ->> 'name' = 'n3' and e0.properties ->> 'prop' = 'a') select count(*) > 0 from s1);
 
 -- case: match (s) where not (s)-[]-() return id(s)
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select (s0.n0).id from s0 where not exists (select 1 from edge e0 where e0.start_id = (s0.n0).id or e0.end_id = (s0.n0).id);
 
 -- case: match (n) where n.system_tags contains ($param) return n
 -- pgsql_params:{"pi0":null}
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'system_tags', '')::text like '%' || (@pi0)::text || '%') select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'system_tags' like '%' || (@pi0)::text || '%') select s0.n0 as n from s0;
 
 -- case: match (n) where n.system_tags starts with (1) return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'system_tags', '')::text like (1)::text || '%') select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'system_tags' like (1)::text || '%') select s0.n0 as n from s0;
 
 -- case: match (n) where n.system_tags ends with ('text') return n
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'system_tags', '')::text like '%' || ('text')::text) select s0.n0 as n from s0;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'system_tags' like '%' || ('text')::text) select s0.n0 as n from s0;
 
 -- case: match (n:NodeKind1) where toString(n.functionallevel) in ['2008 R2','2012','2008','2003','2003 Interim','2000 Mixed/Native'] return n
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'functionallevel' = any (array ['2008 R2', '2012', '2008', '2003', '2003 Interim', '2000 Mixed/Native']::text[]) and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
@@ -247,7 +247,7 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where 1 = coalesce(n0.properties ->> 'a', n0.properties ->> 'b')::int8 and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
 -- case: match (u:NodeKind1) where u.hasspn = true and u.enabled = true and not '-502' ends with u.objectid and not coalesce(u.gmsa, false) = true and not coalesce(u.msa, false) = true return u limit 10
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (n0.properties ->> 'hasspn')::bool = true and (n0.properties ->> 'enabled')::bool = true and not coalesce(n0.properties ->> 'objectid', '')::text like ('%' || (n0.properties ->> 'objectid'))::text and not coalesce((n0.properties ->> 'gmsa')::bool, false)::bool = true and not coalesce((n0.properties ->> 'msa')::bool, false)::bool = true and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as u from s0 limit 10;
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (n0.properties ->> 'hasspn')::bool = true and (n0.properties ->> 'enabled')::bool = true and not '-502' like ('%' || (n0.properties ->> 'objectid'))::text and not coalesce((n0.properties ->> 'gmsa')::bool, false)::bool = true and not coalesce((n0.properties ->> 'msa')::bool, false)::bool = true and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as u from s0 limit 10;
 
 -- case: match (n:NodeKind1) where coalesce(n.name, '') = coalesce(n.migrated_name, '') return n
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = coalesce(n0.properties ->> 'migrated_name', '')::text and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;

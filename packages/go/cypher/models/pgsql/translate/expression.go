@@ -147,14 +147,6 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 	))
 }
 
-func coalescePropertyLookup(propertyLookup *pgsql.BinaryExpression, zeroValue any, dataType pgsql.DataType) pgsql.Expression {
-	return &pgsql.FunctionCall{
-		Function:   pgsql.FunctionCoalesce,
-		Parameters: []pgsql.Expression{propertyLookup, pgsql.NewLiteral(zeroValue, dataType)},
-		CastType:   pgsql.Text,
-	}
-}
-
 func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataType pgsql.DataType) pgsql.Expression {
 	if dataType.IsArrayType() {
 		// Ensure that array conversions use JSONB
@@ -244,18 +236,10 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint.ArrayBaseType())
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
-				// Auto coalesce for property lookups
-				expression.LOperand = coalescePropertyLookup(leftPropertyLookup, "", pgsql.Text)
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
 
 			default:
-				switch rOperandTypeHint {
-				case pgsql.Text:
-					// Auto coalesce for property lookups
-					expression.LOperand = coalescePropertyLookup(leftPropertyLookup, "", pgsql.Text)
-
-				default:
-					expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
-				}
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
 			}
 		}
 	}
@@ -273,18 +257,10 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 				}
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
-				// Auto coalesce for property lookups
-				expression.LOperand = coalescePropertyLookup(rightPropertyLookup, "", pgsql.Text)
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, pgsql.Text)
 
 			default:
-				switch lOperandTypeHint {
-				case pgsql.Text:
-					// Auto coalesce for property lookups
-					expression.ROperand = coalescePropertyLookup(rightPropertyLookup, "", pgsql.Text)
-
-				default:
-					expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
-				}
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
 			}
 		}
 	}
