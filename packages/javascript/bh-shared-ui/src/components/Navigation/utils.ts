@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import MainNav from './MainNav';
-import SubNav from './SubNav';
-import { MainNavData } from './types';
-
-export * from './utils';
-export { MainNav, SubNav, type MainNavData };
+export const getSubRoute = (parentRoute: string, childRoute: string) => {
+    return childRoute.slice(parentRoute.length);
+};
