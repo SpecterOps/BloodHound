@@ -60,7 +60,7 @@ func RedirectToLoginURL(response http.ResponseWriter, request *http.Request, err
 
 	// Optionally, include the error message as a query parameter or in session storage
 	query := redirectURL.Query()
-	query.Set("err", errorMessage)
+	query.Set("error", errorMessage)
 	redirectURL.RawQuery = query.Encode()
 
 	// Redirect to the login page
