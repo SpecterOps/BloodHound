@@ -113,7 +113,7 @@ type AssetGroupTagSelector struct {
 	DisabledBy      null.String `json:"disabled_by"`
 	Name            string      `json:"name" validate:"required"`
 	Description     string      `json:"description"`
-	AutoCertify     bool        `json:"auto_certify"`
+	AutoCertify     null.Bool   `json:"auto_certify"`
 	IsDefault       bool        `json:"is_default"`
 	AllowDisable    bool        `json:"allow_disable"`
 

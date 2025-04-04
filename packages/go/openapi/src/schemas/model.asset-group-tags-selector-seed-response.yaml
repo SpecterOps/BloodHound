@@ -15,10 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: object
-properties:
-  selector_id:
-    type: integer
-  data:
-    type: integer
-  value:
-    type: string
+allOf:
+  - $ref: './model.asset-group-tags-selector-seed-request.yaml'
+  - properties:
+      selector_id:
+        type: integer
+

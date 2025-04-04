@@ -29,32 +29,36 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 const (
-	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
-	ErrInvalidSelectorType    = "invalid selector type"
+	ErrInvalidAssetGroupTagId         = "invalid asset group tag id specified in url"
+	ErrInvalidAssetGroupTagSelectorId = "invalid asset group tag selector id specified in url"
+	ErrInvalidSelectorType            = "invalid selector type"
 )
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
-	// all seeds must be of the same type
-	seedType := seeds[0].Type
+	if len(seeds) > 0 {
+		// all seeds must be of the same type
+		seedType := seeds[0].Type
 
-	if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
-		return fmt.Errorf("invalid seed type %v", seedType)
-	}
-
-	for _, seed := range seeds {
-		if seed.Type != seedType {
-			return fmt.Errorf("all seeds must be of the same type")
+		if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
+			return fmt.Errorf("invalid seed type %v", seedType)
 		}
-		if seed.Type == model.SelectorTypeCypher {
-			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
-				return fmt.Errorf("cypher is invalid: %v", err)
+
+		for _, seed := range seeds {
+			if seed.Type != seedType {
+				return fmt.Errorf("all seeds must be of the same type")
+			}
+			if seed.Type == model.SelectorTypeCypher {
+				if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
+					return fmt.Errorf("cypher is invalid: %v", err)
+				}
 			}
 		}
 	}
@@ -85,6 +89,96 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		selUpdateReq  model.AssetGroupTagSelector
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagSelectorId, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		// we can update DisabledAt on a default selector
+		if selUpdateReq.DisabledAt.Valid {
+			if selector.AllowDisable {
+				selector.DisabledAt = selUpdateReq.DisabledAt
+				if selector.DisabledAt.Time.IsZero() {
+					// clear DisabledBy if DisabledAt is set to zero
+					selector.DisabledBy = null.String{}
+				} else {
+					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				}
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
+				return
+			}
+		}
+
+		// we can update AutoCertify on a default selector
+		if selUpdateReq.AutoCertify.Valid {
+			selector.AutoCertify = selUpdateReq.AutoCertify
+		}
+
+		if selUpdateReq.Name != "" {
+			if !selector.IsDefault {
+				selector.Name = selUpdateReq.Name
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update name on a default selector", request), response)
+				return
+			}
+		}
+
+		if selUpdateReq.Description != "" {
+			if !selector.IsDefault {
+				selector.Description = selUpdateReq.Description
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update description on a default selector", request), response)
+				return
+			}
+		}
+
+		// if seeds are not included, call the DB update with them set to nil
+		var seedsTemp []model.SelectorSeed
+		if len(selUpdateReq.Seeds) > 0 {
+			if !selector.IsDefault {
+				selector.Seeds = selUpdateReq.Seeds
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update seeds on a default selector", request), response)
+				return
+			}
+		} else {
+			// the DB update function will skip updating the seeds in this case
+			seedsTemp = selector.Seeds
+			selector.Seeds = nil
+		}
+
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), selector); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if seedsTemp != nil {
+				// seeds were unchanged, set them back to what is stored in the db for the response
+				selector.Seeds = seedsTemp
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
+		}
 	}
 }
 

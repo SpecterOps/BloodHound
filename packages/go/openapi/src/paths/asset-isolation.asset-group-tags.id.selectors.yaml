@@ -53,7 +53,7 @@ get:
                   selectors:
                     type: array
                     items:
-                      $ref: './../schemas/model.asset-group-tags-selector.yaml'
+                      $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -77,19 +77,18 @@ post:
     - Community
     - Enterprise
   requestBody:
-    description: The request body for creating an asset group tag selector
+    description: The request body for creating an asset group tag selector. Only the name and seeds fields are required. 
     required: true
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            name:
-              type: string
-            seeds:
-              type: array
-              items:
-                $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
+          allOf: 
+            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
+            - type: object 
+              required: 
+                - name
+                - seeds
+
   responses:
     201:
       description: Created
@@ -99,7 +98,7 @@ post:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.asset-group-tags-selector.yaml'
+                $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
 
     400:
       $ref: './../responses/bad-request.yaml'

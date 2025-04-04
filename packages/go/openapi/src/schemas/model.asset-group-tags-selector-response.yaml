@@ -15,6 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 allOf:
+  - $ref: './model.asset-group-tags-selector-request.yaml'
   - type: object
     properties:
       id:
@@ -35,12 +36,6 @@ allOf:
         $ref: './null.time.yaml'
       disabled_by:
         $ref: './null.string.yaml'
-      name:
-        type: string
-      description:
-        type: string
-      auto_certify:
-        type: boolean
       is_default:
         type: boolean
       allow_disable:
@@ -48,4 +43,4 @@ allOf:
       seeds:
         type: array
         items:
-          $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
+          $ref: './../schemas/model.asset-group-tags-selector-seed-response.yaml'
