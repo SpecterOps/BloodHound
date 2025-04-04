@@ -17,3 +17,5 @@
 module github.com/specterops/bloodhound/bhlog
 
 go 1.23
+
+require github.com/peterldowns/pgtestdb v0.1.1
