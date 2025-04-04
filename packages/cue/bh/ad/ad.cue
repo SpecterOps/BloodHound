@@ -942,6 +942,12 @@ ClientAllowedNTLMServers: types.#StringEnum & {
 	representation: "clientallowedntlmservers"
 }
 
+Transitive: types.#StringEnum & {
+	symbol: "Transitive"
+	schema: "ad"
+	name:"Is Transitive"
+	representation: "transitive"
+}
 
 Properties: [
 	AdminCount,
@@ -1071,6 +1077,7 @@ Properties: [
 	LMCompatibilityLevel,
 	UseMachineID,
 	ClientAllowedNTLMServers,
+	Transitive
 ]
 
 // Kinds

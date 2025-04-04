@@ -452,6 +452,7 @@ export enum ActiveDirectoryKindProperties {
     LMCompatibilityLevel = 'lmcompatibilitylevel',
     UseMachineID = 'usemachineid',
     ClientAllowedNTLMServers = 'clientallowedntlmservers',
+    Transitive = 'transitive',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -709,6 +710,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Use Machine ID';
         case ActiveDirectoryKindProperties.ClientAllowedNTLMServers:
             return 'Client Allowed NTLM Servers';
+        case ActiveDirectoryKindProperties.Transitive:
+            return 'Is Transitive';
         default:
             return undefined;
     }

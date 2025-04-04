@@ -666,23 +666,43 @@ func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []
 	return relationships
 }
 
+// ParseDomainTrusts converts the marshalled value of the domain's trust attributes to a valid int or nil
+// and sets the trust relationships for the domain
 func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 	parsedData := ParsedDomainTrustData{}
+
 	for _, trust := range domain.Trusts {
-		var finalTrustAttributes int
+		var (
+			convertedTrustAttributes int
+			invalidTrustAttribute    bool
+			finalTrustAttributes     any
+		)
+
+		// The type of the TrustAttributes is decided during decoding due to the `any` type usage
+		// We need to switch on the type and convert it to an int, or nil when there was an error parsing the value
 		switch converted := trust.TrustAttributes.(type) {
 		case string:
 			if i, err := strconv.Atoi(converted); err != nil {
-				slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
-				finalTrustAttributes = 0
+				slog.Warn(fmt.Sprintf("Error converting trust attributes with a string value of %s to an int", converted))
+				invalidTrustAttribute = true
 			} else {
-				finalTrustAttributes = i
+				convertedTrustAttributes = i
 			}
 		case int:
-			finalTrustAttributes = converted
+			convertedTrustAttributes = converted
+		case float32:
+			convertedTrustAttributes = int(converted)
+		case float64:
+			convertedTrustAttributes = int(converted)
 		default:
-			slog.Error(fmt.Sprintf("Error converting trust attributes %s to int", converted))
-			finalTrustAttributes = 0
+			slog.Warn(fmt.Sprintf("Unexpected trust attributes type of %T, failed to convert to an int", converted))
+			invalidTrustAttribute = true
+		}
+
+		if invalidTrustAttribute {
+			finalTrustAttributes = nil
+		} else {
+			finalTrustAttributes = convertedTrustAttributes
 		}
 
 		parsedData.ExtraNodeProps = append(parsedData.ExtraNodeProps, IngestibleNode{
@@ -704,12 +724,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						ad.IsACL.String():      false,
-						"sidfiltering":         trust.SidFilteringEnabled,
-						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      finalTrustAttributes,
-						"trusttype":            trust.TrustType,
-						"transitive":           trust.IsTransitive},
+						ad.IsACL.String():                false,
+						ad.SidFiltering.String():         trust.SidFilteringEnabled,
+						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
+						ad.TrustAttributes.String():      finalTrustAttributes,
+						ad.TrustType.String():            trust.TrustType,
+						ad.Transitive.String():           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))
@@ -727,12 +747,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
-						ad.IsACL.String():      false,
-						"sidfiltering":         trust.SidFilteringEnabled,
-						"tgtdelegationenabled": trust.TGTDelegationEnabled,
-						"trustattributes":      finalTrustAttributes,
-						"trusttype":            trust.TrustType,
-						"transitive":           trust.IsTransitive},
+						ad.IsACL.String():                false,
+						ad.SidFiltering.String():         trust.SidFilteringEnabled,
+						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
+						ad.TrustAttributes.String():      finalTrustAttributes,
+						ad.TrustType.String():            trust.TrustType,
+						ad.Transitive.String():           trust.IsTransitive},
 					RelType: ad.TrustedBy,
 				},
 			))
