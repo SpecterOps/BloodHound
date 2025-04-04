@@ -47,6 +47,8 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 		err           error
 	)
 
+	slog.WarnContext(request.Context(), fmt.Sprint(payload))
+
 	if err := api.ReadJSONRequestPayloadLimited(&payload, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "JSON malformed.", request), response)
 		return
