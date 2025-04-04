@@ -63,6 +63,10 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.ExtendedByPolicy,
 		ad.Owns,
 		ad.WriteOwner,
+		ad.CoerceAndRelayNTLMToADCS,
+		ad.CoerceAndRelayNTLMToSMB,
+		ad.CoerceAndRelayNTLMToLDAP,
+		ad.CoerceAndRelayNTLMToLDAPS,
 	}
 }
 
