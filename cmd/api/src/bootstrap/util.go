@@ -96,7 +96,7 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 		slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
 		connectionString = cfg.Database.PostgreSQLConnectionString()
 
-		pool, err = tools.NewPool(connectionString)
+		pool, err = pg.NewPool(connectionString)
 		if err != nil {
 			return nil, err
 		}

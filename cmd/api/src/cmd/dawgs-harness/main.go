@@ -36,7 +36,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
 )
 
@@ -52,7 +51,7 @@ func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.T
 	)
 
 	if driverName == pg.DriverName {
-		pool, err = tools.NewPool(connectionStr)
+		pool, err = pg.NewPool(connectionStr)
 		if err != nil {
 			fatalf("Failed creating a new pgxpool: %s", err)
 		}

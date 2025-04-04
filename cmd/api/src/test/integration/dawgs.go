@@ -23,7 +23,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -48,7 +47,7 @@ func OpenGraphDB(testCtrl test.Controller, schema graph.Schema) graph.Database {
 
 	switch cfg.GraphDriver {
 	case pg.DriverName:
-		pool, err := tools.NewPool(cfg.Database.PostgreSQLConnectionString())
+		pool, err := pg.NewPool(cfg.Database.PostgreSQLConnectionString())
 		test.RequireNilErrf(testCtrl, err, "Failed to create new pgx pool: %v", err)
 		graphDatabase, err = dawgs.Open(context.TODO(), cfg.GraphDriver, dawgs.Config{
 			ConnectionString: cfg.Database.PostgreSQLConnectionString(),

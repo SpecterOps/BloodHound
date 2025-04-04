@@ -28,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
@@ -45,7 +44,7 @@ func Test_ResetDB(t *testing.T) {
 	cfg, err := utils.LoadIntegrationTestConfig()
 	require.Nil(t, err)
 
-	pool, err := tools.NewPool(cfg.Database.PostgreSQLConnectionString())
+	pool, err := pg.NewPool(cfg.Database.PostgreSQLConnectionString())
 	require.Nil(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
@@ -88,7 +87,7 @@ func TestPG(t *testing.T) {
 	cfg, err := utils.LoadIntegrationTestConfig()
 	require.Nil(t, err)
 
-	pool, err := tools.NewPool(cfg.Database.PostgreSQLConnectionString())
+	pool, err := pg.NewPool(cfg.Database.PostgreSQLConnectionString())
 	require.Nil(t, err)
 
 	graphDB, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{

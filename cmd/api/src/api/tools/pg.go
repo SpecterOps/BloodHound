@@ -22,13 +22,9 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
-	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/cypher/models/pgsql"
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
@@ -44,10 +40,6 @@ const (
 	StateIdle      MigratorState = "idle"
 	StateMigrating MigratorState = "migrating"
 	StateCanceling MigratorState = "canceling"
-)
-
-const (
-	poolInitConnectionTimeout = time.Second * 10
 )
 
 func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
@@ -456,7 +448,7 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 }
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
-	if pool, err := NewPool(s.Cfg.Database.PostgreSQLConnectionString()); err != nil {
+	if pool, err := pg.NewPool(s.Cfg.Database.PostgreSQLConnectionString()); err != nil {
 		return nil, err
 	} else {
 		return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
@@ -472,62 +464,4 @@ func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 		GraphQueryMemoryLimit: size.Gibibyte,
 		ConnectionString:      s.Cfg.Neo4J.Neo4jConnectionString(),
 	})
-}
-
-func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {
-	for _, dataType := range pgsql.CompositeTypes {
-		if definition, err := conn.LoadType(ctx, dataType.String()); err != nil {
-			if !pg.StateObjectDoesNotExist.ErrorMatches(err) {
-				return fmt.Errorf("failed to match composite type %s to database: %w", dataType, err)
-			}
-		} else {
-			conn.TypeMap().RegisterType(definition)
-		}
-	}
-
-	return nil
-}
-
-func afterPooledConnectionRelease(conn *pgx.Conn) bool {
-	for _, dataType := range pgsql.CompositeTypes {
-		if _, hasType := conn.TypeMap().TypeForName(dataType.String()); !hasType {
-			// This connection should be destroyed since it does not contain information regarding the schema's
-			// composite types
-			slog.Warn(fmt.Sprintf("Unable to find expected data type: %s. This database connection will not be pooled.", dataType))
-			return false
-		}
-	}
-
-	return true
-}
-
-func NewPool(connectionString string) (*pgxpool.Pool, error) {
-	if connectionString == "" {
-		return nil, fmt.Errorf("graph connection requires a connection url to be set")
-	}
-
-	poolCtx, done := context.WithTimeout(context.Background(), poolInitConnectionTimeout)
-	defer done()
-
-	poolCfg, err := pgxpool.ParseConfig(connectionString)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Min and Max connections for the pool should be configurable
-	poolCfg.MinConns = 5
-	poolCfg.MaxConns = 50
-
-	// Bind functions to the AfterConnect and AfterRelease hooks to ensure that composite type registration occurs.
-	// Without composite type registration, the pgx connection type will not be able to marshal PG OIDs to their
-	// respective Golang structs.
-	poolCfg.AfterConnect = afterPooledConnectionEstablished
-	poolCfg.AfterRelease = afterPooledConnectionRelease
-
-	pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return pool, nil
 }
