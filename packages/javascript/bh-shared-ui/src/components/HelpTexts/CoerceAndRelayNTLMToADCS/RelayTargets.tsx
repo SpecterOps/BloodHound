@@ -40,7 +40,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onN
 
     return (
         <>
-            <Typography variant='body2'>The nodes in this list are valid relay targets for this attack</Typography>
+            <Typography variant='body2'>The nodes in this list are valid relay targets for this attack. Examine the node to view the list of vulnerable endpoints</Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
