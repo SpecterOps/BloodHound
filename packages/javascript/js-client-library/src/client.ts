@@ -19,6 +19,7 @@ import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupLabelResponse,
     AssetGroupMemberCountsResponse,
+    AssetGroupMemberInfoResponse,
     AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
@@ -132,6 +133,12 @@ class BHEAPIClient {
     getAssetGroupSelectors = (assetGroupId: number, options?: types.RequestOptions) =>
         this.baseClient.get<AssetGroupSelectorResponse>(
             `/api/v2/asset-group-labels/${assetGroupId}/selectors`,
+            options
+        );
+
+    getAssetGroupLabelMemberInfo = (assetGroupId: number, memberId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberInfoResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/members/${memberId}`,
             options
         );
 

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
@@ -23,55 +24,68 @@ import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../
 import { apiClient } from '../../../utils';
 import { Cypher } from '../Cypher';
 import { DetailsList } from './DetailsList';
+import DynamicDetails from './DynamicDetails';
+import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 import { MembersList } from './MembersList';
-
-const innerDetail = (
-    selectedObject: number | null,
-    selectedSelector: number | null,
-    selectedTier: number
-): SelectedDetailsProps => {
-    if (selectedObject !== null) return { id: selectedObject, type: 'object' };
-
-    if (selectedSelector !== null) return { id: selectedSelector, type: 'selector' };
-
-    return { id: selectedTier, type: 'tier' };
-};
+import ObjectCountPanel from './ObjectCountPanel';
 
 type SelectedDetailsProps = {
-    type: 'tier' | 'label' | 'selector' | 'object';
-    id: number;
     cypher?: boolean;
+    selectedTierId: number;
+    selectedSelectorId: number | null;
+    selectedObjectId: number | null;
+    selectedTier: AssetGroupTag | undefined;
+    selectedSelector: AssetGroupTagSelector | undefined;
+    selectedObject: AssetGroupTagSelectorNode | null;
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher }) => {
-    if (type === 'object')
-        return (
-            <>
-                <div>{`Object Info Panel - ${type}-${id}`}</div>
-            </>
-        );
+const isObject = (data: any): data is AssetGroupTagSelectorNode => {
+    const objectData = data || {};
+    return 'node_id' in objectData;
+};
 
-    if (type === 'selector') {
+const SelectedDetails: FC<SelectedDetailsProps> = ({
+    cypher,
+    selectedTierId,
+    selectedSelectorId,
+    selectedObjectId,
+    selectedTier,
+    selectedSelector,
+    selectedObject,
+}) => {
+    if (selectedObjectId !== null) {
+        if (isObject(selectedObject)) {
+            return (
+                <EntityInfoPanel
+                    selectedNode={selectedObject}
+                    selectedTag={selectedTierId}
+                    selectedObject={selectedObjectId}
+                />
+            );
+        }
+    }
+
+    if (selectedSelectorId !== null) {
         if (cypher)
             return (
                 <>
-                    <div>{`Dynamic Details - ${type}-${id}`}</div>
+                    <DynamicDetails data={selectedSelector} isCypher={cypher} />
                     <Cypher />
                 </>
             );
         else
             return (
                 <>
-                    <div>{`Dynamic Details - ${type}-${id}`}</div>
-                    <div>Object Count Panel</div>
+                    <DynamicDetails data={selectedSelector} />
+                    <ObjectCountPanel selectedTier={selectedTierId} />
                 </>
             );
     }
 
     return (
         <>
-            <div>{`Dynamic Details - ${type}-${id}`}</div>
-            <div>Object Count Panel</div>
+            <DynamicDetails data={selectedTier} />
+            <ObjectCountPanel selectedTier={selectedTierId} />
         </>
     );
 };
@@ -80,6 +94,7 @@ const Details: FC = () => {
     const [selectedTag, setSelectedTag] = useState(1);
     const [selectedSelector, setSelectedSelector] = useState<number | null>(null);
     const [selectedObject, setSelectedObject] = useState<number | null>(null);
+    const [selectedObjectData, setSelectedObjectData] = useState<AssetGroupTagSelectorNode | null>(null);
     const [showCypher, setShowCypher] = useState(false);
     const navigate = useNavigate();
 
@@ -110,8 +125,6 @@ const Details: FC = () => {
         selectedObject !== null ||
         (selectorsQuery.isLoading && labelsQuery.isLoading) ||
         (selectorsQuery.isError && labelsQuery.isError);
-
-    const { type, id } = innerDetail(selectedObject, selectedSelector, selectedTag);
 
     return (
         <div>
@@ -167,7 +180,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     <Button
                         onClick={() => {
-                            navigate(ROUTE_TIER_MANAGEMENT_EDIT, { state: { type: type, id: id } });
+                            navigate(ROUTE_TIER_MANAGEMENT_EDIT);
                         }}
                         variant={'secondary'}
                         disabled={disableEditButton}>
@@ -210,10 +223,11 @@ const Details: FC = () => {
                     </div>
                     <div>
                         <MembersList
-                            itemCount={objectsQuery.data}
-                            onClick={(id) => {
+                            itemCount={objectsQuery.data || 1000}
+                            onClick={(id, data) => {
                                 setSelectedObject(id);
                                 setShowCypher(false);
+                                setSelectedObjectData(data);
                             }}
                             selected={selectedObject}
                             selectedSelector={selectedSelector}
@@ -222,7 +236,15 @@ const Details: FC = () => {
                     </div>
                 </div>
                 <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails type={type} id={id} cypher={showCypher} />
+                    <SelectedDetails
+                        cypher={showCypher}
+                        selectedTierId={selectedTag}
+                        selectedSelectorId={selectedSelector}
+                        selectedObjectId={selectedObject}
+                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTag)}
+                        selectedSelector={selectorsQuery.data?.find((selector) => selector.id === selectedSelector)}
+                        selectedObject={selectedObjectData}
+                    />
                 </div>
             </div>
         </div>

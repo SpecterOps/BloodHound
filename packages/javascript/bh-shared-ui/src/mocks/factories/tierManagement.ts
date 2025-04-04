@@ -111,8 +111,39 @@ export const createSelectorNodes = (
             selector_id: selectorId || 0,
             node_id: i.toString(),
             id: i,
+            properties: { ...JSON.parse(faker.datatype.json()), name, objectid: i },
             certified: faker.datatype.number({ min: -1, max: 2 }) as AssetGroupTagCertifiedValues,
             certified_by: faker.internet.email(),
+            type: 'User',
+        });
+    }
+
+    return data;
+};
+
+export const createAssetGroupMembersCount = (selectorId: number = 0) => {
+    const data = {
+        id: selectorId,
+        total_count: faker.datatype.number(),
+        counts: {
+            User: faker.datatype.number(),
+            Computer: faker.datatype.number(),
+            Container: faker.datatype.number(),
+        },
+    };
+
+    return data;
+};
+
+export const createAssetGroupMemberInfo = (assetGroupId: number, memberId: number | undefined) => {
+    const data = [];
+
+    for (let i = 0; i < 10; i++) {
+        const name = `selector-${memberId && memberId + i}`;
+
+        data.push({
+            id: assetGroupId,
+            member_id: memberId || 0,
             name: name,
         });
     }
