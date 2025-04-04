@@ -87,22 +87,20 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
         relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
-        // react doesnt like this because it doesnt know the params needed for the function factory return function.
-        // but the params needed are not needed in the deps array
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setExploreParams: useCallback(
-            setParamsFactory(setSearchParams, [
-                'exploreSearchTab',
-                'primarySearch',
-                'secondarySearch',
-                'cypherSearch',
-                'searchType',
-                'expandedPanelSections',
-                'selectedItem',
-                'relationshipQueryType',
-                'relationshipQueryItemId',
-                'pathFilters',
-            ]),
+            (updatedParams: Partial<ExploreQueryParams>) =>
+                setParamsFactory(setSearchParams, [
+                    'exploreSearchTab',
+                    'primarySearch',
+                    'secondarySearch',
+                    'cypherSearch',
+                    'searchType',
+                    'expandedPanelSections',
+                    'selectedItem',
+                    'relationshipQueryType',
+                    'relationshipQueryItemId',
+                    'pathFilters',
+                ])(updatedParams),
             [setSearchParams]
         ),
     };

@@ -64,7 +64,7 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
  * @returns
  */
 export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availableParams: Array<keyof T>) => {
-    return (updatedParams: T) => {
+    return (updatedParams: Partial<T>) => {
         setSearchParams((params) => {
             const setParam = setSingleParamFactory(updatedParams, params);
 
