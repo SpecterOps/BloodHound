@@ -18,14 +18,22 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
+import { EdgeCheckboxType } from '../../..';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
-import { usePathfindingFilterSwitch } from './switches';
 
-const EdgeFilter = () => {
+export type PathfindingFilterState = {
+    selectedFilters: EdgeCheckboxType[];
+    initialize: () => void;
+    handleApplyFilters: () => void;
+    handleUpdateFilters: (checked: EdgeCheckboxType[]) => void;
+    handleCancelFilters: () => void;
+};
+
+export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState: PathfindingFilterState }) => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
     const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
-        usePathfindingFilterSwitch();
+        pathfindingFilterState;
 
     return (
         <>
@@ -54,5 +62,3 @@ const EdgeFilter = () => {
         </>
     );
 };
-
-export default EdgeFilter;

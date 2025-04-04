@@ -17,6 +17,7 @@
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
 import {
+    createPathFilterString,
     ExploreGraphQuery,
     ExploreGraphQueryError,
     ExploreGraphQueryKey,
@@ -26,7 +27,6 @@ import {
 } from './utils';
 
 // Only need to create our default filters once
-const createPathFilterString = (types: string[]) => `in:${types.join(',')}`;
 const DEFAULT_FILTERS = createPathFilterString(INITIAL_FILTER_TYPES);
 
 export const pathfindingSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {

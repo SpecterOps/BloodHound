@@ -36,10 +36,10 @@ import {
     ListItemText,
     SvgIcon,
     Typography,
+    useTheme,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from 'bh-shared-ui';
 import { useState } from 'react';
+import { AllEdgeTypes, Category, EdgeCheckboxType, Subcategory } from '../../../edgeTypes';
 
 interface EdgeFilteringDialogProps {
     selectedFilters: EdgeCheckboxType[];

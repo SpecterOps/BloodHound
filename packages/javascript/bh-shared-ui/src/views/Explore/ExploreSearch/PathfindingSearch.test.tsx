@@ -15,13 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { searchbarActions as actions } from 'bh-shared-ui';
+import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act } from 'react-dom/test-utils';
-import { render, screen } from 'src/test-utils';
+import { usePathfindingFilters, usePathfindingSearch } from '../../../hooks';
+import { act, render } from '../../../test-utils';
 import PathfindingSearch from './PathfindingSearch';
-import { usePathfindingSearchSwitch } from './switches';
 
 describe('Pathfinding: interaction', () => {
     const comboboxLookaheadOptions = {
@@ -58,22 +57,30 @@ describe('Pathfinding: interaction', () => {
     );
 
     const WrappedPathfindingSearch = () => {
-        const pathfindingSearchState = usePathfindingSearchSwitch();
-        return <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />;
+        const pathfindingSearchState = usePathfindingSearch();
+        const pathfindingFilterState = usePathfindingFilters();
+        return (
+            <PathfindingSearch
+                pathfindingSearchState={pathfindingSearchState}
+                pathfindingFilterState={pathfindingFilterState}
+            />
+        );
     };
 
-    beforeEach(async () => {
-        await act(async () => {
-            render(<WrappedPathfindingSearch />);
-        });
-    });
+    const setup = async () => {
+        const history = createMemoryHistory({ initialEntries: ['/'] });
+        const screen = await act(async () => render(<WrappedPathfindingSearch />, undefined, { history }));
+        const user = userEvent.setup();
+
+        return { screen, history, user };
+    };
 
     beforeAll(() => server.listen());
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
     it('when user performs a pathfinding search, the swap button is disabled until both the start and destination nodes are provided', async () => {
-        const user = userEvent.setup();
+        const { screen, user } = await setup();
 
         const swapButton = screen.getByRole('button', { name: /right-left/i });
         expect(swapButton).toBeDisabled();
@@ -92,7 +99,7 @@ describe('Pathfinding: interaction', () => {
     });
 
     it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
-        const user = userEvent.setup();
+        const { screen, user, history } = await setup();
 
         const swapButton = screen.getByRole('button', { name: /right-left/i });
         expect(swapButton).toBeDisabled();
@@ -105,53 +112,47 @@ describe('Pathfinding: interaction', () => {
         await user.type(destinationInput, 'computer');
         await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        expect(startInput).toHaveValue('admin1');
-        expect(destinationInput).toHaveValue('computer');
+        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
 
         await user.click(swapButton);
 
-        expect(startInput).toHaveValue('computer');
-        expect(destinationInput).toHaveValue('admin1');
+        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
+        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
     });
 
     it('executes a primary search when only a source node is provided', async () => {
-        const user = userEvent.setup();
-        const spy = vi.spyOn(actions, 'sourceNodeSelected');
+        const { screen, user, history } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0], false);
+        expect(history.location.search).toContain('searchType=node');
+        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
     });
 
     it('executes a pathfinding search when both a source and destination node are provided', async () => {
-        const user = userEvent.setup();
-        const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
-        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
+        const { screen, user, history } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin1');
-        await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
-        // doPathfindSearch is false because a destination is not yet selected
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledTimes(1);
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[0], false);
+        const startOption = await screen.findByRole('option', { name: /admin1/i });
+        await user.click(startOption);
+
+        // searchType is 'node' because a destination is not yet selected
+        expect(history.location.search).toContain('searchType=node');
+        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
         await user.type(destinationInput, 'computer');
-        await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        expect(destinationNodeSelectedSpy).toHaveBeenCalledTimes(1);
-        expect(destinationNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[2]);
+        const destinationOption = await screen.findByRole('option', { name: /computer/i });
+        await user.click(destinationOption);
 
-        await user.clear(startInput);
-        await user.type(startInput, 'admin2');
-        await user.click(await screen.findByRole('option', { name: /admin2/i }));
-
-        // doPathfindingSearch is true because destination has been selected
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledTimes(2);
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(comboboxLookaheadOptions.data[1], true);
+        expect(history.location.search).toContain('searchType=pathfinding');
+        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
     });
 });
