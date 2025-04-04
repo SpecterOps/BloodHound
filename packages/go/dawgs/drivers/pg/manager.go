@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/query"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -40,7 +41,7 @@ type KindMapper interface {
 func KindMapperFromGraphDatabase(graphDB graph.Database) (KindMapper, error) {
 	switch typedGraphDB := graphDB.(type) {
 	case *Driver:
-		return typedGraphDB.schemaManager, nil
+		return typedGraphDB.SchemaManager, nil
 	default:
 		return nil, fmt.Errorf("unsupported graph database type: %T", typedGraphDB)
 	}
@@ -48,7 +49,7 @@ func KindMapperFromGraphDatabase(graphDB graph.Database) (KindMapper, error) {
 
 type SchemaManager struct {
 	defaultGraph    model.Graph
-	database        graph.Database
+	pool            *pgxpool.Pool
 	hasDefaultGraph bool
 	graphs          map[string]model.Graph
 	kindsByID       map[graph.Kind]int16
@@ -56,14 +57,36 @@ type SchemaManager struct {
 	lock            *sync.RWMutex
 }
 
-func NewSchemaManager(database graph.Database) *SchemaManager {
+func NewSchemaManager(pool *pgxpool.Pool) *SchemaManager {
 	return &SchemaManager{
-		database:        database,
+		pool:            pool,
 		hasDefaultGraph: false,
 		graphs:          map[string]model.Graph{},
 		kindsByID:       map[graph.Kind]int16{},
 		kindIDsByKind:   map[int16]graph.Kind{},
 		lock:            &sync.RWMutex{},
+	}
+}
+
+func (s *SchemaManager) WriteTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+	if cfg, err := renderConfig(batchWriteSize, readWriteTxOptions, options); err != nil {
+		return err
+	} else if conn, err := s.pool.Acquire(ctx); err != nil {
+		return err
+	} else {
+		defer conn.Release()
+
+		if tx, err := newTransactionWrapper(ctx, conn, s, cfg, true); err != nil {
+			return err
+		} else {
+			defer tx.Close()
+
+			if err := txDelegate(tx); err != nil {
+				return err
+			}
+
+			return tx.Commit()
+		}
 	}
 }
 
@@ -88,7 +111,7 @@ func (s *SchemaManager) GetKindIDsByKind() map[int16]graph.Kind {
 }
 
 func (s *SchemaManager) Fetch(ctx context.Context) error {
-	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		return s.fetch(tx)
 	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }
@@ -168,6 +191,23 @@ func (s *SchemaManager) MapKinds(ctx context.Context, kinds graph.Kinds) ([]int1
 		return nil, fmt.Errorf("unable to map kinds: %s", strings.Join(missingKinds.Strings(), ", "))
 	}
 }
+func (s *SchemaManager) ReadTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+	if cfg, err := renderConfig(batchWriteSize, readOnlyTxOptions, options); err != nil {
+		return err
+	} else if conn, err := s.pool.Acquire(ctx); err != nil {
+		return err
+	} else {
+		defer conn.Release()
+
+		return txDelegate(&transaction{
+			schemaManager:   s,
+			queryExecMode:   cfg.QueryExecMode,
+			ctx:             ctx,
+			conn:            conn,
+			targetSchemaSet: false,
+		})
+	}
+}
 
 func (s *SchemaManager) mapKindIDs(kindIDs []int16) (graph.Kinds, []int16) {
 	var (
@@ -225,7 +265,7 @@ func (s *SchemaManager) assertKinds(ctx context.Context, kinds graph.Kinds) ([]i
 	// We have to re-acquire the missing kinds since there's a potential for another writer to acquire the write-lock
 	// in between release of the read-lock and acquisition of the write-lock for this operation
 	if _, missingKinds := s.mapKinds(kinds); len(missingKinds) > 0 {
-		if err := s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if err := s.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			return s.defineKinds(tx, missingKinds)
 		}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol)); err != nil {
 			return nil, err
@@ -268,7 +308,7 @@ func (s *SchemaManager) setDefaultGraph(defaultGraph model.Graph, schema graph.G
 }
 
 func (s *SchemaManager) SetDefaultGraph(ctx context.Context, schema graph.Graph) error {
-	return s.database.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	return s.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		// Validate the schema if the graph already exists in the database
 		if graphModel, err := query.On(tx).SelectGraphByName(schema.Name); err != nil {
 			return err
@@ -280,7 +320,7 @@ func (s *SchemaManager) SetDefaultGraph(ctx context.Context, schema graph.Graph)
 }
 
 func (s *SchemaManager) AssertDefaultGraph(ctx context.Context, schema graph.Graph) error {
-	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if graphModel, err := s.AssertGraph(tx, schema); err != nil {
 			return err
 		} else {
@@ -379,7 +419,7 @@ func (s *SchemaManager) AssertSchema(ctx context.Context, schema graph.Schema) e
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	return s.database.WriteTransaction(ctx, func(tx graph.Transaction) error {
+	return s.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		return s.assertSchema(tx, schema)
 	}, OptionSetQueryExecMode(pgx.QueryExecModeSimpleProtocol))
 }

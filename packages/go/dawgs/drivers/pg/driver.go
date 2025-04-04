@@ -19,7 +19,6 @@ package pg
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,6 +26,7 @@ import (
 )
 
 var (
+	batchWriteSize    = defaultBatchWriteSize
 	readOnlyTxOptions = pgx.TxOptions{
 		AccessMode: pgx.ReadOnly,
 	}
@@ -52,22 +52,27 @@ func OptionSetQueryExecMode(queryExecMode pgx.QueryExecMode) graph.TransactionOp
 }
 
 type Driver struct {
-	pool                      *pgxpool.Pool
-	schemaManager             *SchemaManager
-	defaultTransactionTimeout time.Duration
-	batchWriteSize            int
+	pool *pgxpool.Pool
+	*SchemaManager
+}
+
+func NewDriver(pool *pgxpool.Pool) *Driver {
+	return &Driver{
+		pool:          pool,
+		SchemaManager: NewSchemaManager(pool),
+	}
 }
 
 func (s *Driver) SetDefaultGraph(ctx context.Context, graphSchema graph.Graph) error {
-	return s.schemaManager.SetDefaultGraph(ctx, graphSchema)
+	return s.SchemaManager.SetDefaultGraph(ctx, graphSchema)
 }
 
 func (s *Driver) KindMapper() KindMapper {
-	return s.schemaManager
+	return s.SchemaManager
 }
 
 func (s *Driver) SetBatchWriteSize(size int) {
-	s.batchWriteSize = size
+	batchWriteSize = size
 }
 
 func (s *Driver) SetWriteFlushSize(size int) {
@@ -75,14 +80,14 @@ func (s *Driver) SetWriteFlushSize(size int) {
 }
 
 func (s *Driver) BatchOperation(ctx context.Context, batchDelegate graph.BatchDelegate) error {
-	if cfg, err := renderConfig(s.batchWriteSize, readWriteTxOptions, nil); err != nil {
+	if cfg, err := renderConfig(batchWriteSize, readWriteTxOptions, nil); err != nil {
 		return err
 	} else if conn, err := s.pool.Acquire(ctx); err != nil {
 		return err
 	} else {
 		defer conn.Release()
 
-		if batch, err := newBatch(ctx, conn, s.schemaManager, cfg); err != nil {
+		if batch, err := newBatch(ctx, conn, s.SchemaManager, cfg); err != nil {
 			return err
 		} else {
 			defer batch.Close()
@@ -126,46 +131,6 @@ func renderConfig(batchWriteSize int, pgxOptions pgx.TxOptions, userOptions []gr
 	return nil, fmt.Errorf("driver config is nil")
 }
 
-func (s *Driver) ReadTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-	if cfg, err := renderConfig(s.batchWriteSize, readOnlyTxOptions, options); err != nil {
-		return err
-	} else if conn, err := s.pool.Acquire(ctx); err != nil {
-		return err
-	} else {
-		defer conn.Release()
-
-		return txDelegate(&transaction{
-			schemaManager:   s.schemaManager,
-			queryExecMode:   cfg.QueryExecMode,
-			ctx:             ctx,
-			conn:            conn,
-			targetSchemaSet: false,
-		})
-	}
-}
-
-func (s *Driver) WriteTransaction(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-	if cfg, err := renderConfig(s.batchWriteSize, readWriteTxOptions, options); err != nil {
-		return err
-	} else if conn, err := s.pool.Acquire(ctx); err != nil {
-		return err
-	} else {
-		defer conn.Release()
-
-		if tx, err := newTransactionWrapper(ctx, conn, s.schemaManager, cfg, true); err != nil {
-			return err
-		} else {
-			defer tx.Close()
-
-			if err := txDelegate(tx); err != nil {
-				return err
-			}
-
-			return tx.Commit()
-		}
-	}
-}
-
 func (s *Driver) FetchSchema(ctx context.Context) (graph.Schema, error) {
 	// TODO: This is not required for existing functionality as the SchemaManager type handles most of this negotiation
 	//		 however, in the future this function would make it easier to make schema management generic and should be
@@ -178,13 +143,13 @@ func (s *Driver) AssertSchema(ctx context.Context, schema graph.Schema) error {
 	defer s.pool.Reset()
 
 	// Assert that the base graph schema exists and has a matching schema definition
-	if err := s.schemaManager.AssertSchema(ctx, schema); err != nil {
+	if err := s.SchemaManager.AssertSchema(ctx, schema); err != nil {
 		return err
 	}
 
 	if schema.DefaultGraph.Name != "" {
 		// There's a default graph defined. Assert that it exists and has a matching schema
-		if err := s.schemaManager.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
+		if err := s.SchemaManager.AssertDefaultGraph(ctx, schema.DefaultGraph); err != nil {
 			return err
 		}
 	}
@@ -203,7 +168,7 @@ func (s *Driver) Run(ctx context.Context, query string, parameters map[string]an
 
 func (s *Driver) FetchKinds(_ context.Context) (graph.Kinds, error) {
 	var kinds graph.Kinds
-	for _, kind := range s.schemaManager.GetKindIDsByKind() {
+	for _, kind := range s.SchemaManager.GetKindIDsByKind() {
 		kinds = append(kinds, kind)
 	}
 

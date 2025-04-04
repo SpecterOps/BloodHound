@@ -83,7 +83,12 @@ func migrateTypes(ctx context.Context, neoDB, pgDB graph.Database) error {
 		return err
 	}
 
-	_, err := pgDB.(*pg.Driver).KindMapper().AssertKinds(ctx, append(neoNodeKinds, neoEdgeKinds...))
+	driver, ok := pgDB.(*pg.Driver)
+	if !ok {
+		return fmt.Errorf("current graph database is not a pg driver")
+	}
+
+	_, err := driver.KindMapper().AssertKinds(ctx, append(neoNodeKinds, neoEdgeKinds...))
 	return err
 }
 
@@ -443,15 +448,20 @@ func (s *PGMigrator) MigrationStatus(response http.ResponseWriter, request *http
 }
 
 func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
-	return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
-		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.Cfg.Database.PostgreSQLConnectionString(),
-	})
+	if pool, err := pg.NewPool(s.Cfg.Database.PostgreSQLConnectionString()); err != nil {
+		return nil, err
+	} else {
+		return dawgs.Open(s.ServerCtx, pg.DriverName, dawgs.Config{
+			GraphQueryMemoryLimit: size.Gibibyte,
+			ConnectionString:      s.Cfg.Database.PostgreSQLConnectionString(),
+			Pool:                  pool,
+		})
+	}
 }
 
 func (s *PGMigrator) OpenNeo4jGraphConnection() (graph.Database, error) {
 	return dawgs.Open(s.ServerCtx, neo4j.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             s.Cfg.Neo4J.Neo4jConnectionString(),
+		ConnectionString:      s.Cfg.Neo4J.Neo4jConnectionString(),
 	})
 }

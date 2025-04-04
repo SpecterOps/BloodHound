@@ -53,7 +53,7 @@ func (s *GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		sql, _ := fc()
 
-		slog.ErrorContext(ctx, "Database error", "query", sql, "error", err)
+		slog.ErrorContext(ctx, "Database error", "query", sql, "err", err)
 	} else {
 		elapsed := time.Since(begin)
 
