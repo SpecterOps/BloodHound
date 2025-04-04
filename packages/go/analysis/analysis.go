@@ -19,10 +19,8 @@ package analysis
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -54,46 +52,12 @@ func NewCompositionCounter() CompositionCounter {
 	}
 }
 
-func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
-	var (
-		filters = []graph.Criteria{
-			query.IsNotNull(query.NodeProperty(common.SystemTags.String())),
-		}
-	)
-
-	if additionalFilter != nil {
-		filters = append(filters, additionalFilter)
-	}
-
-	return query.And(filters...)
-}
-
 func GetNodeKindDisplayLabel(node *graph.Node) string {
 	return GetNodeKind(node).String()
 }
 
 func GetNodeKind(node *graph.Node) graph.Kind {
 	return graphschema.PrimaryNodeKind(node.Kinds)
-}
-
-func ClearSystemTags(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ClearSystemTagsIncludeMeta")()
-
-	var (
-		props = graph.NewProperties()
-	)
-
-	props.Delete(common.SystemTags.String())
-
-	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if ids, err := ops.FetchNodeIDs(tx.Nodes().Filter(AllTaggedNodesFilter(nil))); err != nil {
-			return err
-		} else {
-			return tx.Nodes().Filterf(func() graph.Criteria {
-				return query.InIDs(query.NodeID(), ids...)
-			}).Update(props)
-		}
-	})
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
