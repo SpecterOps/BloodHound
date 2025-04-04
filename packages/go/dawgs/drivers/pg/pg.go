@@ -18,7 +18,6 @@ package pg
 
 import (
 	"context"
-	"time"
 
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,7 +26,6 @@ import (
 const (
 	DriverName = "pg"
 
-	defaultTransactionTimeout = time.Minute * 15
 	// defaultBatchWriteSize is currently set to 2k. This is meant to strike a balance between the cost of thousands
 	// of round-trips against the cost of locking tables for too long.
 	defaultBatchWriteSize = 2_000
@@ -35,6 +33,6 @@ const (
 
 func init() {
 	dawgs.Register(DriverName, func(ctx context.Context, cfg dawgs.Config) (graph.Database, error) {
-		return NewDriver(cfg.Pool, defaultTransactionTimeout, defaultBatchWriteSize), nil
+		return NewDriver(cfg.Pool), nil
 	})
 }
