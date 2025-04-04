@@ -22,6 +22,7 @@ export enum LuxonFormat {
     DATETIME = "yyyy-MM-dd T ZZZZ '(GMT'ZZZ')'",
     DATETIME_WITHOUT_TIMEZONE = 'yyyy-MM-dd T',
     ISO_8601 = 'yyyy-MM-dd',
+    ISO_8601D = 'yyyy.MM.dd',
     TIMEZONE_AND_GMT_OFFSET = "ZZZZ '(GMT'ZZZ')'",
     TIME = "T ZZZZ' (GMT'ZZZ')'",
     DATETIME_WITH_LINEBREAKS = "yyyy-MM-dd '\n'T ZZZZ\n'(GMT'ZZZ')'",
