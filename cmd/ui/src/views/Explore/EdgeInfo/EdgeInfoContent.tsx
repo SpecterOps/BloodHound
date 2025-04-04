@@ -167,7 +167,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetId={targetNode.objectId}
                                         haslaps={!!targetNodeProperties?.haslaps}
                                         onNodeClick={
-                                            section[0] === 'relaytargets' ? handleRelayTargetsItemClick : undefined
+                                            section[0] === 'relaytargets' || section[0] === 'coerciontargets' ? handleRelayTargetsItemClick : undefined
                                         }
                                     />
                                 </EdgeInfoCollapsibleSection>
