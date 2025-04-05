@@ -7,6 +7,23 @@
     },
     "data": [
         {
+            "GPOChanges": {
+                "LocalAdmins": [
+                   {
+                        "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-2116",
+                        "ObjectType": "User"
+                   }
+                ],
+                "RemoteDesktopUsers": [],
+                "DcomUsers": [],
+                "PSRemoteUsers": [],
+                "AffectedComputers": [
+                    {
+                        "ObjectIdentifier": "S-1-5-21-3130019616-2776909439-2417379446-1104",
+                        "ObjectType": "Computer"
+                    }
+                ]
+            },
             "Properties": {
                 "domain": "TESTLAB.LOCAL",
                 "name": "DOMAIN CONTROLLERS@TESTLAB.LOCAL",

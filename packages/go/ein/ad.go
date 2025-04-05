@@ -29,6 +29,11 @@ import (
 	"github.com/specterops/bloodhound/slicesext"
 )
 
+type LocalGroup struct {
+	RID     string
+	Members []TypedPrincipal
+}
+
 func ConvertSessionObject(session Session) IngestibleSession {
 	return IngestibleSession{
 		Source:    session.ComputerSID,
@@ -644,6 +649,68 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 
 	return relationships
 }
+
+func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
+	parsedData := ParsedLocalGroupData{}
+
+	groups := []LocalGroup{
+		{"544", changes.LocalAdmins},
+		{"555", changes.RemoteDesktopUsers},
+		{"562", changes.DcomUsers},
+		{"580", changes.PSRemoteUsers},
+	}
+
+	for _, computer := range changes.AffectedComputers {
+		for _, group := range groups {
+			groupID := computer.ObjectIdentifier + "-" + group.RID
+			if len(group.Members) > 0 {
+				parsedData.Nodes = append(parsedData.Nodes, IngestibleNode{
+					ObjectID: groupID,
+					// TODO: look up computer name?
+					PropertyMap: map[string]any{
+						"name": groupID,
+					},
+					Label: ad.LocalGroup,
+				})
+
+				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     groupID,
+						SourceType: ad.LocalGroup,
+					},
+					IngestibleTarget{
+						Target:     computer.ObjectIdentifier,
+						TargetType: ad.Computer,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): false},
+						RelType:  ad.LocalToComputer,
+					},
+				))
+			}
+
+			for _, member := range group.Members {
+				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     member.ObjectIdentifier,
+						SourceType: member.Kind(),
+					},
+					IngestibleTarget{
+						Target:     groupID,
+						TargetType: ad.LocalGroup,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{ad.IsACL.String(): false},
+						RelType:  ad.MemberOfLocalGroup,
+					},
+				))
+			}
+		}
+	}
+
+	return parsedData
+}
+
 func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0, len(links))
 	for _, gpLink := range links {
