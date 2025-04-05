@@ -88,6 +88,17 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 			} else {
 				resp.Counts.Selectors = selectorCounts
 			}
+			memberCounts := make(map[int]int, len(tags))
+			for _, tag := range tags {
+				// TODO: use a more efficient query method
+				if nodelist, err := s.GraphQuery.GetNodesByKind(request.Context(), tag.ToKind()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else {
+					memberCounts[tag.ID] = nodelist.Len()
+				}
+			}
+			resp.Counts.Members = memberCounts
 		}
 		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 	}
