@@ -18,6 +18,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -29,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
@@ -38,6 +40,69 @@ const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
 	ErrInvalidSelectorType    = "invalid selector type"
 )
+
+type GetAssetGroupTagsResponse struct {
+	AssetGroupTags model.AssetGroupTags `json:"asset_group_tags"`
+	Counts         struct {
+		Selectors map[int]int `json:"selectors"`
+		Members   map[int]int `json:"members"`
+	} `json:"counts,omitempty"`
+}
+
+func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
+	const (
+		pnameTagType       = "type"
+		pnameIncludeCounts = "includeCounts"
+	)
+	var (
+		pvalsTagType = map[string]model.AssetGroupTagType{
+			strconv.Itoa(int(model.AssetGroupTagTypeLabel)): model.AssetGroupTagTypeLabel,
+			strconv.Itoa(int(model.AssetGroupTagTypeTier)):  model.AssetGroupTagTypeTier,
+			"": model.AssetGroupTagTypeAll, // default
+		}
+		pvalsIncludeCounts = map[string]bool{
+			"false": false,
+			"true":  true,
+			"":      false, // default
+		}
+	)
+
+	var params = request.URL.Query()
+
+	if paramTagType, ok := pvalsTagType[params.Get(pnameTagType)]; !ok {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for tag type", request), response)
+	} else if paramIncludeCounts, ok := pvalsIncludeCounts[params.Get(pnameIncludeCounts)]; !ok {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), paramTagType); err != nil && !errors.Is(err, database.ErrNotFound) {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		resp := GetAssetGroupTagsResponse{AssetGroupTags: tags}
+		if paramIncludeCounts {
+			ids := make([]int, 0, len(tags))
+			for i := range tags {
+				ids = append(ids, tags[i].ID)
+			}
+			if selectorCounts, err := s.DB.GetAssetGroupTagSelectorCounts(request.Context(), ids); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else {
+				resp.Counts.Selectors = selectorCounts
+			}
+			memberCounts := make(map[int]int, len(tags))
+			for _, tag := range tags {
+				// TODO: use a more efficient query method
+				if nodelist, err := s.GraphQuery.GetNodesByKind(request.Context(), tag.ToKind()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				} else {
+					memberCounts[tag.ID] = nodelist.Len()
+				}
+			}
+			resp.Counts.Members = memberCounts
+		}
+		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
+	}
+}
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {

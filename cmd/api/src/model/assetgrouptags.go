@@ -39,6 +39,7 @@ const (
 type AssetGroupTagType int
 
 const (
+	AssetGroupTagTypeAll   AssetGroupTagType = 0
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
 )
@@ -58,6 +59,8 @@ type AssetGroupTag struct {
 	Position       null.Int32        `json:"position"`
 	RequireCertify null.Bool         `json:"require_certify"`
 }
+
+type AssetGroupTags []AssetGroupTag
 
 func (AssetGroupTag) TableName() string {
 	return "asset_group_tags"

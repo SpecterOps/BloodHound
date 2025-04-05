@@ -33,11 +33,13 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
+	GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
 
@@ -98,6 +100,52 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 	}
 }
 
+func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error) {
+	var tags model.AssetGroupTags
+	if tagType == model.AssetGroupTagTypeAll {
+		if result := s.db.WithContext(ctx).Raw(
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+		).Find(&tags); result.Error != nil {
+			return model.AssetGroupTags{}, CheckError(result)
+		}
+	} else {
+		if result := s.db.WithContext(ctx).Raw(
+			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
+			tagType,
+		).Find(&tags); result.Error != nil {
+			return model.AssetGroupTags{}, CheckError(result)
+		}
+	}
+	return tags, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error) {
+	var counts = make(map[int]int, len(tagIds))
+	// initalize values to 0 for any ids that end up with no rows
+	for _, i := range tagIds {
+		counts[i] = 0
+	}
+	if rows, err := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf("SELECT asset_group_tag_id, COUNT(*) FROM %s WHERE asset_group_tag_id IN (?) AND disabled_at IS NULL GROUP BY asset_group_tag_id", model.AssetGroupTagSelector{}.TableName()),
+		tagIds,
+	).Rows(); err != nil {
+		return map[int]int{}, err
+	} else {
+		defer rows.Close()
+		var id, val int
+		for rows.Next() {
+			if err := rows.Scan(&id, &val); err != nil {
+				return map[int]int{}, err
+			}
+			counts[id] = val
+		}
+		if err := rows.Err(); err != nil {
+			return map[int]int{}, err
+		}
+	}
+	return counts, nil
+}
+
 func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
 	var (
 		tag = model.AssetGroupTag{
@@ -115,6 +163,10 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
+
+	if tagType == model.AssetGroupTagTypeAll {
+		return model.AssetGroupTag{}, fmt.Errorf("'AssetGroupTagTypeAll' is not valid for create")
+	}
 
 	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
@@ -156,11 +208,14 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 		selectorSeedSqlFilterStr = " WHERE " + selectorSeedSqlFilter.SQLString
 	}
 
-	sqlStr := fmt.Sprintf(`WITH selectors
-  AS (SELECT  id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s),
-seeds
-  AS (SELECT selector_id, type, value FROM %s %s)
-SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY selectors.id`, model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
+	sqlStr := fmt.Sprintf(`
+		WITH selectors AS (
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
+		), seeds AS (
+			SELECT selector_id, type, value FROM %s %s
+		)
+		SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY selectors.id`,
+		model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
 
 	if rows, err := s.db.WithContext(ctx).Raw(sqlStr, append(append([]any{assetGroupTagId}, selectorSqlFilter.Params...), selectorSeedSqlFilter.Params...)...).Rows(); err != nil {
 		return model.AssetGroupTagSelectors{}, err

@@ -28,6 +28,7 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
@@ -42,6 +43,253 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func TestResources_GetAssetGroupTags(t *testing.T) {
+	const (
+		queryParamTagType       = "type"
+		queryParamIncludeCounts = "includeCounts"
+	)
+	var (
+		mockCtrl      = gomock.NewController(t)
+		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
+		resourcesInst = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+	)
+
+	defer mockCtrl.Finish()
+
+	apitest.
+		NewHarness(t, resourcesInst.GetAssetGroupTags).
+		Run([]apitest.Case{
+			{
+				Name: "InvalidTagType",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamTagType, "123456")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "InvalidIncludeCounts",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamIncludeCounts, "blah")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "DatabaseError",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTags{}, errors.New("failure"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "NoResults",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTags{}, database.ErrNotFound)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, model.AssetGroupTags{}, resp.AssetGroupTags)
+				},
+			},
+			{
+				Name: "TagTypeLabel",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamTagType, "2") // model.AssetGroupTagTypeLabel
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeLabel).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 2, len(resp.AssetGroupTags))
+					for _, t := range resp.AssetGroupTags {
+						apitest.Equal(output, model.AssetGroupTagTypeLabel, t.Type)
+					}
+				},
+			},
+			{
+				Name: "TagTypeTier",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamTagType, "1") // model.AssetGroupTagTypeTier
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeTier).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
+							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 2, len(resp.AssetGroupTags))
+					for _, t := range resp.AssetGroupTags {
+						apitest.Equal(output, model.AssetGroupTagTypeTier, t.Type)
+					}
+				},
+			},
+			{
+				Name: "TagTypeDefault",
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeTier},
+							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeTier},
+						}, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 4, len(resp.AssetGroupTags))
+					tierCount := 0
+					for _, t := range resp.AssetGroupTags {
+						if t.Type == model.AssetGroupTagTypeTier {
+							apitest.Equal(output, model.AssetGroupTagTypeTier, t.Type)
+							tierCount++
+						} else {
+							apitest.Equal(output, model.AssetGroupTagTypeLabel, t.Type)
+						}
+					}
+					apitest.Equal(output, 2, tierCount)
+				},
+			},
+			{
+				Name: "IncludeCounts Selector counts",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamIncludeCounts, "true")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
+							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
+							model.AssetGroupTag{ID: 3, Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 4, Type: model.AssetGroupTagTypeLabel},
+						}, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2, 3, 4}).
+						Return(map[int]int{
+							1: 5,
+							2: 10,
+							3: 0,
+							4: 8,
+						}, nil)
+					mockGraphDb.EXPECT().
+						GetNodesByKind(gomock.Any(), gomock.Any()).
+						Return(graph.EmptyNodeSet(), nil).Times(4)
+				},
+				Test: func(output apitest.Output) {
+					expectedCounts := map[int]int{
+						1: 5,
+						2: 10,
+						3: 0,
+						4: 8,
+					}
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 4, len(resp.AssetGroupTags))
+					apitest.Equal(output, 4, len(resp.Counts.Selectors))
+					for _, t := range resp.AssetGroupTags {
+						expCount, ok := expectedCounts[t.ID]
+						apitest.Equal(output, true, ok)
+						_, ok = resp.Counts.Selectors[t.ID]
+						apitest.Equal(output, true, ok)
+						apitest.Equal(output, expCount, resp.Counts.Selectors[t.ID])
+					}
+				},
+			},
+			{
+				Name: "IncludeCounts member counts",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, queryParamIncludeCounts, "true")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						Return(model.AssetGroupTags{
+							model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel},
+							model.AssetGroupTag{ID: 2, Name: "testtier", Type: model.AssetGroupTagTypeTier},
+						}, nil)
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorCounts(gomock.Any(), []int{1, 2}).
+						Return(map[int]int{
+							1: 1,
+							2: 1,
+						}, nil)
+					mockGraphDb.EXPECT().
+						GetNodesByKind(gomock.Any(), gomock.Any()).
+						Return(graph.NewNodeSet(
+							graph.NewNode(graph.ID(1), graph.NewProperties()),
+							graph.NewNode(graph.ID(2), graph.NewProperties()),
+							graph.NewNode(graph.ID(3), graph.NewProperties()),
+							graph.NewNode(graph.ID(4), graph.NewProperties()),
+							graph.NewNode(graph.ID(5), graph.NewProperties()),
+							graph.NewNode(graph.ID(6), graph.NewProperties()),
+						), nil).
+						Times(1)
+					mockGraphDb.EXPECT().
+						GetNodesByKind(gomock.Any(), gomock.Any()).
+						Return(graph.NewNodeSet(
+							graph.NewNode(graph.ID(1), graph.NewProperties()),
+							graph.NewNode(graph.ID(2), graph.NewProperties()),
+							graph.NewNode(graph.ID(3), graph.NewProperties()),
+							graph.NewNode(graph.ID(4), graph.NewProperties()),
+						), nil).
+						Times(1)
+				},
+				Test: func(output apitest.Output) {
+					expectedMemberCounts := map[int]int{
+						1: 6,
+						2: 4,
+					}
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, 2, len(resp.AssetGroupTags))
+					apitest.Equal(output, 2, len(resp.Counts.Members))
+					for _, t := range resp.AssetGroupTags {
+						expCount, ok := expectedMemberCounts[t.ID]
+						apitest.Equal(output, true, ok)
+						_, ok = resp.Counts.Members[t.ID]
+						apitest.Equal(output, true, ok)
+						apitest.Equal(output, expCount, resp.Counts.Members[t.ID])
+					}
+				},
+			},
+		})
+}
 
 func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 	var (
