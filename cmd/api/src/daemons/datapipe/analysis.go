@@ -69,6 +69,18 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
 	}
 
+	if tierFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureTierManagement); err != nil {
+		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving Tiering feature flag: %w", err))
+	} else if tierFlag.Enabled {
+		if err := SelectAssetGroupNodes(ctx, db, graphDB); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("AGT: selecting failed: %w", err))
+		}
+
+		if err := TagAssetGroupNodes(ctx, db, graphDB); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("AGT: tagging failed: %w", err))
+		}
+	}
+
 	var (
 		adFailed          = false
 		azureFailed       = false
