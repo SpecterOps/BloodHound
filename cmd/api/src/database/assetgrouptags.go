@@ -34,13 +34,14 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
+	GetAssetGroupTags(ctx context.Context) ([]model.AssetGroupTag, error)
+	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
-	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -206,6 +207,11 @@ SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY 
 	}
 
 	return results, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context) ([]model.AssetGroupTag, error) {
+	var tags []model.AssetGroupTag
+	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s", model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {

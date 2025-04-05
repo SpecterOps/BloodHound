@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -290,11 +289,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 					BranchQuery:   FilterContainsRelationship,
 					DescentFilter: descentFilter,
 					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						if systemTags, err := segment.Node.Properties.Get(ad.AdminTierZero).String(); err != nil {
-							return false
-						} else {
-							return strings.Contains(systemTags, ad.AdminTierZero)
-						}
+						return node.IsTierZero()
 					},
 				}, SelectGPOTierZeroCandidateFilter); err != nil {
 					return nil, err
@@ -1604,18 +1599,6 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 
 	slog.InfoContext(ctx, fmt.Sprintf("Collected %d group members", len(allGroupMembers)))
 	return allGroupMembers, nil
-}
-
-func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
-	domainSID, _ := domain.Properties.GetOrDefault(ad.DomainSID.String(), "").String()
-
-	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Node(), ad.Entity),
-			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
-			query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero),
-		)
-	}))
 }
 
 func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (graph.NodeSet, error) {
