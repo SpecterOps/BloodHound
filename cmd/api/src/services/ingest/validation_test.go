@@ -98,7 +98,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			input: `{"graph": {"nodes": [
 			{
 			"id": "1234",
-			"kinds": ["a","b"],
+			"kinds": ["a","b","c"],
 			"properties": {"thing_one": "thing_two","num": 1,"bool": true}
 			 }
 			]
@@ -156,16 +156,8 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	}
 }
 
-// func Test_hellojsonschema(t *testing.T) {
-// 	err := ingest_service.ValidateNodeSchema()
-// 	// var sb strings.Builder
-// 	fmt.Println(err.Error())
-// 	if err, ok := err.(*jsonschema.ValidationError); ok {
-// 		for _, cause := range err.Causes {
-// 			fmt.Println(cause.Error())
-// 			fmt.Println(cause.InstanceLocation)
-// 			// sb.WriteString(fmt.Sprintf("Field: %s - Error: %s\n", cause.InstanceLocation, cause.))
-// 		}
-// 	}
-// 	assert.Nil(t, err)
-// }
+func Test_hellojsonschema(t *testing.T) {
+	err := ingest_service.ValidateNodeSchema()
+
+	assert.Nil(t, err)
+}

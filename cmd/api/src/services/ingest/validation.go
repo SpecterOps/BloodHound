@@ -125,33 +125,23 @@ type Edge struct {
 	SourceID string `json:"source_id"`
 }
 
-func ValidateNodeSchema(v any) string {
-	if nodeSchema, err := jsonschema.UnmarshalJSON(strings.NewReader(`{
-		"type": "object",
-		"properties": {
-			"id": { "type": "string" },
-			"properties": { "type": "object" },
-			"kinds": {
-			"type": "array",
-			"items": { "type": "string" },
-			"maxItems": 2,
-			"minItems": 0
-			}
-		},
-		"required": ["id", "kinds"]
-		}
-`)); err != nil {
-		fmt.Println(">>> schema sux: %w", err)
-	} else {
-		c := jsonschema.NewCompiler()
-		if err := c.AddResource("./hello", nodeSchema); err != nil {
-			fmt.Println(">>> AddResource() failed: %w ", err)
-		} else if sch, err := c.Compile("./hello"); err != nil {
-			fmt.Println(">>> Compile() failed: %w", err)
-		} else {
-			return handleValidationError(sch.Validate(v))
-		}
-	}
+func ValidateNodeSchema() string {
+
+	c := jsonschema.NewCompiler()
+	nodeSchema := c.MustCompile("./node.json")
+	edgeSchema := c.MustCompile("./edge.json")
+
+	node, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id": "1234","kinds": ["a"]}`))
+	err := nodeSchema.Validate(node)
+	fmt.Println(err)
+
+	edge, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"start": 
+{"id_value": "234"},
+"kind": "a", 
+"end": {"id_value": "234"}}`))
+
+	err = edgeSchema.Validate(edge)
+	fmt.Println(err)
 	return ""
 }
 
@@ -175,6 +165,9 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		decoder    = NewStreamDecoder(reader)
 		nodesFound = false
 		edgesFound = false
+		c          = jsonschema.NewCompiler()
+		nodeSchema = c.MustCompile("./node.json")
+		edgeSchema = c.MustCompile("./edge.json")
 	)
 
 	var validateNodes = func() error {
@@ -184,17 +177,20 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 			return err
 		}
 
+		nodeIndex := 0
 		// churn through array
 		for decoder.More() {
-			var node Node
+			var node map[string]any
 			if err := decoder.DecodeNext(&node); err != nil {
 				return err
 			}
 
 			// validate against json schema
-			valid := ValidateNodeSchema(node)
+			if err := nodeSchema.Validate(node); err != nil {
+				fmt.Printf("failure node at index %d: %v \n", nodeIndex, err)
+			}
 
-			fmt.Println(valid)
+			nodeIndex++
 		}
 
 		if err := decoder.EatClosingBracket(); err != nil {
@@ -211,14 +207,21 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 			return err
 		}
 
+		edgeIndex := 0
 		// churn through array
 		for decoder.More() {
-			var edge Edge
+			var edge map[string]any
 			if err := decoder.DecodeNext(&edge); err != nil {
 				return err
 			}
 
-			fmt.Println(edge)
+			// validate against json schema
+			if err := edgeSchema.Validate(edge); err != nil {
+				fmt.Printf("failure node at index %d: %v", edgeIndex, err)
+
+			}
+
+			edgeIndex++
 		}
 
 		if err := decoder.EatClosingBracket(); err != nil {
