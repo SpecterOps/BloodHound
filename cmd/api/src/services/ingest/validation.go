@@ -22,7 +22,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"strings"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
@@ -123,6 +125,49 @@ type Edge struct {
 	SourceID string `json:"source_id"`
 }
 
+func ValidateNodeSchema(v any) string {
+	if nodeSchema, err := jsonschema.UnmarshalJSON(strings.NewReader(`{
+		"type": "object",
+		"properties": {
+			"id": { "type": "string" },
+			"properties": { "type": "object" },
+			"kinds": {
+			"type": "array",
+			"items": { "type": "string" },
+			"maxItems": 2,
+			"minItems": 0
+			}
+		},
+		"required": ["id", "kinds"]
+		}
+`)); err != nil {
+		fmt.Println(">>> schema sux: %w", err)
+	} else {
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("./hello", nodeSchema); err != nil {
+			fmt.Println(">>> AddResource() failed: %w ", err)
+		} else if sch, err := c.Compile("./hello"); err != nil {
+			fmt.Println(">>> Compile() failed: %w", err)
+		} else {
+			return handleValidationError(sch.Validate(v))
+		}
+	}
+	return ""
+}
+
+func handleValidationError(err error) string {
+	var sb strings.Builder
+	if ve, ok := err.(*jsonschema.ValidationError); ok {
+		for _, cause := range ve.Causes {
+			sb.WriteString(cause.Error())
+		}
+	} else {
+		sb.WriteString(err.Error())
+	}
+
+	return sb.String()
+}
+
 // TODO: a payload can contain just edges or just nodes, or both
 func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
@@ -146,7 +191,10 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 				return err
 			}
 
-			fmt.Println(node)
+			// validate against json schema
+			valid := ValidateNodeSchema(node)
+
+			fmt.Println(valid)
 		}
 
 		if err := decoder.EatClosingBracket(); err != nil {
@@ -194,9 +242,8 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 			switch typedToken := token.(type) {
 			case string:
 				if typedToken == "graph" {
-					tok, _ := decoder.dec.Token() // '{' // TODO: validate close bracket exists
-					if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenBracket {
-						return fmt.Errorf("expected opening bracket '{' following 'graph', but got %v", tok)
+					if err := decoder.EatOpeningCurlyBracket(); err != nil {
+						return err
 					}
 				}
 

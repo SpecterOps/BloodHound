@@ -155,3 +155,17 @@ func Test_ValidateGenericIngest(t *testing.T) {
 		assert.ErrorContains(t, err, assertion.err.Error())
 	}
 }
+
+// func Test_hellojsonschema(t *testing.T) {
+// 	err := ingest_service.ValidateNodeSchema()
+// 	// var sb strings.Builder
+// 	fmt.Println(err.Error())
+// 	if err, ok := err.(*jsonschema.ValidationError); ok {
+// 		for _, cause := range err.Causes {
+// 			fmt.Println(cause.Error())
+// 			fmt.Println(cause.InstanceLocation)
+// 			// sb.WriteString(fmt.Sprintf("Field: %s - Error: %s\n", cause.InstanceLocation, cause.))
+// 		}
+// 	}
+// 	assert.Nil(t, err)
+// }
