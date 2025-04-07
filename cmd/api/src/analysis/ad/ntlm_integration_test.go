@@ -129,13 +129,14 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 6, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Computer))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.CertTemplate1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.EnterpriseCA1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.RootCA))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Domain))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.NTAuthStore))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.AuthenticatedUsersGroup))
 			}
 			return nil
 		})
