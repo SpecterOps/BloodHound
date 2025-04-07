@@ -24,8 +24,42 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"pkg.specterops.io/bloodhoundad/bhe/graphschema/meta"
 )
+
+var (
+	// Originates from BHE but copied here
+	meta         = graph.StringKind("Meta")
+	metaDetail   = graph.StringKind("MetaDetail")
+	metaIncludes = graph.StringKind("MetaIncludes")
+	metaKinds    = []graph.Kind{meta, metaDetail, metaIncludes}
+
+	unknownKind = graph.StringKind("Unknown")
+
+	// Used for quick O(1) kind lookups
+	ValidKinds = buildValidKinds()
+)
+
+func buildValidKinds() map[graph.Kind]bool {
+	var (
+		validKinds = make(map[graph.Kind]bool)
+		kindSlices = []graph.Kinds{
+			ad.NodeKinds(),
+			ad.Relationships(),
+			azure.NodeKinds(),
+			azure.Relationships(),
+			common.NodeKinds(),
+			common.Relationships(),
+		}
+	)
+
+	for _, kindSlice := range kindSlices {
+		for _, kind := range kindSlice {
+			validKinds[kind] = true
+		}
+	}
+
+	return validKinds
+}
 
 type KindDescriptor struct {
 	Kind graph.Kind
@@ -45,35 +79,6 @@ type Path struct {
 	Relationships []KindDescriptor
 }
 
-func buildValidKinds() map[graph.Kind]bool {
-	var (
-		validKinds = make(map[graph.Kind]bool)
-		kindSlices = []graph.Kinds{
-			ad.NodeKinds(),
-			ad.Relationships(),
-			azure.NodeKinds(),
-			azure.Relationships(),
-			common.NodeKinds(),
-			common.Relationships(),
-			meta.NodeKinds(),
-			meta.Relationships(),
-		}
-	)
-
-	for _, kindSlice := range kindSlices {
-		for _, kind := range kindSlice {
-			validKinds[kind] = true
-		}
-	}
-
-	return validKinds
-}
-
-var (
-	unknownKind = graph.StringKind("Unknown")
-	ValidKinds  = buildValidKinds()
-)
-
 func PrimaryNodeKind(kinds graph.Kinds) graph.Kind {
 	var (
 		resultKind = unknownKind
@@ -82,8 +87,8 @@ func PrimaryNodeKind(kinds graph.Kinds) graph.Kind {
 
 	for _, kind := range kinds {
 		// If this is a BHE meta kind, return early
-		if kind.Is(meta.Meta, meta.MetaDetail) {
-			return meta.Meta
+		if kind.Is(metaKinds...) {
+			return meta
 		} else if kind.Is(ad.Entity, azure.Entity) {
 			baseKind = kind
 		} else if kind.Is(ad.LocalGroup) {

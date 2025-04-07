@@ -19,7 +19,6 @@ package analysis
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/graphschema"
 	"log/slog"
 	"sync/atomic"
 
@@ -27,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -53,11 +53,6 @@ func NewCompositionCounter() CompositionCounter {
 		counter: atomic.Int64{},
 	}
 }
-
-var (
-	metaKind       = graph.StringKind("Meta")
-	metaDetailKind = graph.StringKind("MetaDetail")
-)
 
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
 	var (
