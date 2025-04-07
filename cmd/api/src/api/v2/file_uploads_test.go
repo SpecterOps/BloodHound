@@ -252,8 +252,6 @@ func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
 }
 
 func TestManagementResource_ProcessFileUpload(t *testing.T) {
-	t.Parallel()
-
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
 	}
@@ -512,7 +510,6 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
