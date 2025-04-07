@@ -37,7 +37,7 @@ func (s *Resources) GetCustomNodeKind(response http.ResponseWriter, request *htt
 
 type CreateCustomNodeRequest struct {
 	KindID int16                      `json:"kind_id"`
-	Config model.CustomNodeKindConfig `json:"config" gorm:"type:jsonb column:config"`
+	Config model.CustomNodeKindConfig `json:"config"`
 }
 
 func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *http.Request) {
@@ -56,7 +56,7 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 
 type UpdateCustomNodeKindRequest struct {
 	KindID int16                      `json:"kind_id"`
-	Config model.CustomNodeKindConfig `json:"config" gorm:"type:jsonb column:config"`
+	Config model.CustomNodeKindConfig `json:"config"`
 }
 
 func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *http.Request) {
