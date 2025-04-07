@@ -417,6 +417,92 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
+		{
+			name: "Error: CreateIngestTask database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+
+				request := &http.Request{
+					URL:    &url.URL{},
+					Header: http.Header{},
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+				}
+
+				request.Header.Set("Content-Type", "application/json")
+
+				param := map[string]string{
+					"file_upload_job_id": "1",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Error: TouchFileUploadJobLastIngest database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+
+				request := &http.Request{
+					URL:    &url.URL{},
+					Header: http.Header{},
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+				}
+
+				request.Header.Set("Content-Type", "application/json")
+
+				param := map[string]string{
+					"file_upload_job_id": "1",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success: file uploaded - Accepted",
+			buildRequest: func() *http.Request {
+
+				request := &http.Request{
+					URL:    &url.URL{},
+					Header: http.Header{},
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"meta": {"type": "domains", "version": 4, "count": 1}, "data": [{"domain": "example.com"}]}`))),
+				}
+
+				request.Header.Set("Content-Type", "application/json")
+
+				param := map[string]string{
+					"file_upload_job_id": "1",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
+				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusAccepted,
+				responseBody:   []byte(``),
+				responseHeader: http.Header{"Location": []string{"/"}},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
