@@ -35,7 +35,7 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
-	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
@@ -68,7 +68,7 @@ func setupUserCtx(user model.User) context.Context {
 func TestResources_ListFileUploadJobs(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
-		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
 	)
 	defer mockCtrl.Finish()
@@ -110,7 +110,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 func TestResources_StartFileUploadJob(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
-		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
 		user      = setupUser()
 		userCtx   = setupUserCtx(user)
@@ -156,7 +156,7 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 func TestResources_EndFileUploadJob(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
-		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
+		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
 	)
 	defer mockCtrl.Finish()
@@ -255,7 +255,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDatabase *dbMocks.MockDatabase
+		mockDatabase *mocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   any
@@ -516,7 +516,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockDatabase: dbMocks.NewMockDatabase(ctrl),
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -534,6 +534,8 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				}
 
 			}
+
+			defer os.RemoveAll(resources.Config.TempDirectory())
 
 			response := httptest.NewRecorder()
 
