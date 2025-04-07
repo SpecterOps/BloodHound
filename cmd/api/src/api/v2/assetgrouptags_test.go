@@ -28,7 +28,6 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -780,8 +779,8 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
 					mockGraphDb.EXPECT().
-						GetNodesByKind(gomock.Any(), gomock.Any()).
-						Return(graph.NodeSet{}, fmt.Errorf("GetAssetGroupTag Nodes fail"))
+						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).
+						Return(map[string]int{}, fmt.Errorf("GetAssetGroupTag Nodes fail"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -797,16 +796,8 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 						GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(assetGroupTag, nil)
 					mockGraphDb.EXPECT().
-						GetNodesByKind(gomock.Any(), gomock.Any()).
-						Return(graph.NodeSet{
-							1: &graph.Node{
-								ID:    1,
-								Kinds: graph.Kinds{ad.Entity, ad.Domain},
-							},
-							2: &graph.Node{
-								ID:    2,
-								Kinds: graph.Kinds{ad.Entity, ad.Domain},
-							}}, nil)
+						GetPrimaryNodeKindCounts(gomock.Any(), gomock.Any()).
+						Return(map[string]int{ad.Domain.String(): 2}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
