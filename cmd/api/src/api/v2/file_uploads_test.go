@@ -326,6 +326,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, errors.New("error"))
 			},
 			expected: expected{
@@ -351,6 +352,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, errors.New("error"))
 			},
 			expected: expected{
@@ -377,6 +379,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
 			},
 			expected: expected{
@@ -409,6 +412,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
 			},
 			expected: expected{
@@ -436,6 +440,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, errors.New("error"))
 			},
@@ -464,6 +469,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(errors.New("error"))
@@ -476,8 +482,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 		},
 		{
 			name: "Success: file uploaded - Accepted",
-			buildRequest: func() *http.Request {
-
+			buildRequest: func() *http.Request {\
 				request := &http.Request{
 					URL:    &url.URL{},
 					Header: http.Header{},
@@ -493,6 +498,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 				return mux.SetURLVars(request, param)
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
 				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
 				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(nil)
