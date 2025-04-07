@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Environment } from 'js-client-library';
-import { orderBy } from 'lodash';
+import orderBy from 'lodash/orderBy';
 import { UseQueryOptions } from 'react-query';
 import { useAvailableEnvironments } from '../useAvailableEnvironments';
 
