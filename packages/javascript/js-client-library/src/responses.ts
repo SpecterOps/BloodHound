@@ -14,7 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode, CollectorManifest, CommunityCollectorType, EnterpriseCollectorType, GraphData } from './types';
+import {
+    AssetGroupTag,
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorNode,
+    CollectorManifest,
+    CommunityCollectorType,
+    EnterpriseCollectorType,
+    GraphData,
+} from './types';
 import { ConfigurationPayload } from './utils/config';
 
 export type BasicResponse<T> = {

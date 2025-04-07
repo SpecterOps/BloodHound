@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { apiClient } from 'bh-shared-ui';
-import { RequestOptions } from 'js-client-library';
-import { CommunityCollectorType, GetCollectorsResponse } from 'js-client-library';
-import { useQuery, UseQueryResult } from 'react-query';
+import { CommunityCollectorType, GetCollectorsResponse, RequestOptions } from 'js-client-library';
+import { UseQueryResult, useQuery } from 'react-query';
 
 export const collectorKeys = {
     all: ['collectors'] as const,
@@ -25,8 +24,12 @@ export const collectorKeys = {
     detail: (userId: number) => [...collectorKeys.all, userId] as const,
 };
 
-export const getCollectorsByType = async (type: CommunityCollectorType, options?: RequestOptions): Promise<GetCollectorsResponse> =>
-    apiClient.getCollectors(type, options).then((res) => res.data);
+export const getCollectorsByType = async (
+    type: CommunityCollectorType,
+    options?: RequestOptions
+): Promise<GetCollectorsResponse> => apiClient.getCollectors(type, options).then((res) => res.data);
 
 export const useGetCollectorsByType = (type: CommunityCollectorType): UseQueryResult<GetCollectorsResponse> =>
-    useQuery<GetCollectorsResponse>(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));
+    useQuery<GetCollectorsResponse>(collectorKeys.listByType(type), ({ signal }) =>
+        getCollectorsByType(type, { signal })
+    );

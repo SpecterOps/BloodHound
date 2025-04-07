@@ -871,10 +871,16 @@ class BHEAPIClient {
     getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetCommunityCollectorsResponse>> =>
         this.baseClient.get<GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
 
-    getEnterpriseCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
+    getEnterpriseCollectors = (
+        options?: types.RequestOptions
+    ): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
         this.baseClient.get<GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
 
-    downloadCollector = (collectorType: types.CommunityCollectorType, version: string, options?: types.RequestOptions) =>
+    downloadCollector = (
+        collectorType: types.CommunityCollectorType,
+        version: string,
+        options?: types.RequestOptions
+    ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}`,
             Object.assign(
