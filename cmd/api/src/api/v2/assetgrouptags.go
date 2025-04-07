@@ -202,7 +202,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else if selector.IsDefault {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot delete a default selector", request), response)
-	} else if err := s.DB.DeleteAssetGroupTagSelectorBySelectorId(request.Context(), actor, selector.ID); err != nil {
+	} else if err := s.DB.DeleteAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	}
 }

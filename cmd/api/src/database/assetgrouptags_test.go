@@ -309,3 +309,43 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 }
+
+func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testActor       = "test_actor"
+		testName        = "test selector name"
+		testDescription = "test description"
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = null.BoolFrom(false)
+		testSeeds       = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		}
+	)
+
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+
+	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	require.NoError(t, err)
+	require.Len(t, history, 1)
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
+
+	t.Run("successfully deletes tag", func(t *testing.T) {
+		err := dbInst.DeleteAssetGroupTagSelector(testCtx, testActor, selector)
+		require.NoError(t, err)
+
+		// verify selector is gone
+		_, err = dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+		require.EqualError(t, err, "entity not found")
+
+		// verify a history record was created for the delete action
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.Len(t, history, 2)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)
+	})
+}
