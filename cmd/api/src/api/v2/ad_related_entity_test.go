@@ -31,23 +31,22 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/queries/mocks"
-	graphMocks "github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
-func setup(t *testing.T) (*gomock.Controller, *graphMocks.MockGraph, *dbMocks.MockDatabase, v2.Resources) {
+func setup(t *testing.T) (*gomock.Controller, *mocks.MockGraph, *dbMocks.MockDatabase, v2.Resources) {
 	var (
 		mockCtrl  = gomock.NewController(t)
-		mockGraph = graphMocks.NewMockGraph(mockCtrl)
+		mockGraph = mocks.NewMockGraph(mockCtrl)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB}
 	)
 	return mockCtrl, mockGraph, mockDB, resources
 }
 
-func setupCases(mockGraph *graphMocks.MockGraph, mockDB *dbMocks.MockDatabase) []apitest.Case {
+func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apitest.Case {
 	return []apitest.Case{
 		{
 			Name: "RepoGetEntityQueryParamsError",

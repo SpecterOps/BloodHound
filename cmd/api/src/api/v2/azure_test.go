@@ -14,7 +14,6 @@ import (
 	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -292,7 +291,6 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 
 	type mock struct {
 		mockDB         *graphmocks.MockDatabase
-		mockGraphQuery *mocks.MockGraph
 	}
 	type args struct {
 		entityType string
