@@ -108,8 +108,6 @@ func TestResources_GetCollectorManifest(t *testing.T) {
 }
 
 func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
-	t.Parallel()
-
 	type expected struct {
 		responseBody   any
 		responseCode   int
@@ -255,7 +253,6 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			request := testCase.buildRequest()
 			testFile := testCase.createCollectorFile(t)
 			if testFile != nil {
