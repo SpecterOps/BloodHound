@@ -482,7 +482,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 		},
 		{
 			name: "Success: file uploaded - Accepted",
-			buildRequest: func() *http.Request {\
+			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL:    &url.URL{},
 					Header: http.Header{},
