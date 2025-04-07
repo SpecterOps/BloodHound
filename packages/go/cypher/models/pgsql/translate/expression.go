@@ -550,26 +550,44 @@ func rewriteIdentityOperands(scope *Scope, newExpression *pgsql.BinaryExpression
 	return nil
 }
 
+// isConcatenationOperation accepts two pgsql.DataType values and attempts to determine if the value are able to be
+// concatenated.
+//
+// For further information regarding the conditional logic, please see the PgSQL upstream documentation:
+// https://www.postgresql.org/docs/9.1/functions-string.html
+func isConcatenationOperation(lOperandType, rOperandType pgsql.DataType) bool {
+	// Any use of an array type automatically assumes concatenation
+	if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
+		return true
+	}
+
+	// The case below must be able to infer operator intent from the following cases:
+	// text + unknown
+	// unknown + text
+	// text + text
+
+	// In the case below where both operands have no type information, no further
+	// intent can be inferred for this operator
+	switch lOperandType {
+	case pgsql.Text:
+		switch rOperandType {
+		case pgsql.Text, pgsql.UnknownDataType:
+			return true
+		}
+
+	case pgsql.UnknownDataType:
+		switch rOperandType {
+		case pgsql.Text:
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.BinaryExpression) error {
 	switch newExpression.Operator {
 	case pgsql.OperatorAdd:
-		isConcatenationOperation := func(lOperandType, rOperandType pgsql.DataType) bool {
-			// Any use of an array type automatically assumes concatenation
-			if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
-				return true
-			}
-
-			switch lOperandType {
-			case pgsql.Text:
-				switch rOperandType {
-				case pgsql.Text:
-					return true
-				}
-			}
-
-			return false
-		}
-
 		// In the case of the use of the cypher `+` operator we must attempt to disambiguate if the intent
 		// is to concatenate or to perform an addition
 		if lOperandType, err := InferExpressionType(newExpression.LOperand); err != nil {
