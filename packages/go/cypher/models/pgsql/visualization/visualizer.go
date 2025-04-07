@@ -91,5 +91,5 @@ func SQLToDigraph(node pgsql.SyntaxNode) (Graph, error) {
 		visualizer.Graph.Title = title
 	}
 
-	return visualizer.Graph, walk.WalkPgSQL(node, visualizer)
+	return visualizer.Graph, walk.PgSQL(node, visualizer)
 }

@@ -441,6 +441,18 @@ export enum ActiveDirectoryKindProperties {
     LDAPSAvailable = 'ldapsavailable',
     LDAPSEPA = 'ldapsepa',
     IsDC = 'isdc',
+    HTTPEnrollmentEndpoints = 'httpenrollmentendpoints',
+    HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
+    HasVulnerableEndpoint = 'hasvulnerableendpoint',
+    RequireSecuritySignature = 'requiresecuritysignature',
+    EnableSecuritySignature = 'enablesecuritysignature',
+    RestrictReceivingNTLMTraffic = 'restrictreceivingntmltraffic',
+    NTLMMinServerSec = 'ntlmminserversec',
+    NTLMMinClientSec = 'ntlmminclientsec',
+    LMCompatibilityLevel = 'lmcompatibilitylevel',
+    UseMachineID = 'usemachineid',
+    ClientAllowedNTLMServers = 'clientallowedntlmservers',
+    Transitive = 'transitive',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -676,6 +688,30 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'LDAPS EPA';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
+        case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
+            return 'HTTP Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
+            return 'HTTPS Enrollment Endpoints';
+        case ActiveDirectoryKindProperties.HasVulnerableEndpoint:
+            return 'Has Vulnerable Endpoint';
+        case ActiveDirectoryKindProperties.RequireSecuritySignature:
+            return 'Require Security Signature';
+        case ActiveDirectoryKindProperties.EnableSecuritySignature:
+            return 'Enable Security Signature';
+        case ActiveDirectoryKindProperties.RestrictReceivingNTLMTraffic:
+            return 'Restrict Receiving NTLM Traffic';
+        case ActiveDirectoryKindProperties.NTLMMinServerSec:
+            return 'NTLM Min Server Sec';
+        case ActiveDirectoryKindProperties.NTLMMinClientSec:
+            return 'NTLM Min Client Sec';
+        case ActiveDirectoryKindProperties.LMCompatibilityLevel:
+            return 'LM Compatibility Level';
+        case ActiveDirectoryKindProperties.UseMachineID:
+            return 'Use Machine ID';
+        case ActiveDirectoryKindProperties.ClientAllowedNTLMServers:
+            return 'Client Allowed NTLM Servers';
+        case ActiveDirectoryKindProperties.Transitive:
+            return 'Is Transitive';
         default:
             return undefined;
     }

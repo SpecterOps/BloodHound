@@ -288,6 +288,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 							pgsql.OperatorEquals,
 							pgsql.NewAnyExpression(
 								pgsql.CompoundIdentifier{scope.CurrentFrame().Binding.Identifier, pgsql.ColumnPath},
+								pgsql.ExpansionPath,
 							),
 						),
 					},
@@ -422,7 +423,7 @@ func (s *Translator) buildTailProjection() error {
 func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cypher.ProjectionItem) error {
 	if alias, hasAlias, err := extractIdentifierFromCypherExpression(projectionItem); err != nil {
 		return err
-	} else if nextExpression, err := s.treeTranslator.Pop(); err != nil {
+	} else if nextExpression, err := s.treeTranslator.PopOperand(); err != nil {
 		return err
 	} else if selectItem, isProjection := nextExpression.(pgsql.SelectItem); !isProjection {
 		s.SetErrorf("invalid type for select item: %T", nextExpression)
@@ -449,7 +450,7 @@ func (s *Translator) translateProjectionItem(scope *Scope, projectionItem *cyphe
 		case *pgsql.BinaryExpression:
 			// Binary expressions are used when properties are returned from a result projection
 			// e.g. match (n) return n.prop
-			if propertyLookup, isPropertyLookup := asPropertyLookup(typedSelectItem); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(typedSelectItem); isPropertyLookup {
 				// Ensure that projections maintain the raw JSONB type of the field
 				propertyLookup.Operator = pgsql.OperatorJSONField
 			}

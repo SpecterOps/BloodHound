@@ -21,7 +21,12 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
-export type ExploreGraphQueryOptions = UseQueryOptions<FlatGraphResponse, unknown, FlatGraphResponse, QueryKeys>;
+export type ExploreGraphQueryOptions = UseQueryOptions<
+    GraphResponse | FlatGraphResponse,
+    unknown,
+    GraphResponse | FlatGraphResponse,
+    QueryKeys
+>;
 
 export type GraphItemMutationFn = (items: any) => unknown;
 
@@ -36,10 +41,19 @@ export const ExploreGraphQueryKey = 'explore-graph-query';
 
 export const INITIAL_FILTERS = getInitialPathFilters();
 export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
+export const EMPTY_FILTER_VALUE = 'empty';
 
 export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
     retry: false,
     refetchOnWindowFocus: false,
+};
+
+// creates a filter string in our API format, handling the case that our 'empty' value is in the url param
+export const createPathFilterString = (types: string[]) => {
+    if (types[0] === EMPTY_FILTER_VALUE) {
+        return `nin:${INITIAL_FILTER_TYPES.join(',')}`;
+    }
+    return `in:${types.join(',')}`;
 };
 
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
@@ -137,4 +151,8 @@ const isLink = (item: any): boolean => {
 
 const isNode = (item: any): boolean => {
     return !isLink(item);
+};
+
+export const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
+    return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
 };

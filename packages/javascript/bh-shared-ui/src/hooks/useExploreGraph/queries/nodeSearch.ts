@@ -14,10 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FlatGraphResponse } from 'js-client-library';
 import { apiClient } from '../../../utils';
 import { ExploreQueryParams } from '../../useExploreParams';
-import { ExploreGraphQuery, ExploreGraphQueryError, ExploreGraphQueryKey, ExploreGraphQueryOptions } from './utils';
+import {
+    ExploreGraphQuery,
+    ExploreGraphQueryError,
+    ExploreGraphQueryKey,
+    ExploreGraphQueryOptions,
+    sharedGraphQueryOptions,
+} from './utils';
 
 export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>): ExploreGraphQueryOptions => {
     const { searchType, primarySearch, secondarySearch, exploreSearchTab } = paramOptions;
@@ -33,11 +38,10 @@ export const nodeSearchGraphQuery = (paramOptions: Partial<ExploreQueryParams>):
     }
 
     return {
+        ...sharedGraphQueryOptions,
         queryKey: [ExploreGraphQueryKey, searchType, term],
         queryFn: ({ signal }) =>
-            apiClient
-                .getSearchResult(term ?? '', 'exact', { signal })
-                .then((res) => res.data.data as FlatGraphResponse),
+            apiClient.getSearchResult(term ?? '', 'exact', { signal }).then((res) => res.data.data),
         retry: false,
         enabled: !!(searchType && term),
     };

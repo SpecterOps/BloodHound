@@ -125,7 +125,7 @@ const SettingsMenu: React.FC<Props> = ({ anchorEl, handleClose }) => {
                 <MenuItem
                     onClick={() => handleClose()}
                     component='a'
-                    href='https://support.bloodhoundenterprise.io/hc'
+                    href='https://bloodhound.specterops.io'
                     target='_blank'
                     rel='noreferrer'
                     data-testid='global_header_settings-menu_nav-support'>

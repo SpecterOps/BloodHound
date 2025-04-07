@@ -41,6 +41,9 @@ export const useNodeSearch = () => {
                 setSearchTerm(matchedNode.name);
                 setSelectedItem(matchedNode);
             }
+        } else {
+            setSearchTerm('');
+            setSelectedItem(undefined);
         }
     }, [primarySearch, searchType, searchData]);
 

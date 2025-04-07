@@ -45,7 +45,7 @@ func TestWalk(t *testing.T) {
 				t.Fatalf("Parser errors: %s", parseErr.Error())
 			}
 
-			require.Nil(t, walk.WalkCypher(queryModel, visitor))
+			require.Nil(t, walk.Cypher(queryModel, visitor))
 		}
 	}
 }

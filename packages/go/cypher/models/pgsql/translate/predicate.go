@@ -37,7 +37,7 @@ func (s *Translator) preparePatternPredicate() error {
 	return nil
 }
 
-func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart, traversalStep *PatternSegment) (pgsql.Expression, error) {
+func (s *Translator) buildOptimizedRelationshipExistPredicate(part *PatternPart, traversalStep *TraversalStep) (pgsql.Expression, error) {
 	whereClause := pgsql.NewBinaryExpression(
 		pgsql.NewBinaryExpression(
 			pgsql.CompoundIdentifier{traversalStep.Edge.Identifier, pgsql.ColumnStartID},
@@ -90,7 +90,7 @@ func (s *Translator) translatePatternPredicate() error {
 	}
 
 	// Push this as an expression for rendering constraints
-	s.treeTranslator.Push(predicateFuture)
+	s.treeTranslator.PushOperand(predicateFuture)
 
 	// Track this as a predicate to revisit while rendering the patterns
 	currentQueryPart.AddPatternPredicateFuture(predicateFuture)
@@ -145,7 +145,7 @@ func (s *Translator) buildPatternPredicates() error {
 			}
 
 			if idx > 0 {
-				if traversalStepQuery, err := s.buildTraversalPatternStep(traversalStep.Frame, patternPart, traversalStep); err != nil {
+				if traversalStepQuery, err := s.buildTraversalPatternStep(traversalStep.Frame, traversalStep); err != nil {
 					return err
 				} else {
 					subQuery.AddCTE(pgsql.CommonTableExpression{
@@ -156,7 +156,7 @@ func (s *Translator) buildPatternPredicates() error {
 					})
 				}
 			} else {
-				if traversalStepQuery, err := s.buildTraversalPatternRoot(traversalStep.Frame, patternPart, traversalStep); err != nil {
+				if traversalStepQuery, err := s.buildTraversalPatternRoot(traversalStep.Frame, traversalStep); err != nil {
 					return err
 				} else {
 					subQuery.AddCTE(pgsql.CommonTableExpression{

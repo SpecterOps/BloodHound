@@ -39,12 +39,6 @@ func (s *Translator) translateNodePattern(nodePattern *cypher.NodePattern) error
 	return nil
 }
 
-func (s *Translator) translateNodePatternSegment(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
-	// Make this the node select of the pattern part
-	part.NodeSelect.Binding = bindingResult.Binding
-	return nil
-}
-
 func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern, part *PatternPart, bindingResult BindingResult) error {
 	currentQueryPart := s.query.CurrentPart()
 
@@ -53,8 +47,8 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 		var propertyConstraints pgsql.Expression
 
 		for key, value := range currentQueryPart.ConsumeProperties() {
-			s.treeTranslator.Push(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
-			s.treeTranslator.Push(value)
+			s.treeTranslator.PushOperand(pgsql.NewPropertyLookup(pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnProperties}, pgsql.NewLiteral(key, pgsql.Text)))
+			s.treeTranslator.PushOperand(value)
 
 			if newConstraint, err := s.treeTranslator.PopBinaryExpression(pgsql.OperatorEquals); err != nil {
 				return err
@@ -63,7 +57,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			}
 		}
 
-		if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+		if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 			return err
 		}
 	}
@@ -74,7 +68,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			return fmt.Errorf("failed to translate kinds: %w", err)
 		} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
 			return err
-		} else if err := s.treeTranslator.Constrain(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+		} else if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
 			pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindIDs},
 			pgsql.OperatorPGArrayOverlap,
 			kindIDsLiteral,
@@ -86,7 +80,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	if part.IsTraversal {
 		if numSteps := len(part.TraversalSteps); numSteps == 0 {
 			// This is the traversal step's left node
-			part.TraversalSteps = append(part.TraversalSteps, &PatternSegment{
+			part.TraversalSteps = append(part.TraversalSteps, &TraversalStep{
 				LeftNode:      bindingResult.Binding,
 				LeftNodeBound: bindingResult.AlreadyBound,
 			})
@@ -97,19 +91,28 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			currentStep.RightNode = bindingResult.Binding
 			currentStep.RightNodeBound = bindingResult.AlreadyBound
 
-			// Finish setting up this traversal step
+			// Finish setting up this traversal step for the expansion
 			if currentStep.Expansion.Set {
+				// Set the right node data type to the terminal of an expansion
 				currentStep.RightNode.DataType = pgsql.ExpansionTerminalNode
+
+				// TODO: This is a little recursive and could use some refactor love
+				currentExpansion := currentStep.Expansion.Value
+
+				if err := currentExpansion.CompletePattern(currentStep); err != nil {
+					return err
+				}
 			}
 		}
 	} else {
-		return s.translateNodePatternSegment(nodePattern, part, bindingResult)
+		// Make this the node select of the pattern part
+		part.NodeSelect.Binding = bindingResult.Binding
 	}
 
 	return nil
 }
 
-func (s *Translator) buildNodePattern(part *PatternPart) error {
+func (s *Translator) buildNodePatternPart(part *PatternPart) error {
 	var (
 		partFrame  = part.NodeSelect.Frame
 		nextSelect = pgsql.Select{

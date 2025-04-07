@@ -21,6 +21,7 @@ import {
     PRIMARY_SEARCH,
     searchbarActions as actions,
     initialSearchState,
+    mockCodemirrorLayoutMethods,
 } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -52,15 +53,26 @@ const server = setupServer(
                 ],
             })
         );
+    }),
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
+            })
+        );
     })
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+});
 afterAll(() => server.close());
 
 describe('ExploreSearch rendering per tab', async () => {
     beforeEach(async () => {
+        mockCodemirrorLayoutMethods();
+
         await act(async () => {
             render(<ExploreSearch />);
         });
@@ -95,7 +107,7 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /run/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /run/ })).toBeInTheDocument();
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {

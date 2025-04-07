@@ -19,15 +19,17 @@ import General from './General';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import RelaySources from './RelaySources';
 import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToSMB = {
     general: General,
-    composition: Composition,
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
+    coerciontargets: RelaySources,
     references: References,
+    composition: Composition,
 };
 
 export default CoerceAndRelayNTLMToSMB;

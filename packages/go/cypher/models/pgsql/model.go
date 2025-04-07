@@ -454,18 +454,18 @@ type AnyExpression struct {
 	CastType DataType
 }
 
-func NewAnyExpression(inner Expression) AnyExpression {
-	newAnyExpression := AnyExpression{
+func NewAnyExpression(inner Expression, castType DataType) *AnyExpression {
+	return &AnyExpression{
 		Expression: inner,
+		CastType:   castType,
 	}
+}
 
-	// This is a guard to prevent recursive wrapping of an expression in an Any expression
-	switch innerTypeHint := inner.(type) {
-	case TypeHinted:
-		newAnyExpression.CastType = innerTypeHint.TypeHint()
+func NewAnyExpressionHinted(inner TypeHinted) *AnyExpression {
+	return &AnyExpression{
+		Expression: inner,
+		CastType:   inner.TypeHint(),
 	}
-
-	return newAnyExpression
 }
 
 func (s AnyExpression) AsExpression() Expression {
@@ -571,6 +571,10 @@ func AsIdentifiers(strs ...string) []Identifier {
 	return identifiers
 }
 
+func (s Identifier) AsCompoundIdentifier() CompoundIdentifier {
+	return CompoundIdentifier{s}
+}
+
 func (s Identifier) AsSelectItem() SelectItem {
 	return s
 }
@@ -639,6 +643,14 @@ func (s CompoundIdentifier) Replace(old, new Identifier) {
 
 func (s CompoundIdentifier) Root() Identifier {
 	return s[0]
+}
+
+func (s CompoundIdentifier) HasField() bool {
+	return len(s) > 1
+}
+
+func (s CompoundIdentifier) Field() Identifier {
+	return s[1]
 }
 
 func (s CompoundIdentifier) AsExpressions() []Expression {

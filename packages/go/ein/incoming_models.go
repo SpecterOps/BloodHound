@@ -173,10 +173,23 @@ type RootCA struct {
 
 type EnterpriseCA struct {
 	IngestBase
-	CARegistryData       CARegistryData
-	EnabledCertTemplates []TypedPrincipal
-	HostingComputer      string
-	DomainSID            string
+	CARegistryData          CARegistryData
+	EnabledCertTemplates    []TypedPrincipal
+	HostingComputer         string
+	DomainSID               string
+	HttpEnrollmentEndpoints []CAEnrollmentAPIResult
+}
+
+type CAEnrollmentAPIResult struct {
+	APIResult
+	Result CAEnrollmentEndpoint
+}
+
+type CAEnrollmentEndpoint struct {
+	Url                    string
+	ADCSWebEnrollmentHTTP  bool
+	ADCSWebEnrollmentHTTPS bool
+	ADCSWebEnrollmentEPA   bool
 }
 
 type NTAuthStore struct {
@@ -277,15 +290,28 @@ type BoolAPIResult struct {
 
 type SMBSigningAPIResult struct {
 	APIResult
-	SigningEnabled  bool
-	OSVersion       string
-	OSBuild         string
-	DnsComputerName string
+	Result SMBSigningResult
 }
 
-type RegistryDataAPIResult struct {
+type SMBSigningResult struct {
+	SigningEnabled bool
+}
+
+type NTLMRegistryDataAPIResult struct {
 	APIResult
-	RestrictSendingNtlmTraffic uint
+	Result NTLMRegistryInfo
+}
+
+type NTLMRegistryInfo struct {
+	RestrictSendingNtlmTraffic   uint
+	RequireSecuritySignature     uint
+	EnableSecuritySignature      uint
+	RestrictReceivingNTLMTraffic uint
+	NtlmMinServerSec             uint
+	NtlmMinClientSec             uint
+	LmCompatibilityLevel         uint
+	UseMachineId                 uint
+	ClientAllowedNTLMServers     []string
 }
 
 type Computer struct {
@@ -307,7 +333,7 @@ type Computer struct {
 	UnconstrainedDelegation bool
 	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
-	NTLMRegistryData        RegistryDataAPIResult
+	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
 type OU struct {

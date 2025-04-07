@@ -17,7 +17,7 @@
 import { useState } from 'react';
 import { EdgeCheckboxType } from '../../edgeTypes';
 import { useExploreParams } from '../useExploreParams';
-import { INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
+import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
 import { compareEdgeTypes, extractEdgeTypes, mapParamsToFilters } from './utils';
 
 export const usePathfindingFilters = () => {
@@ -28,8 +28,13 @@ export const usePathfindingFilters = () => {
     // query params. This is useful for our filter form where we only want to sync once when the user opens it
     const initialize = () => {
         if (pathFilters?.length) {
-            const mapped = mapParamsToFilters(pathFilters, INITIAL_FILTERS);
+            // Since we need to track state in the case of an empty set of filters, check for our 'empty' key here
+            const incoming = pathFilters[0] === EMPTY_FILTER_VALUE ? [] : pathFilters;
+
+            const mapped = mapParamsToFilters(incoming, INITIAL_FILTERS);
             updateSelectedFilters(mapped);
+        } else {
+            updateSelectedFilters(INITIAL_FILTERS);
         }
     };
 
@@ -38,18 +43,20 @@ export const usePathfindingFilters = () => {
     const handleApplyFilters = () => {
         const selectedEdgeTypes = extractEdgeTypes(selectedFilters);
 
-        // To avoid giant query strings where at all possible, clear them out if the user selects the default
-        if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+        if (selectedEdgeTypes.length === 0) {
+            // query string stores a value indicating an empty set if every option is unselected
+            setExploreParams({ pathFilters: [EMPTY_FILTER_VALUE] });
+        } else if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+            // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
             setExploreParams({ pathFilters: extractEdgeTypes(selectedFilters) });
         }
     };
 
-    const handleCancelFilters = () => {
-        const previous = pathFilters ? mapParamsToFilters(pathFilters, INITIAL_FILTERS) : INITIAL_FILTERS;
-        updateSelectedFilters(previous);
-    };
+    // In our new implementation, these two functions are equivalent. Once we no longer need to support the old approach,
+    // we can consider removing this.
+    const handleCancelFilters = () => initialize();
 
     return {
         selectedFilters,

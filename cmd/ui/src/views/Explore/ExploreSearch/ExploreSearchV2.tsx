@@ -19,21 +19,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
+    CypherSearch,
     ExploreQueryParams,
     ExploreSearchTab,
     Icon,
     MappedStringLiteral,
+    NodeSearch,
+    PathfindingSearch,
     cn,
     encodeCypherQuery,
     useCypherSearch,
     useExploreParams,
     useNodeSearch,
+    usePathfindingFilters,
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import CypherSearch from './CypherSearch';
-import NodeSearch from './NodeSearch';
-import PathfindingSearch from './PathfindingSearch';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -75,6 +76,8 @@ const ExploreSearchV2: React.FC = () => {
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
+    // We can move this back down into the filter modal once we remove the redux implementation
+    const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
 
@@ -179,7 +182,10 @@ const ExploreSearchV2: React.FC = () => {
                         // This linting rule is disabled because the elements in this array do not require a key prop.
                         /* eslint-disable react/jsx-key */
                         <NodeSearch nodeSearchState={nodeSearchState} />,
-                        <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />,
+                        <PathfindingSearch
+                            pathfindingSearchState={pathfindingSearchState}
+                            pathfindingFilterState={pathfindingFilterState}
+                        />,
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}
