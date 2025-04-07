@@ -59,7 +59,7 @@ func TestNodeQuery(t *testing.T) {
 		}
 	)
 
-	mockTx.EXPECT().Raw("-- match (n) where n.prop = $ return n limit 1\nwith s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'prop' = @pi0::text) select s0.n0 as n from s0 limit 1;", gomock.Any()).Return(mockResult)
+	mockTx.EXPECT().Raw("-- match (n) where n.prop = $ return n limit 1\nwith s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'prop', '')::text = @pi0::text) select s0.n0 as n from s0 limit 1;", gomock.Any()).Return(mockResult)
 
 	mockResult.EXPECT().Error().Return(nil)
 	mockResult.EXPECT().Next().Return(true)

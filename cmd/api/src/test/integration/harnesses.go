@@ -8917,6 +8917,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), endpoints)
 	s.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)
 	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
@@ -8951,29 +8952,37 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	domain2Sid := RandomDomainSID()
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer1)
 
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
 	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
+	s.Computer2.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	graphTestContext.UpdateNode(s.Computer2)
 
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain2Sid)
 
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain2Sid)
 	s.Computer4.Properties.Set(ad.SMBSigning.String(), true)
+	s.Computer4.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	graphTestContext.UpdateNode(s.Computer4)
 
 	s.Computer5 = graphTestContext.NewActiveDirectoryComputer("Computer5", domain2Sid)
 
 	s.Computer6 = graphTestContext.NewActiveDirectoryComputer("Computer6", domain2Sid)
 	s.Computer6.Properties.Set(ad.SMBSigning.String(), false)
+	s.Computer6.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	graphTestContext.UpdateNode(s.Computer6)
 
 	s.Computer7 = graphTestContext.NewActiveDirectoryComputer("Computer7", domain2Sid)
 	s.Computer8 = graphTestContext.NewActiveDirectoryComputer("Computer8", domain2Sid)
+	s.Computer8.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer8)
 
 	s.Computer9 = graphTestContext.NewActiveDirectoryComputer("Computer9", domain2Sid)
 	s.Computer9.Properties.Set(ad.SMBSigning.String(), false)
-	graphTestContext.UpdateNode(s.Computer2)
+	s.Computer9.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer9)
 
 	s.Computer10 = graphTestContext.NewActiveDirectoryComputer("Computer10", domain2Sid)
 	s.Computer10.Properties.Set(ad.RestrictOutboundNTLM.String(), true)

@@ -30,7 +30,27 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: true,
                     },
+                    {
+                        id: 17,
+                        key: 'dark_mode',
+                        name: 'Dark Mode',
+                        description: 'Best mode 😎',
+                        enabled: true,
+                        user_updatable: false,
+                    },
+                    {
+                        key: 'back_button_support',
+                        enabled: true,
+                    },
                 ],
+            })
+        );
+    }),
+    // GET Kinds
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
             })
         );
     }),

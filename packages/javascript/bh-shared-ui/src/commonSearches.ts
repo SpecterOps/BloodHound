@@ -397,7 +397,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'ESC8-vulnerable Enterprise CAs',
-                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.adcswebenrollmenthttp = True\nOR (n.adcswebenrollmenthttps = True AND n.adcswebenrollmenthttpsepa = False)\nRETURN n',
+                cypher: 'MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n',
             },
             {
                 description: 'Computers with the outgoing NTLM setting set to Deny all',
@@ -409,7 +409,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'DCs vulnerable to NTLM relay to LDAP attacks',
-                cypher: 'MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE NOT dc.ldapsigning = True\nOR (dc.ldapsavailable = True AND NOT dc.ldapsepa = True)\nRETURN p',
+                cypher: 'MATCH p = (dc:Computer)-[:DCFor]->(:Domain)\nWHERE (dc.ldapavailable = True AND dc.ldapsigning = False)\nOR (dc.ldapsavailable = True AND dc.ldapsepa = False)\nOR (dc.ldapavailable = True AND dc.ldapsavailable = True AND dc.ldapsigning = False and dc.ldapsepa = True)\nRETURN p',
             },
             {
                 description: 'Computers with the WebClient running',
