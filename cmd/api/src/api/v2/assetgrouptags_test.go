@@ -136,7 +136,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
@@ -156,7 +156,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
@@ -450,7 +450,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
@@ -467,7 +467,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},
@@ -487,7 +487,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag selector id specified in url")
 				},
 			},
@@ -508,7 +508,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 						Return(model.AssetGroupTag{}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag selector id specified in url")
 				},
 			},
@@ -664,7 +664,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "foo")
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "invalid asset group tag id specified in url")
 				},
 			},

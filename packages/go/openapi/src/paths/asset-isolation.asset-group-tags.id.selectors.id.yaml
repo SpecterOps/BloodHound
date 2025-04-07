@@ -41,25 +41,18 @@ patch:
     - Enterprise
 
   requestBody:
-    description: The request body for updating an asset group tag selector. One or more fields must be provided. Only provided fields will be updated. 
+    description: The request body for updating an asset group tag selector. At least one field must be provided in the request body. Any combination of fields from the original schema can be included, and only the fields that are provided will be updated.
     required: true
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            name:
-              type: string
-            description:
-              type: string
-            disabled_at:
-              $ref: './../schemas/null.time.yaml'
-            auto_certify:
-              type: boolean
-            seeds:
-              type: array
-              items:
-                $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
+          allOf: 
+            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
+            - type: object 
+              properties:
+                disabled_at:
+                  $ref: './../schemas/null.time.yaml'
+
   responses:
     200:
       description: Updated
@@ -69,7 +62,7 @@ patch:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.asset-group-tags-selector.yaml'
+                $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
@@ -82,4 +75,3 @@ patch:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
-      
