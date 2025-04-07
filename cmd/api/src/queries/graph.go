@@ -130,7 +130,6 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 }
 
 type Graph interface {
-	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
@@ -140,6 +139,8 @@ type Graph interface {
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
+	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
+	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
