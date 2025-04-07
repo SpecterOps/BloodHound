@@ -115,21 +115,11 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 	}
 */
 
-type Node struct {
-	Kinds      []string       `json:"kinds"`
-	ID         string         `json:"id"`         // Will be copied into Properties["objectid"]
-	Properties map[string]any `json:"properties"` // Arbitrary key-value store
-}
-
-type Edge struct {
-	SourceID string `json:"source_id"`
-}
-
 func ValidateNodeSchema() string {
 
 	c := jsonschema.NewCompiler()
-	nodeSchema := c.MustCompile("./node.json")
-	edgeSchema := c.MustCompile("./edge.json")
+	nodeSchema := c.MustCompile("./json_schema/node.json")
+	edgeSchema := c.MustCompile("./json_schema/edge.json")
 
 	node, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id": "1234","kinds": ["a"]}`))
 	err := nodeSchema.Validate(node)
@@ -148,7 +138,10 @@ func ValidateNodeSchema() string {
 func handleValidationError(err error) string {
 	var sb strings.Builder
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
-		for _, cause := range ve.Causes {
+		for i, cause := range ve.Causes {
+			if i > 0 {
+				sb.WriteString(", ")
+			}
 			sb.WriteString(cause.Error())
 		}
 	} else {
@@ -166,15 +159,19 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		nodesFound = false
 		edgesFound = false
 		c          = jsonschema.NewCompiler()
-		nodeSchema = c.MustCompile("./node.json")
-		edgeSchema = c.MustCompile("./edge.json")
+		nodeSchema = c.MustCompile("./json_schema/node.json")
+		edgeSchema = c.MustCompile("./json_schema/edge.json")
 	)
 
 	var validateNodes = func() error {
 		nodesFound = true
 
 		if err := decoder.EatOpeningBracket(); err != nil {
-			return err
+			if err == ingest.ErrNullArray {
+				return nil // payload is edge only
+			} else {
+				return err
+			}
 		}
 
 		nodeIndex := 0
@@ -187,7 +184,9 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
 			// validate against json schema
 			if err := nodeSchema.Validate(node); err != nil {
-				fmt.Printf("failure node at index %d: %v \n", nodeIndex, err)
+				errorStr := handleValidationError(err)
+				// slog.Warn("validation error for node %d: %v", nodeIndex, errorStr)
+				return fmt.Errorf("[%d] %w: %s", nodeIndex, ingest.ErrNodeValidation, errorStr)
 			}
 
 			nodeIndex++
@@ -217,8 +216,9 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
 			// validate against json schema
 			if err := edgeSchema.Validate(edge); err != nil {
-				fmt.Printf("failure node at index %d: %v", edgeIndex, err)
-
+				// errorStr := handleValidationError(err)
+				// slog.Warn("validation error for node %d: %v", nodeIndex, errorStr)
+				return fmt.Errorf("%w: %w", ingest.ErrEdgeValidation, err)
 			}
 
 			edgeIndex++

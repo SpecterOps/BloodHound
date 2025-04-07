@@ -1,0 +1,14 @@
+{
+    "type": "object",
+    "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "properties": { "type": ["object","null"] },
+        "kinds": {
+            "type": ["array", "null"],
+            "items": { "type": "string" },
+            "maxItems": 2,
+            "minItems": 1
+        }
+    },
+    "required": ["id"]
+}

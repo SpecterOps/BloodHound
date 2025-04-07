@@ -17,7 +17,10 @@
 package ingest_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -85,9 +88,38 @@ func Test_ValidateMetaTag(t *testing.T) {
 }
 
 type genericAssertion struct {
-	name  string
-	input string
-	err   error
+	name             string
+	err              error
+	validationErrMsg string
+	input            string
+	payload          testPayload
+}
+
+type testNode struct {
+	ID         string         `json:"id"`
+	Properties map[string]any `json:"properties"`
+	Kinds      []string       `json:"kinds"`
+}
+
+type testEdge struct {
+	Start      edgePiece      `json:"start"`
+	End        edgePiece      `json:"end"`
+	Kind       string         `json:"kind"`
+	Properties map[string]any `json:"properties"`
+}
+
+type edgePiece struct {
+	IDValue    string `json:"id_value"`
+	IDProperty string `json:"id_property"`
+}
+
+type testGraph struct {
+	Nodes []testNode `json:"nodes,omitempty"`
+	Edges []testEdge `json:"edges,omitempty"`
+}
+
+type testPayload struct {
+	Graph testGraph `json:"graph"`
 }
 
 func Test_ValidateGenericIngest(t *testing.T) {
@@ -131,12 +163,12 @@ func Test_ValidateGenericIngest(t *testing.T) {
 		{
 			name:  "payload contains a node that doesn't conform to spec",
 			input: `{"graph": {"nodes": [{"id": 1234}]}}`,
-			err:   ingest.ErrNodeSchema,
+			err:   ingest.ErrNodeValidation,
 		},
 		{
 			name:  "payload contains an edge that doesn't conform to spec",
 			input: `{"graph": {"edges": [{"source_id": 1234}]}}`,
-			err:   ingest.ErrEdgeSchema,
+			err:   ingest.ErrEdgeValidation,
 		},
 		{
 			name:  "payload contains a node that has invalid json",
@@ -156,8 +188,185 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	}
 }
 
-func Test_hellojsonschema(t *testing.T) {
-	err := ingest_service.ValidateNodeSchema()
+// TODO: Error aggregation?
+func Test_ValidateGenericIngest2(t *testing.T) {
 
-	assert.Nil(t, err)
+	var (
+		positiveCases = []genericAssertion{
+			{
+				name: "payload contains one node",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID:    "1234",
+								Kinds: []string{"a"},
+								Properties: map[string]any{
+									"hello": "world",
+									"one":   2,
+									"true":  false,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				name: "payload contains one edge",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: edgePiece{
+									IDValue: "1234",
+								},
+								End: edgePiece{
+									IDValue: "5678",
+								},
+								Kind: "kind A",
+							},
+						},
+					},
+				},
+			},
+			{
+				name: "node has no kinds specified",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID:    "1234",
+								Kinds: []string{},
+							},
+						},
+					},
+				},
+			},
+			{
+				name: "node kinds is null",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID: "1234",
+							},
+						},
+					},
+				},
+			},
+		}
+		negativeCases = []genericAssertion{
+			{
+				name: "payload doesn't contain atleast one of nodes or edges",
+				payload: testPayload{
+					Graph: testGraph{},
+				},
+				err: ingest.ErrEmptyIngest,
+			},
+			{
+				name: "node validation: ID is null",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								Kinds: []string{"kind A", "kind b"},
+							},
+						},
+					},
+				},
+				err:              ingest.ErrNodeValidation,
+				validationErrMsg: "at '/id",
+			},
+			{
+				name: "node validation: ID is empty string",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID:    "",
+								Kinds: []string{"kind A", "kind b"},
+							},
+						},
+					},
+				},
+				err:              ingest.ErrNodeValidation,
+				validationErrMsg: "at '/id'",
+			},
+			{
+				name: "node validation: > than 2 kinds supplied",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID:    "1234",
+								Kinds: []string{"kind A", "kind b", "kind c"},
+							},
+						},
+					},
+				},
+				err:              ingest.ErrNodeValidation,
+				validationErrMsg: "at '/kinds': maxItems: got 3, want 2",
+			},
+			{
+				name: "node validation: multiple issues. no node id, > 2 kinds supplied",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								Kinds: []string{"kind A", "kind b", "kind c"},
+							},
+						},
+					},
+				},
+				err:              ingest.ErrNodeValidation,
+				validationErrMsg: "at '/kinds': maxItems: got 3, want 21",
+			},
+			// {
+			// 	name: "edge validation: start not provided",
+			// 	payload: testPayload{
+			// 		Graph: testGraph{
+			// 			Edges: []testEdge{
+			// 				{
+			// 					End: edgePiece{
+			//                         IDValue: "5678",
+			//                     },
+			//                     Kind: "kind A",
+			// 				}
+			// 			},
+			// 		},
+			// 	},
+			// 	err:              ingest.ErrNodeValidation,
+			// 	validationErrMsg: "at '/kinds': maxItems: got 3, want 2",
+			// },
+		}
+	)
+
+	for _, assertion := range negativeCases {
+		testMessage := fmt.Sprintf("negative case failed. test name: %s", assertion.name)
+		// marshal the test structure into json to simulate input
+		payload, err := json.Marshal(assertion.payload)
+		assert.Nil(t, err, testMessage)
+
+		reader := bytes.NewReader(payload)
+
+		err = ingest_service.ValidateGenericIngest(reader, true)
+		assert.NotNil(t, err, testMessage)
+		assert.ErrorContains(t, err, assertion.err.Error(), testMessage)
+
+		if assertion.validationErrMsg != "" {
+			assert.ErrorContains(t, err, assertion.validationErrMsg, testMessage)
+		}
+	}
+
+	for _, assertion := range positiveCases {
+		testMessage := fmt.Sprintf("positive case failed. test name: %s", assertion.name)
+		// marshal the test structure into json to simulate input
+		payload, err := json.Marshal(assertion.payload)
+		assert.Nil(t, err, testMessage)
+
+		reader := bytes.NewReader(payload)
+
+		err = ingest_service.ValidateGenericIngest(reader, true)
+		assert.Nil(t, err, testMessage)
+	}
 }

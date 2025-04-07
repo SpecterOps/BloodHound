@@ -24,7 +24,7 @@
             "required": ["id_value"]
         },
         "kind": { "type": "string" },
-        "properties": { "type": "object" }
+        "properties": { "type": ["object","null"] }
     },
     "required": ["start", "end", "kind"]
 }

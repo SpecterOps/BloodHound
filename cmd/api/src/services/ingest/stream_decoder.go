@@ -20,6 +20,9 @@ func NewStreamDecoder(r io.Reader) *StreamDecoder {
 // EatOpeningBracket consumes the opening bracket '['
 func (s *StreamDecoder) EatOpeningBracket() error {
 	tok, err := s.dec.Token()
+	if tok == nil {
+		return ingest.ErrNullArray
+	}
 	if err != nil {
 		return err
 	}
@@ -75,12 +78,7 @@ func (s *StreamDecoder) DecodeNext(v any) error {
 		} else if syntaxErr, ok := err.(*json.SyntaxError); ok {
 			return fmt.Errorf("syntax error at byte %d: %v", syntaxErr.Offset, err)
 		} else if _, ok := err.(*json.UnmarshalTypeError); ok {
-			switch v.(type) {
-			case *Node:
-				return ingest.ErrNodeSchema
-			case *Edge:
-				return ingest.ErrEdgeSchema
-			}
+			return fmt.Errorf("hmmm")
 		} else {
 			return fmt.Errorf("unexpected error: %v", err)
 		}
