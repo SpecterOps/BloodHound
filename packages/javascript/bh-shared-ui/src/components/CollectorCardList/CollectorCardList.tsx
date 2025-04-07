@@ -16,16 +16,17 @@
 
 import { Box, useTheme } from '@mui/material';
 import CollectorCard from '../CollectorCard';
+import { CommunityCollectorType } from 'js-client-library';
 
 interface CollectorCardListProps {
     collectors: {
-        collectorType: 'sharphound' | 'azurehound';
+        collectorType: CommunityCollectorType;
         version: string;
         checksum: string;
         isLatest: boolean;
         isDeprecated: boolean;
-        onClickDownload: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
-        onClickDownloadChecksum: (collectorType: 'sharphound' | 'azurehound', version: string) => void;
+        onClickDownload: (collectorType: CommunityCollectorType, version: string) => void;
+        onClickDownloadChecksum: (collectorType: CommunityCollectorType, version: string) => void;
     }[];
 }
 

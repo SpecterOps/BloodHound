@@ -16,23 +16,17 @@
 
 import { apiClient } from 'bh-shared-ui';
 import { RequestOptions } from 'js-client-library';
-import { useQuery } from 'react-query';
-
-export type CollectorType = 'sharphound' | 'azurehound';
-
-export const COLLECTOR_TYPE: Record<CollectorType, string> = {
-    sharphound: 'SharpHound',
-    azurehound: 'AzureHound',
-};
+import { CommunityCollectorType, GetCollectorsResponse } from 'js-client-library';
+import { useQuery, UseQueryResult } from 'react-query';
 
 export const collectorKeys = {
     all: ['collectors'] as const,
-    listByType: (type: CollectorType) => [...collectorKeys.all, type] as const,
+    listByType: (type: CommunityCollectorType) => [...collectorKeys.all, type] as const,
     detail: (userId: number) => [...collectorKeys.all, userId] as const,
 };
 
-export const getCollectorsByType = (type: CollectorType, options?: RequestOptions) =>
+export const getCollectorsByType = async (type: CommunityCollectorType, options?: RequestOptions): Promise<GetCollectorsResponse> =>
     apiClient.getCollectors(type, options).then((res) => res.data);
 
-export const useGetCollectorsByType = (type: CollectorType) =>
-    useQuery(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));
+export const useGetCollectorsByType = (type: CommunityCollectorType): UseQueryResult<GetCollectorsResponse> =>
+    useQuery<GetCollectorsResponse>(collectorKeys.listByType(type), ({ signal }) => getCollectorsByType(type, { signal }));
