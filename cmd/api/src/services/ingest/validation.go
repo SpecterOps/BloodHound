@@ -216,9 +216,8 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
 			// validate against json schema
 			if err := edgeSchema.Validate(edge); err != nil {
-				// errorStr := handleValidationError(err)
-				// slog.Warn("validation error for node %d: %v", nodeIndex, errorStr)
-				return fmt.Errorf("%w: %w", ingest.ErrEdgeValidation, err)
+				errorStr := handleValidationError(err)
+				return fmt.Errorf("[%d] %w: %s", edgeIndex, ingest.ErrEdgeValidation, errorStr)
 			}
 
 			edgeIndex++

@@ -4,11 +4,11 @@
         "id": { "type": "string", "minLength": 1 },
         "properties": { "type": ["object","null"] },
         "kinds": {
-            "type": ["array", "null"],
+            "type": ["array"],
             "items": { "type": "string" },
             "maxItems": 2,
             "minItems": 1
         }
     },
-    "required": ["id"]
+    "required": ["id", "kinds"]
 }

@@ -88,11 +88,11 @@ func Test_ValidateMetaTag(t *testing.T) {
 }
 
 type genericAssertion struct {
-	name             string
-	err              error
-	validationErrMsg string
-	input            string
-	payload          testPayload
+	name              string
+	err               error
+	validationErrMsgs []string // one record may have multiple schema violations
+	input             string
+	payload           testPayload
 }
 
 type testNode struct {
@@ -102,14 +102,16 @@ type testNode struct {
 }
 
 type testEdge struct {
-	Start      edgePiece      `json:"start"`
-	End        edgePiece      `json:"end"`
-	Kind       string         `json:"kind"`
+	// non-pointer nested structs are automatically initialized with the zero value of the struct type.
+	// we want the edgePiece's to be pointers so that we can omit them in the request and test validation
+	Start      *edgePiece     `json:"start"`
+	End        *edgePiece     `json:"end"`
+	Kind       string         `json:"kind,omitempty"`
 	Properties map[string]any `json:"properties"`
 }
 
 type edgePiece struct {
-	IDValue    string `json:"id_value"`
+	IDValue    string `json:"id_value,omitempty"`
 	IDProperty string `json:"id_property"`
 }
 
@@ -188,7 +190,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	}
 }
 
-// TODO: Error aggregation?
+// TODO: Error aggregation. ie multiple nodes that have errors
 func Test_ValidateGenericIngest2(t *testing.T) {
 
 	var (
@@ -217,38 +219,18 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					Graph: testGraph{
 						Edges: []testEdge{
 							{
-								Start: edgePiece{
+								Start: &edgePiece{
 									IDValue: "1234",
 								},
-								End: edgePiece{
+								End: &edgePiece{
 									IDValue: "5678",
 								},
 								Kind: "kind A",
-							},
-						},
-					},
-				},
-			},
-			{
-				name: "node has no kinds specified",
-				payload: testPayload{
-					Graph: testGraph{
-						Nodes: []testNode{
-							{
-								ID:    "1234",
-								Kinds: []string{},
-							},
-						},
-					},
-				},
-			},
-			{
-				name: "node kinds is null",
-				payload: testPayload{
-					Graph: testGraph{
-						Nodes: []testNode{
-							{
-								ID: "1234",
+								Properties: map[string]any{
+									"hello": "world",
+									"true":  false,
+									"one":   2,
+								},
 							},
 						},
 					},
@@ -274,8 +256,8 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:              ingest.ErrNodeValidation,
-				validationErrMsg: "at '/id",
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/id"},
 			},
 			{
 				name: "node validation: ID is empty string",
@@ -289,8 +271,8 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:              ingest.ErrNodeValidation,
-				validationErrMsg: "at '/id'",
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/id'"},
 			},
 			{
 				name: "node validation: > than 2 kinds supplied",
@@ -304,8 +286,37 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:              ingest.ErrNodeValidation,
-				validationErrMsg: "at '/kinds': maxItems: got 3, want 2",
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2"},
+			},
+			{
+				name: "node validation: atleast one kind must be specified",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID:    "1234",
+								Kinds: []string{},
+							},
+						},
+					},
+				},
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/kinds': minItems: got 0, want 1"},
+			},
+			{
+				name: "node validation: kinds cannot be a null array",
+				payload: testPayload{
+					Graph: testGraph{
+						Nodes: []testNode{
+							{
+								ID: "1234",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/kinds': got null, want array"},
 			},
 			{
 				name: "node validation: multiple issues. no node id, > 2 kinds supplied",
@@ -318,26 +329,110 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:              ingest.ErrNodeValidation,
-				validationErrMsg: "at '/kinds': maxItems: got 3, want 21",
+				err:               ingest.ErrNodeValidation,
+				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2", "at '/id': minLength: got 0, want 1"},
 			},
-			// {
-			// 	name: "edge validation: start not provided",
-			// 	payload: testPayload{
-			// 		Graph: testGraph{
-			// 			Edges: []testEdge{
-			// 				{
-			// 					End: edgePiece{
-			//                         IDValue: "5678",
-			//                     },
-			//                     Kind: "kind A",
-			// 				}
-			// 			},
-			// 		},
-			// 	},
-			// 	err:              ingest.ErrNodeValidation,
-			// 	validationErrMsg: "at '/kinds': maxItems: got 3, want 2",
-			// },
+			{
+				name: "edge validation: start not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								End: &edgePiece{
+									IDValue: "a5678",
+								},
+								Kind: "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/start': got null, want object"},
+			},
+			{
+				name: "edge validation: start id not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: &edgePiece{},
+								End: &edgePiece{
+									IDValue: "a5678",
+								},
+								Kind: "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/start': missing property 'id_value'"},
+			},
+			{
+				name: "edge validation: end not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: &edgePiece{
+									IDValue: "1234",
+								},
+								Kind: "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/end': got null, want object"},
+			},
+			{
+				name: "edge validation: end id not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: &edgePiece{IDValue: "1234"},
+								End:   &edgePiece{},
+								Kind:  "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/end': missing property 'id_value'"},
+			},
+			{
+				name: "edge validation: kind not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: &edgePiece{
+									IDValue: "1234",
+								},
+								End: &edgePiece{
+									IDValue: "5678",
+								},
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '': missing property 'kind'"},
+			},
+			{
+				name: "edge validation: multiple errors. start and end not provided",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Kind: "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/end': got null, want object", "at '/start': got null, want object"},
+			},
 		}
 	)
 
@@ -350,11 +445,12 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 		reader := bytes.NewReader(payload)
 
 		err = ingest_service.ValidateGenericIngest(reader, true)
-		assert.NotNil(t, err, testMessage)
 		assert.ErrorContains(t, err, assertion.err.Error(), testMessage)
 
-		if assertion.validationErrMsg != "" {
-			assert.ErrorContains(t, err, assertion.validationErrMsg, testMessage)
+		if len(assertion.validationErrMsgs) > 0 {
+			for _, validationError := range assertion.validationErrMsgs {
+				assert.ErrorContains(t, err, validationError, testMessage)
+			}
 		}
 	}
 
