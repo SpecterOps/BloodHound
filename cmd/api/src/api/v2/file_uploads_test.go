@@ -17,15 +17,12 @@
 package v2_test
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"testing"
 
