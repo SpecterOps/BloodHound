@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, useTheme } from '@mui/material';
-import CollectorCard from '../CollectorCard';
 import { CommunityCollectorType } from 'js-client-library';
+import CollectorCard from '../CollectorCard';
 
 interface CollectorCardListProps {
     collectors: {
