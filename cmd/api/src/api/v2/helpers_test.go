@@ -30,7 +30,7 @@ import (
 func TestParseIntQueryParameter(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		key string
+		key          string
 		defaultValue int
 	}
 	type want struct {
@@ -38,18 +38,18 @@ func TestParseIntQueryParameter(t *testing.T) {
 		err error
 	}
 	tests := []struct {
-		name string
+		name     string
 		addParam func() url.Values
-		args args
-		want want
+		args     args
+		want     want
 	}{
 		{
 			name: "Error: parameter is not provided",
 			args: args{
-				key: "key1",
+				key:          "key1",
 				defaultValue: 0,
 			},
-			addParam: func() url.Values {return url.Values{}},
+			addParam: func() url.Values { return url.Values{} },
 			want: want{
 				err: nil,
 				res: 0,
@@ -58,10 +58,10 @@ func TestParseIntQueryParameter(t *testing.T) {
 		{
 			name: "Error: parameter is not an int",
 			args: args{
-				key: "key1",
+				key:          "key1",
 				defaultValue: 0,
 			},
-			addParam: func() url.Values  {
+			addParam: func() url.Values {
 				urlValues := url.Values{}
 				urlValues.Add("key1", "value1")
 				return urlValues
@@ -74,10 +74,10 @@ func TestParseIntQueryParameter(t *testing.T) {
 		{
 			name: "Success: query parameter is int",
 			args: args{
-				key: "key1",
+				key:          "key1",
 				defaultValue: 0,
 			},
-			addParam: func() url.Values  {
+			addParam: func() url.Values {
 				urlValues := url.Values{}
 				urlValues.Add("key1", "1")
 				return urlValues
@@ -159,17 +159,17 @@ func TestParseOptionalLimitQueryParameter(t *testing.T) {
 		err error
 	}
 	tests := []struct {
-		name string
+		name     string
 		addParam func() url.Values
-		args args
-		want want
+		args     args
+		want     want
 	}{
 		{
 			name: "Success: optional parameter `limit` not present, returns default",
 			args: args{
 				defaultInt: 1,
 			},
-			addParam: func() url.Values {return url.Values{}},
+			addParam: func() url.Values { return url.Values{} },
 			want: want{
 				err: nil,
 				res: 1,

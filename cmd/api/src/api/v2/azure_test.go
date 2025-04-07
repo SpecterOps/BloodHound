@@ -290,7 +290,7 @@ func TestManagementResource_GetAZEntityInformation(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockDB         *graphmocks.MockDatabase
+		mockDB *graphmocks.MockDatabase
 	}
 	type args struct {
 		entityType string
