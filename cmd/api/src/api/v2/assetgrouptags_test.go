@@ -577,7 +577,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusForbidden)
-					apitest.BodyContains(output, "cannot update name on a default selector")
+					apitest.BodyContains(output, "default selectors only support modifying auto_certify and disabled_at")
 				},
 			},
 			{
@@ -597,7 +597,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
@@ -627,7 +627,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any()).
+						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)

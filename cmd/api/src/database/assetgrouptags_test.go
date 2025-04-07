@@ -137,7 +137,6 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	selector.UpdatedBy = updateActor
 	selector.Name = updateName
 	selector.Description = updateDescription
 	selector.DisabledAt = disabledTime
@@ -146,7 +145,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.Seeds = updateSeeds
 
 	// call the update function
-	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, selector)
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor, selector)
 	require.NoError(t, err)
 
 	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)

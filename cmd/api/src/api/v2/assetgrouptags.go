@@ -113,8 +113,6 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
 		// we can update DisabledAt on a default selector
 		if selUpdateReq.DisabledAt.Valid {
@@ -137,40 +135,34 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.AutoCertify = selUpdateReq.AutoCertify
 		}
 
+		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != "" || len(selUpdateReq.Seeds) > 0) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "default selectors only support modifying auto_certify and disabled_at", request), response)
+			return
+		}
+
 		if selUpdateReq.Name != "" {
-			if !selector.IsDefault {
-				selector.Name = selUpdateReq.Name
-			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update name on a default selector", request), response)
-				return
-			}
+			selector.Name = selUpdateReq.Name
 		}
 
 		if selUpdateReq.Description != "" {
-			if !selector.IsDefault {
-				selector.Description = selUpdateReq.Description
-			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update description on a default selector", request), response)
-				return
-			}
+			selector.Description = selUpdateReq.Description
 		}
 
 		// if seeds are not included, call the DB update with them set to nil
 		var seedsTemp []model.SelectorSeed
 		if len(selUpdateReq.Seeds) > 0 {
-			if !selector.IsDefault {
-				selector.Seeds = selUpdateReq.Seeds
-			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot update seeds on a default selector", request), response)
+			if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 				return
 			}
+			selector.Seeds = selUpdateReq.Seeds
 		} else {
 			// the DB update function will skip updating the seeds in this case
 			seedsTemp = selector.Seeds
 			selector.Seeds = nil
 		}
 
-		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), selector); err != nil {
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if seedsTemp != nil {
