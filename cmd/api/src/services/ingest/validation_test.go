@@ -96,7 +96,7 @@ type genericAssertion struct {
 }
 
 type testNode struct {
-	ID         string         `json:"id"`
+	ID         string         `json:"id,omitempty"`
 	Properties map[string]any `json:"properties"`
 	Kinds      []string       `json:"kinds"`
 }
@@ -257,7 +257,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/id"},
+				validationErrMsgs: []string{"at '': missing property 'id'"},
 			},
 			{
 				name: "node validation: ID is empty string",
@@ -272,7 +272,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/id'"},
+				validationErrMsgs: []string{"at '': missing property 'id'"},
 			},
 			{
 				name: "node validation: > than 2 kinds supplied",
@@ -330,7 +330,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2", "at '/id': minLength: got 0, want 1"},
+				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2", "at '': missing property 'id'"},
 			},
 			{
 				name: "edge validation: start not provided",
@@ -392,6 +392,22 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 							{
 								Start: &edgePiece{IDValue: "1234"},
 								End:   &edgePiece{},
+								Kind:  "kind A",
+							},
+						},
+					},
+				},
+				err:               ingest.ErrEdgeValidation,
+				validationErrMsgs: []string{"at '/end': missing property 'id_value'"},
+			},
+			{
+				name: "edge validation: end id is empty",
+				payload: testPayload{
+					Graph: testGraph{
+						Edges: []testEdge{
+							{
+								Start: &edgePiece{IDValue: "1234"},
+								End:   &edgePiece{IDValue: ""},
 								Kind:  "kind A",
 							},
 						},

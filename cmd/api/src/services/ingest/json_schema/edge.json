@@ -4,7 +4,7 @@
         "start": {
             "type": "object",
             "properties": {
-                "id_value": { "type": "string", "minLength": 1 },
+                "id_value": { "type": "string" },
                 "id_property": {
                     "type": "string",
                     "description": "Edge inserts use this property to perform an exact match search. If not provided, edge inserts default to matching on a node's 'objectid' property."
@@ -15,7 +15,7 @@
         "end": {
             "type": "object",
             "properties": {
-                "id_value": { "type": "string" , "minLength": 1 },
+                "id_value": { "type": "string"  },
                 "id_property": {
                     "type": "string",
                     "description": "Edge inserts use this property to perform an exact match search. If not provided, edge inserts default to matching on a node's 'objectid' property."

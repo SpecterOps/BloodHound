@@ -1,7 +1,7 @@
 {
     "type": "object",
     "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": { "type": "string" },
         "properties": { "type": ["object","null"] },
         "kinds": {
             "type": ["array"],
