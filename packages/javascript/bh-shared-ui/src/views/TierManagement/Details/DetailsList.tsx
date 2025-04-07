@@ -48,7 +48,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
     const [sortOrder, setSortOrder] = useState<SortOrder>();
 
     return (
-        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full overflow-y-hidden'>
+        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
             {title !== 'Tiers' ? (
                 <SortableHeader
                     title={title}
@@ -71,7 +71,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 </div>
             )}
             <div
-                className={cn('h-full', {
+                className={cn('h-full max-h-full overflow-y-auto', {
                     'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
                 })}>
                 <ul>

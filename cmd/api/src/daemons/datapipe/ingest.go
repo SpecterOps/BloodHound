@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/services/fileupload"
+	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const (
@@ -39,7 +39,7 @@ const (
 )
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, adcsEnabled bool) error {
-	if meta, err := fileupload.ValidateMetaTag(reader, false); err != nil {
+	if meta, err := ingest_service.ValidateMetaTag(reader, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta, adcsEnabled)

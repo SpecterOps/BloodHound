@@ -29,10 +29,12 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.IdentityFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if referenceArgument, err := PopFromBuilderAs[pgsql.Identifier](s.treeTranslator); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
+		} else if referenceArgument, typeOK := argument.(pgsql.Identifier); !typeOK {
+			s.SetErrorf("expected an identifier for the cypher function: %s but received %T", typedExpression.Name, argument)
 		} else {
-			s.treeTranslator.Push(pgsql.CompoundIdentifier{referenceArgument, pgsql.ColumnID})
+			s.treeTranslator.PushOperand(pgsql.CompoundIdentifier{referenceArgument, pgsql.ColumnID})
 		}
 
 	case cypher.LocalTimeFunction:
@@ -58,32 +60,32 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.EdgeTypeFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else if identifier, isIdentifier := argument.(pgsql.Identifier); !isIdentifier {
 			s.SetErrorf("expected an identifier for the cypher function: %s but received %T", typedExpression.Name, argument)
 		} else {
-			s.treeTranslator.Push(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindID})
+			s.treeTranslator.PushOperand(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindID})
 		}
 
 	case cypher.NodeLabelsFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else if identifier, isIdentifier := argument.(pgsql.Identifier); !isIdentifier {
 			s.SetErrorf("expected an identifier for the cypher function: %s but received %T", typedExpression.Name, argument)
 		} else {
-			s.treeTranslator.Push(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindIDs})
+			s.treeTranslator.PushOperand(pgsql.CompoundIdentifier{identifier, pgsql.ColumnKindIDs})
 		}
 
 	case cypher.CountFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			s.treeTranslator.Push(pgsql.FunctionCall{
+			s.treeTranslator.PushOperand(pgsql.FunctionCall{
 				Function:   pgsql.FunctionCount,
 				Parameters: []pgsql.Expression{argument},
 				CastType:   pgsql.Int8,
@@ -93,9 +95,9 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.StringSplitToArrayFunction:
 		if typedExpression.NumArguments() != 2 {
 			s.SetError(fmt.Errorf("expected two arguments for cypher function %s", typedExpression.Name))
-		} else if delimiter, err := s.treeTranslator.Pop(); err != nil {
+		} else if delimiter, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
-		} else if splitReference, err := s.treeTranslator.Pop(); err != nil {
+		} else if splitReference, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
 			if _, hasHint := GetTypeHint(splitReference); !hasHint {
@@ -103,14 +105,14 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 				if typedSplitRef, err := TypeCastExpression(splitReference, pgsql.Text); err != nil {
 					s.SetError(err)
 				} else {
-					s.treeTranslator.Push(pgsql.FunctionCall{
+					s.treeTranslator.PushOperand(pgsql.FunctionCall{
 						Function:   pgsql.FunctionStringToArray,
 						Parameters: []pgsql.Expression{typedSplitRef, delimiter},
 						CastType:   pgsql.TextArray,
 					})
 				}
 			} else {
-				s.treeTranslator.Push(pgsql.FunctionCall{
+				s.treeTranslator.PushOperand(pgsql.FunctionCall{
 					Function:   pgsql.FunctionStringToArray,
 					Parameters: []pgsql.Expression{splitReference, delimiter},
 					CastType:   pgsql.TextArray,
@@ -121,15 +123,15 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.ToLowerFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Rewrite the property lookup operator with a JSON text field lookup
 				propertyLookup.Operator = pgsql.OperatorJSONTextField
 			}
 
-			s.treeTranslator.Push(pgsql.FunctionCall{
+			s.treeTranslator.PushOperand(pgsql.FunctionCall{
 				Function:   pgsql.FunctionToLower,
 				Parameters: []pgsql.Expression{argument},
 				CastType:   pgsql.Text,
@@ -139,12 +141,12 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.ListSizeFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
 			var functionCall pgsql.FunctionCall
 
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Ensure that the JSONB array length function receives the JSONB type
 				propertyLookup.Operator = pgsql.OperatorJSONField
 
@@ -161,21 +163,21 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 				}
 			}
 
-			s.treeTranslator.Push(functionCall)
+			s.treeTranslator.PushOperand(functionCall)
 		}
 
 	case cypher.ToUpperFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+			if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 				// Rewrite the property lookup operator with a JSON text field lookup
 				propertyLookup.Operator = pgsql.OperatorJSONTextField
 			}
 
-			s.treeTranslator.Push(pgsql.FunctionCall{
+			s.treeTranslator.PushOperand(pgsql.FunctionCall{
 				Function:   pgsql.FunctionToUpper,
 				Parameters: []pgsql.Expression{argument},
 				CastType:   pgsql.Text,
@@ -185,19 +187,19 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.ToStringFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Text))
+			s.treeTranslator.PushOperand(pgsql.NewTypeCast(argument, pgsql.Text))
 		}
 
 	case cypher.ToIntegerFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
-			s.treeTranslator.Push(pgsql.NewTypeCast(argument, pgsql.Int8))
+			s.treeTranslator.PushOperand(pgsql.NewTypeCast(argument, pgsql.Int8))
 		}
 
 	case cypher.CoalesceFunction:
@@ -208,7 +210,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 	case cypher.CollectFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
-		} else if argument, err := s.treeTranslator.Pop(); err != nil {
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
 			switch typedArgument := unwrapParenthetical(argument).(type) {
@@ -218,7 +220,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 				} else if bindingArrayType, err := binding.DataType.ToArrayType(); err != nil {
 					s.SetError(err)
 				} else {
-					s.treeTranslator.Push(pgsql.FunctionCall{
+					s.treeTranslator.PushOperand(pgsql.FunctionCall{
 						Function:   pgsql.FunctionArrayAggregate,
 						Parameters: []pgsql.Expression{argument},
 						Distinct:   typedExpression.Distinct,
@@ -227,7 +229,7 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 				}
 
 			default:
-				s.treeTranslator.Push(pgsql.FunctionCall{
+				s.treeTranslator.PushOperand(pgsql.FunctionCall{
 					Function:   pgsql.FunctionArrayAggregate,
 					Parameters: []pgsql.Expression{argument},
 					Distinct:   typedExpression.Distinct,
@@ -271,14 +273,14 @@ func (s *Translator) translateDateTimeFunctionCall(cypherFunc *cypher.FunctionIn
 	if !cypherFunc.HasArguments() {
 		switch functionIdentifier {
 		case pgsql.FunctionCurrentDate:
-			s.treeTranslator.Push(pgsql.FunctionCall{
+			s.treeTranslator.PushOperand(pgsql.FunctionCall{
 				Function: functionIdentifier,
 				Bare:     true,
 				CastType: dataType,
 			})
 
 		case pgsql.FunctionNow:
-			s.treeTranslator.Push(pgsql.FunctionCall{
+			s.treeTranslator.PushOperand(pgsql.FunctionCall{
 				Function: functionIdentifier,
 				Bare:     false,
 				CastType: dataType,
@@ -288,7 +290,7 @@ func (s *Translator) translateDateTimeFunctionCall(cypherFunc *cypher.FunctionIn
 			if precisionLiteral, err := pgsql.AsLiteral(defaultTimestampPrecision); err != nil {
 				return err
 			} else {
-				s.treeTranslator.Push(pgsql.FunctionCall{
+				s.treeTranslator.PushOperand(pgsql.FunctionCall{
 					Function: functionIdentifier,
 					Parameters: []pgsql.Expression{
 						precisionLiteral,
@@ -299,10 +301,10 @@ func (s *Translator) translateDateTimeFunctionCall(cypherFunc *cypher.FunctionIn
 		}
 	} else if cypherFunc.NumArguments() > 1 {
 		return fmt.Errorf("expected only one text argument for cypher function: %s", cypherFunc.Name)
-	} else if specArgument, err := s.treeTranslator.Pop(); err != nil {
+	} else if specArgument, err := s.treeTranslator.PopOperand(); err != nil {
 		return err
 	} else {
-		s.treeTranslator.Push(pgsql.NewTypeCast(specArgument, dataType))
+		s.treeTranslator.PushOperand(pgsql.NewTypeCast(specArgument, dataType))
 	}
 
 	return nil
@@ -320,7 +322,7 @@ func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.Functi
 		// This loop is used to pop off the coalesce function arguments in the intended order (since they're
 		// pushed onto the translator stack).
 		for idx := range functionInvocation.Arguments {
-			if argument, err := s.treeTranslator.Pop(); err != nil {
+			if argument, err := s.treeTranslator.PopOperand(); err != nil {
 				return err
 			} else {
 				arguments[numArgs-idx-1] = argument
@@ -346,14 +348,14 @@ func (s *Translator) translateCoalesceFunction(functionInvocation *cypher.Functi
 		if expectedType.IsKnown() {
 			// Rewrite any property lookup operators now that we have some type information
 			for idx, argument := range arguments {
-				if propertyLookup, isPropertyLookup := asPropertyLookup(argument); isPropertyLookup {
+				if propertyLookup, isPropertyLookup := expressionToPropertyLookupBinaryExpression(argument); isPropertyLookup {
 					arguments[idx] = rewritePropertyLookupOperator(propertyLookup, expectedType)
 				}
 			}
 		}
 
 		// Translate the function call to the expected SQL form
-		s.treeTranslator.Push(pgsql.FunctionCall{
+		s.treeTranslator.PushOperand(pgsql.FunctionCall{
 			Function:   pgsql.FunctionCoalesce,
 			Parameters: arguments,
 			CastType:   expectedType,

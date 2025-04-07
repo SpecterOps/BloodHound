@@ -54,9 +54,9 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterTargetNode), request), response)
 	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge requested: %s", edgeType[0]), request), response)
-	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 32); err != nil {
+	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
-	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 32); err != nil {
+	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
@@ -90,9 +90,9 @@ func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *ht
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterTargetNode), request), response)
 	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge requested: %s", edgeType[0]), request), response)
-	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 32); err != nil {
+	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
-	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 32); err != nil {
+	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
