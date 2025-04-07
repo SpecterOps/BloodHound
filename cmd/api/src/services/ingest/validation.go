@@ -151,114 +151,87 @@ func handleValidationError(err error) string {
 	return sb.String()
 }
 
-// TODO: a payload can contain just edges or just nodes, or both
 func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
-
 	var (
-		decoder    = NewStreamDecoder(reader)
-		nodesFound = false
-		edgesFound = false
+		decoder = NewStreamDecoder(reader)
+
+		// Initialize schemas
 		c          = jsonschema.NewCompiler()
 		nodeSchema = c.MustCompile("./json_schema/node.json")
 		edgeSchema = c.MustCompile("./json_schema/edge.json")
+
+		nodesFound, edgesFound = false, false
 	)
 
-	var validateNodes = func() error {
-		nodesFound = true
-
+	// Validate an array of items (either nodes or edges)
+	validateArray := func(arrayName string, validateFunc func(map[string]any) error) error {
 		if err := decoder.EatOpeningBracket(); err != nil {
-			if err == ingest.ErrNullArray {
-				return nil // payload is edge only
-			} else {
-				return err
-			}
+			return fmt.Errorf("error opening %s array: %w", arrayName, err)
 		}
 
-		nodeIndex := 0
-		// churn through array
+		index := 0
 		for decoder.More() {
-			var node map[string]any
-			if err := decoder.DecodeNext(&node); err != nil {
-				return err
+			var item map[string]any
+			if err := decoder.DecodeNext(&item); err != nil {
+				return fmt.Errorf("error decoding %s[%d]: %w", arrayName, index, err)
 			}
 
-			// validate against json schema
-			if err := nodeSchema.Validate(node); err != nil {
-				errorStr := handleValidationError(err)
-				// slog.Warn("validation error for node %d: %v", nodeIndex, errorStr)
-				return fmt.Errorf("[%d] %w: %s", nodeIndex, ingest.ErrNodeValidation, errorStr)
+			// Validate the item using the provided validation function
+			if err := validateFunc(item); err != nil {
+				return fmt.Errorf("validation failed for %s[%d]: %w", arrayName, index, err)
 			}
-
-			nodeIndex++
+			index++
 		}
 
 		if err := decoder.EatClosingBracket(); err != nil {
-			return err
+			return fmt.Errorf("error closing %s array: %w", arrayName, err)
 		}
 
 		return nil
 	}
 
-	var validateEdges = func() error {
-		edgesFound = true
-
-		if err := decoder.EatOpeningBracket(); err != nil {
-			return err
+	// Generic validation function for nodes and edges
+	validateItem := func(item map[string]any, schema *jsonschema.Schema) error {
+		if err := schema.Validate(item); err != nil {
+			errorStr := handleValidationError(err)
+			return fmt.Errorf("%s", errorStr)
 		}
-
-		edgeIndex := 0
-		// churn through array
-		for decoder.More() {
-			var edge map[string]any
-			if err := decoder.DecodeNext(&edge); err != nil {
-				return err
-			}
-
-			// validate against json schema
-			if err := edgeSchema.Validate(edge); err != nil {
-				errorStr := handleValidationError(err)
-				return fmt.Errorf("[%d] %w: %s", edgeIndex, ingest.ErrEdgeValidation, errorStr)
-			}
-
-			edgeIndex++
-		}
-
-		if err := decoder.EatClosingBracket(); err != nil {
-			return err
-		}
-
 		return nil
 	}
 
-	// consume JSON until we get to the graph tag
+	// Loop to read the JSON stream and identify graph elements
 	for {
-		if token, err := decoder.dec.Token(); err != nil {
+		token, err := decoder.dec.Token()
+		if err != nil {
 			if errors.Is(err, io.EOF) {
-				if !nodesFound && !edgesFound { // if payload empty, reject
+				if !nodesFound && !edgesFound {
 					return ingest.ErrEmptyIngest
 				}
-				// TODO: may need more checking here for closing delims
 				break
 			}
-		} else {
-			switch typedToken := token.(type) {
-			case string:
-				if typedToken == "graph" {
-					if err := decoder.EatOpeningCurlyBracket(); err != nil {
-						return err
-					}
-				}
+			return fmt.Errorf("error reading token: %w", err)
+		}
 
-				if typedToken == "nodes" {
-					if err := validateNodes(); err != nil {
-						return err
-					}
+		switch typedToken := token.(type) {
+		case string:
+			switch typedToken {
+			case "graph":
+				if err := decoder.EatOpeningCurlyBracket(); err != nil {
+					return fmt.Errorf("error opening graph object: %w", err)
 				}
-
-				if typedToken == "edges" {
-					if err := validateEdges(); err != nil {
-						return err
-					}
+			case "nodes":
+				nodesFound = true
+				if err := validateArray("nodes", func(item map[string]any) error {
+					return validateItem(item, nodeSchema)
+				}); err != nil {
+					return err
+				}
+			case "edges":
+				edgesFound = true
+				if err := validateArray("edges", func(item map[string]any) error {
+					return validateItem(item, edgeSchema)
+				}); err != nil {
+					return err
 				}
 			}
 		}
@@ -266,7 +239,7 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
 	if readToEnd {
 		if _, err := io.Copy(io.Discard, reader); err != nil {
-			return err
+			return fmt.Errorf("error reading to end: %w", err)
 		}
 	}
 	return nil

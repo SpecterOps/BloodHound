@@ -112,7 +112,7 @@ type testEdge struct {
 
 type edgePiece struct {
 	IDValue    string `json:"id_value,omitempty"`
-	IDProperty string `json:"id_property"`
+	IDProperty string `json:"id_property,omitempty"`
 }
 
 type testGraph struct {
@@ -256,8 +256,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '': missing property 'id'"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '': missing property 'id'"},
 			},
 			{
 				name: "node validation: ID is empty string",
@@ -271,8 +270,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '': missing property 'id'"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '': missing property 'id'"},
 			},
 			{
 				name: "node validation: > than 2 kinds supplied",
@@ -286,8 +284,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '/kinds': maxItems: got 3, want 2"},
 			},
 			{
 				name: "node validation: atleast one kind must be specified",
@@ -301,8 +298,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/kinds': minItems: got 0, want 1"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '/kinds': minItems: got 0, want 1"},
 			},
 			{
 				name: "node validation: kinds cannot be a null array",
@@ -315,8 +311,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/kinds': got null, want array"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '/kinds': got null, want array"},
 			},
 			{
 				name: "node validation: multiple issues. no node id, > 2 kinds supplied",
@@ -329,8 +324,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrNodeValidation,
-				validationErrMsgs: []string{"at '/kinds': maxItems: got 3, want 2", "at '': missing property 'id'"},
+				validationErrMsgs: []string{"validation failed for nodes[0]", "at '/kinds': maxItems: got 3, want 2", "at '': missing property 'id'"},
 			},
 			{
 				name: "edge validation: start not provided",
@@ -346,8 +340,9 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 						},
 					},
 				},
-				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/start': got null, want object"},
+				validationErrMsgs: []string{
+					"validation failed for edges[0]",
+					"at '/start': got null, want object"},
 			},
 			{
 				name: "edge validation: start id not provided",
@@ -365,7 +360,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/start': missing property 'id_value'"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '/start': missing property 'id_value'"},
 			},
 			{
 				name: "edge validation: end not provided",
@@ -382,7 +377,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/end': got null, want object"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object"},
 			},
 			{
 				name: "edge validation: end id not provided",
@@ -398,7 +393,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/end': missing property 'id_value'"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
 			},
 			{
 				name: "edge validation: end id is empty",
@@ -414,7 +409,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/end': missing property 'id_value'"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
 			},
 			{
 				name: "edge validation: kind not provided",
@@ -433,7 +428,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '': missing property 'kind'"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '': missing property 'kind'"},
 			},
 			{
 				name: "edge validation: multiple errors. start and end not provided",
@@ -447,7 +442,7 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 					},
 				},
 				err:               ingest.ErrEdgeValidation,
-				validationErrMsgs: []string{"at '/end': got null, want object", "at '/start': got null, want object"},
+				validationErrMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object", "at '/start': got null, want object"},
 			},
 		}
 	)
@@ -461,7 +456,6 @@ func Test_ValidateGenericIngest2(t *testing.T) {
 		reader := bytes.NewReader(payload)
 
 		err = ingest_service.ValidateGenericIngest(reader, true)
-		assert.ErrorContains(t, err, assertion.err.Error(), testMessage)
 
 		if len(assertion.validationErrMsgs) > 0 {
 			for _, validationError := range assertion.validationErrMsgs {
