@@ -325,7 +325,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFileUploadJob(gomock.Any(), int64(1)).Return(model.FileUploadJob{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -352,7 +352,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFileUploadJob(gomock.Any(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -385,7 +385,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFileUploadJob(gomock.Any(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(gomock.Any(), int64(1)).Return(model.IngestJob{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -413,7 +413,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(req.Context(), int64(1)).Return(model.IngestJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, errors.New("error"))
 			},
 			expected: expected{
@@ -442,9 +442,9 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				// mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(req.Context(), int64(1)).Return(model.IngestJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
-				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(errors.New("error"))
+				mock.mockDatabase.EXPECT().UpdateIngestJob(req.Context(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -471,9 +471,9 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
-				// mock.mockDatabase.EXPECT().GetFileUploadJob(req.Context(), int64(1)).Return(model.FileUploadJob{}, nil)
+				mock.mockDatabase.EXPECT().GetIngestJob(req.Context(), int64(1)).Return(model.IngestJob{}, nil)
 				mock.mockDatabase.EXPECT().CreateIngestTask(req.Context(), gomock.Any()).Return(model.IngestTask{}, nil)
-				mock.mockDatabase.EXPECT().UpdateFileUploadJob(req.Context(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().UpdateIngestJob(req.Context(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
