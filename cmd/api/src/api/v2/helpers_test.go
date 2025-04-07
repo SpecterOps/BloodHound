@@ -28,6 +28,7 @@ import (
 )
 
 func TestParseIntQueryParameter(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		key string
 		defaultValue int
@@ -89,6 +90,7 @@ func TestParseIntQueryParameter(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			urlValues := testCase.addParam()
 
 			got, err := v2.ParseIntQueryParameter(urlValues, testCase.args.key, testCase.args.defaultValue)
@@ -148,6 +150,7 @@ func TestParseLimitQueryParameter(t *testing.T) {
 }
 
 func TestParseOptionalLimitQueryParameter(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		defaultInt int
 	}
@@ -220,6 +223,7 @@ func TestParseOptionalLimitQueryParameter(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			urlValues := testCase.addParam()
 
 			got, err := v2.ParseOptionalLimitQueryParameter(urlValues, testCase.args.defaultInt)
