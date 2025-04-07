@@ -41,10 +41,19 @@ export const ExploreGraphQueryKey = 'explore-graph-query';
 
 export const INITIAL_FILTERS = getInitialPathFilters();
 export const INITIAL_FILTER_TYPES = extractEdgeTypes(INITIAL_FILTERS);
+export const EMPTY_FILTER_VALUE = 'empty';
 
 export const sharedGraphQueryOptions: ExploreGraphQueryOptions = {
     retry: false,
     refetchOnWindowFocus: false,
+};
+
+// creates a filter string in our API format, handling the case that our 'empty' value is in the url param
+export const createPathFilterString = (types: string[]) => {
+    if (types[0] === EMPTY_FILTER_VALUE) {
+        return `nin:${INITIAL_FILTER_TYPES.join(',')}`;
+    }
+    return `in:${types.join(',')}`;
 };
 
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
