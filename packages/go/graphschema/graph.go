@@ -19,7 +19,13 @@
 
 package graphschema
 
-import graph "github.com/specterops/bloodhound/dawgs/graph"
+import (
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/graphschema/common"
+	"pkg.specterops.io/bloodhoundad/bhe/graphschema/meta"
+)
 
 type KindDescriptor struct {
 	Kind graph.Kind
@@ -37,4 +43,62 @@ type Path struct {
 	Outbound      KindDescriptor
 	Inbound       KindDescriptor
 	Relationships []KindDescriptor
+}
+
+func buildValidKinds() map[graph.Kind]bool {
+	var (
+		validKinds = make(map[graph.Kind]bool)
+		kindSlices = []graph.Kinds{
+			ad.NodeKinds(),
+			ad.Relationships(),
+			azure.NodeKinds(),
+			azure.Relationships(),
+			common.NodeKinds(),
+			common.Relationships(),
+			meta.NodeKinds(),
+			meta.Relationships(),
+		}
+	)
+
+	for _, kindSlice := range kindSlices {
+		for _, kind := range kindSlice {
+			validKinds[kind] = true
+		}
+	}
+
+	return validKinds
+}
+
+var (
+	unknownKind = graph.StringKind("Unknown")
+	ValidKinds  = buildValidKinds()
+)
+
+func PrimaryNodeKind(kinds graph.Kinds) graph.Kind {
+	var (
+		resultKind = unknownKind
+		baseKind   = resultKind
+	)
+
+	for _, kind := range kinds {
+		// If this is a BHE meta kind, return early
+		if kind.Is(meta.Meta, meta.MetaDetail) {
+			return meta.Meta
+		} else if kind.Is(ad.Entity, azure.Entity) {
+			baseKind = kind
+		} else if kind.Is(ad.LocalGroup) {
+			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
+			if resultKind == unknownKind {
+				resultKind = kind
+			}
+		} else if ValidKinds[kind] {
+			resultKind = kind
+		}
+	}
+
+	if resultKind.Is(unknownKind) {
+		return baseKind
+	} else {
+		return resultKind
+	}
 }

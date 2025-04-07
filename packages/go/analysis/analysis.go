@@ -19,6 +19,7 @@ package analysis
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/graphschema"
 	"log/slog"
 	"sync/atomic"
 
@@ -56,7 +57,6 @@ func NewCompositionCounter() CompositionCounter {
 var (
 	metaKind       = graph.StringKind("Meta")
 	metaDetailKind = graph.StringKind("MetaDetail")
-	ValidKinds     = buildValidKinds()
 )
 
 func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
@@ -78,32 +78,7 @@ func GetNodeKindDisplayLabel(node *graph.Node) string {
 }
 
 func GetNodeKind(node *graph.Node) graph.Kind {
-	var (
-		resultKind = graph.StringKind(NodeKindUnknown)
-		baseKind   = resultKind
-	)
-
-	for _, kind := range node.Kinds {
-		// If this is a BHE meta kind, return early
-		if kind.Is(metaKind, metaDetailKind) {
-			return metaKind
-		} else if kind.Is(ad.Entity, azure.Entity) {
-			baseKind = kind
-		} else if kind.Is(ad.LocalGroup) {
-			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
-			if resultKind.String() == NodeKindUnknown {
-				resultKind = kind
-			}
-		} else if ValidKinds[kind] {
-			resultKind = kind
-		}
-	}
-
-	if resultKind.String() == NodeKindUnknown {
-		return baseKind
-	} else {
-		return resultKind
-	}
+	return graphschema.PrimaryNodeKind(node.Kinds)
 }
 
 func ClearSystemTags(ctx context.Context, db graph.Database) error {
@@ -126,17 +101,8 @@ func ClearSystemTags(ctx context.Context, db graph.Database) error {
 	})
 }
 
-func buildValidKinds() map[graph.Kind]bool {
-	validKinds := make(map[graph.Kind]bool)
-	for _, kind := range slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), []graph.Kind{metaKind, metaDetailKind}) {
-		validKinds[kind] = true
-	}
-
-	return validKinds
-}
-
 func ParseKind(rawKind string) (graph.Kind, error) {
-	for kind := range ValidKinds {
+	for kind := range graphschema.ValidKinds {
 		if kind.String() == rawKind {
 			return kind, nil
 		}

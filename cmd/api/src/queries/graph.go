@@ -23,6 +23,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/graphschema"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -129,6 +130,7 @@ func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegat
 }
 
 type Graph interface {
+	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
 	GetAssetGroupComboNode(ctx context.Context, owningObjectID string, assetGroupTag string) (map[string]any, error)
 	GetAssetGroupNodes(ctx context.Context, assetGroupTag string, isSystemGroup bool) (graph.NodeSet, error)
 	GetAllShortestPaths(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
@@ -662,6 +664,37 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 
 	results["props"] = node.Properties.Map
 	return results
+}
+
+func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+	var (
+		numNodes int64
+	)
+
+	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return numNodes, nil
+}
+
+func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
+	results := map[string]int{}
+
+	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
+			for next := range cursor.Chan() {
+				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
+				results[primaryKindStr] += 1
+			}
+
+			return cursor.Error()
+		})
+	})
 }
 
 func (s *GraphQuery) GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error) {
