@@ -22,16 +22,21 @@ import {
     CYPHER_SEARCH,
     CypherSearch,
     Icon,
+    NodeSearch,
     PATHFINDING_SEARCH,
     PRIMARY_SEARCH,
+    PathfindingSearch,
     cn,
     searchbarActions,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import NodeSearch from './NodeSearch';
-import PathfindingSearch from './PathfindingSearch';
-import { useCypherSearchSwitch, useNodeSearchSwitch, usePathfindingSearchSwitch } from './switches';
+import {
+    useCypherSearchSwitch,
+    useNodeSearchSwitch,
+    usePathfindingFilterSwitch,
+    usePathfindingSearchSwitch,
+} from './switches';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -78,6 +83,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
     const nodeSearchState = useNodeSearchSwitch();
     const pathfindingSearchState = usePathfindingSearchSwitch();
+    const pathfindingFilterState = usePathfindingFilterSwitch();
     const cypherSearchState = useCypherSearchSwitch();
 
     /* Event Handlers */
@@ -133,7 +139,10 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                         // This linting rule is disabled because the elements in this array do not require a key prop.
                         /* eslint-disable react/jsx-key */
                         <NodeSearch nodeSearchState={nodeSearchState} />,
-                        <PathfindingSearch pathfindingSearchState={pathfindingSearchState} />,
+                        <PathfindingSearch
+                            pathfindingSearchState={pathfindingSearchState}
+                            pathfindingFilterState={pathfindingFilterState}
+                        />,
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}

@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import Composition from './Composition';
 import General from './General';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
-import RelayTargets from './RelayTargets';
+import RelaySources from './RelaySources';
 import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToSMB = {
@@ -26,8 +27,9 @@ const CoerceAndRelayNTLMToSMB = {
     windowsAbuse: WindowsAbuse,
     linuxAbuse: LinuxAbuse,
     opsec: Opsec,
-    relaytargets: RelayTargets,
+    coerciontargets: RelaySources,
     references: References,
+    composition: Composition,
 };
 
 export default CoerceAndRelayNTLMToSMB;

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,26 +19,20 @@ package ingest
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
 
+// The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
 type IngestData interface {
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
-}
+	DeleteAllIngestTasks(ctx context.Context) error
 
-func CreateIngestTask(ctx context.Context, db IngestData, filename string, fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
-	newIngestTask := model.IngestTask{
-		FileName:    filename,
-		RequestGUID: requestID,
-		TaskID:      null.Int64From(jobID),
-		FileType:    fileType,
-	}
-
-	return db.CreateIngestTask(ctx, newIngestTask)
-}
-
-func CreateCompositionInfo(ctx context.Context, db IngestData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
-	return db.CreateCompositionInfo(ctx, nodes, edges)
+	CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
+	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
+	GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
+	GetAllIngestJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
+	GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
+	DeleteAllIngestJobs(ctx context.Context) error
+	CancelAllIngestJobs(ctx context.Context) error
 }

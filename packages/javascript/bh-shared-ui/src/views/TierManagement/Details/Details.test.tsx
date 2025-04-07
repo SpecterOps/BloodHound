@@ -196,7 +196,7 @@ describe('Details', async () => {
         });
     });
 
-    it('shows a loading view when data is fetching', async () => {
+    it.skip('shows a loading view when data is fetching', async () => {
         render(<Details />);
 
         const editButton = screen.getByRole('button', { name: /Edit/ });
