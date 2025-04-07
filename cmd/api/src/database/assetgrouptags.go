@@ -43,6 +43,15 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
 
+func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
+	for _, seed := range seeds {
+		if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", seed.TableName()), selectorId, seed.Type, seed.Value); result.Error != nil {
+			return nil, CheckError(result)
+		}
+	}
+	return seeds, nil
+}
+
 func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	var (
 		selector = model.AssetGroupTagSelector{
@@ -72,14 +81,10 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 			assetGroupTagId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
 		} else {
-			for _, seed := range seeds {
-				if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", seed.TableName()), selector.ID, seed.Type, seed.Value); result.Error != nil {
-					return CheckError(result)
-				} else {
-					selector.Seeds = append(selector.Seeds, model.SelectorSeed{Type: seed.Type, Value: seed.Value})
-				}
-			}
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, null.String{}, null.String{}); err != nil {
+			var err error
+			if selector.Seeds, err = insertSelectorSeeds(tx, selector.ID, seeds); err != nil {
+				return err
+			} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
@@ -137,11 +142,8 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId s
 				// delete old seeds and re-insert the new ones
 				if result := tx.Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ?", model.SelectorSeed{}.TableName()), selector.ID); result.Error != nil {
 					return CheckError(result)
-				}
-				for _, seed := range selector.Seeds {
-					if result := tx.Exec(fmt.Sprintf("INSERT INTO %s (selector_id, type, value) VALUES (?, ?, ?)", seed.TableName()), selector.ID, seed.Type, seed.Value); result.Error != nil {
-						return CheckError(result)
-					}
+				} else if _, err := insertSelectorSeeds(tx, selector.ID, selector.Seeds); err != nil {
+					return err
 				}
 			}
 			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, selector.UpdatedBy, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
