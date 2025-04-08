@@ -4374,6 +4374,316 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to create a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelectors",
+        "summary": "Get Asset Group Tag selectors",
+        "description": "Get a list of selectors for this group.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "selectors": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateAssetGroupTagSelector",
+        "summary": "Create Asset Group Tag Selector",
+        "description": "Creates an asset group tag selector.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for creating an asset group tag selector. Only the name and seeds fields are required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "seeds"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag to update a selector on",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "Selector ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "patch": {
+        "operationId": "UpdateAssetGroupTagSelector",
+        "summary": "Update Asset Group Tag Selector",
+        "description": "Update an asset group tag selector's properties",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating an asset group tag selector. At least one field must be provided in the request body. Any combination of fields from the original schema can be included, and only the fields that are provided will be updated.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "disabled_at": {
+                        "$ref": "#/components/schemas/null.time"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTag",
+        "summary": "Get Asset Group Tag",
+        "description": "Retrieves an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tag": {
+                          "$ref": "#/components/schemas/model.asset-group-tag"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
@@ -12963,7 +13273,7 @@
       "get": {
         "operationId": "ListDomainAttackPathsDetails",
         "summary": "List domain attack paths details",
-        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ __Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
+        "description": "Lists detailed data about attack paths for a domain.\n\n__Note:__ `ImpactCount`, `ImpactPercentage`, `ExposureCount`, `ExposurePercentage` and `Severity` will have a value other than zero when butterfly analysis is enabled.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -12971,7 +13281,7 @@
         "parameters": [
           {
             "name": "Accept",
-            "in": "./../parameters/header.prefer.yaml",
+            "in": "query",
             "description": "Media type to determine the response format (application/json or text/csv).",
             "required": false,
             "schema": {
@@ -13092,12 +13402,12 @@
             "$ref": "#/components/parameters/query.skip"
           },
           {
-            "$ref": "#/components/parameters/query.limit"
+            "$ref": "#/components/parameters/query.limit",
+            "enum": [
+              "application/json",
+              "text/csv"
+            ]
           }
-        ],
-        "produces": [
-          "application/json",
-          "text/csv"
         ],
         "responses": {
           "200": {
@@ -13137,19 +13447,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "#/components/schemas/model.relationship-finding"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.relationship-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13167,19 +13471,13 @@
                             "data": {
                               "type": "array",
                               "items": {
-                                "allOf": [
-                                  {
-                                    "$ref": "#/components/schemas/model.list-finding"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "Accepted": {
-                                        "type": "boolean"
-                                      }
-                                    }
+                                "$ref": "#/components/schemas/model.list-finding",
+                                "type": "object",
+                                "properties": {
+                                  "Accepted": {
+                                    "type": "boolean"
                                   }
-                                ]
+                                }
                               }
                             }
                           }
@@ -13236,7 +13534,8 @@
                           "ImpactCount": 2,
                           "ExposurePercentage": 0.24,
                           "ExposureCount": 4,
-                          "Severity": "high"
+                          "Severity": "high",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13288,7 +13587,8 @@
                           "ImpactCount": 0,
                           "ExposurePercentage": 0,
                           "ExposureCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13297,9 +13597,9 @@
                     "summary": "Butterfly List Finding",
                     "description": "When the butterfly analysis feature flag is on, impact count/percentage and exposure count/percentage will have a value other than zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13318,10 +13618,11 @@
                             "additionalProp2": {},
                             "additionalProp3": {}
                           },
-                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0.12,
                           "ImpactCount": 2,
-                          "Severity": "high"
+                          "Severity": "high",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -13330,9 +13631,9 @@
                     "summary": "Metatree List Finding",
                     "description": "When the butterfly analysis feature flag is off and metatree is running, impact count/percentage and exposure count/percentage will have a value of zero.",
                     "value": {
-                      "count": "0,",
-                      "skip": "0,",
-                      "limit": "0,",
+                      "count": 0,
+                      "skip": 0,
+                      "limit": 0,
                       "data": [
                         {
                           "id": 0,
@@ -13351,10 +13652,11 @@
                             "additionalProp2": {},
                             "additionalProp3": {}
                           },
-                          "accepted_until": "2024-08-28T21:42:18.844Z",
+                          "AcceptedUntil": "2024-08-28T21:42:18.844Z",
                           "ImpactPercentage": 0,
                           "ImpactCount": 0,
-                          "Severity": ""
+                          "Severity": "",
+                          "Accepted": true
                         }
                       ]
                     }
@@ -14351,7 +14653,7 @@
             "type": "string"
           },
           "valid": {
-            "description": "Valid is true if `string`` is not `null`",
+            "description": "Valid is true if `string` is not `null`",
             "type": "boolean"
           }
         }
@@ -15574,6 +15876,160 @@
           },
           "custom_member": {
             "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tags-selector-seed-request": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "model.asset-group-tags-selector-request": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+            }
+          }
+        }
+      },
+      "model.asset-group-tags-selector-seed-response": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+          },
+          {
+            "properties": {
+              "selector_id": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "model.asset-group-tags-selector-response": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "asset_group_tag_id": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_by": {
+                "type": "string"
+              },
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string"
+              },
+              "is_default": {
+                "type": "boolean"
+              },
+              "allow_disable": {
+                "type": "boolean"
+              },
+              "seeds": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-response"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "$ref": "#/components/schemas/null.time"
+          },
+          "deleted_by": {
+            "$ref": "#/components/schemas/null.string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
           }
         }
       },

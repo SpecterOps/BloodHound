@@ -80,8 +80,9 @@ func (s AssetGroupTag) ToKind() graph.Kind {
 }
 
 type SelectorSeed struct {
-	Type  SelectorType `json:"type"`
-	Value string       `json:"value"`
+	SelectorId int          `json:"selector_id"`
+	Type       SelectorType `json:"type"`
+	Value      string       `json:"value"`
 }
 
 func (SelectorSeed) TableName() string {
@@ -95,6 +96,12 @@ func (s SelectorSeed) AuditData() AuditData {
 	}
 }
 
+func (s SelectorSeed) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{"type": {Equals, NotEquals}}
+}
+
+type AssetGroupTagSelectors []AssetGroupTagSelector
+
 type AssetGroupTagSelector struct {
 	ID              int         `json:"id"`
 	AssetGroupTagId int         `json:"asset_group_tag_id"`
@@ -106,7 +113,7 @@ type AssetGroupTagSelector struct {
 	DisabledBy      null.String `json:"disabled_by"`
 	Name            string      `json:"name" validate:"required"`
 	Description     string      `json:"description"`
-	AutoCertify     bool        `json:"auto_certify"`
+	AutoCertify     null.Bool   `json:"auto_certify"`
 	IsDefault       bool        `json:"is_default"`
 	AllowDisable    bool        `json:"allow_disable"`
 
@@ -126,4 +133,27 @@ func (s AssetGroupTagSelector) AuditData() AuditData {
 		"auto_certify":       s.AutoCertify,
 		"is_default":         s.IsDefault,
 	}
+}
+
+func (s AssetGroupTagSelector) IsStringColumn(filter string) bool {
+	return filter == "name" || filter == "description"
+}
+
+func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"auto_certify": {Equals, NotEquals},
+		"created_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":   {Equals, NotEquals},
+		"description":  {Equals, NotEquals, ApproximatelyEquals},
+		"disabled_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"disabled_by":  {Equals, NotEquals},
+		"is_default":   {Equals, NotEquals},
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"updated_at":   {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":   {Equals, NotEquals},
+	}
+}
+
+type ListSelectorsResponse struct {
+	Selectors AssetGroupTagSelectors `json:"selectors"`
 }

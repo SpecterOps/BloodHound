@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -28,13 +29,16 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
 const (
-	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
+	ErrInvalidAssetGroupTagId         = "invalid asset group tag id specified in url"
+	ErrInvalidAssetGroupTagSelectorId = "invalid asset group tag selector id specified in url"
+	ErrInvalidSelectorType            = "invalid selector type"
 )
 
 // Checks that the selector seeds are valid.
@@ -67,7 +71,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
@@ -83,5 +87,158 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		selUpdateReq  model.AssetGroupTagSelector
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagSelectorId, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		// we can update DisabledAt on a default selector
+		if selUpdateReq.DisabledAt.Valid {
+			if selector.AllowDisable {
+				selector.DisabledAt = selUpdateReq.DisabledAt
+				if selector.DisabledAt.Time.IsZero() {
+					// clear DisabledBy if DisabledAt is set to zero
+					selector.DisabledBy = null.String{}
+				} else {
+					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				}
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
+				return
+			}
+		}
+
+		// we can update AutoCertify on a default selector
+		if selUpdateReq.AutoCertify.Valid {
+			selector.AutoCertify = selUpdateReq.AutoCertify
+		}
+
+		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != "" || len(selUpdateReq.Seeds) > 0) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "default selectors only support modifying auto_certify and disabled_at", request), response)
+			return
+		}
+
+		if selUpdateReq.Name != "" {
+			selector.Name = selUpdateReq.Name
+		}
+
+		if selUpdateReq.Description != "" {
+			selector.Description = selUpdateReq.Description
+		}
+
+		// if seeds are not included, call the DB update with them set to nil
+		var seedsTemp []model.SelectorSeed
+		if len(selUpdateReq.Seeds) > 0 {
+			if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			selector.Seeds = selUpdateReq.Seeds
+		} else {
+			// the DB update function will skip updating the seeds in this case
+			seedsTemp = selector.Seeds
+			selector.Seeds = nil
+		}
+
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if seedsTemp != nil {
+				// seeds were unchanged, set them back to what is stored in the db for the response
+				selector.Seeds = seedsTemp
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
+		}
+	}
+}
+
+func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
+	var (
+		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		selectorQueryFilter      = make(model.QueryParameterFilterMap)
+		selectorSeedsQueryFilter = make(model.QueryParameterFilterMap)
+		selectorSeed             = model.SelectorSeed{}
+		assetGroupTagSelector    = model.AssetGroupTagSelector{}
+	)
+
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		// The below is a workaround to split the query filters by the two tables to be used in the subsequent db calls
+		for name, filters := range queryFilters {
+			// get valid selector predicates and valid selector seed predicates.
+			validSelectorPredicates, selectorFilterErr := api.GetValidFilterPredicatesAsStrings(assetGroupTagSelector, name)
+			validSelectorSeedPredicates, seedFilterErr := api.GetValidFilterPredicatesAsStrings(selectorSeed, name)
+			// return an error if both attempts fail, as either one could be used to build separate queries.
+			if selectorFilterErr != nil && seedFilterErr != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			}
+
+			for _, filter := range filters {
+				if !slices.Contains(validSelectorPredicates, string(filter.Operator)) && !slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+					return
+				}
+				if slices.Contains(validSelectorPredicates, string(filter.Operator)) {
+					selectorQueryFilter.AddFilter(filter)
+					selectorQueryFilter[name][len(selectorQueryFilter[name])-1].IsStringData = assetGroupTagSelector.IsStringColumn(filter.Name)
+				} else if slices.Contains(validSelectorSeedPredicates, string(filter.Operator)) {
+					selectorSeedsQueryFilter.AddFilter(filter)
+					// There are no string columns on asset group selector seeds table
+				}
+			}
+		}
+
+		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrInvalidAssetGroupTagId, request), response)
+		} else if selectorSqlFilter, err := selectorQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), model.ListSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+		}
+	}
+}
+
+type getAssetGroupTagResponse struct {
+	Tag model.AssetGroupTag `json:"tag"`
+}
+
+func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	if tagId, err := strconv.ParseInt(mux.Vars(request)[api.URIPathVariableAssetGroupTagID], 10, 32); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), int(tagId)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
 	}
 }

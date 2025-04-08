@@ -172,72 +172,71 @@ func TestExpressionTreeTranslator(t *testing.T) {
 
 	// Perform a prefix visit of the parent expression and its operator. This is used for tracking
 	// conjunctions and disjunctions.
-	treeTranslator.PushOperator(pgsql.OperatorEquals)
+	treeTranslator.VisitOperator(pgsql.OperatorEquals)
 
 	// Postfix visit and push the compound identifier first: a.name
-	treeTranslator.Push(pgsql.CompoundIdentifier{"a", "name"})
+	treeTranslator.PushOperand(pgsql.CompoundIdentifier{"a", "name"})
 
 	// Postfix visit and push the literal next: "a"
-	treeTranslator.Push(mustAsLiteral("a"))
+	treeTranslator.PushOperand(mustAsLiteral("a"))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals))
+	require.Nil(t, treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorEquals))
 
 	// Expect one newly created binary expression to be the only thing left on the tree
 	// translator's operand stack
-	require.Equal(t, 1, treeTranslator.Depth())
-	require.IsType(t, &pgsql.BinaryExpression{}, treeTranslator.Peek())
+	require.IsType(t, &pgsql.BinaryExpression{}, treeTranslator.PeekOperand())
 
 	// Continue with: and a.num_a > 1
 	// Preform a prefix visit of the 'and' operator:
-	treeTranslator.PushOperator(pgsql.OperatorAnd)
+	treeTranslator.VisitOperator(pgsql.OperatorAnd)
 
 	// Preform a prefix visit of the '>' operator:
-	treeTranslator.PushOperator(pgsql.OperatorGreaterThan)
+	treeTranslator.VisitOperator(pgsql.OperatorGreaterThan)
 
 	// Postfix visit and push the compound identifier first: a.num_a
-	treeTranslator.Push(pgsql.CompoundIdentifier{"a", "num_a"})
+	treeTranslator.PushOperand(pgsql.CompoundIdentifier{"a", "num_a"})
 
 	// Postfix visit and push the literal next: 1
-	treeTranslator.Push(mustAsLiteral(1))
+	treeTranslator.PushOperand(mustAsLiteral(1))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorGreaterThan))
+	require.Nil(t, treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorGreaterThan))
 
 	// Perform a postfix visit of the conjoining parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd))
+	require.Nil(t, treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorAnd))
 
 	// Continue with: and b.name = "b"
 	// Preform a prefix visit of the 'and' operator:
-	treeTranslator.PushOperator(pgsql.OperatorAnd)
+	treeTranslator.VisitOperator(pgsql.OperatorAnd)
 
 	// Preform a prefix visit of the '=' operator:
-	treeTranslator.PushOperator(pgsql.OperatorEquals)
+	treeTranslator.VisitOperator(pgsql.OperatorEquals)
 
 	// Postfix visit and push the compound identifier first: b.name
-	treeTranslator.Push(pgsql.CompoundIdentifier{"b", "name"})
+	treeTranslator.PushOperand(pgsql.CompoundIdentifier{"b", "name"})
 
 	// Postfix visit and push the literal next: "b"
-	treeTranslator.Push(mustAsLiteral("b"))
+	treeTranslator.PushOperand(mustAsLiteral("b"))
 
 	// Perform a postfix visit of the parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals))
+	require.Nil(t, treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorEquals))
 
 	// Perform a postfix visit of the conjoining parent expression and its operator.
-	require.Nil(t, treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd))
+	require.Nil(t, treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorAnd))
 
 	// Continue with: and a.other = b.other
 	// enter Op(and), enter Op(=)
-	treeTranslator.PushOperator(pgsql.OperatorAnd)
-	treeTranslator.PushOperator(pgsql.OperatorEquals)
+	treeTranslator.VisitOperator(pgsql.OperatorAnd)
+	treeTranslator.VisitOperator(pgsql.OperatorEquals)
 
 	// push LOperand, push ROperand
-	treeTranslator.Push(pgsql.CompoundIdentifier{"a", "other"})
-	treeTranslator.Push(pgsql.CompoundIdentifier{"b", "other"})
+	treeTranslator.PushOperand(pgsql.CompoundIdentifier{"a", "other"})
+	treeTranslator.PushOperand(pgsql.CompoundIdentifier{"b", "other"})
 
 	// exit  exit Op(=), Op(and)
-	treeTranslator.PopPushOperator(scope, pgsql.OperatorEquals)
-	treeTranslator.PopPushOperator(scope, pgsql.OperatorAnd)
+	treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorEquals)
+	treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorAnd)
 
 	// Assign remaining operands as constraints
 	treeTranslator.PopRemainingExpressionsAsConstraints()

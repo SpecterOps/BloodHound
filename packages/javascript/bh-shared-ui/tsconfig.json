@@ -18,6 +18,7 @@
         "noFallthroughCasesInSwitch": true,
         "declarationDir": "dist",
         "declaration": true,
+        "declarationMap": true,
         "allowJs": true
     },
     "include": ["src"]

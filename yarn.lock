@@ -1672,9 +1672,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@neo4j-cypher/codemirror@npm:1.0.2":
-  version: 1.0.2
-  resolution: "@neo4j-cypher/codemirror@npm:1.0.2"
+"@neo4j-cypher/codemirror@npm:1.0.3":
+  version: 1.0.3
+  resolution: "@neo4j-cypher/codemirror@npm:1.0.3"
   dependencies:
     "@babel/runtime": ^7.20.13
     "@codemirror/autocomplete": ^6.4.1
@@ -1685,33 +1685,33 @@ __metadata:
     "@codemirror/state": ^6.2.0
     "@codemirror/view": ^6.9.0
     "@lezer/highlight": ^1.1.3
-    "@neo4j-cypher/editor-support": 1.0.1
-  checksum: 0b17a3aea867524ee69ebe1cb794ccfe4c3a1cd6f70a4cf22ce85e9c059c9815186a3fdf0561441ad7bdd68c140d40bf46712b1d7dcaf92d2cc3b36a6a86e87d
+    "@neo4j-cypher/editor-support": 1.0.2
+  checksum: ac39bea1704432803137582dd52ebac90072e0152b5f3b93f70625748c6fe18bf320c4b0ba0a1f943d7fc3100f497d117945a18fd04f8ba306cdaaa842e10304
   languageName: node
   linkType: hard
 
-"@neo4j-cypher/editor-support@npm:1.0.1, @neo4j-cypher/editor-support@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@neo4j-cypher/editor-support@npm:1.0.1"
+"@neo4j-cypher/editor-support@npm:1.0.2, @neo4j-cypher/editor-support@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@neo4j-cypher/editor-support@npm:1.0.2"
   dependencies:
     "@babel/runtime": ^7.20.13
     "@neo4j-cypher/antlr4": 1.0.0
     fuse.js: ^6.6.2
     lodash.find: ^4.6.0
     lodash.includes: ^4.3.0
-  checksum: 5d9c18f6b63799a0990dcc43dcaf55a265623e78a5bcf7cdd2df9b97c6989a9ce23c74326f40cb0cdebb6700c4e49f731ae5b6cbc9f0e72123eefa824bbfed4c
+  checksum: 1798112753aa541bfc2e65c037a09bbcf0109795013fcb89851e561eaf65ee222538de2bf983cb30fee1ed6ba0115696da07e5b8e5550e9eb9db11cb679f86f8
   languageName: node
   linkType: hard
 
-"@neo4j-cypher/react-codemirror@npm:^1.0.3":
-  version: 1.0.3
-  resolution: "@neo4j-cypher/react-codemirror@npm:1.0.3"
+"@neo4j-cypher/react-codemirror@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@neo4j-cypher/react-codemirror@npm:1.0.4"
   dependencies:
     "@babel/runtime": ^7.20.13
-    "@neo4j-cypher/codemirror": 1.0.2
+    "@neo4j-cypher/codemirror": 1.0.3
   peerDependencies:
     react: ">=16"
-  checksum: 58392650b457f34997dcc70125eb6c149dd02581603471b09267fae1d8db1d2ed5a331dcd3f1490411989ac8e35e65f9680da07ed0fbdbb511d5e613cd6c6751
+  checksum: 64b794cfb157f4cd130783cf45506e3f5f558df0954023ff868b6fd797514ebc2b8fe8ff2c95f4283387c47e409548b45b986182eb7ddfecd72d4f45b9e783c5
   languageName: node
   linkType: hard
 
@@ -4674,6 +4674,8 @@ __metadata:
     "@mui/lab": ^5.0.0-alpha.136
     "@mui/material": ^5.14.0
     "@mui/styles": ^5.14.0
+    "@neo4j-cypher/editor-support": ^1.0.2
+    "@neo4j-cypher/react-codemirror": ^1.0.4
     "@reduxjs/toolkit": ^1.9.5
     "@rollup/plugin-terser": ^0.4.4
     "@rollup/plugin-typescript": ^11.1.6
@@ -4722,6 +4724,7 @@ __metadata:
     rollup-plugin-delete: ^2.0.0
     swagger-ui-react: ^4.18.3
     tailwind-merge: ^2.5.4
+    tailwindcss: ^3.4.17
     typescript: ^5.1.6
     vite: ^5.4.12
     vitest: ^2.1.9
@@ -4791,8 +4794,6 @@ __metadata:
     "@mui/material": ^5.10.8
     "@mui/styles": ^5.14.0
     "@mui/x-date-pickers": ^5.0.20
-    "@neo4j-cypher/editor-support": ^1.0.1
-    "@neo4j-cypher/react-codemirror": ^1.0.3
     "@react-sigma/core": ^3.4.1
     "@reduxjs/toolkit": ^1.8.5
     "@testing-library/jest-dom": ^5.16.5
@@ -11776,15 +11777,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar-fs@npm:^2.0.0":
-  version: 2.1.1
-  resolution: "tar-fs@npm:2.1.1"
+"tar-fs@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "tar-fs@npm:2.1.2"
   dependencies:
     chownr: ^1.1.1
     mkdirp-classic: ^0.5.2
     pump: ^3.0.0
     tar-stream: ^2.1.4
-  checksum: f5b9a70059f5b2969e65f037b4e4da2daf0fa762d3d232ffd96e819e3f94665dbbbe62f76f084f1acb4dbdcce16c6e4dac08d12ffc6d24b8d76720f4d9cf032d
+  checksum: 6b4fcd38a644b5cd3325f687b9f1f48cd19809b63cbc8376fe794f68361849a17120d036833b3a97de6acb1df588844476309b8c2d0bcaf53f19da2d56ac07de
   languageName: node
   linkType: hard
 

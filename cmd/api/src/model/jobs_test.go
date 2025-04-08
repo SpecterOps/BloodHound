@@ -22,8 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileUploadJobs_IsSortable(t *testing.T) {
-	fuj := FileUploadJobs{}
+func TestIngestJobs_IsSortable(t *testing.T) {
+	fuj := IngestJobs{}
 	require.False(t, fuj.IsSortable("user_id"))
 	require.True(t, fuj.IsSortable("status"))
 	require.True(t, fuj.IsSortable("user_email_address"))
@@ -38,8 +38,8 @@ func TestFileUploadJobs_IsSortable(t *testing.T) {
 	require.False(t, fuj.IsSortable("foobar"))
 }
 
-func TestFileUploadJobs_ValidFilters(t *testing.T) {
-	fuj := FileUploadJobs{}
+func TestIngestJobs_ValidFilters(t *testing.T) {
+	fuj := IngestJobs{}
 	columns := fuj.ValidFilters()
 	require.Equal(t, 13, len(columns))
 }

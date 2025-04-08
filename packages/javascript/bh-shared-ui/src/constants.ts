@@ -16,6 +16,15 @@
 
 import { Theme } from '@mui/material';
 import { DefaultTheme, makeStyles } from '@mui/styles';
+import {
+    ActiveDirectoryKindProperties,
+    ActiveDirectoryNodeKind,
+    ActiveDirectoryRelationshipKind,
+    AzureKindProperties,
+    AzureNodeKind,
+    AzureRelationshipKind,
+    CommonKindProperties,
+} from './graphSchema';
 import { addOpacityToHex } from './utils/colors';
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
@@ -407,3 +416,26 @@ export const components = (theme: Theme): Partial<Theme['components']> => ({
         },
     },
 });
+
+export const graphSchema = (labels: string[] | undefined) => {
+    const schema = {
+        labels: [
+            ...Object.values(ActiveDirectoryNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+            ...Object.values(AzureNodeKind).map((nodeLabel) => `:${nodeLabel}`),
+        ],
+        relationshipTypes: [
+            ...Object.values(ActiveDirectoryRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+            ...Object.values(AzureRelationshipKind).map((relationshipType) => `:${relationshipType}`),
+        ],
+        propertyKeys: [
+            ...Object.values(CommonKindProperties),
+            ...Object.values(ActiveDirectoryKindProperties),
+            ...Object.values(AzureKindProperties),
+        ],
+    };
+
+    if (!!labels && labels.length > 0)
+        schema.labels = [...schema.labels, ...labels.map((nodeLabel) => `:${nodeLabel}`)];
+
+    return schema;
+};
