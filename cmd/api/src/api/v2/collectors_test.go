@@ -353,7 +353,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 				}
 				param := map[string]string{
 					"release_tag":    "latest",
-					"collector_type": "azurehound",
+					"collector_type": "sharphound",
 				}
 
 				return mux.SetURLVars(request, param)
