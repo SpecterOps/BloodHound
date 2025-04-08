@@ -741,7 +741,7 @@ GetKeys = 'AZGetKeys',
 GetSecrets = 'AZGetSecrets',
 HasRole = 'AZHasRole',
 MemberOf = 'AZMemberOf',
-O365MemberOf = 'AZGroup365Member',
+M365MemberOf = 'AZM365MemberOf',
 Owner = 'AZOwner',
 RunsAs = 'AZRunsAs',
 VMContributor = 'AZVMContributor',
@@ -800,8 +800,8 @@ case AzureRelationshipKind.HasRole:
 return 'HasRole'
 case AzureRelationshipKind.MemberOf: 
 return 'MemberOf'
-case AzureRelationshipKind.O365MemberOf: 
-return 'O365MemberOf'
+case AzureRelationshipKind.M365MemberOf: 
+return 'M365MemberOf'
 case AzureRelationshipKind.Owner: 
 return 'Owner'
 case AzureRelationshipKind.RunsAs: 
@@ -919,6 +919,7 @@ PublisherDomain = 'publisherdomain',
 SignInAudience = 'signinaudience',
 RoleTemplateID = 'templateid',
 Visibility = 'visibility',
+Mail = 'mail',
 }
 export function AzureKindPropertiesToDisplay (value : AzureKindProperties): string | undefined {
 switch (value) {
@@ -988,12 +989,14 @@ case AzureKindProperties.RoleTemplateID:
 return 'Role Template ID'
 case AzureKindProperties.Visibility: 
 return 'Visibility'
+case AzureKindProperties.Mail: 
+return 'M365 Group Mail'
 default:
 return undefined
 }
 }
 export function AzurePathfindingEdges (): AzureRelationshipKind[] {
-return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.O365MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.Contains]
+return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.M365MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.Contains]
 }
 export enum CommonNodeKind {
 MigrationData = 'MigrationData',

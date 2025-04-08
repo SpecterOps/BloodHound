@@ -19,10 +19,10 @@ import General from './General';
 import Opsec from './Opsec';
 import References from './References';
 
-const AZGroup365MemberOf = {
+const AZM365MemberOf = {
     general: General,
     abuse: Abuse,
     opsec: Opsec,
     references: References,
 };
-export default AZGroup365MemberOf;
+export default AZM365MemberOf;

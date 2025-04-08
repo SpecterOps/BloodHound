@@ -261,6 +261,14 @@ Visibility: types.#StringEnum & {
 	representation: "visibility"
 }
 
+M365GroupMail: types.#StringEnum & {
+	symbol:         "Mail"
+	schema:         "azure"
+	name:           "M365 Group Mail"
+	representation: "mail"
+}
+
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -295,6 +303,7 @@ Properties: [
 	SignInAudience,
 	RoleTemplateID,
 	Visibility,
+	M365GroupMail,
 ]
 
 // Kinds
@@ -610,10 +619,10 @@ Owns: types.#Kind & {
 	representation: "AZOwns"
 }
 
-O365MemberOf: types.#Kind & {
-	symbol:         "O365MemberOf"
+M365MemberOf: types.#Kind & {
+	symbol:         "M365MemberOf"
 	schema:         "azure"
-	representation: "AZGroup365Member"
+	representation: "AZM365MemberOf"
 }
 
 ScopedTo: types.#Kind & {
@@ -757,7 +766,7 @@ RelationshipKinds: [
 	GetSecrets,
 	HasRole,
 	MemberOf,
-	O365MemberOf,
+	M365MemberOf,
 	Owner,
 	RunsAs,
 	VMContributor,
@@ -866,7 +875,7 @@ InboundOutboundRelationshipKinds: [
 	GetSecrets,
 	HasRole,
 	MemberOf,
-	O365MemberOf,
+	M365MemberOf,
 	Owner,
 	RunsAs,
 	VMContributor,

@@ -906,10 +906,10 @@ func (s *AZBaseHarness) CreateAzureNestedGroup365Chain(testCtx *GraphTestContext
 		)
 
 		if previousGroup == nil {
-			testCtx.NewRelationship(s.User, newGroup, azure.O365MemberOf)
+			testCtx.NewRelationship(s.User, newGroup, azure.M365MemberOf)
 			s.UserFirstDegreeGroups.Add(newGroup)
 		} else {
-			testCtx.NewRelationship(previousGroup, newGroup, azure.O365MemberOf)
+			testCtx.NewRelationship(previousGroup, newGroup, azure.M365MemberOf)
 		}
 
 		groupNodes.Add(newGroup)
@@ -942,9 +942,9 @@ func (s *AZGroupMembershipHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.UserA, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserB, s.Group, azure.MemberOf)
 	testCtx.NewRelationship(s.UserC, s.Group, azure.MemberOf)
-	testCtx.NewRelationship(s.UserA, s.Group365, azure.O365MemberOf)
-	testCtx.NewRelationship(s.UserB, s.Group365, azure.O365MemberOf)
-	testCtx.NewRelationship(s.UserC, s.Group365, azure.O365MemberOf)
+	testCtx.NewRelationship(s.UserA, s.Group365, azure.M365MemberOf)
+	testCtx.NewRelationship(s.UserB, s.Group365, azure.M365MemberOf)
+	testCtx.NewRelationship(s.UserC, s.Group365, azure.M365MemberOf)
 }
 
 type AZManagementGroupHarness struct {
@@ -1271,8 +1271,8 @@ func (s *AZInboundControlHarness) Setup(testCtx *GraphTestContext) {
 
 	testCtx.NewRelationship(s.AZUserA, s.AZGroupA, azure.MemberOf)
 	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroupB, azure.MemberOf)
-	testCtx.NewRelationship(s.AZUserA, s.AZGroup365A, azure.O365MemberOf)
-	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroup365B, azure.O365MemberOf)
+	testCtx.NewRelationship(s.AZUserA, s.AZGroup365A, azure.M365MemberOf)
+	testCtx.NewRelationship(s.AZServicePrincipalB, s.AZGroup365B, azure.M365MemberOf)
 
 	testCtx.NewRelationship(s.AZAppA, s.AZServicePrincipalA, azure.RunsAs)
 

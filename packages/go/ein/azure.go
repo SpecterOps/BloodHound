@@ -484,17 +484,18 @@ func ConvertAzureGroup365ToNode(data models.Group365) IngestibleNode {
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
 		PropertyMap: map[string]any{
-			common.Name.String(): strings.ToUpper(fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName)),
-			/* common.WhenCreated.String():       ParseISO8601(data.CreatedDateTime),
+			common.Name.String():              strings.ToUpper(fmt.Sprintf("%s@%s", data.DisplayName, data.TenantName)),
+			common.WhenCreated.String():       ParseISO8601(data.CreatedDateTime),
 			common.Description.String():       data.Description,
 			common.DisplayName.String():       data.DisplayName,
 			azure.IsAssignableToRole.String(): data.IsAssignableToRole,
 			azure.OnPremID.String():           data.OnPremisesSecurityIdentifier,
 			azure.OnPremSyncEnabled.String():  data.OnPremisesSyncEnabled,
 			azure.SecurityEnabled.String():    data.SecurityEnabled,
-			azure.SecurityIdentifier.String(): data.SecurityIdentifier, */
-			azure.Visibility.String(): data.Visibility,
-			azure.TenantID.String():   strings.ToUpper(data.TenantId),
+			azure.SecurityIdentifier.String(): data.SecurityIdentifier,
+			azure.Visibility.String():         data.Visibility,
+			azure.TenantID.String():           strings.ToUpper(data.TenantId),
+			azure.Mail.String():               data.Mail,
 		},
 		Label: azure.Group365,
 	}
@@ -546,7 +547,7 @@ func ConvertAzureGroup365MembersToRels(data models.Group365Members) []Ingestible
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
-					RelType:  azure.O365MemberOf,
+					RelType:  azure.M365MemberOf,
 				},
 			))
 		}
