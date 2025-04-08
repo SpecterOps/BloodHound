@@ -29,7 +29,7 @@ const azureHoundCELink = (
     <Link
         target='_blank'
         data-testid='download-collectors-azurehound-ce-link'
-        href={'https://bloodhound.specterops.iocollect-data/ce-collection/azurehound'}>
+        href={'https://bloodhound.specterops.io/collect-data/ce-collection/azurehound'}>
         AzureHound Community
     </Link>
 );
