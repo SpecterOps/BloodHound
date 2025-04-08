@@ -136,8 +136,17 @@ export interface AssetGroupTagSelectorNode {
     node_id: string;
     certified: AssetGroupTagCertifiedValues;
     certified_by: string | System | null;
+    properties: Record<string, any>;
+    type: string;
     id: number;
+}
+
+export interface AssetGroupTagMemberInfo {
+    node_id: string;
+    certified: AssetGroupTagCertifiedValues;
+    certified_by: string | System | null;
     name: string;
+    selectors: AssetGroupTagSelector[];
 }
 
 export interface CreateSharpHoundClientRequest {
