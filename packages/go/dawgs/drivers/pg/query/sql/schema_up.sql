@@ -362,7 +362,7 @@ begin
     root_id   int8   not null,
     next_id   int8   not null,
     depth     int4   not null,
-    satisfied bool   not null,
+    satisfied bool,
     is_cycle  bool   not null,
     path      int8[] not null,
     primary key (path)
@@ -403,7 +403,7 @@ begin
     root_id   int8   not null,
     next_id   int8   not null,
     depth     int4   not null,
-    satisfied bool   not null,
+    satisfied bool,
     is_cycle  bool   not null,
     path      int8[] not null,
     primary key (path)
@@ -434,6 +434,7 @@ begin
   delete
   from forward_front r
   where r.is_cycle
+     or r.satisfied is null
      or not r.satisfied and not exists(select 1 from edge e where e.end_id = r.next_id);
 
   return;
@@ -459,6 +460,7 @@ begin
   delete
   from backward_front r
   where r.is_cycle
+     or r.satisfied is null
      or not r.satisfied and not exists(select 1 from edge e where e.start_id = r.next_id);
 
   return;
