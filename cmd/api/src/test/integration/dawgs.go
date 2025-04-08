@@ -47,20 +47,24 @@ func OpenGraphDB(testCtrl test.Controller, schema graph.Schema) graph.Database {
 
 	switch cfg.GraphDriver {
 	case pg.DriverName:
+		pool, err := pg.NewPool(cfg.Database.PostgreSQLConnectionString())
+		test.RequireNilErrf(testCtrl, err, "Failed to create new pgx pool: %v", err)
 		graphDatabase, err = dawgs.Open(context.TODO(), cfg.GraphDriver, dawgs.Config{
-			DriverCfg: cfg.Database.PostgreSQLConnectionString(),
+			ConnectionString: cfg.Database.PostgreSQLConnectionString(),
+			Pool:             pool,
 		})
+		test.RequireNilErrf(testCtrl, err, "Failed connecting to graph database: %v", err)
 
 	case neo4j.DriverName:
 		graphDatabase, err = dawgs.Open(context.TODO(), cfg.GraphDriver, dawgs.Config{
-			DriverCfg: cfg.Neo4J.Neo4jConnectionString(),
+			ConnectionString: cfg.Neo4J.Neo4jConnectionString(),
 		})
+		test.RequireNilErrf(testCtrl, err, "Failed connecting to graph database: %v", err)
 
 	default:
 		testCtrl.Fatalf("unsupported graph driver name %s", cfg.GraphDriver)
 	}
 
-	test.RequireNilErrf(testCtrl, err, "Failed connecting to graph database: %v", err)
 	test.RequireNilErr(testCtrl, graphDatabase.AssertSchema(context.Background(), schema))
 
 	return graphDatabase

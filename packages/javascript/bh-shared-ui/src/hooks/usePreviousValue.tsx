@@ -14,20 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
+// Taken from https://stackoverflow.com/a/57706747
 
-export const Edit: FC = () => {
-    const { state } = useLocation();
+import { useEffect, useRef } from 'react';
 
-    return (
-        <div>
-            <h1>Edit</h1>
-            <h2>
-                Type: {state?.type}
-                <br />
-                ID: {state?.id}
-            </h2>
-        </div>
-    );
+export const usePreviousValue = <T,>(value: T): T | undefined => {
+    const ref = useRef<T>();
+    useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
 };
