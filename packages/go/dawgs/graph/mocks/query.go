@@ -57,7 +57,7 @@ func (m *MockValueMapper) EXPECT() *MockValueMapperMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockValueMapper) Count() int {
+func (m *MockValueMapper) Len() int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count")
 	ret0, _ := ret[0].(int)
@@ -67,7 +67,7 @@ func (m *MockValueMapper) Count() int {
 // Count indicates an expected call of Count.
 func (mr *MockValueMapperMockRecorder) Count() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockValueMapper)(nil).Count))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockValueMapper)(nil).Len))
 }
 
 // Map mocks base method.

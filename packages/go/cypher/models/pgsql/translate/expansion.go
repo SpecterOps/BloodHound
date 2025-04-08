@@ -36,7 +36,7 @@ func expansionEdgeJoinCondition(traversalStep *TraversalStep) (pgsql.Expression,
 
 func expansionConstraints(traversalStep *TraversalStep) pgsql.Expression {
 	return pgd.And(
-		pgd.LessThan(
+		pgd.LessThanOrEqualTo(
 			pgd.Column(traversalStep.Expansion.Value.Frame.Binding.Identifier, expansionDepth),
 			pgd.IntLiteral(traversalStep.Expansion.Value.MaxDepth.GetOr(translateDefaultMaxTraversalDepth)),
 		),

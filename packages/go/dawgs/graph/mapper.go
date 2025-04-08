@@ -404,7 +404,14 @@ func NewValueMapper(values []any, mappers ...MapFunc) ValueMapper {
 	}
 }
 
-func (s *valueMapper) Count() int {
+func (s *valueMapper) All() []any {
+	valuesCopy := make([]any, len(s.values))
+	copy(valuesCopy, s.values)
+
+	return valuesCopy
+}
+
+func (s *valueMapper) Len() int {
 	return len(s.values)
 }
 

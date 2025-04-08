@@ -261,14 +261,15 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (u:NodeKind1) where 'DES-CBC-CRC' in u.arrayProperty or 'DES-CBC-MD5' in u.arrayProperty or 'RC4-HMAC-MD5' in u.arrayProperty return u
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where 'DES-CBC-CRC' = any (jsonb_to_text_array(n0.properties -> 'arrayProperty')::text[]) or 'DES-CBC-MD5' = any (jsonb_to_text_array(n0.properties -> 'arrayProperty')::text[]) or 'RC4-HMAC-MD5' = any (jsonb_to_text_array(n0.properties -> 'arrayProperty')::text[]) and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as u from s0;
 
---- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = 'CN=ADMINSDHOLDER,CN=SYSTEM,' + n.distinguishedname return m
+-- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = 'CN=ADMINSDHOLDER,CN=SYSTEM,' + n.distinguishedname return m
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.properties ->> 'distinguishedname' = 'CN=ADMINSDHOLDER,CN=SYSTEM,' || (s0.n0).properties ->> 'distinguishedname') select s1.n1 as m from s1;
 
---- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = n.distinguishedname + 'CN=ADMINSDHOLDER,CN=SYSTEM,' return m
+-- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = n.distinguishedname + 'CN=ADMINSDHOLDER,CN=SYSTEM,' return m
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.properties ->> 'distinguishedname' = (s0.n0).properties ->> 'distinguishedname' || 'CN=ADMINSDHOLDER,CN=SYSTEM,') select s1.n1 as m from s1;
 
---- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = n.unknown + m.unknown return m
+-- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = n.unknown + m.unknown return m
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.kind_ids operator (pg_catalog.&&) array [2]::int2[] and n1.properties ->> 'distinguishedname' = (s0.n0).properties -> 'unknown' + n1.properties -> 'unknown') select s1.n1 as m from s1;
 
---- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = '1' + '2' return m
+-- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = '1' + '2' return m
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where n1.properties ->> 'distinguishedname' = '1' || '2' and n1.kind_ids operator (pg_catalog.&&) array [2]::int2[]) select s1.n1 as m from s1;
+

@@ -78,9 +78,9 @@ create table if not exists graph
 );
 
 -- The kind table contains name to ID mappings for graph kinds. Storage of these types is necessary to maintain search
--- capability of a database without the origin application that generated it. 
+-- capability of a database without the origin application that generated it.
 -- To support FK in asset_group_tags table, the kind table is now maintained by the stepwise migration files.
--- Any schema updates here should be reflected in a stepwise migration file as well. 
+-- Any schema updates here should be reflected in a stepwise migration file as well.
 create table if not exists kind
 (
   id   smallserial,
@@ -108,10 +108,10 @@ $$;
 -- contain a disjunction of kinds for creating node subsets without requiring edges.
 create table if not exists node
 (
-  id         bigserial   not null,
-  graph_id   integer     not null,
+  id         bigserial  not null,
+  graph_id   integer    not null,
   kind_ids   smallint[] not null,
-  properties jsonb       not null,
+  properties jsonb      not null,
 
   primary key (id, graph_id),
   foreign key (graph_id) references graph (id) on delete cascade
@@ -488,36 +488,22 @@ begin
   -- Defines two tables to represent pathspace of the recursive expansion
   perform create_unidirectional_pathspace_tables();
 
-  -- Populate the root front first with its primer query
-  forward_front_depth = forward_front_depth + 1;
-  execute forward_primer;
-
-  raise debug 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
-
-  -- Return all satisfied paths from the next frontier, if any
-  if exists(select 1 from next_front r where r.satisfied) then
-    return query select * from next_front r where r.satisfied;
-
-    -- This second return is not an error. This closes this function's result set and the return above will
-    -- be treated as a yield and continue execution once the results cursor is exhausted.
-    return;
-  end if;
-
-  -- Swap the next_front table into the forward_front
-  perform swap_forward_front();
-
-  while forward_front_depth < max_depth and exists(select 1 from forward_front)
+  while forward_front_depth < max_depth and (forward_front_depth = 0 or exists(select 1 from forward_front))
     loop
-      -- Populate the next front with the recursive root front query
+    -- If this is the first expansion of this frontier, perform the primer query - otherwise perform the
+    -- recursive expansion query
+      if forward_front_depth = 0 then
+        execute forward_primer;
+      else
+        execute forward_recursive;
+      end if;
+
       forward_front_depth = forward_front_depth + 1;
-      execute forward_recursive;
 
       raise debug 'Expansion step % - Available Root Paths % - Num satisfied: %', forward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
 
       -- Check to see if the root front is satisfied
-      if exists(select 1
-                from next_front r
-                where r.satisfied) then
+      if exists(select 1 from next_front r where r.satisfied) then
         -- Return all satisfied paths from the next front
         return query select * from next_front r where r.satisfied;
         exit;
@@ -526,6 +512,9 @@ begin
       -- Swap the next_front table into the forward_front
       perform swap_forward_front();
     end loop;
+
+  -- This bare return is not an error. This closes this function's result set and the return above will
+  -- be treated as a yield and continue execution once the results cursor is exhausted.
   return;
 end;
 $$
@@ -555,41 +544,54 @@ begin
   -- Defines three tables to represent pathspace of the recursive expansion
   perform create_bidirectional_pathspace_tables();
 
-  -- Populate the forward frontier first with its primer query
-  forward_front_depth = forward_front_depth + 1;
-  execute forward_primer;
-
-  raise debug 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
-
-  -- Early check to make sure there's something to expand toward from the backward frontier
-  if not exists(select 1 from next_front) then
-    return;
-  end if;
-
-  -- Return all satisfied paths from the next frontier, if any
-  if exists(select 1 from next_front r where r.satisfied) then
-    return query select * from next_front r where r.satisfied;
-
-    -- This second return is not an error. This closes this function's result set and the return above will
-    -- be treated as a yield and continue execution once the results cursor is exhausted.
-    return;
-  end if;
-
-  -- Swap the next frontier to the forward frontier
-  perform swap_forward_front();
-
-  -- Populate the terminal front next with its primer query
-  backward_front_depth = backward_front_depth + 1;
-  execute backward_primer;
-
-  raise debug 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
-
-  -- Swap the next frontier to the backward frontier
-  perform swap_backward_front();
-
   while forward_front_depth + backward_front_depth < max_depth and
-        exists(select 1 from forward_front) and exists(select 1 from backward_front)
+        (forward_front_depth = 0 or exists(select 1 from forward_front)) and
+        (backward_front_depth = 0 or exists(select 1 from backward_front))
     loop
+      -- Check to expand the smaller of the two frontiers, or if both are the same size prefer the forward frontier
+      if (select count(*) from forward_front) <= (select count(*) from backward_front) then
+        -- If this is the first expansion of this frontier, perform the primer query - otherwise perform the
+        -- recursive expansion query
+        if forward_front_depth = 0 then
+          execute forward_primer;
+        else
+          execute forward_recursive;
+        end if;
+
+        forward_front_depth = forward_front_depth + 1;
+
+        raise debug 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+        -- Check to see if the next frontier is satisfied
+        if exists(select 1 from next_front r where r.satisfied) then
+          return query select * from next_front r where r.satisfied;
+          exit;
+        end if;
+
+        -- Swap the next_front table into the forward_front
+        perform swap_forward_front();
+      else
+        -- If this is the first expansion of this frontier, perform the primer query - otherwise perform the
+        -- recursive expansion query
+        if backward_front_depth = 0 then
+          execute backward_primer;
+        else
+          execute backward_recursive;
+        end if;
+
+        backward_front_depth = backward_front_depth + 1;
+        raise debug 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
+
+        -- Check to see if the next frontier is satisfied
+        if exists(select 1 from next_front r where r.satisfied) then
+          return query select * from next_front r where r.satisfied;
+          exit;
+        end if;
+
+        -- Swap the next_front table into the backward_front
+        perform swap_backward_front();
+      end if;
+
       -- Check to see if the two frontiers meet somewhere in the middle
       if exists(select 1
                 from forward_front f
@@ -603,42 +605,12 @@ begin
                             f.path || b.path
                      from forward_front f
                             join backward_front b on f.next_id = b.next_id;
-        return;
-      end if;
-
-      -- Check to expand the smaller of the two frontiers
-      if (select count(*) from forward_front) < (select count(*) from backward_front) then
-        -- Populate the next frontier with the recursive forward front query
-        forward_front_depth = forward_front_depth + 1;
-        execute forward_recursive;
-
-        raise debug 'Forward expansion as step % - Available Root Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
-
-        -- Check to see if the next frontier is satisfied
-        if exists(select 1 from next_front r where r.satisfied) then
-          return query select * from next_front r where r.satisfied;
-          exit;
-        end if;
-
-        -- Swap the next_front table into the forward_front
-        perform swap_forward_front();
-      else
-        -- Populate the next frontier with the recursive backward front query
-        backward_front_depth = backward_front_depth + 1;
-        execute backward_recursive;
-
-        raise debug 'Backward expansion as step % - Available Terminal Paths % - Num satisfied: %', forward_front_depth + backward_front_depth, (select count(*) from next_front), (select count(*) from next_front p where p.satisfied);
-
-        -- Check to see if the next frontier is satisfied
-        if exists(select 1 from next_front r where r.satisfied) then
-          return query select * from next_front r where r.satisfied;
-          exit;
-        end if;
-
-        -- Swap the next_front table into the backward_front
-        perform swap_backward_front();
+        exit;
       end if;
     end loop;
+
+  -- This bare return is not an error. This closes this function's result set and the return above will
+  -- be treated as a yield and continue execution once the results cursor is exhausted.
   return;
 end;
 $$

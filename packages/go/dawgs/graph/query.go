@@ -19,11 +19,12 @@
 package graph
 
 type ValueMapper interface {
+	All() []any
 	Next() (any, error)
 	Map(target any) error
 	MapOptions(target ...any) (any, error)
 	Scan(targets ...any) error
-	Count() int
+	Len() int
 }
 
 type Scanner interface {
