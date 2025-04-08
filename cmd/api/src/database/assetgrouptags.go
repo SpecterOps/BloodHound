@@ -146,7 +146,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId s
 					return err
 				}
 			}
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, selector.UpdatedBy, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
