@@ -22,18 +22,19 @@ import (
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 	baseItem := ein.IngestBase{
 		ObjectIdentifier: "ABC123",
 		Properties: map[string]any{
-			"machineaccountquota":                    "1",
-			"minpwdlength":                           "1",
-			"pwdproperties":                          "1",
-			"pwdhistorylength":                       "1",
-			"lockoutthreshold":                       "1",
-			"expirepasswordsonsmartcardonlyaccounts": "false",
+			ad.MachineAccountQuota.String():                    "1",
+			ad.MinPwdLength.String():                           "1",
+			ad.PwdProperties.String():                          "1",
+			ad.PwdHistoryLength.String():                       "1",
+			ad.LockoutThreshold.String():                       "1",
+			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): "false",
 		},
 		Aces:           nil,
 		IsDeleted:      false,
@@ -43,28 +44,28 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 
 	result := ein.ConvertObjectToNode(baseItem, ad.Domain)
 	props := result.PropertyMap
-	assert.Contains(t, props, "machineaccountquota")
-	assert.Contains(t, props, "minpwdlength")
-	assert.Contains(t, props, "pwdproperties")
-	assert.Contains(t, props, "pwdhistorylength")
-	assert.Contains(t, props, "lockoutthreshold")
-	assert.Contains(t, props, "expirepasswordsonsmartcardonlyaccounts")
-	assert.Equal(t, 1, props["machineaccountquota"])
-	assert.Equal(t, 1, props["minpwdlength"])
-	assert.Equal(t, 1, props["pwdproperties"])
-	assert.Equal(t, 1, props["pwdhistorylength"])
-	assert.Equal(t, 1, props["lockoutthreshold"])
-	assert.Equal(t, false, props["expirepasswordsonsmartcardonlyaccounts"])
+	assert.Contains(t, props, ad.MachineAccountQuota.String())
+	assert.Contains(t, props, ad.MinPwdLength.String())
+	assert.Contains(t, props, ad.PwdProperties.String())
+	assert.Contains(t, props, ad.PwdHistoryLength.String())
+	assert.Contains(t, props, ad.LockoutThreshold.String())
+	assert.Contains(t, props, ad.ExpirePasswordsOnSmartCardOnlyAccounts.String())
+	assert.Equal(t, 1, props[ad.MachineAccountQuota.String()])
+	assert.Equal(t, 1, props[ad.MinPwdLength.String()])
+	assert.Equal(t, 1, props[ad.PwdProperties.String()])
+	assert.Equal(t, 1, props[ad.PwdHistoryLength.String()])
+	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
+	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
 
 	baseItem = ein.IngestBase{
 		ObjectIdentifier: "ABC123",
 		Properties: map[string]any{
-			"machineaccountquota":                    1,
-			"minpwdlength":                           1,
-			"pwdproperties":                          1,
-			"pwdhistorylength":                       1,
-			"lockoutthreshold":                       1,
-			"expirepasswordsonsmartcardonlyaccounts": false,
+			ad.MachineAccountQuota.String():                    1,
+			ad.MinPwdLength.String():                           1,
+			ad.PwdProperties.String():                          1,
+			ad.PwdHistoryLength.String():                       1,
+			ad.LockoutThreshold.String():                       1,
+			ad.ExpirePasswordsOnSmartCardOnlyAccounts.String(): false,
 		},
 		Aces:           nil,
 		IsDeleted:      false,
@@ -74,21 +75,21 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 
 	result = ein.ConvertObjectToNode(baseItem, ad.Domain)
 	props = result.PropertyMap
-	assert.Contains(t, props, "machineaccountquota")
-	assert.Contains(t, props, "minpwdlength")
-	assert.Contains(t, props, "pwdproperties")
-	assert.Contains(t, props, "pwdhistorylength")
-	assert.Contains(t, props, "lockoutthreshold")
-	assert.Contains(t, props, "expirepasswordsonsmartcardonlyaccounts")
-	assert.Equal(t, 1, props["machineaccountquota"])
-	assert.Equal(t, 1, props["minpwdlength"])
-	assert.Equal(t, 1, props["pwdproperties"])
-	assert.Equal(t, 1, props["pwdhistorylength"])
-	assert.Equal(t, 1, props["lockoutthreshold"])
-	assert.Equal(t, false, props["expirepasswordsonsmartcardonlyaccounts"])
+	assert.Contains(t, props, ad.MachineAccountQuota.String())
+	assert.Contains(t, props, ad.MinPwdLength.String())
+	assert.Contains(t, props, ad.PwdProperties.String())
+	assert.Contains(t, props, ad.PwdHistoryLength.String())
+	assert.Contains(t, props, ad.LockoutThreshold.String())
+	assert.Contains(t, props, ad.ExpirePasswordsOnSmartCardOnlyAccounts.String())
+	assert.Equal(t, 1, props[ad.MachineAccountQuota.String()])
+	assert.Equal(t, 1, props[ad.MinPwdLength.String()])
+	assert.Equal(t, 1, props[ad.PwdProperties.String()])
+	assert.Equal(t, 1, props[ad.PwdHistoryLength.String()])
+	assert.Equal(t, 1, props[ad.LockoutThreshold.String()])
+	assert.Equal(t, false, props[ad.ExpirePasswordsOnSmartCardOnlyAccounts.String()])
 }
 
-func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
+func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 	domainObject := ein.Domain{
 		IngestBase:   ein.IngestBase{},
 		ChildObjects: nil,
@@ -96,42 +97,115 @@ func TestParseDomainTrusts_TrustAttributesFix(t *testing.T) {
 		Links:        nil,
 	}
 
-	domainObject.Trusts = append(domainObject.Trusts, ein.Trust{
-		TargetDomainSid:      "abc123",
-		IsTransitive:         false,
-		TrustDirection:       ein.TrustDirectionInbound,
-		TrustType:            "abc",
-		SidFilteringEnabled:  false,
-		TargetDomainName:     "abc456",
-		TGTDelegationEnabled: false,
-		TrustAttributes:      "12345",
+	t.Run("TrustAttributes Parse String Success", func(t *testing.T) {
+		domainObject.Trusts = []ein.Trust{
+			{
+				TargetDomainSid:      "abc123",
+				IsTransitive:         false,
+				TrustDirection:       ein.TrustDirectionInbound,
+				TrustType:            "abc",
+				SidFilteringEnabled:  false,
+				TargetDomainName:     "abc456",
+				TGTDelegationEnabled: false,
+				TrustAttributes:      "12345",
+			},
+		}
+
+		result := ein.ParseDomainTrusts(domainObject)
+		require.Len(t, result.TrustRelationships, 1)
+
+		rel := result.TrustRelationships[0]
+		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
+		assert.Equal(t, rel.RelProps[ad.TrustAttributes.String()], 12345)
 	})
 
-	result := ein.ParseDomainTrusts(domainObject)
-	assert.Len(t, result.TrustRelationships, 1)
+	t.Run("TrustAttributes Parse Int Success", func(t *testing.T) {
+		domainObject.Trusts = []ein.Trust{
+			{
+				TargetDomainSid:      "abc123",
+				IsTransitive:         false,
+				TrustDirection:       ein.TrustDirectionInbound,
+				TrustType:            "abc",
+				SidFilteringEnabled:  false,
+				TargetDomainName:     "abc456",
+				TGTDelegationEnabled: false,
+				TrustAttributes:      12345,
+			},
+		}
 
-	rel := result.TrustRelationships[0]
-	assert.Contains(t, rel.RelProps, "trustattributes")
-	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+		result := ein.ParseDomainTrusts(domainObject)
+		require.Len(t, result.TrustRelationships, 1)
 
-	domainObject.Trusts = make([]ein.Trust, 0)
-	domainObject.Trusts = append(domainObject.Trusts, ein.Trust{
-		TargetDomainSid:      "abc123",
-		IsTransitive:         false,
-		TrustDirection:       ein.TrustDirectionInbound,
-		TrustType:            "abc",
-		SidFilteringEnabled:  false,
-		TargetDomainName:     "abc456",
-		TGTDelegationEnabled: false,
-		TrustAttributes:      12345,
+		rel := result.TrustRelationships[0]
+		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
+		assert.Equal(t, rel.RelProps[ad.TrustAttributes.String()], 12345)
 	})
 
-	result = ein.ParseDomainTrusts(domainObject)
-	assert.Len(t, result.TrustRelationships, 1)
+	t.Run("TrustAttributes Parse Float64 Success", func(t *testing.T) {
+		domainObject.Trusts = []ein.Trust{
+			{
+				TargetDomainSid:      "abc123",
+				IsTransitive:         false,
+				TrustDirection:       ein.TrustDirectionInbound,
+				TrustType:            "abc",
+				SidFilteringEnabled:  false,
+				TargetDomainName:     "abc456",
+				TGTDelegationEnabled: false,
+				TrustAttributes:      float64(12345),
+			},
+		}
 
-	rel = result.TrustRelationships[0]
-	assert.Contains(t, rel.RelProps, "trustattributes")
-	assert.Equal(t, rel.RelProps["trustattributes"], 12345)
+		result := ein.ParseDomainTrusts(domainObject)
+		require.Len(t, result.TrustRelationships, 1)
+
+		rel := result.TrustRelationships[0]
+		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
+		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributes.String()])
+	})
+
+	t.Run("TrustAttributes Parse Float32 Success", func(t *testing.T) {
+		domainObject.Trusts = []ein.Trust{
+			{
+				TargetDomainSid:      "abc123",
+				IsTransitive:         false,
+				TrustDirection:       ein.TrustDirectionInbound,
+				TrustType:            "abc",
+				SidFilteringEnabled:  false,
+				TargetDomainName:     "abc456",
+				TGTDelegationEnabled: false,
+				TrustAttributes:      float32(12345),
+			},
+		}
+
+		result := ein.ParseDomainTrusts(domainObject)
+		require.Len(t, result.TrustRelationships, 1)
+
+		rel := result.TrustRelationships[0]
+		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
+		assert.Equal(t, 12345, rel.RelProps[ad.TrustAttributes.String()])
+	})
+
+	t.Run("TrustAttributes Parse Unknown Type Failure", func(t *testing.T) {
+		domainObject.Trusts = []ein.Trust{
+			{
+				TargetDomainSid:      "abc123",
+				IsTransitive:         false,
+				TrustDirection:       ein.TrustDirectionInbound,
+				TrustType:            "abc",
+				SidFilteringEnabled:  false,
+				TargetDomainName:     "abc456",
+				TGTDelegationEnabled: false,
+				TrustAttributes:      uint32(12345),
+			},
+		}
+
+		result := ein.ParseDomainTrusts(domainObject)
+		require.Len(t, result.TrustRelationships, 1)
+
+		rel := result.TrustRelationships[0]
+		assert.Contains(t, rel.RelProps, ad.TrustAttributes.String())
+		assert.Equal(t, nil, rel.RelProps[ad.TrustAttributes.String()])
+	})
 }
 
 func TestConvertComputerToNode(t *testing.T) {
@@ -141,11 +215,13 @@ func TestConvertComputerToNode(t *testing.T) {
 				"isdc": true,
 			},
 		},
-		NTLMRegistryData: ein.RegistryDataAPIResult{
+		NTLMRegistryData: ein.NTLMRegistryDataAPIResult{
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
-			RestrictSendingNtlmTraffic: 1,
+			Result: ein.NTLMRegistryInfo{
+				RestrictSendingNtlmTraffic: 2,
+			},
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
 			APIResult: ein.APIResult{
@@ -157,7 +233,9 @@ func TestConvertComputerToNode(t *testing.T) {
 			APIResult: ein.APIResult{
 				Collected: true,
 			},
-			SigningEnabled: true,
+			Result: ein.SMBSigningResult{
+				SigningEnabled: true,
+			},
 		},
 	}
 

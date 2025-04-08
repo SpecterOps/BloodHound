@@ -90,7 +90,7 @@ func (s *Translator) translatePatternPredicate() error {
 	}
 
 	// Push this as an expression for rendering constraints
-	s.treeTranslator.Push(predicateFuture)
+	s.treeTranslator.PushOperand(predicateFuture)
 
 	// Track this as a predicate to revisit while rendering the patterns
 	currentQueryPart.AddPatternPredicateFuture(predicateFuture)

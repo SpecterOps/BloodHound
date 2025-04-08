@@ -19,6 +19,9 @@ import {
     AssetGroupTagMemberInfo,
     AssetGroupTagSelector,
     AssetGroupTagSelectorNode,
+    CollectorManifest,
+    CommunityCollectorType,
+    EnterpriseCollectorType,
     GraphData,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
@@ -250,3 +253,16 @@ export type ConfigurationWithMetadata<T> = TimestampFields &
 export type GetConfigurationResponse = BasicResponse<ConfigurationWithMetadata<ConfigurationPayload>[]>;
 
 export type UpdateConfigurationResponse = BasicResponse<ConfigurationPayload>;
+
+export type GetCollectorsResponse = BasicResponse<{
+    latest: string;
+    versions: {
+        version: string;
+        sha256sum: string;
+        deprecated: boolean;
+    }[];
+}>;
+
+export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityCollectorType, CollectorManifest[]>>;
+
+export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;

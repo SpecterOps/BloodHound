@@ -20,6 +20,12 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (n) where ID(n) = 1 return n
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.id = 1) select s0.n0 as n from s0;
 
+-- case: match (n) where coalesce(n.name, '') = '1234' return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where coalesce(n0.properties ->> 'name', '')::text = '1234') select s0.n0 as n from s0;
+
+-- case: match (n) where n.name = '1234' return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'name' = '1234') select s0.n0 as n from s0;
+
 -- case: match (n:NodeKind1 {name: "SOME NAME"}) return n
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[] and n0.properties ->> 'name' = 'SOME NAME') select s0.n0 as n from s0;
 

@@ -645,6 +645,14 @@ func (s CompoundIdentifier) Root() Identifier {
 	return s[0]
 }
 
+func (s CompoundIdentifier) HasField() bool {
+	return len(s) > 1
+}
+
+func (s CompoundIdentifier) Field() Identifier {
+	return s[1]
+}
+
 func (s CompoundIdentifier) AsExpressions() []Expression {
 	expressions := make([]Expression, len(s))
 
