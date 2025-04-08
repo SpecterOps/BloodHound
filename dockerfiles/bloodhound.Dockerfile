@@ -17,8 +17,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.6.2
-ARG AZUREHOUND_VERSION=v2.3.0
+ARG SHARPHOUND_VERSION=v2.6.3
+ARG AZUREHOUND_VERSION=v2.3.1
 
 ########
 # Golang Image
@@ -70,32 +70,32 @@ RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
 RUN apk --no-cache add p7zip
 
 # Package Sharphound
-RUN wget https://github.com/SpecterOps/SharpHound/releases/download/$SHARPHOUND_VERSION/SharpHound-$SHARPHOUND_VERSION.zip -O sharphound-$SHARPHOUND_VERSION.zip
-RUN sha256sum sharphound-$SHARPHOUND_VERSION.zip > sharphound-$SHARPHOUND_VERSION.zip.sha256
+RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip -O SharpHound_${SHARPHOUND_VERSION}.zip
+RUN wget https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256 -O SharpHound_${SHARPHOUND_VERSION}.zip.sha256
 
 WORKDIR /tmp/azurehound
 
 # Package Azurehound
 RUN wget \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-darwin-arm64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-linux-amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-linux-amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-linux-arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-linux-arm64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/$AZUREHOUND_VERSION/azurehound-windows-arm64.zip.sha256
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip.sha256 \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip.sha256 \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip.sha256 \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip.sha256 \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256 \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip \
+  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256
 RUN sha256sum -cw *.sha256
 RUN 7z x '*.zip' -oartifacts/*
 RUN ls
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-$AZUREHOUND_VERSION.zip azurehound-*
-RUN sha256sum azurehound-$AZUREHOUND_VERSION.zip > azurehound-$AZUREHOUND_VERSION.zip.sha256
+RUN 7z a -tzip -mx9 AzureHound_${AZUREHOUND_VERSION}.zip AzureHound_*
+RUN sha256sum AzureHound_${AZUREHOUND_VERSION}.zip > AzureHound_${AZUREHOUND_VERSION}.zip.sha256
 
 ########
 # Package Bloodhound
@@ -107,9 +107,9 @@ ARG AZUREHOUND_VERSION
 COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
 COPY --from=builder /bloodhound/dist/bhapi /bloodhound
 COPY --from=hound-builder /opt/bloodhound /etc/bloodhound /var/log /
-COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip /etc/bloodhound/collectors/sharphound/
-COPY --from=hound-builder /tmp/sharphound/sharphound-$SHARPHOUND_VERSION.zip.sha256 /etc/bloodhound/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip /etc/bloodhound/collectors/azurehound/
-COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-$AZUREHOUND_VERSION.zip.sha256 /etc/bloodhound/collectors/azurehound/
+COPY --from=hound-builder /tmp/sharphound/SharpHound_${SHARPHOUND_VERSION}.zip /etc/bloodhound/collectors/sharphound/
+COPY --from=hound-builder /tmp/sharphound/SharpHound_${SHARPHOUND_VERSION}.zip.sha256 /etc/bloodhound/collectors/sharphound/
+COPY --from=hound-builder /tmp/azurehound/artifacts/AzureHound_${AZUREHOUND_VERSION}.zip /etc/bloodhound/collectors/azurehound/
+COPY --from=hound-builder /tmp/azurehound/artifacts/AzureHound_${AZUREHOUND_VERSION}.zip.sha256 /etc/bloodhound/collectors/azurehound/
 
 ENTRYPOINT ["/bloodhound", "-configfile", "/bloodhound.config.json"]
