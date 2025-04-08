@@ -39,6 +39,7 @@ import (
 const (
 	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
 	ErrInvalidSelectorType    = "invalid selector type"
+	ErrInvalidMemberId        = "invalid member id specified in url"
 )
 
 // Checks that the selector seeds are valid.
@@ -186,7 +187,7 @@ func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWrite
 	if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
 	} else if memberID, err := strconv.Atoi(memberStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidMemberId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {

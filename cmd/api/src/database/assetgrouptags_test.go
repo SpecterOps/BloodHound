@@ -209,3 +209,13 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 }
+
+func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
+	// var (
+	// 	dbInst  = integration.SetupDB(t)
+	// 	testCtx = context.Background()
+	// )
+
+	// selectors, err := dbInst.GetSelectorsByMemberId(testCtx, tag.ID)
+
+}
