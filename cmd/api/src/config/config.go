@@ -152,6 +152,7 @@ type Configuration struct {
 	Crypto                       CryptoConfiguration       `json:"crypto"`
 	SAML                         SAMLConfiguration         `json:"saml"`
 	DefaultAdmin                 DefaultAdminConfiguration `json:"default_admin"`
+	CollectorsBucketURL          serde.URL                 `json:"collectors_bucket_url"`
 	CollectorsBasePath           string                    `json:"collectors_base_path"`
 	DatapipeInterval             int                       `json:"datapipe_interval"`
 	EnableStartupWaitPeriod      bool                      `json:"enable_startup_wait_period"`

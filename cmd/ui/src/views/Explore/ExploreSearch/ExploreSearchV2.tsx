@@ -24,6 +24,7 @@ import {
     ExploreSearchTab,
     Icon,
     MappedStringLiteral,
+    NodeSearch,
     PathfindingSearch,
     cn,
     encodeCypherQuery,
@@ -34,7 +35,6 @@ import {
     usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import NodeSearch from './NodeSearch';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
