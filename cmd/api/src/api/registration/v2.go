@@ -322,9 +322,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 
 		// Node Icon Management
 		routerInst.GET("/api/v2/customnode", resources.GetCustomNodeKinds).RequireAuth(),
-		routerInst.GET("/api/v2/customnode/{%s}", resources.GetCustomNodeKind).RequireAuth(),
+		routerInst.GET(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
 		routerInst.POST("/api/v2/customnode", resources.CreateCustomNodeKind).RequireAuth(),
-		routerInst.PUT("/api/v2/customnode/{%s}", resources.UpdateCustomNodeKind).RequireAuth(),
-		routerInst.DELETE("/api/v2/customnode/{%s}", resources.DeleteCustomNodeKind).RequireAuth(),
+		routerInst.PUT(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
 	)
 }
