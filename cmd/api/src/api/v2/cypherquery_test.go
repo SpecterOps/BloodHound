@@ -19,6 +19,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -31,7 +32,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 		mockDatabase   *dbmocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -55,7 +56,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"JSON malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"JSON malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -87,7 +88,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -122,7 +123,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusForbidden,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Permission denied: User may not modify the graph."}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Permission denied: User may not modify the graph."}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -157,7 +158,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Neo4jError:  ()"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Neo4jError:  ()"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -192,7 +193,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -238,7 +239,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"nodes":{"1":{"label":"label","kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`),
+				responseBody:   `{"data":{"nodes":{"1":{"label":"label","kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -270,7 +271,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/specterops/bloodhound/src/utils"
 )
 
-func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, []byte) {
+func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, http.Header, string) {
 	t.Helper()
 	if response.Code != http.StatusOK && response.Code != http.StatusAccepted {
 		responseBytes, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
@@ -29,8 +29,8 @@ func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, ht
 			t.Fatalf("error reading response body: %v", err)
 		}
 
-		return response.Code, response.Header(), res
+		return response.Code, response.Header(), string(res)
 	}
 
-	return response.Code, response.Header(), nil
+	return response.Code, response.Header(), ""
 }

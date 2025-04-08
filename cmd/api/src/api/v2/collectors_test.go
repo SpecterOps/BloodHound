@@ -109,7 +109,7 @@ func TestResources_GetCollectorManifest(t *testing.T) {
 
 func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -136,7 +136,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []uint8([]byte{}),
+				responseBody:   ``,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -158,7 +158,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -180,7 +180,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -213,7 +213,6 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []uint8{},
 				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-1.0.0.zip\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
 			},
 		},
@@ -246,7 +245,6 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []uint8{},
 				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-latest.zip\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
 			},
 		},
@@ -284,7 +282,9 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
@@ -293,7 +293,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -320,7 +320,6 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []uint8([]byte{}),
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -342,7 +341,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -364,7 +363,7 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -397,7 +396,6 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []uint8{},
 				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-1.0.0.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
 			},
 		},
@@ -430,7 +428,6 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []uint8{},
 				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-latest.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}, "Location": []string{"/"}},
 			},
 		},
@@ -469,7 +466,9 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }

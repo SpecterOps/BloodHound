@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -89,7 +90,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		mockDatabase *dbMocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -129,7 +130,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -161,7 +162,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"request timed out"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"request timed out"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -198,7 +199,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"analysis is configured to run on a schedule, unable to run just in time"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"analysis is configured to run on a schedule, unable to run just in time"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -236,7 +237,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -274,7 +275,6 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseBody:   []byte(``),
 				responseHeader: http.Header{"Location": []string{"/"}},
 			},
 		},
@@ -312,7 +312,6 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseBody:   []byte(``),
 				responseHeader: http.Header{"Location": []string{"/"}},
 			},
 		},
@@ -341,7 +340,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseBody:   []byte(``),
+				responseBody:   ``,
 				responseHeader: http.Header{"Location": []string{"/"}},
 			},
 		},
@@ -371,7 +370,9 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }

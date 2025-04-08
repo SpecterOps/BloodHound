@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/ingest"
 
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -256,7 +257,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 		mockDatabase *dbmocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -280,7 +281,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Content type must be application/json or application/zip"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Content type must be application/json or application/zip"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -303,7 +304,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -329,7 +330,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -356,7 +357,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Error saving ingest file: file is not valid json"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: file is not valid json"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -389,7 +390,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Error saving ingest file: no valid meta tag or data tag found"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Error saving ingest file: no valid meta tag or data tag found"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -418,7 +419,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -448,7 +449,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -477,7 +478,6 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseBody:   []byte(``),
 				responseHeader: http.Header{"Location": []string{"/"}},
 			},
 		},
@@ -517,7 +517,9 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }

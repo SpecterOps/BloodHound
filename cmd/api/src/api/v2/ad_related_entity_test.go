@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -498,7 +499,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 		mockDatabase   *dbMocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -528,7 +529,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameters: error getting objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameters: error getting objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -553,7 +554,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -579,7 +580,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameters: type 'graph' is not supported for this endpoint"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameters: type 'graph' is not supported for this endpoint"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -605,7 +606,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -631,7 +632,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -657,7 +658,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`"results"`),
+				responseBody:   `"results"`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
 			},
 		},
@@ -681,7 +682,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"count":1,"limit":10,"skip":0,"data":""}`),
+				responseBody:   `{"count":1,"limit":10,"skip":0,"data":""}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -713,7 +714,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -707,7 +708,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -737,7 +738,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -759,7 +760,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -784,7 +785,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -809,7 +810,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -835,7 +836,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -856,7 +857,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -890,7 +891,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -902,7 +903,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -932,7 +933,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -954,7 +955,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -979,7 +980,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1004,7 +1005,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1030,7 +1031,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1051,7 +1052,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -1085,7 +1086,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1097,7 +1098,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -1127,7 +1128,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -1149,7 +1150,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1174,7 +1175,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1199,7 +1200,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1225,7 +1226,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1246,7 +1247,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -1280,7 +1281,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1292,7 +1293,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -1322,7 +1323,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -1344,7 +1345,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1369,7 +1370,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1394,7 +1395,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1420,7 +1421,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1441,7 +1442,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -1476,7 +1477,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1488,7 +1489,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -1518,7 +1519,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -1540,7 +1541,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1565,7 +1566,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1590,7 +1591,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1616,7 +1617,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1637,7 +1638,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -1671,7 +1672,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1683,7 +1684,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -1713,7 +1714,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -1735,7 +1736,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1760,7 +1761,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1785,7 +1786,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1811,7 +1812,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1832,7 +1833,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -1866,7 +1867,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1878,7 +1879,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -1908,7 +1909,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -1930,7 +1931,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1955,7 +1956,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -1980,7 +1981,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2006,7 +2007,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2027,7 +2028,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -2061,7 +2062,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -2073,7 +2074,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 		mockGraphQuery *mocks.MockGraph
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -2103,7 +2104,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=`"}},
 			},
 		},
@@ -2125,7 +2126,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2150,7 +2151,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"node not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2175,7 +2176,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error getting node: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2201,7 +2202,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"results":"output"}}`),
+				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
 			},
 		},
@@ -2222,7 +2223,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"props":null}}`),
+				responseBody:   `{"data":{"props":null}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=false"}},
 			},
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
@@ -2256,7 +2257,7 @@ func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }

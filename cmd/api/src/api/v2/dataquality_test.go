@@ -35,6 +35,7 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -919,7 +920,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 		mockGraph *graphmocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -946,7 +947,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"Error getting quality stat: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"Error getting quality stat: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -965,7 +966,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{}}`),
+				responseBody:   `{"data":{}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -995,7 +996,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }

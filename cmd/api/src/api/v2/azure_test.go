@@ -15,6 +15,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -26,7 +27,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 		mockDB *graphmocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -50,7 +51,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"query parameter \"related_entity_type\" is malformed: missing required parameter"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"query parameter \"related_entity_type\" is malformed: missing required parameter"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -68,7 +69,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"query parameter \"type\" is malformed: invalid return type requested for related entities"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"query parameter \"type\" is malformed: invalid return type requested for related entities"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=invalid&related_entity_type=list"}},
 			},
 		},
@@ -86,7 +87,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"query parameter \"skip\" is malformed: error converting skip value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"query parameter \"skip\" is malformed: error converting skip value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=list&skip=true"}},
 			},
 		},
@@ -104,7 +105,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"query parameter \"limit\" is malformed: error converting limit value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"query parameter \"limit\" is malformed: error converting limit value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=list&skip=1&limit=true"}},
 			},
 		},
@@ -125,7 +126,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"error fetching related entity type inbound-control: invalid skip parameter"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"error fetching related entity type inbound-control: invalid skip parameter"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph&skip=0&limit=1&related_entity_type=inbound-control"}},
 			},
 		},
@@ -146,7 +147,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{}`),
+				responseBody:   `{}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph&skip=0&limit=1&related_entity_type=inbound-control"}},
 			},
 		},
@@ -167,7 +168,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"invalid skip: 0"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"invalid skip: 0"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
 			},
 		},
@@ -188,7 +189,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"no matching related entity list type for descendent-users"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for descendent-users"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
 			},
 		},
@@ -209,7 +210,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
 			},
 		},
@@ -230,7 +231,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
 			},
 		},
@@ -251,7 +252,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"count":0,"limit":1,"skip":0,"data":[]}`),
+				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=inbound-control&skip=0&limit=1"}},
 			},
 		},
@@ -281,7 +282,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -908,7 +909,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		mockDB *graphmocks.MockDatabase
 	}
 	type expected struct {
-		responseBody   any
+		responseBody   string
 		responseCode   int
 		responseHeader http.Header
 	}
@@ -932,7 +933,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"query parameter object_id is required"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"query parameter object_id is required"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 			},
 		},
@@ -950,7 +951,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"no matching related entity list type for bad"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for bad"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&related_entity_type=bad"}},
 			},
 		},
@@ -968,7 +969,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=bad"}},
 			},
 		},
@@ -993,7 +994,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
 			},
 		},
@@ -1011,7 +1012,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   []byte(`{"errors":[{"context":"","message":"db error: unknown azure entity "}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`),
+				responseBody:   `{"errors":[{"context":"","message":"db error: unknown azure entity "}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
 			},
 		},
@@ -1036,7 +1037,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   []byte(`{"data":{"kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`),
+				responseBody:   `{"data":{"kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
 			},
 		},
@@ -1066,7 +1067,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
-			require.Equal(t, testCase.expected.responseBody, body)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
