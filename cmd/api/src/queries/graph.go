@@ -43,6 +43,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -138,6 +139,8 @@ type Graph interface {
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
+	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
+	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
@@ -662,6 +665,31 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 
 	results["props"] = node.Properties.Map
 	return results
+}
+
+func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+	var numNodes int64
+
+	return numNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
+		return err
+	})
+}
+
+func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
+	results := map[string]int{}
+
+	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
+			for next := range cursor.Chan() {
+				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
+				results[primaryKindStr] += 1
+			}
+
+			return cursor.Error()
+		})
+	})
 }
 
 func (s *GraphQuery) GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error) {
