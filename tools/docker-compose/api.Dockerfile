@@ -58,7 +58,7 @@ RUN 7z x '*.zip' -oartifacts/*
 RUN ls
 
 WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip AzureHound_*
+RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
 RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
 
 FROM docker.io/library/golang:1.23
