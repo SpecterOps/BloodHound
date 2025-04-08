@@ -43,6 +43,23 @@ const (
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
 )
 
+type AssetGroupCertification int
+
+const (
+	AssetGroupCertificationRevoked AssetGroupCertification = -1
+	AssetGroupCertificationNone    AssetGroupCertification = 0
+	AssetGroupCertificationManual  AssetGroupCertification = 1
+	AssetGroupCertificationAuto    AssetGroupCertification = 2
+)
+
+type AssetGroupSelectorNodeSource int
+
+const (
+	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
+	AssetGroupSelectorNodeSourceExpand AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
+)
+
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
 	Type           AssetGroupTagType `json:"type"`
@@ -156,4 +173,16 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 
 type ListSelectorsResponse struct {
 	Selectors AssetGroupTagSelectors `json:"selectors"`
+}
+
+type AssetGroupSelectorNode struct {
+	SelectorId  int                          `json:"selector_id"`
+	NodeId      graph.ID                     `json:"node_id"`
+	Certified   AssetGroupCertification      `json:"certified"`
+	CertifiedBy null.String                  `json:"certified_by"`
+	Source      AssetGroupSelectorNodeSource `json:"source"`
+}
+
+func (s AssetGroupSelectorNode) TableName() string {
+	return "asset_group_tag_selector_nodes"
 }
