@@ -801,7 +801,7 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					result := api.ListAssetGroupMemberCountsResponse{}
+					result := v2.GetAssetGroupTagMemberCountsResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, 2, result.TotalCount)
 					require.Equal(t, 2, result.Counts[ad.Domain.String()])

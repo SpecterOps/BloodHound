@@ -243,20 +243,20 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 	}
 }
 
-type getAssetGroupTagMemberCountsResponse struct {
+type GetAssetGroupTagMemberCountsResponse struct {
 	TotalCount int            `json:"total_count"`
 	Counts     map[string]int `json:"counts"`
 }
 
 func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
-	if tagId, err := strconv.ParseInt(mux.Vars(request)[api.URIPathVariableAssetGroupTagID], 10, 32); err != nil {
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), int(tagId)); err != nil {
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		data := getAssetGroupTagMemberCountsResponse{
+		data := GetAssetGroupTagMemberCountsResponse{
 			Counts: primaryNodeKindsCounts,
 		}
 

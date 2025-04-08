@@ -668,19 +668,13 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 }
 
 func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
-	var (
-		numNodes int64
-	)
+	var numNodes int64
 
-	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	return numNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
 		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
 		return err
-	}); err != nil {
-		return 0, err
-	}
-
-	return numNodes, nil
+	})
 }
 
 func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
