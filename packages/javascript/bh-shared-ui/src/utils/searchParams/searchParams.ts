@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useSearchParams } from 'react-router-dom';
+import { createSearchParams, useSearchParams } from 'react-router-dom';
 import { EnvironmentQueryParams, ExploreQueryParams } from '../..';
 
 // FUTURE DEV: SetURLSearchParams is in both v6 and v7, but v6 uses this type internally and v7 exports it.
@@ -85,4 +85,11 @@ export const persistSearchParams = (persistentSearchParams: string[]) => {
     });
 
     return newParams;
+};
+
+// Utility function for adding type safety/autocomplete to search param construction
+export const createTypedSearchParams = <T>(params: Partial<T>) => {
+    const result: any = {};
+    Object.entries(params).forEach(([key, value]) => (result[key] = value));
+    return createSearchParams(result).toString();
 };
