@@ -40,8 +40,8 @@ import (
 type GetAssetGroupTagsResponse struct {
 	Tags   model.AssetGroupTags `json:"tags"`
 	Counts struct {
-		Selectors map[int]int `json:"selectors"`
-		Members   map[int]int `json:"members"`
+		Selectors map[int]int   `json:"selectors"`
+		Members   map[int]int64 `json:"members"`
 	} `json:"counts,omitempty"`
 }
 
@@ -84,14 +84,13 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 			} else {
 				resp.Counts.Selectors = selectorCounts
 			}
-			memberCounts := make(map[int]int, len(tags))
+			memberCounts := make(map[int]int64, len(tags))
 			for _, tag := range tags {
-				// TODO: use a more efficient query method
-				if nodelist, err := s.GraphQuery.GetNodesByKind(request.Context(), tag.ToKind()); err != nil {
+				if n, err := s.GraphQuery.CountNodesByKind(request.Context(), tag.ToKind()); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
-					memberCounts[tag.ID] = nodelist.Len()
+					memberCounts[tag.ID] = n
 				}
 			}
 			resp.Counts.Members = memberCounts

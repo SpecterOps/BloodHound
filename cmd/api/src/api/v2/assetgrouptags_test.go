@@ -28,7 +28,6 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -207,8 +206,8 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							4: 8,
 						}, nil)
 					mockGraphDb.EXPECT().
-						GetNodesByKind(gomock.Any(), gomock.Any()).
-						Return(graph.EmptyNodeSet(), nil).Times(4)
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil).Times(4)
 				},
 				Test: func(output apitest.Output) {
 					expectedCounts := map[int]int{
@@ -250,28 +249,16 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 							2: 1,
 						}, nil)
 					mockGraphDb.EXPECT().
-						GetNodesByKind(gomock.Any(), gomock.Any()).
-						Return(graph.NewNodeSet(
-							graph.NewNode(graph.ID(1), graph.NewProperties()),
-							graph.NewNode(graph.ID(2), graph.NewProperties()),
-							graph.NewNode(graph.ID(3), graph.NewProperties()),
-							graph.NewNode(graph.ID(4), graph.NewProperties()),
-							graph.NewNode(graph.ID(5), graph.NewProperties()),
-							graph.NewNode(graph.ID(6), graph.NewProperties()),
-						), nil).
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(6), nil).
 						Times(1)
 					mockGraphDb.EXPECT().
-						GetNodesByKind(gomock.Any(), gomock.Any()).
-						Return(graph.NewNodeSet(
-							graph.NewNode(graph.ID(1), graph.NewProperties()),
-							graph.NewNode(graph.ID(2), graph.NewProperties()),
-							graph.NewNode(graph.ID(3), graph.NewProperties()),
-							graph.NewNode(graph.ID(4), graph.NewProperties()),
-						), nil).
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(4), nil).
 						Times(1)
 				},
 				Test: func(output apitest.Output) {
-					expectedMemberCounts := map[int]int{
+					expectedMemberCounts := map[int]int64{
 						1: 6,
 						2: 4,
 					}
