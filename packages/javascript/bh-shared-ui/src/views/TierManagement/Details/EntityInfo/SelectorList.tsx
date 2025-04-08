@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/d
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { AppIcon } from '../../../../components/AppIcon';
-import { apiClient } from '../../../../utils';
+import { apiClient, cn } from '../../../../utils';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
@@ -45,7 +45,6 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
 
     const handleViewClick = () => {};
     const handleEditClick = () => {};
-    const handleDeleteClick = () => {};
 
     if (selectorsQuery.isLoading) {
         return itemSkeletons.map((skeleton, index) => {
@@ -66,7 +65,9 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
                 {selectorsQuery.data.selectors?.map((selector, index) => {
                     return (
                         <div
-                            className={`flex items-center gap-2 p-2 ${index % 2 === 0 ? 'bg-[#E3E7EA] dark:bg-[#272727]' : ''}`}
+                            className={cn('flex items-center gap-2 p-2', {
+                                'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
+                            })}
                             key={index}>
                             <Popover open={!!menuOpen[index]}>
                                 <PopoverTrigger asChild>
@@ -79,19 +80,14 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
                                     onInteractOutside={() => setMenuOpen({})}
                                     onEscapeKeyDown={() => setMenuOpen({})}>
                                     <div
-                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                        className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
                                         onClick={handleViewClick}>
                                         View
                                     </div>
                                     <div
-                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
+                                        className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
                                         onClick={handleEditClick}>
                                         Edit
-                                    </div>
-                                    <div
-                                        className='cursor-pointer p-2 hover:bg-[#E3E7EA] hover:dark:bg-[#272727]'
-                                        onClick={handleDeleteClick}>
-                                        Delete
                                     </div>
                                 </PopoverContent>
                             </Popover>

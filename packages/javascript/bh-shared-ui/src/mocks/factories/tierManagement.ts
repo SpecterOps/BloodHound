@@ -18,6 +18,7 @@ import { faker } from '@faker-js/faker';
 import {
     AssetGroupTag,
     AssetGroupTagCertifiedValues,
+    AssetGroupTagMemberInfo,
     AssetGroupTagSelector,
     AssetGroupTagSelectorNode,
     AssetGroupTagSelectorSeed,
@@ -135,18 +136,14 @@ export const createAssetGroupMembersCount = (selectorId: number = 0) => {
     return data;
 };
 
-export const createAssetGroupMemberInfo = (assetGroupId: number, memberId: number | undefined) => {
-    const data = [];
-
-    for (let i = 0; i < 10; i++) {
-        const name = `selector-${memberId && memberId + i}`;
-
-        data.push({
-            id: assetGroupId,
-            member_id: memberId || 0,
-            name: name,
-        });
-    }
+export const createAssetGroupMemberInfo = (assetGroupId: number, memberId: number) => {
+    const data: AssetGroupTagMemberInfo = {
+        node_id: memberId.toString(),
+        certified: 1,
+        certified_by: 'user',
+        name: 'member',
+        selectors: createSelectors(10, assetGroupId),
+    };
 
     return data;
 };

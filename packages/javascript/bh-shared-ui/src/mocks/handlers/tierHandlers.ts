@@ -113,9 +113,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     rest.get('/api/v2/asset-group-labels/:assetGroupId/members/:memberId', async (req, res, ctx) => {
         const total = 1057;
         const { assetGroupId, memberId } = req.params;
-        const url = new URL(req.url);
-        const skip = url.searchParams.get('skip');
-        const limit = url.searchParams.get('limit');
 
         return res(
             ctx.json({
@@ -125,8 +122,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         parseInt(memberId as string)
                     ),
                 },
-                skip: skip,
-                limit: limit,
                 count: total,
             })
         );

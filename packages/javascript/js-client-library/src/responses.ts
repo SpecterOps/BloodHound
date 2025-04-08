@@ -171,7 +171,7 @@ export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 export type AssetGroupLabelResponse = BasicResponse<{ asset_group_labels: AssetGroupTag[] }>;
 export type AssetGroupSelectorResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupMemberResponse = PaginatedResponse<{ members: AssetGroupTagSelectorNode[] }>;
-export type AssetGroupMemberInfoResponse = BasicResponse<{ member: AssetGroupTagMemberInfo }>;
+export type AssetGroupMemberInfoResponse = PaginatedResponse<{ member: AssetGroupTagMemberInfo }>;
 
 export type AssetGroupSelector = TimestampFields & {
     id: number;

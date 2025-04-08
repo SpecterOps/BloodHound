@@ -38,7 +38,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ data, isCypher }) => {
     const lastUpdated = new Date(data.updated_at).toLocaleDateString();
 
     return (
-        <Card className='h-[280px] mb-[24px] px-6 pt-6 select-none overflow-y-auto'>
+        <Card className='h-64 mb-8 px-6 pt-6 select-none overflow-y-auto'>
             <div className='text-xl font-bold'>{data ? data.name : 'Nothing Data'}</div>
             <div className='flex flex-wrap gap-x-2'>
                 {isLabel(data) && data.position !== null && (
