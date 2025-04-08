@@ -31,14 +31,10 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
-)
-
-const (
-	ErrInvalidAssetGroupTagId = "invalid asset group tag id specified in url"
-	ErrInvalidSelectorType    = "invalid selector type"
 )
 
 type GetAssetGroupTagsResponse struct {
@@ -134,7 +130,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
@@ -150,6 +146,88 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
+	}
+}
+
+func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		selUpdateReq  model.AssetGroupTagSelector
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Update")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else {
+		// we can update DisabledAt on a default selector
+		if selUpdateReq.DisabledAt.Valid {
+			if selector.AllowDisable {
+				selector.DisabledAt = selUpdateReq.DisabledAt
+				if selector.DisabledAt.Time.IsZero() {
+					// clear DisabledBy if DisabledAt is set to zero
+					selector.DisabledBy = null.String{}
+				} else {
+					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				}
+			} else {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
+				return
+			}
+		}
+
+		// we can update AutoCertify on a default selector
+		if selUpdateReq.AutoCertify.Valid {
+			selector.AutoCertify = selUpdateReq.AutoCertify
+		}
+
+		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != "" || len(selUpdateReq.Seeds) > 0) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "default selectors only support modifying auto_certify and disabled_at", request), response)
+			return
+		}
+
+		if selUpdateReq.Name != "" {
+			selector.Name = selUpdateReq.Name
+		}
+
+		if selUpdateReq.Description != "" {
+			selector.Description = selUpdateReq.Description
+		}
+
+		// if seeds are not included, call the DB update with them set to nil
+		var seedsTemp []model.SelectorSeed
+		if len(selUpdateReq.Seeds) > 0 {
+			if err := validateSelectorSeeds(s.GraphQuery, selUpdateReq.Seeds); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+				return
+			}
+			selector.Seeds = selUpdateReq.Seeds
+		} else {
+			// the DB update function will skip updating the seeds in this case
+			seedsTemp = selector.Seeds
+			selector.Seeds = nil
+		}
+
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			if seedsTemp != nil {
+				// seeds were unchanged, set them back to what is stored in the db for the response
+				selector.Seeds = seedsTemp
+			}
+			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
+		}
 	}
 }
 
@@ -195,7 +273,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
 
 		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 		} else if selectorSqlFilter, err := selectorQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
@@ -215,11 +293,36 @@ type getAssetGroupTagResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http.Request) {
-	if tagId, err := strconv.ParseInt(mux.Vars(request)[api.URIPathVariableAssetGroupTagID], 10, 32); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), int(tagId)); err != nil {
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
+	}
+}
+
+type GetAssetGroupTagMemberCountsResponse struct {
+	TotalCount int            `json:"total_count"`
+	Counts     map[string]int `json:"counts"`
+}
+
+func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWriter, request *http.Request) {
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if primaryNodeKindsCounts, err := s.GraphQuery.GetPrimaryNodeKindCounts(request.Context(), tag.ToKind()); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		data := GetAssetGroupTagMemberCountsResponse{
+			Counts: primaryNodeKindsCounts,
+		}
+
+		for _, count := range primaryNodeKindsCounts {
+			data.TotalCount += count
+		}
+
+		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
 }
