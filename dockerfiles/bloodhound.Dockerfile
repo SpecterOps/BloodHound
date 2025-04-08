@@ -17,8 +17,8 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.6.2
-ARG AZUREHOUND_VERSION=v2.3.0
+ARG SHARPHOUND_VERSION=v2.6.3
+ARG AZUREHOUND_VERSION=v2.3.1
 
 ########
 # Golang Image
