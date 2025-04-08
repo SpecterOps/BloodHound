@@ -1,4 +1,6 @@
 {
+    "title": "Generic Ingest Edge",
+    "description": "An edge used in a generic graph ingestion system. Each edge connects a start node to an end node using unique identifiers. A kind is required to define the relationship type. Optional properties can include additional metadata. Node lookup can be customized by specifying an `id_property`, otherwise 'objectid' is used by default.",
     "type": "object",
     "properties": {
         "start": {
@@ -15,7 +17,7 @@
         "end": {
             "type": "object",
             "properties": {
-                "id_value": { "type": "string"  },
+                "id_value": { "type": "string" },
                 "id_property": {
                     "type": "string",
                     "description": "Edge inserts use this property to perform an exact match search. If not provided, edge inserts default to matching on a node's 'objectid' property."
@@ -24,7 +26,34 @@
             "required": ["id_value"]
         },
         "kind": { "type": "string" },
-        "properties": { "type": ["object","null"] }
+        "properties": { "type": ["object", "null"] }
     },
-    "required": ["start", "end", "kind"]
+    "required": ["start", "end", "kind"],
+    "examples": [
+        {
+            "start": { "id_value": "user-1234" },
+            "end": { "id_value": "device-5678" },
+            "kind": "USES"
+        },
+        {
+            "start": {
+                "id_value": "server-001",
+                "id_property": "hostname"
+            },
+            "end": {
+                "id_value": "rack-01",
+                "id_property": "location_id"
+            },
+            "kind": "LOCATED_IN",
+            "properties": {
+                "installed_at": "2025-04-08"
+            }
+        },
+        {
+            "start": { "id_value": "process-1" },
+            "end": { "id_value": "file-1" },
+            "kind": "ACCESSES",
+            "properties": null
+        }
+    ]
 }
