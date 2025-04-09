@@ -164,7 +164,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						RawQuery: "edge_type=Meta&source_node=test&target_node=test",
+						RawQuery: "edge_type=AZBase&source_node=test&target_node=test",
 					},
 				}
 
@@ -174,7 +174,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid value for startID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=test&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=test&target_node=test"}},
 			},
 		},
 		{
@@ -182,7 +182,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						RawQuery: "edge_type=Meta&source_node=1&target_node=test",
+						RawQuery: "edge_type=AZBase&source_node=1&target_node=test",
 					},
 				}
 
@@ -192,7 +192,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid value for endID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=test"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=test"}},
 			},
 		},
 		{
@@ -200,7 +200,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						RawQuery: "edge_type=Meta&source_node=1&target_node=2",
+						RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
 					},
 				}
 
@@ -213,7 +213,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Could not find edge matching criteria: error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 			},
 		},
 		{
@@ -221,7 +221,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						RawQuery: "edge_type=Meta&source_node=1&target_node=2",
+						RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
 					},
 				}
 
@@ -235,7 +235,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"Error getting composition for edge: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 			},
 		},
 		{
@@ -243,7 +243,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						RawQuery: "edge_type=Meta&source_node=1&target_node=2",
+						RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
 					},
 				}
 
@@ -257,7 +257,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"nodes":{},"edges":[]}}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=Meta&source_node=1&target_node=2"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
 			},
 		},
 	}
