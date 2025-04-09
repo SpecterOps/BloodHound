@@ -17,6 +17,8 @@
 package ingest
 
 import (
+	"bytes"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +31,9 @@ import (
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
+
+//go:embed json_schema
+var schemaFiles embed.FS
 
 // ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
@@ -84,10 +89,19 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 				if !dataTagFound && depth == 1 && typed == "data" {
 					dataTagFound = true
 				}
+
+				if typed == "graph" {
+					// this is a generic payload
+					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
+					if err := ValidateGenericIngest(decoder, readToEnd); err != nil {
+						return meta, err
+					}
+					break
+				}
 			}
 		}
 
-		if dataTagValidated && metaTagFound {
+		if dataTagValidated && metaTagFound || meta.Type == ingest.DataTypeGeneric {
 			break
 		}
 	}
@@ -131,10 +145,43 @@ func formatAggregateErrors(errs []validationError) string {
 	return sb.String()
 }
 
-func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
-	var (
-		decoder = NewStreamDecoder(reader)
+func DoEmbedStuff() error {
+	data, err := schemaFiles.ReadFile("json_schema/node.json")
+	if err != nil {
+		return err
+	}
 
+	nodeSchema, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+
+	c := jsonschema.NewCompiler()
+	err = c.AddResource("json_schema/node.json", nodeSchema)
+	if err != nil {
+		return err
+	}
+
+	sch, err := c.Compile("json_schema/schema.json")
+	if err != nil {
+		return err
+	}
+
+	inst, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id":1234}`))
+
+	err = sch.Validate(inst)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+/*
+payload will be : { nodes: [], edges: [] }
+*/
+func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
+
+	var (
 		// Initialize schemas
 		c          = jsonschema.NewCompiler()
 		nodeSchema = c.MustCompile("./json_schema/node.json")
@@ -147,14 +194,19 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 
 	// Validate an array of items (either nodes or edges)
 	validateArray := func(arrayName string, validateFunc func(map[string]any) error) error {
-		if err := decoder.EatOpeningBracket(); err != nil {
-			return fmt.Errorf("error opening %s array: %w", arrayName, err)
+		// if err := decoder.EatOpeningBracket(); err != nil {
+		// 	return fmt.Errorf("error opening %s array: %w", arrayName, err)
+		// }
+
+		_, err := decoder.Token() // [
+		if err != nil {
+			return err
 		}
 
 		index := 0
 		for decoder.More() {
 			var item map[string]any
-			if err := decoder.DecodeNext(&item); err != nil {
+			if err := decoder.Decode(&item); err != nil {
 				if _, ok := err.(*json.UnmarshalTypeError); ok {
 					// json.UnmarshalTypeErrors are recoverable. the stream can continue advancing
 					validationErrors = append(validationErrors, validationError{
@@ -194,8 +246,12 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 			return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
 		}
 
-		if err := decoder.EatClosingBracket(); err != nil {
-			return fmt.Errorf("error closing %s array: %w", arrayName, err)
+		// if err := decoder.EatClosingBracket(); err != nil {
+		// 	return fmt.Errorf("error closing %s array: %w", arrayName, err)
+		// }
+		_, err = decoder.Token() // ]
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -210,20 +266,16 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		return nil
 	}
 
+	_, err := decoder.Token() // {
+	if err != nil {
+		return err
+	}
+
 	// Loop to read the JSON stream and identify graph elements
-	for {
-		token, err := decoder.dec.Token()
+	for decoder.More() {
+		token, err := decoder.Token()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				if !nodesFound && !edgesFound {
-					// kick out if client gave us nothing
-					// validationErrors = append(validationErrors, validationError{
-					// 	Index:   0,
-					// 	Type:    "empty graph tags",
-					// 	Message: "hello",
-					// })
-					return ingest.ErrEmptyIngest
-				}
 				break
 			}
 			return fmt.Errorf("error reading token: %w", err)
@@ -232,10 +284,6 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		switch typedToken := token.(type) {
 		case string:
 			switch typedToken {
-			case "graph":
-				if err := decoder.EatOpeningCurlyBracket(); err != nil {
-					return fmt.Errorf("error opening graph object: %w", err)
-				}
 			case "nodes":
 				nodesFound = true
 				if err := validateArray("nodes", func(item map[string]any) error {
@@ -254,10 +302,13 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		}
 	}
 
-	if readToEnd {
-		if _, err := io.Copy(io.Discard, reader); err != nil {
-			return fmt.Errorf("error reading to end: %w", err)
-		}
+	_, err = decoder.Token() // }
+	if err != nil {
+		return err
+	}
+
+	if !nodesFound && !edgesFound {
+		return ingest.ErrEmptyIngest
 	}
 	return nil
 }

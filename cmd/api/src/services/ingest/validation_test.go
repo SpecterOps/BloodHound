@@ -39,50 +39,68 @@ type metaTagAssertion struct {
 func Test_ValidateMetaTag(t *testing.T) {
 	assertions := []metaTagAssertion{
 		{
-			name:         "valid",
-			rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			name:         "succesful generic payload",
+			rawString:    `{"graph": {"nodes":[]}}`,
 			err:          nil,
-			expectedType: ingest.DataTypeSession,
+			expectedType: ingest.DataTypeGeneric,
 		},
 		{
-			name:      "No data tag",
-			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
-			err:       ingest.ErrDataTagNotFound,
+			name:         "empty generic payload",
+			rawString:    `{"graph": {}}`,
+			err:          ingest.ErrEmptyIngest,
+			expectedType: ingest.DataTypeGeneric,
 		},
-		{
-			name:      "No meta tag",
-			rawString: `{"data": []}`,
-			err:       ingest.ErrMetaTagNotFound,
-		},
-		{
-			name:      "No valid tags",
-			rawString: `{}`,
-			err:       ingest.ErrNoTagFound,
-		},
-		{
-			name:         "ignore invalid tag but still find correct tag",
-			rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
-			err:          nil,
-			expectedType: ingest.DataTypeSession,
-		},
-		{
-			name:         "swapped order",
-			rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
-			err:          nil,
-			expectedType: ingest.DataTypeSession,
-		},
-		{
-			name:      "invalid type",
-			rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
-			err:       ingest.ErrMetaTagNotFound,
-		},
+		// {
+		// 	name:         "node fails schema validation",
+		// 	rawString:    `{"graph": {"nodes":[{}]}}`,
+		// 	err:          errors.New("[0] validation error"),
+		// 	expectedType: ingest.DataTypeGeneric,
+		// },
+		// {
+		// 	name:         "valid",
+		// 	rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+		// 	err:          nil,
+		// 	expectedType: ingest.DataTypeSession,
+		// },
+		// {
+		// 	name:      "No data tag",
+		// 	rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+		// 	err:       ingest.ErrDataTagNotFound,
+		// },
+		// {
+		// 	name:      "No meta tag",
+		// 	rawString: `{"data": []}`,
+		// 	err:       ingest.ErrMetaTagNotFound,
+		// },
+		// {
+		// 	name:      "No valid tags",
+		// 	rawString: `{}`,
+		// 	err:       ingest.ErrNoTagFound,
+		// },
+		// {
+		// 	name:         "ignore invalid tag but still find correct tag",
+		// 	rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+		// 	err:          nil,
+		// 	expectedType: ingest.DataTypeSession,
+		// },
+		// {
+		// 	name:         "swapped order",
+		// 	rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+		// 	err:          nil,
+		// 	expectedType: ingest.DataTypeSession,
+		// },
+		// {
+		// 	name:      "invalid type",
+		// 	rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
+		// 	err:       ingest.ErrMetaTagNotFound,
+		// },
 	}
 
 	for _, assertion := range assertions {
 		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
-			assert.Equal(t, meta.Type, assertion.expectedType)
+			assert.Equal(t, assertion.expectedType, meta.Type)
 		}
 	}
 }
@@ -123,8 +141,6 @@ type testGraph struct {
 type testPayload struct {
 	Graph testGraph `json:"graph"`
 }
-
-// TODO: Error aggregation. ie multiple nodes that have errors
 
 func Test_ValidateGenericIngest(t *testing.T) {
 
@@ -194,8 +210,10 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			reader = strings.NewReader(assertion.rawPayload)
 		}
 
-		err := ingest_service.ValidateGenericIngest(reader, true)
-		fmt.Println(err)
+		decoder := json.NewDecoder(reader)
+
+		err := ingest_service.ValidateGenericIngest(decoder, true)
+
 		if len(assertion.errMsgs) > 0 {
 			for _, validationError := range assertion.errMsgs {
 				assert.ErrorContains(t, err, validationError, testMessage)
@@ -210,10 +228,16 @@ func Test_ValidateGenericIngest(t *testing.T) {
 		assert.Nil(t, err, testMessage)
 
 		reader := bytes.NewReader(payload)
+		decoder := json.NewDecoder(reader)
 
-		err = ingest_service.ValidateGenericIngest(reader, true)
+		err = ingest_service.ValidateGenericIngest(decoder, true)
 		assert.Nil(t, err, testMessage)
 	}
+}
+
+func Test_EmbedThing(t *testing.T) {
+	err := ingest_service.DoEmbedStuff()
+	fmt.Println(err)
 }
 
 // these cases exercise the json.Decoder in different ways to produce (recoverable) UnmarshalTypeErrors

@@ -103,6 +103,7 @@ const (
 	DataTypeCertTemplate   DataType = "certtemplates"
 	DataTypeAzure          DataType = "azure"
 	DataTypeIssuancePolicy DataType = "issuancepolicies"
+	DataTypeGeneric        DataType = "generic"
 )
 
 func AllIngestDataTypes() []DataType {
