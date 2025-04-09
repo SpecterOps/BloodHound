@@ -67,6 +67,12 @@ func newSQLWalkCursor(node pgsql.SyntaxNode) (*Cursor[pgsql.SyntaxNode], error) 
 			Branches: typedNode.AsSyntaxNodes(),
 		}, nil
 
+	case *pgsql.OrderBy:
+		return &Cursor[pgsql.SyntaxNode]{
+			Node:     node,
+			Branches: []pgsql.SyntaxNode{typedNode.Expression},
+		}, nil
+
 	case pgsql.Select:
 		nextCursor := &Cursor[pgsql.SyntaxNode]{
 			Node: node,

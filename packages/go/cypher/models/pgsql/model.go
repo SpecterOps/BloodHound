@@ -402,6 +402,16 @@ type OrderBy struct {
 	Ascending  bool
 }
 
+func NewOrderBy(ascending bool) *OrderBy {
+	return &OrderBy{
+		Ascending: ascending,
+	}
+}
+
+func (s OrderBy) AsExpression() Expression {
+	return s
+}
+
 func (s OrderBy) NodeType() string {
 	return "order_by"
 }
@@ -1167,7 +1177,7 @@ func (s With) NodeType() string {
 type Query struct {
 	CommonTableExpressions *With
 	Body                   SetExpression
-	OrderBy                []OrderBy
+	OrderBy                []*OrderBy
 	Offset                 models.Optional[Expression]
 	Limit                  models.Optional[Expression]
 }

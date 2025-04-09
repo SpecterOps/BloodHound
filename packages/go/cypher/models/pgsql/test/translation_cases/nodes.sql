@@ -93,9 +93,8 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (n) return n skip 5 limit 10
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as n from s0 offset 5 limit 10;
 
--- exclusive
--- case: match (s) return s order by id(n) desc
-;
+-- case: match (s) return s order by id(s) desc
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 order by (s0.n0).id desc;
 
 -- case: match (s) return s order by s.name, s.other_prop desc
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0) select s0.n0 as s from s0 order by (s0.n0).properties -> 'name', (s0.n0).properties -> 'other_prop' desc;
