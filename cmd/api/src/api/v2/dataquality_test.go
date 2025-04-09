@@ -912,7 +912,6 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 	}
 }
 
-// TODO: BED-5640 - Unable to reach the anonymous function due to mocking
 func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 	t.Parallel()
 
