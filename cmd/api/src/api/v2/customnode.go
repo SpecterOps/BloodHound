@@ -2,14 +2,20 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"net/http"
+	"regexp"
 )
 
 const (
 	CustomNodeKindParameter = "kind_name"
+)
+
+var (
+	validIconName = regexp.MustCompile(`^fa-[a-z0-9-]+$`)
 )
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
@@ -36,6 +42,26 @@ type CreateCustomNodeRequest struct {
 	CustomTypes map[string]model.CustomNodeKindConfig `json:"custom_types"`
 }
 
+func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeRequest) error {
+	for _, config := range customNodeKindRequest.CustomTypes {
+		if err := validateConfig(config); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateConfig(config model.CustomNodeKindConfig) error {
+	if config.Icon.Type != "font-awesome" {
+		return fmt.Errorf("custom node kind config type (%s) is not supported", config.Icon.Type)
+	} else if !validIconName.MatchString(config.Icon.Name) {
+		return fmt.Errorf("custom node kind config name (%s) is not valid", config.Icon.Name)
+	}
+
+	return nil
+}
+
 func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *http.Request) {
 	var (
 		customNodeKindRequest CreateCustomNodeRequest
@@ -43,6 +69,8 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if err := validateCreateCustomNodeRequest(customNodeKindRequest); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseCodeBadRequest, request), response)
 	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -75,6 +103,8 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if err := validateConfig(customNodeKindRequest.Config); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseCodeBadRequest, request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: customNodeKindRequest.Config}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
