@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 
@@ -147,6 +148,21 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 	))
 }
 
+func rewriteStringWildCardLiteral(expression pgsql.Expression) (pgsql.Expression, error) {
+	switch typedExpression := expression.(type) {
+	case pgsql.Literal:
+		if strValue, typeOK := typedExpression.Value.(string); !typeOK {
+			return nil, fmt.Errorf("expected a string literal but received type: %T", typedExpression.Value)
+		} else {
+			rewritten := strings.Replace(strValue, "_", "\\_", -1)
+			return pgsql.NewLiteral(rewritten, pgsql.Text), nil
+		}
+
+	default:
+		return expression, nil
+	}
+}
+
 func rewritePropertyLookupOperator(propertyLookup *pgsql.BinaryExpression, dataType pgsql.DataType) pgsql.Expression {
 	if dataType.IsArrayType() {
 		// Ensure that array conversions use JSONB
@@ -238,6 +254,14 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
 
+				// If the right operand is a literal, it may contain characters that have special meaning in PgSQL
+				// but do not in Cypher. These characters must be escaped
+				if rewrittenROperand, err := rewriteStringWildCardLiteral(expression.ROperand); err != nil {
+					return err
+				} else {
+					expression.ROperand = rewrittenROperand
+				}
+
 			default:
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
 			}
@@ -258,6 +282,9 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
 				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, pgsql.Text)
+
+				// If the left operand is a literal, unlike the right operand case there is no need to rewrite
+				// for special (like, ilike, etc.) character classes
 
 			default:
 				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
@@ -449,7 +476,7 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-if rightOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
+	if rightOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return err
 	} else if rightDependencies, err := ExtractSyntaxNodeReferences(rightOperand); err != nil {
 		return err
