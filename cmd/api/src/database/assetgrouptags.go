@@ -109,7 +109,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify 
 			FROM %s WHERE id = ?`,
 			selector.TableName()),
-			assetGroupTagSelectorId).Scan(&selector); result.Error != nil {
+			assetGroupTagSelectorId).First(&selector); result.Error != nil {
 			return CheckError(result)
 		} else if result := tx.Raw(fmt.Sprintf("SELECT selector_id, type, value FROM %s WHERE selector_id = ?", (model.SelectorSeed{}).TableName()), selector.ID).Find(&selector.Seeds); result.Error != nil {
 			return CheckError(result)
