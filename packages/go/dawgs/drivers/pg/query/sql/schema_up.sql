@@ -340,6 +340,18 @@ $$
   parallel safe
   strict;
 
+create or replace function public.nodes_to_path(nodes variadic int8[]) returns pathComposite as
+$$
+select row (array_agg(distinct (n.id, n.kind_ids, n.properties)::nodeComposite)::nodeComposite[],
+         array []::edgeComposite[])::pathComposite
+from node n
+where n.id = any (nodes);
+$$
+  language sql
+  immutable
+  parallel safe
+  strict;
+
 create or replace function public.edges_to_path(path variadic int8[]) returns pathComposite as
 $$
 select row (array_agg(distinct (n.id, n.kind_ids, n.properties)::nodeComposite)::nodeComposite[],

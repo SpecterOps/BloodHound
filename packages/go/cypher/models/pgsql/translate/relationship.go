@@ -119,10 +119,7 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 			return err
 		} else {
 			// Set up the new expansion model here
-			newExpansion := NewExpansionModel()
-
-			newExpansion.MinDepth = models.PointerOptional(relationshipPattern.Range.StartIndex)
-			newExpansion.MaxDepth = models.PointerOptional(relationshipPattern.Range.EndIndex)
+			newExpansion := NewExpansionModel(part, relationshipPattern)
 
 			// Set the path binding in the expansion struct for easier referencing upstream
 			newExpansion.PathBinding = expansionPathBinding

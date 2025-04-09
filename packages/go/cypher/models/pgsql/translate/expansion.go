@@ -35,13 +35,15 @@ func expansionEdgeJoinCondition(traversalStep *TraversalStep) (pgsql.Expression,
 }
 
 func expansionConstraints(traversalStep *TraversalStep) pgsql.Expression {
+	expansionModel := traversalStep.Expansion.Value
+
 	return pgd.And(
 		pgd.LessThanOrEqualTo(
-			pgd.Column(traversalStep.Expansion.Value.Frame.Binding.Identifier, expansionDepth),
-			pgd.IntLiteral(traversalStep.Expansion.Value.MaxDepth.GetOr(translateDefaultMaxTraversalDepth)),
+			pgd.Column(expansionModel.Frame.Binding.Identifier, expansionDepth),
+			pgd.IntLiteral(expansionModel.Options.MaxDepth.GetOr(translateDefaultMaxTraversalDepth)),
 		),
 		pgd.Not(
-			pgd.Column(traversalStep.Expansion.Value.Frame.Binding.Identifier, expansionIsCycle),
+			pgd.Column(expansionModel.Frame.Binding.Identifier, expansionIsCycle),
 		),
 	)
 }
@@ -428,6 +430,32 @@ func (s *ExpansionBuilder) prepareBackwardFrontRecursiveQuery(expansionModel *Ex
 	return nextQuery
 }
 
+func shortestPathSearchCTE(functionName pgsql.Identifier, expansionModel *Expansion, harnessParameters []pgsql.Expression) pgsql.CommonTableExpression {
+	var (
+		innerQuery = pgsql.Query{
+			Body: pgsql.Select{
+				Projection: []pgsql.SelectItem{
+					pgsql.Wildcard{},
+				},
+				From: []pgsql.FromClause{{
+					Source: pgsql.FunctionCall{
+						Function:   functionName,
+						Parameters: harnessParameters,
+					},
+				}},
+			},
+		}
+	)
+
+	return pgsql.CommonTableExpression{
+		Alias: pgsql.TableAlias{
+			Name:  expansionModel.Frame.Binding.Identifier,
+			Shape: models.ValueOptional(expansionColumns()),
+		},
+		Query: innerQuery,
+	}
+}
+
 func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
 	var (
 		expansionModel             = s.traversalStep.Expansion.Value
@@ -481,26 +509,7 @@ func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
 			Body:                   projectionQuery,
 		}
 
-		query.AddCTE(pgsql.CommonTableExpression{
-			Alias: pgsql.TableAlias{
-				Name:  expansionModel.Frame.Binding.Identifier,
-				Shape: models.ValueOptional(expansionColumns()),
-			},
-			Query: pgsql.Query{
-				Body: pgsql.Select{
-					Projection: []pgsql.SelectItem{
-						pgsql.Wildcard{},
-					},
-					From: []pgsql.FromClause{{
-						Source: pgsql.FunctionCall{
-							Function:   pgsql.FunctionUnidirectionalASPHarness,
-							Parameters: harnessParameters,
-						},
-					}},
-				},
-			},
-		})
-
+		query.AddCTE(shortestPathSearchCTE(pgsql.FunctionUnidirectionalASPHarness, expansionModel, harnessParameters))
 		return query, nil
 	}
 }
@@ -560,26 +569,7 @@ func (s *ExpansionBuilder) BuildBiDirectionalAllShortestPathsRoot() (pgsql.Query
 			Body:                   projectionQuery,
 		}
 
-		query.AddCTE(pgsql.CommonTableExpression{
-			Alias: pgsql.TableAlias{
-				Name:  expansionModel.Frame.Binding.Identifier,
-				Shape: models.ValueOptional(expansionColumns()),
-			},
-			Query: pgsql.Query{
-				Body: pgsql.Select{
-					Projection: []pgsql.SelectItem{
-						pgsql.Wildcard{},
-					},
-					From: []pgsql.FromClause{{
-						Source: pgsql.FunctionCall{
-							Function:   pgsql.FunctionBidirectionalASPHarness,
-							Parameters: harnessParameters,
-						},
-					}},
-				},
-			},
-		})
-
+		query.AddCTE(shortestPathSearchCTE(pgsql.FunctionBidirectionalASPHarness, expansionModel, harnessParameters))
 		return query, nil
 	}
 }
@@ -617,7 +607,7 @@ func (s *ExpansionBuilder) allShortestPathsParameters(expansionModel *Expansion,
 		})
 	}
 
-	return append(harnessParameters, pgsql.NewLiteral(expansionModel.MaxDepth.GetOr(translateDefaultMaxTraversalDepth), pgsql.Int)), nil
+	return append(harnessParameters, pgsql.NewLiteral(expansionModel.Options.MaxDepth.GetOr(translateDefaultMaxTraversalDepth), pgsql.Int)), nil
 }
 
 func (s *ExpansionBuilder) bidirectionalAllShortestPathsParameters(expansionModel *Expansion, forwardFrontPrimerQuery pgsql.Select, forwardFrontRecursiveQuery pgsql.Select, backwardFrontPrimerQuery pgsql.Select, backwardFrontRecursiveQuery pgsql.Select) ([]pgsql.Expression, error) {
@@ -673,44 +663,7 @@ func (s *ExpansionBuilder) bidirectionalAllShortestPathsParameters(expansionMode
 		})
 	}
 
-	return append(harnessParameters, pgsql.NewLiteral(expansionModel.MaxDepth.GetOr(translateDefaultMaxTraversalDepth), pgsql.Int)), nil
-}
-
-func (s *ExpansionBuilder) BuildAllShortestPathsStep() pgsql.Query {
-	return pgsql.Query{}
-}
-
-func (s *ExpansionBuilder) BuildAllShortestPathsQuery(primerIdentifier, recursiveIdentifier *pgsql.Parameter, expansionIdentifier pgsql.Identifier, maxDepth int64) pgsql.Query {
-	query := pgsql.Query{
-		CommonTableExpressions: &pgsql.With{},
-		Body:                   s.ProjectionStatement,
-	}
-
-	query.AddCTE(pgsql.CommonTableExpression{
-		Alias: pgsql.TableAlias{
-			Name:  expansionIdentifier,
-			Shape: models.ValueOptional(expansionColumns()),
-		},
-		Query: pgsql.Query{
-			Body: pgsql.Select{
-				Projection: []pgsql.SelectItem{
-					pgsql.Wildcard{},
-				},
-				From: []pgsql.FromClause{{
-					Source: pgsql.FunctionCall{
-						Function: pgsql.FunctionUnidirectionalASPHarness,
-						Parameters: []pgsql.Expression{
-							primerIdentifier,
-							recursiveIdentifier,
-							pgsql.NewLiteral(maxDepth, pgsql.Int),
-						},
-					},
-				}},
-			},
-		},
-	})
-
-	return query
+	return append(harnessParameters, pgsql.NewLiteral(expansionModel.Options.MaxDepth.GetOr(translateDefaultMaxTraversalDepth), pgsql.Int)), nil
 }
 
 func (s *ExpansionBuilder) Build(expansionIdentifier pgsql.Identifier) pgsql.Query {
@@ -1156,7 +1109,7 @@ func (s *Translator) buildExpansionPatternStep(traversalStep *TraversalStep, exp
 	}, nil
 }
 
-func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversalStep bool, isShortestPath bool, traversalStep *TraversalStep) error {
+func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversalStep bool, expansionOptions expansionOptions, traversalStep *TraversalStep) error {
 	expansionModel := traversalStep.Expansion.Value
 
 	// Translate the expansion's constraints - this has the side effect of making the pattern identifiers visible in
@@ -1212,7 +1165,7 @@ func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversal
 		traversalStep.Projection = boundProjections.Items
 	}
 
-	if isShortestPath {
+	if expansionOptions.FindShortestPath || expansionOptions.FindAllShortestPaths {
 		if err := s.translateShortestPathTraversal(expansionModel); err != nil {
 			return err
 		}

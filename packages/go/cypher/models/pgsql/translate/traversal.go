@@ -18,6 +18,7 @@ package translate
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
@@ -212,6 +213,7 @@ func (s *Translator) buildTraversalPatternStep(partFrame *Frame, traversalStep *
 	}, nil
 }
 
+
 func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedProjection bool) error {
 	var scopeSnapshot *Scope
 
@@ -228,13 +230,13 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 		}
 
 		if traversalStep.Expansion.Set {
-			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, part.AllShortestPaths || part.ShortestPath, traversalStep); err != nil {
+			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, traversalStep.Expansion.Value.Options, traversalStep); err != nil {
 				return err
 			}
-		} else {
-			if err := s.translateTraversalPatternPartWithoutExpansion(idx == 0, traversalStep); err != nil {
-				return err
-			}
+		} else if part.AllShortestPaths || part.ShortestPath {
+			return fmt.Errorf("expected shortest path search to utilize variable expansion: ()-[*..]->()")
+		} else if err := s.translateTraversalPatternPartWithoutExpansion(idx == 0, traversalStep); err != nil {
+			return err
 		}
 	}
 

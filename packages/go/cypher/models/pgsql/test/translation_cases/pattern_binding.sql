@@ -14,6 +14,12 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+-- case: match p = (:NodeKind1) return p
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select nodes_to_path(variadic array [(s0.n0).id]::int8[])::pathcomposite as p from s0;
+
+-- case: match p = (n:NodeKind1) where n.name contains 'test' return p
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (n0.properties ->> 'name' like '%test%') and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select nodes_to_path(variadic array [(s0.n0).id]::int8[])::pathcomposite as p from s0;
+
 -- case: match p = ()-[]->() return p
 with s0 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from edge e0 join node n0 on n0.id = e0.start_id join node n1 on n1.id = e0.end_id) select edges_to_path(variadic array [(s0.e0).id]::int8[])::pathcomposite as p from s0;
 
