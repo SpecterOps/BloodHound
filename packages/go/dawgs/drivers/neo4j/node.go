@@ -183,7 +183,7 @@ func (s *NodeQuery) First() (*graph.Node, error) {
 	), query.Limit(1))
 }
 
-func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error) error {
+func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error, finalCriteria ...graph.Criteria) error {
 	return s.Query(func(result graph.Result) error {
 		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (*graph.Node, error) {
 			var node graph.Node
@@ -193,7 +193,7 @@ func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error)
 		defer cursor.Close()
 		return delegate(cursor)
 	}, query.Returning(
-		query.Node(),
+		append([]graph.Criteria{query.Node()}, finalCriteria...)...,
 	))
 }
 

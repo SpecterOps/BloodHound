@@ -288,7 +288,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(model.OrderCriteria{model.OrderCriterion{Property: "id", Order: query.Ascending()}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), 5, 5); err != nil {
+	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(model.OrderCriteria{model.OrderCriterion{Property: "id", Order: query.Ascending()}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), 1, 10); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting domains: %v", err), request), response)
 	} else {
 		for _, node := range nodes {

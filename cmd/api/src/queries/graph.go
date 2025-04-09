@@ -717,7 +717,10 @@ func (s *GraphQuery) GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria
 }
 
 func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
-	var nodes []*graph.Node
+	var (
+		nodes         []*graph.Node
+		finalCriteria []graph.Criteria
+	)
 
 	return nodes, s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		nodeQuery := tx.Nodes().Filterf(func() graph.Criteria {
@@ -725,19 +728,19 @@ func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.Orde
 		})
 
 		if offset > 0 {
-			nodeQuery = nodeQuery.Offset(offset)
+			finalCriteria = append(finalCriteria, query.Offset(offset))
 		}
 
 		if limit > 0 {
-			nodeQuery = nodeQuery.Limit(limit)
+			finalCriteria = append(finalCriteria, query.Limit(limit))
 		}
 
 		if len(orderCriteria) > 0 {
 			for _, order := range orderCriteria {
 				if order.Property == "id" {
-					nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeID(), order.Order))
+					finalCriteria = append(finalCriteria, query.OrderBy(query.Order(query.NodeID(), order.Order)))
 				} else {
-					nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order))
+					finalCriteria = append(finalCriteria, query.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order)))
 				}
 			}
 		}
@@ -747,7 +750,7 @@ func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.Orde
 				nodes = append(nodes, node)
 			}
 			return nil
-		})
+		}, finalCriteria...)
 	})
 }
 

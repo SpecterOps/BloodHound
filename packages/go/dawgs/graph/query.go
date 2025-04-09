@@ -110,7 +110,7 @@ type NodeQuery interface {
 
 	// Fetch completes the query and captures a cursor for iterating the result set. This cursor is passed to the given
 	// delegate. Errors from the delegate are returned upwards as the error result of this call.
-	Fetch(delegate func(cursor Cursor[*Node]) error) error
+	Fetch(delegate func(cursor Cursor[*Node]) error, finalCriteria ...Criteria) error
 
 	// FetchIDs completes the query and captures a cursor for iterating the result set. This cursor is passed to the given
 	// delegate. Errors from the delegate are returned upwards as the error result of this call.
