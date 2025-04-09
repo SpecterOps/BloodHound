@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -45,10 +46,7 @@ import (
 )
 
 func TestResources_GetAssetGroupTags(t *testing.T) {
-	const (
-		queryParamTagType       = "type"
-		queryParamIncludeCounts = "includeCounts"
-	)
+	const queryParamTagType = "type"
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -69,14 +67,22 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Input: func(input *apitest.Input) {
 					apitest.AddQueryParam(input, queryParamTagType, "123456")
 				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTags(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTags{}, database.ErrNotFound)
+				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
+					resp := v2.GetAssetGroupTagsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.Equal(output, model.AssetGroupTags{}, resp.Tags)
 				},
 			},
 			{
 				Name: "InvalidIncludeCounts",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamIncludeCounts, "blah")
+					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "blah")
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
@@ -111,11 +117,14 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "TagTypeLabel",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "2") // model.AssetGroupTagTypeLabel
+					apitest.AddQueryParam(input, queryParamTagType, "eq:2") // model.AssetGroupTagTypeLabel
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeLabel).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+							SQLString: "type = ?",
+							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeLabel))},
+						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
@@ -134,11 +143,14 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "TagTypeTier",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamTagType, "1") // model.AssetGroupTagTypeTier
+					apitest.AddQueryParam(input, queryParamTagType, "eq:1") // model.AssetGroupTagTypeTier
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeTier).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
+							SQLString: "type = ?",
+							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeTier))},
+						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
@@ -158,7 +170,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Name: "TagTypeDefault",
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						GetAssetGroupTags(gomock.Any(), model.SQLFilter{}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeLabel},
@@ -186,11 +198,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "IncludeCounts Selector counts",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamIncludeCounts, "true")
+					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},
 							model.AssetGroupTag{ID: 2, Type: model.AssetGroupTagTypeTier},
@@ -233,11 +245,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 			{
 				Name: "IncludeCounts member counts",
 				Input: func(input *apitest.Input) {
-					apitest.AddQueryParam(input, queryParamIncludeCounts, "true")
+					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetAssetGroupTags(gomock.Any(), model.AssetGroupTagTypeAll).
+						GetAssetGroupTags(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Name: "testlabel", Type: model.AssetGroupTagTypeLabel},
 							model.AssetGroupTag{ID: 2, Name: "testtier", Type: model.AssetGroupTagTypeTier},

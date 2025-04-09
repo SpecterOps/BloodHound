@@ -33,7 +33,7 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
-	GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error)
+	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -169,21 +169,21 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 	}
 }
 
-func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, tagType model.AssetGroupTagType) (model.AssetGroupTags, error) {
+func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error) {
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = " AND " + sqlFilter.SQLString
+	}
+
 	var tags model.AssetGroupTags
-	if tagType == model.AssetGroupTagTypeAll {
-		if result := s.db.WithContext(ctx).Raw(
-			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
-		).Find(&tags); result.Error != nil {
-			return model.AssetGroupTags{}, CheckError(result)
-		}
-	} else {
-		if result := s.db.WithContext(ctx).Raw(
-			fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL", model.AssetGroupTag{}.TableName()),
-			tagType,
-		).Find(&tags); result.Error != nil {
-			return model.AssetGroupTags{}, CheckError(result)
-		}
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL%s",
+			model.AssetGroupTag{}.TableName(),
+			sqlFilter.SQLString,
+		),
+		sqlFilter.Params...,
+	).Find(&tags); result.Error != nil {
+		return model.AssetGroupTags{}, CheckError(result)
 	}
 	return tags, nil
 }
@@ -232,10 +232,6 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)
-
-	if tagType == model.AssetGroupTagTypeAll {
-		return model.AssetGroupTag{}, fmt.Errorf("'AssetGroupTagTypeAll' is not valid for create")
-	}
 
 	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")

@@ -46,56 +46,59 @@ type GetAssetGroupTagsResponse struct {
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
-	const (
-		pnameTagType       = "type"
-		pnameIncludeCounts = "includeCounts"
-	)
-	var (
-		pvalsTagType = map[string]model.AssetGroupTagType{
-			strconv.Itoa(int(model.AssetGroupTagTypeLabel)): model.AssetGroupTagTypeLabel,
-			strconv.Itoa(int(model.AssetGroupTagTypeTier)):  model.AssetGroupTagTypeTier,
-			"": model.AssetGroupTagTypeAll, // default
-		}
-		pvalsIncludeCounts = map[string]bool{
-			"false": false,
-			"true":  true,
-			"":      false, // default
-		}
-	)
+	var rCtx = request.Context()
 
-	var params = request.URL.Query()
-
-	if paramTagType, ok := pvalsTagType[params.Get(pnameTagType)]; !ok {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for tag type", request), response)
-	} else if paramIncludeCounts, ok := pvalsIncludeCounts[params.Get(pnameIncludeCounts)]; !ok {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
-	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), paramTagType); err != nil && !errors.Is(err, database.ErrNotFound) {
-		api.HandleDatabaseError(request, response, err)
+	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
 	} else {
-		resp := GetAssetGroupTagsResponse{Tags: tags}
-		if paramIncludeCounts {
-			ids := make([]int, 0, len(tags))
-			for i := range tags {
-				ids = append(ids, tags[i].ID)
-			}
-			if selectorCounts, err := s.DB.GetAssetGroupTagSelectorCounts(request.Context(), ids); err != nil {
-				api.HandleDatabaseError(request, response, err)
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
+				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 				return
 			} else {
-				resp.Counts.Selectors = selectorCounts
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = model.AssetGroupTag{}.IsStringColumn(filter.Name)
+				}
 			}
-			memberCounts := make(map[int]int64, len(tags))
-			for _, tag := range tags {
-				if n, err := s.GraphQuery.CountNodesByKind(request.Context(), tag.ToKind()); err != nil {
+		}
+
+		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			resp := GetAssetGroupTagsResponse{Tags: tags}
+			if paramIncludeCounts {
+				ids := make([]int, 0, len(tags))
+				for i := range tags {
+					ids = append(ids, tags[i].ID)
+				}
+				if selectorCounts, err := s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
 				} else {
-					memberCounts[tag.ID] = n
+					resp.Counts.Selectors = selectorCounts
 				}
+				memberCounts := make(map[int]int64, len(tags))
+				for _, tag := range tags {
+					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						memberCounts[tag.ID] = n
+					}
+				}
+				resp.Counts.Members = memberCounts
 			}
-			resp.Counts.Members = memberCounts
+			api.WriteBasicResponse(rCtx, resp, http.StatusOK, response)
 		}
-		api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 	}
 }
 

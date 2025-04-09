@@ -39,7 +39,6 @@ const (
 type AssetGroupTagType int
 
 const (
-	AssetGroupTagTypeAll   AssetGroupTagType = 0
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
 )
@@ -80,6 +79,25 @@ func (s AssetGroupTag) AuditData() AuditData {
 
 func (s AssetGroupTag) ToKind() graph.Kind {
 	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+}
+
+func (s AssetGroupTag) IsStringColumn(filter string) bool {
+	return filter == "name" || filter == "description"
+}
+
+func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"type":            {Equals, NotEquals},
+		"name":            {Equals, NotEquals, ApproximatelyEquals},
+		"description":     {Equals, NotEquals, ApproximatelyEquals},
+		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":      {Equals, NotEquals},
+		"updated_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":      {Equals, NotEquals},
+		"deleted_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"deleted_by":      {Equals, NotEquals},
+		"require_certify": {Equals, NotEquals},
+	}
 }
 
 type SelectorSeed struct {

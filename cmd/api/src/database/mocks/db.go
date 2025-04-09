@@ -1036,7 +1036,7 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorsByTagId(arg0, arg1,
 }
 
 // GetAssetGroupTags mocks base method.
-func (m *MockDatabase) GetAssetGroupTags(arg0 context.Context, arg1 model.AssetGroupTagType) (model.AssetGroupTags, error) {
+func (m *MockDatabase) GetAssetGroupTags(arg0 context.Context, arg1 model.SQLFilter) (model.AssetGroupTags, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupTags", arg0, arg1)
 	ret0, _ := ret[0].(model.AssetGroupTags)

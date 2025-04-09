@@ -215,11 +215,6 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
 	})
 
-	t.Run("creating tag with AssetGroupTagTypeAll fails", func(t *testing.T) {
-		_, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeAll, testActor, testName, testDescription, position, requireCertify)
-		require.Error(t, err)
-	})
-
 	t.Run("Non existant tag errors out", func(t *testing.T) {
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
@@ -249,13 +244,13 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 2", testDescription, null.Int32From(2), null.BoolFrom(false))
 	require.NoError(t, err)
 
-	t.Run("AssetGroupTagTypeLabel returns labels", func(t *testing.T) {
+	t.Run("filtering for Label returns labels", func(t *testing.T) {
 		ids := []int{
 			label1.ID,
 			label2.ID,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeLabel)
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeLabel}})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
@@ -267,13 +262,13 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		}
 	})
 
-	t.Run("AssetGroupTagTypeTier returns tiers", func(t *testing.T) {
+	t.Run("filtering for Tier returns tiers", func(t *testing.T) {
 		ids := []int{
 			tier1.ID,
 			tier2.ID,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeTier)
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 		for _, itm := range items {
@@ -285,7 +280,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 		}
 	})
 
-	t.Run("AssetGroupTagTypeAll returns everything", func(t *testing.T) {
+	t.Run("no filter returns everything", func(t *testing.T) {
 		ids := []int{
 			label1.ID,
 			label2.ID,
@@ -297,7 +292,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 			model.AssetGroupTagTypeTier,
 		}
 
-		items, err := dbInst.GetAssetGroupTags(testCtx, model.AssetGroupTagTypeAll)
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 4)
 		for _, itm := range items {
