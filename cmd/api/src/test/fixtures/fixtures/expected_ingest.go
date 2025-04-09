@@ -81,6 +81,12 @@ var (
 			query.Kind(query.Relationship(), ad.Contains),
 			query.Kind(query.End(), ad.Container),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "AB616901-D423-4B9A-B68F-D24CEE1E36EF")),
+		query.And(
+			query.Kind(query.Start(), ad.User),
+			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1114"),
+			query.Kind(query.Relationship(), ad.AdminTo),
+			query.Kind(query.End(), ad.Computer),
+			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1000")),
 
 		//// CONTAINERS
 		query.And(

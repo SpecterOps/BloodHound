@@ -246,6 +246,7 @@ type Domain struct {
 	ChildObjects []TypedPrincipal
 	Trusts       []Trust
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }
 
 type SessionAPIResult struct {
