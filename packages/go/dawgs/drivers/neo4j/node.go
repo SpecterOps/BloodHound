@@ -193,8 +193,8 @@ func (s *NodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error,
 		defer cursor.Close()
 		return delegate(cursor)
 	}, query.Returning(
-		append([]graph.Criteria{query.Node()}, finalCriteria...)...,
-	))
+		query.Node(),
+	), finalCriteria)
 }
 
 func (s *NodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
