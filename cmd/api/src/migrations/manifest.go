@@ -54,7 +54,6 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes")
 
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
-		fmt.Println("GOT HERE")
 
 		// MATCH(n:User) WHERE n.adminrightscount <> null
 		nodes, err := ops.FetchNodes(batch.Nodes().Filterf(func() graph.Criteria {
