@@ -3,7 +3,6 @@ package ingest
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/specterops/bloodhound/src/model/ingest"
@@ -71,20 +70,8 @@ func (s *StreamDecoder) EatClosingCurlyBracket() error {
 // DecodeNext decodes the next JSON value into the provided type
 func (s *StreamDecoder) DecodeNext(v any) error {
 	err := s.dec.Decode(v)
-	if err != nil {
-		if errors.Is(err, io.EOF) {
-			fmt.Println("End of JSON stream")
-			return nil
-		} else if syntaxErr, ok := err.(*json.SyntaxError); ok {
-			return fmt.Errorf("syntax error at byte %d: %v", syntaxErr.Offset, err)
-		} else if _, ok := err.(*json.UnmarshalTypeError); ok {
-			return fmt.Errorf("hmmm")
-		} else {
-			return fmt.Errorf("unexpected error: %v", err)
-		}
-	}
 
-	return nil
+	return err
 }
 
 // More checks if there are more tokens in the current array scope

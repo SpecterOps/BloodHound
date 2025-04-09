@@ -101,41 +101,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 	return meta, nil
 }
 
-/*
-	"graph": {
-		"nodes": [],
-		"edges": [],
-	}
-
-	or
-
-	"graph": {
-		"edges": [],
-		"nodes": [],
-	}
-*/
-
-func ValidateNodeSchema() string {
-
-	c := jsonschema.NewCompiler()
-	nodeSchema := c.MustCompile("./json_schema/node.json")
-	edgeSchema := c.MustCompile("./json_schema/edge.json")
-
-	node, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id": "1234","kinds": ["a"]}`))
-	err := nodeSchema.Validate(node)
-	fmt.Println(err)
-
-	edge, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"start": 
-{"id_value": "234"},
-"kind": "a", 
-"end": {"id_value": "234"}}`))
-
-	err = edgeSchema.Validate(edge)
-	fmt.Println(err)
-	return ""
-}
-
-func handleValidationError(err error) string {
+func formatSchemaValidationError(err error) string {
 	var sb strings.Builder
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
 		for i, cause := range ve.Causes {
@@ -151,6 +117,20 @@ func handleValidationError(err error) string {
 	return sb.String()
 }
 
+type validationError struct {
+	Index   int
+	Type    string // "decode" or "validation"
+	Message string
+}
+
+func formatAggregateErrors(errs []validationError) string {
+	var sb strings.Builder
+	for _, e := range errs {
+		sb.WriteString(fmt.Sprintf("- [%d] %s error: %s\n", e.Index, e.Type, e.Message))
+	}
+	return sb.String()
+}
+
 func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 	var (
 		decoder = NewStreamDecoder(reader)
@@ -161,6 +141,8 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		edgeSchema = c.MustCompile("./json_schema/edge.json")
 
 		nodesFound, edgesFound = false, false
+		maxErrors              = 50
+		validationErrors       []validationError
 	)
 
 	// Validate an array of items (either nodes or edges)
@@ -173,14 +155,43 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		for decoder.More() {
 			var item map[string]any
 			if err := decoder.DecodeNext(&item); err != nil {
-				return fmt.Errorf("error decoding %s[%d]: %w", arrayName, index, err)
+				if _, ok := err.(*json.UnmarshalTypeError); ok {
+					// json.UnmarshalTypeErrors are recoverable. the stream can continue advancing
+					validationErrors = append(validationErrors, validationError{
+						Index:   index,
+						Type:    "decode",
+						Message: fmt.Sprintf("type mismatch for %s[%d]: %s", arrayName, index, err),
+					})
+				} else {
+					// json.SyntaxErrors typically corrupt the stream. abort the parse
+					validationErrors = append(validationErrors, validationError{
+						Index:   index,
+						Type:    "decode",
+						Message: fmt.Sprintf("syntax error for %s[%d]: %s. abort parse.", arrayName, index, err),
+					})
+					break
+				}
 			}
 
 			// Validate the item using the provided validation function
 			if err := validateFunc(item); err != nil {
-				return fmt.Errorf("validation failed for %s[%d]: %w", arrayName, index, err)
+				validationErrors = append(validationErrors, validationError{
+					Index:   index,
+					Type:    "validation",
+					Message: fmt.Sprintf("validation failed for %s[%d]: %s", arrayName, index, err),
+				})
+
 			}
+
+			if len(validationErrors) >= maxErrors {
+				break
+			}
+
 			index++
+		}
+
+		if len(validationErrors) > 0 {
+			return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
 		}
 
 		if err := decoder.EatClosingBracket(); err != nil {
@@ -193,7 +204,7 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 	// Generic validation function for nodes and edges
 	validateItem := func(item map[string]any, schema *jsonschema.Schema) error {
 		if err := schema.Validate(item); err != nil {
-			errorStr := handleValidationError(err)
+			errorStr := formatSchemaValidationError(err)
 			return fmt.Errorf("%s", errorStr)
 		}
 		return nil
@@ -205,6 +216,12 @@ func ValidateGenericIngest(reader io.Reader, readToEnd bool) error {
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				if !nodesFound && !edgesFound {
+					// kick out if client gave us nothing
+					// validationErrors = append(validationErrors, validationError{
+					// 	Index:   0,
+					// 	Type:    "empty graph tags",
+					// 	Message: "hello",
+					// })
 					return ingest.ErrEmptyIngest
 				}
 				break
