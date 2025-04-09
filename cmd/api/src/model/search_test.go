@@ -62,7 +62,7 @@ func TestDomainSelectors_GetOrderCriteria_InvalidSortColumn(t *testing.T) {
 	params := url.Values{}
 	params.Add("sort_by", "invalidColumn")
 
-	_, err := domains.GetOrderCriteria(params)
+	_, err := domains.GetGraphSortItems(params)
 	require.Equal(t, ErrResponseDetailsColumnNotSortable, err.Error())
 }
 
@@ -72,13 +72,13 @@ func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
 	params.Add("sort_by", "objectid")
 	params.Add("sort_by", "-name")
 
-	orderCriteria, err := domains.GetOrderCriteria(params)
+	orderCriteria, err := domains.GetGraphSortItems(params)
 	require.Nil(t, err)
-	require.Equal(t, orderCriteria[0].Property, "objectid")
-	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
+	require.Equal(t, orderCriteria[0].SortCriteria.(*cypher.PropertyLookup), query.NodeProperty("objectid"))
+	require.True(t, orderCriteria[0].Direction.(cypher.SortOrder) == query.Ascending())
 
-	require.Equal(t, orderCriteria[1].Property, "name")
-	require.True(t, orderCriteria[0].Order.(cypher.SortOrder) == query.Ascending())
+	require.Equal(t, orderCriteria[1].SortCriteria.(*cypher.PropertyLookup), query.NodeProperty("name"))
+	require.True(t, orderCriteria[0].Direction.(cypher.SortOrder) == query.Ascending())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {

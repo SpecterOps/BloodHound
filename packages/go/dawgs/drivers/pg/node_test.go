@@ -74,7 +74,7 @@ func TestNodeQuery(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestNodeQueryLimit(t *testing.T) {
+func TestNodeQueryOrderByNodeIdWithLimit(t *testing.T) {
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockTx        = graph_mocks.NewMockTransaction(mockCtrl)
@@ -85,13 +85,13 @@ func TestNodeQueryLimit(t *testing.T) {
 		}
 	)
 
-	mockTx.EXPECT().Raw("-- match (n) where n.prop = $ return n order by n.prop desc limit 2\nwith s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'prop' = @pi0::text) select s0.n0 as n from s0 order by (s0.n0).properties -> 'prop' desc limit 2;", gomock.Any()).Return(mockResult)
+	mockTx.EXPECT().Raw("-- match (n) where n.prop = $ return n order by id(n) desc limit 2\nwith s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.properties ->> 'prop' = @pi0::text) select s0.n0 as n from s0 order by (s0.n0).id desc limit 2;", gomock.Any()).Return(mockResult)
 
 	mockResult.EXPECT().Error().Return(nil)
 	mockResult.EXPECT().Close().Return().Times(2)
 	nodeQueryInst.Filter(
 		query.Equals(query.NodeProperty("prop"), "1234"),
-	).Limit(2)
+	)
 
 	err := nodeQueryInst.Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		return nil

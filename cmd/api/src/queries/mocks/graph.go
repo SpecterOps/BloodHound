@@ -25,6 +25,7 @@ import (
 	reflect "reflect"
 
 	graph "github.com/specterops/bloodhound/dawgs/graph"
+	query "github.com/specterops/bloodhound/dawgs/query"
 	model "github.com/specterops/bloodhound/src/model"
 	queries "github.com/specterops/bloodhound/src/queries"
 	agi "github.com/specterops/bloodhound/src/services/agi"
@@ -224,10 +225,10 @@ func (mr *MockGraphMockRecorder) GetEntityCountResults(arg0, arg1, arg2 interfac
 }
 
 // GetFilteredAndSortedNodes mocks base method.
-func (m *MockGraph) GetFilteredAndSortedNodes(arg0 model.OrderCriteria, arg1 graph.Criteria) (graph.NodeSet, error) {
+func (m *MockGraph) GetFilteredAndSortedNodes(arg0 query.SortItems, arg1 graph.Criteria) ([]*graph.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFilteredAndSortedNodes", arg0, arg1)
-	ret0, _ := ret[0].(graph.NodeSet)
+	ret0, _ := ret[0].([]*graph.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -236,6 +237,21 @@ func (m *MockGraph) GetFilteredAndSortedNodes(arg0 model.OrderCriteria, arg1 gra
 func (mr *MockGraphMockRecorder) GetFilteredAndSortedNodes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilteredAndSortedNodes", reflect.TypeOf((*MockGraph)(nil).GetFilteredAndSortedNodes), arg0, arg1)
+}
+
+// GetFilteredAndSortedNodesPaginated mocks base method.
+func (m *MockGraph) GetFilteredAndSortedNodesPaginated(arg0 query.SortItems, arg1 graph.Criteria, arg2, arg3 int) ([]*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFilteredAndSortedNodesPaginated", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFilteredAndSortedNodesPaginated indicates an expected call of GetFilteredAndSortedNodesPaginated.
+func (mr *MockGraphMockRecorder) GetFilteredAndSortedNodesPaginated(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilteredAndSortedNodesPaginated", reflect.TypeOf((*MockGraph)(nil).GetFilteredAndSortedNodesPaginated), arg0, arg1, arg2, arg3)
 }
 
 // GetNodesByKind mocks base method.

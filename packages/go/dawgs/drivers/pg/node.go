@@ -112,9 +112,10 @@ func (s *nodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error,
 
 		defer cursor.Close()
 		return delegate(cursor)
-	}, query.Returning(
-		query.Node(),
-	), finalCriteria)
+	},
+		query.Returning(query.Node()),
+		finalCriteria,
+	)
 }
 
 func (s *nodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {

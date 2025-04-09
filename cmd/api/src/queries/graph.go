@@ -141,8 +141,8 @@ type Graph interface {
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
-	GetFilteredAndSortedNodesPaginated(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
-	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
+	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
+	GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
@@ -708,15 +708,11 @@ func (s *GraphQuery) GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (g
 	})
 }
 
-func (s *GraphQuery) GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error) {
-	if nodes, err := s.GetFilteredAndSortedNodesPaginated(orderCriteria, filterCriteria, 0, 0); err != nil {
-		return graph.NodeSet{}, err
-	} else {
-		return graph.NewNodeSet(nodes...), nil
-	}
+func (s *GraphQuery) GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error) {
+	return s.GetFilteredAndSortedNodesPaginated(sortItems, filterCriteria, 0, 0)
 }
 
-func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
+func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
 	var (
 		nodes         []*graph.Node
 		finalCriteria []graph.Criteria
@@ -735,14 +731,8 @@ func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.Orde
 			finalCriteria = append(finalCriteria, query.Limit(limit))
 		}
 
-		if len(orderCriteria) > 0 {
-			for _, order := range orderCriteria {
-				if order.Property == "id" {
-					finalCriteria = append(finalCriteria, query.OrderBy(query.Order(query.NodeID(), order.Order)))
-				} else {
-					finalCriteria = append(finalCriteria, query.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order)))
-				}
-			}
+		if len(sortItems) > 0 {
+			finalCriteria = append(finalCriteria, sortItems.FormatCypherOrder())
 		}
 
 		return nodeQuery.Fetch(func(cursor graph.Cursor[*graph.Node]) error {

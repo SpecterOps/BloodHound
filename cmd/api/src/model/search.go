@@ -36,10 +36,11 @@ const (
 )
 
 type DomainSelector struct {
-	Type      string `json:"type"`
-	Name      string `json:"name"`
-	ObjectID  string `json:"id"`
-	Collected bool   `json:"collected"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	ObjectID    string `json:"id"`
+	Collected   bool   `json:"collected"`
+	ImpactValue int    `json:"impactValue,omitempty"`
 }
 
 type DomainSelectors []DomainSelector
@@ -93,30 +94,30 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 	}
 }
 
-func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, error) {
+func (s DomainSelectors) GetGraphSortItems(params url.Values) (query.SortItems, error) {
 	var (
 		sortByColumns = params["sort_by"]
-		orderCriteria OrderCriteria
+		sortItems     query.SortItems
 	)
 
 	for _, column := range sortByColumns {
-		criterion := OrderCriterion{}
+		sortItem := query.SortItem{}
 
 		if string(column[0]) == "-" {
 			column = column[1:]
-			criterion.Order = query.Descending()
+			sortItem.Direction = query.SortDirectionDescending
 		} else {
-			criterion.Order = query.Ascending()
+			sortItem.Direction = query.SortDirectionAscending
 		}
-		criterion.Property = column
+		sortItem.SortCriteria = query.NodeProperty(column)
 
 		if !s.IsSortable(column) {
-			return OrderCriteria{}, errors.New(ErrResponseDetailsColumnNotSortable)
+			return query.SortItems{}, errors.New(ErrResponseDetailsColumnNotSortable)
 		}
 
-		orderCriteria = append(orderCriteria, criterion)
+		sortItems = append(sortItems, sortItem)
 	}
-	return orderCriteria, nil
+	return sortItems, nil
 }
 
 func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {

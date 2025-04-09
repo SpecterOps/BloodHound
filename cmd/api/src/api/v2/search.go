@@ -54,18 +54,18 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var domains model.DomainSelectors
 
-	if orderCriteria, err := domains.GetOrderCriteria(request.URL.Query()); err != nil {
+	if sortItems, err := domains.GetGraphSortItems(request.URL.Query()); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if filterCriteria, err := domains.GetFilterCriteria(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(orderCriteria, filterCriteria); err != nil {
+	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sortItems, filterCriteria); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsInternalServerError, err), request), response)
 	} else {
 		api.WriteBasicResponse(request.Context(), setNodeProperties(nodes), http.StatusOK, response)
 	}
 }
 
-func setNodeProperties(nodes graph.NodeSet) model.DomainSelectors {
+func setNodeProperties(nodes []*graph.Node) model.DomainSelectors {
 	domains := model.DomainSelectors{}
 	for _, node := range nodes {
 		var (

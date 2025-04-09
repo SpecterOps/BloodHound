@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -268,11 +267,10 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 }
 
 type assetGroupMemberResponse struct {
-	NodeId            graph.ID `json:"id"`
-	ObjectID          string   `json:"object_id"`
-	PrimaryKind       string   `json:"primary_kind"`
-	Name              string   `json:"name"`
-	DistinguishedName string   `json:"distinguished_name"`
+	NodeId      graph.ID `json:"id"`
+	ObjectID    string   `json:"object_id"`
+	PrimaryKind string   `json:"primary_kind"`
+	Name        string   `json:"name"`
 
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
@@ -288,22 +286,20 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(model.OrderCriteria{model.OrderCriterion{Property: "id", Order: query.Ascending()}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), 1, 10); err != nil {
+	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), 5, 10); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting domains: %v", err), request), response)
 	} else {
 		for _, node := range nodes {
 			var (
-				objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-				name, _              = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-				distinguishedName, _ = node.Properties.GetOrDefault(ad.DistinguishedName.String(), "").String()
+				objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+				name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 			)
 
 			members = append(members, assetGroupMemberResponse{
-				NodeId:            node.ID,
-				ObjectID:          objectID,
-				PrimaryKind:       analysis.GetNodeKindDisplayLabel(node),
-				Name:              name,
-				DistinguishedName: distinguishedName,
+				NodeId:      node.ID,
+				ObjectID:    objectID,
+				PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
+				Name:        name,
 			})
 		}
 
