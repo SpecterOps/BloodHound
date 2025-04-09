@@ -722,7 +722,7 @@ func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.Orde
 	return nodes, s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		nodeQuery := tx.Nodes().Filterf(func() graph.Criteria {
 			return filterCriteria
-		}).Limit(limit)
+		})
 
 		if offset > 0 {
 			nodeQuery = nodeQuery.Offset(offset)
