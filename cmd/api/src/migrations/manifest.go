@@ -47,8 +47,8 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
-// Version_740_Migration removes the leftover 'adminrightscount' property from User nodes
-func Version_740_Migration(ctx context.Context, db graph.Database) error {
+// Version_730_Migration removes the leftover 'adminrightscount' property from User nodes
+func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	const adminRightsCount = "adminrightscount"
 
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes")
@@ -368,8 +368,8 @@ var Manifest = []Migration{
 		Execute: Version_620_Migration,
 	},
 	{
-		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
-		Execute: Version_740_Migration,
+		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
+		Execute: Version_730_Migration,
 	},
 }
 
