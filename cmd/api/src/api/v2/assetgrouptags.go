@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
@@ -287,9 +288,10 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodes, err := s.GraphQuery.GetNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
+	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(model.OrderCriteria{model.OrderCriterion{Property: "id", Order: query.Ascending()}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), 0, 5); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting domains: %v", err), request), response)
 	} else {
+		fmt.Printf("Length of Nodes: %d\n", len(nodes))
 		for _, node := range nodes {
 			var (
 				objectID, _          = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()

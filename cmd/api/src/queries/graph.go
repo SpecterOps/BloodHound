@@ -141,6 +141,7 @@ type Graph interface {
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
+	GetFilteredAndSortedNodesPaginated(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
 	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
@@ -708,30 +709,46 @@ func (s *GraphQuery) GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (g
 }
 
 func (s *GraphQuery) GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error) {
-	var nodes graph.NodeSet
+	if nodes, err := s.GetFilteredAndSortedNodesPaginated(orderCriteria, filterCriteria, 0, 0); err != nil {
+		return graph.NodeSet{}, err
+	} else {
+		return graph.NewNodeSet(nodes...), nil
+	}
+}
 
-	if err := s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
+	var nodes []*graph.Node
+
+	return nodes, s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		nodeQuery := tx.Nodes().Filterf(func() graph.Criteria {
 			return filterCriteria
-		})
+		}).Limit(limit)
+
+		if offset > 0 {
+			nodeQuery = nodeQuery.Offset(offset)
+		}
+
+		if limit > 0 {
+			nodeQuery = nodeQuery.Limit(limit)
+		}
 
 		if len(orderCriteria) > 0 {
 			for _, order := range orderCriteria {
-				nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order))
+				if order.Property == "id" {
+					nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeID(), order.Order))
+				} else {
+					nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order))
+				}
 			}
 		}
 
-		if fetchedNodes, err := ops.FetchNodeSet(nodeQuery); err != nil {
-			return err
-		} else {
-			nodes = fetchedNodes
-		}
-
-		return nil
-	}); err != nil {
-		return graph.NodeSet{}, err
-	}
-	return nodes, nil
+		return nodeQuery.Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				nodes = append(nodes, node)
+			}
+			return nil
+		})
+	})
 }
 
 // FetchNodesByObjectIDs takes a list of objectIDs. Returns a graph.NodeSet for found results

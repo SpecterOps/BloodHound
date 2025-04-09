@@ -382,3 +382,10 @@ type SortItem struct {
 }
 
 type Sort []SortItem
+
+type OrderCriterion struct {
+	Property string
+	Order    graph.Criteria
+}
+
+type OrderCriteria []OrderCriterion

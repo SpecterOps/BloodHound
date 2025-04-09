@@ -28,6 +28,13 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
+const (
+	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
+	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
+	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
+	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
+)
+
 type DomainSelector struct {
 	Type      string `json:"type"`
 	Name      string `json:"name"`
@@ -85,20 +92,6 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 		return stringPredicates, nil
 	}
 }
-
-type OrderCriterion struct {
-	Property string
-	Order    graph.Criteria
-}
-
-type OrderCriteria []OrderCriterion
-
-const (
-	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
-	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
-	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
-	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
-)
 
 func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, error) {
 	var (
