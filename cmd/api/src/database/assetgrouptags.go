@@ -39,7 +39,7 @@ type AssetGroupTagData interface {
 type AssetGroupTagSelectorData interface {
 	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
-	UpdateAssetGroupTagSelector(ctx context.Context, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
+	UpdateAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
