@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/dawgs"
@@ -75,34 +76,45 @@ func DefaultConfigFilePath() string {
 }
 
 func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.DatabaseSwitch, error) {
-	var connectionString string
+	var (
+		connectionString string
+		pool             *pgxpool.Pool
+		err              error
+	)
 
-	if driverName, err := tools.LookupGraphDriver(ctx, cfg); err != nil {
+	driverName, err := tools.LookupGraphDriver(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	switch driverName {
+	case neo4j.DriverName:
+		slog.InfoContext(ctx, "Connecting to graph using Neo4j")
+		connectionString = cfg.Neo4J.Neo4jConnectionString()
+
+	case pg.DriverName:
+		slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
+		connectionString = cfg.Database.PostgreSQLConnectionString()
+
+		pool, err = pg.NewPool(connectionString)
+		if err != nil {
+			return nil, err
+		}
+
+	default:
+		return nil, fmt.Errorf("unknown graphdb driver name: %s", driverName)
+	}
+
+	if connectionString == "" {
+		return nil, fmt.Errorf("graph connection requires a connection url to be set")
+	} else if graphDatabase, err := dawgs.Open(ctx, driverName, dawgs.Config{
+		GraphQueryMemoryLimit: size.Size(cfg.GraphQueryMemoryLimit) * size.Gibibyte,
+		ConnectionString:      connectionString,
+		Pool:                  pool,
+	}); err != nil {
 		return nil, err
 	} else {
-		switch driverName {
-		case neo4j.DriverName:
-			slog.InfoContext(ctx, "Connecting to graph using Neo4j")
-			connectionString = cfg.Neo4J.Neo4jConnectionString()
-
-		case pg.DriverName:
-			slog.InfoContext(ctx, "Connecting to graph using PostgreSQL")
-			connectionString = cfg.Database.PostgreSQLConnectionString()
-
-		default:
-			return nil, fmt.Errorf("unknown graphdb driver name: %s", driverName)
-		}
-
-		if connectionString == "" {
-			return nil, fmt.Errorf("graph connection requires a connection url to be set")
-		} else if graphDatabase, err := dawgs.Open(ctx, driverName, dawgs.Config{
-			GraphQueryMemoryLimit: size.Size(cfg.GraphQueryMemoryLimit) * size.Gibibyte,
-			DriverCfg:             connectionString,
-		}); err != nil {
-			return nil, err
-		} else {
-			return graph.NewDatabaseSwitch(ctx, graphDatabase), nil
-		}
+		return graph.NewDatabaseSwitch(ctx, graphDatabase), nil
 	}
 }
 

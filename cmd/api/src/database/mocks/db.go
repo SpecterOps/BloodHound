@@ -1802,18 +1802,18 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelectors(arg0, arg1, arg2, 
 }
 
 // UpdateAssetGroupTagSelector mocks base method.
-func (m *MockDatabase) UpdateAssetGroupTagSelector(arg0 context.Context, arg1 model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) UpdateAssetGroupTagSelector(arg0 context.Context, arg1 string, arg2 model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.AssetGroupTagSelector)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateAssetGroupTagSelector indicates an expected call of UpdateAssetGroupTagSelector.
-func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), arg0, arg1, arg2)
 }
 
 // UpdateAuthSecret mocks base method.

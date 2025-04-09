@@ -68,6 +68,26 @@ func (mr *MockGraphMockRecorder) BatchNodeUpdate(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchNodeUpdate", reflect.TypeOf((*MockGraph)(nil).BatchNodeUpdate), arg0, arg1)
 }
 
+// CountNodesByKind mocks base method.
+func (m *MockGraph) CountNodesByKind(arg0 context.Context, arg1 ...graph.Kind) (int64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CountNodesByKind", varargs...)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountNodesByKind indicates an expected call of CountNodesByKind.
+func (mr *MockGraphMockRecorder) CountNodesByKind(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountNodesByKind", reflect.TypeOf((*MockGraph)(nil).CountNodesByKind), varargs...)
+}
+
 // FetchNodesByObjectIDs mocks base method.
 func (m *MockGraph) FetchNodesByObjectIDs(arg0 context.Context, arg1 ...string) (graph.NodeSet, error) {
 	m.ctrl.T.Helper()
@@ -236,6 +256,26 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(arg0 interface{}, arg1 ...interf
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodesByKind", reflect.TypeOf((*MockGraph)(nil).GetNodesByKind), varargs...)
+}
+
+// GetPrimaryNodeKindCounts mocks base method.
+func (m *MockGraph) GetPrimaryNodeKindCounts(arg0 context.Context, arg1 ...graph.Kind) (map[string]int, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetPrimaryNodeKindCounts", varargs...)
+	ret0, _ := ret[0].(map[string]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPrimaryNodeKindCounts indicates an expected call of GetPrimaryNodeKindCounts.
+func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryNodeKindCounts", reflect.TypeOf((*MockGraph)(nil).GetPrimaryNodeKindCounts), varargs...)
 }
 
 // PrepareCypherQuery mocks base method.

@@ -50,10 +50,14 @@ export * from './useExploreGraph';
 
 export * from './useExploreSelectedItem';
 
+export * from './useEnvironmentParams';
+
 export * from './useShowNavBar';
 
 export * from './useIsMouseDragging';
 
-export * from './useEnvironmentParams';
-
 export * from './useMatchingPaths';
+
+export * from './useInitialEnvironment';
+
+export * from './usePreviousValue';
