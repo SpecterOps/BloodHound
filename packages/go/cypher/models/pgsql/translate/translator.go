@@ -30,7 +30,7 @@ type Translator struct {
 	walk.HierarchicalVisitor[cypher.SyntaxNode]
 
 	ctx            context.Context
-	kindMapper     pgsql.KindMapper
+	kindMapper     *contextAwareKindMapper
 	translation    Result
 	treeTranslator *ExpressionTreeTranslator
 	query          *Query
@@ -42,14 +42,16 @@ func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters 
 		parameters = map[string]any{}
 	}
 
+	ctxAwareKindMapper := newContextAwareKindMapper(ctx, kindMapper)
+
 	return &Translator{
 		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.SyntaxNode](),
 		translation: Result{
 			Parameters: parameters,
 		},
 		ctx:            ctx,
-		kindMapper:     kindMapper,
-		treeTranslator: NewExpressionTreeTranslator(),
+		kindMapper:     ctxAwareKindMapper,
+		treeTranslator: NewExpressionTreeTranslator(ctxAwareKindMapper),
 		query:          &Query{},
 		scope:          NewScope(),
 	}

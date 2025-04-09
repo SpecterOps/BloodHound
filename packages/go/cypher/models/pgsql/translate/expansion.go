@@ -928,7 +928,7 @@ func (s *Translator) buildExpansionPatternRoot(traversalStep *TraversalStep, exp
 			// only accept paths that are marked satisfied from the recursive descent CTE
 			if constraints, err := s.treeTranslator.ConsumeConstraintsFromVisibleSet(expansionModel.Frame.Visible); err != nil {
 				return pgsql.Query{}, err
-			} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{expansionModel.Frame.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
+			} else if projectionConstraints, err := ConjoinExpressions(s.kindMapper, []pgsql.Expression{pgsql.CompoundIdentifier{expansionModel.Frame.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
 				return pgsql.Query{}, err
 			} else {
 				expansion.ProjectionStatement.Where = projectionConstraints

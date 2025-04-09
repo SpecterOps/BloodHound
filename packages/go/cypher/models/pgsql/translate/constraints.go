@@ -215,29 +215,6 @@ type Constraint struct {
 	Expression   pgsql.Expression
 }
 
-func (s *Constraint) Merge(other *Constraint) error {
-	if other.Dependencies != nil && other.Expression != nil {
-		newExpression := pgsql.OptionalAnd(s.Expression, other.Expression)
-
-		switch typedNewExpression := newExpression.(type) {
-		case *pgsql.UnaryExpression:
-			if err := applyUnaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-
-		case *pgsql.BinaryExpression:
-			if err := applyBinaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-		}
-
-		s.Dependencies.MergeSet(other.Dependencies)
-		s.Expression = newExpression
-	}
-
-	return nil
-}
-
 // ConstraintTracker is a tool for associating constraints (e.g. binary or unary expressions
 // that constrain a set of identifiers) with the identifier set they constrain.
 //
@@ -275,7 +252,7 @@ func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) (bool, er
 	return false, nil
 }
 
-func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
+func (s *ConstraintTracker) ConsumeAll(kindMapper *contextAwareKindMapper) (*Constraint, error) {
 	var (
 		constraintExpressions = make([]pgsql.Expression, len(s.Constraints))
 		matchedDependencies   = pgsql.NewIdentifierSet()
@@ -289,7 +266,7 @@ func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
 	// Clear the internal constraint slice
 	s.Constraints = s.Constraints[:0]
 
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+	if conjoined, err := ConjoinExpressions(kindMapper, constraintExpressions); err != nil {
 		return nil, err
 	} else {
 		return &Constraint{
@@ -329,7 +306,7 @@ be satisfied by the scope's identifiers.
 
 ```
 */
-func (s *ConstraintTracker) ConsumeSet(visible *pgsql.IdentifierSet) (*Constraint, error) {
+func (s *ConstraintTracker) ConsumeSet(kindMapper *contextAwareKindMapper, visible *pgsql.IdentifierSet) (*Constraint, error) {
 	var (
 		matchedDependencies   = pgsql.NewIdentifierSet()
 		constraintExpressions []pgsql.Expression
@@ -357,7 +334,7 @@ func (s *ConstraintTracker) ConsumeSet(visible *pgsql.IdentifierSet) (*Constrain
 		}
 	}
 
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+	if conjoined, err := ConjoinExpressions(kindMapper, constraintExpressions); err != nil {
 		return nil, err
 	} else {
 		return &Constraint{
@@ -367,7 +344,7 @@ func (s *ConstraintTracker) ConsumeSet(visible *pgsql.IdentifierSet) (*Constrain
 	}
 }
 
-func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
+func (s *ConstraintTracker) Constrain(kindMapper *contextAwareKindMapper, dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
 	for _, constraint := range s.Constraints {
 		if constraint.Dependencies.Matches(dependencies) {
 			joinedExpression := pgsql.NewBinaryExpression(
@@ -376,7 +353,7 @@ func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constra
 				constraint.Expression,
 			)
 
-			if err := applyBinaryExpressionTypeHints(joinedExpression); err != nil {
+			if err := applyBinaryExpressionTypeHints(kindMapper, joinedExpression); err != nil {
 				return err
 			}
 

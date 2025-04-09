@@ -17,6 +17,12 @@
 -- case: match ()-[r]->() return r
 with s0 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from edge e0 join node n0 on n0.id = e0.start_id join node n1 on n1.id = e0.end_id) select s0.e0 as r from s0;
 
+-- case: match ()-[r]->() where type(r) = 'EdgeKind1' return r
+with s0 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from edge e0 join node n0 on n0.id = e0.start_id join node n1 on n1.id = e0.end_id where (e0.kind_id = 3)) select s0.e0 as r from s0;
+
+-- case: match ()-[r]->() where 'EdgeKind1' = type(r) return r
+with s0 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from edge e0 join node n0 on n0.id = e0.start_id join node n1 on n1.id = e0.end_id where (3 = e0.kind_id)) select s0.e0 as r from s0;
+
 -- case: match (n), ()-[r]->() return n, r
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0), s1 as (select (e0.id, e0.start_id, e0.end_id, e0.kind_id, e0.properties)::edgecomposite as e0, s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1, (n2.id, n2.kind_ids, n2.properties)::nodecomposite as n2 from s0, edge e0 join node n1 on n1.id = e0.start_id join node n2 on n2.id = e0.end_id) select s1.n0 as n, s1.e0 as r from s1;
 

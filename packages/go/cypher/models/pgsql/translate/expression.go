@@ -296,7 +296,7 @@ func (s *Builder) IsEmpty() bool {
 	return len(s.stack) == 0
 }
 
-func (s *Builder) PopOperand() (pgsql.Expression, error) {
+func (s *Builder) PopOperand(kindMapper *contextAwareKindMapper) (pgsql.Expression, error) {
 	next := s.stack[len(s.stack)-1]
 	s.stack = s.stack[:len(s.stack)-1]
 
@@ -307,7 +307,7 @@ func (s *Builder) PopOperand() (pgsql.Expression, error) {
 		}
 
 	case *pgsql.BinaryExpression:
-		if err := applyBinaryExpressionTypeHints(typedNext); err != nil {
+		if err := applyBinaryExpressionTypeHints(kindMapper, typedNext); err != nil {
 			return nil, err
 		}
 	}
@@ -323,7 +323,7 @@ func (s *Builder) PushOperand(operand pgsql.Expression) {
 	s.stack = append(s.stack, operand)
 }
 
-func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error) {
+func ConjoinExpressions(kindMapper *contextAwareKindMapper, expressions []pgsql.Expression) (pgsql.Expression, error) {
 	var conjoined pgsql.Expression
 
 	for _, expression := range expressions {
@@ -338,7 +338,7 @@ func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error
 
 		conjoinedBinaryExpression := pgsql.NewBinaryExpression(conjoined, pgsql.OperatorAnd, expression)
 
-		if err := applyBinaryExpressionTypeHints(conjoinedBinaryExpression); err != nil {
+		if err := applyBinaryExpressionTypeHints(kindMapper, conjoinedBinaryExpression); err != nil {
 			return nil, err
 		}
 
@@ -353,16 +353,18 @@ type ExpressionTreeTranslator struct {
 	TranslationConstraints *ConstraintTracker
 
 	treeBuilder        *Builder
+	kindMapper         *contextAwareKindMapper
 	parentheticalDepth int
 	disjunctionDepth   int
 	conjunctionDepth   int
 }
 
-func NewExpressionTreeTranslator() *ExpressionTreeTranslator {
+func NewExpressionTreeTranslator(kindMapper *contextAwareKindMapper) *ExpressionTreeTranslator {
 	return &ExpressionTreeTranslator{
 		UserConstraints:        NewConstraintTracker(),
 		TranslationConstraints: NewConstraintTracker(),
 		treeBuilder:            NewExpressionTreeBuilder(),
+		kindMapper:             kindMapper,
 	}
 }
 
@@ -376,9 +378,9 @@ func mergeUserAndTranslationConstraints(userConstraints, translationConstraints 
 }
 
 func (s *ExpressionTreeTranslator) ConsumeConstraintsFromVisibleSet(visible *pgsql.IdentifierSet) (*Constraint, error) {
-	if userConstraints, err := s.UserConstraints.ConsumeSet(visible); err != nil {
+	if userConstraints, err := s.UserConstraints.ConsumeSet(s.kindMapper, visible); err != nil {
 		return nil, err
-	} else if translationConstraints, err := s.TranslationConstraints.ConsumeSet(visible); err != nil {
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeSet(s.kindMapper, visible); err != nil {
 		return nil, err
 	} else {
 		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
@@ -386,9 +388,9 @@ func (s *ExpressionTreeTranslator) ConsumeConstraintsFromVisibleSet(visible *pgs
 }
 
 func (s *ExpressionTreeTranslator) ConsumeAllConstraints() (*Constraint, error) {
-	if userConstraints, err := s.UserConstraints.ConsumeAll(); err != nil {
+	if userConstraints, err := s.UserConstraints.ConsumeAll(s.kindMapper); err != nil {
 		return nil, err
-	} else if translationConstraints, err := s.TranslationConstraints.ConsumeAll(); err != nil {
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeAll(s.kindMapper); err != nil {
 		return nil, err
 	} else {
 		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
@@ -396,11 +398,11 @@ func (s *ExpressionTreeTranslator) ConsumeAllConstraints() (*Constraint, error) 
 }
 
 func (s *ExpressionTreeTranslator) AddTranslationConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
-	return s.TranslationConstraints.Constrain(requiredIdentifiers, expression)
+	return s.TranslationConstraints.Constrain(s.kindMapper, requiredIdentifiers, expression)
 }
 
 func (s *ExpressionTreeTranslator) AddUserConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
-	return s.UserConstraints.Constrain(requiredIdentifiers, expression)
+	return s.UserConstraints.Constrain(s.kindMapper, requiredIdentifiers, expression)
 }
 
 func (s *ExpressionTreeTranslator) PushOperand(expression pgsql.Expression) {
@@ -412,7 +414,7 @@ func (s *ExpressionTreeTranslator) PeekOperand() pgsql.Expression {
 }
 
 func (s *ExpressionTreeTranslator) PopOperand() (pgsql.Expression, error) {
-	return s.treeBuilder.PopOperand()
+	return s.treeBuilder.PopOperand(s.kindMapper)
 }
 
 func (s *ExpressionTreeTranslator) popOperandAsUserConstraint() error {
@@ -447,14 +449,14 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-	if rightOperand, err := s.treeBuilder.PopOperand(); err != nil {
+if rightOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return err
 	} else if rightDependencies, err := ExtractSyntaxNodeReferences(rightOperand); err != nil {
 		return err
 	} else if s.treeBuilder.IsEmpty() {
 		// If the tree builder is empty then this operand is at the top of the disjunction chain
 		return s.AddUserConstraint(rightDependencies, rightOperand)
-	} else if leftOperand, err := s.treeBuilder.PopOperand(); err != nil {
+	} else if leftOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return err
 	} else {
 		newOrExpression := pgsql.NewBinaryExpression(
@@ -463,7 +465,7 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 			rightOperand,
 		)
 
-		if err := applyBinaryExpressionTypeHints(newOrExpression); err != nil {
+		if err := applyBinaryExpressionTypeHints(s.kindMapper, newOrExpression); err != nil {
 			return err
 		}
 
@@ -493,7 +495,7 @@ func (s *ExpressionTreeTranslator) PopBinaryExpression(operator pgsql.Operator) 
 		return nil, err
 	} else {
 		newBinaryExpression := pgsql.NewBinaryExpression(leftOperand, operator, rightOperand)
-		return newBinaryExpression, applyBinaryExpressionTypeHints(newBinaryExpression)
+		return newBinaryExpression, applyBinaryExpressionTypeHints(s.kindMapper, newBinaryExpression)
 	}
 }
 
@@ -905,7 +907,7 @@ func (s *ExpressionTreeTranslator) PushParenthetical() {
 func (s *ExpressionTreeTranslator) PopParenthetical() (*pgsql.Parenthetical, error) {
 	s.parentheticalDepth -= 1
 
-	if operand, err := s.treeBuilder.PopOperand(); err != nil {
+	if operand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return nil, err
 	} else if parentheticalExpr, typeOK := operand.(*pgsql.Parenthetical); !typeOK {
 		return nil, fmt.Errorf("expected type *pgsql.Parenthetical but received %T", operand)
