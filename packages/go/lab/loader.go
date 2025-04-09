@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package lab
 
 import (
@@ -49,17 +65,6 @@ type Edge struct {
 	Properties map[string]any `json:"properties"`
 }
 
-// ParseGraphFixtureJsonFile takes in a fs.File interface and parses its contents into a
-// GraphFixture struct.
-func ParseGraphFixtureJsonFile(fh fs.File) (GraphFixture, error) {
-	var graphFixture GraphFixture
-	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
-		return graphFixture, fmt.Errorf("could not unmarshal graph data: %w", err)
-	} else {
-		return graphFixture, nil
-	}
-}
-
 // LoadGraphFixture requires a graph.Database interface and a GraphFixture struct.
 // It will import the nodes and edges from the GraphFixture and inserts them into
 // the graph database. It uses the `id` property of the nodes as the local
@@ -96,15 +101,16 @@ func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 // parse then file into a GraphFixture, and finally import the GraphFixture
 // Nodes and Edges into the graph.Database.
 func LoadGraphFixtureFile(db graph.Database, fSys fs.FS, path string) error {
-	if fh, err := fSys.Open(path); err != nil {
+	fh, err := fSys.Open(path)
+	if err != nil {
 		return fmt.Errorf("could not open graph data file: %w", err)
-	} else {
-		defer fh.Close()
-		if graphFixture, err := ParseGraphFixtureJsonFile(fh); err != nil {
-			return fmt.Errorf("could not parse graph data file: %w", err)
-		} else if err := LoadGraphFixture(db, &graphFixture); err != nil {
-			return fmt.Errorf("could not load graph data: %w", err)
-		}
+	}
+	defer fh.Close()
+	var graphFixture GraphFixture
+	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
+		return fmt.Errorf("could not parse graph data file: %w", err)
+	} else if err := LoadGraphFixture(db, &graphFixture); err != nil {
+		return fmt.Errorf("could not load graph data: %w", err)
 	}
 	return nil
 }
