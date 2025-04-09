@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useAvailableEnvironments } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
-import { orderBy } from 'lodash';
+import orderBy from 'lodash/orderBy';
 import { UseQueryOptions } from 'react-query';
+import { useAvailableEnvironments } from '../useAvailableEnvironments';
 
 export interface UseInitialEnvironmentParams {
     /** orderBy alphabetical in CE, we will use impactValue for BHE */
@@ -25,7 +25,7 @@ export interface UseInitialEnvironmentParams {
     handleInitialEnvironment?: (env: Environment | null) => void;
     queryOptions?: Omit<
         UseQueryOptions<Environment[], unknown, Environment | undefined, string[]>,
-        'queryFn' | 'onError' | 'onSuccess'
+        'queryFn' | 'select'
     >;
 }
 
@@ -39,7 +39,6 @@ export const useInitialEnvironment = (options: UseInitialEnvironmentParams) => {
         // set initial environment/tenant once user is authenticated
         select: (availableEnvironments) => {
             if (!availableEnvironments?.length) return;
-
             const collectedEnvironments = availableEnvironments?.filter(
                 (environment: Environment) => environment.collected
             );
