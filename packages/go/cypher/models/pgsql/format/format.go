@@ -151,12 +151,17 @@ func formatValue(builder *OutputBuilder, value any) error {
 }
 
 func formatLiteral(builder *OutputBuilder, literal pgsql.Literal) error {
-	if !literal.Null {
-		return formatValue(builder, literal.Value)
+	if literal.Null {
+		builder.Write("null")
+		return nil
 	}
 
-	builder.Write("null")
-	return nil
+	switch literal.CastType {
+	case pgsql.Interval:
+		builder.Write("interval ")
+	}
+
+	return formatValue(builder, literal.Value)
 }
 
 func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {

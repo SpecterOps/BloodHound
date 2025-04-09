@@ -105,6 +105,12 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (s) where s.created_at = date() return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'created_at')::date = current_date::date)) select s0.n0 as s from s0;
 
+-- case: match (s) where s.created_at = date() - duration('P1D') return s
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'created_at')::date = current_date::date - interval 'P1D')) select s0.n0 as s from s0;
+
+-- case: match (s) where s.created_at = date() + duration('4 hours') return s
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'created_at')::date = current_date::date + interval '4 hours')) select s0.n0 as s from s0;
+
 -- case: match (s) where s.created_at = date('2023-4-4') return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'created_at')::date = ('2023-4-4')::date)) select s0.n0 as s from s0;
 
@@ -221,6 +227,8 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'pwdlastset')::numeric < (extract(epoch from now()::timestamp with time zone)::numeric - (365 * 86400)) and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[])) and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as u from s0 limit 100;
 
 -- case: match (u:NodeKind1) where u.pwdlastset < (datetime().epochmillis - 86400000) and not u.pwdlastset IN [-1.0, 0.0] return u limit 100
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ->> 'pwdlastset')::numeric < (extract(epoch from now()::timestamp with time zone)::numeric * 1000 - 86400000) and not (n0.properties ->> 'pwdlastset')::float8 = any (array [- 1, 0]::float8[])) and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as u from s0 limit 100;
+
 -- case: match (n:NodeKind1) where size(n.array_value) > 0 return n
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (jsonb_array_length(n0.properties -> 'array_value')::int > 0) and n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]) select s0.n0 as n from s0;
 
