@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/util/size"
 	"sync"
 
 	"github.com/specterops/bloodhound/dawgs/util/channels"
@@ -27,7 +28,6 @@ import (
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
 func FetchAllNodeProperties(tx graph.Transaction, nodes graph.NodeSet) error {
@@ -56,20 +56,20 @@ func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyName
 		var nodeID graph.ID
 
 		for results.Next() {
-			if values, err := results.Values(); err != nil {
+			if mapper, err := results.Mapper(); err != nil {
 				return err
 			} else {
 				nodeProperties := map[string]any{}
 
 				// Map the node ID first
-				if err := values.Map(&nodeID); err != nil {
+				if err := mapper.MapNext(&nodeID); err != nil {
 					return err
 				}
 
 				// Map requested properties next by matching the name index
 				for idx := 0; idx < len(propertyNames); idx++ {
-					if next, err := values.Next(); err != nil {
-						return err
+					if next, hasNext := mapper.Next(); !hasNext {
+						return fmt.Errorf("property %s not found in node %d result", propertyNames[idx], nodeID)
 					} else {
 						nodeProperties[propertyNames[idx]] = next
 					}
@@ -176,34 +176,37 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 		defer result.Close()
 
 		for result.Next() {
-			var (
-				relationship graph.Relationship
-				node         graph.Node
-				path         graph.Path
-			)
-
-			if values, err := result.Values(); err != nil {
-				return pathSet, err
-			} else if mapped, err := values.MapOptions(&relationship, &node, &path); err != nil {
+			if values, err := result.Mapper(); err != nil {
 				return pathSet, err
 			} else {
-				switch typedMapped := mapped.(type) {
-				case *graph.Relationship:
-					currentPath.Edges = append(currentPath.Edges, typedMapped)
+				for values.HasNext() {
+					var (
+						relationship = &graph.Relationship{}
+						node         = &graph.Node{}
+						path         = &graph.Path{}
+					)
 
-				case *graph.Node:
-					currentPath.Nodes = append(currentPath.Nodes, typedMapped)
-
-				case *graph.Path:
-					pathSet = append(pathSet, *typedMapped)
-				}
-
-				if tx.GraphQueryMemoryLimit() > 0 {
-					currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
-					pathSetSize := size.Of(pathSet)
-					if currentPathSize > tx.GraphQueryMemoryLimit() || pathSetSize > tx.GraphQueryMemoryLimit() {
-						return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.GraphQueryMemoryLimit().Mebibytes())
+					if values.TryMapNext(relationship) {
+						currentPath.Edges = append(currentPath.Edges, relationship)
+						relationship = &graph.Relationship{}
+					} else if values.TryMapNext(node) {
+						currentPath.Nodes = append(currentPath.Nodes, node)
+						node = &graph.Node{}
+					} else if values.TryMapNext(path) {
+						pathSet = append(pathSet, *path)
+						path = &graph.Path{}
 					}
+				}
+			}
+
+			if tx.GraphQueryMemoryLimit() > 0 {
+				var (
+					currentPathSize = size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
+					pathSetSize     = size.Of(pathSet)
+				)
+
+				if currentPathSize > tx.GraphQueryMemoryLimit() || pathSetSize > tx.GraphQueryMemoryLimit() {
+					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.GraphQueryMemoryLimit().Mebibytes())
 				}
 			}
 		}

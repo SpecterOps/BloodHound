@@ -193,7 +193,7 @@ func (mr *MockScannerMockRecorder) Scan(targets ...any) *gomock.Call {
 }
 
 // Values mocks base method.
-func (m *MockScanner) Values() (graph.ValueMapper, error) {
+func (m *MockScanner) Mapper() (graph.ValueMapper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Values")
 	ret0, _ := ret[0].(graph.ValueMapper)
@@ -204,7 +204,7 @@ func (m *MockScanner) Values() (graph.ValueMapper, error) {
 // Values indicates an expected call of Values.
 func (mr *MockScannerMockRecorder) Values() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockScanner)(nil).Values))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockScanner)(nil).Mapper))
 }
 
 // MockResult is a mock of Result interface.
@@ -290,7 +290,7 @@ func (mr *MockResultMockRecorder) Scan(targets ...any) *gomock.Call {
 }
 
 // Values mocks base method.
-func (m *MockResult) Values() (graph.ValueMapper, error) {
+func (m *MockResult) Mapper() (graph.ValueMapper, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Values")
 	ret0, _ := ret[0].(graph.ValueMapper)
@@ -301,7 +301,7 @@ func (m *MockResult) Values() (graph.ValueMapper, error) {
 // Values indicates an expected call of Values.
 func (mr *MockResultMockRecorder) Values() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockResult)(nil).Values))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockResult)(nil).Mapper))
 }
 
 // MockNodeQuery is a mock of NodeQuery interface.
