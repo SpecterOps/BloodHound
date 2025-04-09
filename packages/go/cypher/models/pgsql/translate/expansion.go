@@ -926,7 +926,7 @@ func (s *Translator) buildExpansionPatternRoot(traversalStep *TraversalStep, exp
 
 			// Constraints that target the terminal node may crop up here where it's finally in scope. Additionally,
 			// only accept paths that are marked satisfied from the recursive descent CTE
-			if constraints, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(expansionModel.Frame.Visible); err != nil {
+			if constraints, err := s.treeTranslator.ConsumeConstraintsFromVisibleSet(expansionModel.Frame.Visible); err != nil {
 				return pgsql.Query{}, err
 			} else if projectionConstraints, err := ConjoinExpressions([]pgsql.Expression{pgsql.CompoundIdentifier{expansionModel.Frame.Binding.Identifier, expansionSatisfied}, constraints.Expression}); err != nil {
 				return pgsql.Query{}, err
@@ -1222,7 +1222,7 @@ func (s *Translator) translateTraversalPatternPartWithExpansion(isFirstTraversal
 }
 
 func (s *Translator) translateExpansionConstraints(isFirstTraversalStep bool, step *TraversalStep, expansionModel *Expansion) error {
-	if constraints, err := consumePatternConstraints(isFirstTraversalStep, recursivePattern, step, s.treeTranslator.IdentifierConstraints); err != nil {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, recursivePattern, step, s.treeTranslator); err != nil {
 		return err
 	} else {
 		// If one side of the expansion has constraints but the other does not this may be an opportunity to reorder the traversal
@@ -1343,7 +1343,7 @@ func (s *Translator) translateNonTraversalPatternPart(part *PatternPart) error {
 
 		nextFrame.Export(part.NodeSelect.Binding.Identifier)
 
-		if constraint, err := s.treeTranslator.IdentifierConstraints.ConsumeSet(nextFrame.Known()); err != nil {
+		if constraint, err := s.treeTranslator.ConsumeConstraintsFromVisibleSet(nextFrame.Known()); err != nil {
 			return err
 		} else if err := RewriteFrameBindings(s.scope, constraint.Expression); err != nil {
 			return err

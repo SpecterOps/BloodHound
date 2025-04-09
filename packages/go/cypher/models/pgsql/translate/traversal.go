@@ -246,7 +246,7 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 }
 
 func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *TraversalStep) error {
-	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator); err != nil {
 		return err
 	} else {
 		if isFirstTraversalStep {

@@ -305,7 +305,7 @@ be satisfied by the scope's identifiers.
 
 ```
 
-	scope := pgsql.IdentifierSet{
+	visible := pgsql.IdentifierSet{
 		"a": struct{}{},
 		"b": struct{}{},
 	}
@@ -325,11 +325,11 @@ be satisfied by the scope's identifiers.
 		}},
 	}
 
-	satisfiedScope, expression := tracker.ConsumeSet(scope)
+	satisfiedConstraints, expression := tracker.ConsumeSet(visible)
 
 ```
 */
-func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint, error) {
+func (s *ConstraintTracker) ConsumeSet(visible *pgsql.IdentifierSet) (*Constraint, error) {
 	var (
 		matchedDependencies   = pgsql.NewIdentifierSet()
 		constraintExpressions []pgsql.Expression
@@ -342,7 +342,7 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 		// to be consumed even if the dependencies are satisfied
 		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
 			return nil, err
-		} else if !syntaxNodeSatisfied || !scope.Satisfies(nextConstraint.Dependencies) {
+		} else if !syntaxNodeSatisfied || !visible.Satisfies(nextConstraint.Dependencies) {
 			// This constraint isn't satisfied, move to the next one
 			idx += 1
 		} else {
@@ -434,7 +434,7 @@ const (
 	nonRecursivePattern = false
 )
 
-func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, tracker *ConstraintTracker) (PatternConstraints, error) {
+func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, treeTranslator *ExpressionTreeTranslator) (PatternConstraints, error) {
 	var (
 		constraints PatternConstraints
 		err         error
@@ -450,7 +450,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	// Track the identifiers visible at this frame to correctly assign the remaining constraints
 	knownBindings := traversalStep.Frame.Known()
 
-	if constraints.LeftNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.LeftNode, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 
@@ -466,7 +466,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	traversalStep.Frame.Export(traversalStep.Edge.Identifier)
 	knownBindings.Add(traversalStep.Edge.Identifier)
 
-	if constraints.Edge, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.Edge, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 
@@ -474,7 +474,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	traversalStep.Frame.Export(traversalStep.RightNode.Identifier)
 	knownBindings.Add(traversalStep.RightNode.Identifier)
 
-	if constraints.RightNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.RightNode, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 

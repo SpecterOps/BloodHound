@@ -30,7 +30,7 @@ func unwrapParenthetical(parenthetical pgsql.Expression) pgsql.Expression {
 
 	for next != nil {
 		switch typedNext := next.(type) {
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			next = typedNext.Expression
 
 		default:
@@ -349,49 +349,58 @@ func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error
 }
 
 type ExpressionTreeTranslator struct {
-	IdentifierConstraints *ConstraintTracker
+	UserConstraints        *ConstraintTracker
+	TranslationConstraints *ConstraintTracker
 
-	projectionConstraints []*Constraint
-	treeBuilder           *Builder
-	parentheticalDepth    int
-	disjunctionDepth      int
-	conjunctionDepth      int
+	treeBuilder        *Builder
+	parentheticalDepth int
+	disjunctionDepth   int
+	conjunctionDepth   int
 }
 
 func NewExpressionTreeTranslator() *ExpressionTreeTranslator {
 	return &ExpressionTreeTranslator{
-		IdentifierConstraints: NewConstraintTracker(),
-		treeBuilder:           NewExpressionTreeBuilder(),
+		UserConstraints:        NewConstraintTracker(),
+		TranslationConstraints: NewConstraintTracker(),
+		treeBuilder:            NewExpressionTreeBuilder(),
 	}
 }
 
-func (s *ExpressionTreeTranslator) ConsumeSet(identifierSet *pgsql.IdentifierSet) (*Constraint, error) {
-	return s.IdentifierConstraints.ConsumeSet(identifierSet)
+func mergeUserAndTranslationConstraints(userConstraints, translationConstraints *Constraint) *Constraint {
+	if userConstraints.Expression != nil {
+		// Fold the user constraints into the translation constraints wrapped in a parenthetical
+		translationConstraints.Expression = pgsql.OptionalAnd(pgsql.NewParenthetical(userConstraints.Expression), translationConstraints.Expression)
+	}
+
+	return translationConstraints
 }
 
-func (s *ExpressionTreeTranslator) ConsumeAll() (*Constraint, error) {
-	if constraint, err := s.IdentifierConstraints.ConsumeAll(); err != nil {
+func (s *ExpressionTreeTranslator) ConsumeConstraintsFromVisibleSet(visible *pgsql.IdentifierSet) (*Constraint, error) {
+	if userConstraints, err := s.UserConstraints.ConsumeSet(visible); err != nil {
+		return nil, err
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeSet(visible); err != nil {
 		return nil, err
 	} else {
-		constraintExpressions := []pgsql.Expression{constraint.Expression}
-
-		for _, projectionConstraint := range s.projectionConstraints {
-			constraint.Dependencies.MergeSet(projectionConstraint.Dependencies)
-			constraintExpressions = append(constraintExpressions, projectionConstraint.Expression)
-		}
-
-		if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
-			return nil, err
-		} else {
-			constraint.Expression = conjoined
-		}
-
-		return constraint, nil
+		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
 	}
 }
 
-func (s *ExpressionTreeTranslator) ConstrainSet(identifierSet *pgsql.IdentifierSet, expression pgsql.Expression) error {
-	return s.IdentifierConstraints.Constrain(identifierSet, expression)
+func (s *ExpressionTreeTranslator) ConsumeAllConstraints() (*Constraint, error) {
+	if userConstraints, err := s.UserConstraints.ConsumeAll(); err != nil {
+		return nil, err
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeAll(); err != nil {
+		return nil, err
+	} else {
+		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
+	}
+}
+
+func (s *ExpressionTreeTranslator) AddTranslationConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
+	return s.TranslationConstraints.Constrain(requiredIdentifiers, expression)
+}
+
+func (s *ExpressionTreeTranslator) AddUserConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
+	return s.UserConstraints.Constrain(requiredIdentifiers, expression)
 }
 
 func (s *ExpressionTreeTranslator) PushOperand(expression pgsql.Expression) {
@@ -406,7 +415,7 @@ func (s *ExpressionTreeTranslator) PopOperand() (pgsql.Expression, error) {
 	return s.treeBuilder.PopOperand()
 }
 
-func (s *ExpressionTreeTranslator) popOperandAsConstraint() error {
+func (s *ExpressionTreeTranslator) popOperandAsUserConstraint() error {
 	if nextExpression, err := s.PopOperand(); err != nil {
 		return err
 	} else if identifierDeps, err := ExtractSyntaxNodeReferences(nextExpression); err != nil {
@@ -417,14 +426,14 @@ func (s *ExpressionTreeTranslator) popOperandAsConstraint() error {
 			nextExpression = rewritePropertyLookupOperator(propertyLookup, pgsql.Boolean)
 		}
 
-		return s.ConstrainSet(identifierDeps, nextExpression)
+		return s.AddUserConstraint(identifierDeps, nextExpression)
 	}
 }
 
-func (s *ExpressionTreeTranslator) PopRemainingExpressionsAsConstraints() error {
+func (s *ExpressionTreeTranslator) PopRemainingExpressionsAsUserConstraints() error {
 	// Pull the right operand only if one exists
 	for !s.treeBuilder.IsEmpty() {
-		if err := s.popOperandAsConstraint(); err != nil {
+		if err := s.popOperandAsUserConstraint(); err != nil {
 			return err
 		}
 	}
@@ -444,7 +453,7 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 		return err
 	} else if s.treeBuilder.IsEmpty() {
 		// If the tree builder is empty then this operand is at the top of the disjunction chain
-		return s.ConstrainSet(rightDependencies, rightOperand)
+		return s.AddUserConstraint(rightDependencies, rightOperand)
 	} else if leftOperand, err := s.treeBuilder.PopOperand(); err != nil {
 		return err
 	} else {
@@ -470,7 +479,7 @@ func (s *ExpressionTreeTranslator) ConstrainConjoinedOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-	if err := s.popOperandAsConstraint(); err != nil {
+	if err := s.popOperandAsUserConstraint(); err != nil {
 		return err
 	}
 
@@ -622,7 +631,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {
@@ -698,7 +707,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {
@@ -758,7 +767,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {

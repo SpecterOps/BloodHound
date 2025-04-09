@@ -300,7 +300,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			s.SetError(err)
 		} else {
 			parenthetical.Expression = wrappedExpression
-			s.treeTranslator.PushOperand(*parenthetical)
+			s.treeTranslator.PushOperand(parenthetical)
 		}
 
 	case *cypher.FunctionInvocation:
@@ -322,7 +322,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		} else {
 			for cursor := operand; cursor != nil; {
 				switch typedCursor := cursor.(type) {
-				case pgsql.Parenthetical:
+				case *pgsql.Parenthetical:
 					// Unwrap parentheticals
 					cursor = typedCursor.Expression
 					continue
@@ -369,7 +369,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 
 	case *cypher.Where:
 		// Assign the last operands as identifier set constraints
-		if err := s.treeTranslator.PopRemainingExpressionsAsConstraints(); err != nil {
+		if err := s.treeTranslator.PopRemainingExpressionsAsUserConstraints(); err != nil {
 			s.SetError(err)
 		}
 

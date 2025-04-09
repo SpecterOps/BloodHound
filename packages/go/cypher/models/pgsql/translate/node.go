@@ -57,7 +57,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			}
 		}
 
-		if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+		if err := s.treeTranslator.AddTranslationConstraint(pgsql.AsIdentifierSet(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 			return err
 		}
 	}
@@ -68,7 +68,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 			return fmt.Errorf("failed to translate kinds: %w", err)
 		} else if kindIDsLiteral, err := pgsql.AsLiteral(kindIDs); err != nil {
 			return err
-		} else if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+		} else if err := s.treeTranslator.AddTranslationConstraint(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
 			pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindIDs},
 			pgsql.OperatorPGArrayOverlap,
 			kindIDsLiteral,

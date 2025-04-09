@@ -51,7 +51,7 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 				}
 			}
 
-			if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+			if err := s.treeTranslator.AddTranslationConstraint(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 				return err
 			}
 		}
@@ -60,7 +60,7 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 		if len(relationshipPattern.Kinds) > 0 {
 			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, relationshipPattern.Kinds); err != nil {
 				return fmt.Errorf("failed to translate kinds: %w", err)
-			} else if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+			} else if err := s.treeTranslator.AddTranslationConstraint(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
 				pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindID},
 				pgsql.OperatorEquals,
 				pgsql.NewAnyExpressionHinted(pgsql.NewLiteral(kindIDs, pgsql.Int2Array)),

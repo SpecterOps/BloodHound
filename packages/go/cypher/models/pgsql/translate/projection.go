@@ -268,7 +268,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		// Create a new final projection that's aliased to the visible binding's identifier
 		return []pgsql.SelectItem{
 			&pgsql.AliasedExpression{
-				Expression: pgsql.Parenthetical{
+				Expression: &pgsql.Parenthetical{
 					Expression: pgsql.Select{
 						Projection: []pgsql.SelectItem{
 							pgsql.FunctionCall{
@@ -392,7 +392,7 @@ func (s *Translator) buildTailProjection() error {
 		},
 	}}
 
-	if projectionConstraint, err := s.treeTranslator.ConsumeAll(); err != nil {
+	if projectionConstraint, err := s.treeTranslator.ConsumeAllConstraints(); err != nil {
 		return err
 	} else if projection, err := buildExternalProjection(s.scope, currentPart.projections.Items); err != nil {
 		return err

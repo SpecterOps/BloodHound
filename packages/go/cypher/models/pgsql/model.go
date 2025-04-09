@@ -367,15 +367,21 @@ type Parenthetical struct {
 	Expression Expression
 }
 
-func (s Parenthetical) AsSelectItem() SelectItem {
+func NewParenthetical(expr Expression) *Parenthetical {
+	return &Parenthetical{
+		Expression: expr,
+	}
+}
+
+func (s *Parenthetical) AsSelectItem() SelectItem {
 	return s
 }
 
-func (s Parenthetical) NodeType() string {
+func (s *Parenthetical) NodeType() string {
 	return "parenthetical"
 }
 
-func (s Parenthetical) AsExpression() Expression {
+func (s *Parenthetical) AsExpression() Expression {
 	return s
 }
 

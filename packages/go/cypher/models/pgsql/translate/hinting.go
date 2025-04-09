@@ -157,7 +157,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 			return inferBinaryExpressionType(typedExpression)
 		}
 
-	case pgsql.Parenthetical:
+	case *pgsql.Parenthetical:
 		return InferExpressionType(typedExpression.Expression)
 
 	default:

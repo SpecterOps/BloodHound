@@ -239,7 +239,7 @@ func TestExpressionTreeTranslator(t *testing.T) {
 	treeTranslator.CompleteBinaryExpression(scope, pgsql.OperatorAnd)
 
 	// Assign remaining operands as constraints
-	treeTranslator.PopRemainingExpressionsAsConstraints()
+	treeTranslator.PopRemainingExpressionsAsUserConstraints()
 
 	// Pull out the 'a' constraint
 	aIdentifier := pgsql.AsIdentifierSet("a")
@@ -258,7 +258,7 @@ func TestExpressionTreeTranslator(t *testing.T) {
 }
 
 func validateConstraints(t *testing.T, constraintTracker *translate.ExpressionTreeTranslator, idents *pgsql.IdentifierSet, expectedTranslation string) {
-	constraint, err := constraintTracker.ConsumeSet(idents)
+	constraint, err := constraintTracker.ConsumeConstraintsFromVisibleSet(idents)
 
 	require.NotNil(t, constraint)
 	require.True(t, constraint.Dependencies.Matches(idents))

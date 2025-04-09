@@ -440,7 +440,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 					exprStack = append(exprStack, pgsql.FormattingLiteral("("))
 				}
 
-			case pgsql.Parenthetical:
+			case *pgsql.Parenthetical:
 				// Avoid formatting type-casted parenthetical statements as (('test'))::text - this should instead look like ('test')::text
 				exprStack = append(exprStack, pgsql.FormattingLiteral(typedNextExpr.CastType), pgsql.FormattingLiteral("::"))
 				exprStack = append(exprStack, typedNextExpr.Expression)
@@ -451,13 +451,10 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, pgsql.FormattingLiteral("("))
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
 			exprStack = append(exprStack, typedNextExpr.Expression)
 			exprStack = append(exprStack, pgsql.FormattingLiteral("("))
-
-		case *pgsql.Parenthetical:
-			exprStack = append(exprStack, *typedNextExpr)
 
 		case pgsql.Parameter:
 			if builder.MaterializeParameters {
