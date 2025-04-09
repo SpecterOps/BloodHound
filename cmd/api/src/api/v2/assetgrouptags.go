@@ -37,22 +37,20 @@ import (
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
-	if len(seeds) > 0 {
-		// all seeds must be of the same type
-		seedType := seeds[0].Type
+	// all seeds must be of the same type
+	seedType := seeds[0].Type
 
-		if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
-			return fmt.Errorf("invalid seed type %v", seedType)
+	if seedType != model.SelectorTypeObjectId && seedType != model.SelectorTypeCypher {
+		return fmt.Errorf("invalid seed type %v", seedType)
+	}
+
+	for _, seed := range seeds {
+		if seed.Type != seedType {
+			return fmt.Errorf("all seeds must be of the same type")
 		}
-
-		for _, seed := range seeds {
-			if seed.Type != seedType {
-				return fmt.Errorf("all seeds must be of the same type")
-			}
-			if seed.Type == model.SelectorTypeCypher {
-				if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
-					return fmt.Errorf("cypher is invalid: %v", err)
-				}
+		if seed.Type == model.SelectorTypeCypher {
+			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
+				return fmt.Errorf("cypher is invalid: %v", err)
 			}
 		}
 	}
