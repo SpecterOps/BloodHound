@@ -104,6 +104,8 @@ FROM gcr.io/distroless/static-debian11 AS bloodhound
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
+# api/v2/collectors/[collector-type]/[version] for collector download specifically expects
+# '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
 COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
 COPY --from=builder /bloodhound/dist/bhapi /bloodhound
 COPY --from=hound-builder /opt/bloodhound /etc/bloodhound /var/log /

@@ -72,6 +72,8 @@ RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/wo
 RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.0
 RUN go install github.com/air-verse/air@v1.52.3
 
+# api/v2/collectors/[collector-type]/[version] for collector download specifically expects
+# '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
 COPY --from=hound-builder /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip.sha256 /bhapi/collectors/sharphound/
 COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-${AZUREHOUND_VERSION}.zip /bhapi/collectors/azurehound/
