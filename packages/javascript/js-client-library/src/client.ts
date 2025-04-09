@@ -19,6 +19,7 @@ import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupLabelResponse,
     AssetGroupMemberCountsResponse,
+    AssetGroupMemberInfoResponse,
     AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
@@ -135,6 +136,12 @@ class BHEAPIClient {
     getAssetGroupSelectors = (assetGroupId: number, options?: types.RequestOptions) =>
         this.baseClient.get<AssetGroupSelectorResponse>(
             `/api/v2/asset-group-labels/${assetGroupId}/selectors`,
+            options
+        );
+
+    getAssetGroupLabelMemberInfo = (assetGroupId: number, memberId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberInfoResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/members/${memberId}`,
             options
         );
 
@@ -569,7 +576,7 @@ class BHEAPIClient {
     getJobLogFile = (jobId: string, options?: types.RequestOptions) =>
         this.baseClient.get(`/api/v2/jobs/${jobId}/log`, options);
 
-    getRiskDetails = (
+    getRiskDetails = <T = any>(
         domainId: string,
         finding: string,
         skip: number,
@@ -593,7 +600,7 @@ class BHEAPIClient {
 
         if (typeof filterAccepted === 'boolean') params.append('Accepted', `eq:${filterAccepted}`);
 
-        return this.baseClient.get(
+        return this.baseClient.get<T>(
             `/api/v2/domains/${domainId}/details`,
             Object.assign(
                 {
@@ -605,7 +612,7 @@ class BHEAPIClient {
         );
     };
 
-    getRiskSparklineValues = (
+    getRiskSparklineValues = <T = any>(
         domainId: string,
         finding: string,
         from?: Date,
@@ -613,7 +620,7 @@ class BHEAPIClient {
         sortBy?: string,
         options?: types.RequestOptions
     ) =>
-        this.baseClient.get(
+        this.baseClient.get<T>(
             `/api/v2/domains/${domainId}/sparkline`,
             Object.assign(
                 {

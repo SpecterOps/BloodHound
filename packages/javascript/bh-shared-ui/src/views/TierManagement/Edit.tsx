@@ -24,9 +24,9 @@ export const Edit: FC = () => {
         <div>
             <h1>Edit</h1>
             <h2>
-                Type: {state.type}
+                Type: {state?.type}
                 <br />
-                ID: {state.id}
+                ID: {state?.id}
             </h2>
         </div>
     );
