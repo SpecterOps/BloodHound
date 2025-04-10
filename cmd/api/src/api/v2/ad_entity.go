@@ -63,7 +63,7 @@ func (s *Resources) PatchDomain(response http.ResponseWriter, request *http.Requ
 }
 
 func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, request *http.Request, entityType graph.Kind, countQueries map[string]any) {
-	if hydrateCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), true); err != nil {
+	if includeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if objectId, err := GetEntityObjectIDFromRequestPath(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("error reading objectid: %v", err), request), response)
@@ -73,7 +73,7 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		} else {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error getting node: %v", err), request), response)
 		}
-	} else if hydrateCounts {
+	} else if includeCounts {
 		results := s.GraphQuery.GetEntityCountResults(request.Context(), node, countQueries)
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	} else {

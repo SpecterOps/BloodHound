@@ -406,9 +406,9 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter %s is required", objectIDQueryParameterName), request), response)
 	} else if relatedEntityTypeStr := queryVars.Get(relatedEntityTypeQueryParameterName); relatedEntityTypeStr != "" {
 		s.GetAZRelatedEntities(request.Context(), response, request, objectID)
-	} else if hydrateCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
+	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.Graph, entityType, objectID, hydrateCounts); err != nil {
+	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.Graph, entityType, objectID, includeCounts); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
 		} else {
