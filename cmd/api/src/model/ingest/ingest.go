@@ -224,8 +224,5 @@ var (
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
 
 	// generic ingest related errors
-	ErrEmptyIngest    = errors.New("empty graph tag")
-	ErrNodeValidation = errors.New("node does not conform to schema")
-	ErrEdgeValidation = errors.New("edge does not conform to schema")
-	ErrNullArray      = errors.New("array is null")
+	ErrEmptyIngest = errors.New("empty graph tag")
 )

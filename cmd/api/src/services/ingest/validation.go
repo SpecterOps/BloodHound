@@ -145,33 +145,98 @@ func formatAggregateErrors(errs []validationError) string {
 	return sb.String()
 }
 
+// LoadSchema uses embed.FS to load the JSON Schema and returns a validator
+func LoadSchema(filename string) (*jsonschema.Schema, error) {
+	const schemaDir = "json_schema"
+
+	// Read the raw JSON schema file from embed.FS
+	path := fmt.Sprintf("%s/%s", schemaDir, filename)
+	data, err := schemaFiles.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read schema %q: %w", path, err)
+	}
+
+	// Parse the JSON into a generic in-memory representation
+	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal schema %q: %w", path, err)
+	}
+
+	// Create a new compiler and register the document
+	compiler := jsonschema.NewCompiler()
+	if err := compiler.AddResource(filename, document); err != nil {
+		return nil, fmt.Errorf("failed to add resource for schema %q: %w", filename, err)
+	}
+
+	// Compile the schema for validation use
+	schema, err := compiler.Compile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile schema %q: %w", filename, err)
+	}
+
+	return schema, nil
+}
+
 func DoEmbedStuff() error {
-	data, err := schemaFiles.ReadFile("json_schema/node.json")
-	if err != nil {
-		return err
-	}
 
-	nodeSchema, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
-	if err != nil {
-		return err
-	}
-
-	c := jsonschema.NewCompiler()
-	err = c.AddResource("json_schema/node.json", nodeSchema)
-	if err != nil {
-		return err
-	}
-
-	sch, err := c.Compile("json_schema/schema.json")
+	nodeSchema, err := LoadSchema("edge.json")
 	if err != nil {
 		return err
 	}
 
 	inst, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id":1234}`))
 
-	err = sch.Validate(inst)
+	err = nodeSchema.Validate(inst)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func expectOpeningSquareBracket(decoder *json.Decoder, name string) error {
+	tok, err := decoder.Token()
+	if err != nil {
+		return fmt.Errorf("error decoding %s array: %w", name, err)
+	}
+	delim, ok := tok.(json.Delim)
+	if !ok || delim != '[' {
+		return fmt.Errorf("error opening %s array: expected '[', got %v", name, tok)
+	}
+	return nil
+}
+
+func expectClosingSquareBracket(decoder *json.Decoder, name string) error {
+	tok, err := decoder.Token()
+	if err != nil {
+		return fmt.Errorf("error decoding %s array: %w", name, err)
+	}
+	delim, ok := tok.(json.Delim)
+	if !ok || delim != ']' {
+		return fmt.Errorf("error closing %s array: expected ']', got %v", name, tok)
+	}
+	return nil
+}
+
+func expectOpeningCurlyBracket(decoder *json.Decoder, name string) error {
+	tok, err := decoder.Token()
+	if err != nil {
+		return fmt.Errorf("error decoding %s object: %w", name, err)
+	}
+	delim, ok := tok.(json.Delim)
+	if !ok || delim != '{' {
+		return fmt.Errorf("error opening %s object: expected '{', got %v", name, tok)
+	}
+	return nil
+}
+
+func expectClosingCurlyBracket(decoder *json.Decoder, name string) error {
+	tok, err := decoder.Token()
+	if err != nil {
+		return fmt.Errorf("error decoding %s object: %w", name, err)
+	}
+	delim, ok := tok.(json.Delim)
+	if !ok || delim != '}' {
+		return fmt.Errorf("error closing %s object: expected '}', got %v", name, tok)
 	}
 	return nil
 }
@@ -180,27 +245,35 @@ func DoEmbedStuff() error {
 payload will be : { nodes: [], edges: [] }
 */
 func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
-
 	var (
 		// Initialize schemas
-		c          = jsonschema.NewCompiler()
-		nodeSchema = c.MustCompile("./json_schema/node.json")
-		edgeSchema = c.MustCompile("./json_schema/edge.json")
-
 		nodesFound, edgesFound = false, false
 		maxErrors              = 50
+		criticalErrors         []validationError
 		validationErrors       []validationError
 	)
 
-	// Validate an array of items (either nodes or edges)
-	validateArray := func(arrayName string, validateFunc func(map[string]any) error) error {
-		// if err := decoder.EatOpeningBracket(); err != nil {
-		// 	return fmt.Errorf("error opening %s array: %w", arrayName, err)
-		// }
+	nodeSchema, err := LoadSchema("node.json")
+	if err != nil {
 
-		_, err := decoder.Token() // [
-		if err != nil {
-			return err
+		return err
+	}
+	edgeSchema, err := LoadSchema("edge.json")
+	if err != nil {
+		return err
+	}
+
+	// Validate an array of items (either nodes or edges)
+	validateArray := func(arrayName string, validateFunc func(map[string]any) error) {
+
+		// eat [
+		if err := expectOpeningSquareBracket(decoder, arrayName); err != nil {
+			criticalErrors = append(criticalErrors, validationError{
+				Index:   0,
+				Type:    "structure",
+				Message: err.Error(),
+			})
+			return
 		}
 
 		index := 0
@@ -216,10 +289,10 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 					})
 				} else {
 					// json.SyntaxErrors typically corrupt the stream. abort the parse
-					validationErrors = append(validationErrors, validationError{
+					criticalErrors = append(criticalErrors, validationError{
 						Index:   index,
 						Type:    "decode",
-						Message: fmt.Sprintf("syntax error for %s[%d]: %s. abort parse.", arrayName, index, err),
+						Message: fmt.Sprintf("syntax error for %s[%d]: %s", arrayName, index, err),
 					})
 					break
 				}
@@ -242,19 +315,21 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 			index++
 		}
 
-		if len(validationErrors) > 0 {
-			return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
+		// eat ]
+		if err := expectClosingSquareBracket(decoder, arrayName); err != nil {
+			criticalErrors = append(criticalErrors, validationError{
+				Index:   0,
+				Type:    "structure",
+				Message: err.Error(),
+			})
+			return
 		}
 
-		// if err := decoder.EatClosingBracket(); err != nil {
-		// 	return fmt.Errorf("error closing %s array: %w", arrayName, err)
+		// if len(validationErrors) > 0 {
+		// 	return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
 		// }
-		_, err = decoder.Token() // ]
-		if err != nil {
-			return err
-		}
 
-		return nil
+		// return nil
 	}
 
 	// Generic validation function for nodes and edges
@@ -266,9 +341,14 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 		return nil
 	}
 
-	_, err := decoder.Token() // {
-	if err != nil {
-		return err
+	// eat {
+	if err := expectOpeningCurlyBracket(decoder, "graph"); err != nil {
+		criticalErrors = append(criticalErrors, validationError{
+			Index:   0,
+			Type:    "structure",
+			Message: err.Error(),
+		})
+		return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
 	}
 
 	// Loop to read the JSON stream and identify graph elements
@@ -286,30 +366,47 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 			switch typedToken {
 			case "nodes":
 				nodesFound = true
-				if err := validateArray("nodes", func(item map[string]any) error {
+				validateArray("nodes", func(item map[string]any) error {
 					return validateItem(item, nodeSchema)
-				}); err != nil {
-					return err
+				})
+				if len(criticalErrors) > 0 {
+					return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
 				}
 			case "edges":
 				edgesFound = true
-				if err := validateArray("edges", func(item map[string]any) error {
+				validateArray("edges", func(item map[string]any) error {
 					return validateItem(item, edgeSchema)
-				}); err != nil {
-					return err
+				})
+				if len(criticalErrors) > 0 {
+					return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
 				}
 			}
 		}
+
+		if len(validationErrors) >= maxErrors {
+			break
+		}
 	}
 
-	_, err = decoder.Token() // }
-	if err != nil {
-		return err
+	// reject any request that had any validation errors
+	if len(validationErrors) > 0 || len(criticalErrors) > 0 {
+		return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
+	}
+
+	// eat }
+	if err := expectClosingCurlyBracket(decoder, "graph"); err != nil {
+		criticalErrors = append(criticalErrors, validationError{
+			Index:   0,
+			Type:    "structure",
+			Message: err.Error(),
+		})
+		return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
 	}
 
 	if !nodesFound && !edgesFound {
 		return ingest.ErrEmptyIngest
 	}
+
 	return nil
 }
 

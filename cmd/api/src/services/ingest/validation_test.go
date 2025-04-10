@@ -51,49 +51,55 @@ func Test_ValidateMetaTag(t *testing.T) {
 			expectedType: ingest.DataTypeGeneric,
 		},
 		// {
+		// 	name:         "generic payload with validation errors on nodes AND edges",
+		// 	rawString:    `{"graph": {"edges": [{"id": 5678}],"nodes": [{"id": 5678}]}}`,
+		// 	err:          fmt.Errorf("pooop"),
+		// 	expectedType: ingest.DataTypeGeneric,
+		// },
+		// {
 		// 	name:         "node fails schema validation",
 		// 	rawString:    `{"graph": {"nodes":[{}]}}`,
 		// 	err:          errors.New("[0] validation error"),
 		// 	expectedType: ingest.DataTypeGeneric,
 		// },
-		// {
-		// 	name:         "valid",
-		// 	rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
-		// 	err:          nil,
-		// 	expectedType: ingest.DataTypeSession,
-		// },
-		// {
-		// 	name:      "No data tag",
-		// 	rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
-		// 	err:       ingest.ErrDataTagNotFound,
-		// },
-		// {
-		// 	name:      "No meta tag",
-		// 	rawString: `{"data": []}`,
-		// 	err:       ingest.ErrMetaTagNotFound,
-		// },
-		// {
-		// 	name:      "No valid tags",
-		// 	rawString: `{}`,
-		// 	err:       ingest.ErrNoTagFound,
-		// },
-		// {
-		// 	name:         "ignore invalid tag but still find correct tag",
-		// 	rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
-		// 	err:          nil,
-		// 	expectedType: ingest.DataTypeSession,
-		// },
-		// {
-		// 	name:         "swapped order",
-		// 	rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
-		// 	err:          nil,
-		// 	expectedType: ingest.DataTypeSession,
-		// },
-		// {
-		// 	name:      "invalid type",
-		// 	rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
-		// 	err:       ingest.ErrMetaTagNotFound,
-		// },
+		{
+			name:         "valid",
+			rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:          nil,
+			expectedType: ingest.DataTypeSession,
+		},
+		{
+			name:      "No data tag",
+			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			err:       ingest.ErrDataTagNotFound,
+		},
+		{
+			name:      "No meta tag",
+			rawString: `{"data": []}`,
+			err:       ingest.ErrMetaTagNotFound,
+		},
+		{
+			name:      "No valid tags",
+			rawString: `{}`,
+			err:       ingest.ErrNoTagFound,
+		},
+		{
+			name:         "ignore invalid tag but still find correct tag",
+			rawString:    `{"meta": 0, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			err:          nil,
+			expectedType: ingest.DataTypeSession,
+		},
+		{
+			name:         "swapped order",
+			rawString:    `{"data": [],"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}}`,
+			err:          nil,
+			expectedType: ingest.DataTypeSession,
+		},
+		{
+			name:      "invalid type",
+			rawString: `{"data": [],"meta": {"methods": 0, "type": "invalid", "count": 0, "version": 5}}`,
+			err:       ingest.ErrMetaTagNotFound,
+		},
 	}
 
 	for _, assertion := range assertions {
@@ -107,7 +113,6 @@ func Test_ValidateMetaTag(t *testing.T) {
 
 type genericAssertion struct {
 	name       string
-	err        error
 	errMsgs    []string // one record may have multiple violations
 	payload    *testPayload
 	rawPayload string // for cases that require raw JSON to trip validation controls
@@ -133,32 +138,26 @@ type edgePiece struct {
 	IDProperty string `json:"id_property,omitempty"`
 }
 
-type testGraph struct {
+type testPayload struct {
+	// Graph testGraph `json:"graph"`
 	Nodes []testNode `json:"nodes,omitempty"`
 	Edges []testEdge `json:"edges,omitempty"`
 }
 
-type testPayload struct {
-	Graph testGraph `json:"graph"`
-}
-
 func Test_ValidateGenericIngest(t *testing.T) {
-
 	var (
 		positiveCases = []genericAssertion{
 			{
 				name: "payload contains one node",
 				payload: &testPayload{
-					Graph: testGraph{
-						Nodes: []testNode{
-							{
-								ID:    "1234",
-								Kinds: []string{"a"},
-								Properties: map[string]any{
-									"hello": "world",
-									"one":   2,
-									"true":  false,
-								},
+					Nodes: []testNode{
+						{
+							ID:    "1234",
+							Kinds: []string{"a"},
+							Properties: map[string]any{
+								"hello": "world",
+								"one":   2,
+								"true":  false,
 							},
 						},
 					},
@@ -167,21 +166,19 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			{
 				name: "payload contains one edge",
 				payload: &testPayload{
-					Graph: testGraph{
-						Edges: []testEdge{
-							{
-								Start: &edgePiece{
-									IDValue: "1234",
-								},
-								End: &edgePiece{
-									IDValue: "5678",
-								},
-								Kind: "kind A",
-								Properties: map[string]any{
-									"hello": "world",
-									"true":  false,
-									"one":   2,
-								},
+					Edges: []testEdge{
+						{
+							Start: &edgePiece{
+								IDValue: "1234",
+							},
+							End: &edgePiece{
+								IDValue: "5678",
+							},
+							Kind: "kind A",
+							Properties: map[string]any{
+								"hello": "world",
+								"true":  false,
+								"one":   2,
 							},
 						},
 					},
@@ -193,6 +190,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	)
 
 	negativeCases = append(negativeCases, decodingFailureCases()...)
+	negativeCases = append(negativeCases, criticalFailureCases()...)
 	negativeCases = append(negativeCases, schemaFailureCases()...)
 	negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
@@ -213,7 +211,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 		decoder := json.NewDecoder(reader)
 
 		err := ingest_service.ValidateGenericIngest(decoder, true)
-
+		fmt.Println(err)
 		if len(assertion.errMsgs) > 0 {
 			for _, validationError := range assertion.errMsgs {
 				assert.ErrorContains(t, err, validationError, testMessage)
@@ -235,34 +233,64 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	}
 }
 
-func Test_EmbedThing(t *testing.T) {
-	err := ingest_service.DoEmbedStuff()
-	fmt.Println(err)
-}
-
-// these cases exercise the json.Decoder in different ways to produce (recoverable) UnmarshalTypeErrors
-// and (unrecoverable) SyntaxErrors
+// these cases exercise the json.Decoder in different ways to produce (recoverable) UnmarshalTypeErrors and (unrecoverable) SyntaxErrors
 func decodingFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{ // UnmarshalType error, is recoverable
 			name:       "decoding error: node is not a JSON Object",
-			rawPayload: `{"graph": {"nodes": ["this is a string"]}}`,
+			rawPayload: `{"nodes": ["this is a string"]}`,
 			errMsgs:    []string{"[0] decode error", "type mismatch", "json: cannot unmarshal string"},
 		},
-		{ // SyntaxError, try to advance but may have to abort.
+		{
 			name:       "decoding error: trailing comma in object",
-			rawPayload: `{"graph": {"nodes": [{"id":"123",}]}}`,
-			errMsgs:    []string{"[0] decode error", "syntax error", "invalid character '}' looking for beginning of object key string"},
+			rawPayload: `{"nodes": [{"id":"123",}]}`,
+			errMsgs:    []string{"[0] decode error", "syntax error", "2 critical error(s)", "invalid character '}' looking for beginning of object key string"},
 		},
 		{
 			name:       "decoding error: unclosed object",
-			rawPayload: `{"graph": {"nodes": [{"id":"123"]}}`,
-			errMsgs:    []string{"[0] decode error", "syntax error", "invalid character ']' after object key:value pair"},
+			rawPayload: `{"nodes": [{"id":"123"]}`,
+			errMsgs:    []string{"[0] decode error", "syntax error", "2 critical error(s)", "invalid character ']' after object key:value pair"},
 		},
 		{
 			name:       "decoding error: unquoted keys",
-			rawPayload: `{"graph": {"nodes": [{id:"123"}]}}`,
-			errMsgs:    []string{"[0] decode error", "syntax error", "invalid character 'i' looking for beginning of object key string"},
+			rawPayload: `{"nodes": [{id:"123"}]}`,
+			errMsgs:    []string{"[0] decode error", "syntax error", "2 critical error(s)", "invalid character 'i' looking for beginning of object key string"},
+		},
+	}
+}
+
+// these cases exercise top-level mistakes that will halt the parse and return early
+func criticalFailureCases() []genericAssertion {
+	return []genericAssertion{
+		{
+			name:       "no opening { on payload",
+			rawPayload: "a",
+			errMsgs:    []string{"[0] structure error", "error decoding graph object"},
+		},
+		{
+			name:       "no closing } on payload",
+			rawPayload: `{"nodes": []`,
+			errMsgs:    []string{"[0] structure error", "error decoding graph object"},
+		},
+		{
+			name:       "nodes array is not opened properly with '['",
+			rawPayload: `{"nodes": "some string"}`,
+			errMsgs:    []string{"[0] structure error", "error opening nodes array: expected '['"},
+		},
+		{
+			name:       "nodes array is not closed properly with ']'",
+			rawPayload: `{"nodes": [{"id":"1234"}}`,
+			errMsgs:    []string{"[0] structure error", "error decoding nodes array"},
+		},
+		{
+			name:       "edges array is not opened properly with '['",
+			rawPayload: `{"nodes": [], "edges": "a string value"}`,
+			errMsgs:    []string{"[0] structure error", "error opening edges array: expected '['"},
+		},
+		{
+			name:       "edges array is not closed properly with ']'",
+			rawPayload: `{"nodes": [], "edges": [{"id":"1234"}}`,
+			errMsgs:    []string{"[0] structure error", "error decoding edges array"},
 		},
 	}
 }
@@ -271,20 +299,16 @@ func decodingFailureCases() []genericAssertion {
 func schemaFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{
-			name: "payload doesn't contain atleast one of nodes or edges",
-			payload: &testPayload{
-				Graph: testGraph{},
-			},
-			err: ingest.ErrEmptyIngest,
+			name:    "payload doesn't contain atleast one of nodes or edges",
+			payload: &testPayload{},
+			errMsgs: []string{"empty graph tag"},
 		},
 		{
 			name: "node validation: ID is null",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							Kinds: []string{"kind A", "kind b"},
-						},
+				Nodes: []testNode{
+					{
+						Kinds: []string{"kind A", "kind b"},
 					},
 				},
 			},
@@ -293,12 +317,10 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "node validation: ID is empty string",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							ID:    "",
-							Kinds: []string{"kind A", "kind b"},
-						},
+				Nodes: []testNode{
+					{
+						ID:    "",
+						Kinds: []string{"kind A", "kind b"},
 					},
 				},
 			},
@@ -307,12 +329,10 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "node validation: > than 2 kinds supplied",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							ID:    "1234",
-							Kinds: []string{"kind A", "kind b", "kind c"},
-						},
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"kind A", "kind b", "kind c"},
 					},
 				},
 			},
@@ -321,12 +341,10 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "node validation: atleast one kind must be specified",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							ID:    "1234",
-							Kinds: []string{},
-						},
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{},
 					},
 				},
 			},
@@ -335,11 +353,9 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "node validation: kinds cannot be a null array",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							ID: "1234",
-						},
+				Nodes: []testNode{
+					{
+						ID: "1234",
 					},
 				},
 			},
@@ -348,11 +364,9 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "node validation: multiple issues. no node id, > 2 kinds supplied",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							Kinds: []string{"kind A", "kind b", "kind c"},
-						},
+				Nodes: []testNode{
+					{
+						Kinds: []string{"kind A", "kind b", "kind c"},
 					},
 				},
 			},
@@ -361,14 +375,12 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "edge validation: start not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							End: &edgePiece{
-								IDValue: "a5678",
-							},
-							Kind: "kind A",
+				Edges: []testEdge{
+					{
+						End: &edgePiece{
+							IDValue: "a5678",
 						},
+						Kind: "kind A",
 					},
 				},
 			},
@@ -379,125 +391,106 @@ func schemaFailureCases() []genericAssertion {
 		{
 			name: "edge validation: start id not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{},
-							End: &edgePiece{
-								IDValue: "a5678",
-							},
-							Kind: "kind A",
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{},
+						End: &edgePiece{
+							IDValue: "a5678",
 						},
+						Kind: "kind A",
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '/start': missing property 'id_value'"},
 		},
 		{
 			name: "edge validation: end not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{
-								IDValue: "1234",
-							},
-							Kind: "kind A",
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							IDValue: "1234",
 						},
+						Kind: "kind A",
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object"},
 		},
 		{
 			name: "edge validation: end id not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{IDValue: "1234"},
-							End:   &edgePiece{},
-							Kind:  "kind A",
-						},
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{IDValue: "1234"},
+						End:   &edgePiece{},
+						Kind:  "kind A",
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
 		},
 		{
 			name: "edge validation: end id is empty",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{IDValue: "1234"},
-							End:   &edgePiece{IDValue: ""},
-							Kind:  "kind A",
-						},
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{IDValue: "1234"},
+						End:   &edgePiece{IDValue: ""},
+						Kind:  "kind A",
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
 		},
 		{
 			name: "edge validation: kind not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{
-								IDValue: "1234",
-							},
-							End: &edgePiece{
-								IDValue: "5678",
-							},
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							IDValue: "1234",
+						},
+						End: &edgePiece{
+							IDValue: "5678",
 						},
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '': missing property 'kind'"},
 		},
 		{
 			name: "edge validation: multiple errors. start and end not provided",
 			payload: &testPayload{
-				Graph: testGraph{
-					Edges: []testEdge{
-						{
-							Kind: "kind A",
-						},
+				Edges: []testEdge{
+					{
+						Kind: "kind A",
 					},
 				},
 			},
-			err:     ingest.ErrEdgeValidation,
 			errMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object", "at '/start': got null, want object"},
 		},
 	}
 }
 
+// TODO: add a test case with failures in both nodes and edges
 func itemsWithMultipleFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{
 			name: "multiple nodes don't have an an ID.",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{
-							Kinds: []string{"kind A"},
-						},
-						{
-							Kinds: []string{"kind A"},
-						},
-						{
-							Kinds: []string{"kind A"},
-						},
-						{
-							Kinds: []string{"kind A"},
-						},
+				Nodes: []testNode{
+					{
+						Kinds: []string{"kind A"},
+					},
+					{
+						Kinds: []string{"kind A"},
+					},
+					{
+						Kinds: []string{"kind A"},
+					},
+					{
+						Kinds: []string{"kind A"},
 					},
 				},
 			},
@@ -506,19 +499,51 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 		{
 			name: "multiple nodes with mixed errors.",
 			payload: &testPayload{
-				Graph: testGraph{
-					Nodes: []testNode{
-						{ // no ID
-							Kinds: []string{"kind A"},
-						},
-						{ // no kinds
-							Kinds: []string{},
-						},
+				Nodes: []testNode{
+					{ // no ID
+						Kinds: []string{"kind A"},
+					},
+					{ // no kinds
+						Kinds: []string{},
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]: at '': missing property 'id'",
-				"validation failed for nodes[2]: at '': missing property 'id', at '/kinds': minItems: got 0, want 1"},
+			errMsgs: []string{
+				"validation failed for nodes[0]: at '': missing property 'id'",
+				"validation failed for nodes[1]: at '': missing property 'id', at '/kinds': minItems: got 0, want 1"},
+		},
+		{
+			name: "nodes and edges both have errors",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						Kinds: []string{"a"},
+					},
+				},
+				Edges: []testEdge{
+					{
+						Kind: "a",
+					},
+				},
+			},
+			errMsgs: []string{"validation failed for nodes[0]", "validation failed for edges[0]"},
+		},
+		{
+			name: "edges have errors",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind: "a",
+					},
+					{
+						Kind: "b",
+					},
+					{
+						Kind: "c",
+					},
+				},
+			},
+			errMsgs: []string{"validation failed for edges[0]", "validation failed for edges[1]", "validation failed for edges[2]"},
 		},
 	}
 }
