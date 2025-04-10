@@ -31,7 +31,7 @@ func TestMap(t *testing.T) {
 	assert.True(foo.Has("foo"))
 	assert.Equal("bar", foo["foo"])
 	clone := foo.Clone()
-	assert.NotSame(clone, foo)
+	assert.NotSame(&clone, &foo)
 	clone.Delete("foo")
 	assert.False(clone.Has("foo"))
 	assert.True(foo.Has("foo"))

@@ -51,7 +51,7 @@ func TestUnique(t *testing.T) {
 	)
 
 	require.Equal(t, []string{"a", "b"}, out)
-	require.NotSame(t, in, out) // ensure we didn't mutate the original slice
+	require.NotSame(t, &in, &out) // ensure we didn't mutate the original slice
 	require.Equal(t, []string{"a", "b"}, slicesext.Unique([]string{"a", "b", "b", "a"}))
 	require.Equal(t, []string{"a"}, slicesext.Unique([]string{"a"}))
 	require.Equal(t, []int{1, 2, 3}, slicesext.Unique([]int{1, 1, 2, 2, 3}))
@@ -60,9 +60,7 @@ func TestUnique(t *testing.T) {
 func BenchmarkSliceExtMap(b *testing.B) {
 	const sliceSize = 1024 * 1024
 
-	var (
-		anySlice = make([]any, sliceSize)
-	)
+	anySlice := make([]any, sliceSize)
 
 	for idx := 0; idx < sliceSize; idx++ {
 		anySlice[idx] = idx
