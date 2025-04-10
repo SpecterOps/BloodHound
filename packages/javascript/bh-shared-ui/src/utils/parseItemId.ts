@@ -26,8 +26,7 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
     // Edge identifiers can be either `rel_<sourceNodeId>_<edgeKind>_<targetNodeId>`...
     let match = itemId.match(/^(?:rel_)?(\d+)_(.+)_(\d+)$/);
     if (match) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [_rel, sourceId, edgeType, targetId] = match;
+        const [, sourceId, edgeType, targetId] = match;
         return {
             itemType: 'edge',
             cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId}  RETURN p LIMIT 1`,
@@ -43,6 +42,27 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
         return {
             itemType: 'edge',
             cypherQuery: `MATCH p=()-[r]->() WHERE ID(r) = ${match[1]} RETURN p LIMIT 1`,
+        };
+    }
+
+    // Adding two cases here to account for links coming from findings on the Attack Paths page.
+
+    // `node_<objectId>` for list findings
+    match = itemId.match(/^node_(.+)$/);
+    if (match) {
+        return {
+            itemType: 'node',
+            cypherQuery: `MATCH (n) WHERE n.objectid = '${match[1]}' RETURN n LIMIT 1`,
+        };
+    }
+
+    // `edge_||:<sourceObjectId>||:<edgeType>||:<targetObjectId>` for relationship findings
+    match = itemId.match(/^edge_\|\|:(.+)\|\|:(.+)\|\|:(.+)$/);
+    if (match) {
+        const [, sourceObjectId, edgeType, targetObjectId] = match;
+        return {
+            itemType: 'edge',
+            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE s.objectid = '${sourceObjectId}' AND t.objectid = '${targetObjectId}'  RETURN p LIMIT 1`,
         };
     }
 
