@@ -75,10 +75,10 @@ func (mr *MockGraphMockRecorder) BatchNodeUpdate(ctx, nodeUpdate any) *gomock.Ca
 }
 
 // CountNodesByKind mocks base method.
-func (m *MockGraph) CountNodesByKind(arg0 context.Context, arg1 ...graph.Kind) (int64, error) {
+func (m *MockGraph) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
+	varargs := []any{ctx}
+	for _, a := range kinds {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CountNodesByKind", varargs...)
@@ -88,9 +88,9 @@ func (m *MockGraph) CountNodesByKind(arg0 context.Context, arg1 ...graph.Kind) (
 }
 
 // CountNodesByKind indicates an expected call of CountNodesByKind.
-func (mr *MockGraphMockRecorder) CountNodesByKind(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *MockGraphMockRecorder) CountNodesByKind(ctx any, kinds ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]any{ctx}, kinds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountNodesByKind", reflect.TypeOf((*MockGraph)(nil).CountNodesByKind), varargs...)
 }
 
@@ -265,10 +265,10 @@ func (mr *MockGraphMockRecorder) GetNodesByKind(ctx any, kinds ...any) *gomock.C
 }
 
 // GetPrimaryNodeKindCounts mocks base method.
-func (m *MockGraph) GetPrimaryNodeKindCounts(arg0 context.Context, arg1 ...graph.Kind) (map[string]int, error) {
+func (m *MockGraph) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
+	varargs := []any{ctx}
+	for _, a := range kinds {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetPrimaryNodeKindCounts", varargs...)
@@ -278,9 +278,9 @@ func (m *MockGraph) GetPrimaryNodeKindCounts(arg0 context.Context, arg1 ...graph
 }
 
 // GetPrimaryNodeKindCounts indicates an expected call of GetPrimaryNodeKindCounts.
-func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetPrimaryNodeKindCounts(ctx any, kinds ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
+	varargs := append([]any{ctx}, kinds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrimaryNodeKindCounts", reflect.TypeOf((*MockGraph)(nil).GetPrimaryNodeKindCounts), varargs...)
 }
 

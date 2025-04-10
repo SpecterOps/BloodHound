@@ -22,7 +22,7 @@ require (
 	github.com/RoaringBitmap/roaring v1.9.4
 	github.com/bloodhoundad/azurehound/v2 v2.0.1
 	github.com/stretchr/testify v1.9.0
-	go.uber.org/mock v0.2.0
+	go.uber.org/mock v0.5.1
 )
 
 require (
