@@ -4684,6 +4684,76 @@
         }
       }
     },
+    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ListAssetGroupTagMemberCountByKind",
+        "summary": "List asset group tag member count by kind",
+        "description": "List counts of members of an asset group tag by primary kind.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "total_count": {
+                          "type": "integer"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/kinds": {
       "parameters": [
         {
