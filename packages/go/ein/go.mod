@@ -20,7 +20,7 @@ go 1.23
 
 require (
 	github.com/bloodhoundad/azurehound/v2 v2.0.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
