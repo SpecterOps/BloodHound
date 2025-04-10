@@ -57,7 +57,7 @@ type AssetGroupSelectorNodeSource int
 
 const (
 	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
-	AssetGroupSelectorNodeSourceExpand AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceChild  AssetGroupSelectorNodeSource = 2
 	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
 )
 

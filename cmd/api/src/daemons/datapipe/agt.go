@@ -77,7 +77,7 @@ func newSrcSet() *srcSet {
 	}
 }
 
-func fetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) (graph.ThreadSafeNodeSet, srcSet, error) {
+func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) (graph.ThreadSafeNodeSet, srcSet, error) {
 	var (
 		result       = graph.NewThreadSafeNodeSet(graph.NodeSet{})
 		resultSrcSet = newSrcSet()
@@ -149,7 +149,7 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 				query.And(
 					query.Kind(query.Relationship(), ad.Contains),
 					query.Kind(query.Start(), ad.OU),
-				)).InboundWithDepth(1, 1,
+				)).InboundWithDepth(0, 1,
 				query.And(
 					query.Kind(query.Relationship(), ad.GPLink),
 					query.Kind(query.Start(), ad.GPO),
@@ -216,7 +216,7 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 			// MATCH (n:AZApp)-[:AZRunsAs]->(m:AZServicePrincipal) RETURN n
 			if err := tx.BreadthFirst(ctx, traversal.Plan{
 				Root: node,
-				Driver: traversal.NewPattern().InboundWithDepth(1, 1, query.And(
+				Driver: traversal.NewPattern().InboundWithDepth(0, 1, query.And(
 					query.Kind(query.Relationship(), azure.RunsAs),
 					query.Kind(query.Start(), azure.App),
 				)).Do(func(path *graph.PathSegment) error {
@@ -244,20 +244,20 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 	switch {
 	case node.Kinds.ContainsOneOf(ad.Group):
 		// MATCH (n:Group)<-[:MemberOf*..]-(m:Base) RETURN m
-		pattern = traversal.NewPattern().InboundWithDepth(1, 0, query.And(
+		pattern = traversal.NewPattern().InboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), ad.MemberOf),
 			query.KindIn(query.End(), ad.Entity),
 		))
 	case node.Kinds.ContainsOneOf(ad.OU, ad.Container):
 		// MATCH (n:Container)-[:Contains*..]->(m:Base) RETURN m
 		// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN m
-		pattern = traversal.NewPattern().OutboundWithDepth(1, 0, query.And(
+		pattern = traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), ad.Contains),
 			query.KindIn(query.End(), ad.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Group):
 		// MATCH (n:AZGroup)<-[:AZMemberOf*..]-(m:AZBase) RETURN m
-		pattern = traversal.NewPattern().InboundWithDepth(1, 0, query.And(
+		pattern = traversal.NewPattern().InboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), azure.MemberOf),
 			query.KindIn(query.End(), azure.Entity),
 		))
@@ -265,13 +265,13 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 		// MATCH (n:AZResourceGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZManagementGroup)-[:AZContains*..]->(m:AZBase) RETURN m
 		// MATCH (n:AZSubscription)-[:AZContains*..]->(m:AZBase) RETURN m
-		pattern = traversal.NewPattern().OutboundWithDepth(1, 0, query.And(
+		pattern = traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 			query.KindIn(query.Relationship(), azure.Contains),
 			query.KindIn(query.End(), azure.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Role):
 		// MATCH (n:AZRole)<-[:AZHasRole]-(m:AZBase) RETURN m
-		pattern = traversal.NewPattern().InboundWithDepth(1, 1, query.And(
+		pattern = traversal.NewPattern().InboundWithDepth(0, 1, query.And(
 			query.KindIn(query.Relationship(), azure.HasRole),
 			query.KindIn(query.End(), azure.Entity),
 		))
@@ -286,12 +286,12 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 		Driver: pattern.Do(func(path *graph.PathSegment) error {
 			if path.Trunk != nil {
 				if result.AddIfNotExists(path.Trunk.Node) {
-					resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceExpand)
+					resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceChild)
 					addedNodes.Add(path.Trunk.Node)
 				}
 			}
 			if result.AddIfNotExists(path.Node) {
-				resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceExpand)
+				resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceChild)
 				addedNodes.Add(path.Node)
 			}
 
@@ -302,7 +302,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 
 	if addedNodes != nil && addedNodes.Len() > 0 {
 		for _, node := range addedNodes.Slice() {
-			resultSrcSet.AddIfNotExists(node.ID, model.AssetGroupSelectorNodeSourceExpand)
+			resultSrcSet.AddIfNotExists(node.ID, model.AssetGroupSelectorNodeSourceChild)
 			// Expand to child nodes as needed based on kind
 			if err := fetchChildNodes(ctx, tx, node, result, resultSrcSet); err != nil {
 				return err
@@ -326,13 +326,13 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		nodeIdsToDelete []graph.ID
 		nodeIdsToUpdate []graph.ID
 	)
-	if selector.AutoCertify {
+	if selector.AutoCertify.Bool {
 		certified = model.AssetGroupCertificationAuto
 		certifiedBy = null.StringFrom(model.AssetGroupActorSystem)
 	}
 
 	// 1. Grab the graph nodes
-	if nodes, srcSet, err := fetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod); err != nil {
+	if nodes, srcSet, err := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod); err != nil {
 		return err
 		// 2. Grab the already selected nodes
 	} else if oldSelectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selector.ID); err != nil {
@@ -352,7 +352,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify && oldSelectedNodesByNodeId[id].Certified == model.AssetGroupCertificationNone {
+			} else if selector.AutoCertify.Bool && oldSelectedNodesByNodeId[id].Certified == model.AssetGroupCertificationNone {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
