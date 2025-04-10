@@ -117,6 +117,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 
 func formatSchemaValidationError(err error) string {
 	var sb strings.Builder
+	sb.WriteString("[")
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
 		for i, cause := range ve.Causes {
 			if i > 0 {
@@ -128,19 +129,36 @@ func formatSchemaValidationError(err error) string {
 		sb.WriteString(err.Error())
 	}
 
+	sb.WriteString("]")
+
 	return sb.String()
 }
 
 type validationError struct {
 	Index   int
-	Type    string // "decode" or "validation"
 	Message string
+}
+
+type ValidationReport struct {
+	CriticalErrors   []validationError // things like json syntax errors where the document is un-parseable
+	ValidationErrors []validationError // nodes and edges that dont conform to the spec
+}
+
+func (s ValidationReport) Error() string {
+	var sb strings.Builder
+	if len(s.CriticalErrors) > 0 {
+		sb.WriteString(fmt.Sprintf("Critical errors (%d):\n%s\n", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors)))
+	}
+	if len(s.ValidationErrors) > 0 {
+		sb.WriteString(fmt.Sprintf("Validation errors (%d):\n%s\n", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors)))
+	}
+	return sb.String()
 }
 
 func formatAggregateErrors(errs []validationError) string {
 	var sb strings.Builder
 	for _, e := range errs {
-		sb.WriteString(fmt.Sprintf("- [%d] %s error: %s\n", e.Index, e.Type, e.Message))
+		sb.WriteString(fmt.Sprintf("- error: %s\n", e.Message))
 	}
 	return sb.String()
 }
@@ -251,6 +269,15 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 		maxErrors              = 50
 		criticalErrors         []validationError
 		validationErrors       []validationError
+		reportCritical         = func(index int, msg string) {
+			criticalErrors = append(criticalErrors, validationError{Index: index, Message: msg})
+		}
+		reportValidation = func(index int, msg string) {
+			validationErrors = append(validationErrors, validationError{Index: index, Message: msg})
+		}
+		hasErrors = func() bool {
+			return len(validationErrors) > 0 || len(criticalErrors) > 0
+		}
 	)
 
 	nodeSchema, err := LoadSchema("node.json")
@@ -264,15 +291,11 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 	}
 
 	// Validate an array of items (either nodes or edges)
-	validateArray := func(arrayName string, validateFunc func(map[string]any) error) {
+	validateArray := func(arrayName string, schema *jsonschema.Schema) {
 
 		// eat [
 		if err := expectOpeningSquareBracket(decoder, arrayName); err != nil {
-			criticalErrors = append(criticalErrors, validationError{
-				Index:   0,
-				Type:    "structure",
-				Message: err.Error(),
-			})
+			reportCritical(0, err.Error())
 			return
 		}
 
@@ -280,36 +303,18 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 		for decoder.More() {
 			var item map[string]any
 			if err := decoder.Decode(&item); err != nil {
-				if _, ok := err.(*json.UnmarshalTypeError); ok {
-					// json.UnmarshalTypeErrors are recoverable. the stream can continue advancing
-					validationErrors = append(validationErrors, validationError{
-						Index:   index,
-						Type:    "decode",
-						Message: fmt.Sprintf("type mismatch for %s[%d]: %s", arrayName, index, err),
-					})
-				} else {
-					// json.SyntaxErrors typically corrupt the stream. abort the parse
-					criticalErrors = append(criticalErrors, validationError{
-						Index:   index,
-						Type:    "decode",
-						Message: fmt.Sprintf("syntax error for %s[%d]: %s", arrayName, index, err),
-					})
-					break
+				switch err.(type) {
+				case *json.UnmarshalTypeError:
+					reportValidation(index, fmt.Sprintf("%s[%d] type mismatch: %s", arrayName, index, err))
+				default:
+					reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
 				}
+			} else if err := schema.Validate(item); err != nil {
+				reportValidation(index, fmt.Sprintf("%s[%d] schema validation failed: %s", arrayName, index, formatSchemaValidationError(err)))
 			}
 
-			// Validate the item using the provided validation function
-			if err := validateFunc(item); err != nil {
-				validationErrors = append(validationErrors, validationError{
-					Index:   index,
-					Type:    "validation",
-					Message: fmt.Sprintf("validation failed for %s[%d]: %s", arrayName, index, err),
-				})
-
-			}
-
-			if len(validationErrors) >= maxErrors {
-				break
+			if len(validationErrors) >= maxErrors || len(criticalErrors) > 0 {
+				return
 			}
 
 			index++
@@ -317,38 +322,18 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 
 		// eat ]
 		if err := expectClosingSquareBracket(decoder, arrayName); err != nil {
-			criticalErrors = append(criticalErrors, validationError{
-				Index:   0,
-				Type:    "structure",
-				Message: err.Error(),
-			})
+			reportCritical(0, err.Error())
 			return
 		}
-
-		// if len(validationErrors) > 0 {
-		// 	return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
-		// }
-
-		// return nil
-	}
-
-	// Generic validation function for nodes and edges
-	validateItem := func(item map[string]any, schema *jsonschema.Schema) error {
-		if err := schema.Validate(item); err != nil {
-			errorStr := formatSchemaValidationError(err)
-			return fmt.Errorf("%s", errorStr)
-		}
-		return nil
 	}
 
 	// eat {
 	if err := expectOpeningCurlyBracket(decoder, "graph"); err != nil {
-		criticalErrors = append(criticalErrors, validationError{
-			Index:   0,
-			Type:    "structure",
-			Message: err.Error(),
-		})
-		return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
+		reportCritical(0, err.Error())
+		return ValidationReport{
+			CriticalErrors:   criticalErrors,
+			ValidationErrors: validationErrors,
+		}
 	}
 
 	// Loop to read the JSON stream and identify graph elements
@@ -361,24 +346,26 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 			return fmt.Errorf("error reading token: %w", err)
 		}
 
-		switch typedToken := token.(type) {
+		switch key := token.(type) {
 		case string:
-			switch typedToken {
+			switch key {
 			case "nodes":
 				nodesFound = true
-				validateArray("nodes", func(item map[string]any) error {
-					return validateItem(item, nodeSchema)
-				})
+				validateArray("nodes", nodeSchema)
 				if len(criticalErrors) > 0 {
-					return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
+					return ValidationReport{
+						CriticalErrors:   criticalErrors,
+						ValidationErrors: validationErrors,
+					}
 				}
 			case "edges":
 				edgesFound = true
-				validateArray("edges", func(item map[string]any) error {
-					return validateItem(item, edgeSchema)
-				})
+				validateArray("edges", edgeSchema)
 				if len(criticalErrors) > 0 {
-					return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
+					return ValidationReport{
+						CriticalErrors:   criticalErrors,
+						ValidationErrors: validationErrors,
+					}
 				}
 			}
 		}
@@ -388,23 +375,23 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 		}
 	}
 
-	// reject any request that had any validation errors
-	if len(validationErrors) > 0 || len(criticalErrors) > 0 {
-		return fmt.Errorf("validation failed with %d error(s):\n%s", len(validationErrors), formatAggregateErrors(validationErrors))
-	}
-
-	// eat }
 	if err := expectClosingCurlyBracket(decoder, "graph"); err != nil {
-		criticalErrors = append(criticalErrors, validationError{
-			Index:   0,
-			Type:    "structure",
-			Message: err.Error(),
-		})
-		return fmt.Errorf("validation failed with %d critical error(s):\n%s", len(criticalErrors), formatAggregateErrors(criticalErrors))
+		reportCritical(0, err.Error())
+		return ValidationReport{
+			CriticalErrors:   criticalErrors,
+			ValidationErrors: validationErrors,
+		}
 	}
 
 	if !nodesFound && !edgesFound {
 		return ingest.ErrEmptyIngest
+	}
+
+	if hasErrors() {
+		return ValidationReport{
+			CriticalErrors:   criticalErrors,
+			ValidationErrors: validationErrors,
+		}
 	}
 
 	return nil
