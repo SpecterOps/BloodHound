@@ -321,16 +321,16 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, "", "label 2", "", null.Int32{}, null.Bool{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.Bool{}, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.Bool{}, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.Bool{}, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
 
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.Bool{}, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.Bool{}, []model.SelectorSeed{})
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
 	require.NoError(t, err)
 
 	t.Run("single item count", func(t *testing.T) {

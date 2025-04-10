@@ -73,6 +73,10 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 		}
 	)
 
+	if !autoCertify.Valid {
+		return model.AssetGroupTagSelector{}, fmt.Errorf("auto_certify must be set to true or false")
+	}
+
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 		if result := tx.Raw(fmt.Sprintf(`
