@@ -55,23 +55,23 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null
-		nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Node(), ad.User),
 				query.IsNotNull(query.NodeProperty(adminRightsCount)),
 			)
-		}))
-		if err != nil {
+		})); err != nil {
 			return err
-		}
-
-		for _, node := range nodes {
-			node.Properties.Delete(adminRightsCount)
-			if err := tx.UpdateNode(node); err != nil {
-				return err
+		} else {
+			for _, node := range nodes {
+				node.Properties.Delete(adminRightsCount)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
 			}
+
+			return nil
 		}
-		return nil
 	})
 }
 
