@@ -21,9 +21,6 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/models/cypher"
-
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -55,30 +52,6 @@ func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
 		require.Equal(t, "eq", predicates[0])
 		require.Equal(t, "neq", predicates[1])
 	}
-}
-
-func TestDomainSelectors_GetOrderCriteria_InvalidSortColumn(t *testing.T) {
-	domains := DomainSelectors{}
-	params := url.Values{}
-	params.Add("sort_by", "invalidColumn")
-
-	_, err := domains.GetGraphSortItems(params)
-	require.Equal(t, ErrResponseDetailsColumnNotSortable, err.Error())
-}
-
-func TestDomainSelectors_GetOrderCriteria_Success(t *testing.T) {
-	domains := DomainSelectors{}
-	params := url.Values{}
-	params.Add("sort_by", "objectid")
-	params.Add("sort_by", "-name")
-
-	orderCriteria, err := domains.GetGraphSortItems(params)
-	require.Nil(t, err)
-	require.Equal(t, orderCriteria[0].SortCriteria.(*cypher.PropertyLookup), query.NodeProperty("objectid"))
-	require.True(t, orderCriteria[0].Direction.(cypher.SortOrder) == query.Ascending())
-
-	require.Equal(t, orderCriteria[1].SortCriteria.(*cypher.PropertyLookup), query.NodeProperty("name"))
-	require.True(t, orderCriteria[0].Direction.(cypher.SortOrder) == query.Ascending())
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {

@@ -18,41 +18,68 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/src/model"
 )
 
-const (
-	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
-	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
-	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
-	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
+var (
+	ErrResponseDetailsColumnNotSortable   = errors.New("the specified column cannot be sorted")
+	ErrResponseDetailsCriteriaNotSortable = errors.New("the specified criteria cannot be sorted")
 )
 
 type Sortable interface {
 	IsSortable(column string) bool
 }
 
-func GetGraphSortItems(s Sortable, params url.Values) (query.SortItems, error) {
+func ParseSortParameters(s Sortable, params url.Values) (model.Sort, error) {
 	var (
 		sortByColumns = params["sort_by"]
-		sortItems     query.SortItems
+		sort          = make(model.Sort, 0, len(sortByColumns))
+	)
+	for _, column := range sortByColumns {
+		var sortItem model.SortItem
+		if string(column[0]) == "-" {
+			sortItem.Direction = model.DescendingSortDirection
+			sortItem.Column = column[1:]
+		} else {
+			sortItem.Direction = model.AscendingSortDirection
+			sortItem.Column = column
+		}
+		if !s.IsSortable(sortItem.Column) {
+			return sort, fmt.Errorf("%w: %s", ErrResponseDetailsColumnNotSortable, sortItem.Column)
+		}
+		sort = append(sort, sortItem)
+	}
+	return sort, nil
+}
+
+func ParseGraphSortParameters(s Sortable, params url.Values) (query.SortItems, error) {
+	var (
+		sortByCriteria = params["sort_by"]
+		sortItems      query.SortItems
 	)
 
-	for _, column := range sortByColumns {
+	for _, criteria := range sortByCriteria {
 		sortItem := query.SortItem{}
 
-		if string(column[0]) == "-" {
-			column = column[1:]
+		if string(criteria[0]) == "-" {
+			criteria = criteria[1:]
 			sortItem.Direction = query.SortDirectionDescending
 		} else {
 			sortItem.Direction = query.SortDirectionAscending
 		}
-		sortItem.SortCriteria = query.NodeProperty(column)
 
-		if !s.IsSortable(column) {
-			return query.SortItems{}, errors.New(ErrResponseDetailsColumnNotSortable)
+		if criteria == "id" {
+			sortItem.SortCriteria = query.NodeID()
+		} else {
+			sortItem.SortCriteria = query.NodeProperty(criteria)
+		}
+
+		if !s.IsSortable(criteria) {
+			return query.SortItems{}, fmt.Errorf("%w: %s", ErrResponseDetailsCriteriaNotSortable, criteria)
 		}
 
 		sortItems = append(sortItems, sortItem)

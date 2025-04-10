@@ -54,7 +54,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 func (s *Resources) GetAvailableDomains(response http.ResponseWriter, request *http.Request) {
 	var domains model.DomainSelectors
 
-	if sortItems, err := domains.GetGraphSortItems(request.URL.Query()); err != nil {
+	if sortItems, err := api.ParseGraphSortParameters(domains, request.URL.Query()); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
 	} else if filterCriteria, err := domains.GetFilterCriteria(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)

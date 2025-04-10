@@ -19,7 +19,6 @@ package model
 import (
 	"errors"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -92,32 +91,6 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 		}
 		return stringPredicates, nil
 	}
-}
-
-func (s DomainSelectors) GetGraphSortItems(params url.Values) (query.SortItems, error) {
-	var (
-		sortByColumns = params["sort_by"]
-		sortItems     query.SortItems
-	)
-
-	for _, column := range sortByColumns {
-		sortItem := query.SortItem{}
-
-		if string(column[0]) == "-" {
-			column = column[1:]
-			sortItem.Direction = query.SortDirectionDescending
-		} else {
-			sortItem.Direction = query.SortDirectionAscending
-		}
-		sortItem.SortCriteria = query.NodeProperty(column)
-
-		if !s.IsSortable(column) {
-			return query.SortItems{}, errors.New(ErrResponseDetailsColumnNotSortable)
-		}
-
-		sortItems = append(sortItems, sortItem)
-	}
-	return sortItems, nil
 }
 
 func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {

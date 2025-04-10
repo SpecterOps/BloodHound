@@ -275,17 +275,28 @@ type assetGroupMemberResponse struct {
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
 
+func (s assetGroupMemberResponse) IsSortable(criteria string) bool {
+	switch criteria {
+	case "id", "objectid", "name":
+		return true
+	default:
+		return false
+	}
+}
+
 type getAssetGroupMemberResponse struct {
 	Members []assetGroupMemberResponse `json:"members"`
 }
 
 func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		queryParams = request.URL.Query()
 		members     []assetGroupMemberResponse
+		queryParams = request.URL.Query()
 	)
 
-	if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+	if sort, err := api.ParseGraphSortParameters(assetGroupMemberResponse{}, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 10); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
@@ -293,25 +304,35 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, query.KindIn(query.Node(), assetGroupTag.ToKind()), skip, limit); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
-	} else if count, err := s.GraphQuery.CountNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 	} else {
-		for _, node := range nodes {
-			var (
-				objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-				name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-			)
-
-			members = append(members, assetGroupMemberResponse{
-				NodeId:      node.ID,
-				ObjectID:    objectID,
-				PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
-				Name:        name,
-			})
+		if len(sort) == 0 {
+			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
 		}
 
-		api.WriteResponseWrapperWithPagination(request.Context(), getAssetGroupMemberResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
+		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, query.KindIn(query.Node(), assetGroupTag.ToKind()), skip, limit); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
+		} else if count, err := s.GraphQuery.CountNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+		} else {
+			api.WriteResponseWrapperWithPagination(request.Context(), getAssetGroupMemberResponse{Members: nodeToAssetGroupMembers(nodes, members)}, limit, skip, int(count), http.StatusOK, response)
+		}
 	}
+}
+
+// Used to minimize the response shape to just the necessary member display fields
+func nodeToAssetGroupMembers(nodes []*graph.Node, members []assetGroupMemberResponse) []assetGroupMemberResponse {
+	for _, node := range nodes {
+		var (
+			objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+			name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+		)
+
+		members = append(members, assetGroupMemberResponse{
+			NodeId:      node.ID,
+			ObjectID:    objectID,
+			PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
+			Name:        name,
+		})
+	}
+	return members
 }
