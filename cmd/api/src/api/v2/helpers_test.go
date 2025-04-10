@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/api/v2"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/stretchr/testify/require"
 )

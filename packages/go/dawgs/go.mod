@@ -28,7 +28,7 @@ require (
 	github.com/specterops/bloodhound/bhlog v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/cypher v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.9.0
-	go.uber.org/mock v0.2.0
+	go.uber.org/mock v0.5.1
 )
 
 require (
