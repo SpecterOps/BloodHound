@@ -18,6 +18,7 @@ package ein_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -42,7 +43,7 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result := ein.ConvertObjectToNode(baseItem, ad.Domain)
+	result := ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
 	props := result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())
@@ -73,7 +74,7 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 		ContainedBy:    ein.TypedPrincipal{},
 	}
 
-	result = ein.ConvertObjectToNode(baseItem, ad.Domain)
+	result = ein.ConvertObjectToNode(baseItem, ad.Domain, time.Now().UTC())
 	props = result.PropertyMap
 	assert.Contains(t, props, ad.MachineAccountQuota.String())
 	assert.Contains(t, props, ad.MinPwdLength.String())

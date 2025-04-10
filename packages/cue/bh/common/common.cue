@@ -97,8 +97,15 @@ UserTags: types.#StringEnum & {
 LastSeen: types.#StringEnum & {
 	symbol:         "LastSeen"
 	schema:         "common"
-	name:           "Last Collected by BloodHound"
+	name:           "Last Seen by BloodHound"
 	representation: "lastseen"
+}
+
+LastCollected: types.#StringEnum & {
+	symbol:         "LastCollected"
+	schema:         "common"
+	name:           "Last Collected by BloodHound"
+	representation: "lastcollected"
 }
 
 WhenCreated: types.#StringEnum & {
@@ -161,6 +168,7 @@ Properties: [
 	SystemTags,
 	UserTags,
 	LastSeen,
+	LastCollected,
 	WhenCreated,
 	Enabled,
 	PasswordLastSet,

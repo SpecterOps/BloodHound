@@ -31,7 +31,7 @@ Retention means BHE does not assume that lack of visibility during a single coll
 
 On objects, this timestamp is updated for both visibility of the object itself and visibility to references of the object. For example, if an object is deleted, but the SID remains present in an ACE applied to some other remaining object, this timestamp will be updated, and the object will appear present in BHE.
 
-To implement this, BHE stores a timestamp on every data point, updated whenever a new collection includes the same data point. The timestamp on nodes can be seen as the "Last Collected by BloodHound" attribute in every node's entity panel on the "Explore" page.
+To implement this, BHE stores a timestamp on every data point, updated whenever a new collection includes the same data point. The timestamp on nodes can be seen as the "Last Seen by BloodHound" attribute in every node's entity panel on the "Explore" page.
 
 <Frame>
   <img src="/assets/image-58.png" alt=""/>
