@@ -27,7 +27,7 @@ func (s *CustomNodeKindConfig) Scan(value interface{}) error {
 	}
 
 	if bytes, ok := value.([]byte); !ok {
-		return errors.New("type assertion to []byte failed for SSOProviderConfig")
+		return errors.New("type assertion to []byte failed for CustomNodeKindConfig")
 	} else {
 		return json.Unmarshal(bytes, &s)
 	}
