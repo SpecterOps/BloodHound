@@ -18,6 +18,7 @@ import { faker } from '@faker-js/faker';
 import {
     AssetGroupTag,
     AssetGroupTagCertifiedValues,
+    AssetGroupTagMemberInfo,
     AssetGroupTagSelector,
     AssetGroupTagSelectorNode,
     AssetGroupTagSelectorSeed,
@@ -25,7 +26,7 @@ import {
     SeedTypeValues,
 } from 'js-client-library';
 
-export const createAssetGroupLabels = (count: number = 10) => {
+export const createAssetGroupLabels = (count: number = 100) => {
     const data: AssetGroupTag[] = [];
 
     for (let i = 1; i < count; i++) {
@@ -111,11 +112,38 @@ export const createSelectorNodes = (
             selector_id: selectorId || 0,
             node_id: i.toString(),
             id: i,
+            properties: { ...JSON.parse(faker.datatype.json()), name, objectid: i },
             certified: faker.datatype.number({ min: -1, max: 2 }) as AssetGroupTagCertifiedValues,
             certified_by: faker.internet.email(),
-            name: name,
+            type: 'User',
         });
     }
+
+    return data;
+};
+
+export const createAssetGroupMembersCount = (selectorId: number = 0) => {
+    const data = {
+        id: selectorId,
+        total_count: faker.datatype.number(),
+        counts: {
+            User: faker.datatype.number(),
+            Computer: faker.datatype.number(),
+            Container: faker.datatype.number(),
+        },
+    };
+
+    return data;
+};
+
+export const createAssetGroupMemberInfo = (assetGroupId: number, memberId: number) => {
+    const data: AssetGroupTagMemberInfo = {
+        node_id: memberId.toString(),
+        certified: 1,
+        certified_by: 'user',
+        name: 'member',
+        selectors: createSelectors(10, assetGroupId),
+    };
 
     return data;
 };

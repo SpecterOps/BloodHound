@@ -15,70 +15,86 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
 import { apiClient } from '../../../utils';
+import { Cypher } from '../Cypher';
 import { DetailsList } from './DetailsList';
+import DynamicDetails from './DynamicDetails';
+import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 import { MembersList } from './MembersList';
-
-const innerDetail = (
-    selectedObject: number | null,
-    selectedSelector: number | null,
-    selectedTier: number
-): SelectedDetailsProps => {
-    if (selectedObject !== null) return { id: selectedObject, type: 'object' };
-
-    if (selectedSelector !== null) return { id: selectedSelector, type: 'selector' };
-
-    return { id: selectedTier, type: 'tier' };
-};
+import ObjectCountPanel from './ObjectCountPanel';
 
 type SelectedDetailsProps = {
-    type: 'tier' | 'label' | 'selector' | 'object';
-    id: number;
     cypher?: boolean;
+    selectedTierId: number;
+    selectedSelectorId: number | null;
+    selectedObjectId: number | null;
+    selectedTier: AssetGroupTag | undefined;
+    selectedSelector: AssetGroupTagSelector | undefined;
+    selectedObject: AssetGroupTagSelectorNode | null;
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({ type, id, cypher }) => {
-    if (type === 'object')
-        return (
-            <>
-                <div>{`Object Info Panel - ${type}-${id}`}</div>
-            </>
-        );
+const isObject = (data: any): data is AssetGroupTagSelectorNode => {
+    const objectData = data || {};
+    return 'node_id' in objectData;
+};
 
-    if (type === 'selector') {
+const SelectedDetails: FC<SelectedDetailsProps> = ({
+    cypher,
+    selectedTierId,
+    selectedSelectorId,
+    selectedObjectId,
+    selectedTier,
+    selectedSelector,
+    selectedObject,
+}) => {
+    if (selectedObjectId !== null) {
+        if (isObject(selectedObject)) {
+            return (
+                <EntityInfoPanel
+                    selectedNode={selectedObject}
+                    selectedTag={selectedTierId}
+                    selectedObject={selectedObjectId}
+                />
+            );
+        }
+    }
+
+    if (selectedSelectorId !== null) {
         if (cypher)
             return (
                 <>
-                    <div>{`Dynamic Details - ${type}-${id}`}</div>
-                    <div>Cypher Input</div>
+                    <DynamicDetails data={selectedSelector} isCypher={cypher} />
+                    <Cypher />
                 </>
             );
         else
             return (
                 <>
-                    <div>{`Dynamic Details - ${type}-${id}`}</div>
-                    <div>Object Count Panel</div>
+                    <DynamicDetails data={selectedSelector} />
+                    <ObjectCountPanel selectedTier={selectedTierId} />
                 </>
             );
     }
 
     return (
         <>
-            <div>{`Dynamic Details - ${type}-${id}`}</div>
-            <div>Object Count Panel</div>
+            <DynamicDetails data={selectedTier} />
+            <ObjectCountPanel selectedTier={selectedTierId} />
         </>
     );
 };
 
 const Details: FC = () => {
-    const [selectedTier, setSelectedTier] = useState(1);
+    const [selectedTag, setSelectedTag] = useState(1);
     const [selectedSelector, setSelectedSelector] = useState<number | null>(null);
     const [selectedObject, setSelectedObject] = useState<number | null>(null);
+    const [selectedObjectData, setSelectedObjectData] = useState<AssetGroupTagSelectorNode | null>(null);
     const [showCypher, setShowCypher] = useState(false);
     const navigate = useNavigate();
 
@@ -88,19 +104,19 @@ const Details: FC = () => {
         });
     });
 
-    const selectorsQuery = useQuery(['asset-group-selectors', selectedTier], () => {
-        return apiClient.getAssetGroupSelectors(selectedTier).then((res) => {
+    const selectorsQuery = useQuery(['asset-group-selectors', selectedTag], () => {
+        return apiClient.getAssetGroupSelectors(selectedTag).then((res) => {
             return res.data.data['selectors'];
         });
     });
 
-    const objectsQuery = useQuery(['asset-group-members', selectedTier, selectedSelector], async () => {
+    const objectsQuery = useQuery(['asset-group-members', selectedTag, selectedSelector], async () => {
         if (selectedSelector === null)
-            return apiClient.getAssetGroupLabelMembers(selectedTier, 0, 1).then((res) => {
+            return apiClient.getAssetGroupLabelMembers(selectedTag, 0, 1).then((res) => {
                 return res.data.count;
             });
 
-        return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector, 0, 1).then((res) => {
+        return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, 0, 1).then((res) => {
             return res.data.count;
         });
     });
@@ -109,8 +125,6 @@ const Details: FC = () => {
         selectedObject !== null ||
         (selectorsQuery.isLoading && labelsQuery.isLoading) ||
         (selectorsQuery.isError && labelsQuery.isError);
-
-    const { type, id } = innerDetail(selectedObject, selectedSelector, selectedTier);
 
     return (
         <div>
@@ -136,7 +150,7 @@ const Details: FC = () => {
                                     title: 'Selector',
                                     onClick: () => {
                                         navigate(ROUTE_TIER_MANAGEMENT_CREATE, {
-                                            state: { type: 'Selector', within: selectedTier },
+                                            state: { type: 'Selector', within: selectedTag },
                                         });
                                     },
                                 },
@@ -166,7 +180,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     <Button
                         onClick={() => {
-                            navigate(ROUTE_TIER_MANAGEMENT_EDIT, { state: { type: type, id: id } });
+                            navigate(ROUTE_TIER_MANAGEMENT_EDIT);
                         }}
                         variant={'secondary'}
                         disabled={disableEditButton}>
@@ -174,22 +188,22 @@ const Details: FC = () => {
                     </Button>
                 </div>
             </div>
-            <div className='flex gap-8 mt-4'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg'>
-                    <div className='min-h-96 grow-0 basis-1/3'>
+            <div className='flex gap-8 mt-4 grow-1'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg max-h-[560px] *:grow-0 *:basis-1/3 *:min-h-96'>
+                    <div className='max-h-[518px]'>
                         <DetailsList
                             title='Tiers'
                             listQuery={labelsQuery}
-                            selected={selectedTier}
+                            selected={selectedTag}
                             onSelect={(id: number) => {
-                                setSelectedTier(id);
+                                setSelectedTag(id);
                                 setSelectedSelector(null);
                                 setSelectedObject(null);
                                 setShowCypher(false);
                             }}
                         />
                     </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 min-h-96 grow-0 basis-1/3'>
+                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 max-h-[518px]'>
                         <DetailsList
                             title='Selectors'
                             listQuery={selectorsQuery}
@@ -207,21 +221,30 @@ const Details: FC = () => {
                             }}
                         />
                     </div>
-                    <div className='min-h-96 grow-0 basis-1/3'>
+                    <div>
                         <MembersList
-                            itemCount={objectsQuery.data}
-                            onClick={(id) => {
+                            itemCount={objectsQuery.data || 1000}
+                            onClick={(id, data) => {
                                 setSelectedObject(id);
                                 setShowCypher(false);
+                                setSelectedObjectData(data);
                             }}
                             selected={selectedObject}
                             selectedSelector={selectedSelector}
-                            selectedTier={selectedTier}
+                            selectedTag={selectedTag}
                         />
                     </div>
                 </div>
                 <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails type={type} id={id} cypher={showCypher} />
+                    <SelectedDetails
+                        cypher={showCypher}
+                        selectedTierId={selectedTag}
+                        selectedSelectorId={selectedSelector}
+                        selectedObjectId={selectedObject}
+                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTag)}
+                        selectedSelector={selectorsQuery.data?.find((selector) => selector.id === selectedSelector)}
+                        selectedObject={selectedObjectData}
+                    />
                 </div>
             </div>
         </div>

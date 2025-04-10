@@ -27,6 +27,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/dawgs"
@@ -44,9 +45,22 @@ func fatalf(format string, args ...any) {
 }
 
 func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.TestSuite {
+	var (
+		pool *pgxpool.Pool
+		err  error
+	)
+
+	if driverName == pg.DriverName {
+		pool, err = pg.NewPool(connectionStr)
+		if err != nil {
+			fatalf("Failed creating a new pgxpool: %s", err)
+		}
+	}
+
 	if connection, err := dawgs.Open(context.TODO(), driverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
-		DriverCfg:             connectionStr,
+		ConnectionString:      connectionStr,
+		Pool:                  pool,
 	}); err != nil {
 		fatalf("Failed opening %s database: %v", driverName, err)
 	} else {
@@ -65,7 +79,7 @@ func RunTestSuite(ctx context.Context, connectionStr, driverName string) tests.T
 		}
 	}
 
-	panic(nil)
+	panic("unexpected error")
 }
 
 func newContext() context.Context {

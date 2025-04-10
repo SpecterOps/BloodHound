@@ -333,7 +333,7 @@ func TestValidateRequestSignature(t *testing.T) {
 
 		tmpFiles, err := os.ReadDir(authenticator.cfg.TempDirectory())
 		assert.NoError(t, err)
-		assert.Len(t, slicesext.Filter[fs.DirEntry](tmpFiles, func(file fs.DirEntry) bool {
+		assert.Len(t, slicesext.Filter(tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
 		}), 1)
 
@@ -341,7 +341,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		req.Body.Close()
 		tmpFiles, err = os.ReadDir(os.TempDir())
 		assert.NoError(t, err)
-		assert.Len(t, slicesext.Filter[fs.DirEntry](tmpFiles, func(file fs.DirEntry) bool {
+		assert.Len(t, slicesext.Filter(tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
 		}), 0)
 	})
@@ -376,7 +376,7 @@ func TestValidateRequestSignature(t *testing.T) {
 		// "small" payloads should not create a tmp file
 		tmpFiles, err := os.ReadDir(os.TempDir())
 		assert.NoError(t, err)
-		assert.Len(t, slicesext.Filter[fs.DirEntry](tmpFiles, func(file fs.DirEntry) bool {
+		assert.Len(t, slicesext.Filter(tmpFiles, func(file fs.DirEntry) bool {
 			return strings.HasPrefix(file.Name(), "bh-request-")
 		}), 0)
 	})

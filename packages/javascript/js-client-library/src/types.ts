@@ -136,8 +136,17 @@ export interface AssetGroupTagSelectorNode {
     node_id: string;
     certified: AssetGroupTagCertifiedValues;
     certified_by: string | System | null;
+    properties: Record<string, any>;
+    type: string;
     id: number;
+}
+
+export interface AssetGroupTagMemberInfo {
+    node_id: string;
+    certified: AssetGroupTagCertifiedValues;
+    certified_by: string | System | null;
     name: string;
+    selectors: AssetGroupTagSelector[];
 }
 
 export interface CreateSharpHoundClientRequest {
@@ -349,15 +358,30 @@ export interface LoginResponse {
     };
 }
 
-export interface GetCollectorsResponse {
-    data: {
-        latest: string;
-        versions: {
-            version: string;
-            sha256sum: string;
-            deprecated: boolean;
-        }[];
-    };
+export type CommunityCollectorType = 'sharphound' | 'azurehound';
+export type EnterpriseCollectorType = 'sharphound_enterprise' | 'azurehound_enterprise';
+export type CollectorType = CommunityCollectorType | EnterpriseCollectorType;
+
+export interface CollectorManifest {
+    version: string;
+    version_meta: VersionMeta;
+    release_date: string;
+    release_assets: CollectorAsset[];
+}
+
+interface VersionMeta {
+    major: number;
+    minor: number;
+    patch: number;
+    prerelease: string;
+}
+
+interface CollectorAsset {
+    name: string;
+    download_url: string;
+    checksum_download_url: string;
+    os: string;
+    arch: string;
 }
 
 export type PostureRequest = {
@@ -401,10 +425,6 @@ export type GraphEdge = {
 export type GraphEdges = GraphEdge[];
 
 export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
-
-export type GraphResponse = {
-    data: GraphData;
-};
 
 export type StyledGraphNode = {
     color: string;

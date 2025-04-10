@@ -38,7 +38,9 @@ const normalizeItem = (item: VirtualizedNodeListItem): VirtualizedNodeListItem =
 });
 
 const InnerElement = ({ style, ...rest }: any) => (
-    <List component='ul' disablePadding style={{ ...style, overflowX: 'hidden' }} {...rest} />
+    // Top margin is adjusted to account for FixedSizeList's default of 'overflow: auto'
+    // causing the scrollbar to render even for a single node
+    <List component='ul' disablePadding style={{ ...style, overflowX: 'hidden', marginTop: 0 }} {...rest} />
 );
 
 const Row = ({ data, index, style }: ListChildComponentProps<VirtualizedNodeListItem[]>) => {

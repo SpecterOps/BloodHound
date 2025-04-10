@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupLabelResponse,
     AssetGroupMemberCountsResponse,
+    AssetGroupMemberInfoResponse,
     AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
@@ -29,7 +30,11 @@ import {
     DatapipeStatusResponse,
     EndFileIngestResponse,
     Environment,
+    GetCollectorsResponse,
+    GetCommunityCollectorsResponse,
     GetConfigurationResponse,
+    GetEnterpriseCollectorsResponse,
+    GraphResponse,
     ListAuthTokensResponse,
     ListFileIngestJobsResponse,
     ListFileTypesForIngestResponse,
@@ -81,7 +86,11 @@ class BHEAPIClient {
     };
 
     cypherSearch = (query: string, options?: types.RequestOptions, includeProperties?: boolean) => {
-        return this.baseClient.post('/api/v2/graphs/cypher', { query, include_properties: includeProperties }, options);
+        return this.baseClient.post<GraphResponse>(
+            '/api/v2/graphs/cypher',
+            { query, include_properties: includeProperties },
+            options
+        );
     };
 
     getUserSavedQueries = (options?: types.RequestOptions) => {
@@ -106,6 +115,9 @@ class BHEAPIClient {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
+    getKinds = (options?: types.RequestOptions) =>
+        this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
+
     clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
@@ -124,6 +136,12 @@ class BHEAPIClient {
     getAssetGroupSelectors = (assetGroupId: number, options?: types.RequestOptions) =>
         this.baseClient.get<AssetGroupSelectorResponse>(
             `/api/v2/asset-group-labels/${assetGroupId}/selectors`,
+            options
+        );
+
+    getAssetGroupLabelMemberInfo = (assetGroupId: number, memberId: number, options?: types.RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberInfoResponse>(
+            `/api/v2/asset-group-labels/${assetGroupId}/members/${memberId}`,
             options
         );
 
@@ -854,10 +872,22 @@ class BHEAPIClient {
     toggleFeatureFlag = (flagId: string | number, options?: types.RequestOptions) =>
         this.baseClient.put(`/api/v2/features/${flagId}/toggle`, options);
 
-    getCollectors = (collectorType: 'sharphound' | 'azurehound', options?: types.RequestOptions) =>
-        this.baseClient.get<types.GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
+    getCollectors = (collectorType: types.CommunityCollectorType, options?: types.RequestOptions) =>
+        this.baseClient.get<GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
-    downloadCollector = (collectorType: 'sharphound' | 'azurehound', version: string, options?: types.RequestOptions) =>
+    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetCommunityCollectorsResponse>> =>
+        this.baseClient.get<GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
+
+    getEnterpriseCollectors = (
+        options?: types.RequestOptions
+    ): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
+        this.baseClient.get<GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
+
+    downloadCollector = (
+        collectorType: types.CommunityCollectorType,
+        version: string,
+        options?: types.RequestOptions
+    ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}`,
             Object.assign(
@@ -869,12 +899,23 @@ class BHEAPIClient {
         );
 
     downloadCollectorChecksum = (
-        collectorType: 'sharphound' | 'azurehound',
+        collectorType: types.CommunityCollectorType,
         version: string,
         options?: types.RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}/checksum`,
+            Object.assign(
+                {
+                    responseType: 'blob',
+                },
+                options
+            )
+        );
+
+    downloadCollectorManifestAsset = (fileName: string, options?: types.RequestOptions) =>
+        this.baseClient.get(
+            `/api/v2/kennel/download/${fileName}`,
             Object.assign(
                 {
                     responseType: 'blob',
@@ -2352,7 +2393,7 @@ class BHEAPIClient {
         relationshipKinds?: string,
         options?: types.RequestOptions
     ) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/shortest-path',
             Object.assign(
                 {
@@ -2367,7 +2408,7 @@ class BHEAPIClient {
         );
 
     getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/edge-composition',
             Object.assign(
                 {
@@ -2382,7 +2423,7 @@ class BHEAPIClient {
         );
 
     getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
-        this.baseClient.get<types.GraphResponse>(
+        this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/relay-targets',
             Object.assign(
                 {

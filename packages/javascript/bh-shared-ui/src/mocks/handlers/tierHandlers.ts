@@ -30,7 +30,27 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: true,
                     },
+                    {
+                        id: 17,
+                        key: 'dark_mode',
+                        name: 'Dark Mode',
+                        description: 'Best mode 😎',
+                        enabled: true,
+                        user_updatable: false,
+                    },
+                    {
+                        key: 'back_button_support',
+                        enabled: true,
+                    },
                 ],
+            })
+        );
+    }),
+    // GET Kinds
+    rest.get('/api/v2/graphs/kinds', async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
             })
         );
     }),
@@ -47,7 +67,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Label
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/members*', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-labels/:assetGroupId/members', async (req, res, ctx) => {
         const total = 3000;
         const url = new URL(req.url);
         const { assetGroupId, selectorId } = req.params;
@@ -94,6 +114,32 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                 limit: limit,
                 count: total,
             })
+        );
+    }),
+
+    // GET Selectors for Object/Member
+    rest.get('/api/v2/asset-group-labels/:assetGroupId/members/:memberId', async (req, res, ctx) => {
+        const total = 1057;
+        const { assetGroupId, memberId } = req.params;
+
+        return res(
+            ctx.json({
+                data: {
+                    member: tierMocks.createAssetGroupMemberInfo(
+                        parseInt(assetGroupId as string),
+                        parseInt(memberId as string)
+                    ),
+                },
+                count: total,
+            })
+        );
+    }),
+
+    // GET object counts
+    rest.get('/api/v2/asset-group-labels/:assetGroupId/members/counts', async (req, res, ctx) => {
+        const { assetGroupId } = req.params;
+        return res(
+            ctx.json({ data: { counts: tierMocks.createAssetGroupMembersCount(parseInt(assetGroupId as string)) } })
         );
     }),
 ];

@@ -1,0 +1,33 @@
+type: object
+properties:
+  id:
+    type: integer
+  kinds:
+    type: array
+    items:
+      type: string
+  added_kinds:
+    type: array
+    items:
+      type: string
+  deleted_kinds:
+      type: array
+      items:
+        type: string
+  properties:
+    type: object
+    properties:
+      map:
+        type: object
+        additionalProperties: true
+      deleted:
+        type: object
+        additionalProperties:
+          type: object
+          properties: {}
+      modified:
+        type: object
+        additionalProperties:
+          type: object
+          properties: {}
+      

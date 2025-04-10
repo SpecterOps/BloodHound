@@ -122,7 +122,7 @@ type AssetGroupTagSelector struct {
 	DisabledBy      null.String `json:"disabled_by"`
 	Name            string      `json:"name" validate:"required"`
 	Description     string      `json:"description"`
-	AutoCertify     bool        `json:"auto_certify"`
+	AutoCertify     null.Bool   `json:"auto_certify"`
 	IsDefault       bool        `json:"is_default"`
 	AllowDisable    bool        `json:"allow_disable"`
 
@@ -163,10 +163,6 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-type ListSelectorsResponse struct {
-	Selectors AssetGroupTagSelectors `json:"selectors"`
-}
-
 type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
@@ -179,3 +175,11 @@ type AssetGroupSelectorNode struct {
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
 }
+
+type AssetGroupSelectorNodeSource int
+
+const (
+	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
+	AssetGroupSelectorNodeSourceExpand AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
+)
