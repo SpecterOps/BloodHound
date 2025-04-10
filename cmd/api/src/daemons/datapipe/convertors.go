@@ -100,6 +100,10 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData) {
 	domainTrustData := ein.ParseDomainTrusts(domain)
 	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
 	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
+
+	parsedLocalGroupData := ein.ParseGPOChanges(domain.GPOChanges)
+	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
 }
 
 func convertGPOData(gpo ein.GPO, converted *ConvertedData) {
