@@ -318,8 +318,16 @@ func LessThan(reference graph.Criteria, value any) *cypherModel.Comparison {
 	return cypherModel.NewComparison(reference, cypherModel.OperatorLessThan, Parameter(value))
 }
 
+func LessThanGraphQuery(reference1, reference2 graph.Criteria) *cypherModel.Comparison {
+	return cypherModel.NewComparison(reference1, cypherModel.OperatorLessThan, reference2)
+}
+
 func Before(reference graph.Criteria, value time.Time) *cypherModel.Comparison {
 	return LessThan(reference, value)
+}
+
+func BeforeGraphQuery(reference1, reference2 graph.Criteria) *cypherModel.Comparison {
+	return LessThanGraphQuery(reference1, reference2)
 }
 
 func LessThanOrEquals(reference graph.Criteria, value any) *cypherModel.Comparison {
