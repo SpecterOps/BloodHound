@@ -53,10 +53,9 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 
 	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes")
 
-	return db.BatchOperation(ctx, func(batch graph.Batch) error {
-
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null
-		nodes, err := ops.FetchNodes(batch.Nodes().Filterf(func() graph.Criteria {
+		nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 			return query.And(
 				query.Kind(query.Node(), ad.User),
 				query.IsNotNull(query.NodeProperty(adminRightsCount)),
@@ -66,15 +65,13 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 			return err
 		}
 
-		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			for _, node := range nodes {
-				node.Properties.Delete(adminRightsCount)
-				if err := tx.UpdateNode(node); err != nil {
-					return err
-				}
+		for _, node := range nodes {
+			node.Properties.Delete(adminRightsCount)
+			if err := tx.UpdateNode(node); err != nil {
+				return err
 			}
-			return nil
-		})
+		}
+		return nil
 	})
 }
 
