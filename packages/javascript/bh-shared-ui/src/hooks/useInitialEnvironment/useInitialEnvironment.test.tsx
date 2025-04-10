@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as bhSharedUi from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { renderHook, waitFor } from 'src/test-utils';
+import { renderHook, waitFor } from '../../test-utils';
+import * as useAvailableEnvironmentHooks from '../useAvailableEnvironments';
 import { useInitialEnvironment } from './useInitialEnvironment';
-const useAvailableEnvironmentsSpy = vi.spyOn(bhSharedUi, 'useAvailableEnvironments');
+const useAvailableEnvironmentsSpy = vi.spyOn(useAvailableEnvironmentHooks, 'useAvailableEnvironments');
 
 const fakeEnvironmentA = {
     type: 'active-directory',
