@@ -76,7 +76,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
-					apitest.Equal(output, model.AssetGroupTags{}, resp.Tags)
+					apitest.Equal(output, 0, len(resp.Tags))
 				},
 			},
 			{
@@ -111,7 +111,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					resp := v2.GetAssetGroupTagsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
-					apitest.Equal(output, model.AssetGroupTags{}, resp.Tags)
+					apitest.Equal(output, 0, len(resp.Tags))
 				},
 			},
 			{
@@ -232,13 +232,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
 					apitest.Equal(output, 4, len(resp.Tags))
-					apitest.Equal(output, 4, len(resp.Counts.Selectors))
 					for _, t := range resp.Tags {
 						expCount, ok := expectedCounts[t.ID]
 						apitest.Equal(output, true, ok)
-						_, ok = resp.Counts.Selectors[t.ID]
-						apitest.Equal(output, true, ok)
-						apitest.Equal(output, expCount, resp.Counts.Selectors[t.ID])
+						apitest.Equal(output, false, t.Counts == nil)
+						apitest.Equal(output, expCount, t.Counts.Selectors)
 					}
 				},
 			},
@@ -278,13 +276,11 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
 					apitest.Equal(output, 2, len(resp.Tags))
-					apitest.Equal(output, 2, len(resp.Counts.Members))
 					for _, t := range resp.Tags {
 						expCount, ok := expectedMemberCounts[t.ID]
 						apitest.Equal(output, true, ok)
-						_, ok = resp.Counts.Members[t.ID]
-						apitest.Equal(output, true, ok)
-						apitest.Equal(output, expCount, resp.Counts.Members[t.ID])
+						apitest.Equal(output, false, t.Counts == nil)
+						apitest.Equal(output, expCount, t.Counts.Members)
 					}
 				},
 			},

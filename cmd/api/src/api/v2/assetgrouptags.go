@@ -37,12 +37,18 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+type AssetGroupTagCounts struct {
+	Selectors int   `json:"selectors"`
+	Members   int64 `json:"members"`
+}
+
+type AssetGroupTagView struct {
+	model.AssetGroupTag
+	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+}
+
 type GetAssetGroupTagsResponse struct {
-	Tags   model.AssetGroupTags `json:"tags"`
-	Counts struct {
-		Selectors map[int]int   `json:"selectors"`
-		Members   map[int]int64 `json:"members"`
-	} `json:"counts,omitempty"`
+	Tags []AssetGroupTagView `json:"tags"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -74,28 +80,38 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			resp := GetAssetGroupTagsResponse{Tags: tags}
+			var (
+				resp = GetAssetGroupTagsResponse{
+					Tags: make([]AssetGroupTagView, 0, len(tags)),
+				}
+				selectorCounts map[int]int
+			)
+
 			if paramIncludeCounts {
 				ids := make([]int, 0, len(tags))
 				for i := range tags {
 					ids = append(ids, tags[i].ID)
 				}
-				if selectorCounts, err := s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
 					api.HandleDatabaseError(request, response, err)
 					return
-				} else {
-					resp.Counts.Selectors = selectorCounts
 				}
-				memberCounts := make(map[int]int64, len(tags))
-				for _, tag := range tags {
+			}
+
+			for _, tag := range tags {
+				tview := AssetGroupTagView{AssetGroupTag: tag}
+				if paramIncludeCounts {
 					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
 						api.HandleDatabaseError(request, response, err)
 						return
 					} else {
-						memberCounts[tag.ID] = n
+						tview.Counts = &AssetGroupTagCounts{
+							Selectors: selectorCounts[tag.ID],
+							Members:   n,
+						}
 					}
 				}
-				resp.Counts.Members = memberCounts
+				resp.Tags = append(resp.Tags, tview)
 			}
 			api.WriteBasicResponse(rCtx, resp, http.StatusOK, response)
 		}
