@@ -151,7 +151,7 @@ func processTimeFunctionProperty(prop string) (time.Time, error) {
 	ts := time.Now()
 	mod := strings.TrimPrefix(prop, "NOW()")
 	if mod != "" {
-		if modi, err := strconv.Atoi(mod); err == nil {
+		if modi, err := strconv.Atoi(mod); err != nil {
 			return ts, fmt.Errorf("could not parse %d to int", modi)
 		} else {
 			ts = ts.Add(time.Duration(modi) * time.Second)
