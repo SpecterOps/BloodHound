@@ -102,8 +102,12 @@ func Test_ValidateMetaTag(t *testing.T) {
 		},
 	}
 
+	schema, err := ingest_service.LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
 	for _, assertion := range assertions {
-		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), false)
+		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
 			assert.Equal(t, assertion.expectedType, meta.Type)
@@ -196,6 +200,11 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	// negativeCases = append(negativeCases, schemaFailureCases()...)
 	// negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
+	ingestSchema, err := ingest_service.LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
+
 	for _, assertion := range negativeCases {
 		var (
 			testMessage = fmt.Sprintf("negative case failed. test name: %s", assertion.name)
@@ -212,7 +221,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 
 		decoder := json.NewDecoder(reader)
 
-		err := ingest_service.ValidateGenericIngest(decoder, true)
+		err := ingest_service.ValidateGenericIngest(decoder, ingestSchema)
 		fmt.Println(err)
 		if report, ok := err.(ingest_service.ValidationReport); ok {
 			// check critical errors
@@ -239,7 +248,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 		reader := bytes.NewReader(payload)
 		decoder := json.NewDecoder(reader)
 
-		err = ingest_service.ValidateGenericIngest(decoder, true)
+		err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
 		assert.Nil(t, err, testMessage)
 	}
 }

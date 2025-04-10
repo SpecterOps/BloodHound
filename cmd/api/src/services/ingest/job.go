@@ -94,17 +94,7 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 	return ValidateZipFile(tr)
 }
 
-func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
-	normalizedContent, err := bomenc.NormalizeToUTF8(src)
-	if err != nil {
-		return err
-	}
-	tr := io.TeeReader(normalizedContent, dst)
-	_, err = ValidateMetaTag(tr, true)
-	return err
-}
-
-func SaveIngestFile(location string, request *http.Request) (string, model.FileType, error) {
+func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (string, model.FileType, error) {
 	fileData := request.Body
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
@@ -112,7 +102,7 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 	}
 
 	if utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
+		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, validator.WriteAndValidateJSON)
 	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
 		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
@@ -122,6 +112,20 @@ func SaveIngestFile(location string, request *http.Request) (string, model.FileT
 }
 
 type FileValidator func(src io.Reader, dst io.Writer) error
+
+type IngestValidator struct {
+	IngestSchema IngestSchema
+}
+
+func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
+	normalizedContent, err := bomenc.NormalizeToUTF8(src)
+	if err != nil {
+		return err
+	}
+	tr := io.TeeReader(normalizedContent, dst)
+	_, err = ValidateMetaTag(tr, s.IngestSchema, true)
+	return err
+}
 
 func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
 	if err := validationFunc(fileData, tempFile); err != nil {

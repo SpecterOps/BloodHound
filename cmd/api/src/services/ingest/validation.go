@@ -17,8 +17,6 @@
 package ingest
 
 import (
-	"bytes"
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,12 +30,9 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-//go:embed json_schema
-var schemaFiles embed.FS
-
 // ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) {
+func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
 	var (
 		depth            = 0
 		decoder          = json.NewDecoder(reader)
@@ -93,7 +88,7 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 				if typed == "graph" {
 					// this is a generic payload
 					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-					if err := ValidateGenericIngest(decoder, readToEnd); err != nil {
+					if err := ValidateGenericIngest(decoder, ingestSchema); err != nil {
 						return meta, err
 					}
 					break
@@ -113,25 +108,6 @@ func ValidateMetaTag(reader io.Reader, readToEnd bool) (ingest.Metadata, error) 
 	}
 
 	return meta, nil
-}
-
-func formatSchemaValidationError(err error) string {
-	var sb strings.Builder
-	sb.WriteString("[")
-	if ve, ok := err.(*jsonschema.ValidationError); ok {
-		for i, cause := range ve.Causes {
-			if i > 0 {
-				sb.WriteString(", ")
-			}
-			sb.WriteString(cause.Error())
-		}
-	} else {
-		sb.WriteString(err.Error())
-	}
-
-	sb.WriteString("]")
-
-	return sb.String()
 }
 
 type validationError struct {
@@ -155,60 +131,31 @@ func (s ValidationReport) Error() string {
 	return sb.String()
 }
 
+func formatSchemaValidationError(err error) string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	if ve, ok := err.(*jsonschema.ValidationError); ok {
+		for i, cause := range ve.Causes {
+			if i > 0 {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(cause.Error())
+		}
+	} else {
+		sb.WriteString(err.Error())
+	}
+
+	sb.WriteString("]")
+
+	return sb.String()
+}
+
 func formatAggregateErrors(errs []validationError) string {
 	var sb strings.Builder
 	for _, e := range errs {
 		sb.WriteString(fmt.Sprintf("- error: %s\n", e.Message))
 	}
 	return sb.String()
-}
-
-// LoadSchema uses embed.FS to load the JSON Schema and returns a validator
-func LoadSchema(filename string) (*jsonschema.Schema, error) {
-	const schemaDir = "json_schema"
-
-	// Read the raw JSON schema file from embed.FS
-	path := fmt.Sprintf("%s/%s", schemaDir, filename)
-	data, err := schemaFiles.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read schema %q: %w", path, err)
-	}
-
-	// Parse the JSON into a generic in-memory representation
-	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal schema %q: %w", path, err)
-	}
-
-	// Create a new compiler and register the document
-	compiler := jsonschema.NewCompiler()
-	if err := compiler.AddResource(filename, document); err != nil {
-		return nil, fmt.Errorf("failed to add resource for schema %q: %w", filename, err)
-	}
-
-	// Compile the schema for validation use
-	schema, err := compiler.Compile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile schema %q: %w", filename, err)
-	}
-
-	return schema, nil
-}
-
-func DoEmbedStuff() error {
-
-	nodeSchema, err := LoadSchema("edge.json")
-	if err != nil {
-		return err
-	}
-
-	inst, _ := jsonschema.UnmarshalJSON(strings.NewReader(`{"id":1234}`))
-
-	err = nodeSchema.Validate(inst)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func expectOpeningSquareBracket(decoder *json.Decoder, name string) error {
@@ -262,14 +209,15 @@ func expectClosingCurlyBracket(decoder *json.Decoder, name string) error {
 /*
 payload will be : { nodes: [], edges: [] }
 */
-func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
+func ValidateGenericIngest(decoder *json.Decoder, schema IngestSchema) error {
 	var (
-		// Initialize schemas
 		nodesFound, edgesFound = false, false
-		maxErrors              = 50
-		criticalErrors         []validationError
-		validationErrors       []validationError
-		reportCritical         = func(index int, msg string) {
+		maxErrors              = 15
+
+		criticalErrors   []validationError
+		validationErrors []validationError
+
+		reportCritical = func(index int, msg string) {
 			criticalErrors = append(criticalErrors, validationError{Index: index, Message: msg})
 		}
 		reportValidation = func(index int, msg string) {
@@ -279,16 +227,6 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 			return len(validationErrors) > 0 || len(criticalErrors) > 0
 		}
 	)
-
-	nodeSchema, err := LoadSchema("node.json")
-	if err != nil {
-
-		return err
-	}
-	edgeSchema, err := LoadSchema("edge.json")
-	if err != nil {
-		return err
-	}
 
 	// Validate an array of items (either nodes or edges)
 	validateArray := func(arrayName string, schema *jsonschema.Schema) {
@@ -351,7 +289,7 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 			switch key {
 			case "nodes":
 				nodesFound = true
-				validateArray("nodes", nodeSchema)
+				validateArray("nodes", schema.NodeSchema)
 				if len(criticalErrors) > 0 {
 					return ValidationReport{
 						CriticalErrors:   criticalErrors,
@@ -360,7 +298,7 @@ func ValidateGenericIngest(decoder *json.Decoder, readToEnd bool) error {
 				}
 			case "edges":
 				edgesFound = true
-				validateArray("edges", edgeSchema)
+				validateArray("edges", schema.EdgeSchema)
 				if len(criticalErrors) > 0 {
 					return ValidationReport{
 						CriticalErrors:   criticalErrors,

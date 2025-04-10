@@ -19,6 +19,7 @@ package ingest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -97,12 +98,19 @@ func TestWriteAndValidateJSON(t *testing.T) {
 		// },
 	}
 
+	schema, err := LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
+
+	v := IngestValidator{IngestSchema: schema}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			src := bytes.NewReader(tt.input)
 			dst := &bytes.Buffer{}
 
-			err := WriteAndValidateJSON(src, dst)
+			err := v.WriteAndValidateJSON(src, dst)
 			if tt.expectedError != nil {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, tt.expectedError)
@@ -118,7 +126,14 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	src := &ErrorReader{err: errors.New("read error")}
 	dst := &bytes.Buffer{}
 
-	err := WriteAndValidateJSON(src, dst)
+	schema, err := LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
+
+	v := IngestValidator{IngestSchema: schema}
+
+	err = v.WriteAndValidateJSON(src, dst)
 
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrInvalidJSON)
