@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -51,28 +51,6 @@ func Group365EntityDetails(db graph.Database, objectID string, hydrateCounts boo
 
 func PopulateGroup365EntityDetailsCounts(tx graph.Transaction, node *graph.Node, details Group365Details) (Group365Details, error) {
 
-	/* if roles, err := FetchEntityRoles(tx, node, 0, 0); err != nil {
-		return details, err
-
-	} else {
-		details.Roles = roles.Len()
-	} */
-
-	/* if groupMembers, err := FetchGroupMemberPaths(tx, node); err != nil {
-		return details, err
-
-	} else {
-		details.Group365Members = groupMembers.Len()
-	} */
-
-	/* if groupMembership, err := FetchEntityGroupMembershipPaths(tx, node); err != nil {
-		return details, err
-
-	} else {
-		details.Group365Membership = groupMembership.Len()
-
-	} */
-
 	if inboundObjectControl, err := FetchInboundEntityObjectControllers(tx, node, 0, 0); err != nil {
 		return details, err
 
@@ -80,11 +58,5 @@ func PopulateGroup365EntityDetailsCounts(tx graph.Transaction, node *graph.Node,
 		details.InboundObjectControl = inboundObjectControl.Len()
 	}
 
-	/* if outboundObjectControl, err := FetchOutboundEntityObjectControl(tx, node, 0, 0); err != nil {
-		return details, err
-
-	} else {
-		details.OutboundObjectControl = outboundObjectControl.Len()
-	} */
 	return details, nil
 }
