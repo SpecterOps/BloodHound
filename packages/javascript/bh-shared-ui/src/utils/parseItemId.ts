@@ -72,3 +72,22 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
         cypherQuery: `MATCH (n) WHERE ID(n) = ${itemId} RETURN n LIMIT 1`,
     };
 };
+
+// Some constants and helper functions useful for handling the ID formats that parseItemId can work with
+export const NODE_ID_PREFIX = 'node_';
+export const EDGE_ID_PREFIX = 'edge_';
+export const REL_ID_PREFIX = 'rel_';
+export const EDGE_ID_SEPARATOR = '||:';
+export const REL_ID_SEPARATOR = '_';
+
+export const createNodeItemId = (objectId: string): string => {
+    return NODE_ID_PREFIX + objectId;
+};
+
+export const createEdgeItemId = (sourceObjectId: string, edgeType: string, targetObjectId: string): string => {
+    return [EDGE_ID_PREFIX, sourceObjectId, edgeType, targetObjectId].join(EDGE_ID_SEPARATOR);
+};
+
+export const createRelItemId = (sourceGraphId: string, edgeType: string, targetGraphId: string): string => {
+    return REL_ID_PREFIX + [sourceGraphId, edgeType, targetGraphId].join(REL_ID_SEPARATOR);
+};
