@@ -148,7 +148,7 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 }
 
 func processTimeFunctionProperty(prop string) (time.Time, error) {
-	ts := time.Now()
+	ts := time.Now().UTC()
 	mod := strings.TrimPrefix(prop, "NOW()")
 	if mod != "" {
 		if modi, err := strconv.Atoi(mod); err != nil {
