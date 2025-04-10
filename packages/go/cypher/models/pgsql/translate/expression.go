@@ -399,6 +399,9 @@ func mergeUserAndTranslationConstraints(userConstraints, translationConstraints 
 	if userConstraints.Expression != nil {
 		// Fold the user constraints into the translation constraints wrapped in a parenthetical
 		translationConstraints.Expression = pgsql.OptionalAnd(pgsql.NewParenthetical(userConstraints.Expression), translationConstraints.Expression)
+
+		// Ensure that the identifier dependencies in the constraint are merged as well
+		translationConstraints.Dependencies.MergeSet(userConstraints.Dependencies)
 	}
 
 	return translationConstraints

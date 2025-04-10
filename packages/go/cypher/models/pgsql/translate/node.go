@@ -110,7 +110,7 @@ func (s *Translator) translateNodePatternToStep(nodePattern *cypher.NodePattern,
 	}
 
 	if part.PatternBinding.Set {
-		// If there's a bound pattern track this edge as a dependency of the pattern identifier
+		// If there's a bound pattern track this node as a dependency of the pattern identifier
 		part.PatternBinding.Value.DependOn(bindingResult.Binding)
 	}
 

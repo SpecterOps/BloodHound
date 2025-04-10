@@ -20,8 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 	"sync"
+
+	"github.com/specterops/bloodhound/dawgs/util/size"
 
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 
@@ -179,13 +180,13 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 			if values, err := result.Mapper(); err != nil {
 				return pathSet, err
 			} else {
-				for values.HasNext() {
-					var (
-						relationship = &graph.Relationship{}
-						node         = &graph.Node{}
-						path         = &graph.Path{}
-					)
+				var (
+					relationship = &graph.Relationship{}
+					node         = &graph.Node{}
+					path         = &graph.Path{}
+				)
 
+				for values.HasNext() {
 					if values.TryMapNext(relationship) {
 						currentPath.Edges = append(currentPath.Edges, relationship)
 						relationship = &graph.Relationship{}

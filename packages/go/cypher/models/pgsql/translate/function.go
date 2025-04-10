@@ -33,12 +33,9 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 			s.SetError(err)
 		} else if referenceArgument, typeOK := argument.(pgsql.Literal); !typeOK {
 			s.SetErrorf("expected a string literal for the cypher function: %s but received %T", typedExpression.Name, argument)
+		} else if _, typeOK := referenceArgument.Value.(string); !typeOK {
+			s.SetErrorf("expected a string literal for the cypher function: %s but received %T", typedExpression.Name, argument)
 		} else {
-			// Assert that the value of the literal is a string
-			if _, typeOK := referenceArgument.Value.(string); !typeOK {
-				s.SetErrorf("expected a string literal for the cypher function: %s but received %T", typedExpression.Name, argument)
-			}
-
 			// Rewrite the cast type of the literal to the PgSQL interval type. The equivalent PgSQL form does not
 			// require a function call
 			referenceArgument.CastType = pgsql.Interval

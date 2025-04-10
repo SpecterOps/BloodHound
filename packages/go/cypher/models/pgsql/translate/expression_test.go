@@ -164,7 +164,7 @@ func TestInferExpressionType(t *testing.T) {
 func TestExpressionTreeTranslator(t *testing.T) {
 	// Tree translator is a stack oriented expression tree builder
 	var (
-		treeTranslator = translate.NewExpressionTreeTranslator()
+		treeTranslator = translate.NewExpressionTreeTranslator(nil)
 		scope          = translate.NewScope()
 	)
 
@@ -243,17 +243,17 @@ func TestExpressionTreeTranslator(t *testing.T) {
 
 	// Pull out the 'a' constraint
 	aIdentifier := pgsql.AsIdentifierSet("a")
-	expectedTranslation := "a.name = 'a' and a.num_a > 1"
+	expectedTranslation := "(a.name = 'a' and a.num_a > 1)"
 	validateConstraints(t, treeTranslator, aIdentifier, expectedTranslation)
 
 	// Pull out the 'b' constraint next
 	bIdentifier := pgsql.AsIdentifierSet("b")
-	expectedTranslation = "b.name = 'b'"
+	expectedTranslation = "(b.name = 'b')"
 	validateConstraints(t, treeTranslator, bIdentifier, expectedTranslation)
 
 	// Pull out the constraint that depends on both 'a' and 'b' identifiers
 	idents := pgsql.AsIdentifierSet("a", "b")
-	expectedTranslation = "a.other = b.other"
+	expectedTranslation = "(a.other = b.other)"
 	validateConstraints(t, treeTranslator, idents, expectedTranslation)
 }
 

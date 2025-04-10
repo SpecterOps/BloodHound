@@ -155,7 +155,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		)
 
 		// Path composite components are encoded as dependencies on the bound identifier representing the
-		// path. This is not ideal as it escapes normal translation flow as drive by the structure of the
+		// path. This is not ideal as it escapes normal translation flow as driven by the structure of the
 		// originating cypher AST.
 		for _, dependency := range projected.Dependencies {
 			switch dependency.DataType {
