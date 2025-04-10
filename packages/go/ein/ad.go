@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -42,7 +43,7 @@ func ConvertSessionObject(session Session) IngestibleSession {
 	}
 }
 
-func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
+func ConvertObjectToNode(item IngestBase, itemType graph.Kind, nowUTC time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
@@ -50,6 +51,7 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 
 	if itemType == ad.Domain {
 		convertInvalidDomainProperties(itemProps)
+		itemProps[common.LastCollected.String()] = nowUTC
 	}
 
 	convertOwnsEdgeToProperty(item, itemProps)
@@ -1250,7 +1252,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 
 	// Get IngesibleNode for EnterpriceCA
-	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA)
+	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA, time.Now().UTC())
 
 	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slicesext.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {
