@@ -21,6 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -37,15 +40,18 @@ type Node struct {
 	// This ID is not preserved when imported into the database.
 	ID string `json:"id"`
 
+	// Caption will be used as the `name` property of a Node.
+	Caption string `json:"caption"`
+
 	// Labels are the node types. This is equivalent to what we call
 	// Kinds in BloodHound.
 	Labels []string `json:"labels"`
 
 	// Properties is the key:value map used for storing extra information
-	// on the Node. We currently do not validate that Nodes have an
-	// `object_id` property, but it is best practice to include one as
-	// `object_id` is the main identifier we use in BloodHound.
-	Properties map[string]any `json:"properties"`
+	// on the Node. For timestamp properties, you can use a timestamp function
+	// like `NOW()` or `NOW()-3600` where `-3600` modifies the timestamp to
+	// be 3600 seconds in the past.
+	Properties map[string]string `json:"properties"`
 }
 
 // Edge is the JSON representation of a graph edge.
@@ -62,7 +68,7 @@ type Edge struct {
 
 	// Properties is the key:value map used for storing extra information
 	// on the Edge.
-	Properties map[string]any `json:"properties"`
+	Properties map[string]string `json:"properties"`
 }
 
 // LoadGraphFixture requires a graph.Database interface and a GraphFixture struct.
@@ -74,7 +80,14 @@ func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 	var nodeMap = make(map[string]graph.ID)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 		for _, node := range g.Nodes {
-			if dbNode, err := tx.CreateNode(graph.AsProperties(node.Properties), graph.StringsToKinds(node.Labels)...); err != nil {
+
+			props, err := processProperties(node.Properties)
+			if err != nil {
+				return fmt.Errorf("failed to process node properties: %w", err)
+			}
+			props.Set("name", node.Caption)
+
+			if dbNode, err := tx.CreateNode(props, graph.StringsToKinds(node.Labels)...); err != nil {
 				return fmt.Errorf("could not create node `%s`: %w", node.ID, err)
 			} else {
 				nodeMap[node.ID] = dbNode.ID
@@ -85,7 +98,9 @@ func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 				return fmt.Errorf("could not find start node %s", edge.FromID)
 			} else if endId, ok := nodeMap[edge.ToID]; !ok {
 				return fmt.Errorf("could not find end node %s", edge.ToID)
-			} else if _, err := tx.CreateRelationshipByIDs(startId, endId, graph.StringKind(edge.Type), graph.AsProperties(edge.Properties)); err != nil {
+			} else if props, err := processProperties(edge.Properties); err != nil {
+				return fmt.Errorf("failed to process edge properties: %w", err)
+			} else if _, err := tx.CreateRelationshipByIDs(startId, endId, graph.StringKind(edge.Type), props); err != nil {
 				return fmt.Errorf("could not create relationship `%s` from `%s` to `%s`: %w", edge.Type, edge.FromID, edge.ToID, err)
 			}
 		}
@@ -101,16 +116,46 @@ func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 // parse then file into a GraphFixture, and finally import the GraphFixture
 // Nodes and Edges into the graph.Database.
 func LoadGraphFixtureFile(db graph.Database, fSys fs.FS, path string) error {
+	var graphFixture GraphFixture
 	fh, err := fSys.Open(path)
 	if err != nil {
 		return fmt.Errorf("could not open graph data file: %w", err)
 	}
 	defer fh.Close()
-	var graphFixture GraphFixture
 	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
 		return fmt.Errorf("could not parse graph data file: %w", err)
 	} else if err := LoadGraphFixture(db, &graphFixture); err != nil {
 		return fmt.Errorf("could not load graph data: %w", err)
 	}
 	return nil
+}
+
+func processProperties(props map[string]string) (*graph.Properties, error) {
+	var out = graph.NewProperties()
+	for k, v := range props {
+		switch {
+		case strings.HasPrefix(v, "NOW()"):
+			if ts, err := processTimeFunctionProperty(v); err != nil {
+				return nil, fmt.Errorf("could not process time function `%s`: %w", v, err)
+			} else {
+				out.Set(k, ts)
+			}
+		default:
+			out.Set(k, v)
+		}
+	}
+	return out, nil
+}
+
+func processTimeFunctionProperty(prop string) (time.Time, error) {
+	ts := time.Now()
+	mod := strings.TrimPrefix(prop, "NOW()")
+	if mod != "" {
+		if modi, err := strconv.Atoi(mod); err == nil {
+			return ts, fmt.Errorf("could not parse %d to int", modi)
+		} else {
+			ts = ts.Add(time.Duration(modi) * time.Second)
+		}
+	}
+	return ts, nil
 }

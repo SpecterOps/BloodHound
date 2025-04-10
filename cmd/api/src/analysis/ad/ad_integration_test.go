@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	schema "github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/test"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
@@ -1089,30 +1090,36 @@ func TestFetchEntityLinkedGPOPaths(t *testing.T) {
 }
 
 func TestFetchLocalGroupCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	var (
+		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
 
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.Completeness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, harness.Completeness.DomainSid)
+	require.Nil(t, lab.LoadGraphFixtureFile(graphDB, integration.Harnesses, "harnesses/completenessharness.json"))
 
+	graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		// why does this function ask for a transaction type?
+		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, "DOMAIN123")
 		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
+		return nil
 	})
 }
 
 func TestFetchUserSessionCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	var (
+		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
 
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.Completeness.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, harness.Completeness.DomainSid)
+	require.Nil(t, lab.LoadGraphFixtureFile(graphDB, integration.Harnesses, "harnesses/completenessharness.json"))
 
+	graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		// why does this function ask for a transaction type?
+		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, "DOMAIN123")
 		test.RequireNilErr(t, err)
 		require.Equal(t, .5, completeness)
+		return nil
 	})
 }
 
