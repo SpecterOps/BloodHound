@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,26 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build integration
-// +build integration
-
-package v2_test
-
-import (
-	"testing"
-
-	"github.com/specterops/bloodhound/src/api/v2/integration"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/stretchr/testify/require"
-)
-
-func TestRequestAnalysis(t *testing.T) {
-	testCtx := integration.NewFOSSContext(t)
-
-	err := testCtx.AdminClient().RequestAnalysis()
-	require.Nil(t, err)
-
-	analReq, err := testCtx.AdminClient().GetAnalysisRequest()
-	require.Nil(t, err)
-	require.Equal(t, analReq.RequestType, model.AnalysisRequestAnalysis)
-}
+export const getSubRoute = (parentRoute: string, childRoute: string) => {
+    return childRoute.slice(parentRoute.length);
+};
