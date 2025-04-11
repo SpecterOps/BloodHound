@@ -17,6 +17,7 @@
 package v2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -29,8 +30,10 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
@@ -66,7 +69,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 	if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+	} else if tag, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err := json.NewDecoder(request.Body).Decode(&sel); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
@@ -80,6 +83,24 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Fire off goroutine to select the nodes
+		go func() {
+			err := datapipe.SelectNodes(context.Background(), s.DB, s.Graph, selector, tag.GetExpansionMethod())
+			if err != nil {
+				slog.Error("AGT: API error selecting nodes", "selector", selector, "err", err)
+			}
+		}()
+
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
+
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
 	}
 }
