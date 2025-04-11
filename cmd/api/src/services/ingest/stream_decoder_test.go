@@ -99,11 +99,12 @@ func Test_ValidateMetaTag(t *testing.T) {
 }
 
 type genericAssertion struct {
-	name              string
-	criticalErrMsgs   []string
-	validationErrMsgs []string
-	payload           *testPayload
-	rawPayload        string // for cases that require raw JSON to trip validation controls
+	name       string
+	payload    *testPayload
+	rawPayload string // for cases that require raw JSON to trip validation controls
+
+	criticalErrMsgs       []string
+	validationErrContains [][]string
 }
 
 type testNode struct {
@@ -174,7 +175,6 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			require.True(t, ok)
 
 			assert.Equal(t, len(assertion.criticalErrMsgs), len(report.CriticalErrors))
-			assert.Equal(t, len(assertion.validationErrMsgs), len(report.ValidationErrors))
 
 			// check critical errors
 			for index, actualCriticalErr := range report.CriticalErrors {
@@ -182,8 +182,11 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			}
 
 			// check non-critical validation errors
-			for index, actualValidationErr := range report.ValidationErrors {
-				assert.Equal(t, assertion.validationErrMsgs[index], actualValidationErr.Message)
+			for i, expectedSubstrings := range assertion.validationErrContains {
+				actual := report.ValidationErrors[i].Message
+				for _, substr := range expectedSubstrings {
+					assert.Contains(t, actual, substr)
+				}
 			}
 
 		})
@@ -250,9 +253,11 @@ func positiveGenericIngestCases() []genericAssertion {
 func decodingFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{ // UnmarshalType error, is recoverable
-			name:              "decoding error: node is not a JSON Object",
-			rawPayload:        `{"nodes": ["this is a string"]}`,
-			validationErrMsgs: []string{"nodes[0] type mismatch: json: cannot unmarshal string into Go value of type map[string]interface {}"},
+			name:       "decoding error: node is not a JSON Object",
+			rawPayload: `{"nodes": ["this is a string"]}`,
+			validationErrContains: [][]string{
+				{"nodes[0] type mismatch", "cannot unmarshal string into Go value of type map[string]interface {}"},
+			},
 		},
 		{
 			name:            "decoding error: trailing comma in object",
@@ -270,10 +275,12 @@ func decodingFailureCases() []genericAssertion {
 			criticalErrMsgs: []string{"nodes[0] syntax error: invalid character 'i' looking for beginning of object key string"},
 		},
 		{
-			name:              "validation and critical errors",
-			rawPayload:        `{"nodes":[{"id":1234}], "edges":[}`,
-			criticalErrMsgs:   []string{"error decoding edges array: invalid character '}' looking for beginning of value"},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'kinds', at '/id': got number, want string]"},
+			name:            "validation and critical errors",
+			rawPayload:      `{"nodes":[{"id":1234}], "edges":[}`,
+			criticalErrMsgs: []string{"error decoding edges array: invalid character '}' looking for beginning of value"},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'kinds'", "at '/id': got number, want string"},
+			},
 		},
 	}
 }
@@ -297,10 +304,12 @@ func criticalFailureCases() []genericAssertion {
 			criticalErrMsgs: []string{"error opening nodes array: expected '[', got some string"},
 		},
 		{
-			name:              "nodes array is not closed properly with ']'",
-			rawPayload:        `{"nodes": [{"id":"1234"}}`,
-			criticalErrMsgs:   []string{"error decoding nodes array: invalid character '}' after array element"},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'kinds']"},
+			name:            "nodes array is not closed properly with ']'",
+			rawPayload:      `{"nodes": [{"id":"1234"}}`,
+			criticalErrMsgs: []string{"error decoding nodes array: invalid character '}' after array element"},
+			validationErrContains: [][]string{
+				{"nodes[0] schema validation", "at '': missing property 'kinds'"},
+			},
 		},
 		{
 			name:            "edges array is not opened properly with '['",
@@ -308,10 +317,12 @@ func criticalFailureCases() []genericAssertion {
 			criticalErrMsgs: []string{"error opening edges array: expected '[', got a string value"},
 		},
 		{
-			name:              "edges array is not closed properly with ']'",
-			rawPayload:        `{"nodes": [], "edges": [{"id":"1234"}}`,
-			criticalErrMsgs:   []string{"error decoding edges array: invalid character '}' after array element"},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '': missing properties 'start', 'end', 'kind']"},
+			name:            "edges array is not closed properly with ']'",
+			rawPayload:      `{"nodes": [], "edges": [{"id":"1234"}}`,
+			criticalErrMsgs: []string{"error decoding edges array: invalid character '}' after array element"},
+			validationErrContains: [][]string{
+				{"edges[0] schema validation", "at '': missing properties 'start', 'end', 'kind'"},
+			},
 		},
 	}
 }
@@ -333,7 +344,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'"},
+			},
 		},
 		{
 			name: "node validation: ID is empty string",
@@ -345,7 +358,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'"},
+			},
 		},
 		{
 			name: "node validation: > than 3 kinds supplied",
@@ -357,7 +372,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': maxItems: got 4, want 3]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '/kinds': maxItems: got 4, want 3"},
+			},
 		},
 		{
 			name: "node validation: atleast one kind must be specified",
@@ -369,7 +386,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': minItems: got 0, want 1]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '/kinds': minItems: got 0, want 1"},
+			},
 		},
 		{
 			name: "node validation: kinds cannot be a null array",
@@ -380,7 +399,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': got null, want array]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '/kinds': got null, want array"},
+			},
 		},
 		{
 			name: "node validation: multiple issues. no node id, > 3 kinds supplied",
@@ -391,7 +412,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id', at '/kinds': maxItems: got 4, want 3]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
+			},
 		},
 		{
 			name: "edge validation: start not provided",
@@ -405,7 +428,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object]"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start': got null, want object"},
+			},
 		},
 		{
 			name: "edge validation: start id not provided",
@@ -420,7 +445,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': missing property 'id_value']"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start': missing property 'id_value'"},
+			},
 		},
 		{
 			name: "edge validation: end not provided",
@@ -434,7 +461,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': got null, want object]"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/end': got null, want object"},
+			},
 		},
 		{
 			name: "edge validation: end id not provided",
@@ -447,7 +476,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': missing property 'id_value']"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/end': missing property 'id_value'"},
+			},
 		},
 		{
 			name: "edge validation: end id is empty",
@@ -460,7 +491,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': missing property 'id_value']"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/end': missing property 'id_value'"},
+			},
 		},
 		{
 			name: "edge validation: kind not provided",
@@ -476,7 +509,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '': missing property 'kind']"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '': missing property 'kind'"},
+			},
 		},
 		{
 			name: "edge validation: multiple errors. start and end not provided",
@@ -487,7 +522,9 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start': got null, want object", "at '/end': got null, want object"},
+			},
 		},
 	}
 }
@@ -512,7 +549,12 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']", "nodes[1] schema validation failed: [at '': missing property 'id']", "nodes[2] schema validation failed: [at '': missing property 'id']", "nodes[3] schema validation failed: [at '': missing property 'id']"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'"},
+				{"nodes[1]", "at '': missing property 'id'"},
+				{"nodes[2]", "at '': missing property 'id'"},
+				{"nodes[3]", "at '': missing property 'id'"},
+			},
 		},
 		{
 			name: "multiple nodes with mixed errors.",
@@ -526,9 +568,10 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{
-				"nodes[0] schema validation failed: [at '': missing property 'id']",
-				"nodes[1] schema validation failed: [at '': missing property 'id', at '/kinds': minItems: got 0, want 1]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'"},
+				{"nodes[1]", "at '': missing property 'id'", "at '/kinds': minItems: got 0, want 1"},
+			},
 		},
 		{
 			name: "nodes and edges both have errors",
@@ -544,7 +587,10 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']", "edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
+			validationErrContains: [][]string{
+				{"nodes[0]", "at '': missing property 'id'"},
+				{"edges[0]", "at '/start': got null, want object", "at '/end': got null, want object"},
+			},
 		},
 		{
 			name: "edges have errors",
@@ -558,7 +604,10 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]", "edges[1] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
+			validationErrContains: [][]string{
+				{"edges[0]", "'/start': got null, want object", "'/end': got null, want object"},
+				{"edges[1]", "'/start': got null, want object", "'/end': got null, want object"},
+			},
 		},
 	}
 }

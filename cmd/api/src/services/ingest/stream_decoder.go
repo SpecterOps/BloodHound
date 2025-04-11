@@ -154,7 +154,7 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 	var sb strings.Builder
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
 		numberOfViolations := len(ve.Causes)
-		sb.WriteString(fmt.Sprintf("%s[%d] schema validation failed with %d errors: ", arrayName, index, numberOfViolations))
+		sb.WriteString(fmt.Sprintf("%s[%d] schema validation failed with %d error(s): ", arrayName, index, numberOfViolations))
 
 		sb.WriteString("[")
 
