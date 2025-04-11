@@ -73,6 +73,7 @@ get:
                         properties:
                           id: 
                             type: integer
+                            format: int64
                           object_id:
                             type: string
                           primary_kind:

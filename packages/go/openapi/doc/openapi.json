@@ -4838,7 +4838,8 @@
                                 "type": "object",
                                 "properties": {
                                   "id": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "format": "int64"
                                   },
                                   "object_id": {
                                     "type": "string"
