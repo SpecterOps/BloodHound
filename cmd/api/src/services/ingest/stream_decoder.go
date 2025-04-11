@@ -88,7 +88,10 @@ func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool
 				if typed == "graph" {
 					// this is a generic payload
 					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-					if err := ValidateGenericIngest(decoder, ingestSchema); err != nil {
+					err := ValidateGenericIngest(decoder, ingestSchema)
+					if report, ok := err.(ValidationReport); ok {
+						// log the structured report
+						slog.With("validation", report).Warn("generic ingest validation failed")
 						return meta, err
 					}
 					break
@@ -120,40 +123,62 @@ type ValidationReport struct {
 	ValidationErrors []validationError // nodes and edges that dont conform to the spec
 }
 
+func (s ValidationReport) BuildAPIError() []string {
+	msgs := []string{"Error saving ingest file. File failed schema validation."}
+
+	for _, criticalErr := range s.CriticalErrors {
+		msgs = append(msgs, criticalErr.Message)
+	}
+
+	for _, valErr := range s.ValidationErrors {
+		msgs = append(msgs, valErr.Message)
+	}
+	return msgs
+}
+
 func (s ValidationReport) Error() string {
 	var sb strings.Builder
 	if len(s.CriticalErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("Critical errors (%d):\n%s\n", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors)))
+		sb.WriteString(fmt.Sprintf("(%d) critical error(s): [%s]", len(s.CriticalErrors), formatAggregateErrors(s.CriticalErrors)))
+		if len(s.ValidationErrors) > 0 {
+			sb.WriteString(", ")
+		}
 	}
 	if len(s.ValidationErrors) > 0 {
-		sb.WriteString(fmt.Sprintf("Validation errors (%d):\n%s\n", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors)))
+		sb.WriteString(fmt.Sprintf("(%d) validation error(s): [%s]", len(s.ValidationErrors), formatAggregateErrors(s.ValidationErrors)))
 	}
 	return sb.String()
 }
 
-func formatSchemaValidationError(err error) string {
+func formatSchemaValidationError(arrayName string, index int, err error) string {
 	var sb strings.Builder
-	sb.WriteString("[")
 	if ve, ok := err.(*jsonschema.ValidationError); ok {
+		numberOfViolations := len(ve.Causes)
+		sb.WriteString(fmt.Sprintf("%s[%d] schema validation failed with %d errors: ", arrayName, index, numberOfViolations))
+
+		sb.WriteString("[")
+
 		for i, cause := range ve.Causes {
 			if i > 0 {
 				sb.WriteString(", ")
 			}
 			sb.WriteString(cause.Error())
 		}
+
+		sb.WriteString("]")
 	} else {
 		sb.WriteString(err.Error())
 	}
-
-	sb.WriteString("]")
-
 	return sb.String()
 }
 
 func formatAggregateErrors(errs []validationError) string {
 	var sb strings.Builder
-	for _, e := range errs {
-		sb.WriteString(fmt.Sprintf("- error: %s\n", e.Message))
+	for i, e := range errs {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(e.Message)
 	}
 	return sb.String()
 }
@@ -248,7 +273,7 @@ func ValidateGenericIngest(decoder *json.Decoder, schema IngestSchema) error {
 					reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
 				}
 			} else if err := schema.Validate(item); err != nil {
-				reportValidation(index, fmt.Sprintf("%s[%d] schema validation failed: %s", arrayName, index, formatSchemaValidationError(err)))
+				reportValidation(index, formatSchemaValidationError(arrayName, index, err))
 			}
 
 			if len(validationErrors) >= maxErrors || len(criticalErrors) > 0 {

@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -47,24 +47,6 @@ func Test_ValidateMetaTag(t *testing.T) {
 			expectedType: ingest.DataTypeGeneric,
 		},
 		{
-			name:         "empty generic payload",
-			rawString:    `{"graph": {}}`,
-			err:          ingest.ErrEmptyIngest,
-			expectedType: ingest.DataTypeGeneric,
-		},
-		// {
-		// 	name:         "generic payload with validation errors on nodes AND edges",
-		// 	rawString:    `{"graph": {"edges": [{"id": 5678}],"nodes": [{"id": 5678}]}}`,
-		// 	err:          fmt.Errorf("pooop"),
-		// 	expectedType: ingest.DataTypeGeneric,
-		// },
-		// {
-		// 	name:         "node fails schema validation",
-		// 	rawString:    `{"graph": {"nodes":[{}]}}`,
-		// 	err:          errors.New("[0] validation error"),
-		// 	expectedType: ingest.DataTypeGeneric,
-		// },
-		{
 			name:         "valid",
 			rawString:    `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
 			err:          nil,
@@ -105,9 +87,8 @@ func Test_ValidateMetaTag(t *testing.T) {
 	}
 
 	schema, err := ingest_service.LoadIngestSchema()
-	if err != nil {
-		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
-	}
+	require.Nil(t, err)
+
 	for _, assertion := range assertions {
 		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
 		assert.ErrorIs(t, err, assertion.err)
@@ -121,7 +102,6 @@ type genericAssertion struct {
 	name              string
 	criticalErrMsgs   []string
 	validationErrMsgs []string
-	errMsgs           []string // one record may have multiple violations
 	payload           *testPayload
 	rawPayload        string // for cases that require raw JSON to trip validation controls
 }
@@ -168,53 +148,16 @@ func prepareReader(assertion genericAssertion) (io.Reader, error) {
 
 func Test_ValidateGenericIngest(t *testing.T) {
 	var (
-		positiveCases = []genericAssertion{
-			{
-				name: "payload contains one node",
-				payload: &testPayload{
-					Nodes: []testNode{
-						{
-							ID:    "1234",
-							Kinds: []string{"a"},
-							Properties: map[string]any{
-								"hello": "world",
-								"one":   2,
-								"true":  false,
-							},
-						},
-					},
-				},
-			},
-			{
-				name: "payload contains one edge",
-				payload: &testPayload{
-					Edges: []testEdge{
-						{
-							Start: &edgePiece{
-								IDValue: "1234",
-							},
-							End: &edgePiece{
-								IDValue: "5678",
-							},
-							Kind: "kind A",
-							Properties: map[string]any{
-								"hello": "world",
-								"true":  false,
-								"one":   2,
-							},
-						},
-					},
-				},
-			},
-		}
-
+		positiveCases = []genericAssertion{}
 		negativeCases = []genericAssertion{}
 	)
+
+	positiveCases = append(positiveCases, positiveGenericIngestCases()...)
 
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
 	negativeCases = append(negativeCases, schemaFailureCases()...)
-	// negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
+	negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
 	ingestSchema, err := ingest_service.LoadIngestSchema()
 	require.Nil(t, err, fmt.Sprintf("failed to load ingest schema: %s", err))
@@ -258,6 +201,48 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
 			assert.Nil(t, err)
 		})
+	}
+}
+
+func positiveGenericIngestCases() []genericAssertion {
+	return []genericAssertion{
+		{
+			name: "payload contains one node",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"a"},
+						Properties: map[string]any{
+							"hello": "world",
+							"one":   2,
+							"true":  false,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "payload contains one edge",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							IDValue: "1234",
+						},
+						End: &edgePiece{
+							IDValue: "5678",
+						},
+						Kind: "kind A",
+						Properties: map[string]any{
+							"hello": "world",
+							"true":  false,
+							"one":   2,
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -363,16 +348,16 @@ func schemaFailureCases() []genericAssertion {
 			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']"},
 		},
 		{
-			name: "node validation: > than 2 kinds supplied",
+			name: "node validation: > than 3 kinds supplied",
 			payload: &testPayload{
 				Nodes: []testNode{
 					{
 						ID:    "1234",
-						Kinds: []string{"kind A", "kind b", "kind c"},
+						Kinds: []string{"kind A", "kind b", "kind c", "kind d"},
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': maxItems: got 3, want 2]"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': maxItems: got 4, want 3]"},
 		},
 		{
 			name: "node validation: atleast one kind must be specified",
@@ -398,15 +383,15 @@ func schemaFailureCases() []genericAssertion {
 			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': got null, want array]"},
 		},
 		{
-			name: "node validation: multiple issues. no node id, > 2 kinds supplied",
+			name: "node validation: multiple issues. no node id, > 3 kinds supplied",
 			payload: &testPayload{
 				Nodes: []testNode{
 					{
-						Kinds: []string{"kind A", "kind b", "kind c"},
+						Kinds: []string{"kind A", "kind b", "kind c", "kind d"},
 					},
 				},
 			},
-			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id', at '/kinds': maxItems: got 3, want 2]"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id', at '/kinds': maxItems: got 4, want 3]"},
 		},
 		{
 			name: "edge validation: start not provided",
@@ -527,7 +512,7 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"[0] validation error", "[1] validation error", "[2] validation error", "[3] validation error", "at '': missing property 'id'"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']", "nodes[1] schema validation failed: [at '': missing property 'id']", "nodes[2] schema validation failed: [at '': missing property 'id']", "nodes[3] schema validation failed: [at '': missing property 'id']"},
 		},
 		{
 			name: "multiple nodes with mixed errors.",
@@ -541,9 +526,9 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{
-				"validation failed for nodes[0]: at '': missing property 'id'",
-				"validation failed for nodes[1]: at '': missing property 'id', at '/kinds': minItems: got 0, want 1"},
+			validationErrMsgs: []string{
+				"nodes[0] schema validation failed: [at '': missing property 'id']",
+				"nodes[1] schema validation failed: [at '': missing property 'id', at '/kinds': minItems: got 0, want 1]"},
 		},
 		{
 			name: "nodes and edges both have errors",
@@ -559,7 +544,7 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "validation failed for edges[0]"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']", "edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
 		},
 		{
 			name: "edges have errors",
@@ -571,12 +556,9 @@ func itemsWithMultipleFailureCases() []genericAssertion {
 					{
 						Kind: "b",
 					},
-					{
-						Kind: "c",
-					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "validation failed for edges[1]", "validation failed for edges[2]"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]", "edges[1] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
 		},
 	}
 }

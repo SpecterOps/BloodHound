@@ -25,6 +25,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/bhlog/measure"
@@ -121,6 +122,12 @@ func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *htt
 	}
 }
 
+type testNode struct {
+	ID         string         `json:"id,omitempty"`
+	Properties map[string]any `json:"properties"`
+	Kinds      []string       `json:"kinds"`
+}
+
 func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http.Request) {
 	var (
 		requestId             = ctx.FromRequest(request).RequestID
@@ -141,6 +148,24 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestTaskParams, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, ingest.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+	} else if report, ok := err.(ingest.ValidationReport); ok {
+		var (
+			msgs       = report.BuildAPIError()
+			errDetails = []api.ErrorDetails{}
+		)
+
+		for _, msg := range msgs {
+			errDetails = append(errDetails, api.ErrorDetails{Message: msg})
+		}
+
+		e := &api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Timestamp:  time.Now(),
+			RequestID:  ctx.FromRequest(request).RequestID,
+			Errors:     errDetails,
+		}
+
+		api.WriteErrorResponse(request.Context(), e, response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, ingest.IngestTaskParams{Filename: ingestTaskParams.Filename, FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(fileUploadJobID), IsGeneric: ingestTaskParams.IsGeneric}); err != nil {
