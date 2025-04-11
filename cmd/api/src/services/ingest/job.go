@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . IngestData
 package ingest
 
 import (
@@ -88,36 +87,58 @@ func GetIngestJobByID(ctx context.Context, db IngestData, jobID int64) (model.In
 	return db.GetIngestJob(ctx, jobID)
 }
 
-func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (string, model.FileType, error) {
+func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (IngestTaskParams, error) {
 	fileData := request.Body
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
-		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
+		return IngestTaskParams{Filename: "", FileType: model.FileTypeJson}, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
-	if utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
-		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, validator.WriteAndValidateJSON)
-	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
-		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
-	} else {
-		// We should never get here since this is checked a level above
-		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
+	var (
+		fileType     model.FileType
+		validationFn FileValidator
+	)
+
+	switch {
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+		fileType = model.FileTypeJson
+		validationFn = validator.WriteAndValidateJSON
+	case utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+		fileType = model.FileTypeZip
+		validationFn = WriteAndValidateZip
+	default:
+		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
+
+	if metadata, err := WriteAndValidateFile(fileData, tempFile, validationFn); err != nil {
+		return IngestTaskParams{}, err
+	} else {
+		isGeneric := false
+		if metadata.Type == ingest.DataTypeGeneric {
+			isGeneric = true
+		}
+		return IngestTaskParams{
+			Filename:  tempFile.Name(),
+			FileType:  fileType,
+			IsGeneric: isGeneric,
+		}, nil
+	}
+
 }
 
-func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {
-	if err := validationFunc(fileData, tempFile); err != nil {
+func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) (ingest.Metadata, error) {
+	if meta, err := validationFunc(fileData, tempFile); err != nil {
 		if err := tempFile.Close(); err != nil {
 			slog.Error(fmt.Sprintf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err))
 		} else if err := os.Remove(tempFile.Name()); err != nil {
 			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFile.Name(), err))
 		}
-		return err
+		return meta, err
 	} else {
 		if err := tempFile.Close(); err != nil {
 			slog.Error(fmt.Sprintf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err))
 		}
-		return nil
+		return meta, nil
 	}
 }
 
