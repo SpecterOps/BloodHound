@@ -36,7 +36,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 		file, err := os.Open("../../test/fixtures/fixtures/goodzip.zip")
 		assert.Nil(t, err)
 
-		_, err = WriteAndValidateZip(io.Reader(file), &writer)
+		err = WriteAndValidateZip(io.Reader(file), &writer)
 		assert.Nil(t, err)
 	})
 
@@ -46,7 +46,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 			badZip = strings.NewReader("123123")
 		)
 
-		_, err := WriteAndValidateZip(badZip, &writer)
+		err := WriteAndValidateZip(badZip, &writer)
 		assert.Equal(t, err, ingest.ErrInvalidZipFile)
 	})
 }
@@ -110,7 +110,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 			src := bytes.NewReader(tt.input)
 			dst := &bytes.Buffer{}
 
-			_, err := v.WriteAndValidateJSON(src, dst)
+			err := v.WriteAndValidateJSON(src, dst)
 			if tt.expectedError != nil {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, tt.expectedError)
@@ -133,7 +133,7 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 
 	v := NewIngestValidator(schema)
 
-	_, err = v.WriteAndValidateJSON(src, dst)
+	err = v.WriteAndValidateJSON(src, dst)
 
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrInvalidJSON)
