@@ -26,6 +26,7 @@ import (
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/test"
+	"github.com/stretchr/testify/assert"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -1095,15 +1096,20 @@ func TestFetchLocalGroupCompleteness(t *testing.T) {
 		graphDB = testCtx.Graph.Database
 	)
 
-	require.Nil(t, lab.LoadGraphFixtureFile(graphDB, integration.Harnesses, "harnesses/completenessharness.json"))
+	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	require.NoError(t, err)
 
-	graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+	err = lab.WriteGraphFixture(graphDB, &fixture)
+	require.NoError(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
 		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, "DOMAIN123")
-		test.RequireNilErr(t, err)
-		require.Equal(t, .5, completeness)
+		require.NoError(t, err)
+		assert.Equal(t, .5, completeness)
 		return nil
 	})
+	assert.NoError(t, err)
 }
 
 func TestFetchUserSessionCompleteness(t *testing.T) {
@@ -1112,15 +1118,20 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 		graphDB = testCtx.Graph.Database
 	)
 
-	require.Nil(t, lab.LoadGraphFixtureFile(graphDB, integration.Harnesses, "harnesses/completenessharness.json"))
+	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	require.NoError(t, err)
 
-	graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+	err = lab.WriteGraphFixture(graphDB, &fixture)
+	require.NoError(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
 		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, "DOMAIN123")
-		test.RequireNilErr(t, err)
-		require.Equal(t, .5, completeness)
+		require.NoError(t, err)
+		assert.Equal(t, .5, completeness)
 		return nil
 	})
+	assert.NoError(t, err)
 }
 
 func TestSyncLAPSPassword(t *testing.T) {

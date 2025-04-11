@@ -71,12 +71,12 @@ type Edge struct {
 	Properties map[string]string `json:"properties"`
 }
 
-// LoadGraphFixture requires a graph.Database interface and a GraphFixture struct.
+// WriteGraphFixture requires a graph.Database interface and a GraphFixture struct.
 // It will import the nodes and edges from the GraphFixture and inserts them into
 // the graph database. It uses the `ID` property of the nodes as the local
 // identifier and then maps them to database IDs, meaning that the `ID` given in
 // the GraphFixture will not be preserved.
-func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
+func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 	var nodeMap = make(map[string]graph.ID)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 		for _, node := range g.Nodes {
@@ -111,23 +111,21 @@ func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 	return nil
 }
 
-// LoadGraphFixtureFile takes a graph.Database interface, a fs.FS interface,
-// and a path string. It will attempt to read the given path from the FS and
-// parse then file into a GraphFixture, and finally import the GraphFixture
-// Nodes and Edges into the graph.Database.
-func LoadGraphFixtureFile(db graph.Database, fSys fs.FS, path string) error {
+// LoadGraphFixtureFromFile a fs.FS interface, and a path string. It will
+// attempt to read the given path from the FS and parse the file into a
+// GraphFixture and return it.
+func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
 	var graphFixture GraphFixture
 	fh, err := fSys.Open(path)
 	if err != nil {
-		return fmt.Errorf("could not open graph data file: %w", err)
+		return graphFixture, fmt.Errorf("could not open graph data file: %w", err)
 	}
 	defer fh.Close()
 	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
-		return fmt.Errorf("could not parse graph data file: %w", err)
-	} else if err := LoadGraphFixture(db, &graphFixture); err != nil {
-		return fmt.Errorf("could not load graph data: %w", err)
+		return graphFixture, fmt.Errorf("could not parse graph data file: %w", err)
+	} else {
+		return graphFixture, nil
 	}
-	return nil
 }
 
 func processProperties(props map[string]string) (*graph.Properties, error) {
