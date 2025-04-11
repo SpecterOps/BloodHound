@@ -214,7 +214,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file, adcsEnabled); err != nil {
+				} else if err := ReadFileForIngest(batch, file, s.ingestSchema, adcsEnabled); err != nil {
 					failed++
 					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}

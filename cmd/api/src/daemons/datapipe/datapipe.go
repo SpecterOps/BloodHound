@@ -46,13 +46,14 @@ type Daemon struct {
 	tickInterval        time.Duration
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
+	ingestSchema        ingest.IngestSchema
 }
 
 func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration) *Daemon {
+func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
 	return &Daemon{
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
@@ -61,6 +62,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		ctx:                 ctx,
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
+		ingestSchema:        ingestSchema,
 	}
 }
 
