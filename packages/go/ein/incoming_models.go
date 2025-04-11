@@ -246,6 +246,7 @@ type Domain struct {
 	ChildObjects []TypedPrincipal
 	Trusts       []Trust
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }
 
 type SessionAPIResult struct {
@@ -290,15 +291,28 @@ type BoolAPIResult struct {
 
 type SMBSigningAPIResult struct {
 	APIResult
-	SigningEnabled  bool
-	OSVersion       string
-	OSBuild         string
-	DnsComputerName string
+	Result SMBSigningResult
 }
 
-type RegistryDataAPIResult struct {
+type SMBSigningResult struct {
+	SigningEnabled bool
+}
+
+type NTLMRegistryDataAPIResult struct {
 	APIResult
-	RestrictSendingNtlmTraffic uint
+	Result NTLMRegistryInfo
+}
+
+type NTLMRegistryInfo struct {
+	RestrictSendingNtlmTraffic   uint
+	RequireSecuritySignature     uint
+	EnableSecuritySignature      uint
+	RestrictReceivingNTLMTraffic uint
+	NtlmMinServerSec             uint
+	NtlmMinClientSec             uint
+	LmCompatibilityLevel         uint
+	UseMachineId                 uint
+	ClientAllowedNTLMServers     []string
 }
 
 type Computer struct {
@@ -320,11 +334,20 @@ type Computer struct {
 	UnconstrainedDelegation bool
 	SmbInfo                 SMBSigningAPIResult
 	IsWebClientRunning      BoolAPIResult
-	NTLMRegistryData        RegistryDataAPIResult
+	NTLMRegistryData        NTLMRegistryDataAPIResult
+}
+
+type GPOChanges struct {
+	LocalAdmins        []TypedPrincipal
+	RemoteDesktopUsers []TypedPrincipal
+	DcomUsers          []TypedPrincipal
+	PSRemoteUsers      []TypedPrincipal
+	AffectedComputers  []TypedPrincipal
 }
 
 type OU struct {
 	IngestBase
 	ChildObjects []TypedPrincipal
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }

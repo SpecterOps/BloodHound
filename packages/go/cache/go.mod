@@ -20,7 +20,7 @@ go 1.23
 
 require (
 	github.com/hashicorp/golang-lru v0.6.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (

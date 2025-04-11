@@ -43,7 +43,7 @@ func main() {
 	if lvl, err := bhlog.ParseLevel(rawLvl); err != nil {
 		slog.Error(fmt.Sprintf("Could not parse log level from %s: %v", environment.LogLevelVarName, err))
 	} else {
-		level.GlobalAccepts(lvl)
+		level.SetGlobalLevel(lvl)
 	}
 
 	if cmd, err := command.ParseCLI(env); errors.Is(err, command.ErrNoCmd) {

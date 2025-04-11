@@ -25,7 +25,7 @@ import (
 )
 
 func TestMeasureSelectivity(t *testing.T) {
-	selectivity, err := MeasureSelectivity(false, pgd.Equals(
+	selectivity, err := MeasureSelectivity(NewScope(), false, pgd.Equals(
 		pgsql.Identifier("123"),
 		pgsql.Identifier("456"),
 	))

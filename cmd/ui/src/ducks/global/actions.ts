@@ -35,8 +35,8 @@ export const addSnackbar = (
             message: notification,
             key: key || (new Date().getTime() + Math.random()).toString(),
             options: {
-                ...options,
                 autoHideDuration: 5000,
+                ...options,
             },
             dismissed: false,
         },

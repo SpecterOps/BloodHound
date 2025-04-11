@@ -25,6 +25,7 @@ import {
     searchbarActions,
     useExploreParams,
     useFeatureFlag,
+    useInitialEnvironment,
     useNodeByObjectId,
     usePermissions,
 } from 'bh-shared-ui';
@@ -33,7 +34,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
-import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
 import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';

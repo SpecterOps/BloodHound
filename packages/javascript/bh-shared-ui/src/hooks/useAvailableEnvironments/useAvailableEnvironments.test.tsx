@@ -19,7 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as ReactQuery from 'react-query';
 import { renderHook, waitFor } from '../../test-utils';
-import { useAvailableEnvironments, useEnvironment } from './useAvailableEnvironments';
+import { useAvailableEnvironments, useSelectedEnvironment } from './useAvailableEnvironments';
 
 const fakeDomainA = {
     type: 'active-directory',
@@ -59,26 +59,26 @@ describe('useAvailableEnvironments', () => {
         });
     });
 
-    describe('useEnvironment', () => {
+    describe('useSelectedEnvironment', () => {
         it('returns the full environment for the environmentid passed', async () => {
-            const actual = renderHook(() => useEnvironment(fakeDomainA.id));
+            const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id));
 
             await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
         });
         it('returns the full environment of the environmentId found in the search params', async () => {
             const history = createMemoryHistory({ initialEntries: [`/test?environmentId=${fakeDomainA.id}`] });
-            const actual = renderHook(() => useEnvironment(fakeDomainA.id), { history });
+            const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id), { history });
 
             await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
         });
         it('returns undefined if environmentId searched for is not found', async () => {
             const fakeEnvId = 'nonexistent';
-            const actual = renderHook(() => useEnvironment(fakeEnvId));
+            const actual = renderHook(() => useSelectedEnvironment(fakeEnvId));
 
             await waitFor(() => expect(actual.result.current.data).toBeUndefined());
 
             const history = createMemoryHistory({ initialEntries: [`/test?environmentId=${fakeEnvId}`] });
-            const actual2 = renderHook(() => useEnvironment(), { history });
+            const actual2 = renderHook(() => useSelectedEnvironment(), { history });
 
             await waitFor(() => expect(actual2.result.current.data).toBeUndefined());
         });

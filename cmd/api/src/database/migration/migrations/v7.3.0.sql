@@ -104,5 +104,5 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
 );
 
 -- generic ingest
-ALTER TABLE file_upload_jobs RENAME TO ingest_jobs;
-ALTER TABLE ingest_tasks ADD COLUMN is_generic BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE IF EXISTS file_upload_jobs RENAME TO ingest_jobs;
+ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS is_generic BOOLEAN NOT NULL DEFAULT FALSE;

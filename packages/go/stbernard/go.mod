@@ -23,7 +23,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/specterops/bloodhound/bhlog v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/mod v0.21.0
 )
 
