@@ -131,7 +131,7 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		defer request.Body.Close()
 	}
 
-	validator := ingest.IngestValidator{IngestSchema: s.IngestSchema}
+	validator := ingest.NewIngestValidator(s.IngestSchema)
 
 	if !IsValidContentTypeForUpload(request.Header) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)

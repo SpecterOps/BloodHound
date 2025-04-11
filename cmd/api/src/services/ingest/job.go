@@ -27,7 +27,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/model"
@@ -89,11 +88,6 @@ func GetIngestJobByID(ctx context.Context, db IngestData, jobID int64) (model.In
 	return db.GetIngestJob(ctx, jobID)
 }
 
-func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
-	tr := io.TeeReader(src, dst)
-	return ValidateZipFile(tr)
-}
-
 func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (string, model.FileType, error) {
 	fileData := request.Body
 	tempFile, err := os.CreateTemp(location, "bh")
@@ -109,22 +103,6 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		// We should never get here since this is checked a level above
 		return "", model.FileTypeJson, fmt.Errorf("invalid content type for ingest file")
 	}
-}
-
-type FileValidator func(src io.Reader, dst io.Writer) error
-
-type IngestValidator struct {
-	IngestSchema IngestSchema
-}
-
-func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
-	normalizedContent, err := bomenc.NormalizeToUTF8(src)
-	if err != nil {
-		return err
-	}
-	tr := io.TeeReader(normalizedContent, dst)
-	_, err = ValidateMetaTag(tr, s.IngestSchema, true)
-	return err
 }
 
 func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) error {

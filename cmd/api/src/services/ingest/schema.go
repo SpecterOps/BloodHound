@@ -11,6 +11,10 @@ import (
 //go:embed jsonschema
 var schemaFiles embed.FS
 
+// IngestSchema holds compiled JSON schemas used to validate
+// generic-ingested graph data. It includes separate schemas for nodes
+// and edges, which are reused across multiple ingestion requests
+// to avoid recompiling on every request.
 type IngestSchema struct {
 	NodeSchema *jsonschema.Schema
 	EdgeSchema *jsonschema.Schema

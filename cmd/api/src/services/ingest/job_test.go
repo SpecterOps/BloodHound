@@ -103,7 +103,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
 	}
 
-	v := IngestValidator{IngestSchema: schema}
+	v := NewIngestValidator(schema)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -131,7 +131,7 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
 	}
 
-	v := IngestValidator{IngestSchema: schema}
+	v := NewIngestValidator(schema)
 
 	err = v.WriteAndValidateJSON(src, dst)
 
