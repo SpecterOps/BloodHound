@@ -131,23 +131,44 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 		defer request.Body.Close()
 	}
 
-	if !IsValidContentTypeForUpload(request.Header) {
+	contentType, err := ParseUploadContentType(request.Header)
+	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
-	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
+		return
+	}
+
+	fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString)
+	if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
+		return
+	}
+
+	ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(fileUploadJobID))
+	if err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, fileType, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, ingest.ErrInvalidJSON) {
+		return
+	}
+
+	fileName, fileType, err := ingest.SaveIngestFile(s.Config.TempDirectory(), contentType, request.Body)
+	if errors.Is(err, ingest.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+		return
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, fileName, fileType, requestId, int64(fileUploadJobID)); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err = ingest.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		response.WriteHeader(http.StatusAccepted)
+		return
 	}
+
+	if _, err = ingest.CreateIngestTask(request.Context(), s.DB, fileName, fileType, requestId, int64(fileUploadJobID)); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	if err = ingest.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	}
+
+	response.WriteHeader(http.StatusAccepted)
 }
 
 func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.Request) {
@@ -172,13 +193,20 @@ func (s Resources) ListAcceptedFileUploadTypes(response http.ResponseWriter, req
 	api.WriteBasicResponse(request.Context(), ingestModel.AllowedFileUploadTypes, http.StatusOK, response)
 }
 
-func IsValidContentTypeForUpload(header http.Header) bool {
+func ParseUploadContentType(header http.Header) (string, error) {
 	rawValue := header.Get(headers.ContentType.String())
 	if rawValue == "" {
-		return false
-	} else if parsed, _, err := mime.ParseMediaType(rawValue); err != nil {
-		return false
-	} else {
-		return slices.Contains(ingestModel.AllowedFileUploadTypes, parsed)
+		return "", fmt.Errorf("missing Content-Type header")
 	}
+
+	parsed, _, err := mime.ParseMediaType(rawValue)
+	if err != nil {
+		return "", fmt.Errorf("invalid Content-Type format: %w", err)
+	}
+
+	if !slices.Contains(ingestModel.AllowedFileUploadTypes, parsed) {
+		return "", fmt.Errorf("unsupported Content-Type: %s", parsed)
+	}
+
+	return parsed, nil
 }

@@ -2,8 +2,7 @@ package ingest
 
 import (
 	"bytes"
-	"net/http"
-	"net/http/httptest"
+	"io"
 	"os"
 	"testing"
 
@@ -12,13 +11,10 @@ import (
 
 func TestIntegration_SaveIngestFile_JSON(t *testing.T) {
 	// TODO: Make this
-	body := bytes.NewBufferString(`{"meta":{"methods":46067,"type":"computers","count":0,"version":6},"data":[]}`)
-
-	req := httptest.NewRequest(http.MethodPost, "/ingest", body)
-	req.Header.Set("Content-Type", "application/json")
+	body := io.NopCloser(bytes.NewBufferString(`{"meta":{"methods":46067,"type":"computers","count":0,"vers ion":6},"data":[]}`))
 
 	// TODO: Make this take it a FS?
-	location, fileType, err := SaveIngestFile("/tmp", req)
+	location, fileType, err := SaveIngestFile("/tmp", "application/json", body)
 	if err != nil {
 		t.Fatalf("SaveIngestFile failed: %v", err)
 	}
