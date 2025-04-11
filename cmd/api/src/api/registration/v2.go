@@ -121,17 +121,12 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorByVersion).RequireAuth()
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}/checksum", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorChecksumByVersion).RequireAuth()
 
-	// Collection File Upload API
+	// Generic Ingest + File Upload API
 	routerInst.GET("/api/v2/file-upload", resources.ListIngestJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
-
 	routerInst.POST("/api/v2/file-upload/start", resources.StartIngestJob).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessIngestFile).RequirePermissions(permissions.GraphDBIngest)
 	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndIngestJob).RequirePermissions(permissions.GraphDBIngest)
-
-	// routerInst.POST("/api/v2/generic-ingest/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
-	// routerInst.POST(fmt.Sprintf("/api/v2/generic-ingest/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
-	// routerInst.POST(fmt.Sprintf("/api/v2/generic-ingest/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(resources.DB)
