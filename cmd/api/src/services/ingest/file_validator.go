@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/specterops/bloodhound/bomenc"
+	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
 // FileValidator defines the interface for ingest file validation.
@@ -27,12 +28,12 @@ import (
 // Implementations are responsible for validating the input stream,
 // while simultaneously copying it to the destination for persistence.
 // This abstraction supports format-agnostic payloads (e.g., JSON, ZIP)
-type FileValidator func(src io.Reader, dst io.Writer) error
+type FileValidator func(src io.Reader, dst io.Writer) (ingest.Metadata, error)
 
 // WriteAndValidateZIP implements FileValidator for ZIP ingest files.
-func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
+func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
 	tr := io.TeeReader(src, dst)
-	return ValidateZipFile(tr)
+	return ingest.Metadata{}, ValidateZipFile(tr)
 }
 
 // WriteAndValidateJSON implements FileValidator for JSON ingest files.
@@ -40,14 +41,15 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) error {
 //
 // This method is a member of `IngestValidator` to reuse the precompiled
 // node and edge schemas loaded during application startup.
-func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
+func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
 	normalizedContent, err := bomenc.NormalizeToUTF8(src)
 	if err != nil {
-		return err
+		return ingest.Metadata{}, err
 	}
 	tr := io.TeeReader(normalizedContent, dst)
-	_, err = ValidateMetaTag(tr, s.IngestSchema, true)
-	return err
+	metatag, err := ValidateMetaTag(tr, s.IngestSchema, true)
+
+	return metatag, err
 }
 
 // IngestValidator encapsulates precompiled JSON schemas used to validate

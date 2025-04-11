@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . IngestData
 package ingest
 
 import (
@@ -24,10 +25,12 @@ import (
 
 // The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
 type IngestData interface {
+	// Task handlers
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
-	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
 	DeleteAllIngestTasks(ctx context.Context) error
+	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
 
+	// Job handlers
 	CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
 	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
 	GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
