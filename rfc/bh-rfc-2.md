@@ -57,8 +57,10 @@ The following types should be used when appropriate in a conventional commit mes
 | :---- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | feat  | For introducing a new feature in the application. Denotes that the release including this commit will have a `MINOR` version bump if there are no other `MAJOR` version changes being applied. |
 | fix   | For fixing a bug in the application. Denotes that the release including this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied.   |
-| chore | For miscellaneous changes that do not fit well as either a `feat` for `fix` type.                                                                                                              |
-| wip   | A convenience type that for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                      |
+| docs  | For updating existing documentation or creating new documentation.                                                                                                                             |
+| test  | For updating existing tests or introducing new tests.                                                                                                                                          |
+| chore | For miscellaneous changes that do not fit well into any of the types listed above.                                                                                                             |
+| wip   | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                           |
 
 ### 3.2 Scope
 
