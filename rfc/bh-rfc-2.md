@@ -30,12 +30,16 @@ A conventional commit will have the following shape:
 
 [optional body]
 
-[optional footer(s)]
+<footer(s)>
 ```
 
 Simple example:
 
-`feat: Adds table view to Explore page`
+```
+feat: Adds table view to Explore page
+
+Closes BED-5555
+```
 
 Detailed example:
 
