@@ -17,7 +17,7 @@ This document provides a set of guidelines for formatting commit messages that c
 ## 2. Motivation
 
 - **Regular Messages** - Provide a standard format and set of options that developers should follow so that incoming code changes can be quickly and easily parsed for the level and scope of impact.
-- **Semver Adherance** - Use commit messaging that mitigates ambiguity in versioning the application when new releases are tagged.
+- **Semver Adherence** - Use commit messaging that mitigates ambiguity in versioning the application when new releases are tagged.
 - **Improved Automations** - Parse commit messages with tools to automate the generation of changelogs.
 - **Clear Communication** - Reviewers are able to navigate changesets with certainty. New contributors are able to clearly convey what their work entails.
 
@@ -53,17 +53,12 @@ Closes BED-5555
 All commit messages MUST have a type included.  
 The following types should be used when appropriate in a conventional commit message:
 
-| Type     | Description                                                                                   |
-| :------- | :-------------------------------------------------------------------------------------------- |
-| feat     | For introducing a new feature in the application. This corresponds to a `MINOR` version bump. |
-| fix      | For fixing a bug in the application. This corresponds to a `PATCH` version bump.              |
-| docs     | For updating existing documentation or creating new documentation.                            |
-| style    | For changes that do not materially change the logic of the application such as formatting.    |
-| refactor | For changes that may change logic but does not fix a bug or introduce a new feature.          |
-| perf     | For changes that improve the performance of the application                                   |
-| test     | For updating existing tests or introducing new tests.                                         |
-| ci       | For changes that involve continous integration such as configuration or scripts.              |
-| revert   | For reverting a previous commit.                                                              |
+| Type  | Description                                                                                                                                                                                    |
+| :---- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| feat  | For introducing a new feature in the application. Denotes that the release including this commit will have a `MINOR` version bump if there are no other `MAJOR` version changes being applied. |
+| fix   | For fixing a bug in the application. Denotes that the release including this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied.   |
+| chore | For miscellaneous changes that do not fit well as either a `feat` for `fix` type.                                                                                                              |
+| wip   | A convenience type that for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                      |
 
 ### 3.2 Scope
 
@@ -101,11 +96,23 @@ The body is a good place to provide additional context, details, motivations, or
 
 ### 3.5 Footer
 
-The footer of a conventional commit message is OPTIONAL.
+The footer MUST be included as part of a conventional commit message
+
+The footer MUST relate a ticket or issue number that the work is associated with. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+
+Examples:
+
+`Closes #1111`
+
+`Fixes BED-5555`
+
+`resolves: #777`
+
+`CLOSES: #1, resolves #2, Fix: BED-4444`
 
 The footer should be separated from the body (or the type and description if no body is included) with an empty line.
 
-The footer SHOULD be used if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
+The footer SHOULD be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
 
 Example:
 
@@ -118,20 +125,14 @@ Closes BED-5555
 
 The footer can also be used to relate to the ticket or issue number the work is associated with. The keywords `closes` or `fixes` should be used in this case.
 
-Examples:
-
-`Closes #1111`
-
-`Fixes BED-5555`
-
 ## 4. Best Practices
 
 The following are best practices for using Conventional Commits:
 
 - Always write clear and concise commit messages.
 - Use the appropriate `type` for each commit based on the nature of the change.
-- Avoid using vague `types` such as `chore` or `wip`.
-- If a commit contains a breaking change, clearly document the change in the commit body or footer.
+- Avoid using vague `types` such as `chore` or `wip` if `feat` or `fix` can be appropriately applied.
+- If a commit contains a breaking change, clearly document the change in the footer.
 - Group related changes into a single commit instead of multiple small commits.
 
 ## 5. Exceptional Scenarios
