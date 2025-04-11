@@ -19,8 +19,9 @@ package translate
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"log/slog"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )

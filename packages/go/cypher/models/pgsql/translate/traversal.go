@@ -213,7 +213,6 @@ func (s *Translator) buildTraversalPatternStep(partFrame *Frame, traversalStep *
 	}, nil
 }
 
-
 func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedProjection bool) error {
 	var scopeSnapshot *Scope
 
