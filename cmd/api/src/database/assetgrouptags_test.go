@@ -222,6 +222,150 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 
 }
 
+func TestDatabase_GetAssetGroupTags(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testActor       = "test_actor"
+		testDescription = "test tag description"
+	)
+
+	var (
+		err            error
+		label1, label2 model.AssetGroupTag
+		tier1, tier2   model.AssetGroupTag
+	)
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "label 1", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testActor, "label 2", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 1", testDescription, null.Int32From(1), null.BoolFrom(false))
+	require.NoError(t, err)
+	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "tier 2", testDescription, null.Int32From(2), null.BoolFrom(false))
+	require.NoError(t, err)
+
+	t.Run("filtering for Label returns labels", func(t *testing.T) {
+		ids := []int{
+			label1.ID,
+			label2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeLabel}})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("filtering for Tier returns tiers", func(t *testing.T) {
+		ids := []int{
+			tier1.ID,
+			tier2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("no filter returns everything", func(t *testing.T) {
+		ids := []int{
+			label1.ID,
+			label2.ID,
+			tier1.ID,
+			tier2.ID,
+		}
+		types := []model.AssetGroupTagType{
+			model.AssetGroupTagTypeLabel,
+			model.AssetGroupTagTypeTier,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 4)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Contains(t, types, itm.Type)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+}
+
+func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+
+	var (
+		err            error
+		label1, label2 model.AssetGroupTag
+	)
+
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, "", "label 1", "", null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, "", "label 2", "", null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, "", "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	t.Run("single item count", func(t *testing.T) {
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+	})
+
+	t.Run("multi item count", func(t *testing.T) {
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+		require.NoError(t, err)
+		require.Equal(t, 2, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+		require.Equal(t, 2, counts[label2.ID])
+	})
+
+	t.Run("single value set for id with no results", func(t *testing.T) {
+		nonexistentId := 1234
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(counts))
+		require.Equal(t, 0, counts[nonexistentId])
+	})
+
+	t.Run("multi value set for id with no results", func(t *testing.T) {
+		nonexistentId := 1234
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		require.NoError(t, err)
+		require.Equal(t, 2, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+		require.Equal(t, 0, counts[nonexistentId])
+	})
+}
+
 func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	var (
 		dbInst        = integration.SetupDB(t)

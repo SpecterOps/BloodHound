@@ -40,7 +40,7 @@ const (
 
 	// Query parameters
 	QueryParameterSortBy         = "sort_by"
-	QueryParameterHydrateCounts  = "counts"
+	QueryParameterIncludeCounts  = "counts"
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
