@@ -75,3 +75,29 @@ patch:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+
+delete:
+  operationId: DeleteAssetGroupTagSelector
+  summary: Delete Asset Group Tag Selector
+  description: Delete an asset group tag selector
+  tags:
+    - Asset Isolation
+    - Community
+    - Enterprise
+
+  responses:
+    200:
+      description: Successfully deleted. No content is returned. 
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

@@ -578,6 +578,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), ctx, assetGroupIds)
 }
 
+// DeleteAssetGroupTagSelector mocks base method.
+func (m *MockDatabase) DeleteAssetGroupTagSelector(arg0 context.Context, arg1 string, arg2 model.AssetGroupTagSelector) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupTagSelector", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupTagSelector indicates an expected call of DeleteAssetGroupTagSelector.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupTagSelector(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupTagSelector), arg0, arg1, arg2)
+}
+
 // DeleteAuthSecret mocks base method.
 func (m *MockDatabase) DeleteAuthSecret(ctx context.Context, authSecret model.AuthSecret) error {
 	m.ctrl.T.Helper()
