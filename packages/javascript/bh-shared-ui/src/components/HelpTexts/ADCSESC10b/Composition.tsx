@@ -16,21 +16,18 @@
 
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useQuery } from 'react-query';
 import { EdgeInfoProps } from '..';
-import { apiClient } from '../../../utils/api';
-import VirtualizedNodeList, { VirtualizedNodeListItem } from '../../VirtualizedNodeList';
+import { useEdgeInfoItems } from '../../../hooks/useEdgeInfoItems';
+import VirtualizedNodeList from '../../VirtualizedNodeList';
 
 const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
-    const { data, isLoading, isError } = useQuery(['edgeComposition', sourceDBId, targetDBId, edgeName], () =>
-        apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
-    );
-
-    const nodesArray: VirtualizedNodeListItem[] = Object.values(data?.data.nodes || {}).map((node) => ({
-        name: node.label,
-        objectId: node.objectId,
-        kind: node.kind,
-    }));
+    const { isLoading, isError, nodesArray } = useEdgeInfoItems({
+        sourceDBId,
+        targetDBId,
+        edgeName,
+        endpoint: 'getEdgeComposition',
+        queryKey: 'edgeComposition',
+    });
 
     return (
         <>
