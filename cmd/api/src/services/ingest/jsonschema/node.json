@@ -8,7 +8,7 @@
         "kinds": {
             "type": ["array"],
             "items": { "type": "string" },
-            "maxItems": 2,
+            "maxItems": 3,
             "minItems": 1
         }
     },

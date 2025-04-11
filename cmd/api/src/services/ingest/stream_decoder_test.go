@@ -213,7 +213,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
-	// negativeCases = append(negativeCases, schemaFailureCases()...)
+	negativeCases = append(negativeCases, schemaFailureCases()...)
 	// negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
 	ingestSchema, err := ingest_service.LoadIngestSchema()
@@ -221,10 +221,6 @@ func Test_ValidateGenericIngest(t *testing.T) {
 
 	for _, assertion := range negativeCases {
 		t.Run(fmt.Sprintf("negative case: %s", assertion.name), func(t *testing.T) {
-			var (
-				reader io.Reader
-			)
-
 			reader, err := prepareReader(assertion)
 			require.Nil(t, err)
 
@@ -335,13 +331,13 @@ func criticalFailureCases() []genericAssertion {
 	}
 }
 
-// these test cases represent all the ways a node or an edge can fail schema validation
+// these test cases represent all the ways a node or an edge can fail schema validation.
 func schemaFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{
-			name:    "payload doesn't contain atleast one of nodes or edges",
-			payload: &testPayload{},
-			errMsgs: []string{"empty graph tag"},
+			name:            "payload doesn't contain atleast one of nodes or edges",
+			payload:         &testPayload{},
+			criticalErrMsgs: []string{"graph tag is empty. atleast one of nodes: [] or edges: [] is required"},
 		},
 		{
 			name: "node validation: ID is null",
@@ -352,7 +348,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '': missing property 'id'"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']"},
 		},
 		{
 			name: "node validation: ID is empty string",
@@ -364,7 +360,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '': missing property 'id'"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id']"},
 		},
 		{
 			name: "node validation: > than 2 kinds supplied",
@@ -376,7 +372,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '/kinds': maxItems: got 3, want 2"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': maxItems: got 3, want 2]"},
 		},
 		{
 			name: "node validation: atleast one kind must be specified",
@@ -388,7 +384,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '/kinds': minItems: got 0, want 1"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': minItems: got 0, want 1]"},
 		},
 		{
 			name: "node validation: kinds cannot be a null array",
@@ -399,7 +395,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '/kinds': got null, want array"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '/kinds': got null, want array]"},
 		},
 		{
 			name: "node validation: multiple issues. no node id, > 2 kinds supplied",
@@ -410,7 +406,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for nodes[0]", "at '/kinds': maxItems: got 3, want 2", "at '': missing property 'id'"},
+			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'id', at '/kinds': maxItems: got 3, want 2]"},
 		},
 		{
 			name: "edge validation: start not provided",
@@ -424,9 +420,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{
-				"validation failed for edges[0]",
-				"at '/start': got null, want object"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object]"},
 		},
 		{
 			name: "edge validation: start id not provided",
@@ -441,7 +435,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '/start': missing property 'id_value'"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': missing property 'id_value']"},
 		},
 		{
 			name: "edge validation: end not provided",
@@ -455,7 +449,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': got null, want object]"},
 		},
 		{
 			name: "edge validation: end id not provided",
@@ -468,7 +462,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': missing property 'id_value']"},
 		},
 		{
 			name: "edge validation: end id is empty",
@@ -481,7 +475,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '/end': missing property 'id_value'"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/end': missing property 'id_value']"},
 		},
 		{
 			name: "edge validation: kind not provided",
@@ -497,7 +491,7 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '': missing property 'kind'"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '': missing property 'kind']"},
 		},
 		{
 			name: "edge validation: multiple errors. start and end not provided",
@@ -508,12 +502,11 @@ func schemaFailureCases() []genericAssertion {
 					},
 				},
 			},
-			errMsgs: []string{"validation failed for edges[0]", "at '/end': got null, want object", "at '/start': got null, want object"},
+			validationErrMsgs: []string{"edges[0] schema validation failed: [at '/start': got null, want object, at '/end': got null, want object]"},
 		},
 	}
 }
 
-// TODO: add a test case with failures in both nodes and edges
 func itemsWithMultipleFailureCases() []genericAssertion {
 	return []genericAssertion{
 		{

@@ -322,7 +322,11 @@ func ValidateGenericIngest(decoder *json.Decoder, schema IngestSchema) error {
 	}
 
 	if !nodesFound && !edgesFound {
-		return ingest.ErrEmptyIngest
+		return ValidationReport{
+			CriticalErrors: []validationError{
+				{Message: "graph tag is empty. atleast one of nodes: [] or edges: [] is required"},
+			},
+		}
 	}
 
 	if hasErrors() {
