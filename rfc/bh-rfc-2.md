@@ -114,7 +114,7 @@ Examples:
 
 The footer should be separated from the body (or the type and description if no body is included) with an empty line.
 
-The footer SHOULD be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
+The footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
 
 Example:
 
@@ -124,8 +124,6 @@ feat(auth): Introduces required facial recognition sign in
 BREAKING CHANGE: The API endpoints for login and registration have changed.
 Closes BED-5555
 ```
-
-The footer can also be used to relate to the ticket or issue number the work is associated with. The keywords `closes` or `fixes` should be used in this case.
 
 ## 4. Best Practices
 
@@ -163,5 +161,6 @@ The following scenarios provide common and historical examples of when this migh
 - [Semantic Versioning](https://semver.org/)
 - [Commitlint](https://commitlint.js.org/)
 - [semantic-release](https://semantic-release.gitbook.io/)
+- [Commitizen](https://commitizen-tools.github.io/commitizen/)
 
 ---
