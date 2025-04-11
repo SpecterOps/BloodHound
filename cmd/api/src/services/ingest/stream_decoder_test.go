@@ -19,6 +19,7 @@ package ingest_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -27,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/ingest"
 	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type metaTagAssertion struct {
@@ -150,6 +152,20 @@ type testPayload struct {
 	Edges []testEdge `json:"edges,omitempty"`
 }
 
+func prepareReader(assertion genericAssertion) (io.Reader, error) {
+	if assertion.payload != nil { // test case uses go structure
+		payload, err := json.Marshal(assertion.payload)
+		if err != nil {
+			return nil, err
+		}
+		return bytes.NewReader(payload), nil
+	} else if assertion.rawPayload != "" { // test cases uses raw json
+		return strings.NewReader(assertion.rawPayload), nil
+	}
+
+	return nil, errors.New("no payload defined in test case")
+}
+
 func Test_ValidateGenericIngest(t *testing.T) {
 	var (
 		positiveCases = []genericAssertion{
@@ -201,55 +217,51 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	// negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
 	ingestSchema, err := ingest_service.LoadIngestSchema()
-	if err != nil {
-		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
-	}
+	require.Nil(t, err, fmt.Sprintf("failed to load ingest schema: %s", err))
 
 	for _, assertion := range negativeCases {
-		var (
-			testMessage = fmt.Sprintf("negative case failed. test name: %s", assertion.name)
-			reader      io.Reader
-		)
+		t.Run(fmt.Sprintf("negative case: %s", assertion.name), func(t *testing.T) {
+			var (
+				reader io.Reader
+			)
 
-		if assertion.payload != nil { // test case uses go structure
-			payload, err := json.Marshal(assertion.payload)
-			assert.Nil(t, err, testMessage)
-			reader = bytes.NewReader(payload)
-		} else if assertion.rawPayload != "" { // test cases uses raw json
-			reader = strings.NewReader(assertion.rawPayload)
-		}
+			reader, err := prepareReader(assertion)
+			require.Nil(t, err)
 
-		decoder := json.NewDecoder(reader)
+			decoder := json.NewDecoder(reader)
+			err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
 
-		err := ingest_service.ValidateGenericIngest(decoder, ingestSchema)
-		fmt.Println(err)
-		if report, ok := err.(ingest_service.ValidationReport); ok {
+			report, ok := err.(ingest_service.ValidationReport)
+			require.True(t, ok)
+
+			assert.Equal(t, len(assertion.criticalErrMsgs), len(report.CriticalErrors))
+			assert.Equal(t, len(assertion.validationErrMsgs), len(report.ValidationErrors))
+
 			// check critical errors
 			for index, actualCriticalErr := range report.CriticalErrors {
-				expected := assertion.criticalErrMsgs[index]
-				assert.Equal(t, expected, actualCriticalErr.Message, testMessage)
+				assert.Equal(t, assertion.criticalErrMsgs[index], actualCriticalErr.Message)
 			}
+
 			// check non-critical validation errors
 			for index, actualValidationErr := range report.ValidationErrors {
-				expected := assertion.validationErrMsgs[index]
-				assert.Equal(t, expected, actualValidationErr.Message, testMessage)
+				assert.Equal(t, assertion.validationErrMsgs[index], actualValidationErr.Message)
 			}
-		} else {
-			assert.Failf(t, "ValidateGenericIngest should've returned a ValidationReport. instead returned", err.Error(), testMessage)
-		}
+
+		})
 	}
 
 	for _, assertion := range positiveCases {
-		testMessage := fmt.Sprintf("positive case failed. test name: %s", assertion.name)
-		// marshal the test structure into json to simulate input
-		payload, err := json.Marshal(assertion.payload)
-		assert.Nil(t, err, testMessage)
+		t.Run(fmt.Sprintf("positive case: %s", assertion.name), func(t *testing.T) {
+			// marshal the test structure into json to simulate input
+			payload, err := json.Marshal(assertion.payload)
+			assert.Nil(t, err)
 
-		reader := bytes.NewReader(payload)
-		decoder := json.NewDecoder(reader)
+			reader := bytes.NewReader(payload)
+			decoder := json.NewDecoder(reader)
 
-		err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
-		assert.Nil(t, err, testMessage)
+			err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
+			assert.Nil(t, err)
+		})
 	}
 }
 
@@ -310,10 +322,9 @@ func criticalFailureCases() []genericAssertion {
 			validationErrMsgs: []string{"nodes[0] schema validation failed: [at '': missing property 'kinds']"},
 		},
 		{
-			name:              "edges array is not opened properly with '['",
-			rawPayload:        `{"nodes": [], "edges": "a string value"}`,
-			criticalErrMsgs:   []string{"error opening edges array: expected '[', got a string value"},
-			validationErrMsgs: []string{""},
+			name:            "edges array is not opened properly with '['",
+			rawPayload:      `{"nodes": [], "edges": "a string value"}`,
+			criticalErrMsgs: []string{"error opening edges array: expected '[', got a string value"},
 		},
 		{
 			name:              "edges array is not closed properly with ']'",
