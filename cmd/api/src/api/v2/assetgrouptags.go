@@ -81,6 +81,15 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
 	}
 }
@@ -161,6 +170,15 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			if seedsTemp != nil {
 				// seeds were unchanged, set them back to what is stored in the db for the response
 				selector.Seeds = seedsTemp
+			}
+			// Request analysis if scheduled analysis isn't enabled
+			if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
 			}
 			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
 		}
