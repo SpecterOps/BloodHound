@@ -44,12 +44,15 @@ Closes BED-5555
 Detailed example:
 
 ```
-feat(explore page): Adds a table view for graph results with only nodes
+docs(bh-rfc-2): Address PR feedback
 
-Since a result of only nodes is not particularly interesting to view as a graph, a table view has been
-added to the explore page that allows for inspecting result details with a better and more streamlined experience.
+- fixes 'Adherance' typo
+- removes superfluous types
+- adds `chore` and `wip` types
+- updates ticket/issue linking to be required
+- updates examples for ticket/issue linking and adds reference
 
-Closes BED-5555
+fixes: BED-5475
 ```
 
 ### 3.1 Types
