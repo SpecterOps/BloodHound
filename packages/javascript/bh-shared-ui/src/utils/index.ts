@@ -27,6 +27,7 @@ export * from './mocks';
 export * from './parseItemId';
 export * from './passwd';
 export * from './permissions';
+export * from './queries';
 export * from './searchParams';
 export * from './theme';
 export * from './user';
