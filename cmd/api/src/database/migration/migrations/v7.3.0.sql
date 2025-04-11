@@ -119,18 +119,3 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
   CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_nodes FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE,
   PRIMARY KEY (selector_id, node_id)
 );
-
--- Populate default cypher selectors
-
--- Domain Controllers
-WITH inserted_selector_id AS (
-  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
-    VALUES ((SELECT id FROM asset_group_tags WHERE name = 'Tier Zero'), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', 'Enterprise Domain Controllers', 'Enterprise domain controllers group', true, false, false) RETURNING id)
-INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) VALUES ((SELECT id FROM inserted_selector_id), 2, 'match (n:User:Group) where n.objectid ends with "1-5-9" return n');
-
--- Administrator Account
-WITH inserted_selector_id AS (
-  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
-    VALUES ((SELECT id FROM asset_group_tags WHERE name = 'Tier Zero'), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', 'Administrator Account', 'Administrator account', true, false, false) RETURNING id)
-INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) VALUES ((SELECT id FROM inserted_selector_id), 2, 'match (n:User:Group) where n.objectid ends with "-500" return n');
-
