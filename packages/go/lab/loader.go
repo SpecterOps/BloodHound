@@ -73,9 +73,9 @@ type Edge struct {
 
 // LoadGraphFixture requires a graph.Database interface and a GraphFixture struct.
 // It will import the nodes and edges from the GraphFixture and inserts them into
-// the graph database. It uses the `id` property of the nodes as the local
-// identifier and then maps them to database IDs, meaning that the `id` given in
-// the file will not be preserved.
+// the graph database. It uses the `ID` property of the nodes as the local
+// identifier and then maps them to database IDs, meaning that the `ID` given in
+// the GraphFixture will not be preserved.
 func LoadGraphFixture(db graph.Database, g *GraphFixture) error {
 	var nodeMap = make(map[string]graph.ID)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {

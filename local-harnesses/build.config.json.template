@@ -15,7 +15,7 @@
     "neo4j": {
         "connection": "neo4j://neo4j:bloodhoundcommunityedition@graph-db:7687/"
     },
-    "graph_driver": "pg",
+    "graph_driver": "neo4j",
     "default_admin": {
         "principal_name": "admin",
         "email_address": "spam@example.com",
