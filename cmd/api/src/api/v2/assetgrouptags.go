@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
@@ -188,6 +189,16 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot delete a default selector", request), response)
 	} else if err := s.DB.DeleteAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
 	}
 }
 
