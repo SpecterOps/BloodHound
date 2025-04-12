@@ -16,7 +16,7 @@
 
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
-import { useEdgeInfoItems } from '../../../hooks/useEdgeInfoItems';
+import { EdgeInfoType, useEdgeInfoItems } from '../../../hooks/useEdgeInfoItems';
 import VirtualizedNodeList from '../../VirtualizedNodeList';
 import { EdgeInfoProps } from '../index';
 
@@ -25,8 +25,7 @@ const RelayTargets: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =
         sourceDBId,
         targetDBId,
         edgeName,
-        endpoint: 'getRelayTargets',
-        queryKey: 'relayTargets',
+        type: EdgeInfoType['relayTargets'],
     });
 
     return (
