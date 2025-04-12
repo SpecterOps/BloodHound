@@ -57,7 +57,7 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       itemType,
+		Labels:      []graph.Kind{itemType},
 	}
 }
 
@@ -109,7 +109,7 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       ad.Computer,
+		Labels:      []graph.Kind{ad.Computer},
 	}
 }
 
@@ -161,7 +161,7 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
 		PropertyMap: itemProps,
-		Label:       ad.EnterpriseCA,
+		Labels:      []graph.Kind{ad.EnterpriseCA},
 	}
 }
 
@@ -670,7 +670,7 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 					PropertyMap: map[string]any{
 						"name": groupID,
 					},
-					Label: ad.LocalGroup,
+					Labels: []graph.Kind{ad.LocalGroup},
 				})
 
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
@@ -775,7 +775,7 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		parsedData.ExtraNodeProps = append(parsedData.ExtraNodeProps, IngestibleNode{
 			PropertyMap: map[string]any{"name": trust.TargetDomainName},
 			ObjectID:    trust.TargetDomainSid,
-			Label:       ad.Domain,
+			Labels:      []graph.Kind{ad.Domain},
 		})
 
 		var dir = trust.TrustDirection
@@ -1009,7 +1009,7 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 			PropertyMap: map[string]any{
 				"name": localGroup.Name,
 			},
-			Label: ad.LocalGroup,
+			Labels: []graph.Kind{ad.LocalGroup},
 		})
 	}
 
@@ -1051,7 +1051,7 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 			PropertyMap: map[string]any{
 				"name": name.PrincipalName,
 			},
-			Label: ad.Entity,
+			Labels: []graph.Kind{ad.Entity},
 		})
 	}
 
@@ -1107,7 +1107,7 @@ func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    enterpriseCA.ObjectIdentifier,
 		PropertyMap: propMap,
-		Label:       ad.EnterpriseCA,
+		Labels:      []graph.Kind{ad.EnterpriseCA},
 	}
 }
 
@@ -1360,6 +1360,6 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
 		PropertyMap: propMap,
-		Label:       ad.Computer,
+		Labels:      []graph.Kind{ad.Computer},
 	}
 }

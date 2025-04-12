@@ -17,6 +17,7 @@
 package datapipe
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -34,11 +35,7 @@ T is any of the ingest types
 */
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
 
-func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
+func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversionFunc ConversionFunc[T]) error {
 
 	var (
 		count         = 0
@@ -61,7 +58,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		}
 
 		if count == IngestCountThreshold {
-			if err = IngestBasicData(batch, convertedData); err != nil {
+			if err := IngestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -71,7 +68,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	}
 
 	if count > 0 {
-		if err = IngestBasicData(batch, convertedData); err != nil {
+		if err := IngestBasicData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -79,11 +76,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	return errs.Combined()
 }
 
-func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
+func decodeGroupData(batch graph.Batch, decoder *json.Decoder) error {
 
 	var (
 		convertedData = ConvertedGroupData{}
@@ -93,7 +86,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	for decoder.More() {
 		var group ein.Group
-		if err = decoder.Decode(&group); err != nil {
+		if err := decoder.Decode(&group); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding group object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -114,7 +107,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestGroupData(batch, convertedData); err != nil {
+		if err := IngestGroupData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -122,20 +115,16 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
-
+func decodeSessionData(batch graph.Batch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
 		errs          = util.NewErrorCollector()
 	)
+
 	for decoder.More() {
 		var session ein.Session
-		if err = decoder.Decode(&session); err != nil {
+		if err := decoder.Decode(&session); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding session object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -155,7 +144,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
+		if err := IngestSessions(batch, convertedData.SessionProps); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -163,12 +152,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
-
+func decodeAzureData(batch graph.Batch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
@@ -177,7 +161,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 
 	for decoder.More() {
 		var data AzureBase
-		if err = decoder.Decode(&data); err != nil {
+		if err := decoder.Decode(&data); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding azure object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -198,7 +182,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestAzureData(batch, convertedData); err != nil {
+		if err := IngestAzureData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}

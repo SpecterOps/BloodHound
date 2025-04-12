@@ -351,3 +351,9 @@ type OU struct {
 	Links        []GPLink
 	GPOChanges   GPOChanges
 }
+
+type GenericNode struct {
+	ID         string
+	Kinds      []string
+	Properties map[string]any
+}

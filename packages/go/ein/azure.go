@@ -60,7 +60,7 @@ func ConvertAZAppToNode(app models.App) IngestibleNode {
 			azure.TenantID.String():        strings.ToUpper(app.TenantId),
 		},
 		ObjectID: strings.ToUpper(app.AppId),
-		Label:    azure.App,
+		Labels:   []graph.Kind{azure.App},
 	}
 }
 
@@ -95,7 +95,7 @@ func ConvertAZDeviceToNode(device models.Device) IngestibleNode {
 			azure.TenantID.String():               strings.ToUpper(device.TenantId),
 		},
 		ObjectID: strings.ToUpper(device.Id),
-		Label:    azure.Device,
+		Labels:   []graph.Kind{azure.Device},
 	}
 }
 
@@ -125,7 +125,7 @@ func ConvertAZVMScaleSetToNode(scaleSet models.VMScaleSet) IngestibleNode {
 			common.Name.String():    strings.ToUpper(scaleSet.Name),
 			azure.TenantID.String(): strings.ToUpper(scaleSet.TenantId),
 		},
-		Label: azure.VMScaleSet,
+		Labels: []graph.Kind{azure.VMScaleSet},
 	}
 }
 
@@ -244,7 +244,7 @@ func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []Inges
 			azure.TenantID.String():     strings.ToUpper(data.TenantId),
 		},
 		ObjectID: strings.ToUpper(data.PrincipalId.String()),
-		Label:    azure.ServicePrincipal,
+		Labels:   []graph.Kind{azure.ServicePrincipal},
 	})
 
 	nodes = append(nodes, IngestibleNode{
@@ -253,7 +253,7 @@ func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []Inges
 			azure.TenantID.String():     strings.ToUpper(data.TenantId),
 		},
 		ObjectID: strings.ToUpper(data.ResourceId),
-		Label:    azure.ServicePrincipal,
+		Labels:   []graph.Kind{azure.ServicePrincipal},
 	})
 
 	return nodes
@@ -300,7 +300,7 @@ func ConvertAzureFunctionAppToNode(data models.FunctionApp) IngestibleNode {
 			common.Name.String():    strings.ToUpper(data.Name),
 			azure.TenantID.String(): strings.ToUpper(data.TenantId),
 		},
-		Label: azure.FunctionApp,
+		Labels: []graph.Kind{azure.FunctionApp},
 	}
 }
 
@@ -408,7 +408,7 @@ func ConvertAzureGroupToNode(data models.Group) IngestibleNode {
 			azure.SecurityIdentifier.String(): data.SecurityIdentifier,
 			azure.TenantID.String():           strings.ToUpper(data.TenantId),
 		},
-		Label: azure.Group,
+		Labels: []graph.Kind{azure.Group},
 	}
 }
 
@@ -417,14 +417,14 @@ func ConvertAzureGroupToOnPremisesNode(data models.Group) IngestibleNode {
 		return IngestibleNode{
 			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
 			PropertyMap: map[string]any{},
-			Label:       ad.Group,
+			Labels:      []graph.Kind{ad.Group},
 		}
 	}
 
 	return IngestibleNode{
 		ObjectID:    "",
 		PropertyMap: nil,
-		Label:       nil,
+		Labels:      nil,
 	}
 }
 
@@ -521,7 +521,7 @@ func ConvertAzureKeyVault(data models.KeyVault) (IngestibleNode, IngestibleRelat
 				azure.EnableRBACAuthorization.String(): data.Properties.EnableRbacAuthorization,
 				azure.TenantID.String():                strings.ToUpper(data.TenantId),
 			},
-			Label: azure.KeyVault,
+			Labels: []graph.Kind{azure.KeyVault},
 		},
 		NewIngestibleRelationship(
 			IngestibleSource{
@@ -732,7 +732,7 @@ func ConvertAzureManagementGroup(data models.ManagementGroup) (IngestibleNode, I
 				common.Name.String():    strings.ToUpper(fmt.Sprintf("%s@%s", data.Properties.DisplayName, data.TenantName)),
 				azure.TenantID.String(): strings.ToUpper(data.TenantId),
 			},
-			Label: azure.ManagementGroup,
+			Labels: []graph.Kind{azure.ManagementGroup},
 		}, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     strings.ToUpper(data.TenantId),
@@ -756,7 +756,7 @@ func ConvertAzureResourceGroup(data models.ResourceGroup) (IngestibleNode, Inges
 				common.Name.String():    strings.ToUpper(data.Name),
 				azure.TenantID.String(): strings.ToUpper(data.TenantId),
 			},
-			Label: azure.ResourceGroup,
+			Labels: []graph.Kind{azure.ResourceGroup},
 		}, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     strings.ToUpper(data.SubscriptionId),
@@ -834,7 +834,7 @@ func ConvertAzureRole(data models.Role) (IngestibleNode, IngestibleRelationship)
 				azure.RoleTemplateID.String(): data.TemplateId,
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
 			},
-			Label: azure.Role,
+			Labels: []graph.Kind{azure.Role},
 		}, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     strings.ToUpper(data.TenantId),
@@ -922,7 +922,7 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal) ([]IngestibleNod
 			azure.ServicePrincipalType.String():   data.ServicePrincipalType,
 			azure.TenantID.String():               strings.ToUpper(data.TenantId),
 		},
-		Label: azure.ServicePrincipal,
+		Labels: []graph.Kind{azure.ServicePrincipal},
 	})
 
 	nodes = append(nodes, IngestibleNode{
@@ -931,7 +931,7 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal) ([]IngestibleNod
 			common.DisplayName.String(): data.AppDisplayName,
 			azure.TenantID.String():     strings.ToUpper(data.AppOwnerOrganizationId),
 		},
-		Label: azure.App,
+		Labels: []graph.Kind{azure.App},
 	})
 
 	relationships = append(relationships, NewIngestibleRelationship(
@@ -974,7 +974,7 @@ func ConvertAzureLogicApp(logicApp models.LogicApp) (IngestibleNode, []Ingestibl
 			common.Name.String():    strings.ToUpper(logicApp.Name),
 			azure.TenantID.String(): strings.ToUpper(logicApp.TenantId),
 		},
-		Label: azure.LogicApp,
+		Labels: []graph.Kind{azure.LogicApp},
 	}
 
 	relationships := make([]IngestibleRelationship, 0)
@@ -1107,7 +1107,7 @@ func ConvertAzureSubscription(data azure2.Subscription) (IngestibleNode, Ingesti
 				common.Name.String():        strings.ToUpper(data.DisplayName),
 				azure.TenantID.String():     strings.ToUpper(data.TenantId),
 			},
-			Label: azure.Subscription,
+			Labels: []graph.Kind{azure.Subscription},
 		},
 		NewIngestibleRelationship(
 			IngestibleSource{
@@ -1184,7 +1184,7 @@ func ConvertAzureTenantToNode(data models.Tenant) IngestibleNode {
 			common.Name.String():        strings.ToUpper(data.DisplayName),
 			azure.TenantID.String():     strings.ToUpper(data.TenantId),
 		},
-		Label: azure.Tenant,
+		Labels: []graph.Kind{azure.Tenant},
 	}
 
 	if data.Collected {
@@ -1201,7 +1201,7 @@ func ConvertAzureUser(data models.User) (IngestibleNode, IngestibleNode, Ingesti
 		onPremNode = IngestibleNode{
 			ObjectID:    strings.ToUpper(data.OnPremisesSecurityIdentifier),
 			PropertyMap: map[string]any{},
-			Label:       ad.User,
+			Labels:      []graph.Kind{ad.User},
 		}
 	}
 
@@ -1221,7 +1221,7 @@ func ConvertAzureUser(data models.User) (IngestibleNode, IngestibleNode, Ingesti
 				azure.UserType.String():          data.UserType,
 				azure.TenantID.String():          strings.ToUpper(data.TenantId),
 			},
-			Label: azure.User,
+			Labels: []graph.Kind{azure.User},
 		}, onPremNode, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     strings.ToUpper(data.TenantId),
@@ -1248,7 +1248,7 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine) (IngestibleNode, []I
 			common.OperatingSystem.String(): data.Properties.StorageProfile.OSDisk.OSType,
 			azure.TenantID.String():         strings.ToUpper(data.TenantId),
 		},
-		Label: azure.VM,
+		Labels: []graph.Kind{azure.VM},
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
@@ -1454,7 +1454,7 @@ func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID 
 			azure.TenantID.String():            strings.ToUpper(data.TenantId),
 			azure.NodeResourceGroupID.String(): strings.ToUpper(nodeResourceGroupID),
 		},
-		Label: azure.ManagedCluster,
+		Labels: []graph.Kind{azure.ManagedCluster},
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
@@ -1528,7 +1528,7 @@ func ConvertAzureContainerRegistry(data models.ContainerRegistry) (IngestibleNod
 			common.Name.String():    strings.ToUpper(data.Name),
 			azure.TenantID.String(): strings.ToUpper(data.TenantId),
 		},
-		Label: azure.ContainerRegistry,
+		Labels: []graph.Kind{azure.ContainerRegistry},
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
@@ -1594,7 +1594,7 @@ func ConvertAzureWebApp(webApp models.WebApp) (IngestibleNode, []IngestibleRelat
 			common.Name.String():    strings.ToUpper(webApp.Name),
 			azure.TenantID.String(): strings.ToUpper(webApp.TenantId),
 		},
-		Label: azure.WebApp,
+		Labels: []graph.Kind{azure.WebApp},
 	}
 
 	relationships := make([]IngestibleRelationship, 0)
@@ -1753,7 +1753,7 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 			common.Name.String():    strings.ToUpper(account.Name),
 			azure.TenantID.String(): strings.ToUpper(account.TenantId),
 		},
-		Label: azure.AutomationAccount,
+		Labels: []graph.Kind{azure.AutomationAccount},
 	}
 
 	relationships := make([]IngestibleRelationship, 0)

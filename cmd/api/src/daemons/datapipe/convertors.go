@@ -17,11 +17,26 @@
 package datapipe
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
+
+func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
+	// entity has ID "", Kinds[], Properties map[string]any
+	ingestibleNode := ein.IngestibleNode{
+		ObjectID:    entity.ID,
+		PropertyMap: entity.Properties,
+		Labels:      graph.StringsToKinds(entity.Kinds),
+	}
+
+	fmt.Println("convertGenericNode: ", ingestibleNode)
+
+	converted.NodeProps = append(converted.NodeProps, ingestibleNode)
+}
 
 func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 	baseNodeProp := ein.ConvertComputerToNode(computer)

@@ -71,7 +71,7 @@ type IngestibleSession struct {
 type IngestibleNode struct {
 	ObjectID    string
 	PropertyMap map[string]any
-	Label       graph.Kind
+	Labels      []graph.Kind
 }
 
 func (s IngestibleNode) IsValid() bool {

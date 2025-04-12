@@ -17,6 +17,7 @@
 package datapipe
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -97,42 +98,78 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
 }
 
 func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
-	switch meta.Type {
-	case ingest.DataTypeComputer:
-		if meta.Version >= 5 {
-			return decodeBasicData(batch, reader, convertComputerData)
-		}
-	case ingest.DataTypeUser:
-		return decodeBasicData(batch, reader, convertUserData)
-	case ingest.DataTypeGroup:
-		return decodeGroupData(batch, reader)
-	case ingest.DataTypeDomain:
-		return decodeBasicData(batch, reader, convertDomainData)
-	case ingest.DataTypeGPO:
-		return decodeBasicData(batch, reader, convertGPOData)
-	case ingest.DataTypeOU:
-		return decodeBasicData(batch, reader, convertOUData)
-	case ingest.DataTypeSession:
-		return decodeSessionData(batch, reader)
-	case ingest.DataTypeContainer:
-		return decodeBasicData(batch, reader, convertContainerData)
-	case ingest.DataTypeAIACA:
-		return decodeBasicData(batch, reader, convertAIACAData)
-	case ingest.DataTypeRootCA:
-		return decodeBasicData(batch, reader, convertRootCAData)
-	case ingest.DataTypeEnterpriseCA:
-		return decodeBasicData(batch, reader, convertEnterpriseCAData)
-	case ingest.DataTypeNTAuthStore:
-		return decodeBasicData(batch, reader, convertNTAuthStoreData)
-	case ingest.DataTypeCertTemplate:
-		return decodeBasicData(batch, reader, convertCertTemplateData)
-	case ingest.DataTypeAzure:
-		return decodeAzureData(batch, reader)
-	case ingest.DataTypeIssuancePolicy:
-		return decodeBasicData(batch, reader, convertIssuancePolicy)
+	if handler, ok := ingestHandlers[meta.Type]; !ok {
+		return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
+	} else {
+		return handler(batch, reader, meta)
 	}
+}
 
-	return nil
+type ingestHandler func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error
+
+func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler {
+	return func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		decoder, err := CreateIngestDecoder(reader, "data", 1)
+		if err != nil {
+			return err
+		}
+		return decodeBasicData(batch, decoder, conversionFunc)
+	}
+}
+
+var ingestHandlers = map[ingest.DataType]ingestHandler{
+	ingest.DataTypeGeneric: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
+			return err
+		} else {
+			return decodeBasicData(batch, decoder, convertGenericNode)
+		}
+	},
+	ingest.DataTypeComputer: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else if meta.Version >= 5 {
+			return decodeBasicData(batch, decoder, convertComputerData)
+		} else {
+			return nil
+		}
+	},
+	ingest.DataTypeGroup: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeGroupData(batch, decoder)
+		}
+	},
+	ingest.DataTypeSession: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeSessionData(batch, decoder)
+		}
+	},
+	ingest.DataTypeAzure: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeAzureData(batch, decoder)
+		}
+	},
+	ingest.DataTypeUser:           defaultBasicHandler(convertUserData),
+	ingest.DataTypeDomain:         defaultBasicHandler(convertDomainData),
+	ingest.DataTypeGPO:            defaultBasicHandler(convertGPOData),
+	ingest.DataTypeOU:             defaultBasicHandler(convertOUData),
+	ingest.DataTypeContainer:      defaultBasicHandler(convertContainerData),
+	ingest.DataTypeAIACA:          defaultBasicHandler(convertAIACAData),
+	ingest.DataTypeRootCA:         defaultBasicHandler(convertRootCAData),
+	ingest.DataTypeEnterpriseCA:   defaultBasicHandler(convertEnterpriseCAData),
+	ingest.DataTypeNTAuthStore:    defaultBasicHandler(convertNTAuthStoreData),
+	ingest.DataTypeCertTemplate:   defaultBasicHandler(convertCertTemplateData),
+	ingest.DataTypeIssuancePolicy: defaultBasicHandler(convertIssuancePolicy),
+}
+
+func getDefaultDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
+	return CreateIngestDecoder(reader, "data", 1)
 }
 
 func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
@@ -172,7 +209,7 @@ func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, ne
 	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
 
 	return batch.UpdateNodeBy(graph.NodeUpdate{
-		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Label),
+		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
 		IdentityKind: identityKind,
 		IdentityProperties: []string{
 			common.ObjectID.String(),
