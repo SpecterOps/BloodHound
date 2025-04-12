@@ -17,7 +17,7 @@
 import { Alert, Box, Skeleton, Typography } from '@mui/material';
 import { FC } from 'react';
 import { EdgeInfoProps } from '..';
-import { useEdgeInfoItems } from '../../../hooks/useEdgeInfoItems';
+import { EdgeInfoType, useEdgeInfoItems } from '../../../hooks/useEdgeInfoItems';
 import VirtualizedNodeList from '../../VirtualizedNodeList';
 
 const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
@@ -25,8 +25,7 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
         sourceDBId,
         targetDBId,
         edgeName,
-        endpoint: 'getEdgeComposition',
-        queryKey: 'edgeComposition',
+        type: EdgeInfoType['composition'],
     });
 
     return (
