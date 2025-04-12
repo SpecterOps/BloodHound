@@ -38,6 +38,20 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 	converted.NodeProps = append(converted.NodeProps, ingestibleNode)
 }
 
+func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
+	// don't have source/target types
+	ingestibleRel := ein.IngestibleRelationship{
+		Source:   entity.Start.ID_Value,
+		Target:   entity.End.ID_Value,
+		RelProps: entity.Properties,
+		RelType:  graph.StringKind(entity.Kind),
+	}
+
+	fmt.Println("convertGenericEdge", ingestibleRel)
+
+	converted.RelProps = append(converted.RelProps, ingestibleRel)
+}
+
 func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 	baseNodeProp := ein.ConvertComputerToNode(computer)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer)...)

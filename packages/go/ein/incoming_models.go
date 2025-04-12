@@ -357,3 +357,14 @@ type GenericNode struct {
 	Kinds      []string
 	Properties map[string]any
 }
+
+type GenericEdge struct {
+	Start      edgePiece
+	End        edgePiece
+	Kind       string
+	Properties map[string]any
+}
+
+type edgePiece struct {
+	ID_Value string
+}

@@ -119,10 +119,10 @@ func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler 
 
 var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeGeneric: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
-		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
+		if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
 			return err
 		} else {
-			return decodeBasicData(batch, decoder, convertGenericNode)
+			return decodeBasicData(batch, decoder, convertGenericEdge)
 		}
 	},
 	ingest.DataTypeComputer: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
