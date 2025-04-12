@@ -23,6 +23,7 @@ import {
     ROUTE_EXPLORE,
     apiClient,
     createTypedSearchParams,
+    useFeatureFlag,
 } from '..';
 import { VirtualizedNodeListItem } from '../components/VirtualizedNodeList';
 
@@ -54,6 +55,7 @@ export const useEdgeInfoItems = ({
     type: EdgeInfoTypes;
 }) => {
     const navigate = useNavigate();
+    const { data: backButtonflag } = useFeatureFlag('back_button_support');
 
     const { data, isLoading, isError } = useQuery([EdgeInfoQueryKeys[type], sourceDBId, targetDBId, edgeName], () =>
         apiClient[EdgeInfoEndpoints[type]](sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
@@ -61,14 +63,16 @@ export const useEdgeInfoItems = ({
 
     const handleNodeClick = (item: any) => {
         const node = nodesArray[item];
-        navigate({
-            pathname: ROUTE_EXPLORE,
-            search: createTypedSearchParams<ExploreQueryParams>({
-                selectedItem: node.graphId,
-                primarySearch: node.objectId,
-                searchType: 'node',
-            }),
-        });
+        if (backButtonflag?.enabled) {
+            navigate({
+                pathname: ROUTE_EXPLORE,
+                search: createTypedSearchParams<ExploreQueryParams>({
+                    selectedItem: node.graphId,
+                    primarySearch: node.objectId,
+                    searchType: 'node',
+                }),
+            });
+        }
     };
 
     const nodesArray: VirtualizedNodeListItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
