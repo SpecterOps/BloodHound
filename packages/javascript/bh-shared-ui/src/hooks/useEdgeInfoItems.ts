@@ -14,24 +14,49 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphResponse } from 'js-client-library';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { EdgeInfoProps, ExploreQueryParams, NodeResponse, ROUTE_EXPLORE, apiClient, createTypedSearchParams } from '..';
+import {
+    EdgeInfoProps,
+    ExploreQueryParams,
+    MappedStringLiteral,
+    ROUTE_EXPLORE,
+    apiClient,
+    createTypedSearchParams,
+} from '..';
 import { VirtualizedNodeListItem } from '../components/VirtualizedNodeList';
+
+type EdgeInfoTypes = 'relayTargets' | 'composition';
+type EdgeInfoEndpoints = 'getRelayTargets' | 'getEdgeComposition';
+type EdgeInfoQueryKeys = 'relayTargets' | 'edgeComposition';
+
+export const EdgeInfoType = {
+    relayTargets: 'relayTargets',
+    composition: 'composition',
+} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoTypes>;
+
+export const EdgeInfoEndpoints = {
+    relayTargets: 'getRelayTargets',
+    composition: 'getEdgeComposition',
+} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoEndpoints>;
+
+export const EdgeInfoQueryKeys = {
+    relayTargets: 'relayTargets',
+    composition: 'edgeComposition',
+} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoQueryKeys>;
 
 export const useEdgeInfoItems = ({
     sourceDBId,
     targetDBId,
     edgeName,
-    endpoint,
-    queryKey,
-}: Partial<EdgeInfoProps> & { endpoint: string; queryKey: string }) => {
+    type,
+}: Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName'> & {
+    type: EdgeInfoTypes;
+}) => {
     const navigate = useNavigate();
 
-    // To do: cleanup type of apiClient and create mapLiteral for endpoint
-    const { data, isLoading, isError } = useQuery([queryKey, sourceDBId, targetDBId, edgeName], () =>
-        (apiClient as any)[endpoint](sourceDBId!, targetDBId!, edgeName!).then((result: GraphResponse) => result.data)
+    const { data, isLoading, isError } = useQuery([EdgeInfoQueryKeys[type], sourceDBId, targetDBId, edgeName], () =>
+        apiClient[EdgeInfoEndpoints[type]](sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
     );
 
     const handleNodeClick = (item: any) => {
@@ -46,14 +71,12 @@ export const useEdgeInfoItems = ({
         });
     };
 
-    const nodesArray: VirtualizedNodeListItem[] = Object.entries((data?.data?.nodes as NodeResponse) || {}).map(
-        ([graphId, node]) => ({
-            name: node.label,
-            objectId: node.objectId,
-            graphId,
-            kind: node.kind,
-            onClick: handleNodeClick,
-        })
-    );
+    const nodesArray: VirtualizedNodeListItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
+        name: node.label,
+        objectId: node.objectId,
+        graphId,
+        kind: node.kind,
+        onClick: handleNodeClick,
+    }));
     return { isLoading, isError, nodesArray };
 };
