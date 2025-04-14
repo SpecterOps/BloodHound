@@ -122,7 +122,7 @@ func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Re
 	}
 }
 
-func (s Resources) ProcessIngestFile(response http.ResponseWriter, request *http.Request) {
+func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http.Request) {
 	var (
 		requestId   = ctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]

@@ -89,22 +89,24 @@ func Test_ValidateMetaTag(t *testing.T) {
 	schema, err := ingest_service.LoadIngestSchema()
 	require.Nil(t, err)
 
-	for _, assertion := range assertions {
-		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
-		assert.ErrorIs(t, err, assertion.err)
-		if assertion.err == nil {
-			assert.Equal(t, assertion.expectedType, meta.Type)
+	t.Run("Verify ValidateMetaTag for classic collection types-- {meta:{}, data:[]}", func(t *testing.T) {
+		for _, assertion := range assertions {
+			meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
+			assert.ErrorIs(t, err, assertion.err)
+			if assertion.err == nil {
+				assert.Equal(t, assertion.expectedType, meta.Type)
+			}
 		}
-	}
+	})
 }
 
-type genericAssertion struct {
+type genericIngestAssertion struct {
 	name       string
 	payload    *testPayload
 	rawPayload string // for cases that require raw JSON to trip validation controls
 
 	criticalErrMsgs       []string
-	validationErrContains [][]string
+	validationErrContains [][]string // do substring matches so that cosmetic changes to formatted error strings don't break test cases
 }
 
 type testNode struct {
@@ -133,7 +135,7 @@ type testPayload struct {
 	Edges []testEdge `json:"edges,omitempty"`
 }
 
-func prepareReader(assertion genericAssertion) (io.Reader, error) {
+func prepareReader(assertion genericIngestAssertion) (io.Reader, error) {
 	if assertion.payload != nil { // test case uses go structure
 		payload, err := json.Marshal(assertion.payload)
 		if err != nil {
@@ -149,8 +151,8 @@ func prepareReader(assertion genericAssertion) (io.Reader, error) {
 
 func Test_ValidateGenericIngest(t *testing.T) {
 	var (
-		positiveCases = []genericAssertion{}
-		negativeCases = []genericAssertion{}
+		positiveCases = []genericIngestAssertion{}
+		negativeCases = []genericIngestAssertion{}
 	)
 
 	positiveCases = append(positiveCases, positiveGenericIngestCases()...)
@@ -207,8 +209,8 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	}
 }
 
-func positiveGenericIngestCases() []genericAssertion {
-	return []genericAssertion{
+func positiveGenericIngestCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{
 			name: "payload contains one node",
 			payload: &testPayload{
@@ -250,8 +252,8 @@ func positiveGenericIngestCases() []genericAssertion {
 }
 
 // these cases exercise the json.Decoder in different ways to produce (recoverable) UnmarshalTypeErrors and (unrecoverable) SyntaxErrors
-func decodingFailureCases() []genericAssertion {
-	return []genericAssertion{
+func decodingFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{ // UnmarshalType error, is recoverable
 			name:       "decoding error: node is not a JSON Object",
 			rawPayload: `{"nodes": ["this is a string"]}`,
@@ -286,8 +288,8 @@ func decodingFailureCases() []genericAssertion {
 }
 
 // these cases exercise top-level mistakes that will halt the parse and return early
-func criticalFailureCases() []genericAssertion {
-	return []genericAssertion{
+func criticalFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{
 			name:            "no opening { on payload",
 			rawPayload:      "a",
@@ -328,8 +330,8 @@ func criticalFailureCases() []genericAssertion {
 }
 
 // these test cases represent all the ways a node or an edge can fail schema validation.
-func schemaFailureCases() []genericAssertion {
-	return []genericAssertion{
+func schemaFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{
 			name:            "payload doesn't contain atleast one of nodes or edges",
 			payload:         &testPayload{},
@@ -529,8 +531,8 @@ func schemaFailureCases() []genericAssertion {
 	}
 }
 
-func itemsWithMultipleFailureCases() []genericAssertion {
-	return []genericAssertion{
+func itemsWithMultipleFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{
 			name: "multiple nodes don't have an an ID.",
 			payload: &testPayload{

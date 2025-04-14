@@ -85,8 +85,8 @@ func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool
 					dataTagFound = true
 				}
 
-				if typed == "graph" {
-					// this is a generic payload
+				if depth == 1 && typed == "graph" {
+					// presence of "graph" key indicates this is a generic ingestion
 					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
 					err := ValidateGenericIngest(decoder, ingestSchema)
 					if report, ok := err.(ValidationReport); ok {
