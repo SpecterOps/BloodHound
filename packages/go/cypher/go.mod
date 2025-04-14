@@ -16,7 +16,9 @@
 
 module github.com/specterops/bloodhound/cypher
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.8
 
 require (
 	cuelang.org/go v0.11.1
