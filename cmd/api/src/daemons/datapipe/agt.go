@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"slices"
 	"sync"
 
@@ -42,49 +43,10 @@ const (
 	selectorNodeBatchingLimit = 10000
 )
 
-// Below is a thread safe way to track the source of why a node was selected by a selector
-type srcSet struct {
-	srcMap map[graph.ID]model.AssetGroupSelectorNodeSource
-	lock   *sync.Mutex
-}
-
-func (s srcSet) AddSet(set graph.NodeSet, src model.AssetGroupSelectorNodeSource) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	for id := range set {
-		if _, ok := s.srcMap[id]; !ok {
-			s.srcMap[id] = src
-		}
-	}
-}
-
-func (s srcSet) AddIfNotExists(id graph.ID, src model.AssetGroupSelectorNodeSource) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if _, ok := s.srcMap[id]; !ok {
-		s.srcMap[id] = src
-	}
-}
-
-func (s srcSet) GetSrc(id graph.ID) model.AssetGroupSelectorNodeSource {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	return s.srcMap[id]
-}
-
-func newSrcSet() *srcSet {
-	lock := sync.Mutex{}
-	return &srcSet{
-		srcMap: make(map[graph.ID]model.AssetGroupSelectorNodeSource),
-		lock:   &lock,
-	}
-}
-
-func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) (graph.ThreadSafeNodeSet, srcSet, error) {
+func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []model.SelectorSeed, expansionMethod model.AssetGroupExpansionMethod) (*graph.ThreadSafeNodeSet, *sync.Map, error) {
 	var (
 		result       = graph.NewThreadSafeNodeSet(graph.NodeSet{})
-		resultSrcSet = newSrcSet()
+		resultSrcSet = &sync.Map{}
 		err          error
 	)
 
@@ -93,18 +55,20 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		for _, seed := range seeds {
 			switch seed.Type {
 			case model.SelectorTypeObjectId:
-				if seedNodes, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value))); err != nil {
+				if seedNode, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), seed.Value)).First(); err != nil {
 					return err
 				} else {
-					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
-					result.AddSet(seedNodes)
+					resultSrcSet.Store(seedNode.ID, model.AssetGroupSelectorNodeSourceSeed)
+					result.Add(seedNode)
 				}
 			case model.SelectorTypeCypher:
 				if seedNodes, err := ops.FetchNodesByQuery(tx, seed.Value); err != nil {
 					return err
 				} else {
-					resultSrcSet.AddSet(seedNodes, model.AssetGroupSelectorNodeSourceSeed)
-					result.AddSet(seedNodes)
+					for _, node := range seedNodes {
+						resultSrcSet.Store(node.ID, model.AssetGroupSelectorNodeSourceSeed)
+						result.Add(node)
+					}
 				}
 			default:
 				slog.WarnContext(ctx, fmt.Sprintf("AGT: Unsupported selector type: %d", seed.Type))
@@ -112,11 +76,11 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		}
 		return nil
 	}); err != nil {
-		return *result, *resultSrcSet, err
+		return result, resultSrcSet, err
 	}
 
 	if expansionMethod == model.AssetGroupExpansionMethodNone {
-		return *result, *resultSrcSet, nil
+		return result, resultSrcSet, nil
 	}
 
 	traversalInst := traversal.New(graphDb, analysis.MaximumDatabaseParallelWorkers)
@@ -125,7 +89,7 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		// Expand to child nodes recursively as needed based on kind
 		for _, node := range result.Copy().Slice() {
 			if err = fetchChildNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
-				return *result, *resultSrcSet, err
+				return result, resultSrcSet, err
 			}
 		}
 	}
@@ -134,17 +98,16 @@ func FetchNodesFromSeeds(ctx context.Context, graphDb graph.Database, seeds []mo
 		// Expand to parent nodes as needed
 		for _, node := range result.Copy().Slice() {
 			if err = fetchParentNodes(ctx, traversalInst, node, result, resultSrcSet); err != nil {
-				return *result, *resultSrcSet, err
+				return result, resultSrcSet, err
 			}
 		}
 	}
 
-	return *result, *resultSrcSet, err
+	return result, resultSrcSet, err
 }
 
-func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
+func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *sync.Map) error {
 	if node.Kinds.ContainsOneOf(ad.Entity) {
-		// Verify aclprotected false for OUs as well?
 		// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
 		// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
 		if err := tx.BreadthFirst(ctx, traversal.Plan{
@@ -160,11 +123,11 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 				)).Do(func(path *graph.PathSegment) error {
 				if path.Trunk != nil {
 					if result.AddIfNotExists(path.Trunk.Node) {
-						resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						resultSrcSet.Store(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 				}
 				if result.AddIfNotExists(path.Node) {
-					resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+					resultSrcSet.Store(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 				}
 
 				return nil
@@ -182,11 +145,11 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 				)).Do(func(path *graph.PathSegment) error {
 					if path.Trunk != nil {
 						if result.AddIfNotExists(path.Trunk.Node) {
-							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+							resultSrcSet.Store(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 						}
 					}
 					if result.AddIfNotExists(path.Node) {
-						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						resultSrcSet.Store(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 					return nil
 				})}); err != nil {
@@ -203,12 +166,12 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 			)).Do(func(path *graph.PathSegment) error {
 				if path.Trunk != nil && path.Trunk.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
 					if result.AddIfNotExists(path.Trunk.Node) {
-						resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						resultSrcSet.Store(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 				}
 				if path.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
 					if result.AddIfNotExists(path.Node) {
-						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						resultSrcSet.Store(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 				}
 				return nil
@@ -226,11 +189,11 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 				)).Do(func(path *graph.PathSegment) error {
 					if path.Trunk != nil {
 						if result.AddIfNotExists(path.Trunk.Node) {
-							resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+							resultSrcSet.Store(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 						}
 					}
 					if result.AddIfNotExists(path.Node) {
-						resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
+						resultSrcSet.Store(path.Node.ID, model.AssetGroupSelectorNodeSourceParent)
 					}
 					return nil
 				})}); err != nil {
@@ -242,7 +205,7 @@ func fetchParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.N
 	return nil
 }
 
-func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *srcSet) error {
+func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, result *graph.ThreadSafeNodeSet, resultSrcSet *sync.Map) error {
 	var pattern traversal.PatternContinuation
 
 	switch {
@@ -290,12 +253,12 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 		Driver: pattern.Do(func(path *graph.PathSegment) error {
 			if path.Trunk != nil {
 				if result.AddIfNotExists(path.Trunk.Node) {
-					resultSrcSet.AddIfNotExists(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceChild)
+					resultSrcSet.Store(path.Trunk.Node.ID, model.AssetGroupSelectorNodeSourceChild)
 					addedNodes.Add(path.Trunk.Node)
 				}
 			}
 			if result.AddIfNotExists(path.Node) {
-				resultSrcSet.AddIfNotExists(path.Node.ID, model.AssetGroupSelectorNodeSourceChild)
+				resultSrcSet.Store(path.Node.ID, model.AssetGroupSelectorNodeSourceChild)
 				addedNodes.Add(path.Node)
 			}
 
@@ -306,7 +269,7 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 
 	if addedNodes != nil && addedNodes.Len() > 0 {
 		for _, node := range addedNodes.Slice() {
-			resultSrcSet.AddIfNotExists(node.ID, model.AssetGroupSelectorNodeSourceChild)
+			resultSrcSet.Store(node.ID, model.AssetGroupSelectorNodeSourceChild)
 			// Expand to child nodes as needed based on kind
 			if err := fetchChildNodes(ctx, tx, node, result, resultSrcSet); err != nil {
 				return err
@@ -357,10 +320,19 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		for _, id := range nodes.IDs() {
 			// Missing, insert the record
 			if oldCert, ok := oldSelectedNodesByNodeId[id]; !ok {
-				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, srcSet.GetSrc(id)); err != nil {
-					return err
+				if src, ok := srcSet.Load(id); !ok {
+					slog.WarnContext(ctx, "AGT: failed to load src for", "nodeId", id)
+				} else {
+					switch typedSrc := src.(type) {
+					case model.AssetGroupSelectorNodeSource:
+						if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, typedSrc); err != nil {
+							return err
+						}
+						countInserted++
+					default:
+						slog.WarnContext(ctx, "AGT: incorrect src type", "nodeId", id, "src type", reflect.TypeOf(typedSrc))
+					}
 				}
-				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it
 			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationNone {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
