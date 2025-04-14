@@ -21,7 +21,6 @@ import { GenericErrorBoundaryFallback } from '../components';
 export const ROUTE_TIER_MANAGEMENT = '/tier-management';
 export const ROUTE_TIER_MANAGEMENT_EDIT = '/tier-management/edit';
 export const ROUTE_TIER_MANAGEMENT_CREATE = '/tier-management/create';
-export const ROUTE_EXPLORE = '/explore';
 
 export type Routable = {
     path: string;
