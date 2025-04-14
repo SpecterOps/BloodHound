@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/src
 
-go 1.23.0
+go 1.23
 
 require (
 	github.com/bloodhoundad/azurehound/v2 v2.0.1
