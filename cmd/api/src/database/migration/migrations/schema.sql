@@ -655,7 +655,7 @@ INSERT INTO feature_flags (key, name, description, enabled, user_updatable, crea
     'dark_mode', 
     'Dark Mode', 
     'Allows users to enable or disable dark mode via a toggle in the settings menu', 
-    false, true, current_timestamp, current_timestamp
+    false, false, current_timestamp, current_timestamp
 ), ( 
     'pg_migration_dual_ingest', 
     'PostgreSQL Migration Dual Ingest', 
