@@ -35,7 +35,7 @@ Include contextual information about the proposal (e.g., current state, challeng
 
 ## 3. Considerations
 
-This section may contain several subsections titled with [third-level headings](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#headings) with sequential sub-section numbering (e.g., 3.1, 3.2, 3.3). Each subsection should detail the specific context that was taken into account when authoring the proposal.
+This section is optional and may contain several subsections titled with [third-level headings](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#headings) with sequential sub-section numbering (e.g., 3.1, 3.2, 3.3). Each subsection should detail the specific context that was taken into account when authoring the proposal.
 
 #### 3.1 Recommended subsections
 
