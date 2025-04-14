@@ -265,6 +265,15 @@ type Member struct {
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
 }
 
+type assetGroupMemberResponse struct {
+	NodeId      graph.ID `json:"id"`
+	ObjectID    string   `json:"object_id"`
+	PrimaryKind string   `json:"primary_kind"`
+	Name        string   `json:"name"`
+
+	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
+}
+
 func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
