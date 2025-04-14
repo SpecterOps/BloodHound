@@ -50,11 +50,11 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ing
 func IngestBasicData(batch graph.Batch, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
+	if err := IngestNodes(batch, graph.EmptyKind, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, graph.EmptyKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -119,7 +119,11 @@ func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler 
 
 var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeGeneric: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
-		if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
+		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
+			return err
+		} else if err = decodeBasicData(batch, decoder, convertGenericNode); err != nil {
+			return err
+		} else if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
 			return err
 		} else {
 			return decodeBasicData(batch, decoder, convertGenericEdge)

@@ -33,7 +33,7 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 		Labels:      graph.StringsToKinds(entity.Kinds),
 	}
 
-	fmt.Println("convertGenericNode: ", ingestibleNode)
+	fmt.Printf("convertGenericNode: %+v\n", ingestibleNode)
 
 	converted.NodeProps = append(converted.NodeProps, ingestibleNode)
 }
@@ -43,10 +43,12 @@ func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 		ein.IngestibleSource{
 			Source: entity.Start.ID_Value,
 			// SourceType: , TODO: do we need a type?
+			// SourceType: graph.StringKind("typex"),
 		},
 		ein.IngestibleTarget{
 			Target: entity.End.ID_Value,
 			// TargetType: ,TODO:
+			// TargetType: graph.StringKind("typex"),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
@@ -54,7 +56,7 @@ func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 		},
 	)
 
-	fmt.Println("convertGenericEdge", ingestibleRel)
+	fmt.Printf("convertGenericEdge: %+v\n ", ingestibleRel)
 
 	converted.RelProps = append(converted.RelProps, ingestibleRel)
 }

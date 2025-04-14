@@ -162,6 +162,7 @@ func (s *SchemaManager) MapKind(ctx context.Context, kind graph.Kind) (int16, er
 		return -1, err
 	}
 
+	// TODO: if kind is an unknown edge kind, it does not get created
 	if id, hasID := s.kindsByID[kind]; hasID {
 		return id, nil
 	} else {

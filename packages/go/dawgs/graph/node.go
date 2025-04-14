@@ -18,6 +18,7 @@ package graph
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"sync"
 
@@ -31,7 +32,13 @@ const (
 )
 
 func PrepareNode(properties *Properties, kinds ...Kind) *Node {
-	return NewNode(UnregisteredNodeID, properties, kinds...)
+	var filtered []Kind
+	for _, k := range kinds {
+		if k != nil {
+			filtered = append(filtered, k)
+		}
+	}
+	return NewNode(UnregisteredNodeID, properties, filtered...)
 }
 
 func NewNode(id ID, properties *Properties, kinds ...Kind) *Node {
@@ -91,6 +98,7 @@ func (s *Node) SizeOf() size.Size {
 }
 
 func (s *Node) AddKinds(kinds ...Kind) {
+	fmt.Printf(">>> mofo node: %+v \n ", *s)
 	for _, kind := range kinds {
 		s.Kinds = s.Kinds.Add(kind)
 		s.AddedKinds = s.AddedKinds.Add(kind)
