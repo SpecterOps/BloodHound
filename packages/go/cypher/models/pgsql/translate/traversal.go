@@ -18,6 +18,7 @@ package translate
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
@@ -228,13 +229,13 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 		}
 
 		if traversalStep.Expansion.Set {
-			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, part.AllShortestPaths || part.ShortestPath, traversalStep); err != nil {
+			if err := s.translateTraversalPatternPartWithExpansion(idx == 0, traversalStep.Expansion.Value.Options, traversalStep); err != nil {
 				return err
 			}
-		} else {
-			if err := s.translateTraversalPatternPartWithoutExpansion(idx == 0, traversalStep); err != nil {
-				return err
-			}
+		} else if part.AllShortestPaths || part.ShortestPath {
+			return fmt.Errorf("expected shortest path search to utilize variable expansion: ()-[*..]->()")
+		} else if err := s.translateTraversalPatternPartWithoutExpansion(idx == 0, traversalStep); err != nil {
+			return err
 		}
 	}
 
@@ -246,7 +247,7 @@ func (s *Translator) translateTraversalPatternPart(part *PatternPart, isolatedPr
 }
 
 func (s *Translator) translateTraversalPatternPartWithoutExpansion(isFirstTraversalStep bool, traversalStep *TraversalStep) error {
-	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator.IdentifierConstraints); err != nil {
+	if constraints, err := consumePatternConstraints(isFirstTraversalStep, nonRecursivePattern, traversalStep, s.treeTranslator); err != nil {
 		return err
 	} else {
 		if isFirstTraversalStep {
