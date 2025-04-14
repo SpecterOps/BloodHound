@@ -205,11 +205,15 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 	return properties
 }
 
+// TODO: identityKind is hardcoded as ad.Entity or az.Entity
 func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
 	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
 
 	return batch.UpdateNodeBy(graph.NodeUpdate{
-		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
+		Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
+		// TODO: see drivers/pg/query/format.go Add() func.
+		// we just auto-add this kind to any created node.
+		// can we just make it optional?
 		IdentityKind: identityKind,
 		IdentityProperties: []string{
 			common.ObjectID.String(),
@@ -232,6 +236,7 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 	return errs.Combined()
 }
 
+// TODO: nodeIDKind is hardcoded as ad.Entity or az.Entity
 func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = nowUTC
 	nextRel.Source = strings.ToUpper(nextRel.Source)
