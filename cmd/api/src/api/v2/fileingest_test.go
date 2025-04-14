@@ -75,7 +75,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resources.ListFileUploadJobs).
+		NewHarness(t, resources.ListIngestJobs).
 		Run([]apitest.Case{
 			apitest.NewSortingErrorCase(),
 			apitest.NewColumnNotFilterableCase(),
@@ -119,7 +119,7 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resources.StartFileUploadJob).
+		NewHarness(t, resources.StartIngestJob).
 		Run([]apitest.Case{
 			{
 				Name: "Unauthorized",
@@ -163,7 +163,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resources.EndFileUploadJob).
+		NewHarness(t, resources.EndIngestJob).
 		Run([]apitest.Case{
 			{
 				Name: "InvalidJobID",
@@ -510,7 +510,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources.ProcessFileUpload(response, request)
+			resources.ProcessIngestTask(response, request)
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
