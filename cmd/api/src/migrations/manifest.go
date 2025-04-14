@@ -47,6 +47,34 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+// Version_730_Migration removes the leftover 'adminrightscount' property from User nodes
+func Version_730_Migration(ctx context.Context, db graph.Database) error {
+	const adminRightsCount = "adminrightscount"
+
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes")
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		// MATCH(n:User) WHERE n.adminrightscount <> null
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Node(), ad.User),
+				query.IsNotNull(query.NodeProperty(adminRightsCount)),
+			)
+		})); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				node.Properties.Delete(adminRightsCount)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}
+	})
+}
+
 // Version_620_Migration is intended to rename the RemoteInteractiveLogonPrivilege edge to RemoteInteractiveLogonRight
 // See: https://specterops.atlassian.net/browse/BED-4428
 func Version_620_Migration(ctx context.Context, db graph.Database) error {
@@ -62,7 +90,7 @@ func Version_620_Migration(ctx context.Context, db graph.Database) error {
 	edgeProperties := graph.NewProperties()
 	edgeProperties.Set(common.LastSeen.String(), time.Now().UTC())
 
-	//Get all RemoteInteractiveLogonPrivilege edges, use the start/end ids to insert new edges, and delete the old ones
+	// Get all RemoteInteractiveLogonPrivilege edges, use the start/end ids to insert new edges, and delete the old ones
 	return db.BatchOperation(ctx, func(batch graph.Batch) error {
 		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
 		if err != nil {
@@ -200,7 +228,7 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 					node.Properties.Set(common.ObjectID.String(), strings.ToUpper(objectId))
 				}
 
-				//We may not always get these properties, so ignore errors
+				// We may not always get these properties, so ignore errors
 				if operatingSystem, err := node.Properties.Get(common.OperatingSystem.String()).String(); err == nil && operatingSystem != "" && operatingSystem != strings.ToUpper(operatingSystem) {
 					dirty = true
 					node.Properties.Set(common.OperatingSystem.String(), strings.ToUpper(operatingSystem))
@@ -284,7 +312,7 @@ var Manifest = []Migration{
 			}
 
 			return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-				//Remove ADLocalGroup label from all nodes that also have the group label
+				// Remove ADLocalGroup label from all nodes that also have the group label
 				if nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
 					return query.And(
 						query.Kind(query.Node(), ad.LocalGroup),
@@ -301,7 +329,7 @@ var Manifest = []Migration{
 					}
 				}
 
-				//Delete all local group edges
+				// Delete all local group edges
 				if err := tx.Relationships().Filterf(func() graph.Criteria {
 					return query.And(
 						query.Or(
@@ -334,6 +362,10 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 6, Minor: 2, Patch: 0},
 		Execute: Version_620_Migration,
+	},
+	{
+		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
+		Execute: Version_730_Migration,
 	},
 }
 
