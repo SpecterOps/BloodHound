@@ -38,6 +38,10 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
+const (
+	selectorNodeBatchingLimit = 10000
+)
+
 // Below is a thread safe way to track the source of why a node was selected by a selector
 type srcSet struct {
 	srcMap map[graph.ID]model.AssetGroupSelectorNodeSource
@@ -313,7 +317,18 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 	return nil
 }
 
-// TODO Batching?
+func fetchOldSelectedNodes(ctx context.Context, db database.Database, selectorId int) (map[graph.ID]model.AssetGroupCertification, error) {
+	oldSelectedNodesMap := make(map[graph.ID]model.AssetGroupCertification)
+	if oldSelectedNodes, err := db.GetSelectorNodesBySelectorIds(ctx, selectorId); err != nil {
+		return oldSelectedNodesMap, err
+	} else {
+		for _, node := range oldSelectedNodes {
+			oldSelectedNodesMap[node.NodeId] = node.Certified
+		}
+		return oldSelectedNodesMap, nil
+	}
+}
+
 func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Database, selector model.AssetGroupTagSelector, expansionMethod model.AssetGroupExpansionMethod) error {
 	var (
 		countInserted int
@@ -321,7 +336,7 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 		certified   = model.AssetGroupCertificationNone
 		certifiedBy null.String
 
-		oldSelectedNodes []model.AssetGroupSelectorNode
+		oldSelectedNodesByNodeId map[graph.ID]model.AssetGroupCertification
 
 		nodeIdsToDelete []graph.ID
 		nodeIdsToUpdate []graph.ID
@@ -335,24 +350,19 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 	if nodes, srcSet, err := FetchNodesFromSeeds(ctx, graphDb, selector.Seeds, expansionMethod); err != nil {
 		return err
 		// 2. Grab the already selected nodes
-	} else if oldSelectedNodes, err = db.GetSelectorNodesBySelectorIds(ctx, selector.ID); err != nil {
+	} else if oldSelectedNodesByNodeId, err = fetchOldSelectedNodes(ctx, db, selector.ID); err != nil {
 		return err
 	} else {
-		oldSelectedNodesByNodeId := make(map[graph.ID]*model.AssetGroupSelectorNode)
-		for _, node := range oldSelectedNodes {
-			oldSelectedNodesByNodeId[node.NodeId] = &node
-		}
-
 		// 3. Range the graph nodes and insert any that haven't been inserted yet, mark for update any that need updating, pare down the existing map for future deleting
 		for _, id := range nodes.IDs() {
 			// Missing, insert the record
-			if oldSelectedNodesByNodeId[id] == nil {
+			if oldCert, ok := oldSelectedNodesByNodeId[id]; !ok {
 				if err = db.InsertSelectorNode(ctx, selector.ID, id, certified, certifiedBy, srcSet.GetSrc(id)); err != nil {
 					return err
 				}
 				countInserted++
 				// Auto certify is enabled but this node hasn't been certified, certify it
-			} else if selector.AutoCertify.Bool && oldSelectedNodesByNodeId[id].Certified == model.AssetGroupCertificationNone {
+			} else if selector.AutoCertify.Bool && oldCert == model.AssetGroupCertificationNone {
 				nodeIdsToUpdate = append(nodeIdsToUpdate, id)
 				delete(oldSelectedNodesByNodeId, id)
 			} else {
@@ -360,20 +370,32 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		// Update the selected nodes that need updating
-		if len(nodeIdsToUpdate) > 0 {
-			if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeIdsToUpdate...); err != nil {
-				return err
+		// Update the selected nodes that need updating via batches
+		if nodesToUpdateLen := len(nodeIdsToUpdate); nodesToUpdateLen > 0 {
+			for i := 0; i < nodesToUpdateLen; i += selectorNodeBatchingLimit {
+				j := i + selectorNodeBatchingLimit
+				if j > nodesToUpdateLen {
+					j = nodesToUpdateLen
+				}
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeIdsToUpdate[i:j]); err != nil {
+					return err
+				}
 			}
 		}
 
 		// Delete the selected nodes that need to be deleted
-		if len(oldSelectedNodesByNodeId) > 0 {
+		if nodeIdsToDeleteLen := len(oldSelectedNodesByNodeId); nodeIdsToDeleteLen > 0 {
 			for nodeId := range oldSelectedNodesByNodeId {
 				nodeIdsToDelete = append(nodeIdsToDelete, nodeId)
 			}
-			if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeIdsToDelete...); err != nil {
-				return err
+			for i := 0; i < nodeIdsToDeleteLen; i += selectorNodeBatchingLimit {
+				j := i + selectorNodeBatchingLimit
+				if j > nodeIdsToDeleteLen {
+					j = nodeIdsToDeleteLen
+				}
+				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeIdsToDelete[i:j]); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -422,7 +444,7 @@ func SelectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // TODO Batching?
-func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag) error {
 	if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 		return err
 	} else {
@@ -541,7 +563,7 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			// Parallelize the tagging of label nodes
 			go func() {
 				defer wg.Done()
-				if err = tagAssetGroupNodes(ctx, db, graphDb, tag); err != nil {
+				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag); err != nil {
 					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
 				}
 			}()
@@ -550,7 +572,7 @@ func TagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 
 		// Process the tier tagging synchronously
 		for _, tier := range tiersOrdered {
-			if err := tagAssetGroupNodes(ctx, db, graphDb, tier); err != nil {
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier); err != nil {
 				slog.Error("AGT: Error tagging nodes", "tier", tier, "err", err)
 			}
 		}
