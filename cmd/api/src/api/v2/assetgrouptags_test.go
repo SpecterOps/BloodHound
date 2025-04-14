@@ -903,7 +903,7 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 						Return(model.AssetGroupTagSelector{AssetGroupTagId: 1}, nil).Times(1)
 				},
 				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusOK)
+					apitest.StatusCode(output, http.StatusNoContent)
 				},
 			},
 		})

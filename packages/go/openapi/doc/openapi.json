@@ -4626,7 +4626,7 @@
           "Enterprise"
         ],
         "responses": {
-          "200": {
+          "204": {
             "description": "Successfully deleted. No content is returned."
           },
           "400": {
