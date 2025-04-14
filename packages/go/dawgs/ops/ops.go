@@ -174,16 +174,16 @@ func FetchNodesByQuery(tx graph.Transaction, query string) (graph.NodeSet, error
 		defer result.Close()
 
 		for result.Next() {
-			var node graph.Node
-
-			if values, err := result.Values(); err != nil {
-				return nodes, err
-			} else if mapped, err := values.MapOptions(&node); err != nil {
+			if values, err := result.Mapper(); err != nil {
 				return nodes, err
 			} else {
-				switch typedMapped := mapped.(type) {
-				case *graph.Node:
-					nodes.Add(typedMapped)
+				var node = &graph.Node{}
+
+				for values.HasNext() {
+					if values.TryMapNext(node) {
+						nodes.Add(node)
+						node = &graph.Node{}
+					}
 				}
 			}
 		}
