@@ -15,15 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { useNavigate } from 'react-router-dom';
-import {
-    EdgeInfoProps,
-    ExploreQueryParams,
-    ROUTE_EXPLORE,
-    apiClient,
-    createTypedSearchParams,
-    useFeatureFlag,
-} from '../..';
+import { EdgeInfoProps, apiClient, useExploreParams, useFeatureFlag } from '../..';
 import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
 
 export enum EdgeInfoItems {
@@ -51,23 +43,19 @@ const queryConfig = {
 };
 
 export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
-    const navigate = useNavigate();
     const { data: backButtonflag } = useFeatureFlag('back_button_support');
-
+    const { setExploreParams } = useExploreParams();
     const { data, isLoading, isError } = useQuery([queryConfig[type], sourceDBId, targetDBId, edgeName], () =>
         queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName })
     );
 
-    const handleNodeClick = (item: any) => {
+    const handleNodeClick = (item: number) => {
         const node = nodesArray[item];
         if (backButtonflag?.enabled) {
-            navigate({
-                pathname: ROUTE_EXPLORE,
-                search: createTypedSearchParams<ExploreQueryParams>({
-                    selectedItem: node.graphId,
-                    primarySearch: node.objectId,
-                    searchType: 'node',
-                }),
+            setExploreParams({
+                selectedItem: node.graphId,
+                primarySearch: node.objectId,
+                searchType: 'node',
             });
         }
     };
