@@ -19,46 +19,43 @@ import { useNavigate } from 'react-router-dom';
 import {
     EdgeInfoProps,
     ExploreQueryParams,
-    MappedStringLiteral,
     ROUTE_EXPLORE,
     apiClient,
     createTypedSearchParams,
     useFeatureFlag,
-} from '..';
-import { VirtualizedNodeListItem } from '../components/VirtualizedNodeList';
+} from '../..';
+import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
 
-type EdgeInfoTypes = 'relayTargets' | 'composition';
-type EdgeInfoEndpoints = 'getRelayTargets' | 'getEdgeComposition';
-type EdgeInfoQueryKeys = 'relayTargets' | 'edgeComposition';
+export enum EdgeInfoItems {
+    relayTargets = 'relayTargets',
+    composition = 'composition',
+}
 
-export const EdgeInfoType = {
-    relayTargets: 'relayTargets',
-    composition: 'composition',
-} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoTypes>;
+type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName'>;
 
-export const EdgeInfoEndpoints = {
-    relayTargets: 'getRelayTargets',
-    composition: 'getEdgeComposition',
-} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoEndpoints>;
+type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
+    type: EdgeInfoItems;
+};
 
-export const EdgeInfoQueryKeys = {
-    relayTargets: 'relayTargets',
-    composition: 'edgeComposition',
-} satisfies MappedStringLiteral<EdgeInfoTypes, EdgeInfoQueryKeys>;
+const queryConfig = {
+    [EdgeInfoItems.relayTargets]: {
+        endpoint: ({ sourceDBId, targetDBId, edgeName }: EdgeInfoItemsArguments) => {
+            return apiClient.getRelayTargets(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
+        },
+    },
+    [EdgeInfoItems.composition]: {
+        endpoint: ({ sourceDBId, targetDBId, edgeName }: EdgeInfoItemsArguments) => {
+            return apiClient.getEdgeComposition(sourceDBId!, targetDBId!, edgeName!).then((result) => result.data);
+        },
+    },
+};
 
-export const useEdgeInfoItems = ({
-    sourceDBId,
-    targetDBId,
-    edgeName,
-    type,
-}: Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName'> & {
-    type: EdgeInfoTypes;
-}) => {
+export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
     const navigate = useNavigate();
     const { data: backButtonflag } = useFeatureFlag('back_button_support');
 
-    const { data, isLoading, isError } = useQuery([EdgeInfoQueryKeys[type], sourceDBId, targetDBId, edgeName], () =>
-        apiClient[EdgeInfoEndpoints[type]](sourceDBId!, targetDBId!, edgeName!).then((result) => result.data)
+    const { data, isLoading, isError } = useQuery([queryConfig[type], sourceDBId, targetDBId, edgeName], () =>
+        queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName })
     );
 
     const handleNodeClick = (item: any) => {
