@@ -48,10 +48,10 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind, nowUTC time.Time)
 	if itemProps == nil {
 		itemProps = make(map[string]any)
 	}
+	itemProps[common.LastCollected.String()] = nowUTC
 
 	if itemType == ad.Domain {
 		convertInvalidDomainProperties(itemProps)
-		itemProps[common.LastCollected.String()] = nowUTC
 	}
 
 	convertOwnsEdgeToProperty(item, itemProps)
@@ -63,11 +63,12 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind, nowUTC time.Time)
 	}
 }
 
-func ConvertComputerToNode(item Computer) IngestibleNode {
+func ConvertComputerToNode(item Computer, nowUTC time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
 	}
+	itemProps[common.LastCollected.String()] = nowUTC
 
 	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
 
@@ -115,7 +116,7 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 	}
 }
 
-func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
+func ConvertEnterpriseCAToNode(item EnterpriseCA, nowUTC time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)

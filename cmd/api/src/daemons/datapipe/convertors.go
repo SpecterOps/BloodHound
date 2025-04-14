@@ -25,7 +25,7 @@ import (
 )
 
 func convertComputerData(computer ein.Computer, converted *ConvertedData, nowUTC time.Time) {
-	baseNodeProp := ein.ConvertComputerToNode(computer)
+	baseNodeProp := ein.ConvertComputerToNode(computer, nowUTC)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
 	if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
 		converted.RelProps = append(converted.RelProps, primaryGroupRel)
@@ -177,10 +177,10 @@ func convertRootCAData(rootca ein.RootCA, converted *ConvertedData, nowUTC time.
 }
 
 func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *ConvertedData, nowUTC time.Time) {
-	baseNodeProp := ein.ConvertEnterpriseCAToNode(enterpriseca)
-	converted.NodeProps = append(converted.NodeProps, ein.ConvertEnterpriseCAToNode(enterpriseca))
+	baseNodeProps := ein.ConvertEnterpriseCAToNode(enterpriseca, nowUTC)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProps)
 	converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProps, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 
 	if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {

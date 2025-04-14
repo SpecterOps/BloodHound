@@ -186,7 +186,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker, nowUTC time.Time) 
 			return err
 		} else {
 			convert := getKindConverter(data.Kind)
-			convert(data.Data, &convertedData)
+			convert(data.Data, &convertedData, nowUTC)
 			count++
 			if count == IngestCountThreshold {
 				if err = IngestAzureData(batch, convertedData, nowUTC); err != nil {

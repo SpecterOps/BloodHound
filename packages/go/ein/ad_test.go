@@ -240,7 +240,7 @@ func TestConvertComputerToNode(t *testing.T) {
 		},
 	}
 
-	result := ein.ConvertComputerToNode(computer)
+	result := ein.ConvertComputerToNode(computer, time.Now())
 	assert.Equal(t, true, result.PropertyMap[ad.IsDC.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.WebClientRunning.String()])
 	assert.Equal(t, true, result.PropertyMap[ad.RestrictOutboundNTLM.String()])
