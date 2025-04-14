@@ -43,7 +43,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/graphschema"
+	// "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -694,10 +694,10 @@ func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...grap
 
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
-			for next := range cursor.Chan() {
-				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
-				results[primaryKindStr] += 1
-			}
+			// for next := range cursor.Chan() {
+			// 	primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
+			// 	results[primaryKindStr] += 1
+			// }
 
 			return cursor.Error()
 		})

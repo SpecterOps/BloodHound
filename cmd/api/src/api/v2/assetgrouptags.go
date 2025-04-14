@@ -25,9 +25,10 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -37,7 +38,6 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
-<<<<<<< HEAD
 const (
 	ErrInvalidAssetGroupTagId         = "invalid asset group tag id specified in url"
 	ErrInvalidAssetGroupTagSelectorId = "invalid asset group tag selector id specified in url"
@@ -45,8 +45,6 @@ const (
 	ErrInvalidMemberId                = "invalid member id specified in url"
 )
 
-=======
->>>>>>> main
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
 	// all seeds must be of the same type
@@ -258,10 +256,10 @@ type listNodeSelectorsResponse struct {
 }
 
 type Member struct {
-	graph.Node
+	assetGroupMemberResponse
 	// getNodeKindDisplayLabel => aka primaryKind
-	// return ID, primary_kind, properties 
-	// check with ari on member view 
+	// return ID, primary_kind, properties
+	// check with ari on member view
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
 }
 
@@ -274,11 +272,11 @@ type assetGroupMemberResponse struct {
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
 
-func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWriter, request *http.Request) {
+func (s *Resources) GetAssetGroupTagSelectorsByMemberId(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
-		entity        = &graph.Node{}
+		member        assetGroupMemberResponse
 	)
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Node Selectors Id")()
@@ -289,18 +287,12 @@ func (s *Resources) GetAssetGroupSelectorsByMemberId(response http.ResponseWrite
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidMemberId, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
-		entity.ID = graph.ID(memberID)
-		if entity, err = ops.FetchNode(tx, entity.ID); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	} else if entity, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if selectors, err := s.DB.GetSelectorsByMemberId(request.Context(), memberID, assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{*entity, selectors}}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{nodeToAssetGroupMember(&entity, member), selectors}}, http.StatusOK, response)
 	}
 }
 
@@ -327,4 +319,21 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 
 		api.WriteBasicResponse(request.Context(), data, http.StatusOK, response)
 	}
+}
+
+// Used to minimize the response shape to just the necessary member display fields
+func nodeToAssetGroupMember(node *graph.Node, member assetGroupMemberResponse) assetGroupMemberResponse {
+	var (
+		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+	)
+
+	member = assetGroupMemberResponse{
+		NodeId:      node.ID,
+		ObjectID:    objectID,
+		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
+		Name:        name,
+	}
+
+	return member
 }

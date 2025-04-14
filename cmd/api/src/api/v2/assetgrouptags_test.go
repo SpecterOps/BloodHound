@@ -32,6 +32,7 @@ import (
 	"github.com/gorilla/mux"
 
 	// "github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -820,14 +821,14 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:    mockDB,
-			Graph: mockGraphDb,
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
 		}
 	)
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resourcesInst.GetAssetGroupSelectorsByMemberId).
+		NewHarness(t, resourcesInst.GetAssetGroupTagSelectorsByMemberId).
 		Run([]apitest.Case{
 			{
 				Name: "Bad Request - Invalid Asset Group Tag ID",
@@ -867,39 +868,42 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 					apitest.BodyContains(output, api.ErrorResponseDetailsResourceNotFound)
 				},
 			},
-			// These tests are stubbed out due to the call to dawgs FetchNodes being untestable
-			// {
-			// 	Name: "DB error - GetSelectorsByMemberId",
-			// 	Input: func(input *apitest.Input) {
-			// 		apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-			// 		apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
-			// 	},
-			// 	Setup: func() {
-			// 		mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
-			// 			Return(model.AssetGroupTagSelectors{}, database.ErrNotFound)
-			// 		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-			// 			Return(model.AssetGroupTag{}, nil)
-			// 	},
-			// 	Test: func(output apitest.Output) {
-			// 		apitest.StatusCode(output, http.StatusNotFound)
+			{
+				Name: "DB error - GetSelectorsByMemberId",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelectors{}, database.ErrNotFound)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
+						Return(graph.Node{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
 
-			// 	},
-			// },
-			// {
-			// 	Name: "Success",
-			// 	Input: func(input *apitest.Input) {
-			// 		apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-			// 		apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
-			// 	},
-			// 	Setup: func() {
-			// 		mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
-			// 			Return(model.AssetGroupTagSelectors{}, nil)
-			// 		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
-			// 			Return(model.AssetGroupTag{}, nil)
-			// 	},
-			// 	Test: func(output apitest.Output) {
-			// 		apitest.StatusCode(output, http.StatusOK)
-			// 	},
-			// },
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTagSelectors{}, nil)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
+						Return(graph.Node{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
 		})
 }
