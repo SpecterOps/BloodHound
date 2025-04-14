@@ -196,7 +196,7 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 		case Int2:
 			return s, true
 
-		case Int, Int8, Int4:
+		case Int, Numeric, Int8, Int4:
 			return other, true
 		}
 
@@ -205,7 +205,7 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 		case Int4, Int2:
 			return s, true
 
-		case Int, Int8:
+		case Int, Numeric, Int8:
 			return other, true
 		}
 
@@ -213,6 +213,9 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 		switch other {
 		case Int, Int8, Int4, Int2:
 			return s, true
+
+		case Numeric:
+			return other, true
 		}
 
 	case Int:
@@ -220,7 +223,7 @@ func (s DataType) CoerceToSupertype(other DataType) (DataType, bool) {
 		case Int:
 			return s, true
 
-		case Int8:
+		case Numeric, Int8:
 			return other, true
 		}
 
@@ -270,6 +273,24 @@ func (s DataType) OperatorResultType(other DataType, operator Operator) (DataTyp
 
 		if supertype, validSupertype := s.CoerceToSupertype(other); validSupertype {
 			return supertype, true
+		}
+
+		// Other special cases for arithmetic
+		switch s {
+		case Date:
+			switch other {
+			case Date, Interval:
+				return Date, true
+			}
+
+		case Interval:
+			switch other {
+			case Date:
+				return Date, true
+
+			case Interval:
+				return Interval, true
+			}
 		}
 
 	case OperatorConcatenate:

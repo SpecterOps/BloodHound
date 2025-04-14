@@ -33,7 +33,7 @@ func (s *queryResult) Next() bool {
 	return s.rows.Next()
 }
 
-func (s *queryResult) Values() (graph.ValueMapper, error) {
+func (s *queryResult) Mapper() (graph.ValueMapper, error) {
 	if values, err := s.rows.Values(); err != nil {
 		return nil, err
 	} else {
