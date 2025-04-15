@@ -20,11 +20,12 @@ import { EdgeInfoItems, useEdgeInfoItems } from '../../../hooks/useExploreGraph/
 import VirtualizedNodeList from '../../VirtualizedNodeList';
 import { EdgeInfoProps } from '../index';
 
-const RelaySources: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) => {
+const RelaySources: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName, onNodeClick }) => {
     const { isLoading, isError, nodesArray } = useEdgeInfoItems({
         sourceDBId,
         targetDBId,
         edgeName,
+        onNodeClick,
         type: EdgeInfoItems['relayTargets'],
     });
 
