@@ -547,7 +547,7 @@ func ConvertAzureGroup365MembersToRels(data models.Group365Members) []Ingestible
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
-					RelType:  azure.M365MemberOf,
+					RelType:  azure.MemberOf,
 				},
 			))
 		}
@@ -576,6 +576,40 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 				},
 				IngestibleTarget{
 					TargetType: azure.Group,
+					Target:     strings.ToUpper(data.GroupId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.Owns,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
+func ConvertAzureGroup365OwnerToRels(data models.Group365Owners) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+
+	for _, raw := range data.Owners {
+		var (
+			owner azure2.DirectoryObject
+		)
+		if err := json.Unmarshal(raw.Owner, &owner); err != nil {
+			slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group owner", err))
+		} else if ownerType, err := ExtractTypeFromDirectoryObject(owner); errors.Is(err, ErrInvalidType) {
+			slog.Warn(fmt.Sprintf(ExtractError, err))
+		} else if err != nil {
+			slog.Error(fmt.Sprintf(ExtractError, err))
+		} else {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     strings.ToUpper(owner.Id),
+					SourceType: ownerType,
+				},
+				IngestibleTarget{
+					TargetType: azure.Group365,
 					Target:     strings.ToUpper(data.GroupId),
 				},
 				IngestibleRel{

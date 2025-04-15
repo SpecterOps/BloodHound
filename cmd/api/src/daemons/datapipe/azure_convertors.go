@@ -63,6 +63,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureGroup365Member
 	case enums.KindAZGroupOwner:
 		return convertAzureGroupOwner
+	case enums.KindAZGroup365Owner:
+		return convertAzureGroup365Owner
 	case enums.KindAZKeyVault:
 		return convertAzureKeyVault
 	case enums.KindAZKeyVaultAccessPolicy:
@@ -292,7 +294,7 @@ func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
 
 	if err := json.Unmarshal(raw, &data); err != nil {
 
-		slog.Error(fmt.Sprintf(SerialError, "azure group365", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 36 group", err))
 
 	} else {
 
@@ -336,6 +338,17 @@ func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) 
 		slog.Error(fmt.Sprintf(SerialError, "azure group owners", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureGroup365Owner(raw json.RawMessage, converted *ConvertedAzureData) {
+	var (
+		data models.Group365Owners
+	)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group owners", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365OwnerToRels(data)...)
 	}
 }
 

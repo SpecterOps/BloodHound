@@ -824,7 +824,6 @@ export enum AzureRelationshipKind {
     GetSecrets = 'AZGetSecrets',
     HasRole = 'AZHasRole',
     MemberOf = 'AZMemberOf',
-    M365MemberOf = 'AZM365MemberOf',
     Owner = 'AZOwner',
     RunsAs = 'AZRunsAs',
     VMContributor = 'AZVMContributor',
@@ -883,8 +882,6 @@ export function AzureRelationshipKindToDisplay (value: AzureRelationshipKind): s
             return 'HasRole';
         case AzureRelationshipKind.MemberOf: 
             return 'MemberOf';
-        case AzureRelationshipKind.M365MemberOf: 
-            return 'M365MemberOf';
         case AzureRelationshipKind.Owner: 
             return 'Owner';
         case AzureRelationshipKind.RunsAs: 
@@ -1087,7 +1084,6 @@ export function AzurePathfindingEdges (): AzureRelationshipKind[] {
         AzureRelationshipKind.GetSecrets,
         AzureRelationshipKind.HasRole,
         AzureRelationshipKind.MemberOf,
-        AzureRelationshipKind.M365MemberOf,
         AzureRelationshipKind.Owner,
         AzureRelationshipKind.RunsAs,
         AzureRelationshipKind.VMContributor,

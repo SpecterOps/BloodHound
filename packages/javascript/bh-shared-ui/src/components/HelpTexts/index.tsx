@@ -57,7 +57,6 @@ import AZMGRoleManagement_ReadWrite_Directory from './AZMGRoleManagement_ReadWri
 import AZMGServicePrincipalEndpoint_ReadWrite_All from './AZMGServicePrincipalEndpoint_ReadWrite_All/AZMGServicePrincipalEndpoint_ReadWrite_All';
 import AZManagedIdentity from './AZManagedIdentity/AZManagedIdentity';
 import AZMemberOf from './AZMemberOf/AZMemberOf';
-import AZM365MemberOf from './AZM365MemberOf/AZM365MemberOf';
 import AZNodeResourceGroup from './AZNodeResourceGroup/AZNodeResourceGroup';
 import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
@@ -146,7 +145,6 @@ export type EdgeInfoProps = {
 const EdgeInfoComponents = {
     GenericAll: GenericAll,
     MemberOf: MemberOf,
-    AZM365MemberOf: AZM365MemberOf,
     AllExtendedRights: AllExtendedRights,
     AdminTo: AdminTo,
     HasSession: HasSession,

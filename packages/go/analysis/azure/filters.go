@@ -27,7 +27,7 @@ import (
 )
 
 func FilterEntityActiveAssignments() graph.Criteria {
-	return query.KindIn(query.Relationship(), azure.HasRole, azure.MemberOf, azure.M365MemberOf)
+	return query.KindIn(query.Relationship(), azure.HasRole, azure.MemberOf)
 }
 
 func FilterEntityPIMAssignments() graph.Criteria {
@@ -63,12 +63,12 @@ func FilterAbusableAppRoleAssignmentRelationships() graph.Criteria {
 }
 
 func FilterGroupMembership() graph.Criteria {
-	return query.Kind(query.Relationship(), azure.MemberOf, azure.M365MemberOf)
+	return query.Kind(query.Relationship(), azure.MemberOf)
 }
 
 func FilterGroupMembers() graph.Criteria {
 	return query.And(
-		query.Kind(query.Relationship(), azure.MemberOf, azure.M365MemberOf),
+		query.Kind(query.Relationship(), azure.MemberOf),
 		query.Kind(query.Start(), azure.Entity),
 	)
 }

@@ -1134,36 +1134,36 @@ export const entityRelationshipEndpoints = {
     'azgroup365-members': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups365', id, 'group-members', counts, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),
+            .then((res : any) => res.data),
     'azgroup365-member_of': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups365', id, 'group-membership', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res) => res.data),
+            .then((res : any) => res.data),
     'azgroup365-roles': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups365', id, 'roles', counts, skip, limit, type, { signal: controller.signal })
-            .then((res) => res.data),
+            .then((res : any) => res.data),
          
     'azgroup365-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups365', id, 'inbound-control', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res) => res.data),
+            .then((res : any) => res.data),
     'azgroup365-outbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('groups365', id, 'outbound-control', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res) => res.data),
+            .then((res: any) => res.data),
     'azkeyvault-key_readers': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('key-vaults', id, 'key-readers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res: { data: { countLabel: string; }; }) => {
+            .then((res) => {
                 if (type !== 'graph') res.data.countLabel = 'Key Readers';
                 return res.data;
             }),
@@ -1172,7 +1172,7 @@ export const entityRelationshipEndpoints = {
             .getAZEntityInfoV2('key-vaults', id, 'certificate-readers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res: { data: { countLabel: string; }; }) => {
+            .then((res) => {
                 if (type !== 'graph') res.data.countLabel = 'Certificate Readers';
                 return res.data;
             }),
@@ -1181,7 +1181,7 @@ export const entityRelationshipEndpoints = {
             .getAZEntityInfoV2('key-vaults', id, 'secret-readers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res: { data: { countLabel: string; }; }) => {
+            .then((res) => {
                 if (type !== 'graph') res.data.countLabel = 'Secret Readers';
                 return res.data;
             }),
@@ -1190,7 +1190,7 @@ export const entityRelationshipEndpoints = {
             .getAZEntityInfoV2('key-vaults', id, 'all-readers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
-            .then((res: { data: { countLabel: string; }; }) => {
+            .then((res) => {
                 if (type !== 'graph') res.data.countLabel = 'All Readers';
                 return res.data;
             }),
