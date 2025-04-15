@@ -56,7 +56,7 @@ func rewriteCompoundIdentifierScopeReference(scope *Scope, identifier pgsql.Comp
 }
 
 type FrameBindingRewriter struct {
-	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+	walk.Visitor[pgsql.SyntaxNode]
 
 	scope *Scope
 }
@@ -286,7 +286,7 @@ func RewriteFrameBindings(scope *Scope, expression pgsql.Expression) error {
 	}
 
 	return walk.PgSQL(expression, &FrameBindingRewriter{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
-		scope:               scope,
+		Visitor: walk.NewVisitor[pgsql.SyntaxNode](),
+		scope:   scope,
 	})
 }

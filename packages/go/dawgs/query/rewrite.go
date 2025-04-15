@@ -19,23 +19,28 @@ package query
 import (
 	"strconv"
 
+	"github.com/specterops/bloodhound/cypher/models/walk"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 )
 
 type ParameterRewriter struct {
+	walk.Visitor[cypher.SyntaxNode]
+
 	Parameters     map[string]any
 	parameterIndex int
 }
 
 func NewParameterRewriter() *ParameterRewriter {
 	return &ParameterRewriter{
+		Visitor:        walk.NewVisitor[cypher.SyntaxNode](),
 		Parameters:     map[string]any{},
 		parameterIndex: 0,
 	}
 }
 
-func (s *ParameterRewriter) Visit(stack *cypher.WalkStack, element cypher.Expression) error {
-	switch typedElement := element.(type) {
+func (s *ParameterRewriter) Enter(node cypher.SyntaxNode) {
+	switch typedNode := node.(type) {
 	case *cypher.Parameter:
 		var (
 			nextParameterIndex    = s.parameterIndex
@@ -46,9 +51,7 @@ func (s *ParameterRewriter) Visit(stack *cypher.WalkStack, element cypher.Expres
 		s.parameterIndex++
 
 		// Record the parameter in our map and then bind the symbol in the model
-		s.Parameters[nextParameterIndexStr] = typedElement.Value
-		typedElement.Symbol = nextParameterIndexStr
+		s.Parameters[nextParameterIndexStr] = typedNode.Value
+		typedNode.Symbol = nextParameterIndexStr
 	}
-
-	return nil
 }

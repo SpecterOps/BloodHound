@@ -187,7 +187,7 @@ func (s *SingleQuery) copy() *SingleQuery {
 
 type Unwind struct {
 	Expression Expression
-	Binding    *Variable
+	Variable   *Variable
 }
 
 func NewUnwind() *Unwind {
@@ -201,7 +201,7 @@ func (s *Unwind) copy() *Unwind {
 
 	return &Unwind{
 		Expression: Copy(s.Expression),
-		Binding:    Copy(s.Binding),
+		Variable:   Copy(s.Variable),
 	}
 }
 
@@ -258,6 +258,10 @@ func (s *MultiPartQueryPart) AddUpdatingClause(clause *UpdatingClause) {
 type MultiPartQuery struct {
 	Parts           []*MultiPartQueryPart
 	SinglePartQuery *SinglePartQuery
+}
+
+func (s *MultiPartQuery) AppendPart() {
+	s.Parts = append(s.Parts, NewMultiPartQueryPart())
 }
 
 func (s *MultiPartQuery) CurrentPart() *MultiPartQueryPart {
@@ -612,7 +616,7 @@ func (s *Create) copy() *Create {
 }
 
 type IDInCollection struct {
-	Variable   *Variable
+	Variable   Expression
 	Expression Expression
 }
 
@@ -1083,7 +1087,7 @@ func (s *Variable) copy() *Variable {
 
 type ProjectionItem struct {
 	Expression Expression
-	Binding    Expression
+	Alias      Expression
 }
 
 func NewProjectionItem() *ProjectionItem {
@@ -1103,13 +1107,13 @@ func (s *ProjectionItem) copy() *ProjectionItem {
 
 	return &ProjectionItem{
 		Expression: Copy(s.Expression),
-		Binding:    Copy(s.Binding),
+		Alias:      Copy(s.Alias),
 	}
 }
 
 type PropertyLookup struct {
-	Atom    Expression
-	Symbols []string
+	Atom   Expression
+	Symbol string
 }
 
 func (s *PropertyLookup) copy() *PropertyLookup {
@@ -1118,22 +1122,22 @@ func (s *PropertyLookup) copy() *PropertyLookup {
 	}
 
 	return &PropertyLookup{
-		Atom:    Copy(s.Atom),
-		Symbols: Copy(s.Symbols),
+		Atom:   Copy(s.Atom),
+		Symbol: s.Symbol,
 	}
 }
 
-func NewPropertyLookup(variableSymbol string, propertySymbols ...string) *PropertyLookup {
+func NewPropertyLookup(variableSymbol string, propertySymbol string) *PropertyLookup {
 	return &PropertyLookup{
 		Atom: &Variable{
 			Symbol: variableSymbol,
 		},
-		Symbols: propertySymbols,
+		Symbol: propertySymbol,
 	}
 }
 
-func (s *PropertyLookup) AddLookupSymbol(symbol string) {
-	s.Symbols = append(s.Symbols, symbol)
+func (s *PropertyLookup) SetSymbol(symbol string) {
+	s.Symbol = symbol
 }
 
 type PatternElement struct {
@@ -1182,7 +1186,7 @@ func NewProperties() *Properties {
 
 // NodePattern
 type NodePattern struct {
-	Binding    Expression
+	Variable   Expression
 	Kinds      graph.Kinds
 	Properties Expression
 }
@@ -1193,7 +1197,7 @@ func (s *NodePattern) copy() *NodePattern {
 	}
 
 	return &NodePattern{
-		Binding:    s.Binding,
+		Variable:   s.Variable,
 		Kinds:      Copy(s.Kinds),
 		Properties: Copy(s.Properties),
 	}
@@ -1210,7 +1214,7 @@ func (s *NodePattern) AddKind(kind graph.Kind) {
 
 // RelationshipPattern
 type RelationshipPattern struct {
-	Binding    Expression
+	Variable   Expression
 	Kinds      graph.Kinds
 	Direction  graph.Direction
 	Range      *PatternRange
@@ -1223,7 +1227,7 @@ func (s *RelationshipPattern) copy() *RelationshipPattern {
 	}
 
 	return &RelationshipPattern{
-		Binding:    s.Binding,
+		Variable:   s.Variable,
 		Kinds:      Copy(s.Kinds),
 		Direction:  s.Direction,
 		Range:      Copy(s.Range),
@@ -1340,7 +1344,7 @@ func (s *Return) copy() *Return {
 }
 
 type PatternPart struct {
-	Binding                 Expression
+	Variable                Expression
 	ShortestPathPattern     bool
 	AllShortestPathsPattern bool
 	PatternElements         []*PatternElement
@@ -1356,7 +1360,7 @@ func (s *PatternPart) copy() *PatternPart {
 	}
 
 	return &PatternPart{
-		Binding:                 s.Binding,
+		Variable:                s.Variable,
 		ShortestPathPattern:     s.ShortestPathPattern,
 		AllShortestPathsPattern: s.AllShortestPathsPattern,
 		PatternElements:         Copy(s.PatternElements),

@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/specterops/bloodhound/cypher/models/walk"
+
 	cypherBackend "github.com/specterops/bloodhound/cypher/models/cypher/format"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
@@ -56,51 +58,10 @@ func NewEmptyQueryBuilder() *QueryBuilder {
 	}
 }
 
-func (s *QueryBuilder) liftRelationshipKindMatchers() cypher.Visitor {
-	firstReadingClause := query.GetFirstReadingClause(s.query)
-
-	return cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
-		if firstReadingClause == nil {
-			return nil
-		}
-
-		if firstReadingClause.Match == nil {
-			return fmt.Errorf("first reading clause of query has a nil match clause")
-		}
-
-		firstRelationshipPattern := firstReadingClause.Match.FirstRelationshipPattern()
-
-		switch typedElement := element.(type) {
-		case cypher.ExpressionList:
-			var removeList []cypher.Expression
-
-			for _, expression := range typedElement.GetAll() {
-				switch typedExpression := expression.(type) {
-				case *cypher.KindMatcher:
-					switch variable := typedExpression.Reference.(type) {
-					case *cypher.Variable:
-						switch variable.Symbol {
-						case query.EdgeSymbol:
-							firstRelationshipPattern.Kinds = append(firstRelationshipPattern.Kinds, typedExpression.Kinds...)
-							removeList = append(removeList, expression)
-						}
-					}
-				}
-			}
-
-			for _, expression := range removeList {
-				typedElement.Remove(expression)
-			}
-		}
-
-		return nil
-	}, nil)
-}
-
 func (s *QueryBuilder) rewriteParameters() error {
 	parameterRewriter := query.NewParameterRewriter()
 
-	if err := cypher.Walk(s.query, cypher.NewVisitor(parameterRewriter.Visit, nil)); err != nil {
+	if err := walk.Cypher(s.query, parameterRewriter); err != nil {
 		return err
 	}
 
@@ -164,10 +125,10 @@ func (s *QueryBuilder) prepareMatch() error {
 
 		isRelationshipQuery = false
 
-		bindWalk = cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
-			switch typedElement := element.(type) {
+		bindWalk = walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+			switch typedNode := node.(type) {
 			case *cypher.Variable:
-				switch typedElement.Symbol {
+				switch typedNode.Symbol {
 				case query.NodeSymbol:
 					singleNodeBound = true
 
@@ -184,9 +145,7 @@ func (s *QueryBuilder) prepareMatch() error {
 					isRelationshipQuery = true
 				}
 			}
-
-			return nil
-		}, nil)
+		})
 	)
 
 	// Zip through updating clauses first
@@ -199,11 +158,11 @@ func (s *QueryBuilder) prepareMatch() error {
 
 		switch typedClause := typedUpdatingClause.Clause.(type) {
 		case *cypher.Create:
-			if err := cypher.Walk(typedClause, cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
-				switch typedElement := element.(type) {
+			if err := walk.Cypher(typedClause, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedElement := node.(type) {
 				case *cypher.NodePattern:
-					if typedBinding, isVariable := typedElement.Binding.(*cypher.Variable); !isVariable {
-						return fmt.Errorf("expected variable but got %T", typedElement.Binding)
+					if typedBinding, isVariable := typedElement.Variable.(*cypher.Variable); !isVariable {
+						errorHandler.SetErrorf("expected variable but got %T", typedElement.Variable)
 					} else {
 						switch typedBinding.Symbol {
 						case query.NodeSymbol:
@@ -218,8 +177,8 @@ func (s *QueryBuilder) prepareMatch() error {
 					}
 
 				case *cypher.RelationshipPattern:
-					if typedBinding, isVariable := typedElement.Binding.(*cypher.Variable); !isVariable {
-						return fmt.Errorf("expected variable but got %T", typedElement.Binding)
+					if typedBinding, isVariable := typedElement.Variable.(*cypher.Variable); !isVariable {
+						errorHandler.SetErrorf("expected variable but got %T", typedElement.Variable)
 					} else {
 						switch typedBinding.Symbol {
 						case query.EdgeSymbol:
@@ -227,14 +186,12 @@ func (s *QueryBuilder) prepareMatch() error {
 						}
 					}
 				}
-
-				return nil
-			}, nil)); err != nil {
+			})); err != nil {
 				return err
 			}
 
 		case *cypher.Delete:
-			if err := cypher.Walk(typedClause, bindWalk, nil); err != nil {
+			if err := walk.Cypher(typedClause, bindWalk); err != nil {
 				return err
 			}
 		}
@@ -242,7 +199,7 @@ func (s *QueryBuilder) prepareMatch() error {
 
 	// Is there a where clause?
 	if firstReadingClause := query.GetFirstReadingClause(s.query); firstReadingClause != nil && firstReadingClause.Match.Where != nil {
-		if err := cypher.Walk(firstReadingClause.Match.Where, bindWalk, nil); err != nil {
+		if err := walk.Cypher(firstReadingClause.Match.Where, bindWalk); err != nil {
 			return err
 		}
 	}
@@ -258,7 +215,7 @@ func (s *QueryBuilder) prepareMatch() error {
 			s.query.SingleQuery.SinglePartQuery.Return.Projection.Order = s.order
 		}
 
-		if err := cypher.Walk(s.query.SingleQuery.SinglePartQuery.Return, bindWalk, nil); err != nil {
+		if err := walk.Cypher(s.query.SingleQuery.SinglePartQuery.Return, bindWalk); err != nil {
 			return err
 		}
 	}
@@ -270,13 +227,13 @@ func (s *QueryBuilder) prepareMatch() error {
 
 	if singleNodeBound && !creatingSingleNode {
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(query.NodeSymbol),
+			Variable: cypher.NewVariableWithSymbol(query.NodeSymbol),
 		})
 	}
 
 	if startNodeBound {
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(query.EdgeStartSymbol),
+			Variable: cypher.NewVariableWithSymbol(query.EdgeStartSymbol),
 		})
 	}
 
@@ -288,7 +245,7 @@ func (s *QueryBuilder) prepareMatch() error {
 		if !creatingRelationship {
 			if relationshipBound {
 				patternPart.AddPatternElements(&cypher.RelationshipPattern{
-					Binding:   cypher.NewVariableWithSymbol(query.EdgeSymbol),
+					Variable:  cypher.NewVariableWithSymbol(query.EdgeSymbol),
 					Direction: graph.DirectionOutbound,
 				})
 			} else {
@@ -305,7 +262,7 @@ func (s *QueryBuilder) prepareMatch() error {
 
 	if endNodeBound {
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(query.EdgeEndSymbol),
+			Variable: cypher.NewVariableWithSymbol(query.EdgeEndSymbol),
 		})
 	}
 
@@ -327,15 +284,13 @@ func (s *QueryBuilder) prepareMatch() error {
 func (s *QueryBuilder) compilationErrors() error {
 	var modelErrors []error
 
-	cypher.Walk(s.query, cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
-		if errorNode, typeOK := element.(cypher.Fallible); typeOK {
+	walk.Cypher(s.query, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+		if errorNode, typeOK := node.(cypher.Fallible); typeOK {
 			if len(errorNode.Errors()) > 0 {
 				modelErrors = append(modelErrors, errorNode.Errors()...)
 			}
 		}
-
-		return nil
-	}, nil))
+	}))
 
 	return errors.Join(modelErrors...)
 }
@@ -363,15 +318,7 @@ func (s *QueryBuilder) Prepare() error {
 		return err
 	}
 
-	if err := cypher.Walk(s.query, cypher.NewVisitor(StringNegationRewriter, nil)); err != nil {
-		return err
-	}
-
-	if err := cypher.Walk(s.query, s.liftRelationshipKindMatchers()); err != nil {
-		return err
-	}
-
-	return cypher.Walk(s.query, cypher.NewVisitor(nil, RemoveEmptyExpressionLists))
+	return walk.Cypher(s.query, NewExpressionListRewriter())
 }
 
 func (s *QueryBuilder) PrepareAllShortestPaths() error {
@@ -389,7 +336,7 @@ func (s *QueryBuilder) PrepareAllShortestPaths() error {
 		patternPart := firstReadingClause.Match.Pattern[0]
 
 		// Bind the path
-		patternPart.Binding = cypher.NewVariableWithSymbol(query.PathSymbol)
+		patternPart.Variable = cypher.NewVariableWithSymbol(query.PathSymbol)
 
 		// Set the pattern to search for all shortest paths
 		patternPart.AllShortestPathsPattern = true

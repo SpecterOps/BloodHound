@@ -430,7 +430,7 @@ func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_PropertyLookup(ctx *par
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) ExitOC_PropertyLookup(ctx *parser.OC_PropertyLookupContext) {
-	s.Expression.(*cypher.PropertyLookup).AddLookupSymbol(s.PropertyKeyName)
+	s.Expression.(*cypher.PropertyLookup).SetSymbol(s.PropertyKeyName)
 }
 
 func (s *NonArithmeticOperatorExpressionVisitor) EnterOC_PropertyKeyName(ctx *parser.OC_PropertyKeyNameContext) {

@@ -174,8 +174,8 @@ func EndProperty(name string) *cypherModel.PropertyLookup {
 
 func Property(qualifier graph.Criteria, name string) *cypherModel.PropertyLookup {
 	return &cypherModel.PropertyLookup{
-		Atom:    qualifier.(*cypherModel.Variable),
-		Symbols: []string{name},
+		Atom:   qualifier.(*cypherModel.Variable),
+		Symbol: name,
 	}
 }
 
@@ -338,7 +338,7 @@ func HasRelationships(reference *cypherModel.Variable) *cypherModel.PatternPredi
 	patternPredicate := cypherModel.NewPatternPredicate()
 
 	patternPredicate.AddElement(&cypherModel.NodePattern{
-		Binding: cypherModel.NewVariableWithSymbol(reference.Symbol),
+		Variable: cypherModel.NewVariableWithSymbol(reference.Symbol),
 	})
 
 	patternPredicate.AddElement(&cypherModel.RelationshipPattern{
@@ -424,7 +424,7 @@ func Delete(leaves ...graph.Criteria) *cypherModel.UpdatingClause {
 
 func NodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
 	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(NodeSymbol),
+		Variable:   cypherModel.NewVariableWithSymbol(NodeSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
@@ -432,7 +432,7 @@ func NodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherMo
 
 func StartNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
 	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeStartSymbol),
+		Variable:   cypherModel.NewVariableWithSymbol(EdgeStartSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
@@ -440,7 +440,7 @@ func StartNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cyp
 
 func EndNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cypherModel.NodePattern {
 	return &cypherModel.NodePattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeEndSymbol),
+		Variable:   cypherModel.NewVariableWithSymbol(EdgeEndSymbol),
 		Kinds:      kinds,
 		Properties: properties,
 	}
@@ -448,7 +448,7 @@ func EndNodePattern(kinds graph.Kinds, properties *cypherModel.Parameter) *cyphe
 
 func RelationshipPattern(kind graph.Kind, properties *cypherModel.Parameter, direction graph.Direction) *cypherModel.RelationshipPattern {
 	return &cypherModel.RelationshipPattern{
-		Binding:    cypherModel.NewVariableWithSymbol(EdgeSymbol),
+		Variable:   cypherModel.NewVariableWithSymbol(EdgeSymbol),
 		Kinds:      graph.Kinds{kind},
 		Properties: properties,
 		Direction:  direction,
@@ -472,7 +472,7 @@ func Create(elements ...graph.Criteria) *cypherModel.UpdatingClause {
 			switch typedElement.Symbol {
 			case NodeSymbol, EdgeStartSymbol, EdgeEndSymbol:
 				pattern.AddPatternElements(&cypherModel.NodePattern{
-					Binding: cypherModel.NewVariableWithSymbol(typedElement.Symbol),
+					Variable: cypherModel.NewVariableWithSymbol(typedElement.Symbol),
 				})
 
 			default:
