@@ -100,6 +100,9 @@ func (s *Node) SizeOf() size.Size {
 func (s *Node) AddKinds(kinds ...Kind) {
 	fmt.Printf(">>> mofo node: %+v \n ", *s)
 	for _, kind := range kinds {
+		if kind == nil {
+			continue // prevent panics from nil kinds
+		}
 		s.Kinds = s.Kinds.Add(kind)
 		s.AddedKinds = s.AddedKinds.Add(kind)
 		s.DeletedKinds = s.DeletedKinds.Remove(kind)

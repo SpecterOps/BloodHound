@@ -28,14 +28,15 @@ import (
 	"github.com/specterops/bloodhound/ein"
 )
 
-/*
-ConversionFunc is responsible for turning an individual json object into the equivalent ingest object and storing the data into ConvertedData.
-
-T is any of the ingest types
-*/
+// ConversionFunc is a function that transforms a decoded JSON object (of type T)
+// into its corresponding internal ingest representation, appending it to the provided ConvertedData.
+//
+// T represents a specific ingest type (e.g., User, Computer, Group, etc.).
 type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
 
-func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversionFunc ConversionFunc[T]) error {
+// The identityKind applied to the nodes is typically set at the batch level (e.g., ad.Entity or az.Entity).
+// In generic ingest scenarios, no identityKind is applied by default, allowing kinds to be specified per node.
+func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversionFunc ConversionFunc[T], identityKind graph.Kind) error {
 
 	var (
 		count         = 0
@@ -58,7 +59,7 @@ func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversion
 		}
 
 		if count == IngestCountThreshold {
-			if err := IngestBasicData(batch, convertedData); err != nil {
+			if err := IngestBasicData(batch, identityKind, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -68,7 +69,7 @@ func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversion
 	}
 
 	if count > 0 {
-		if err := IngestBasicData(batch, convertedData); err != nil {
+		if err := IngestBasicData(batch, identityKind, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}

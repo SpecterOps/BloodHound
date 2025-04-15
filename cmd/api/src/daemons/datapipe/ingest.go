@@ -47,14 +47,14 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ing
 	}
 }
 
-func IngestBasicData(batch graph.Batch, converted ConvertedData) error {
+func IngestBasicData(batch graph.Batch, identityKind graph.Kind, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, graph.EmptyKind, converted.NodeProps); err != nil {
+	if err := IngestNodes(batch, identityKind, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, graph.EmptyKind, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, identityKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -113,7 +113,7 @@ func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler 
 		if err != nil {
 			return err
 		}
-		return decodeBasicData(batch, decoder, conversionFunc)
+		return decodeBasicData(batch, decoder, conversionFunc, ad.Entity)
 	}
 }
 
@@ -121,19 +121,19 @@ var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeGeneric: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
 			return err
-		} else if err = decodeBasicData(batch, decoder, convertGenericNode); err != nil {
+		} else if err = decodeBasicData(batch, decoder, convertGenericNode, graph.EmptyKind); err != nil {
 			return err
 		} else if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
 			return err
 		} else {
-			return decodeBasicData(batch, decoder, convertGenericEdge)
+			return decodeBasicData(batch, decoder, convertGenericEdge, graph.EmptyKind)
 		}
 	},
 	ingest.DataTypeComputer: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else if meta.Version >= 5 {
-			return decodeBasicData(batch, decoder, convertComputerData)
+			return decodeBasicData(batch, decoder, convertComputerData, ad.Entity)
 		} else {
 			return nil
 		}
@@ -209,20 +209,22 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 	return properties
 }
 
-// TODO: identityKind is hardcoded as ad.Entity or az.Entity
 func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
-	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
+	var (
+		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
+		nodeUpdate           = graph.NodeUpdate{
+			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
+			IdentityProperties: []string{
+				common.ObjectID.String(),
+			},
+		}
+	)
 
-	return batch.UpdateNodeBy(graph.NodeUpdate{
-		Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
-		// TODO: see drivers/pg/query/format.go Add() func.
-		// we just auto-add this kind to any created node.
-		// can we just make it optional?
-		IdentityKind: identityKind,
-		IdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	})
+	if identityKind != graph.EmptyKind {
+		nodeUpdate.IdentityKind = identityKind
+	}
+
+	return batch.UpdateNodeBy(nodeUpdate)
 }
 
 func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
@@ -240,11 +242,18 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 	return errs.Combined()
 }
 
-// TODO: nodeIDKind is hardcoded as ad.Entity or az.Entity
 func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = nowUTC
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
+
+	var (
+		startIdentityKind, endIdentityKind graph.Kind
+	)
+
+	if nodeIDKind != graph.EmptyKind {
+		startIdentityKind, endIdentityKind = nodeIDKind, nodeIDKind
+	}
 
 	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
@@ -253,7 +262,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 			common.ObjectID: nextRel.Source,
 			common.LastSeen: nowUTC,
 		}), nextRel.SourceType),
-		StartIdentityKind: nodeIDKind,
+		StartIdentityKind: startIdentityKind,
 		StartIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
@@ -262,7 +271,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
 		}), nextRel.TargetType),
-		EndIdentityKind: nodeIDKind,
+		EndIdentityKind: endIdentityKind,
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
