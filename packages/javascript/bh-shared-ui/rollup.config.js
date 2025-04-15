@@ -56,6 +56,7 @@ export default {
         'lodash/cloneDeep',
         'lodash/find',
         'lodash/isEmpty',
+        'lodash/orderBy',
         'lodash/startCase',
         'lodash/toString',
         'luxon',

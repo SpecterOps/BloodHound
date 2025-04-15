@@ -49,7 +49,7 @@ func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error
 		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", kindMatcher.Reference)
 	} else if binding, resolved := s.scope.LookupString(variable.Symbol); !resolved {
 		return fmt.Errorf("unable to find identifier %s", variable.Symbol)
-	} else if kindIDs, err := s.kindMapper.MapKinds(s.ctx, kindMatcher.Kinds); err != nil {
+	} else if kindIDs, err := s.kindMapper.MapKinds(kindMatcher.Kinds); err != nil {
 		return fmt.Errorf("failed to translate kinds: %w", err)
 	} else {
 		return newPGKindIDMatcher(s.scope, s.treeTranslator, binding, kindIDs)

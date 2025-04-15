@@ -26,8 +26,7 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
     // Edge identifiers can be either `rel_<sourceNodeId>_<edgeKind>_<targetNodeId>`...
     let match = itemId.match(/^(?:rel_)?(\d+)_(.+)_(\d+)$/);
     if (match) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [_rel, sourceId, edgeType, targetId] = match;
+        const [, sourceId, edgeType, targetId] = match;
         return {
             itemType: 'edge',
             cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId}  RETURN p LIMIT 1`,
@@ -46,9 +45,49 @@ export const parseItemId = (itemId: string): ParsedQueryItem => {
         };
     }
 
+    // Adding two cases here to account for links coming from findings on the Attack Paths page.
+
+    // `node_<objectId>` for list findings
+    match = itemId.match(/^node_(.+)$/);
+    if (match) {
+        return {
+            itemType: 'node',
+            cypherQuery: `MATCH (n) WHERE n.objectid = '${match[1]}' RETURN n LIMIT 1`,
+        };
+    }
+
+    // `edge_||:<sourceObjectId>||:<edgeType>||:<targetObjectId>` for relationship findings
+    match = itemId.match(/^edge_\|\|:(.+)\|\|:(.+)\|\|:(.+)$/);
+    if (match) {
+        const [, sourceObjectId, edgeType, targetObjectId] = match;
+        return {
+            itemType: 'edge',
+            cypherQuery: `MATCH p=(s)-[r:${edgeType}]->(t) WHERE s.objectid = '${sourceObjectId}' AND t.objectid = '${targetObjectId}'  RETURN p LIMIT 1`,
+        };
+    }
+
     // otherwise it is a node identifier
     return {
         itemType: 'node',
         cypherQuery: `MATCH (n) WHERE ID(n) = ${itemId} RETURN n LIMIT 1`,
     };
+};
+
+// Some constants and helper functions useful for handling the ID formats that parseItemId can work with
+export const NODE_ID_PREFIX = 'node_';
+export const EDGE_ID_PREFIX = 'edge_';
+export const REL_ID_PREFIX = 'rel_';
+export const EDGE_ID_SEPARATOR = '||:';
+export const REL_ID_SEPARATOR = '_';
+
+export const createNodeItemId = (objectId: string): string => {
+    return NODE_ID_PREFIX + objectId;
+};
+
+export const createEdgeItemId = (sourceObjectId: string, edgeType: string, targetObjectId: string): string => {
+    return [EDGE_ID_PREFIX, sourceObjectId, edgeType, targetObjectId].join(EDGE_ID_SEPARATOR);
+};
+
+export const createRelItemId = (sourceGraphId: string, edgeType: string, targetGraphId: string): string => {
+    return REL_ID_PREFIX + [sourceGraphId, edgeType, targetGraphId].join(REL_ID_SEPARATOR);
 };
