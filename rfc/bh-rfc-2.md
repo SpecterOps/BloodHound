@@ -59,8 +59,8 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 
 ### 3.1 Types
 
-All commit messages MUST have a type included.  
-The following types SHOULD be used when appropriate in a conventional commit message:
+- All commit messages MUST have a type included.
+- The following types SHOULD be used when appropriate in a conventional commit message:
 
 | Type     | Description                                                                                                                                                                                             |
 | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -74,65 +74,54 @@ The following types SHOULD be used when appropriate in a conventional commit mes
 
 ### 3.2 Scope
 
-The scope of a conventional commit is OPTIONAL but may be included to provide more detail as to what part of the application is being touched on with the work.
-
-Scopes MAY indicate what part of the codebase the work falls under such as:
-
-- API
-- UI
-
-Scopes MAY indicate particular sections, views, components, endpoints, or other subsets that communicate more about the changeset, e.g.:
-
-- Datapie
-- Explore Page
-- Ingest
-- Post-processing
-- V2 Audit Endpoint
-- Migrations
+- The scope of a conventional commit is OPTIONAL but MAY be included to provide more detail as to what part of the application is being touched on with the work.
+- Scopes MAY indicate what part of the codebase the work falls under such as:
+  - API
+  - UI
+- Scopes MAY indicate particular sections, views, components, endpoints, or other subsets that communicate more about the changeset, e.g.:
+  - Datapie
+  - Explore Page
+  - Ingest
+  - Post-processing
+  - V2 Audit Endpoint
+  - Migrations
 
 ### 3.3 Description
 
-The description part of a conventional commit message MUST be included.
-
-- The description of a conventional commit message should give a brief overview of the work committed.
-- The description of a conventional commit message should be no longer than 72 characters. This character limit is aimed at improving readability in areas where commit messages are regularly viewed.
+- The description part of a conventional commit message MUST be included.
+- The description of a conventional commit message SHOULD give a brief overview of the work committed.
+- The description of a conventional commit message SHOULD be no longer than 72 characters. This character limit is aimed at improving readability in areas where commit messages are regularly viewed.
 - The description of a conventional commit message MUST follow directly after the colon and a space of the type/scope prefix
 
 ### 3.4 Body
 
-The body of a conventional commit message is OPTIONAL.
-
-The body SHOULD be separated from the the type and description with an empty line.
-
-The body MAY be used to provide additional context, details, motivations, or other relevant information to the changeset.
-
-The body text SHOULD wrap at 72 characters for readability.
+- The body of a conventional commit message is OPTIONAL.
+- The body SHOULD be separated from the the type and description with an empty line.
+- The body MAY be used to provide additional context, details, motivations, or other relevant information to the changeset.
+- The body text SHOULD wrap at 72 characters for readability.
 
 ### 3.5 Footer
 
-A footer MUST be included as part of a conventional commit message
-
-An item to relate a ticket or issue number MUST be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+- A footer MUST be included as part of a conventional commit message
+- An item to relate a ticket or issue number MUST be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
 Examples:
 
-`Closes #1111`
+```
+Closes #1111
 
-`Fixes BED-5555`
+Fixes BED-5555
 
-`resolves: #777`
+resolves: #777
 
-`CLOSES: #1, resolves #2, Fix: BED-4444`
+CLOSES: #1, resolves #2, Fix: BED-4444
+```
 
-A footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
-
-A breaking change MAY also be denoted after the type/scope with an exclamation point, e.g., `fix!: Updates v1 endpoint to remove bug`
-
-A footer SHOULD be separated from the body (or the type and description if no body is included) with an empty line.
-
-Multiple footers MAY be included in the commit.
-
-Additional information apart from the issue/ticket number MAY be included in the footer(s).
+- A footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
+- A breaking change MAY also be denoted after the type/scope with an exclamation point, e.g., `fix!: Updates v1 endpoint to remove bug`
+- A footer SHOULD be separated from the body (or the type and description if no body is included) with an empty line.
+- Multiple footers MAY be included in the commit.
+- Additional information apart from the issue/ticket number MAY be included in the footer(s).
 
 Example:
 
@@ -149,7 +138,7 @@ The following are best practices for using Conventional Commits:
 
 - Always write clear and concise commit messages.
 - Use the appropriate `type` for each commit based on the nature of the change.
-- Avoid using vague `types` such as `chore` or `wip` if `feat` or `fix` can be appropriately applied.
+- Avoid using vague `types` such as `chore` or `wip` if other `types` can be appropriately applied.
 - If a commit contains a breaking change, clearly document the change in the footer.
 - Group related changes into a single commit instead of multiple small commits.
 
