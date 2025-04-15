@@ -15,8 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
-import { EdgeInfoProps, apiClient, useExploreParams, useFeatureFlag } from '../..';
+import { EdgeInfoProps } from '../../components';
 import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
+import { apiClient } from '../../utils';
+import { useExploreParams } from '../useExploreParams';
+import { useFeatureFlag } from '../useFeatureFlags';
 
 export enum EdgeInfoItems {
     relayTargets = 'relayTargets',
