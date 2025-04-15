@@ -406,18 +406,3 @@ func (s *BoundIdentifier) Aliased() pgsql.Identifier {
 func (s *BoundIdentifier) DependOn(other *BoundIdentifier) {
 	s.Dependencies = append(s.Dependencies, other)
 }
-
-func (s *BoundIdentifier) Link(other *BoundIdentifier) {
-	s.DependOn(other)
-	other.DependOn(s)
-}
-
-func (s *BoundIdentifier) FirstDependencyByType(dataType pgsql.DataType) (*BoundIdentifier, bool) {
-	for _, dependency := range s.Dependencies {
-		if dependency.DataType == dataType {
-			return dependency, true
-		}
-	}
-
-	return nil, false
-}
