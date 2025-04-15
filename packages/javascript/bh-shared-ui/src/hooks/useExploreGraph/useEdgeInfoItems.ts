@@ -23,7 +23,7 @@ export enum EdgeInfoItems {
     composition = 'composition',
 }
 
-type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName'>;
+type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName' | 'onNodeClick'>;
 
 export type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
     type: EdgeInfoItems;
@@ -42,11 +42,13 @@ const queryConfig = {
     },
 };
 
-export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
+export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type, onNodeClick }: EdgeInfoItemsProps) => {
     const { data: backButtonflag } = useFeatureFlag('back_button_support');
     const { setExploreParams } = useExploreParams();
-    const { data, isLoading, isError } = useQuery([type, sourceDBId, targetDBId, edgeName], () =>
-        queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName })
+    const { data, isLoading, isError } = useQuery(
+        [type, sourceDBId, targetDBId, edgeName],
+        () => queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName }),
+        { enabled: !!sourceDBId && !!targetDBId && !!edgeName }
     );
 
     const handleNodeClick = (item: number) => {
@@ -57,6 +59,8 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: Edg
                 searchType: 'node',
                 exploreSearchTab: 'node',
             });
+        } else {
+            onNodeClick?.(node);
         }
     };
 
