@@ -31,7 +31,7 @@ func mapTestCase[T, V any](t *testing.T, source T, expected V) {
 		value  V
 	)
 
-	require.Nil(t, mapper.Map(&value))
+	require.Nil(t, mapper.MapNext(&value))
 	require.Equalf(t, expected, value, "Mapping case for type %T to %T failed. Value is: %v", source, &value, value)
 }
 

@@ -583,7 +583,6 @@ func (s *GraphTestContext) SetupActiveDirectory() {
 	s.Harness.MembershipHarness.Setup(s)
 	s.Harness.ForeignHarness.Setup(s)
 	s.Harness.TrustDCSync.Setup(s)
-	s.Harness.Completeness.Setup(s)
 	s.Harness.ShortcutHarness.Setup(s)
 
 	s.Harness.AssetGroupComboNodeHarness.Setup(s)

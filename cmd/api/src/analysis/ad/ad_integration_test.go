@@ -24,7 +24,9 @@ import (
 	"testing"
 
 	schema "github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/test"
+	"github.com/stretchr/testify/assert"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -1089,31 +1091,47 @@ func TestFetchEntityLinkedGPOPaths(t *testing.T) {
 }
 
 func TestFetchLocalGroupCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	var (
+		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
 
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.Completeness.Setup(testContext)
+	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	require.NoError(t, err)
+
+	err = lab.WriteGraphFixture(graphDB, &fixture)
+	require.NoError(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		// why does this function ask for a transaction type?
+		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, "DOMAIN123")
+		require.NoError(t, err)
+		assert.Equal(t, .5, completeness)
 		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, harness.Completeness.DomainSid)
-
-		test.RequireNilErr(t, err)
-		require.Equal(t, .5, completeness)
 	})
+	assert.NoError(t, err)
 }
 
 func TestFetchUserSessionCompleteness(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	var (
+		testCtx = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
 
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.Completeness.Setup(testContext)
+	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	require.NoError(t, err)
+
+	err = lab.WriteGraphFixture(graphDB, &fixture)
+	require.NoError(t, err)
+
+	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
+		// why does this function ask for a transaction type?
+		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, "DOMAIN123")
+		require.NoError(t, err)
+		assert.Equal(t, .5, completeness)
 		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, harness.Completeness.DomainSid)
-
-		test.RequireNilErr(t, err)
-		require.Equal(t, .5, completeness)
 	})
+	assert.NoError(t, err)
 }
 
 func TestSyncLAPSPassword(t *testing.T) {

@@ -56,59 +56,40 @@ func (m *MockValueMapper) EXPECT() *MockValueMapperMockRecorder {
 	return m.recorder
 }
 
-// Count mocks base method.
-func (m *MockValueMapper) Count() int {
+// HasNext mocks base method.
+func (m *MockValueMapper) HasNext() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Count")
-	ret0, _ := ret[0].(int)
+	ret := m.ctrl.Call(m, "HasNext")
+	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// Count indicates an expected call of Count.
-func (mr *MockValueMapperMockRecorder) Count() *gomock.Call {
+// HasNext indicates an expected call of HasNext.
+func (mr *MockValueMapperMockRecorder) HasNext() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockValueMapper)(nil).Count))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasNext", reflect.TypeOf((*MockValueMapper)(nil).HasNext))
 }
 
-// Map mocks base method.
-func (m *MockValueMapper) Map(target any) error {
+// MapNext mocks base method.
+func (m *MockValueMapper) MapNext(target any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Map", target)
+	ret := m.ctrl.Call(m, "MapNext", target)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Map indicates an expected call of Map.
-func (mr *MockValueMapperMockRecorder) Map(target any) *gomock.Call {
+// MapNext indicates an expected call of MapNext.
+func (mr *MockValueMapperMockRecorder) MapNext(target any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Map", reflect.TypeOf((*MockValueMapper)(nil).Map), target)
-}
-
-// MapOptions mocks base method.
-func (m *MockValueMapper) MapOptions(target ...any) (any, error) {
-	m.ctrl.T.Helper()
-	varargs := []any{}
-	for _, a := range target {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "MapOptions", varargs...)
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MapOptions indicates an expected call of MapOptions.
-func (mr *MockValueMapperMockRecorder) MapOptions(target ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MapOptions", reflect.TypeOf((*MockValueMapper)(nil).MapOptions), target...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MapNext", reflect.TypeOf((*MockValueMapper)(nil).MapNext), target)
 }
 
 // Next mocks base method.
-func (m *MockValueMapper) Next() (any, error) {
+func (m *MockValueMapper) Next() (any, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Next")
 	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(error)
+	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
@@ -116,6 +97,20 @@ func (m *MockValueMapper) Next() (any, error) {
 func (mr *MockValueMapperMockRecorder) Next() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockValueMapper)(nil).Next))
+}
+
+// Remaining mocks base method.
+func (m *MockValueMapper) Remaining() []any {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Remaining")
+	ret0, _ := ret[0].([]any)
+	return ret0
+}
+
+// Remaining indicates an expected call of Remaining.
+func (mr *MockValueMapperMockRecorder) Remaining() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remaining", reflect.TypeOf((*MockValueMapper)(nil).Remaining))
 }
 
 // Scan mocks base method.
@@ -134,6 +129,20 @@ func (m *MockValueMapper) Scan(targets ...any) error {
 func (mr *MockValueMapperMockRecorder) Scan(targets ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockValueMapper)(nil).Scan), targets...)
+}
+
+// TryMapNext mocks base method.
+func (m *MockValueMapper) TryMapNext(target any) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TryMapNext", target)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// TryMapNext indicates an expected call of TryMapNext.
+func (mr *MockValueMapperMockRecorder) TryMapNext(target any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryMapNext", reflect.TypeOf((*MockValueMapper)(nil).TryMapNext), target)
 }
 
 // MockScanner is a mock of Scanner interface.
@@ -158,6 +167,21 @@ func NewMockScanner(ctrl *gomock.Controller) *MockScanner {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockScanner) EXPECT() *MockScannerMockRecorder {
 	return m.recorder
+}
+
+// Mapper mocks base method.
+func (m *MockScanner) Mapper() (graph.ValueMapper, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Mapper")
+	ret0, _ := ret[0].(graph.ValueMapper)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Mapper indicates an expected call of Mapper.
+func (mr *MockScannerMockRecorder) Mapper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mapper", reflect.TypeOf((*MockScanner)(nil).Mapper))
 }
 
 // Next mocks base method.
@@ -190,21 +214,6 @@ func (m *MockScanner) Scan(targets ...any) error {
 func (mr *MockScannerMockRecorder) Scan(targets ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockScanner)(nil).Scan), targets...)
-}
-
-// Values mocks base method.
-func (m *MockScanner) Values() (graph.ValueMapper, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Values")
-	ret0, _ := ret[0].(graph.ValueMapper)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Values indicates an expected call of Values.
-func (mr *MockScannerMockRecorder) Values() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockScanner)(nil).Values))
 }
 
 // MockResult is a mock of Result interface.
@@ -257,6 +266,21 @@ func (mr *MockResultMockRecorder) Error() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockResult)(nil).Error))
 }
 
+// Mapper mocks base method.
+func (m *MockResult) Mapper() (graph.ValueMapper, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Mapper")
+	ret0, _ := ret[0].(graph.ValueMapper)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Mapper indicates an expected call of Mapper.
+func (mr *MockResultMockRecorder) Mapper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mapper", reflect.TypeOf((*MockResult)(nil).Mapper))
+}
+
 // Next mocks base method.
 func (m *MockResult) Next() bool {
 	m.ctrl.T.Helper()
@@ -287,21 +311,6 @@ func (m *MockResult) Scan(targets ...any) error {
 func (mr *MockResultMockRecorder) Scan(targets ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockResult)(nil).Scan), targets...)
-}
-
-// Values mocks base method.
-func (m *MockResult) Values() (graph.ValueMapper, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Values")
-	ret0, _ := ret[0].(graph.ValueMapper)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Values indicates an expected call of Values.
-func (mr *MockResultMockRecorder) Values() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockResult)(nil).Values))
 }
 
 // MockNodeQuery is a mock of NodeQuery interface.
