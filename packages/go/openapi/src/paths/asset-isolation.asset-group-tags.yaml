@@ -27,17 +27,62 @@ get:
     - Community
   parameters:
   - name: type
-    description: Type of tag. Either Tier = 1 or Label = 2
     in: query
     required: false
     schema:
-      type: string
+      $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
   - name: counts
     description: Wheter to include counts of selectors and members for each tag
     in: query
     schema:
       type: boolean
       default: false
+  - name: name
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string.yaml'
+  - name: description
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string.yaml'
+  - name: created_at
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.time.yaml'
+  - name: created_by
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+  - name: updated_at
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.time.yaml'
+  - name: updated_by
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+  - name: deleted_at
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.time.yaml'
+  - name: deleted_by
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+  - name: require_certify
+    in: query
+    required: false
+    schema:
+      $ref: './../schemas/api.params.predicate.filter.boolean.yaml'
+
   responses:
     200:
       description: OK

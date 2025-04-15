@@ -4392,11 +4392,10 @@
         "parameters": [
           {
             "name": "type",
-            "description": "Type of tag. Either Tier = 1 or Label = 2",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
             }
           },
           {
@@ -4406,6 +4405,78 @@
             "schema": {
               "type": "boolean",
               "default": false
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "created_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "deleted_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "deleted_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "require_certify",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
             }
           }
         ],
@@ -16056,6 +16127,18 @@
           }
         }
       },
+      "api.params.predicate.filter.integer-strict": {
+        "type": "integer",
+        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.string-strict": {
+        "type": "string",
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.boolean": {
+        "type": "boolean",
+        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
+      },
       "null.boolean": {
         "type": "object",
         "properties": {
@@ -17168,10 +17251,6 @@
             }
           }
         ]
-      },
-      "api.params.predicate.filter.boolean": {
-        "type": "boolean",
-        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
       },
       "enum.risk-acceptance": {
         "type": "string",
