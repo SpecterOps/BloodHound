@@ -20,13 +20,9 @@ import { useQuery } from 'react-query';
 import { apiClient } from '../../../utils';
 import { itemSkeletons } from './utils';
 
-type ObjectCountPanelProps = {
-    selectedTier: number;
-};
-
-const ObjectCountPanel: FC<ObjectCountPanelProps> = ({ selectedTier }) => {
-    const objectsCountQuery = useQuery(['asset-group-labels-count'], () => {
-        return apiClient.getAssetGroupMembersCount(selectedTier.toString()).then((res) => {
+const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
+    const objectsCountQuery = useQuery(['asset-group-tags-count'], () => {
+        return apiClient.getAssetGroupTagMembersCount(tagId).then((res) => {
             return res.data.data;
         });
     });
@@ -36,9 +32,10 @@ const ObjectCountPanel: FC<ObjectCountPanelProps> = ({ selectedTier }) => {
             return skeleton('object-count', index);
         });
     }
+
     if (objectsCountQuery.isError) {
         return (
-            <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+            <li className='border-neutral-light-3 dark:border-neutral-dark-3'>
                 <span className='text-base'>There was an error fetching this data</span>
             </li>
         );
@@ -46,15 +43,16 @@ const ObjectCountPanel: FC<ObjectCountPanelProps> = ({ selectedTier }) => {
 
     if (objectsCountQuery.isSuccess) {
         const { total_count, counts } = objectsCountQuery.data;
+
         return (
-            <Card className='flex flex-col  h-[478px] px-6 pt-6 select-none overflow-y-auto'>
-                <div className='flex justify-between mb-4'>
+            <Card className='flex flex-col h-full px-6 pt-6 select-none overflow-y-auto max-w-[32rem]'>
+                <div className='flex justify-between'>
                     <p>Total Count</p>
                     <Badge label={total_count.toLocaleString()} />
                 </div>
                 {Object.entries(counts).map(([key, value]) => {
                     return (
-                        <div className='flex justify-between mb-4' key={key}>
+                        <div className='flex justify-between mt-4' key={key}>
                             <p>{key}</p>
                             <Badge label={value.toLocaleString()} />
                         </div>

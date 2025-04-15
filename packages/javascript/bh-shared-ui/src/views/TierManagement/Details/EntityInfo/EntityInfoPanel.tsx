@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, Typography } from '@mui/material';
-import { AssetGroupTagSelectorNode } from 'js-client-library';
+import { AssetGroupTagSelectorMember } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { usePreviousValue } from '../../../../hooks';
 import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../../utils';
@@ -26,12 +26,10 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode: AssetGroupTagSelectorNode | null;
-    selectedTag: number;
-    selectedObject: number;
+    selectedNode: AssetGroupTagSelectorMember | null;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selectedTag, selectedObject }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { setExpandedSections } = useEntityInfoPanelContext();
@@ -66,8 +64,6 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, selecte
                         id={selectedNode.node_id}
                         nodeType={selectedNode.type}
                         properties={selectedNode.properties}
-                        selectedTag={selectedTag}
-                        selectedObject={selectedObject}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>

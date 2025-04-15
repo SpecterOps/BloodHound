@@ -14,20 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
+import { SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
 
-export const Edit: FC = () => {
-    const { state } = useLocation();
+export interface SelectorFormInputs {
+    name: string;
+    description: string;
+    autoCertify: boolean;
+    seeds: SelectorSeedRequest[];
+}
 
-    return (
-        <div>
-            <h1>Edit</h1>
-            <h2>
-                Type: {state?.type}
-                <br />
-                ID: {state?.id}
-            </h2>
-        </div>
-    );
-};
+export interface DeleteSelectorParams {
+    tagId: string | number;
+    selectorId: string | number;
+}
+
+export interface PatchSelectorParams extends DeleteSelectorParams {
+    updatedValues: UpdateSelectorRequest;
+}
