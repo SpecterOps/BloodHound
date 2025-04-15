@@ -43,7 +43,8 @@ import (
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
-	// "github.com/specterops/bloodhound/graphschema"
+
+	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -149,7 +150,7 @@ type Graph interface {
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
-	FetchNodeByGraphId(ctx context.Context, id graph.ID) (graph.Node, error)
+	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
 }
 
 type GraphQuery struct {
@@ -678,15 +679,20 @@ func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) 
 	})
 }
 
-func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (graph.Node, error) {
-	var node graph.Node
+func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
+	var node *graph.Node
 
-	return node, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if _, err := ops.FetchNode(tx, id); err != nil {
-			return err
-		}
-		return nil
-	})
+	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		node, err = ops.FetchNode(tx, id)
+		return err
+	}); err != nil {
+		return nil, err
+	} else if node == nil {
+		return nil, fmt.Errorf("node not found for id: %s", id)
+	} else {
+		return node, err
+	}
 }
 
 func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
@@ -694,10 +700,10 @@ func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...grap
 
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
-			// for next := range cursor.Chan() {
-			// 	primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
-			// 	results[primaryKindStr] += 1
-			// }
+			for next := range cursor.Chan() {
+				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
+				results[primaryKindStr] += 1
+			}
 
 			return cursor.Error()
 		})

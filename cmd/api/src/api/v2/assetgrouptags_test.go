@@ -824,6 +824,13 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 			DB:         mockDB,
 			GraphQuery: mockGraphDb,
 		}
+		testNode = &graph.Node{
+			ID:           0,
+			Kinds:        graph.StringsToKinds([]string{"kind"}),
+			AddedKinds:   graph.StringsToKinds([]string{"added kind"}),
+			DeletedKinds: graph.StringsToKinds([]string{"deleted kind"}),
+			Properties:   &graph.Properties{Map: map[string]any{"prop": 1}},
+		}
 	)
 	defer mockCtrl.Finish()
 
@@ -880,7 +887,7 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil)
 					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
-						Return(graph.Node{}, nil)
+						Return(testNode, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -899,7 +906,7 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil)
 					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
-						Return(graph.Node{}, nil)
+						Return(testNode, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

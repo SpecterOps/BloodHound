@@ -35,11 +35,22 @@ get:
                 type: object
                 properties:
                   member:
-                    $ref: './../schemas/model.graph.node.yaml'
-                  selectors:
-                    type: array
-                    items:
-                      $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      object_id:
+                        type: string
+                      primary_kind:
+                        type: string
+                      name:
+                          type: string
+                      source:
+                        type: integer
+                      selectors:
+                        type: array
+                        items:
+                          $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

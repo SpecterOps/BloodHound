@@ -252,14 +252,11 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 }
 
 type listNodeSelectorsResponse struct {
-	Member Member `json:"member"`
+	Member member `json:"member"`
 }
 
-type Member struct {
+type member struct {
 	assetGroupMemberResponse
-	// getNodeKindDisplayLabel => aka primaryKind
-	// return ID, primary_kind, properties
-	// check with ari on member view
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
 }
 
@@ -276,7 +273,6 @@ func (s *Resources) GetAssetGroupTagSelectorsByMemberId(response http.ResponseWr
 	var (
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
-		member        assetGroupMemberResponse
 	)
 
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Node Selectors Id")()
@@ -292,7 +288,7 @@ func (s *Resources) GetAssetGroupTagSelectorsByMemberId(response http.ResponseWr
 	} else if selectors, err := s.DB.GetSelectorsByMemberId(request.Context(), memberID, assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: Member{nodeToAssetGroupMember(&entity, member), selectors}}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), listNodeSelectorsResponse{Member: member{nodeToAssetGroupMember(entity), selectors}}, http.StatusOK, response)
 	}
 }
 
@@ -322,13 +318,13 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 }
 
 // Used to minimize the response shape to just the necessary member display fields
-func nodeToAssetGroupMember(node *graph.Node, member assetGroupMemberResponse) assetGroupMemberResponse {
+func nodeToAssetGroupMember(node *graph.Node) assetGroupMemberResponse {
 	var (
 		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 	)
 
-	member = assetGroupMemberResponse{
+	member := assetGroupMemberResponse{
 		NodeId:      node.ID,
 		ObjectID:    objectID,
 		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),

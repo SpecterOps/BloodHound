@@ -4664,12 +4664,29 @@
                       "type": "object",
                       "properties": {
                         "member": {
-                          "$ref": "#/components/schemas/model.graph.node"
-                        },
-                        "selectors": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "integer"
+                            },
+                            "selectors": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              }
+                            }
                           }
                         }
                       }
@@ -16127,55 +16144,6 @@
             }
           }
         ]
-      },
-      "model.graph.node": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "kinds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "added_kinds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "deleted_kinds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "properties": {
-            "type": "object",
-            "properties": {
-              "map": {
-                "type": "object",
-                "additionalProperties": true
-              },
-              "deleted": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "properties": {}
-                }
-              },
-              "modified": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            }
-          }
-        }
       },
       "null.boolean": {
         "type": "object",

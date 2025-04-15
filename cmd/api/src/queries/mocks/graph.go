@@ -95,10 +95,10 @@ func (mr *MockGraphMockRecorder) CountNodesByKind(ctx any, kinds ...any) *gomock
 }
 
 // FetchNodeByGraphId mocks base method.
-func (m *MockGraph) FetchNodeByGraphId(ctx context.Context, id graph.ID) (graph.Node, error) {
+func (m *MockGraph) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FetchNodeByGraphId", ctx, id)
-	ret0, _ := ret[0].(graph.Node)
+	ret0, _ := ret[0].(*graph.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
