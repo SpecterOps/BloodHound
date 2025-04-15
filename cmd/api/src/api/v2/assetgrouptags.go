@@ -38,13 +38,6 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
-const (
-	ErrInvalidAssetGroupTagId         = "invalid asset group tag id specified in url"
-	ErrInvalidAssetGroupTagSelectorId = "invalid asset group tag selector id specified in url"
-	ErrInvalidSelectorType            = "invalid selector type"
-	ErrInvalidMemberId                = "invalid member id specified in url"
-)
-
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
 	// all seeds must be of the same type
@@ -275,12 +268,12 @@ func (s *Resources) GetAssetGroupTagSelectorsByMemberId(response http.ResponseWr
 		memberStr     = mux.Vars(request)[api.URIPathVariableAssetGroupTagMemberID]
 	)
 
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Node Selectors Id")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selectors By Member Id")()
 
 	if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidAssetGroupTagId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if memberID, err := strconv.Atoi(memberStr); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, ErrInvalidMemberId, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if entity, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {

@@ -326,8 +326,6 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/member/{member_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.member.id.yaml'
-
-  # asset group management
   /api/v2/asset-group-tags/{asset_group_tag_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.yaml'
   /api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts:

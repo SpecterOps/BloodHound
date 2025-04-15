@@ -24,14 +24,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	// "strconv"
 	"testing"
 	"time"
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 
-	// "github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
@@ -844,7 +842,7 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
-					apitest.BodyContains(output, "invalid asset group tag id specified in url")
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
 				},
 			},
 			{
@@ -855,7 +853,7 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
-					apitest.BodyContains(output, "invalid member id specified in url")
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
 				},
 			},
 			{
