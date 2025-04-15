@@ -169,7 +169,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, userId s
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
-		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id IN (SELECT id FROM %s WHERE id = ? LIMIT 1)`, selector.TableName(), selector.TableName()), selector.ID); result.Error != nil {
+		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, selector.TableName()), selector.ID); result.Error != nil {
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 			return err
