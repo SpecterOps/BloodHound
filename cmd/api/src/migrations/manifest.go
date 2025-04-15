@@ -281,6 +281,55 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 	})
 }
 
+// Version_740_Migration is intended to split the TrustedBy edge to into SameForestTrust and CrossForestTrust edges
+func Version_740_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to split the TrustedBy edges")()
+
+	targetCriteria := query.And(
+		query.Kind(query.Start(), ad.Domain),
+		query.Kind(query.End(), ad.Domain),
+		query.Kind(query.Relationship(), graph.StringKind("TrustedBy")),
+	)
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		rels, err := ops.FetchRelationships(batch.Relationships().Filter(targetCriteria))
+		if err != nil {
+			return err
+		}
+
+		for _, rel := range rels {
+			// Determine new edge kind
+			trustType, _ := rel.Properties.Get(ad.TrustType.String()).String()
+			newEdgeKind := ad.CrossForestTrust
+			if trustType == "ParentChild" {
+				newEdgeKind = ad.SameForestTrust
+			}
+
+			edgeProperties := graph.NewProperties()
+			edgeProperties.Set(ad.IsACL.String(), false)
+			edgeProperties.Set(ad.TrustType.String(), trustType)
+			edgeProperties.Set(common.LastSeen.String(), rel.Properties.Get(common.LastSeen.String()))
+
+			// Create new edge in opposite direction
+			if err := batch.CreateRelationship(&graph.Relationship{
+				StartID:    rel.EndID,
+				EndID:      rel.StartID,
+				Kind:       newEdgeKind,
+				Properties: edgeProperties,
+			}); err != nil {
+				return err
+			}
+
+			// Delete old edge
+			if err := batch.DeleteRelationship(rel.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
@@ -366,6 +415,10 @@ var Manifest = []Migration{
 	{
 		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
 		Execute: Version_730_Migration,
+	},
+	{
+		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
+		Execute: Version_740_Migration,
 	},
 }
 

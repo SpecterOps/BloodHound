@@ -89,7 +89,7 @@ func groupIsContainedOrTrusted(tx graph.Transaction, group, domain *graph.Node) 
 				return visitedBitmap.CheckedAdd(segment.Node.ID.Uint64())
 			},
 			BranchQuery: func() graph.Criteria {
-				return query.KindIn(query.Relationship(), ad.Contains, ad.TrustedBy)
+				return query.KindIn(query.Relationship(), ad.Contains, ad.SameForestTrust)
 			},
 			PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 				return segment.Node.Kinds.ContainsOneOf(ad.Domain)
@@ -186,7 +186,7 @@ func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		  )
 		MATCH p2 = (n)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
 		MATCH p3 = (ct)-[:ExtendedByPolicy]->(:IssuancePolicy)-[:OIDGroupLink]->(g)
-		MATCH p4 = (d)-[:Contains|TrustedBy*..]->(g)
+		MATCH p4 = (d)-[:Contains|SameForestTrust*..]->(g)
 		RETURN p1,p2,p3,p4
 	*/
 
@@ -450,5 +450,5 @@ func adcsESC13Path3Pattern(certTemplates []graph.ID) traversal.PatternContinuati
 func adcsESC13Path4Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		Inbound(query.Kind(query.Relationship(), ad.Contains)).
-		InboundWithDepth(0, 0, query.Kind(query.Relationship(), ad.TrustedBy))
+		InboundWithDepth(0, 0, query.Kind(query.Relationship(), ad.SameForestTrust))
 }
