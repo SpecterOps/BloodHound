@@ -139,7 +139,7 @@ describe('useEdgeInfoItems', () => {
         expect(nodesArray).toHaveLength(3);
         expect(JSON.stringify(nodesArray[0])).toBe(JSON.stringify(testDataNodeArray));
     });
-    it('sets selectedItem,primarySearch, searchType in URL params when the click handler is executed', async () => {
+    it('sets primarySearch, searchType, exploreSearchTab in URL params when the click handler is executed', async () => {
         const history = createMemoryHistory();
         const hook = renderHook(() => useEdgeInfoItems(testHookParams), { history });
 
@@ -149,8 +149,8 @@ describe('useEdgeInfoItems', () => {
 
         hook.result.current.nodesArray[0].onClick(0);
 
-        expect(history.location.search).toContain('selectedItem');
         expect(history.location.search).toContain('primarySearch');
         expect(history.location.search).toContain('searchType');
+        expect(history.location.search).toContain('exploreSearchTab');
     });
 });
