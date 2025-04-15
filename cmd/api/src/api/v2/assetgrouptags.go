@@ -119,6 +119,9 @@ func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http
 
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
+	if len(seeds) <= 0 {
+		return fmt.Errorf("seeds are required")
+	}
 	// all seeds must be of the same type
 	seedType := seeds[0].Type
 
