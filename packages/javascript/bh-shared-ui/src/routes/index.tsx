@@ -18,9 +18,16 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Route } from 'react-router-dom';
 import { GenericErrorBoundaryFallback } from '../components';
 
-export const ROUTE_TIER_MANAGEMENT = '/tier-management';
-export const ROUTE_TIER_MANAGEMENT_EDIT = '/tier-management/edit';
-export const ROUTE_TIER_MANAGEMENT_CREATE = '/tier-management/create';
+export const ROUTE_TIER_MANAGEMENT_ROOT = '/tier-management/*';
+export const ROUTE_TIER_MANAGEMENT_DETAILS = '/details';
+export const ROUTE_TIER_MANAGEMENT_TAG_DETAILS = '/details/tag/:tagId';
+export const ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS = '/details/tag/:tagId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_OBJECT_DETAILS = '/details/tag/:tagId/selector/:selectorId/member/:memberId';
+export const ROUTE_TIER_MANAGEMENT_EDIT = '/edit';
+export const ROUTE_TIER_MANAGEMENT_EDIT_TAG = '/edit/tag/:tagId';
+export const ROUTE_TIER_MANAGEMENT_EDIT_SELECTOR = '/edit/tag/:tagId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_CREATE_SELECTOR = '/edit/tag/:tagId/selector';
+export const ROUTE_TIER_MANAGEMENT_CREATE = '/create';
 
 export type Routable = {
     path: string;
@@ -30,9 +37,9 @@ export type Routable = {
     exact?: boolean;
 };
 
-export const mapRoutes = (routes: Routable[], AuthenticatedRoute: React.FC<{ children: React.ReactElement }>) => {
+export const mapRoutes = (routes: Routable[], AuthenticatedRoute?: React.FC<{ children: React.ReactElement }>) => {
     return routes.map((route) => {
-        return route.authenticationRequired ? (
+        return route.authenticationRequired && AuthenticatedRoute ? (
             <Route
                 path={route.path}
                 element={

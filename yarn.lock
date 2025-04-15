@@ -4726,6 +4726,7 @@ __metadata:
     "@typescript-eslint/parser": ^7.3.0
     "@vitejs/plugin-react": ^4.2.1
     "@vitest/coverage-v8": ^2.1.9
+    axios: ^1.8.2
     clsx: ^2.1.1
     downshift: ^6.1.7
     eslint: ^8.57.0
@@ -4845,6 +4846,7 @@ __metadata:
     "@vitejs/plugin-react": ^4.2.1
     "@vitest/coverage-v8": ^2.1.9
     autoprefixer: ^10.4.20
+    axios: ^1.8.2
     bh-shared-ui: "workspace:*"
     dagrejs: "git@github.com:BloodHoundAD/dagre.git"
     downshift: ^6.1.7

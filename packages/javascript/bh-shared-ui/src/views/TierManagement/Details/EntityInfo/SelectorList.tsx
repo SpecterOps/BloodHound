@@ -15,23 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { AppIcon } from '../../../../components/AppIcon';
+import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../../routes';
 import { apiClient, cn } from '../../../../utils';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 type SelectorListProps = {
-    selectedTag: number;
-    selectedObject: number;
+    tagId: string;
+    memberId: string;
 };
 
-const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject }) => {
+const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
+    const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const selectorsQuery = useQuery(['asset-group-member-info'], () => {
-        return apiClient.getAssetGroupLabelMemberInfo(selectedTag, selectedObject).then((res) => {
+        return apiClient.getAssetGroupTagMemberInfo(tagId, memberId).then((res) => {
             return res.data.data['member'];
         });
     });
@@ -43,8 +46,19 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
         }));
     };
 
-    const handleViewClick = () => {};
-    const handleEditClick = () => {};
+    const handleViewClick = useCallback(
+        (id: number) => {
+            navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${id}`);
+        },
+        [tagId, navigate]
+    );
+
+    const handleEditClick = useCallback(
+        (id: number) => {
+            navigate(`/tier-management/edit/tag/${tagId}/selector/${id}`);
+        },
+        [tagId, navigate]
+    );
 
     if (selectorsQuery.isLoading) {
         return itemSkeletons.map((skeleton, index) => {
@@ -81,12 +95,16 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
                                     onEscapeKeyDown={() => setMenuOpen({})}>
                                     <div
                                         className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
-                                        onClick={handleViewClick}>
+                                        onClick={() => {
+                                            handleViewClick(selector.id);
+                                        }}>
                                         View
                                     </div>
                                     <div
                                         className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
-                                        onClick={handleEditClick}>
+                                        onClick={() => {
+                                            handleEditClick(selector.id);
+                                        }}>
                                         Edit
                                     </div>
                                 </PopoverContent>

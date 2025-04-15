@@ -68,7 +68,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
         {
             label: tierFlag?.enabled ? 'Tier Management' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
-            route: tierFlag?.enabled ? routes.ROUTE_TIER_MANAGEMENT : routes.ROUTE_GROUP_MANAGEMENT,
+            route: tierFlag?.enabled ? routes.ROUTE_TIER_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-tier-management' : 'global_nav-group-management',
         },
     ];
