@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeValues } from 'js-client-library';
+import { AssetGroupTagTypes } from 'js-client-library';
 import { render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
 describe('DynamicDetails', () => {
     it('renders details for a selected tier', () => {
         const testQuery = {
-            asset_group_tier_id: 9,
+            asset_group_tag_id: 9,
             count: 9374,
             requireCertify: true,
             created_at: '2024-09-08T03:38:22.791Z',
@@ -35,7 +35,7 @@ describe('DynamicDetails', () => {
             updated_at: '2024-07-26T02:15:04.556Z',
             updated_by: 'Deontae34@hotmail.com',
             position: 0,
-            type: 1 as AssetGroupTagTypeValues,
+            type: 1 as AssetGroupTagTypes,
         };
 
         render(<DynamicDetails data={testQuery} />);

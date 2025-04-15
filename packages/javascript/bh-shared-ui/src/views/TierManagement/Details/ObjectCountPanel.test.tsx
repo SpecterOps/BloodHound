@@ -32,7 +32,7 @@ vi.mock('../../../utils', () => ({
 describe('ObjectCountPanel', () => {
     it('renders error message on error', () => {
         (useQuery as jest.Mock).mockReturnValue({ isError: true });
-        render(<ObjectCountPanel selectedTier={1} />);
+        render(<ObjectCountPanel tagId='1' />);
 
         expect(screen.getByText('There was an error fetching this data')).toBeInTheDocument();
     });
@@ -46,7 +46,7 @@ describe('ObjectCountPanel', () => {
             },
         });
 
-        render(<ObjectCountPanel selectedTier={1} />);
+        render(<ObjectCountPanel tagId='1' />);
 
         expect(screen.getByText('Total Count')).toBeInTheDocument();
         expect(screen.getByText('100')).toBeInTheDocument();

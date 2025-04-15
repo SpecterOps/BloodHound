@@ -17,6 +17,7 @@
 import BHEAPIClient from './client';
 
 export * from './errors';
+export * from './requests';
 export * from './responses';
 export * from './types';
 export * from './utils';
