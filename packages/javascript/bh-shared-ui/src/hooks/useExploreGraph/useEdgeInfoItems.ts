@@ -53,9 +53,9 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: Edg
         const node = nodesArray[item];
         if (backButtonflag?.enabled) {
             setExploreParams({
-                selectedItem: node.graphId,
                 primarySearch: node.objectId,
                 searchType: 'node',
+                exploreSearchTab: 'node',
             });
         }
     };
