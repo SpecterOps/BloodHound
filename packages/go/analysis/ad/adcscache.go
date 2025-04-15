@@ -19,8 +19,12 @@ package ad
 import (
 	"context"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -38,6 +42,7 @@ type ADCSCache struct {
 	// To discourage direct access without getting a read lock, these are private
 	authStoreForChainValid map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
 	rootCAForChainValid    map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
+	hasHostingComputer     map[graph.ID]bool
 	//authStorePathToDomain           map[graph.ID]map[graph.ID]graph.Path
 	//rootCAPathToDomain              map[graph.ID]map[graph.ID]graph.Path
 	expandedCertTemplateControllers map[graph.ID]cardinality.Duplex[uint64]
@@ -56,6 +61,7 @@ func NewADCSCache() ADCSCache {
 		mu:                              &sync.RWMutex{},
 		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint64]),
 		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint64]),
+		hasHostingComputer:              make(map[graph.ID]bool),
 		expandedCertTemplateControllers: make(map[graph.ID]cardinality.Duplex[uint64]),
 		certTemplateHasSpecialEnrollers: make(map[graph.ID]bool),
 		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
@@ -101,8 +107,29 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			} else {
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
-
 		}
+
+		mostRecentPasswordLastSetTime := time.Unix(0, 0)
+
+		if computers, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			filters := []graph.Criteria{
+				query.Kind(query.Node(), ad.Computer),
+				query.StringContains(query.NodeProperty(common.OperatingSystem.String()), windows),
+				query.Exists(query.NodeProperty(common.PasswordLastSet.String())),
+			}
+
+			return query.And(filters...)
+		})); err != nil {
+			for _, computer := range computers {
+				if passwordLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
+					continue
+				} else if passwordLastSet.After(mostRecentPasswordLastSetTime) {
+					mostRecentPasswordLastSetTime = passwordLastSet
+				}
+			}
+		}
+
+		activityThreshold := mostRecentPasswordLastSetTime.Add(-ninetyDays)
 
 		for _, eca := range s.enterpriseCertAuthorities {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
@@ -122,6 +149,22 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err))
 			} else {
 				s.publishedTemplateCache[eca.ID] = publishedTemplates.Slice()
+			}
+
+			if hostingComputers, err := fetchFirstDegreeNodes(tx, eca, ad.HostsCAService); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching hosting computers for enterprise ca %d: %v", eca.ID, err))
+			} else {
+				hasHostingComputer := false
+				for _, computer := range hostingComputers.Slice() {
+					if pwdLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
+						continue
+					} else if pwdLastSet.Before(activityThreshold) {
+						continue
+					} else {
+						hasHostingComputer = true
+					}
+				}
+				s.hasHostingComputer[eca.ID] = hasHostingComputer
 			}
 		}
 
@@ -191,6 +234,16 @@ func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node
 		return false
 	} else {
 		return s.rootCAForChainValid[domainID].Contains(caID) && s.authStoreForChainValid[domainID].Contains(caID)
+	}
+}
+
+func (s *ADCSCache) DoesCAHaveHostingComputer(enterpriseCA *graph.Node) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if hasHost, ok := s.hasHostingComputer[enterpriseCA.ID]; !ok {
+		return false
+	} else {
+		return hasHost
 	}
 }
 
