@@ -236,7 +236,7 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
             },
             {
-                description: 'Inter-forest trusts with abusable configuration',
+                description: 'Cross-forest trusts with abusable configuration',
                 cypher: `MATCH p=(n:Domain)-[:CrossForestTrust|SpoofSIDHistory|AbuseTGTDelegation]-(m:Domain)\nWHERE (n)-[:SpoofSIDHistory|AbuseTGTDelegation]-(m)\nRETURN p`,
             },
             {
