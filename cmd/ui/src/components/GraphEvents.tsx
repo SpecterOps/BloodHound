@@ -16,8 +16,6 @@
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { setSelectedEdge } from 'bh-shared-ui';
-import { random } from 'graphology-layout';
-import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -27,10 +25,10 @@ import {
     graphToFramedGraph,
     resetCamera,
 } from 'src/ducks/graph/utils';
-import layoutDagre, { RankDirection } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
@@ -75,15 +73,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const prevent = useRef(false);
 
     const graph = sigma.getGraph();
-    const { assign: assignDagre } = layoutDagre(
-        {
-            graph: {
-                rankdir: RankDirection.LEFT_RIGHT,
-                ranksep: 500,
-            },
-        },
-        graph
-    );
 
     useImperativeHandle(
         ref,
@@ -94,23 +83,16 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 },
 
                 runSequentialLayout: () => {
-                    assignDagre();
+                    sequentialLayout(graph);
                     resetCamera(sigma);
                 },
                 runStandardLayout: () => {
-                    random.assign(graph, { scale: 1000 });
-                    forceAtlas2.assign(graph, {
-                        iterations: 128,
-                        settings: {
-                            scalingRatio: 1000,
-                            barnesHutOptimize: true,
-                        },
-                    });
+                    standardLayout(graph);
                     resetCamera(sigma);
                 },
             };
         },
-        [sigma, assignDagre, graph]
+        [sigma, graph]
     );
 
     const sigmaContainer = document.getElementById('sigma-container');

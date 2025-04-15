@@ -17,11 +17,11 @@
 package integration
 
 import (
+	"embed"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
@@ -33,6 +33,9 @@ import (
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/harnesses"
 )
+
+//go:embed harnesses
+var Harnesses embed.FS
 
 func RandomObjectID(t test.Controller) string {
 	newUUID, err := uuid.NewV4()
@@ -65,65 +68,6 @@ const (
 
 type GraphTestHarness interface {
 	Setup(testContext *GraphTestContext)
-}
-
-type CompletenessHarness struct {
-	UserA        *graph.Node
-	UserB        *graph.Node
-	UserC        *graph.Node
-	UserD        *graph.Node
-	UserInactive *graph.Node
-	ComputerA    *graph.Node
-	ComputerB    *graph.Node
-	ComputerC    *graph.Node
-	ComputerD    *graph.Node
-	Group        *graph.Node
-	DomainSid    string
-}
-
-func (s *CompletenessHarness) Setup(testCtx *GraphTestContext) {
-	s.DomainSid = RandomDomainSID()
-	s.UserA = testCtx.NewActiveDirectoryUser("CUserA", s.DomainSid)
-	s.UserB = testCtx.NewActiveDirectoryUser("CUserB", s.DomainSid)
-	s.UserC = testCtx.NewActiveDirectoryUser("CUserC", s.DomainSid)
-	s.UserD = testCtx.NewActiveDirectoryUser("CUserD", s.DomainSid)
-	s.Group = testCtx.NewActiveDirectoryGroup("CGroup", s.DomainSid)
-	s.UserInactive = testCtx.NewActiveDirectoryUser("CUserInactive", s.DomainSid)
-	s.ComputerA = testCtx.NewActiveDirectoryComputer("CComputerA", s.DomainSid)
-	s.ComputerB = testCtx.NewActiveDirectoryComputer("CComputerB", s.DomainSid)
-	s.ComputerC = testCtx.NewActiveDirectoryComputer("CComputerC", s.DomainSid)
-	s.ComputerD = testCtx.NewActiveDirectoryComputer("CComputerD", s.DomainSid)
-
-	testCtx.NewRelationship(s.ComputerA, s.UserA, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerA, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerB, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.UserA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserInactive, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.Group, s.ComputerC, ad.AdminTo)
-	testCtx.NewRelationship(s.UserD, s.ComputerC, ad.AdminTo)
-	s.UserA.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserA)
-	s.UserB.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserB)
-	s.UserC.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserC)
-	s.UserD.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserD)
-	s.UserInactive.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC().Add(-time.Hour*3000))
-	testCtx.UpdateNode(s.UserInactive)
-	s.ComputerC.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerC.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerC)
-	s.ComputerD.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerD.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerD)
 }
 
 type TrustDCSyncHarness struct {
@@ -9818,7 +9762,6 @@ type HarnessDetails struct {
 	MembershipHarness                               MembershipHarness
 	ForeignHarness                                  ForeignDomainHarness
 	TrustDCSync                                     TrustDCSyncHarness
-	Completeness                                    CompletenessHarness
 	AZBaseHarness                                   AZBaseHarness
 	AZGroupMembership                               AZGroupMembershipHarness
 	AZManagementGroup                               AZManagementGroupHarness
