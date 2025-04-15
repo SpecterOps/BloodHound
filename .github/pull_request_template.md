@@ -9,7 +9,7 @@
 
 ## Motivation and Context
 
-This PR addresses: [GitHub issue or Jira ticket number]
+Resolves: <TICKET_OR_ISSUE_NUMBER>
 
 *Why is this change required? What problem does it solve?*
 
