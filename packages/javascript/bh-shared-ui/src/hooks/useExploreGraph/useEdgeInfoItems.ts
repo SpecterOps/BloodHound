@@ -48,7 +48,7 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type, onNod
     const { data, isLoading, isError } = useQuery(
         [type, sourceDBId, targetDBId, edgeName],
         () => queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName }),
-        { enabled: !!sourceDBId && !!targetDBId && !!edgeName }
+        { enabled: !!(sourceDBId && targetDBId && edgeName) }
     );
 
     const handleNodeClick = (item: number) => {
