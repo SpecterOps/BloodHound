@@ -142,7 +142,9 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel           model.AssetGroupTagSelector
+		sel = model.AssetGroupTagSelector{
+			AutoCertify: null.BoolFrom(false), // default if unset
+		}
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
