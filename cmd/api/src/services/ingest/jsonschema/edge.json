@@ -26,7 +26,28 @@
             "required": ["id_value"]
         },
         "kind": { "type": "string" },
-        "properties": { "type": ["object", "null"] }
+        "properties": {
+            "type": ["object", "null"],
+            "additionalProperties": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" },
+                    { "type": "boolean" },
+                    { "type": "null" },
+                    {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "number" },
+                                { "type": "boolean" },
+                                { "type": "null" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
     },
     "required": ["start", "end", "kind"],
     "examples": [

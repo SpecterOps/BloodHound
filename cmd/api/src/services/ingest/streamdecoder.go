@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -162,7 +163,16 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 			if i > 0 {
 				sb.WriteString(", ")
 			}
-			sb.WriteString(cause.Error())
+
+			// this rule fails when there is a nested object in the property bag
+			if len(cause.InstanceLocation) > 0 && cause.InstanceLocation[0] == "properties" && cause.BasicOutput().KeywordLocation == "/anyOf" {
+				if len(cause.InstanceLocation) > 1 {
+					badPropertyName := cause.InstanceLocation[1]
+					sb.WriteString(fmt.Sprintf("nested object cannot be stored as property. remove \"%s\" from properties.", badPropertyName))
+				}
+			} else {
+				sb.WriteString(cause.Error())
+			}
 		}
 
 		sb.WriteString("]")
@@ -231,6 +241,20 @@ func expectClosingCurlyBracket(decoder *json.Decoder, name string) error {
 	return nil
 }
 
+func isHomogeneousArray(arr []any) bool {
+	if len(arr) == 0 {
+		return true
+	}
+
+	firstType := reflect.TypeOf(arr[0])
+	for _, v := range arr[1:] {
+		if reflect.TypeOf(v) != firstType {
+			return false
+		}
+	}
+	return true
+}
+
 /*
 payload will be : { nodes: [], edges: [] }
 */
@@ -274,6 +298,20 @@ func ValidateGenericIngest(decoder *json.Decoder, schema IngestSchema) error {
 				}
 			} else if err := schema.Validate(item); err != nil {
 				reportValidation(index, formatSchemaValidationError(arrayName, index, err))
+			}
+
+			// ensure array homogeneity in "properties". unable to enforce w/ JSON Schema
+			if props, ok := item["properties"].(map[string]any); ok {
+				for key, val := range props {
+					arr, ok := val.([]any)
+					if !ok {
+						continue // skip non-arrays
+					}
+
+					if !isHomogeneousArray(arr) {
+						reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
+					}
+				}
 			}
 
 			if len(validationErrors) >= maxErrors || len(criticalErrors) > 0 {

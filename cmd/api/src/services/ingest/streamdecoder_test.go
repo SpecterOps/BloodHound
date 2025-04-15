@@ -157,6 +157,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 
 	positiveCases = append(positiveCases, positiveGenericIngestCases()...)
 
+	negativeCases = append(negativeCases, complexNestedPropertyCases()...)
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
 	negativeCases = append(negativeCases, schemaFailureCases()...)
@@ -228,6 +229,35 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 			},
 		},
 		{
+			name: "node has an array in property bag",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"a"},
+						Properties: map[string]any{
+							"arr": []int{1, 2, 3},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "edge has an array in property bag",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{IDValue: "1"},
+						End:   &edgePiece{IDValue: "2"},
+						Kind:  "a",
+						Properties: map[string]any{
+							"arr": []string{"one", "two"},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "payload contains one edge",
 			payload: &testPayload{
 				Edges: []testEdge{
@@ -247,6 +277,112 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 					},
 				},
 			},
+		},
+	}
+}
+
+func complexNestedPropertyCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
+		{
+			name: "node cannot have an object in properties",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"one"},
+						Properties: map[string]any{
+							"nested": map[string]any{
+								"hello": "world",
+							},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "nested object cannot be stored as property", "remove \"nested\""}},
+		},
+		{
+			name: "node cannot have objects inside an array in the property bag",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"one"},
+						Properties: map[string]any{
+							"arr": []any{
+								map[string]any{ // object nested inside of arr
+									"1": 2,
+								},
+							},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "nested object cannot be stored as property", "remove \"arr\""}},
+		},
+		{
+			name: "node cannot have an array with mixed types",
+			payload: &testPayload{
+				Nodes: []testNode{
+					{
+						ID:    "1234",
+						Kinds: []string{"one"},
+						Properties: map[string]any{
+							"arr": []any{1, "two"},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "contains a mixed-type array"}},
+		},
+		{
+			name: "edge cannot have an array with mixed types",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "a",
+						Start: &edgePiece{IDValue: "hey"},
+						End:   &edgePiece{IDValue: "sup"},
+						Properties: map[string]any{
+							"arr": []any{1, "two"},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"edges[0] schema validation", "contains a mixed-type array"}},
+		},
+		{
+			name: "edge cannot have a nested object in properties",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "a",
+						Start: &edgePiece{IDValue: "hey"},
+						End:   &edgePiece{IDValue: "sup"},
+						Properties: map[string]any{
+							"nested": map[string]any{
+								"hello": 1,
+							},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"edges[0] schema validation", "nested object cannot be stored as property"}},
+		},
+		{
+			name: "edge cannot have an array with a nested object",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Kind:  "a",
+						Start: &edgePiece{IDValue: "hey"},
+						End:   &edgePiece{IDValue: "sup"},
+						Properties: map[string]any{
+							"array_with_nest": []any{map[string]any{"hello": "hi"}},
+						},
+					},
+				},
+			},
+			validationErrContains: [][]string{{"edges[0] schema validation", "nested object cannot be stored as property"}},
 		},
 	}
 }
