@@ -1,0 +1,57 @@
+---
+title: ClaimSpecialIdentity
+description: "The ClaimSpecialIdentity edge represents the ability to obtain an access token containing a special identity (group) SID."
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+
+The ClaimSpecialIdentity edge represents the ability to obtain an access token containing a special identity (group) SID. Unlike regular groups, membership in special identities is determined at authentication rather than via an explicit member list.
+See the Abuse section for specific cases.
+
+Abuse Info
+----------
+
+**Guest Account**
+* The Guest user account allows users without a personal account to log in. The account has no password by default.
+* If enabled, anyone with AD access can log in with the Guest account.
+
+**Network Identity**
+* Any user or computer accessing a Windows system via a network has the Network identity in their access token.
+
+**Authentication Authority Asserted Identity**
+* Included in access tokens when an account is authenticated directly against a domain controller and not through Kerberos constrained delegation (service asserted identity).
+
+**Key Trust**
+* Included in access tokens when authentication is based on public key credentials via key trust objects.
+* Anyone with key trust credentials (e.g., from a Shadow Credentials attack) can obtain Key Trust identity access through PKINIT authentication.
+
+**MFA Key Property**
+* Similar to Key Trust but requires the MFA property on the key trust credentials.
+* A Shadow Credentials attack enables anyone to obtain the MFA Key Property identity access through PKINIT authentication.
+
+**NTLM Authentication**
+* Included in an access token when authentication occurs via NTLM protocol.
+* Any AD account can obtain NTLM authentication identity access assuming NTLM is available.
+
+**SChannel Authentication**
+* Included in an access token when authentication occurs via SChannel protocol.
+* Any AD account can obtain the SChannel Authentication identity for example by performing certificate authentication over Schannel.
+
+**This Organization Identity**
+* Assigned to all accounts within the same Active Directory forest and trusted forests without selective authentication.
+
+**This Organization Certificate Identity**
+* Assigned to all accounts within the same Active Directory forest and trusted forests without selective authentication, when the Kerberos PAC contains an NTLM_SUPPLEMENTAL_CREDENTIAL structure.
+* Authentication using an ADCS certificate ensures the required PAC structure.
+
+Opsec Considerations
+----------
+
+No OPSEC considerations are available for this edge.
+
+References
+----------
+
+* [Microsoft: Special identity groups](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-special-identities-groups)
+* [Microsoft: Guest account](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-default-user-accounts#guest-account)

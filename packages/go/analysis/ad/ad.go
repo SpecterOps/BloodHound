@@ -43,22 +43,31 @@ var (
 )
 
 const (
-	EnterpriseDomainControllersGroupSIDSuffix = "1-5-9"
-	AdministratorAccountSIDSuffix             = "-500"
-	DomainAdminsGroupSIDSuffix                = "-512"
-	DomainUsersSuffix                         = "-513"
-	DomainComputersSuffix                     = "-515"
-	DomainControllersGroupSIDSuffix           = "-516"
-	SchemaAdminsGroupSIDSuffix                = "-518"
-	EnterpriseAdminsGroupSIDSuffix            = "-519"
-	KeyAdminsGroupSIDSuffix                   = "-526"
-	EnterpriseKeyAdminsGroupSIDSuffix         = "-527"
-	AdministratorsGroupSIDSuffix              = "-544"
-	BackupOperatorsGroupSIDSuffix             = "-551"
-	AuthenticatedUsersSuffix                  = "-S-1-5-11"
-	EveryoneSuffix                            = "-S-1-1-0"
-	ProtectedUsersSuffix                      = "-525"
-	AdminSDHolderDNPrefix                     = "CN=ADMINSDHOLDER,CN=SYSTEM,"
+	EnterpriseDomainControllersGroupSIDSuffix     = "1-5-9"
+	AdministratorAccountSIDSuffix                 = "-500"
+	GuestSuffix                                   = "-501"
+	DomainAdminsGroupSIDSuffix                    = "-512"
+	DomainUsersSuffix                             = "-513"
+	DomainComputersSuffix                         = "-515"
+	DomainControllersGroupSIDSuffix               = "-516"
+	SchemaAdminsGroupSIDSuffix                    = "-518"
+	EnterpriseAdminsGroupSIDSuffix                = "-519"
+	ProtectedUsersSuffix                          = "-525"
+	KeyAdminsGroupSIDSuffix                       = "-526"
+	EnterpriseKeyAdminsGroupSIDSuffix             = "-527"
+	AdministratorsGroupSIDSuffix                  = "-544"
+	BackupOperatorsGroupSIDSuffix                 = "-551"
+	EveryoneSuffix                                = "-S-1-1-0"
+	NetworkSuffix                                 = "-S-1-5-2"
+	AuthenticatedUsersSuffix                      = "-S-1-5-11"
+	ThisOrganizationSuffix                        = "-S-1-5-15"
+	ThisOrganizationCertificateSuffix             = "-S-1-5-65-1"
+	AuthenticationAuthorityAssertedIdentitySuffix = "-S-1-18-1"
+	KeyTrustSuffix                                = "-S-1-18-4"
+	MFAKeyPropertySuffix                          = "-S-1-18-5"
+	NTLMAuthenticationSuffix                      = "-S-1-64-10"
+	SChannelAuthenticationSuffix                  = "-S-1-64-14"
+	AdminSDHolderDNPrefix                         = "CN=ADMINSDHOLDER,CN=SYSTEM,"
 )
 
 func TierZeroWellKnownSIDSuffixes() []string {
@@ -219,7 +228,7 @@ func grabDomainInformation(tx graph.Transaction) (map[string]string, error) {
 	}
 }
 
-func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
+func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Link well known groups")()
 
 	var (
@@ -237,83 +246,303 @@ func LinkWellKnownGroups(ctx context.Context, db graph.Database) error {
 			if domainSid, domainName, err := nodeprops.ReadDomainIDandNameAsString(domain); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", domain.ID, err))
 			} else {
-				var (
-					domainId                = domain.ID
-					domainUsersWellKnownSID = wellknown.DefineSID(
-						domainSid,
-						wellknown.DomainUsersSIDSuffix,
-					)
-					authUsersIdWellKnownSID = wellknown.DefineSID(
-						domainName,
-						wellknown.AuthenticatedUsersSIDSuffix,
-					)
-					everyoneWellKnownSID = wellknown.DefineSID(
-						domainName,
-						wellknown.EveryoneSIDSuffix,
-					)
-					domainComputerWellKnownSID = wellknown.DefineSID(
-						domainSid,
-						wellknown.DomainComputersSIDSuffix,
-					)
-				)
-
 				if err := db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-					if domainUserNode, err := getOrCreateWellKnownGroup(
+
+					// Get/create special identity nodes
+					everyoneNode, err := getOrCreateWellKnownGroup(
 						tx,
-						domainUsersWellKnownSID,
+						EveryoneSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, domainName),
+					)
+					if err != nil {
+						return fmt.Errorf("error getting everyone for domain %d: %w", domain.ID, err)
+					}
+					authUsersNode, err := getOrCreateWellKnownGroup(
+						tx,
+						AuthenticatedUsersSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, domainName),
+					)
+					if err != nil {
+						return fmt.Errorf("error getting auth users node for domain %d: %w", domain.ID, err)
+					}
+
+					if domainUsersNode, err := getOrCreateWellKnownGroup(
+						tx,
+						DomainUsersSuffix,
 						domainSid,
 						domainName,
 						wellknown.DefineNodeName(wellknown.DomainUsersNodeNamePrefix, domainName),
 					); err != nil {
-						return fmt.Errorf("error getting domain users node for domain %d: %w", domainId, err)
-					} else if authUsersNode, err := getOrCreateWellKnownGroup(
+						return fmt.Errorf("error getting network node for domain %d: %w", domain.ID, err)
+					} else if domainComputersNode, err := getOrCreateWellKnownGroup(
 						tx,
-						authUsersIdWellKnownSID,
-						domainSid,
-						domainName,
-						wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, domainName),
-					); err != nil {
-						return fmt.Errorf("error getting auth users node for domain %d: %w", domainId, err)
-					} else if everyoneNode, err := getOrCreateWellKnownGroup(
-						tx,
-						everyoneWellKnownSID,
-						domainSid,
-						domainName,
-						wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, domainName),
-					); err != nil {
-						return fmt.Errorf("error getting everyone for domain %d: %w", domainId, err)
-					} else if domainComputerNode, err := getOrCreateWellKnownGroup(
-						tx,
-						domainComputerWellKnownSID,
+						DomainComputersSuffix,
 						domainSid,
 						domainName,
 						wellknown.DefineNodeName(wellknown.DomainComputerNodeNamePrefix, domainName),
 					); err != nil {
-						return fmt.Errorf("error getting domain computers node for domain %d: %w", domainId, err)
-					} else if err := createOrUpdateWellKnownLink(
+						return fmt.Errorf("error getting network node for domain %d: %w", domain.ID, err)
+					} else if networkNode, err := getOrCreateWellKnownGroup(
 						tx,
-						domainUserNode,
+						NetworkSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.NetworkNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting network node for domain %d: %w", domain.ID, err)
+					} else if thisOrganizationNode, err := getOrCreateWellKnownGroup(
+						tx,
+						ThisOrganizationSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.ThisOrganizationNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting This Organization node for domain %d: %w", domain.ID, err)
+					} else if thisOrganizationCertificateNode, err := getOrCreateWellKnownGroup(
+						tx,
+						ThisOrganizationCertificateSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.ThisOrganizationCertificateNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting This Organization Certificate node for domain %d: %w", domain.ID, err)
+					} else if authenticationAuthorityAssertedIdentityNode, err := getOrCreateWellKnownGroup(
+						tx,
+						AuthenticationAuthorityAssertedIdentitySuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.AuthenticationAuthorityAssertedIdentityNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting Authentication Authority Asserted Identity node for domain %d: %w", domain.ID, err)
+					} else if keyTrustNode, err := getOrCreateWellKnownGroup(
+						tx,
+						KeyTrustSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.KeyTrustNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting Key Trust node for domain %d: %w", domain.ID, err)
+					} else if mFAKeyPropertyNode, err := getOrCreateWellKnownGroup(
+						tx,
+						MFAKeyPropertySuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.MFAKeyPropertyNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting MFA Key Property node for domain %d: %w", domain.ID, err)
+					} else if nTLMAuthenticationNode, err := getOrCreateWellKnownGroup(
+						tx,
+						NTLMAuthenticationSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.NTLMAuthenticationNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting NTLM Authentication node for domain %d: %w", domain.ID, err)
+					} else if sChannelAuthenticationNode, err := getOrCreateWellKnownGroup(
+						tx,
+						SChannelAuthenticationSuffix,
+						domainSid,
+						domainName,
+						wellknown.DefineNodeName(wellknown.SChannelAuthenticationNodeNamePrefix, domainName),
+					); err != nil {
+						return fmt.Errorf("error getting SChannel Authentication node for domain %d: %w", domain.ID, err)
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Domain Users - MemberOf -> Auth Users
+						tx,
+						domainUsersNode,
 						authUsersNode,
 						newProperties,
+						ad.MemberOf,
 					); err != nil {
 						return err
+
 					} else if err := createOrUpdateWellKnownLink(
+						// Domain Computers - MemberOf -> Auth Users
 						tx,
-						domainComputerNode,
+						domainComputersNode,
 						authUsersNode,
 						newProperties,
+						ad.MemberOf,
 					); err != nil {
 						return err
+
 					} else if err := createOrUpdateWellKnownLink(
+						// Auth Users - MemberOf -> Everyone
 						tx,
 						authUsersNode,
 						everyoneNode,
 						newProperties,
+						ad.MemberOf,
 					); err != nil {
 						return err
-					} else {
-						return nil
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> Network
+						tx,
+						everyoneNode,
+						networkNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> This Organization
+						tx,
+						everyoneNode,
+						thisOrganizationNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> This Organization Certificate
+						tx,
+						everyoneNode,
+						thisOrganizationCertificateNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> Authentication Authority Asserted Identity
+						tx,
+						everyoneNode,
+						authenticationAuthorityAssertedIdentityNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> Key Trust
+						tx,
+						everyoneNode,
+						keyTrustNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> MFA Key Property
+						tx,
+						everyoneNode,
+						mFAKeyPropertyNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> NTLM Authentication
+						tx,
+						everyoneNode,
+						nTLMAuthenticationNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if err := createOrUpdateWellKnownLink(
+						// Everyone - ClaimSpecialIdentity -> SChannel Authentication
+						tx,
+						everyoneNode,
+						sChannelAuthenticationNode,
+						newProperties,
+						ad.ClaimSpecialIdentity,
+					); err != nil {
+						return err
+
+					} else if guestNode, err := tx.Nodes().Filterf(func() graph.Criteria {
+						// Don't create Guest if it does not exist - not a special identity but a real object
+						return query.Equals(query.NodeProperty(common.ObjectID.String()), wellknown.DefineSID(
+							domainSid,
+							wellknown.NewSIDSuffix(GuestSuffix)))
+					}).First(); err == nil {
+						if err := createOrUpdateWellKnownLink(
+							// Guest - MemberOf -> Everyone
+							tx,
+							guestNode,
+							everyoneNode,
+							newProperties,
+							ad.MemberOf,
+						); err != nil {
+							return err
+						}
+
+						if guestEnabled, err := guestNode.Properties.Get(common.Enabled.String()).Bool(); err == nil && guestEnabled {
+							if err := createOrUpdateWellKnownLink(
+								// Everyone - ClaimSpecialIdentity -> Guest
+								tx,
+								everyoneNode,
+								guestNode,
+								newProperties,
+								ad.ClaimSpecialIdentity,
+							); err != nil {
+								return err
+							}
+						}
 					}
+
+					// Connect Authenticated Users and Everyone over trusts
+					if trustingDomains, err := fetchFirstDegreeNodes(tx, domain, ad.SameForestTrust, ad.CrossForestTrust); err != nil {
+						return fmt.Errorf("error getting trusting domains for domain %d: %w", domain.ID, err)
+					} else {
+						for _, trustingDomain := range trustingDomains {
+							if domains.Contains(trustingDomain) { // Make sure it is collected
+								if trustingDomainSid, trustingDomainName, err := nodeprops.ReadDomainIDandNameAsString(trustingDomain); err != nil {
+									slog.ErrorContext(ctx, fmt.Sprintf("Error getting domain sid or name for domain %d: %v", trustingDomain.ID, err))
+								} else {
+									// Get/create special identity nodes
+									if everyoneNodeTrustingDomain, err := getOrCreateWellKnownGroup(
+										tx,
+										EveryoneSuffix,
+										trustingDomainSid,
+										trustingDomainName,
+										wellknown.DefineNodeName(wellknown.EveryoneNodeNamePrefix, trustingDomainName),
+									); err != nil {
+										return fmt.Errorf("error getting everyone for domain %d: %w", trustingDomain.ID, err)
+									} else if authUsersNodeTrustingDomain, err := getOrCreateWellKnownGroup(
+										tx,
+										AuthenticatedUsersSuffix,
+										trustingDomainSid,
+										trustingDomainName,
+										wellknown.DefineNodeName(wellknown.AuthenticatedUsersNodeNamePrefix, trustingDomainName),
+									); err != nil {
+										return fmt.Errorf("error getting auth users node for domain %d: %w", trustingDomain.ID, err)
+									} else if err := createOrUpdateWellKnownLink(
+										// Auth Users (trusted domain) - MemberOf -> Auth Users (trusting domain)
+										tx,
+										authUsersNode,
+										authUsersNodeTrustingDomain,
+										newProperties,
+										ad.MemberOf,
+									); err != nil {
+										return err
+									} else if err := createOrUpdateWellKnownLink(
+										// Everyone (trusted domain) - MemberOf -> Auth Everyone (trusting domain)
+										tx,
+										everyoneNode,
+										everyoneNodeTrustingDomain,
+										newProperties,
+										ad.MemberOf,
+									); err != nil {
+										return err
+									}
+								}
+							}
+						}
+					}
+
+					return nil
 				}); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf(
 						"Error linking well known groups for domain %d: %v",
@@ -336,16 +565,18 @@ func getOrCreateWellKnownGroup(
 	*graph.Node,
 	error,
 ) {
+	objectId := wellknown.DefineSID(domainSid, wellknown.NewSIDSuffix(wellKnownSid))
+
 	// Only filter by ObjectID, not by kind
 	if wellKnownNode, err := tx.Nodes().Filterf(func() graph.Criteria {
-		return query.Equals(query.NodeProperty(common.ObjectID.String()), wellKnownSid)
+		return query.Equals(query.NodeProperty(common.ObjectID.String()), objectId)
 	}).First(); err != nil && !graph.IsErrNotFound(err) {
 		return nil, err
 	} else if graph.IsErrNotFound(err) {
 		// Only create a new node if no node with this ObjectID exists
 		properties := graph.AsProperties(graph.PropertyMap{
 			common.Name:     nodeName,
-			common.ObjectID: wellKnownSid,
+			common.ObjectID: objectId,
 			ad.DomainSID:    domainSid,
 			common.LastSeen: time.Now().UTC(),
 			ad.DomainFQDN:   domainName,
@@ -370,12 +601,13 @@ func createOrUpdateWellKnownLink(
 	startNode *graph.Node,
 	endNode *graph.Node,
 	props *graph.Properties,
+	edgeType graph.Kind,
 ) error {
 	if rel, err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Equals(query.StartID(), startNode.ID),
 			query.Equals(query.EndID(), endNode.ID),
-			query.Kind(query.Relationship(), ad.MemberOf),
+			query.Kind(query.Relationship(), edgeType),
 		)
 	}).First(); err != nil && !graph.IsErrNotFound(err) {
 		return err
@@ -383,7 +615,7 @@ func createOrUpdateWellKnownLink(
 		if _, err := tx.CreateRelationshipByIDs(
 			startNode.ID,
 			endNode.ID,
-			ad.MemberOf,
+			edgeType,
 			props,
 		); err != nil {
 			return err
