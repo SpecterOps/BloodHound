@@ -55,30 +55,33 @@ docs(bh-rfc-2): Address PR feedback
 fixes: BED-5475
 ```
 
+The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL NOT”, “SHOULD”, “SHOULD NOT”, “RECOMMENDED”, “MAY”, and “OPTIONAL” in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
+
 ### 3.1 Types
 
 All commit messages MUST have a type included.  
-The following types should be used when appropriate in a conventional commit message:
+The following types SHOULD be used when appropriate in a conventional commit message:
 
-| Type  | Description                                                                                                                                                                                    |
-| :---- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| feat  | For introducing a new feature in the application. Denotes that the release including this commit will have a `MINOR` version bump if there are no other `MAJOR` version changes being applied. |
-| fix   | For fixing a bug in the application. Denotes that the release including this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied.   |
-| docs  | For updating existing documentation or creating new documentation.                                                                                                                             |
-| test  | For updating existing tests or introducing new tests.                                                                                                                                          |
-| chore | For miscellaneous changes that do not fit well into any of the types listed above.                                                                                                             |
-| wip   | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                           |
+| Type     | Description                                                                                                                                                                                             |
+| :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| feat     | For introducing a new feature in the application. Denotes that the release which will include this commit will have a `MINOR` version bump if there are no other `MAJOR` version changes being applied. |
+| fix      | For fixing a bug in the application. Denotes that the release which will include this commit will have a `PATCH` version bump if there are no other `MAJOR` or `MINOR` version changes being applied.   |
+| docs     | For updating existing documentation or creating new documentation.                                                                                                                                      |
+| refactor | For changes that may change logic but does not fix a bug or introduce a new feature.                                                                                                                    |
+| test     | For updating existing tests or introducing new tests.                                                                                                                                                   |
+| chore    | For miscellaneous changes that do not change application functionality or fit well into any of the types listed above.                                                                                  |
+| wip      | A convenience type for in progress work. This is NOT an acceptable type to use for a commit that will merge into the default branch.                                                                    |
 
 ### 3.2 Scope
 
 The scope of a conventional commit is OPTIONAL but may be included to provide more detail as to what part of the application is being touched on with the work.
 
-Scopes may indicate what part of the codebase the work falls under such as:
+Scopes MAY indicate what part of the codebase the work falls under such as:
 
 - API
 - UI
 
-Scopes may indicate particular sections, views, components, endpoints, or other subsets that communicate more about the changeset, e.g.:
+Scopes MAY indicate particular sections, views, components, endpoints, or other subsets that communicate more about the changeset, e.g.:
 
 - Datapie
 - Explore Page
@@ -99,15 +102,17 @@ The description part of a conventional commit message MUST be included.
 
 The body of a conventional commit message is OPTIONAL.
 
-The body should be separated from the the type and description with an empty line.
+The body SHOULD be separated from the the type and description with an empty line.
 
-The body is a good place to provide additional context, details, motivations, or other relevant information to the changeset. This text should wrap at 72 characters for readability.
+The body MAY be used to provide additional context, details, motivations, or other relevant information to the changeset.
+
+The body text SHOULD wrap at 72 characters for readability.
 
 ### 3.5 Footer
 
-The footer MUST be included as part of a conventional commit message
+A footer MUST be included as part of a conventional commit message
 
-The footer MUST relate a ticket or issue number that the work is associated with. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+An item to relate a ticket or issue number MUST be included in a footer. Some examples are included below and a reference to more details can be found [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
 
 Examples:
 
@@ -119,9 +124,15 @@ Examples:
 
 `CLOSES: #1, resolves #2, Fix: BED-4444`
 
-The footer should be separated from the body (or the type and description if no body is included) with an empty line.
+A footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
 
-The footer MUST be used to denote if there are breaking changes included in the change set. Including breaking changes denotes that the `MAJOR` version of the application should be bumped on the next release. The `BREAKING CHANGE` keyword should be used.
+A breaking change MAY also be denoted after the type/scope with an exclamation point, e.g., `fix!: Updates v1 endpoint to remove bug`
+
+A footer SHOULD be separated from the body (or the type and description if no body is included) with an empty line.
+
+Multiple footers MAY be included in the commit.
+
+Additional information apart from the issue/ticket number MAY be included in the footer(s).
 
 Example:
 
