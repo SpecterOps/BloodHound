@@ -25,7 +25,7 @@ export enum EdgeInfoItems {
 
 type EdgeInfoItemsArguments = Pick<EdgeInfoProps, 'sourceDBId' | 'targetDBId' | 'edgeName'>;
 
-type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
+export type EdgeInfoItemsProps = EdgeInfoItemsArguments & {
     type: EdgeInfoItems;
 };
 
@@ -45,7 +45,7 @@ const queryConfig = {
 export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
     const { data: backButtonflag } = useFeatureFlag('back_button_support');
     const { setExploreParams } = useExploreParams();
-    const { data, isLoading, isError } = useQuery([queryConfig[type], sourceDBId, targetDBId, edgeName], () =>
+    const { data, isLoading, isError } = useQuery([type, sourceDBId, targetDBId, edgeName], () =>
         queryConfig[type].endpoint({ sourceDBId, targetDBId, edgeName })
     );
 
