@@ -32,7 +32,7 @@ get:
     schema:
       $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
   - name: counts
-    description: Wheter to include counts of selectors and members for each tag
+    description: Whether to include counts of selectors and members for each tag
     in: query
     schema:
       type: boolean

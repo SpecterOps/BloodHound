@@ -4400,7 +4400,7 @@
           },
           {
             "name": "counts",
-            "description": "Wheter to include counts of selectors and members for each tag",
+            "description": "Whether to include counts of selectors and members for each tag",
             "in": "query",
             "schema": {
               "type": "boolean",
