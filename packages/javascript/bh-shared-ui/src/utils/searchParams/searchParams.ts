@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createSearchParams, useSearchParams } from 'react-router-dom';
+import { createSearchParams, Path, To, useSearchParams } from 'react-router-dom';
 import { EnvironmentQueryParams } from '../../hooks/useEnvironmentParams';
 import { ExploreQueryParams } from '../../hooks/useExploreParams';
 
@@ -93,4 +93,50 @@ export const createTypedSearchParams = <T>(params: Partial<T>) => {
     const result: any = {};
     Object.entries(params).forEach(([key, value]) => (result[key] = value));
     return createSearchParams(result).toString();
+};
+
+// The 'To' type from react router can either be a string or a 'Path' object, we should be able to handle both cases
+export const applyPreservedParams = (to: To, preservedParams: URLSearchParams): To => {
+    if (typeof to === 'string') {
+        return applyParamsToString(to, preservedParams);
+    } else {
+        return applyParamsToObject(to, preservedParams);
+    }
+};
+
+const applyParamsToString = (to: string, preservedParams: URLSearchParams): string => {
+    const parts = to.split('?');
+
+    // Query params already exist, we need to merge the two and prioritize those passed on the individual link
+    if (parts.length === 2) {
+        const baseSearchParams = new URLSearchParams(parts[1]);
+        const combined = new URLSearchParams({
+            ...Object.fromEntries(preservedParams),
+            ...Object.fromEntries(baseSearchParams),
+        });
+        return parts[0] + '?' + combined.toString();
+    }
+
+    // No query params exist on link, append our preserved params
+    if (parts.length === 1) {
+        return parts[0] + '?' + preservedParams.toString();
+    }
+
+    // Fallback to passing through the 'to' param as-is
+    return to;
+};
+
+const applyParamsToObject = (to: Partial<Path>, preservedParams: URLSearchParams): Partial<Path> => {
+    // If search field already has values, merge the two, prioritizing incoming from the link
+    if (to.search) {
+        const baseSearchParams = new URLSearchParams(to.search);
+        const combined = new URLSearchParams({
+            ...Object.fromEntries(preservedParams),
+            ...Object.fromEntries(baseSearchParams),
+        });
+        return { ...to, search: combined.toString() };
+    }
+
+    // Otherwise just set a new search field with preserved params
+    return { ...to, search: preservedParams.toString() };
 };
