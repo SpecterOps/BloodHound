@@ -20,12 +20,33 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
+
+type CustomNodeKinds []CustomNodeKind
+
+func (s CustomNodeKinds) AuditData() AuditData {
+	var data = make(AuditData)
+
+	for i, kind := range s {
+		data[fmt.Sprint(i)] = kind.AuditData()
+	}
+
+	return data
+}
 
 type CustomNodeKind struct {
 	ID       int32                `json:"id"`
 	KindName string               `json:"kind"`
 	Config   CustomNodeKindConfig `json:"config"`
+}
+
+func (s CustomNodeKind) AuditData() AuditData {
+	return AuditData{
+		"id":     s.ID,
+		"kind":   s.KindName,
+		"config": s.Config,
+	}
 }
 
 type CustomNodeKindConfig struct {

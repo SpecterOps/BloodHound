@@ -18,7 +18,9 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/src/database"
 	"net/http"
 	"regexp"
 
@@ -87,8 +89,10 @@ func (s *Resources) CreateCustomNodeKind(response http.ResponseWriter, request *
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateCreateCustomNodeRequest(customNodeKindRequest); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseCodeBadRequest, request), response)
-	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
+	} else if kinds, err := s.DB.CreateCustomNodeKinds(request.Context(), convertCreateCustomNodeRequest(customNodeKindRequest)); errors.Is(err, database.ErrDuplicateCustomNodeKindName) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, fmt.Sprintf("%s: duplicate kind name", api.ErrorResponseConflict), request), response)
+	} else if err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kinds, http.StatusCreated, response)
@@ -121,7 +125,7 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 	if err := json.NewDecoder(request.Body).Decode(&customNodeKindRequest); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateConfig(customNodeKindRequest.Config); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseCodeBadRequest, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
 	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: customNodeKindRequest.Config}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {

@@ -19,6 +19,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"gorm.io/gorm"
+	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -28,17 +30,34 @@ const (
 )
 
 type CustomNodeKindData interface {
-	CreateCustomNodeKinds(ctx context.Context, customNodeKind []model.CustomNodeKind) ([]model.CustomNodeKind, error)
+	CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error)
 	GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error)
 	GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error)
 	UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error)
 	DeleteCustomNodeKind(ctx context.Context, kindName string) error
 }
 
-func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []model.CustomNodeKind) ([]model.CustomNodeKind, error) {
-	result := s.db.WithContext(ctx).Create(&customNodeKinds)
+func (s *BloodhoundDB) CreateCustomNodeKinds(ctx context.Context, customNodeKinds model.CustomNodeKinds) (model.CustomNodeKinds, error) {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionCreateCustomNodeKind,
+			Model:  &customNodeKinds,
+		}
+	)
 
-	return customNodeKinds, CheckError(result)
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		err := tx.Create(&customNodeKinds).Error
+
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint \"custom_node_kinds_kind_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateCustomNodeKindName, err)
+			}
+		}
+
+		return err
+	})
+
+	return customNodeKinds, err
 }
 
 func (s *BloodhoundDB) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
@@ -59,19 +78,44 @@ func (s *BloodhoundDB) GetCustomNodeKind(ctx context.Context, kindName string) (
 }
 
 func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error) {
-	result := s.db.WithContext(ctx).Raw(fmt.Sprintf("UPDATE %s SET config = ? WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.Config, customNodeKind.KindName).Scan(&customNodeKind.ID)
-	if result.RowsAffected == 0 {
-		return customNodeKind, ErrNotFound
-	}
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionUpdateCustomNodeKind,
+			Model:  &customNodeKind,
+		}
+	)
 
-	return customNodeKind, CheckError(result)
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.Raw(fmt.Sprintf("UPDATE %s SET config = ?, updated_at = NOW() WHERE kind_name = ? RETURNING id;", customNodeKindTable), customNodeKind.Config, customNodeKind.KindName).
+			Scan(&customNodeKind.ID)
+		if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+
+		return CheckError(result)
+	})
+
+	return customNodeKind, err
 }
 
 func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
-	result := s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ?;", customNodeKindTable), kindName)
-	if result.RowsAffected == 0 {
-		return ErrNotFound
-	}
+	var (
+		customNodeKind = model.CustomNodeKind{}
 
-	return CheckError(result)
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionUpdateCustomNodeKind,
+			Model:  &customNodeKind,
+		}
+	)
+
+	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		result := tx.Raw(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ? RETURNING id, config;", customNodeKindTable), kindName).Scan(&customNodeKind.ID).Scan(&customNodeKind.Config)
+		if result.RowsAffected == 0 {
+			return ErrNotFound
+		}
+
+		return CheckError(result)
+	})
+
+	return err
 }
