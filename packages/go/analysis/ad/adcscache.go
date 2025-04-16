@@ -19,17 +19,13 @@ package ad
 import (
 	"context"
 	"fmt"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"log/slog"
-	"sync"
-	"time"
-
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
+	"log/slog"
+	"sync"
 )
 
 type ADCSCache struct {
@@ -109,28 +105,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			}
 		}
 
-		mostRecentPasswordLastSetTime := time.Unix(0, 0)
-
-		if computers, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-			filters := []graph.Criteria{
-				query.Kind(query.Node(), ad.Computer),
-				query.StringContains(query.NodeProperty(common.OperatingSystem.String()), windows),
-				query.Exists(query.NodeProperty(common.PasswordLastSet.String())),
-			}
-
-			return query.And(filters...)
-		})); err != nil {
-			for _, computer := range computers {
-				if passwordLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
-					continue
-				} else if passwordLastSet.After(mostRecentPasswordLastSetTime) {
-					mostRecentPasswordLastSetTime = passwordLastSet
-				}
-			}
-		}
-
-		activityThreshold := mostRecentPasswordLastSetTime.Add(-ninetyDays)
-
 		for _, eca := range s.enterpriseCertAuthorities {
 			if firstDegreeEnrollers, err := fetchFirstDegreeNodes(tx, eca, ad.Enroll); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching enrollers for enterprise ca %d: %v", eca.ID, err))
@@ -156,11 +130,9 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			} else {
 				hasHostingComputer := false
 				for _, computer := range hostingComputers.Slice() {
-					if pwdLastSet, err := computer.Properties.Get(common.PasswordLastSet.String()).Time(); err != nil {
+					if enabled, err := computer.Properties.Get(common.Enabled.String()).Bool(); err != nil {
 						continue
-					} else if pwdLastSet.Before(activityThreshold) {
-						continue
-					} else {
+					} else if enabled {
 						hasHostingComputer = true
 					}
 				}
