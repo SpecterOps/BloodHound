@@ -36,7 +36,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, null.String{}, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)

@@ -45,7 +45,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, null.String{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 	require.Equal(t, 1, selector.AssetGroupTagId)
 	require.False(t, selector.CreatedAt.IsZero())
@@ -86,7 +86,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, null.String{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
 	// test the read by ID function
@@ -134,7 +134,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, null.String{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
 	selector.Name = updateName
@@ -145,7 +145,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.Seeds = updateSeeds
 
 	// call the update function
-	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor, selector)
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor, null.String{}, selector)
 	require.NoError(t, err)
 
 	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
@@ -180,7 +180,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	)
 
 	t.Run("successfully creates tag", func(t *testing.T) {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, testName, testDescription, position, requireCertify)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagType, testActor, null.String{}, testName, testDescription, position, requireCertify)
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
@@ -251,10 +251,10 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		}
 	)
 
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id", test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id", null.String{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
 	created_at := time.Now()
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id2", test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id2", null.String{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
@@ -325,7 +325,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		}
 	)
 
-	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, testActor, null.String{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
 	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
@@ -334,7 +334,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
 
 	t.Run("successfully deletes tag", func(t *testing.T) {
-		err := dbInst.DeleteAssetGroupTagSelector(testCtx, testActor, selector)
+		err := dbInst.DeleteAssetGroupTagSelector(testCtx, testActor, null.String{}, selector)
 		require.NoError(t, err)
 
 		// verify selector is gone
