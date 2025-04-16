@@ -4,7 +4,7 @@ title: Conventional Commits Guide
 authors: |
   [Holms, Alyx](aholms@specterops.io)
   [Rangel, Ulises](urangel@specterops.io)
-status: DRAFT
+status: ACCEPTED
 created: 2025-02-13
 ---
 

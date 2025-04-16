@@ -9,7 +9,8 @@
 
 ## Motivation and Context
 
-Resolves: <TICKET_OR_ISSUE_NUMBER>
+<!-- Please replace "<TICKET_OR_ISSUE_NUMBER>" with the associated ticket or issue number -->
+Resolves <TICKET_OR_ISSUE_NUMBER>
 
 *Why is this change required? What problem does it solve?*
 
