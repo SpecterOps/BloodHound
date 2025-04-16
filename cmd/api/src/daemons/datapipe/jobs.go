@@ -196,14 +196,14 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
+func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
 	} else {
 		adcsEnabled = adcsFlag.Enabled
 	}
-	if paths, failed, err := s.preProcessIngestFile(path, fileType); err != nil {
+	if paths, failed, err := s.preProcessIngestFile(task.FileName, task.FileType); err != nil {
 		return 0, failed, err
 	} else {
 		failed = 0
@@ -214,7 +214,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file, s.ingestSchema, adcsEnabled); err != nil {
+				} else if err := ReadFileForIngest(batch, file, ReadOptions{IngestSchema: s.ingestSchema, FileType: task.FileType, ADCSEnabled: adcsEnabled}); err != nil {
 					failed++
 					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}
@@ -253,7 +253,8 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
+		total, failed, err := s.processIngestFile(ctx, ingestTask)
+
 		if errors.Is(err, fs.ErrNotExist) {
 			slog.WarnContext(ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if err != nil {

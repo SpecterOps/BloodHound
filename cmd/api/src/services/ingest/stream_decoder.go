@@ -30,9 +30,9 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
+// ParseAndValidateIngestPayload ensures that the correct tags are present in a json file for data ingest.
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
+func ParseAndValidateIngestPayload(reader io.Reader, ingestSchema IngestSchema, validateGeneric bool, readToEnd bool) (ingest.Metadata, error) {
 	var (
 		depth            = 0
 		decoder          = json.NewDecoder(reader)
@@ -88,12 +88,16 @@ func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool
 				if typed == "graph" {
 					// this is a generic payload
 					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-					err := ValidateGenericIngest(decoder, ingestSchema)
-					if report, ok := err.(ValidationReport); ok {
-						// log the structured report
-						slog.With("validation", report).Warn("generic ingest validation failed")
-						return meta, err
+
+					if validateGeneric {
+						err := ValidateGenericIngest(decoder, ingestSchema)
+						if report, ok := err.(ValidationReport); ok {
+							// log the structured report
+							slog.With("validation", report).Warn("generic ingest validation failed")
+							return meta, err
+						}
 					}
+
 					break
 				}
 			}

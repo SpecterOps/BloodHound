@@ -18,6 +18,7 @@ package datapipe
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -30,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 )
@@ -39,11 +41,30 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
-	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
-		return fmt.Errorf("error validating meta tag: %w", err)
+type ReadOptions struct {
+	FileType     model.FileType // JSON or ZIP
+	IngestSchema ingest_service.IngestSchema
+	ADCSEnabled  bool
+}
+
+func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, options ReadOptions) error {
+
+	var (
+		shouldValidateGeneric = false
+		readToEnd             = false
+	)
+
+	// if filetype == ZIP, we need to validate against jsonschema because the archive bypassed validation controls at fileupload time
+	if options.FileType == model.FileTypeZip {
+		shouldValidateGeneric = true
+		readToEnd = true
+	}
+
+	if meta, err := ingest_service.ParseAndValidateIngestPayload(reader, options.IngestSchema, shouldValidateGeneric, readToEnd); err != nil {
+		return err
 	} else {
-		return IngestWrapper(batch, reader, meta, adcsEnabled)
+		fmt.Println(">>> what")
+		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}
 }
 
@@ -109,7 +130,7 @@ type ingestHandler func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Met
 
 func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler {
 	return func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
-		decoder, err := CreateIngestDecoder(reader, "data", 1)
+		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
 			return err
 		}
@@ -119,15 +140,27 @@ func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler 
 
 var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeGeneric: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
-		if decoder, err := CreateIngestDecoder(reader, "nodes", 2); err != nil {
+		decoder, err := CreateIngestDecoder(reader, "nodes", 2)
+		if errors.Is(err, ingest.ErrDataTagNotFound) {
+			slog.Debug("no nodes found in generic ingest payload; continuing to edges")
+		} else if err != nil {
 			return err
-		} else if err = decodeBasicData(batch, decoder, convertGenericNode, graph.EmptyKind); err != nil {
-			return err
-		} else if decoder, err := CreateIngestDecoder(reader, "edges", 2); err != nil {
+		} else {
+			if err = decodeBasicData(batch, decoder, convertGenericNode, graph.EmptyKind); err != nil {
+				return err
+			}
+		}
+
+		decoder, err = CreateIngestDecoder(reader, "edges", 2)
+		if errors.Is(err, ingest.ErrDataTagNotFound) {
+			slog.Debug("no edges found in generic ingest payload")
+		} else if err != nil {
 			return err
 		} else {
 			return decodeBasicData(batch, decoder, convertGenericEdge, graph.EmptyKind)
 		}
+
+		return nil
 	},
 	ingest.DataTypeComputer: func(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		if decoder, err := getDefaultDecoder(reader); err != nil {
@@ -177,6 +210,9 @@ func getDefaultDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
 }
 
 func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
+	if properties == nil {
+		properties = make(map[string]any)
+	}
 	delete(properties, ReconcileProperty)
 	properties[common.LastSeen.String()] = nowUTC
 	properties[common.ObjectID.String()] = strings.ToUpper(objectID)

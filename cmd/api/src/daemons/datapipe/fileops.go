@@ -76,7 +76,7 @@ func CreateIngestDecoder(reader io.ReadSeeker, key string, targetDepth int) (*js
 	} else {
 		decoder := json.NewDecoder(reader)
 		if err := SeekToKey(decoder, key, targetDepth); err != nil {
-			return nil, fmt.Errorf("error seeking to data tag: %w", err)
+			return nil, fmt.Errorf("error seeking to %s tag: %w", key, err)
 		} else {
 			return decoder, nil
 		}

@@ -90,7 +90,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, assertion := range assertions {
-		meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
+		meta, err := ingest_service.ParseAndValidateIngestPayload(strings.NewReader(assertion.rawString), schema, true, false)
 		assert.ErrorIs(t, err, assertion.err)
 		if assertion.err == nil {
 			assert.Equal(t, assertion.expectedType, meta.Type)
