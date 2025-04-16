@@ -23,16 +23,14 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/utils"
 )
 
 const jobActivityTimeout = time.Minute * 20
@@ -74,6 +72,7 @@ func GetAllIngestJobs(ctx context.Context, db IngestData, skip int, limit int, o
 	return db.GetAllIngestJobs(ctx, skip, limit, order, filter)
 }
 
+// TODO: Integration test here
 func StartIngestJob(ctx context.Context, db IngestData, user model.User) (model.IngestJob, error) {
 	job := model.IngestJob{
 		UserID:     user.ID,
@@ -104,16 +103,17 @@ func WriteAndValidateJSON(src io.Reader, dst io.Writer) error {
 	return err
 }
 
-func SaveIngestFile(location string, request *http.Request) (string, model.FileType, error) {
-	fileData := request.Body
+// TODO: Integration test here
+func SaveIngestFile(location string, contentType string, fileData io.ReadCloser) (string, model.FileType, error) {
 	tempFile, err := os.CreateTemp(location, "bh")
 	if err != nil {
 		return "", model.FileTypeJson, fmt.Errorf("error creating ingest file: %w", err)
 	}
 
-	if utils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()) {
+	if contentType == mediatypes.ApplicationJson.String() {
 		return tempFile.Name(), model.FileTypeJson, WriteAndValidateFile(fileData, tempFile, WriteAndValidateJSON)
-	} else if utils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...) {
+
+	} else if slices.Contains(ingest.AllowedZipFileUploadTypes, contentType) {
 		return tempFile.Name(), model.FileTypeZip, WriteAndValidateFile(fileData, tempFile, WriteAndValidateZip)
 	} else {
 		// We should never get here since this is checked a level above
@@ -144,6 +144,7 @@ func TouchIngestJobLastIngest(ctx context.Context, db IngestData, job model.Inge
 	return db.UpdateIngestJob(ctx, job)
 }
 
+// TODO: Integration test here
 func EndIngestJob(ctx context.Context, db IngestData, job model.IngestJob) error {
 	job.Status = model.JobStatusIngesting
 
