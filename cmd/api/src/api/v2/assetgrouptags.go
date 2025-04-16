@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
@@ -80,6 +81,15 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
 	}
 }
@@ -103,6 +113,8 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else {
@@ -161,8 +173,55 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 				// seeds were unchanged, set them back to what is stored in the db for the response
 				selector.Seeds = seedsTemp
 			}
+			// Request analysis if scheduled analysis isn't enabled
+			if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+				api.HandleDatabaseError(request, response, err)
+			} else if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
 			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
 		}
+	}
+}
+
+func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Delete")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
+	} else if selector.IsDefault {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot delete a default selector", request), response)
+	} else if err := s.DB.DeleteAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
+		api.WriteBasicResponse(request.Context(), selector, http.StatusNoContent, response)
 	}
 }
 
