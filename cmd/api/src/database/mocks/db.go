@@ -683,17 +683,17 @@ func (mr *MockDatabaseMockRecorder) DeleteSavedQueryPermissionsForUsers(ctx, que
 }
 
 // DeleteSelectorNodesByNodeId mocks base method.
-func (m *MockDatabase) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeIds []graph.ID) error {
+func (m *MockDatabase) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSelectorNodesByNodeId", ctx, selectorId, nodeIds)
+	ret := m.ctrl.Call(m, "DeleteSelectorNodesByNodeId", ctx, selectorId, nodeId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSelectorNodesByNodeId indicates an expected call of DeleteSelectorNodesByNodeId.
-func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesByNodeId(ctx, selectorId, nodeIds any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteSelectorNodesByNodeId(ctx, selectorId, nodeId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesByNodeId), ctx, selectorId, nodeIds)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).DeleteSelectorNodesByNodeId), ctx, selectorId, nodeId)
 }
 
 // DeleteSelectorNodesBySelectorIds mocks base method.
@@ -2008,17 +2008,17 @@ func (mr *MockDatabaseMockRecorder) UpdateSavedQuery(ctx, savedQuery any) *gomoc
 }
 
 // UpdateSelectorNodesByNodeId mocks base method.
-func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeIds []graph.ID) error {
+func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateSelectorNodesByNodeId", ctx, selectorId, certified, certifiedBy, nodeIds)
+	ret := m.ctrl.Call(m, "UpdateSelectorNodesByNodeId", ctx, selectorId, certified, certifiedBy, nodeId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateSelectorNodesByNodeId indicates an expected call of UpdateSelectorNodesByNodeId.
-func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId, certified, certifiedBy, nodeIds any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId, certified, certifiedBy, nodeId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, selectorId, certified, certifiedBy, nodeIds)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, selectorId, certified, certifiedBy, nodeId)
 }
 
 // UpdateUser mocks base method.
