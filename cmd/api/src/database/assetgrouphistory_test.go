@@ -22,6 +22,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -30,20 +31,25 @@ import (
 
 func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	var (
-		dbInst            = integration.SetupDB(t)
-		testCtx           = context.Background()
+		dbInst    = integration.SetupDB(t)
+		testCtx   = context.Background()
+		testActor = model.User{
+			EmailAddress: null.StringFrom("user@example.com"),
+			Unique:       model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")},
+		}
 		testTarget        = "test target"
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, model.AssetGroupActorSystem, null.String{}, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
 	require.NoError(t, err)
 	require.Len(t, record, 1)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
-	require.Equal(t, model.AssetGroupActorSystem, record[0].Actor)
+	require.Equal(t, testActor.ID.String(), record[0].Actor)
+	require.Equal(t, testActor.EmailAddress, record[0].Email)
 	require.Equal(t, testTarget, record[0].Target)
 	require.Equal(t, testAssetGroupTag, record[0].AssetGroupTagId)
 	require.Equal(t, null.String{}, record[0].EnvironmentId)

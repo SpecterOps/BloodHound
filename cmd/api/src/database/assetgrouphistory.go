@@ -26,13 +26,13 @@ import (
 
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
-	CreateAssetGroupHistoryRecord(ctx context.Context, actor string, email null.String, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
+	CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
 	GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error)
 }
 
-func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actor string, email null.String, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
+func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
 	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())", (model.AssetGroupHistory{}).TableName()),
-		actor, email, target, action, assetGroupTagId, environmentId, note))
+		actor.ID.String(), actor.EmailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
 func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
