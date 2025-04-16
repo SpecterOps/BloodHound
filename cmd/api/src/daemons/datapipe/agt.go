@@ -40,10 +40,6 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-const (
-	selectorNodeBatchingLimit = 10000
-)
-
 // This is a bespoke result set to contain a dedupe'd node with source info
 type nodeWithSource struct {
 	*graph.Node
@@ -437,30 +433,19 @@ func SelectNodes(ctx context.Context, db database.Database, graphDb graph.Databa
 			}
 		}
 
-		// Update the selected nodes that need updating via batches
-		if nodesToUpdateLen := len(nodeIdsToUpdate); nodesToUpdateLen > 0 {
-			for i := 0; i < nodesToUpdateLen; i += selectorNodeBatchingLimit {
-				j := i + selectorNodeBatchingLimit
-				if j > nodesToUpdateLen {
-					j = nodesToUpdateLen
-				}
-				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeIdsToUpdate[i:j]); err != nil {
+		// Update the selected nodes that need updating
+		if len(nodeIdsToUpdate) > 0 {
+			for _, nodeId := range nodeIdsToUpdate {
+				if err = db.UpdateSelectorNodesByNodeId(ctx, selector.ID, certified, certifiedBy, nodeId); err != nil {
 					return err
 				}
 			}
 		}
 
 		// Delete the selected nodes that need to be deleted
-		if nodeIdsToDeleteLen := len(oldSelectedNodesByNodeId); nodeIdsToDeleteLen > 0 {
+		if len(oldSelectedNodesByNodeId) > 0 {
 			for nodeId := range oldSelectedNodesByNodeId {
-				nodeIdsToDelete = append(nodeIdsToDelete, nodeId)
-			}
-			for i := 0; i < nodeIdsToDeleteLen; i += selectorNodeBatchingLimit {
-				j := i + selectorNodeBatchingLimit
-				if j > nodeIdsToDeleteLen {
-					j = nodeIdsToDeleteLen
-				}
-				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeIdsToDelete[i:j]); err != nil {
+				if err = db.DeleteSelectorNodesByNodeId(ctx, selector.ID, nodeId); err != nil {
 					return err
 				}
 			}
