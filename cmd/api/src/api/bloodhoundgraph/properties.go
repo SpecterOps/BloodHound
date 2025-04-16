@@ -18,6 +18,7 @@ package bloodhoundgraph
 
 import (
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -26,7 +27,7 @@ func getNodeDisplayProperties(target *graph.Node) map[string]any {
 
 	// Set the node level. This is legacy behavior that should be eventually refactored. The UI should be able to
 	// consume the system_tags and user_tags properties directly.
-	if target.IsTierZero() {
+	if tiering.IsTierZero(target) {
 		properties["level"] = 0
 	}
 

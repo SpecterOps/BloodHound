@@ -24,6 +24,7 @@ import (
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -289,7 +290,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 					BranchQuery:   FilterContainsRelationship,
 					DescentFilter: descentFilter,
 					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						return node.IsTierZero()
+						return tiering.IsTierZero(node)
 					},
 				}, SelectGPOTierZeroCandidateFilter); err != nil {
 					return nil, err

@@ -14,26 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package query
+package tiering
 
 import (
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-// TODO Cleanup after Tiering GA
 func SearchTierZeroNodes(tieringEnabled bool) graph.Criteria {
 	if tieringEnabled {
-		return Kind(Node(), graph.StringKind("Tag_Tier_Zero"))
+		return query.Kind(query.Node(), KindTagTierZero)
 	} else {
-		return StringContains(NodeProperty("system_tags"), "admin_tier_0")
+		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
 }
 
-// TODO Cleanup after Tiering GA
 func SearchTierZeroNodesRel(tieringEnabled bool) graph.Criteria {
 	if tieringEnabled {
-		return Kind(Start(), graph.StringKind("Tag_Tier_Zero"))
+		return query.Kind(query.Start(), KindTagTierZero)
 	} else {
-		return StringContains(StartProperty("system_tags"), "admin_tier_0")
+		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
 }

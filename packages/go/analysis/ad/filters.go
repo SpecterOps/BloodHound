@@ -17,6 +17,7 @@
 package ad
 
 import (
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -162,7 +163,7 @@ func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
 		// GPOs don’t apply to groups.
 		return false
 	}
-	return node.IsTierZero()
+	return tiering.IsTierZero(node)
 }
 
 func SelectGPOContainerCandidateFilter(node *graph.Node) bool {
