@@ -226,10 +226,11 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelationship {
+func ParseObjectContainer(item IngestBase, itemType graph.Kind) []IngestibleRelationship {
+	rels := make([]IngestibleRelationship, 0)
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
-		return NewIngestibleRelationship(
+		rels = append(rels, NewIngestibleRelationship(
 			IngestibleSource{
 				Source:     containingPrincipal.ObjectIdentifier,
 				SourceType: containingPrincipal.Kind(),
@@ -242,11 +243,27 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelati
 				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.Contains,
 			},
-		)
+		))
+
+		if !item.IsACLProtected {
+			rels = append(rels, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     containingPrincipal.ObjectIdentifier,
+					SourceType: containingPrincipal.Kind(),
+				},
+				IngestibleTarget{
+					Target:     item.ObjectIdentifier,
+					TargetType: itemType,
+				},
+				IngestibleRel{
+					RelProps: map[string]any{ad.IsACL.String(): false},
+					RelType:  ad.PropagatesACEsTo,
+				},
+			))
+		}
 	}
 
-	// TODO: Decide if we even want empty rels in the first place
-	return NewIngestibleRelationship(IngestibleSource{}, IngestibleTarget{}, IngestibleRel{})
+	return rels
 }
 
 func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid string) IngestibleRelationship {
@@ -263,6 +280,28 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": true},
 				RelType:  ad.MemberOf,
+			},
+		)
+	}
+
+	// TODO: Decide if we even want empty rels in the first place
+	return NewIngestibleRelationship(IngestibleSource{}, IngestibleTarget{}, IngestibleRel{})
+}
+
+func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
+	if domainSID != "" {
+		return NewIngestibleRelationship(
+			IngestibleSource{
+				Source:     domainSID,
+				SourceType: ad.Domain,
+			},
+			IngestibleTarget{
+				Target:     item.ObjectIdentifier,
+				TargetType: itemType,
+			},
+			IngestibleRel{
+				RelProps: map[string]any{ad.IsACL.String(): false},
+				RelType:  ad.ContainsIdentity,
 			},
 		)
 	}
