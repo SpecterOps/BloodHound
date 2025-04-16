@@ -63,7 +63,6 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, options ReadOpti
 	if meta, err := ingest_service.ParseAndValidateIngestPayload(reader, options.IngestSchema, shouldValidateGeneric, readToEnd); err != nil {
 		return err
 	} else {
-		fmt.Println(">>> what")
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}
 }
@@ -283,35 +282,38 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	var (
-		startIdentityKind, endIdentityKind graph.Kind
-	)
-
-	if nodeIDKind != graph.EmptyKind {
-		startIdentityKind, endIdentityKind = nodeIDKind, nodeIDKind
-	}
-
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	relationshipUpdate := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-
+		// TODO: need to put name property here... and make it dynamic
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
 			common.LastSeen: nowUTC,
+			// common.Name:     nextRel.Source,
 		}), nextRel.SourceType),
-		StartIdentityKind: startIdentityKind,
 		StartIdentityProperties: []string{
+			// "name",
 			common.ObjectID.String(),
 		},
-
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
+			// common.Name:     nextRel.Target,
 		}), nextRel.TargetType),
-		EndIdentityKind: endIdentityKind,
 		EndIdentityProperties: []string{
+			// "name",
 			common.ObjectID.String(),
 		},
-	})
+	}
+
+	fmt.Println(">>> start properties", relationshipUpdate.Start.Properties)
+	fmt.Println(">>> end properties", relationshipUpdate.End.Properties)
+
+	if nodeIDKind != graph.EmptyKind {
+		relationshipUpdate.StartIdentityKind = nodeIDKind
+		relationshipUpdate.EndIdentityKind = nodeIDKind
+	}
+
+	return batch.UpdateRelationshipBy(relationshipUpdate)
 }
 
 func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {

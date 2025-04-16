@@ -18,7 +18,6 @@ package graph
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"sync"
 
@@ -98,7 +97,6 @@ func (s *Node) SizeOf() size.Size {
 }
 
 func (s *Node) AddKinds(kinds ...Kind) {
-	fmt.Printf(">>> mofo node: %+v \n ", *s)
 	for _, kind := range kinds {
 		if kind == nil {
 			continue // prevent panics from nil kinds

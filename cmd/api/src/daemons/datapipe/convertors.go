@@ -42,13 +42,9 @@ func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleSource{
 			Source: entity.Start.ID_Value,
-			// SourceType: , TODO: do we need a type?
-			// SourceType: graph.StringKind("typex"),
 		},
 		ein.IngestibleTarget{
 			Target: entity.End.ID_Value,
-			// TargetType: ,TODO:
-			// TargetType: graph.StringKind("typex"),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
