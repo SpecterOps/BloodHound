@@ -284,7 +284,7 @@ func (s assetGroupMemberResponse) IsSortable(criteria string) bool {
 	}
 }
 
-type getAssetGroupMemberResponse struct {
+type GetAssetGroupMemberResponse struct {
 	Members []assetGroupMemberResponse `json:"members"`
 }
 
@@ -314,7 +314,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		} else if count, err := s.GraphQuery.CountNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), getAssetGroupMemberResponse{Members: nodeToAssetGroupMembers(nodes, members)}, limit, skip, int(count), http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMemberResponse{Members: nodeToAssetGroupMembers(nodes, members)}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
 }
