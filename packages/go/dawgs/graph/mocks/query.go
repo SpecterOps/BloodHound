@@ -369,7 +369,7 @@ func (mr *MockNodeQueryMockRecorder) Delete() *gomock.Call {
 // Fetch mocks base method.
 func (m *MockNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error, finalCriteria ...graph.Criteria) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{delegate}
+	varargs := []any{delegate}
 	for _, a := range finalCriteria {
 		varargs = append(varargs, a)
 	}
@@ -379,9 +379,9 @@ func (m *MockNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error, fi
 }
 
 // Fetch indicates an expected call of Fetch.
-func (mr *MockNodeQueryMockRecorder) Fetch(delegate any) *gomock.Call {
+func (mr *MockNodeQueryMockRecorder) Fetch(delegate any, finalCriteria ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{delegate}, finalCriteria...)
+	varargs := append([]any{delegate}, finalCriteria...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockNodeQuery)(nil).Fetch), varargs...)
 }
 
