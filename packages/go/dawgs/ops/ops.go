@@ -165,7 +165,7 @@ func FetchNodeIDs(query graph.NodeQuery) ([]graph.ID, error) {
 	})
 }
 
-func FetchNodesByQuery(tx graph.Transaction, query string) (graph.NodeSet, error) {
+func FetchNodesByQuery(tx graph.Transaction, query string, limit int) (graph.NodeSet, error) {
 	nodes := graph.NodeSet{}
 
 	if result := tx.Query(query, nil); result.Error() != nil {
@@ -182,6 +182,9 @@ func FetchNodesByQuery(tx graph.Transaction, query string) (graph.NodeSet, error
 				for values.HasNext() {
 					if values.TryMapNext(node) {
 						nodes.Add(node)
+						if limit > 0 && nodes.Len() >= limit {
+							return nodes, nil
+						}
 						node = &graph.Node{}
 					}
 				}

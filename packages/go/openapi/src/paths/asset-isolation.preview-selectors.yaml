@@ -16,29 +16,26 @@
 
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
-  - name: asset_group_tag_id
-    description: ID of the asset_group_tag of a selector
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int32
-  - name: asset_group_member_id
-    description: ID of member to list selectors
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int32
-
-get:
-  operationId: GetAssetGroupSelectorsByMemberId
-  summary: Get asset group tag selectors of a specific object by member id
-  description: Get a list of selectors for an object by member id.
+post:
+  operationId: PreviewSelectors
+  summary: Preview Selectors
+  description: Preview to members a selector with select.
   tags:
     - Asset Isolation
-    - Enterprise
     - Community
+    - Enterprise
+  requestBody:
+    description: The request body of seeds for previewing what a selector will select. 
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            seeds:
+              type: array
+              items:
+                $ref: './../schemas/model.asset-group-tags-selector-seed-request.yaml'
   responses:
     200:
       description: OK
@@ -66,10 +63,6 @@ get:
                           additionalProperties: true
                       source:
                         type: integer
-                      selectors:
-                        type: array
-                        items:
-                          $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

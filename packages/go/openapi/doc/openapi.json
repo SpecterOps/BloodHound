@@ -4673,6 +4673,10 @@
                             "name": {
                               "type": "string"
                             },
+                            "properties": {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
                             "source": {
                               "type": "integer"
                             },
@@ -5392,6 +5396,103 @@
         "responses": {
           "204": {
             "description": "Successfully deleted. No content is returned."
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/preview-selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "PreviewSelectors",
+        "summary": "Preview Selectors",
+        "description": "Preview to members a selector with select.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body of seeds for previewing what a selector will select.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "seeds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "member": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "properties": {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            "source": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
