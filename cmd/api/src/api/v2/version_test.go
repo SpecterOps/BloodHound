@@ -49,5 +49,5 @@ func TestGetVersion(t *testing.T) {
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
 	require.Equal(t, http.StatusOK, response.Code)
-	assert.Contains(t, response.Body.String(), "v2")
+	assert.JSONEq(t, `{"data":{"API":{"current_version":"v2","deprecated_version":"none"},"server_version":"v999.999.999"}}`, response.Body.String())
 }
