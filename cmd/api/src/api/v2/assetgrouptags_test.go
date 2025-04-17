@@ -292,8 +292,6 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil).Times(1)
-					mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).
-						Return(appcfg.Parameter{}, nil).Times(1)
 
 					mockGraphDb.EXPECT().
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
