@@ -862,7 +862,6 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-
 				},
 			},
 			{
@@ -890,7 +889,6 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-
 				},
 			},
 			{
@@ -918,7 +916,48 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-
+				},
+			},
+			{
+				Name: "Success with limit",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "limit", "5")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with skip",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "skip", "100")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
 			{
@@ -954,16 +993,25 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+					expected := v2.GetAssetGroupMemberResponse{
+						Members: []v2.AssetGroupMemberResponse{
+							{
+								NodeId:      1,
+								ObjectID:    "OID-1",
+								PrimaryKind: "User",
+								Name:        "node1",
+							},
+							{
+								NodeId:      2,
+								ObjectID:    "OID-2",
+								PrimaryKind: "Group",
+								Name:        "node2",
+							},
+						},
+					}
 					result := v2.GetAssetGroupMemberResponse{}
 					apitest.UnmarshalData(output, &result)
-					require.Equal(t, graph.ID(1), result.Members[0].NodeId)
-					require.Equal(t, "OID-1", result.Members[0].ObjectID)
-					require.Equal(t, "User", result.Members[0].PrimaryKind)
-					require.Equal(t, "node1", result.Members[0].Name)
-					require.Equal(t, graph.ID(2), result.Members[1].NodeId)
-					require.Equal(t, "OID-2", result.Members[1].ObjectID)
-					require.Equal(t, "Group", result.Members[1].PrimaryKind)
-					require.Equal(t, "node2", result.Members[1].Name)
+					require.Equal(t, expected, result)
 				},
 			},
 		})
