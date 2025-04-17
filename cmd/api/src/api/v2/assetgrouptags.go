@@ -18,6 +18,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -29,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -36,8 +38,91 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+type AssetGroupTagCounts struct {
+	Selectors int   `json:"selectors"`
+	Members   int64 `json:"members"`
+}
+
+type AssetGroupTagView struct {
+	model.AssetGroupTag
+	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+}
+
+type GetAssetGroupTagsResponse struct {
+	Tags []AssetGroupTagView `json:"tags"`
+}
+
+func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
+	var rCtx = request.Context()
+
+	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
+				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = model.AssetGroupTag{}.IsStringColumn(filter.Name)
+				}
+			}
+		}
+
+		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			var (
+				resp = GetAssetGroupTagsResponse{
+					Tags: make([]AssetGroupTagView, 0, len(tags)),
+				}
+				selectorCounts map[int]int
+			)
+
+			if paramIncludeCounts {
+				ids := make([]int, 0, len(tags))
+				for i := range tags {
+					ids = append(ids, tags[i].ID)
+				}
+				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+
+			for _, tag := range tags {
+				tview := AssetGroupTagView{AssetGroupTag: tag}
+				if paramIncludeCounts {
+					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						tview.Counts = &AssetGroupTagCounts{
+							Selectors: selectorCounts[tag.ID],
+							Members:   n,
+						}
+					}
+				}
+				resp.Tags = append(resp.Tags, tview)
+			}
+			api.WriteBasicResponse(rCtx, resp, http.StatusOK, response)
+		}
+	}
+}
+
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
+	if len(seeds) <= 0 {
+		return fmt.Errorf("seeds are required")
+	}
 	// all seeds must be of the same type
 	seedType := seeds[0].Type
 
@@ -60,7 +145,9 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel           model.AssetGroupTagSelector
+		sel = model.AssetGroupTagSelector{
+			AutoCertify: null.BoolFrom(false), // default if unset
+		}
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
