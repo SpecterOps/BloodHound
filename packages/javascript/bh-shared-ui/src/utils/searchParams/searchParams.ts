@@ -27,6 +27,8 @@ export const GloballySupportedSearchParams = ['environmentId', 'environmentAggre
 
 type EmptyParam = undefined | null | '';
 
+export type AppNavigateProps = { discardQueryParams?: boolean };
+
 export const isEmptyParam = <T>(value: T | EmptyParam): value is EmptyParam => {
     return value === undefined || value === null || value === '';
 };
@@ -119,7 +121,8 @@ const applyParamsToString = (to: string, preservedParams: URLSearchParams): stri
 
     // No query params exist on link, append our preserved params
     if (parts.length === 1) {
-        return parts[0] + '?' + preservedParams.toString();
+        const params = preservedParams.toString();
+        return params ? `${parts[0]}?${params}` : parts[0];
     }
 
     // Fallback to passing through the 'to' param as-is
