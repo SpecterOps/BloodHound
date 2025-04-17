@@ -667,49 +667,49 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 	return nil
 }
 
-func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFiltersToClear ...graph.Criteria) error {
+func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFiltersToClear ...graph.Criteria) []error {
+	var errors []error
+
 	if appcfg.GetTieringEnabled(ctx, db) {
 		// Tiering enabled, we don't want system tags present
 		if err := clearSystemTags(ctx, graphDb, additionalFiltersToClear...); err != nil {
 			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 
 		if err := tagAssetGroupNodes(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: tagging failed: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 	} else {
 		// Tiering disabled, we don't want nodes with tagged kinds
 		if err := clearAssetGroupTags(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: clearing tags failed: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 
 		if err := clearSystemTags(ctx, graphDb, additionalFiltersToClear...); err != nil {
 			slog.Error(fmt.Sprintf("Failed clearing system tags: %v", err))
-			return err
-		}
-
-		if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
+			errors = append(errors, err)
+		} else if err := updateAssetGroupIsolationTags(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("Failed updating asset group isolation tags: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 
 		if err := tagActiveDirectoryTierZero(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("Failed tagging Active Directory attack path roots: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 
 		if err := parallelTagAzureTierZero(ctx, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("Failed tagging Azure attack path roots: %v", err))
-			return err
+			errors = append(errors, err)
 		}
 	}
 
-	return nil
+	return errors
 }
