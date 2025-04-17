@@ -56,118 +56,187 @@
     {
       "id": "n0",
       "position": {
-        "x": -53,
-        "y": -249
+        "x": 476,
+        "y": 50.000000000000085
       },
       "caption": "CUserA",
-      "labels": [],
-      "properties": {},
+      "labels": [
+        "Base",
+        "User"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CUserA",
+        "lastlogontimestamp": "NOW()"
+      },
       "style": {}
     },
     {
       "id": "n1",
       "position": {
-        "x": -53,
-        "y": -97
+        "x": 476,
+        "y": 354
       },
       "caption": "CUserB",
-      "labels": [],
-      "properties": {},
+      "labels": [
+        "Base",
+        "User"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CUserB",
+        "lastlogontimestamp": "NOW()"
+      },
       "style": {}
     },
     {
       "id": "n2",
       "position": {
-        "x": -53,
-        "y": 55
+        "x": 476,
+        "y": 566.7526281332937
       },
       "caption": "CUserC",
-      "labels": [],
-      "properties": {},
+      "labels": [
+        "Base",
+        "User"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CUserC",
+        "lastlogontimestamp": "NOW()"
+      },
       "style": {}
     },
     {
       "id": "n3",
       "position": {
-        "x": -53,
-        "y": 207
+        "x": 476,
+        "y": 779.5052562665874
       },
       "caption": "CUserD",
-      "labels": [],
-      "properties": {},
+      "labels": [
+        "Base",
+        "User"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CUserD",
+        "lastlogontimestamp": "NOW()"
+      },
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 476,
+        "y": -174.64970463283234
+      },
+      "caption": "CUserInactive",
+      "labels": [
+        "Base",
+        "User"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CUserInactive",
+        "lastlogontimestamp": "NOW()-10800000"
+      },
       "style": {}
     },
     {
       "id": "n5",
       "position": {
-        "x": -53,
-        "y": -401
+        "x": 75,
+        "y": 49.99999999999983
       },
-      "caption": "CUserInactive",
-      "labels": [],
-      "properties": {},
+      "caption": "CComputerA",
+      "labels": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CComputerA"
+      },
       "style": {}
     },
     {
       "id": "n6",
       "position": {
-        "x": -454,
-        "y": -249
+        "x": 75,
+        "y": 306.6155094954498
       },
-      "caption": "CComputerA",
-      "labels": [],
-      "properties": {},
+      "caption": "CComputerB",
+      "labels": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CComputerB"
+      },
       "style": {}
     },
     {
       "id": "n7",
       "position": {
-        "x": -454,
-        "y": -97
+        "x": 739.2717227504693,
+        "y": 202.00000000000003
       },
-      "caption": "CComputerA",
-      "labels": [],
-      "properties": {},
+      "caption": "CGroup",
+      "labels": [
+        "Base",
+        "Group"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CGroup"
+      },
       "style": {}
     },
     {
       "id": "n8",
       "position": {
-        "x": 210.27172275046928,
-        "y": -248.99999999999997
+        "x": 1134.179306876173,
+        "y": 278
       },
-      "caption": "CGroup",
-      "style": {},
-      "labels": [],
-      "properties": {}
+      "caption": "CComputerC",
+      "labels": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CComputerC",
+        "pwdlastset": "NOW()",
+        "operatingsystem": "WINDOWS"
+      },
+      "style": {}
     },
     {
       "id": "n9",
       "position": {
-        "x": 605.1793068761732,
-        "y": -172.99999999999997
-      },
-      "caption": "CComputerC",
-      "style": {},
-      "labels": [],
-      "properties": {}
-    },
-    {
-      "id": "n10",
-      "position": {
-        "x": 605.1793068761732,
-        "y": -14
+        "x": 1134.179306876173,
+        "y": 437
       },
       "caption": "CComputerD",
-      "labels": [],
-      "properties": {},
+      "labels": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {
+        "domainsid": "DOMAIN123",
+        "objectid": "CComputerD",
+        "pwdlastset": "NOW()",
+        "operatingsystem": "WINDOWS"
+      },
       "style": {}
     }
   ],
   "relationships": [
     {
       "id": "n0",
-      "fromId": "n6",
+      "fromId": "n5",
       "toId": "n0",
       "type": "HasSession",
       "properties": {},
@@ -175,7 +244,7 @@
     },
     {
       "id": "n1",
-      "fromId": "n6",
+      "fromId": "n5",
       "toId": "n1",
       "type": "HasSession",
       "properties": {},
@@ -183,7 +252,7 @@
     },
     {
       "id": "n2",
-      "fromId": "n7",
+      "fromId": "n6",
       "toId": "n1",
       "type": "HasSession",
       "properties": {},
@@ -191,51 +260,91 @@
     },
     {
       "id": "n3",
-      "type": "",
+      "type": "MemberOf",
       "style": {},
       "properties": {},
       "fromId": "n0",
-      "toId": "n8"
+      "toId": "n7"
     },
     {
       "id": "n4",
-      "type": "",
+      "type": "MemberOf",
       "style": {},
       "properties": {},
       "fromId": "n1",
-      "toId": "n8"
+      "toId": "n7"
     },
     {
       "id": "n5",
-      "type": "",
+      "type": "MemberOf",
       "style": {},
       "properties": {},
       "fromId": "n2",
-      "toId": "n8"
+      "toId": "n7"
     },
     {
       "id": "n6",
-      "type": "",
+      "type": "MemberOf",
       "style": {},
       "properties": {},
       "fromId": "n3",
-      "toId": "n8"
+      "toId": "n7"
     },
     {
       "id": "n7",
+      "fromId": "n7",
+      "toId": "n8",
       "type": "AdminTo",
-      "style": {},
       "properties": {},
-      "toId": "n9",
-      "fromId": "n8"
+      "style": {}
     },
     {
       "id": "n8",
+      "fromId": "n3",
+      "toId": "n8",
       "type": "AdminTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "type": "MemberOf",
       "style": {},
       "properties": {},
-      "fromId": "n3",
-      "toId": "n9"
+      "fromId": "n4",
+      "toId": "n7"
+    },
+    {
+      "id": "n10",
+      "type": "MemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n7"
+    },
+    {
+      "id": "n11",
+      "type": "MemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n7"
+    },
+    {
+      "id": "n12",
+      "type": "MemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n7"
+    },
+    {
+      "id": "n13",
+      "type": "MemberOf",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n7"
     }
   ]
 }

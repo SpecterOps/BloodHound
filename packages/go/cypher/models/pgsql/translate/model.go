@@ -61,11 +61,26 @@ type NodeSelect struct {
 	Constraints pgsql.Expression
 }
 
+type expansionOptions struct {
+	FindShortestPath     bool
+	FindAllShortestPaths bool
+	MinDepth             models.Optional[int64]
+	MaxDepth             models.Optional[int64]
+}
+
+func newExpansionOptions(part *PatternPart, relationshipPattern *cypher.RelationshipPattern) expansionOptions {
+	return expansionOptions{
+		FindShortestPath:     part.ShortestPath,
+		FindAllShortestPaths: part.AllShortestPaths,
+		MinDepth:             models.PointerOptional(relationshipPattern.Range.StartIndex),
+		MaxDepth:             models.PointerOptional(relationshipPattern.Range.EndIndex),
+	}
+}
+
 type Expansion struct {
 	Frame       *Frame
 	PathBinding *BoundIdentifier
-	MinDepth    models.Optional[int64]
-	MaxDepth    models.Optional[int64]
+	Options     expansionOptions
 
 	PrimerNodeConstraints              pgsql.Expression
 	PrimerNodeSatisfactionProjection   pgsql.SelectItem
@@ -90,8 +105,10 @@ type Expansion struct {
 	Projection []pgsql.SelectItem
 }
 
-func NewExpansionModel() *Expansion {
-	return &Expansion{}
+func NewExpansionModel(part *PatternPart, relationshipPattern *cypher.RelationshipPattern) *Expansion {
+	return &Expansion{
+		Options: newExpansionOptions(part, relationshipPattern),
+	}
 }
 
 func (s *Expansion) CompletePattern(traversalStep *TraversalStep) error {
@@ -173,9 +190,15 @@ func (s *TraversalStep) FlipNodes() {
 		s.Expansion.Value.FlipDirection()
 	}
 
-	oldLeftNode := s.LeftNode
+	var (
+		oldLeftNode      = s.LeftNode
+		oldLeftNodeBound = s.LeftNodeBound
+	)
+
 	s.LeftNode = s.RightNode
+	s.LeftNodeBound = s.RightNodeBound
 	s.RightNode = oldLeftNode
+	s.RightNodeBound = oldLeftNodeBound
 
 	switch s.Direction {
 	case graph.DirectionOutbound:

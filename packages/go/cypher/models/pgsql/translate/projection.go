@@ -148,10 +148,15 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 
 	case pgsql.PathComposite:
 		var (
-			parameterExpression pgsql.Expression
-			edgeReferences      []pgsql.Expression
+			parameterExpression    pgsql.Expression
+			edgeReferences         []pgsql.Expression
+			nodeReferences         []pgsql.Expression
+			useEdgesToPathFunction = false
 		)
 
+		// Path composite components are encoded as dependencies on the bound identifier representing the
+		// path. This is not ideal as it escapes normal translation flow as driven by the structure of the
+		// originating cypher AST.
 		for _, dependency := range projected.Dependencies {
 			switch dependency.DataType {
 			case pgsql.ExpansionPath:
@@ -161,42 +166,84 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 					dependency.Identifier,
 				)
 
+				useEdgesToPathFunction = true
+
 			case pgsql.EdgeComposite:
 				edgeReferences = append(edgeReferences, rewriteCompositeTypeFieldReference(
 					scope.CurrentFrameBinding().Identifier,
 					pgsql.CompoundIdentifier{dependency.Identifier, pgsql.ColumnID},
 				))
 
+				useEdgesToPathFunction = true
+
+			case pgsql.NodeComposite:
+				nodeReferences = append(nodeReferences, rewriteCompositeTypeFieldReference(
+					scope.CurrentFrameBinding().Identifier,
+					pgsql.CompoundIdentifier{dependency.Identifier, pgsql.ColumnID},
+				))
+
 			default:
-				return nil, fmt.Errorf("unsupported nested composite type for pathcomposite: %s", dependency.DataType)
+				return nil, fmt.Errorf("unsupported type for path rendering: %s", dependency.DataType)
 			}
 		}
 
-		if len(edgeReferences) > 0 {
-			parameterExpression = pgsql.OptionalBinaryExpressionJoin(
-				parameterExpression,
-				pgsql.OperatorConcatenate,
-				pgsql.ArrayLiteral{
-					Values:   edgeReferences,
-					CastType: pgsql.Int8Array,
+		// The code below is covering a strange edge-case of cypher where a query may contain the following
+		// form: match p = (n) return p
+		//
+		// In this case it is not appropriate to call the edges_to_path(...) function and instead a call to
+		// the corresponding nodes_to_path(...) function must be authored.
+		if useEdgesToPathFunction {
+			// It's possible for a path to contain both edge ID references and expansion references. Expansions
+			// are represented as a concatenation of arrays of edge IDs contained within the parameterExpression
+			// variable. If there are edge ID references that are a part of the path then the individual edge
+			// references must first be rewritten as an array and then further concatenated to the existing
+			// path results.
+			if len(edgeReferences) > 0 {
+				parameterExpression = pgsql.OptionalBinaryExpressionJoin(
+					parameterExpression,
+					pgsql.OperatorConcatenate,
+					pgsql.ArrayLiteral{
+						Values:   edgeReferences,
+						CastType: pgsql.Int8Array,
+					},
+				)
+			}
+
+			return []pgsql.SelectItem{
+				&pgsql.AliasedExpression{
+					Expression: pgsql.FunctionCall{
+						Function: pgsql.FunctionEdgesToPath,
+						Parameters: []pgsql.Expression{
+							pgsql.Variadic{
+								Expression: parameterExpression,
+							},
+						},
+						CastType: pgsql.PathComposite,
+					},
+					Alias: pgsql.AsOptionalIdentifier(alias),
 				},
-			)
+			}, nil
+		} else if len(nodeReferences) > 0 {
+			return []pgsql.SelectItem{
+				&pgsql.AliasedExpression{
+					Expression: pgsql.FunctionCall{
+						Function: pgsql.FunctionNodesToPath,
+						Parameters: []pgsql.Expression{
+							pgsql.Variadic{
+								Expression: pgsql.ArrayLiteral{
+									Values:   nodeReferences,
+									CastType: pgsql.Int8Array,
+								},
+							},
+						},
+						CastType: pgsql.PathComposite,
+					},
+					Alias: pgsql.AsOptionalIdentifier(alias),
+				},
+			}, nil
 		}
 
-		return []pgsql.SelectItem{
-			&pgsql.AliasedExpression{
-				Expression: pgsql.FunctionCall{
-					Function: pgsql.FunctionEdgesToPath,
-					Parameters: []pgsql.Expression{
-						pgsql.Variadic{
-							Expression: parameterExpression,
-						},
-					},
-					CastType: pgsql.PathComposite,
-				},
-				Alias: pgsql.AsOptionalIdentifier(alias),
-			},
-		}, nil
+		return nil, fmt.Errorf("path variable does not contain valid components")
 
 	case pgsql.ExpansionRootNode, pgsql.ExpansionTerminalNode:
 		if projected.LastProjection != nil {
@@ -268,7 +315,7 @@ func buildProjection(alias pgsql.Identifier, projected *BoundIdentifier, scope *
 		// Create a new final projection that's aliased to the visible binding's identifier
 		return []pgsql.SelectItem{
 			&pgsql.AliasedExpression{
-				Expression: pgsql.Parenthetical{
+				Expression: &pgsql.Parenthetical{
 					Expression: pgsql.Select{
 						Projection: []pgsql.SelectItem{
 							pgsql.FunctionCall{
@@ -392,7 +439,7 @@ func (s *Translator) buildTailProjection() error {
 		},
 	}}
 
-	if projectionConstraint, err := s.treeTranslator.ConsumeAll(); err != nil {
+	if projectionConstraint, err := s.treeTranslator.ConsumeAllConstraints(); err != nil {
 		return err
 	} else if projection, err := buildExternalProjection(s.scope, currentPart.projections.Items); err != nil {
 		return err

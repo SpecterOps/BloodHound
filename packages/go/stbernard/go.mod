@@ -16,14 +16,16 @@
 
 module github.com/specterops/bloodhound/packages/go/stbernard
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.8
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/specterops/bloodhound/bhlog v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/mod v0.21.0
 )
 
