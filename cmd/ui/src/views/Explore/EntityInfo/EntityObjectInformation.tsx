@@ -21,41 +21,44 @@ import {
     ObjectInfoFields,
     formatObjectInfoFields,
     useFetchEntityProperties,
+    useObjectInfoPanelContext,
 } from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
+    const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
         objectId: id,
         nodeType,
         databaseId,
     });
 
-    const [isExpanded, setIsExpanded] = useState(true);
-
     const previousId = usePreviousValue(id);
 
     useEffect(() => {
         if (previousId !== id) {
-            setIsExpanded(true);
+            setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, id]);
+    }, [previousId, id, setIsObjectInfoPanelOpen]);
 
     const sectionLabel = 'Object Information';
 
     const handleOnChange = () => {
-        setIsExpanded(!isExpanded);
+        setIsObjectInfoPanelOpen(!isObjectInfoPanelOpen);
     };
 
     if (isLoading) return <Skeleton data-testid='entity-object-information-skeleton' variant='text' />;
 
     if (isError || !informationAvailable)
         return (
-            <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
+            <EntityInfoCollapsibleSection
+                onChange={handleOnChange}
+                isExpanded={isObjectInfoPanelOpen}
+                label={sectionLabel}>
                 <FieldsContainer>
                     <Alert severity='error'>Unable to load object information for this node.</Alert>
                 </FieldsContainer>
@@ -65,7 +68,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     return (
-        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isExpanded} label={sectionLabel}>
+        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
                 <BasicObjectInfoFields {...entityProperties} />
                 <ObjectInfoFields fields={formattedObjectFields} />
