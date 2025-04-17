@@ -217,6 +217,10 @@ func stringToInt(itemProps map[string]any, keyName string) {
 			} else {
 				itemProps[keyName] = final
 			}
+		case float32:
+			itemProps[keyName] = int(converted)
+		case float64:
+			itemProps[keyName] = int(converted)
 		case int:
 		// pass
 		default:
