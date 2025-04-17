@@ -268,7 +268,7 @@ func (s *RelationshipUpdateBatch) Add(update graph.RelationshipUpdate) error {
 			return fmt.Errorf("relationship update mixes identity properties with pre-existing updates")
 		}
 	}
-
+	// TODO: startNodeID,endNodeID have value of zero when running this thru the match by name example
 	if startNodeID, err := s.NodeUpdates.Add(graph.NodeUpdate{
 		Node:               update.Start,
 		IdentityKind:       update.StartIdentityKind,

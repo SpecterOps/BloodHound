@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -282,38 +283,65 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	relationshipUpdate := graph.RelationshipUpdate{
-		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-		// TODO: need to put name property here... and make it dynamic
-		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Source,
-			common.LastSeen: nowUTC,
-			// common.Name:     nextRel.Source,
-		}), nextRel.SourceType),
-		StartIdentityProperties: []string{
-			// "name",
-			common.ObjectID.String(),
-		},
-		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Target,
-			common.LastSeen: nowUTC,
-			// common.Name:     nextRel.Target,
-		}), nextRel.TargetType),
-		EndIdentityProperties: []string{
-			// "name",
-			common.ObjectID.String(),
-		},
-	}
-
-	fmt.Println(">>> start properties", relationshipUpdate.Start.Properties)
-	fmt.Println(">>> end properties", relationshipUpdate.End.Properties)
+	// identityKinds are base types-- things like ad.Base and az.Base. generic ingest has no base type
+	var startIdentityKind, endIdentityKind graph.Kind
 
 	if nodeIDKind != graph.EmptyKind {
-		relationshipUpdate.StartIdentityKind = nodeIDKind
-		relationshipUpdate.EndIdentityKind = nodeIDKind
+		startIdentityKind = nodeIDKind
+		endIdentityKind = nodeIDKind
+	}
+	// match by name. this approach doesn't work because the start/end nodes aren't committed to postgres yet.
+	// step 1: fetch start, end nodes by name. then pull out graph id
+	var nodeIDs []graph.ID
+	if err := batch.Nodes().Filter(query.Or(
+		query.Equals(query.NodeProperty(common.Name.String()), nextRel.Source),
+		query.Equals(query.NodeProperty(common.Name.String()), nextRel.Target),
+	)).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
+		for id := range cursor.Chan() {
+			nodeIDs = append(nodeIDs, id)
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
-	return batch.UpdateRelationshipBy(relationshipUpdate)
+	var startNode, endNode *graph.Node
+	// step 3: if both are found, create a rel update
+	if len(nodeIDs) == 2 {
+		startNode = graph.NewNode(nodeIDs[0], graph.AsProperties(graph.PropertyMap{common.LastSeen: nowUTC, common.Name: nextRel.Source}))
+		endNode = graph.NewNode(nodeIDs[1], graph.AsProperties(graph.PropertyMap{common.LastSeen: nowUTC, common.Name: nextRel.Target}))
+
+	} else {
+		slog.Warn(fmt.Sprintf("unable to find an exact name match for %s, %s", nextRel.Source, nextRel.Target))
+	}
+
+	// else, log not found
+	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
+		// TODO: need to put name property here... and make it dynamic
+		Start: startNode,
+		End:   endNode,
+		// Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+		// 	// common.ObjectID: nextRel.Source,
+		// 	common.LastSeen: nowUTC,
+		// 	common.Name:     nextRel.Source,
+		// }), nextRel.SourceType),
+		StartIdentityKind: startIdentityKind,
+		StartIdentityProperties: []string{
+			// common.Name.String(),
+			common.ObjectID.String(),
+		},
+		// End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+		// 	// common.ObjectID: nextRel.Target,
+		// 	common.LastSeen: nowUTC,
+		// 	common.Name:     nextRel.Target,
+		// }), nextRel.TargetType),
+		EndIdentityKind: endIdentityKind,
+		EndIdentityProperties: []string{
+			// common.Name.String(),
+			common.ObjectID.String(),
+		},
+	})
 }
 
 func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
