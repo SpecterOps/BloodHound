@@ -20,7 +20,7 @@ ALTER TABLE asset_group_history
 -- Populate email for existing records by looking up the email address from the users table
 UPDATE asset_group_history
 	SET email = (SELECT email_address FROM users WHERE asset_group_history.actor = users.id)
-	WHERE email IS NULL;
+	WHERE email IS NULL AND actor != 'SYSTEM';
 
 -- Add asset_group_tag_selector_nodes table
 CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
