@@ -266,7 +266,7 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 	}
 }
 
-type assetGroupMemberResponse struct {
+type AssetGroupMemberResponse struct {
 	NodeId      graph.ID `json:"id"`
 	ObjectID    string   `json:"object_id"`
 	PrimaryKind string   `json:"primary_kind"`
@@ -275,9 +275,9 @@ type assetGroupMemberResponse struct {
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
 
-func (s assetGroupMemberResponse) IsSortable(criteria string) bool {
+func (s AssetGroupMemberResponse) IsSortable(criteria string) bool {
 	switch criteria {
-	case "id", "objectid", "name":
+	case "id", "object_id", "name":
 		return true
 	default:
 		return false
@@ -285,16 +285,16 @@ func (s assetGroupMemberResponse) IsSortable(criteria string) bool {
 }
 
 type GetAssetGroupMemberResponse struct {
-	Members []assetGroupMemberResponse `json:"members"`
+	Members []AssetGroupMemberResponse `json:"members"`
 }
 
 func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		members     []assetGroupMemberResponse
+		members     []AssetGroupMemberResponse
 		queryParams = request.URL.Query()
 	)
 
-	if sort, err := api.ParseGraphSortParameters(assetGroupMemberResponse{}, queryParams); err != nil {
+	if sort, err := api.ParseGraphSortParameters(AssetGroupMemberResponse{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
@@ -320,14 +320,14 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 }
 
 // Used to minimize the response shape to just the necessary member display fields
-func nodeToAssetGroupMembers(nodes []*graph.Node, members []assetGroupMemberResponse) []assetGroupMemberResponse {
+func nodeToAssetGroupMembers(nodes []*graph.Node, members []AssetGroupMemberResponse) []AssetGroupMemberResponse {
 	for _, node := range nodes {
 		var (
 			objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 			name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 		)
 
-		members = append(members, assetGroupMemberResponse{
+		members = append(members, AssetGroupMemberResponse{
 			NodeId:      node.ID,
 			ObjectID:    objectID,
 			PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
