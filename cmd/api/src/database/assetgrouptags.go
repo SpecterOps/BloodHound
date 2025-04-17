@@ -32,17 +32,17 @@ const (
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
 type AssetGroupTagData interface {
-	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
+	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
 type AssetGroupTagSelectorData interface {
-	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
+	CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error)
 	GetAssetGroupTagSelectorBySelectorId(ctx context.Context, assetGroupTagSelectorId int) (model.AssetGroupTagSelector, error)
-	UpdateAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
-	DeleteAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) error
+	UpdateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
+	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
@@ -66,12 +66,13 @@ func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed
 	return seeds, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, userId string, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
+func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGroupTagId int, user model.User, name string, description string, isDefault bool, allowDisable bool, autoCertify null.Bool, seeds []model.SelectorSeed) (model.AssetGroupTagSelector, error) {
 	var (
-		selector = model.AssetGroupTagSelector{
+		userIdStr = user.ID.String()
+		selector  = model.AssetGroupTagSelector{
 			AssetGroupTagId: assetGroupTagId,
-			CreatedBy:       userId,
-			UpdatedBy:       userId,
+			CreatedBy:       userIdStr,
+			UpdatedBy:       userIdStr,
 			Name:            name,
 			Description:     description,
 			IsDefault:       isDefault,
@@ -96,13 +97,13 @@ func (s *BloodhoundDB) CreateAssetGroupTagSelector(ctx context.Context, assetGro
 			VALUES (?, NOW(), ?, NOW(), ?, ?, ?, ?, ?, ?)
 			RETURNING id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify`,
 			selector.TableName()),
-			assetGroupTagId, userId, userId, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
+			assetGroupTagId, userIdStr, userIdStr, name, description, isDefault, allowDisable, autoCertify).Scan(&selector); result.Error != nil {
 			return CheckError(result)
 		} else {
 			var err error
 			if selector.Seeds, err = insertSelectorSeeds(tx, selector.ID, seeds); err != nil {
 				return err
-			} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, null.String{}, null.String{}); err != nil {
+			} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateSelector, assetGroupTagId, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
@@ -139,7 +140,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 	return selector, nil
 }
 
-func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	var (
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionUpdateAssetGroupTagSelector,
@@ -153,7 +154,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId s
 			UPDATE %s SET updated_at = NOW(), updated_by = ?, name = ?, description = ?, disabled_at = ?, disabled_by = ?, auto_certify = ?
 			WHERE id = ?`,
 			selector.TableName()),
-			userId, selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify, selector.ID); result.Error != nil {
+			user.ID.String(), selector.Name, selector.Description, selector.DisabledAt, selector.DisabledBy, selector.AutoCertify, selector.ID); result.Error != nil {
 			return CheckError(result)
 		} else {
 			if selector.Seeds != nil {
@@ -164,7 +165,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId s
 					return err
 				}
 			}
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, selector.Name, model.AssetGroupHistoryActionUpdateSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
@@ -176,7 +177,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTagSelector(ctx context.Context, userId s
 	return selector, nil
 }
 
-func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) error {
+func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error {
 	var (
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionDeleteAssetGroupTagSelector,
@@ -188,7 +189,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, userId s
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 		if result := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id = ?`, selector.TableName()), selector.ID); result.Error != nil {
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, selector.Name, model.AssetGroupHistoryActionDeleteSelector, selector.AssetGroupTagId, null.String{}, null.String{}); err != nil {
 			return err
 		}
 		return nil
@@ -254,12 +255,13 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorCounts(ctx context.Context, tagId
 	return counts, nil
 }
 
-func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, userId string, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
+func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error) {
 	var (
-		tag = model.AssetGroupTag{
+		userIdStr = user.ID.String()
+		tag       = model.AssetGroupTag{
 			Type:           tagType,
-			CreatedBy:      userId,
-			UpdatedBy:      userId,
+			CreatedBy:      userIdStr,
+			UpdatedBy:      userIdStr,
 			Name:           name,
 			Description:    description,
 			Position:       position,
@@ -291,9 +293,9 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?, ?, ?)
 			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify`,
 			tag.TableName()),
-			tagType, kindId, name, description, userId, userId, position, requireCertify).Scan(&tag); result.Error != nil {
+			tagType, kindId, name, description, userIdStr, userIdStr, position, requireCertify).Scan(&tag); result.Error != nil {
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, userId, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
 			return err
 		}
 		return nil

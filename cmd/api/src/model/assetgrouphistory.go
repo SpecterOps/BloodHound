@@ -39,6 +39,7 @@ type AssetGroupHistory struct {
 	ID              int64                   `json:"id" gorm:"primaryKey"`
 	CreatedAt       time.Time               `json:"created_at"`
 	Actor           string                  `json:"actor"`
+	Email           null.String             `json:"email"`
 	Action          AssetGroupHistoryAction `json:"action"`
 	Target          string                  `json:"target"`
 	AssetGroupTagId int                     `json:"asset_group_tag_id"`
@@ -55,6 +56,7 @@ func (s AssetGroupHistory) AuditData() AuditData {
 		"id":                 s.ID,
 		"created_at":         s.CreatedAt,
 		"actor":              s.Actor,
+		"email":              s.Email,
 		"action":             s.Action,
 		"target":             s.Target,
 		"asset_group_tag_id": s.AssetGroupTagId,
