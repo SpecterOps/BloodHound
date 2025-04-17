@@ -84,6 +84,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		// Request analysis if scheduled analysis isn't enabled
 		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return
 		} else if !config.Enabled {
 			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
 				api.HandleDatabaseError(request, response, err)
@@ -176,6 +177,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			// Request analysis if scheduled analysis isn't enabled
 			if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 				api.HandleDatabaseError(request, response, err)
+				return
 			} else if !config.Enabled {
 				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
 					api.HandleDatabaseError(request, response, err)
@@ -215,6 +217,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 		// Request analysis if scheduled analysis isn't enabled
 		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
 			api.HandleDatabaseError(request, response, err)
+			return
 		} else if !config.Enabled {
 			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
 				api.HandleDatabaseError(request, response, err)

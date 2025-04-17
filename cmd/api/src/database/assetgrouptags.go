@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
@@ -42,6 +43,16 @@ type AssetGroupTagSelectorData interface {
 	UpdateAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error)
 	DeleteAssetGroupTagSelector(ctx context.Context, userId string, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
+}
+
+// AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
+type AssetGroupTagSelectorNodeData interface {
+	InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error
+	UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error
+	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
+	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
+	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -106,7 +117,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorBySelectorId(ctx context.Context,
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if result := tx.Raw(fmt.Sprintf(`
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify 
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify
 			FROM %s WHERE id = ?`,
 			selector.TableName()),
 			assetGroupTagSelectorId).First(&selector); result.Error != nil {
@@ -209,6 +220,10 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		}
 	)
 
+	if tag.ToType() == "unknown" {
+		return model.AssetGroupTag{}, fmt.Errorf("unknown asset group tag")
+	}
+
 	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
 	}
@@ -284,4 +299,39 @@ SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY 
 	}
 
 	return results, nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {
+	var tags []model.AssetGroupTag
+	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`WITH
+tier AS (SELECT id FROM asset_group_tags WHERE type = 1 AND position = 1 AND deleted_at IS NULL LIMIT 1),
+owned AS (SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1)
+SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`, model.AssetGroupTag{}.TableName())).Find(&tags))
+}
+
+func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error {
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (selector_id, node_id, certified, certified_by, source, created_at, updated_at) VALUES(?, ?, ?, ?, ?, current_timestamp, current_timestamp) ON CONFLICT DO NOTHING", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId, certified, certifiedBy, source))
+}
+
+func (s *BloodhoundDB) UpdateSelectorNodesByNodeId(ctx context.Context, selectorId int, certified model.AssetGroupCertification, certifiedBy null.String, nodeId graph.ID) error {
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("UPDATE %s SET certified = ?, certified_by = ?, updated_at = current_timestamp WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), certified, certifiedBy, selectorId, nodeId))
+}
+
+func (s *BloodhoundDB) DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error {
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id = ? AND node_id = ?", model.AssetGroupSelectorNode{}.TableName()), selectorId, nodeId))
+}
+
+func (s *BloodhoundDB) DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) error {
+	if len(selectorIds) == 0 {
+		return nil
+	}
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("DELETE FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds))
+}
+
+func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error) {
+	var nodes []model.AssetGroupSelectorNode
+	if len(selectorIds) == 0 {
+		return nodes, nil
+	}
+	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
