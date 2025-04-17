@@ -28,7 +28,7 @@ import {
 import React from 'react';
 import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
 
-interface HeaderProps {
+export interface HeaderProps {
     expanded: boolean;
     name: string;
     onToggleExpanded: (expanded: boolean) => void;
