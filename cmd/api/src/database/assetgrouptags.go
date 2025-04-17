@@ -358,10 +358,14 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {
 	var tags []model.AssetGroupTag
-	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`WITH
-tier AS (SELECT id FROM asset_group_tags WHERE type = 1 AND position = 1 AND deleted_at IS NULL LIMIT 1),
-owned AS (SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1)
-SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`, model.AssetGroupTag{}.TableName())).Find(&tags))
+	return tags, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		WITH tier AS (
+			SELECT id FROM asset_group_tags WHERE type = 1 AND position = 1 AND deleted_at IS NULL LIMIT 1
+		), owned AS (
+			SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1
+		)
+		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
+		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
 func (s *BloodhoundDB) InsertSelectorNode(ctx context.Context, selectorId int, nodeId graph.ID, certified model.AssetGroupCertification, certifiedBy null.String, source model.AssetGroupSelectorNodeSource) error {
