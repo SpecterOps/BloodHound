@@ -14,5 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './NotificationProvider';
-export * from './ObjectInfoPanelProvider';
+export * from './ObjectInfoPanelContext';
+export * from './ObjectInfoPanelContextProvider';
