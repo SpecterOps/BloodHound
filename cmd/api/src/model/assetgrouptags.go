@@ -217,6 +217,8 @@ type AssetGroupSelectorNode struct {
 	Certified   AssetGroupCertification      `json:"certified"`
 	CertifiedBy null.String                  `json:"certified_by"`
 	Source      AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt   time.Time                    `json:"created_at"`
+	UpdatedAt   time.Time                    `json:"updated_at"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
