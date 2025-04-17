@@ -28,7 +28,7 @@ import {
 import React from 'react';
 import { useAppDispatch } from 'src/store';
 
-interface HeaderProps {
+export interface HeaderProps {
     name: string;
     expanded: boolean;
     onToggleExpanded: (expanded: boolean) => void;

@@ -153,13 +153,19 @@ const hasLapsDisabledTestText = windowsAbuseHasLapsText(
     selectedEdgeHasLapsDisabled.targetNode.name
 );
 
+const EdgeInfoContentWithProvider = (selectedEdge: bhSharedUi.SelectedEdge) => (
+    <bhSharedUi.ObjectInfoPanelContextProvider>
+        <EdgeInfoContent selectedEdge={selectedEdge!} />
+    </bhSharedUi.ObjectInfoPanelContextProvider>
+);
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EdgeInfoContent', () => {
     test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdge} />);
+        render(EdgeInfoContentWithProvider(selectedEdge));
 
         expect(await screen.findByText(/source node/)).toBeInTheDocument();
 
@@ -183,7 +189,7 @@ describe('EdgeInfoContent', () => {
         ).not.toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsEnabled} />);
+        render(EdgeInfoContentWithProvider(selectedEdgeHasLapsEnabled));
 
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByText('Windows Abuse');
@@ -192,7 +198,7 @@ describe('EdgeInfoContent', () => {
         expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
+        render(EdgeInfoContentWithProvider(selectedEdgeHasLapsDisabled));
 
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByText('Windows Abuse');
@@ -203,7 +209,7 @@ describe('EdgeInfoContent', () => {
 
     describe('EdgeInfoContent support for Deep Linking', () => {
         const setup = () => {
-            const screen = render(<EdgeInfoContent selectedEdge={selectedEdgeADCSESC4} />);
+            const screen = render(EdgeInfoContentWithProvider(selectedEdgeADCSESC4));
             const user = userEvent.setup();
 
             server.use(
