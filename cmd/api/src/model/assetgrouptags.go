@@ -41,6 +41,33 @@ type AssetGroupTagType int
 const (
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
+	AssetGroupTagTypeOwned AssetGroupTagType = 3
+)
+
+type AssetGroupCertification int
+
+const (
+	AssetGroupCertificationRevoked AssetGroupCertification = -1
+	AssetGroupCertificationNone    AssetGroupCertification = 0
+	AssetGroupCertificationManual  AssetGroupCertification = 1
+	AssetGroupCertificationAuto    AssetGroupCertification = 2
+)
+
+type AssetGroupSelectorNodeSource int
+
+const (
+	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
+	AssetGroupSelectorNodeSourceChild  AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
+)
+
+type AssetGroupExpansionMethod int
+
+const (
+	AssetGroupExpansionMethodNone     AssetGroupExpansionMethod = 0
+	AssetGroupExpansionMethodAll      AssetGroupExpansionMethod = 1
+	AssetGroupExpansionMethodChildren AssetGroupExpansionMethod = 2
+	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
 type AssetGroupTag struct {
@@ -97,6 +124,32 @@ func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 		"deleted_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"deleted_by":      {Equals, NotEquals},
 		"require_certify": {Equals, NotEquals},
+	}
+}
+
+func (s AssetGroupTag) ToType() string {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return "tier"
+	case AssetGroupTagTypeLabel:
+		return "label"
+	case AssetGroupTagTypeOwned:
+		return "owned"
+	default:
+		return "unknown"
+	}
+}
+
+func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return AssetGroupExpansionMethodAll
+	case AssetGroupTagTypeLabel:
+		return AssetGroupExpansionMethodChildren
+	case AssetGroupTagTypeOwned:
+		return AssetGroupExpansionMethodNone
+	default:
+		return AssetGroupExpansionMethodNone
 	}
 }
 
@@ -177,4 +230,18 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 
 type ListSelectorsResponse struct {
 	Selectors AssetGroupTagSelectors `json:"selectors"`
+}
+
+type AssetGroupSelectorNode struct {
+	SelectorId  int                          `json:"selector_id"`
+	NodeId      graph.ID                     `json:"node_id"`
+	Certified   AssetGroupCertification      `json:"certified"`
+	CertifiedBy null.String                  `json:"certified_by"`
+	Source      AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt   time.Time                    `json:"created_at"`
+	UpdatedAt   time.Time                    `json:"updated_at"`
+}
+
+func (s AssetGroupSelectorNode) TableName() string {
+	return "asset_group_tag_selector_nodes"
 }
