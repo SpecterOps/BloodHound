@@ -16,8 +16,8 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle, Box, Grid } from '@mui/material';
+import { useAppNavigate } from 'bh-shared-ui';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_LOGIN } from 'src/routes/constants';
@@ -25,7 +25,7 @@ import { useAppDispatch } from 'src/store';
 
 const DisabledUser: React.FC = () => {
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     return (
         <LoginPage>
             <Grid container spacing={4} justifyContent='center'>
@@ -40,7 +40,7 @@ const DisabledUser: React.FC = () => {
                         <Button
                             onClick={() => {
                                 dispatch(logout());
-                                navigate(ROUTE_LOGIN);
+                                navigate(ROUTE_LOGIN, { discardQueryParams: true });
                             }}
                             data-testid='disabled-user-back-to-login'
                             size='large'
