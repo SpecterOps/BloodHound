@@ -477,7 +477,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 			},
 		}
 	)
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id", test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
 	err = dbInst.InsertSelectorNode(testCtx, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source))
 	require.NoError(t, err)

@@ -70,15 +70,6 @@ const (
 	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
-type AssetGroupCertification int
-
-const (
-	AssetGroupCertificationRevoked AssetGroupCertification = -1
-	AssetGroupCertificationNone    AssetGroupCertification = 0
-	AssetGroupCertificationManual  AssetGroupCertification = 1
-	AssetGroupCertificationAuto    AssetGroupCertification = 2
-)
-
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
 	Type           AssetGroupTagType `json:"type"`
