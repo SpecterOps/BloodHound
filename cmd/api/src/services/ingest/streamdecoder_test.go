@@ -125,8 +125,9 @@ type testEdge struct {
 }
 
 type edgePiece struct {
-	IDValue    string `json:"id_value,omitempty"`
-	IDProperty string `json:"id_property,omitempty"`
+	Value   string `json:"value,omitempty"`
+	MatchBy string `json:"match_by,omitempty"`
+	Kind    string `json:"kind,omitempty"`
 }
 
 type testPayload struct {
@@ -160,7 +161,8 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	negativeCases = append(negativeCases, complexNestedPropertyCases()...)
 	negativeCases = append(negativeCases, decodingFailureCases()...)
 	negativeCases = append(negativeCases, criticalFailureCases()...)
-	negativeCases = append(negativeCases, schemaFailureCases()...)
+	negativeCases = append(negativeCases, nodeSchemaFailureCases()...)
+	negativeCases = append(negativeCases, edgeSchemaFailureCases()...)
 	negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
 	ingestSchema, err := ingest_service.LoadIngestSchema()
@@ -247,8 +249,8 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
-						Start: &edgePiece{IDValue: "1"},
-						End:   &edgePiece{IDValue: "2"},
+						Start: &edgePiece{Value: "1"},
+						End:   &edgePiece{Value: "2"},
 						Kind:  "a",
 						Properties: map[string]any{
 							"arr": []string{"one", "two"},
@@ -263,10 +265,10 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Start: &edgePiece{
-							IDValue: "1234",
+							Value: "1234",
 						},
 						End: &edgePiece{
-							IDValue: "5678",
+							Value: "5678",
 						},
 						Kind: "kind A",
 						Properties: map[string]any{
@@ -274,6 +276,42 @@ func positiveGenericIngestCases() []genericIngestAssertion {
 							"true":  false,
 							"one":   2,
 						},
+					},
+				},
+			},
+		},
+		{
+			name: "edge specifies match_by",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							Value:   "a name",
+							MatchBy: "name",
+						},
+						End: &edgePiece{
+							Value:   "another name",
+							MatchBy: "name",
+						},
+						Kind: "kindA",
+					},
+				},
+			},
+		},
+		{
+			name: "edge specifies kind filter",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							Value: "a name",
+							Kind:  "kindA",
+						},
+						End: &edgePiece{
+							Value: "another name",
+							Kind:  "kindB",
+						},
+						Kind: "kindA",
 					},
 				},
 			},
@@ -340,8 +378,8 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Kind:  "a",
-						Start: &edgePiece{IDValue: "hey"},
-						End:   &edgePiece{IDValue: "sup"},
+						Start: &edgePiece{Value: "hey"},
+						End:   &edgePiece{Value: "sup"},
 						Properties: map[string]any{
 							"arr": []any{1, "two"},
 						},
@@ -356,8 +394,8 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Kind:  "a",
-						Start: &edgePiece{IDValue: "hey"},
-						End:   &edgePiece{IDValue: "sup"},
+						Start: &edgePiece{Value: "hey"},
+						End:   &edgePiece{Value: "sup"},
 						Properties: map[string]any{
 							"nested": map[string]any{
 								"hello": 1,
@@ -374,8 +412,8 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Kind:  "a",
-						Start: &edgePiece{IDValue: "hey"},
-						End:   &edgePiece{IDValue: "sup"},
+						Start: &edgePiece{Value: "hey"},
+						End:   &edgePiece{Value: "sup"},
 						Properties: map[string]any{
 							"array_with_nest": []any{map[string]any{"hello": "hi"}},
 						},
@@ -465,8 +503,7 @@ func criticalFailureCases() []genericIngestAssertion {
 	}
 }
 
-// these test cases represent all the ways a node or an edge can fail schema validation.
-func schemaFailureCases() []genericIngestAssertion {
+func nodeSchemaFailureCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
 		{
 			name:            "payload doesn't contain atleast one of nodes or edges",
@@ -554,13 +591,19 @@ func schemaFailureCases() []genericIngestAssertion {
 				{"nodes[0]", "at '': missing property 'id'", "at '/kinds': maxItems: got 4, want 3"},
 			},
 		},
+	}
+}
+
+// these test cases represent all the ways an edge can fail schema validation.
+func edgeSchemaFailureCases() []genericIngestAssertion {
+	return []genericIngestAssertion{
 		{
 			name: "edge validation: start not provided",
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
 						End: &edgePiece{
-							IDValue: "a5678",
+							Value: "a5678",
 						},
 						Kind: "kind A",
 					},
@@ -577,14 +620,14 @@ func schemaFailureCases() []genericIngestAssertion {
 					{
 						Start: &edgePiece{},
 						End: &edgePiece{
-							IDValue: "a5678",
+							Value: "a5678",
 						},
 						Kind: "kind A",
 					},
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/start': missing property 'id_value'"},
+				{"edges[0]", "at '/start': missing property 'value'"},
 			},
 		},
 		{
@@ -593,7 +636,7 @@ func schemaFailureCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Start: &edgePiece{
-							IDValue: "1234",
+							Value: "1234",
 						},
 						Kind: "kind A",
 					},
@@ -608,14 +651,14 @@ func schemaFailureCases() []genericIngestAssertion {
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
-						Start: &edgePiece{IDValue: "1234"},
+						Start: &edgePiece{Value: "1234"},
 						End:   &edgePiece{},
 						Kind:  "kind A",
 					},
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/end': missing property 'id_value'"},
+				{"edges[0]", "at '/end': missing property 'value'"},
 			},
 		},
 		{
@@ -623,14 +666,14 @@ func schemaFailureCases() []genericIngestAssertion {
 			payload: &testPayload{
 				Edges: []testEdge{
 					{
-						Start: &edgePiece{IDValue: "1234"},
-						End:   &edgePiece{IDValue: ""},
+						Start: &edgePiece{Value: "1234"},
+						End:   &edgePiece{Value: ""},
 						Kind:  "kind A",
 					},
 				},
 			},
 			validationErrContains: [][]string{
-				{"edges[0]", "at '/end': missing property 'id_value'"},
+				{"edges[0]", "at '/end': missing property 'value'"},
 			},
 		},
 		{
@@ -639,10 +682,10 @@ func schemaFailureCases() []genericIngestAssertion {
 				Edges: []testEdge{
 					{
 						Start: &edgePiece{
-							IDValue: "1234",
+							Value: "1234",
 						},
 						End: &edgePiece{
-							IDValue: "5678",
+							Value: "5678",
 						},
 					},
 				},
@@ -662,6 +705,26 @@ func schemaFailureCases() []genericIngestAssertion {
 			},
 			validationErrContains: [][]string{
 				{"edges[0]", "at '/start': got null, want object", "at '/end': got null, want object"},
+			},
+		},
+		{
+			name: "edge validation: start node match_by not valid enum value",
+			payload: &testPayload{
+				Edges: []testEdge{
+					{
+						Start: &edgePiece{
+							Value:   "1234",
+							MatchBy: "something bad",
+						},
+						End: &edgePiece{
+							Value: "1234",
+						},
+						Kind: "kind A",
+					},
+				},
+			},
+			validationErrContains: [][]string{
+				{"edges[0]", "at '/start/match_by'", "value must be one of 'id', 'name'"},
 			},
 		},
 	}
