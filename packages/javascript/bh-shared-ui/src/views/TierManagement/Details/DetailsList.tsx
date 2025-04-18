@@ -31,7 +31,7 @@ type DetailsListItem = {
 type DetailsListProps = {
     title: 'Selectors' | 'Tiers' | 'Labels';
     listQuery: UseQueryResult<DetailsListItem[], unknown>;
-    selected: number | null;
+    selected: string | undefined;
     onSelect: (id: number) => void;
 };
 
@@ -45,7 +45,7 @@ type DetailsListProps = {
  * @returns The component that displays a list of entities for the tier management page
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
-    const [sortOrder, setSortOrder] = useState<SortOrder>();
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
@@ -71,7 +71,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 </div>
             )}
             <div
-                className={cn('h-full max-h-full overflow-y-auto', {
+                className={cn('h-[calc(100%-42px)] overflow-y-auto', {
                     'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
                 })}>
                 <ul>
@@ -102,7 +102,8 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                         className={cn(
                                             'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
                                             {
-                                                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.id,
+                                                'bg-neutral-light-4 dark:bg-neutral-dark-4':
+                                                    selected === listItem.id.toString(),
                                             }
                                         )}>
                                         <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />

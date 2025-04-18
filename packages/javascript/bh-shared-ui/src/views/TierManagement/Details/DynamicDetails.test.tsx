@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeValues } from 'js-client-library';
+import { AssetGroupTagTypes } from 'js-client-library';
 import { render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
 describe('DynamicDetails', () => {
     it('renders details for a selected tier', () => {
-        const testQuery = {
-            asset_group_tier_id: 9,
+        const testTag = {
+            asset_group_tag_id: 9,
             count: 9374,
             requireCertify: true,
             created_at: '2024-09-08T03:38:22.791Z',
@@ -35,19 +35,19 @@ describe('DynamicDetails', () => {
             updated_at: '2024-07-26T02:15:04.556Z',
             updated_by: 'Deontae34@hotmail.com',
             position: 0,
-            type: 1 as AssetGroupTagTypeValues,
+            type: 1 as AssetGroupTagTypes,
         };
 
-        render(<DynamicDetails data={testQuery} />);
+        render(<DynamicDetails data={testTag} />);
 
         expect(screen.getByText('Tier-8')).toBeInTheDocument();
         expect(screen.getByText('pique International')).toBeInTheDocument();
         expect(screen.getByText('Franz.Smitham@yahoo.com')).toBeInTheDocument();
-        expect(screen.getByText('7/25/2024')).toBeInTheDocument();
+        expect(screen.getByText('2024/07/25')).toBeInTheDocument();
     });
 
     it('renders details for a selected selector and is of type "Cypher"', () => {
-        const testQuery = {
+        const testSelector = {
             asset_group_tag_id: 9,
             allow_disable: false,
             selector_id: 1,
@@ -69,17 +69,17 @@ describe('DynamicDetails', () => {
             updated_by: 'Demario_Corwin88@yahoo.com',
         };
 
-        render(<DynamicDetails data={testQuery} isCypher={true} />);
+        render(<DynamicDetails data={testSelector} isCypher={true} />);
 
         expect(screen.getByText('tier-0-selector-9')).toBeInTheDocument();
         expect(screen.getByText('North')).toBeInTheDocument();
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
-        expect(screen.getByText('11/25/2024')).toBeInTheDocument();
+        expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Cypher')).toBeInTheDocument();
     });
 
     it('renders details for a selected selector and is of type "Object"', () => {
-        const testQuery = {
+        const testObject = {
             asset_group_tag_id: 9,
             allow_disable: false,
             selector_id: 1,
@@ -101,12 +101,12 @@ describe('DynamicDetails', () => {
             updated_by: 'Demario_Corwin88@yahoo.com',
         };
 
-        render(<DynamicDetails data={testQuery} />);
+        render(<DynamicDetails data={testObject} />);
 
         expect(screen.getByText('tier-0-selector-9')).toBeInTheDocument();
         expect(screen.getByText('North')).toBeInTheDocument();
         expect(screen.getByText('Emery_Swift86@gmail.com')).toBeInTheDocument();
-        expect(screen.getByText('11/25/2024')).toBeInTheDocument();
+        expect(screen.getByText('2024/11/25')).toBeInTheDocument();
         expect(screen.getByText('Object')).toBeInTheDocument();
     });
 });
