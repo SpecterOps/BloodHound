@@ -41,6 +41,33 @@ type AssetGroupTagType int
 const (
 	AssetGroupTagTypeTier  AssetGroupTagType = 1
 	AssetGroupTagTypeLabel AssetGroupTagType = 2
+	AssetGroupTagTypeOwned AssetGroupTagType = 3
+)
+
+type AssetGroupCertification int
+
+const (
+	AssetGroupCertificationRevoked AssetGroupCertification = -1
+	AssetGroupCertificationNone    AssetGroupCertification = 0
+	AssetGroupCertificationManual  AssetGroupCertification = 1
+	AssetGroupCertificationAuto    AssetGroupCertification = 2
+)
+
+type AssetGroupSelectorNodeSource int
+
+const (
+	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
+	AssetGroupSelectorNodeSourceChild  AssetGroupSelectorNodeSource = 2
+	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
+)
+
+type AssetGroupExpansionMethod int
+
+const (
+	AssetGroupExpansionMethodNone     AssetGroupExpansionMethod = 0
+	AssetGroupExpansionMethodAll      AssetGroupExpansionMethod = 1
+	AssetGroupExpansionMethodChildren AssetGroupExpansionMethod = 2
+	AssetGroupExpansionMethodParents  AssetGroupExpansionMethod = 3
 )
 
 type AssetGroupCertification int
@@ -68,6 +95,8 @@ type AssetGroupTag struct {
 	RequireCertify null.Bool         `json:"require_certify"`
 }
 
+type AssetGroupTags []AssetGroupTag
+
 func (AssetGroupTag) TableName() string {
 	return "asset_group_tags"
 }
@@ -86,6 +115,51 @@ func (s AssetGroupTag) AuditData() AuditData {
 
 func (s AssetGroupTag) ToKind() graph.Kind {
 	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+}
+
+func (s AssetGroupTag) IsStringColumn(filter string) bool {
+	return filter == "name" || filter == "description"
+}
+
+func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"type":            {Equals, NotEquals},
+		"name":            {Equals, NotEquals, ApproximatelyEquals},
+		"description":     {Equals, NotEquals, ApproximatelyEquals},
+		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":      {Equals, NotEquals},
+		"updated_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":      {Equals, NotEquals},
+		"deleted_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"deleted_by":      {Equals, NotEquals},
+		"require_certify": {Equals, NotEquals},
+	}
+}
+
+func (s AssetGroupTag) ToType() string {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return "tier"
+	case AssetGroupTagTypeLabel:
+		return "label"
+	case AssetGroupTagTypeOwned:
+		return "owned"
+	default:
+		return "unknown"
+	}
+}
+
+func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
+	switch s.Type {
+	case AssetGroupTagTypeTier:
+		return AssetGroupExpansionMethodAll
+	case AssetGroupTagTypeLabel:
+		return AssetGroupExpansionMethodChildren
+	case AssetGroupTagTypeOwned:
+		return AssetGroupExpansionMethodNone
+	default:
+		return AssetGroupExpansionMethodNone
+	}
 }
 
 type SelectorSeed struct {
@@ -166,20 +240,15 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
-	SelectorId  int                     `json:"selector_id"`
-	NodeId      graph.ID                `json:"node_id"`
-	Certified   AssetGroupCertification `json:"certified"`
-	CertifiedBy null.String             `json:"certified_by"`
+	SelectorId  int                          `json:"selector_id"`
+	NodeId      graph.ID                     `json:"node_id"`
+	Certified   AssetGroupCertification      `json:"certified"`
+	CertifiedBy null.String                  `json:"certified_by"`
+	Source      AssetGroupSelectorNodeSource `json:"source"`
+	CreatedAt   time.Time                    `json:"created_at"`
+	UpdatedAt   time.Time                    `json:"updated_at"`
 }
 
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
 }
-
-type AssetGroupSelectorNodeSource int
-
-const (
-	AssetGroupSelectorNodeSourceSeed   AssetGroupSelectorNodeSource = 1
-	AssetGroupSelectorNodeSourceExpand AssetGroupSelectorNodeSource = 2
-	AssetGroupSelectorNodeSourceParent AssetGroupSelectorNodeSource = 3
-)
