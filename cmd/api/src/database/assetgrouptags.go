@@ -45,6 +45,7 @@ type AssetGroupTagSelectorData interface {
 	DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
+	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
@@ -356,6 +357,12 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 	}
 
 	return results, nil
+}
+
+func (s *BloodhoundDB) GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
+	var selectors model.AssetGroupTagSelectors
+
+	return selectors, CheckError(s.db.WithContext(ctx).Raw("SELECT s.* from asset_group_tag_selectors s JOIN asset_group_tag_selector_nodes n ON s.id = n.node_id JOIN asset_group_tags t ON s.asset_group_tag_id = t.id WHERE t.id = ? AND n.node_id = ?", assetGroupTagId, memberId).Find(&selectors))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {

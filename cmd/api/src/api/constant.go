@@ -51,6 +51,7 @@ const (
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
 	URIPathVariableAssetGroupTagID                   = "asset_group_tag_id"
 	URIPathVariableAssetGroupTagSelectorID           = "asset_group_tag_selector_id"
+	URIPathVariableAssetGroupTagMemberID             = "member_id"
 	URIPathVariableAttackPathID                      = "attack_path_id"
 	URIPathVariableClientID                          = "client_id"
 	URIPathVariableDataType                          = "data_type"

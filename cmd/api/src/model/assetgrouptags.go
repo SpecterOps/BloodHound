@@ -228,9 +228,7 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-type ListSelectorsResponse struct {
-	Selectors AssetGroupTagSelectors `json:"selectors"`
-}
+type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
 	SelectorId  int                          `json:"selector_id"`
