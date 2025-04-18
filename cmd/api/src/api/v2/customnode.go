@@ -20,12 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/specterops/bloodhound/src/database"
 	"net/http"
 	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 )
 

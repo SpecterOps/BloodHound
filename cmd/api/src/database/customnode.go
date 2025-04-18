@@ -19,10 +19,10 @@ package database
 import (
 	"context"
 	"fmt"
-	"gorm.io/gorm"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
+	"gorm.io/gorm"
 )
 
 const (

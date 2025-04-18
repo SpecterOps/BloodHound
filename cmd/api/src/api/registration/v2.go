@@ -322,7 +322,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 
-		// Node Icon Management
+		// Custom Node Management
 		routerInst.GET("/api/v2/customnode", resources.GetCustomNodeKinds).RequireAuth(),
 		routerInst.GET(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
 		routerInst.POST("/api/v2/customnode", resources.CreateCustomNodeKind).RequireAuth(),

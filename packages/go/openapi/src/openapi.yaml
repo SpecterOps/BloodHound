@@ -279,6 +279,12 @@ paths:
   /api/v2/file-upload/accepted-types:
     $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
+  # custom node kind config
+  /api/v2/customnode:
+    $ref: './paths/custom-nodes.custom-nodes.yaml'
+  /api/v2/customnode/{kind_name}:
+    $ref: './paths/custom-nodes.custom-nodes.name.yaml'
+
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
