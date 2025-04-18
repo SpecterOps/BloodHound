@@ -81,6 +81,7 @@ const GroupManagement = () => {
                         selectedItem: getGraphNodeByObjectId.data?.id,
                         primarySearch: openNode?.id,
                         searchType: 'node',
+                        exploreSearchTab: 'node',
                     }),
                 });
             } else {
