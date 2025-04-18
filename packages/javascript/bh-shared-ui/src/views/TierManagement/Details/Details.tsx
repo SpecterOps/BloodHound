@@ -52,7 +52,7 @@ export const getEditButtonState = (
 
 const Details: FC = () => {
     const navigate = useNavigate();
-    const { tagId, selectorId, memberId } = useParams();
+    const { tagId = '1', selectorId, memberId } = useParams();
     const [selectedMember, setSelectedMember] = useState<AssetGroupTagSelectorMember | null>(null);
     const [showCypher, setShowCypher] = useState(false);
 

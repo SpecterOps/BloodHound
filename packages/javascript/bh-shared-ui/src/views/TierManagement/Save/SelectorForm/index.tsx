@@ -29,9 +29,10 @@ import { PatchSelectorParams, SelectorFormInputs } from './types';
 
 const patchSelector = async (params: PatchSelectorParams, options?: RequestOptions) => {
     const { tagId, selectorId, updatedValues } = params;
-    return await apiClient
-        .updateAssetGroupTagSelector(tagId, selectorId, updatedValues, options)
-        .then((res) => res.data.data);
+
+    const res = await apiClient.updateAssetGroupTagSelector(tagId, selectorId, updatedValues, options);
+
+    return res.data.data;
 };
 
 const usePatchSelector = (tagId: string | number) => {

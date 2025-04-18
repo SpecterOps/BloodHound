@@ -37,11 +37,18 @@ import NodeIcon from '../NodeIcon';
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
+const mapSeeds = (seeds: SelectorSeedRequest[]): AssetGroupSelectedNodes => {
+    return seeds.map((seed) => {
+        return { objectid: seed.value };
+    });
+};
+
 const AssetGroupSelectorObjectSelect: FC<{
     setSeeds: (seeds: SelectorSeedRequest[]) => void;
-}> = ({ setSeeds }) => {
+    seeds?: SelectorSeedRequest[];
+}> = ({ setSeeds, seeds = [] }) => {
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(mapSeeds(seeds));
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -95,7 +102,7 @@ const AssetGroupSelectorObjectSelect: FC<{
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                     Object Selector
                     <CardDescription className='pt-3 font-normal'>
-                        Use the input field to add objects and the edit button to remove objects from the list
+                        Use the input field to add objects to the list
                     </CardDescription>
                 </CardHeader>
                 <CardContent className='pl-6'>
