@@ -384,7 +384,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 			AutoCertify:  autoCertify,
 		}
 		test2Selector = model.AssetGroupTagSelector{
-			Name:            "test2 selector name",
+			Name:            "test selector name",
 			Description:     "test2 description",
 			AssetGroupTagId: 1,
 			Seeds: []model.SelectorSeed{
@@ -393,6 +393,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 			AllowDisable: true,
 			AutoCertify:  autoCertify,
 		}
+		nameFilter = model.SQLFilter{SQLString: "name = ?", Params: []any{"test selector name"}}
 	)
 
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
@@ -402,7 +403,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, nameFilter, model.SQLFilter{})
 		require.NoError(t, err)
 
 		require.Equal(t, 2, len(results))
@@ -432,7 +433,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, nameFilter, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(results))
