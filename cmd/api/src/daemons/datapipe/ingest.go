@@ -332,8 +332,10 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 }
 
 // this func attempts to resolve objectids for a rel's source and target nodes.
+// name -> objectid -> submit to batch processor for standard processing flow
 // TODO: how does this function cleanup if the feature is limited to just name matching, and not any arbitrary property?
 // todo: what if only one of source/target requires resolution
+// todo: change rel -> rels and refactor this to do resolution for many rels in one dawg query
 func resolveRelationshipBeforeSubmit(batch graph.Batch, rel ein.IngestibleRelationship) error {
 	var (
 		nowUTC              = time.Now().UTC()
