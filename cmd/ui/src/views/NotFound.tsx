@@ -14,13 +14,54 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { Alert, AlertTitle, Box, Grid } from '@mui/material';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import LoginPage from 'src/components/LoginPage';
+import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
+import { ROUTE_EXPLORE, ROUTE_LOGIN } from 'src/routes/constants';
+import { useAppSelector } from 'src/store';
 
 const NotFound: React.FC = () => {
+    const navigate = useNavigate();
+    const isFullyAuthenticated = useAppSelector(fullyAuthenticatedSelector);
+
+    // Redirect to login if unauthenticated
+    useEffect(() => {
+        if (isFullyAuthenticated) {
+            return;
+        }
+
+        navigate(ROUTE_LOGIN);
+    }, [isFullyAuthenticated]);
+
     return (
-        <div>
-            <Typography variant='h3'>Page Not Found</Typography>
-        </div>
+        <LoginPage>
+            <Grid container spacing={4} justifyContent='center'>
+                <Grid item xs={12}>
+                    <Alert severity='warning'>
+                        <AlertTitle>404 - Page not found</AlertTitle>
+                        There is no page associated with this route. Please contact your system administrator for
+                        assistance.
+                    </Alert>
+                </Grid>
+                <Grid item xs={12}>
+                    <Box mt={2}>
+                        <Button
+                            onClick={() => {
+                                navigate(ROUTE_EXPLORE);
+                            }}
+                            data-testid='page-not-found-go-to-explore'
+                            size='large'
+                            type='button'
+                            className='w-full'>
+                            Go to Explore
+                        </Button>
+                    </Box>
+                </Grid>
+            </Grid>
+        </LoginPage>
     );
 };
 
