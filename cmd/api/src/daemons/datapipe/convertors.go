@@ -41,10 +41,12 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleSource{
-			Source: entity.Start.ID_Value,
+			Source:   entity.Start.ID_Value,
+			Property: entity.Start.ID_Property,
 		},
 		ein.IngestibleTarget{
-			Target: entity.End.ID_Value,
+			Target:   entity.End.ID_Value,
+			Property: entity.Start.ID_Property,
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,

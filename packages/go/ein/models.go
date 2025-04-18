@@ -25,22 +25,26 @@ func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget,
 	}
 
 	return IngestibleRelationship{
-		Source:     source.Source,
-		SourceType: source.SourceType,
-		Target:     target.Target,
-		TargetType: target.TargetType,
-		RelProps:   rel.RelProps,
-		RelType:    rel.RelType,
+		Source:         source.Source,
+		SourceType:     source.SourceType,
+		SourceProperty: source.Property,
+		Target:         target.Target,
+		TargetType:     target.TargetType,
+		TargetProperty: target.Property,
+		RelProps:       rel.RelProps,
+		RelType:        rel.RelType,
 	}
 }
 
 type IngestibleSource struct {
-	Source     string
+	Source     string // usually objectid
+	Property   string // optional field to specify a property to do an exact-match on for node resolution (default is objectid)
 	SourceType graph.Kind
 }
 
 type IngestibleTarget struct {
 	Target     string
+	Property   string
 	TargetType graph.Kind
 }
 
@@ -50,12 +54,16 @@ type IngestibleRel struct {
 }
 
 type IngestibleRelationship struct {
-	Source     string
-	SourceType graph.Kind
-	TargetType graph.Kind
-	Target     string
-	RelProps   map[string]any
-	RelType    graph.Kind
+	Source         string
+	SourceType     graph.Kind
+	SourceProperty string // optional property to specify exact-match lookup of `Source`. e.g. "name"
+
+	Target         string
+	TargetType     graph.Kind
+	TargetProperty string
+
+	RelProps map[string]any
+	RelType  graph.Kind
 }
 
 func (s IngestibleRelationship) IsValid() bool {

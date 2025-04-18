@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -284,29 +285,21 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 
 	relationshipUpdate := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-		// TODO: need to put name property here... and make it dynamic
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
 			common.LastSeen: nowUTC,
-			// common.Name:     nextRel.Source,
 		}), nextRel.SourceType),
 		StartIdentityProperties: []string{
-			// "name",
 			common.ObjectID.String(),
 		},
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
-			// common.Name:     nextRel.Target,
 		}), nextRel.TargetType),
 		EndIdentityProperties: []string{
-			// "name",
 			common.ObjectID.String(),
 		},
 	}
-
-	fmt.Println(">>> start properties", relationshipUpdate.Start.Properties)
-	fmt.Println(">>> end properties", relationshipUpdate.End.Properties)
 
 	if nodeIDKind != graph.EmptyKind {
 		relationshipUpdate.StartIdentityKind = nodeIDKind
@@ -323,12 +316,81 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	)
 
 	for _, next := range relationships {
-		if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
-			errs.Add(err)
+		if next.SourceProperty == "" && next.TargetProperty == "" { // if no property to match against, do the usual objectid thang
+			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
+				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
+				errs.Add(err)
+			}
+		} else {
+			if err := resolveRelationshipBeforeSubmit(batch, next); err != nil {
+				// todo: informative slog
+				errs.Add(err)
+			}
 		}
+
 	}
 	return errs.Combined()
+}
+
+// this func attempts to resolve objectids for a rel's source and target nodes.
+func resolveRelationshipBeforeSubmit(batch graph.Batch, rel ein.IngestibleRelationship) error {
+	var (
+		objectIDs   []string
+		nowUTC      = time.Now().UTC()
+		sourceValue = strings.ToUpper(rel.Source)
+		targetValue = strings.ToUpper(rel.Target)
+	)
+
+	if err := batch.Nodes().Filter(query.Or(
+		query.Equals(query.NodeProperty(rel.SourceProperty), sourceValue), // todo: only one of source/target may require resolution
+		query.Equals(query.NodeProperty(rel.TargetProperty), targetValue),
+	)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		// TODO: can we make safe assumption about ordering of start, end pair in this channel?
+		for node := range cursor.Chan() {
+			if objectid, err := node.Properties.Get(string(common.ObjectID)).String(); err != nil {
+				return err
+			} else {
+				objectIDs = append(objectIDs, objectid)
+			}
+
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// var startNode, endNode *graph.Node // if both are found, create a rel update
+	if len(objectIDs) == 2 {
+		start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: objectIDs[0],
+			common.LastSeen: nowUTC,
+		}), rel.SourceType)
+
+		end := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+			common.ObjectID: objectIDs[1],
+			common.LastSeen: nowUTC,
+		}), rel.TargetType)
+
+		update := graph.RelationshipUpdate{
+			Start: start,
+			// (wrong) theory: maybe i don't need to provide identity properties at all since i already have the node...
+			StartIdentityProperties: []string{
+				common.ObjectID.String(),
+			},
+			End: end,
+			EndIdentityProperties: []string{
+				common.ObjectID.String(),
+			},
+			Relationship: graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+			// note: no need to set start/end identitykind because this code path is generic-ingest only which has no base kind.
+		}
+
+		return batch.UpdateRelationshipBy(update)
+	} else {
+		slog.Warn(fmt.Sprintf("unable to find an exact name match for %s, %s", rel.Source, rel.Target))
+	}
+
+	return nil
 }
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {

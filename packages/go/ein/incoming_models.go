@@ -366,5 +366,7 @@ type GenericEdge struct {
 }
 
 type edgePiece struct {
-	ID_Value string
+	ID_Value    string
+	ID_Property string
+	Kind        string
 }
