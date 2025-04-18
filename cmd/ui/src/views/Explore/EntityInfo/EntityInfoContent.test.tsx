@@ -67,7 +67,15 @@ const server = setupServer(
     })
 );
 
-const EntityInfoContentWithProvider = (testId: string, nodeType: EntityKinds | string, databaseId?: string) => (
+const EntityInfoContentWithProvider = ({
+    testId,
+    nodeType,
+    databaseId,
+}: {
+    testId: string;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
+}) => (
     <EntityInfoPanelContextProvider>
         <ObjectInfoPanelContextProvider>
             <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
@@ -84,7 +92,7 @@ describe('EntityInfoContent', () => {
         const testId = '1';
         const nodeType = AzureNodeKind.Role;
 
-        render(EntityInfoContentWithProvider(testId, nodeType));
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
         expect(screen.queryByText('PIM Assignments')).not.toBeInTheDocument();
     });
@@ -95,7 +103,7 @@ describe('EntityObjectInformation', () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.LocalGroup;
 
-        render(EntityInfoContentWithProvider(testId, nodeType));
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
@@ -106,7 +114,7 @@ describe('EntityObjectInformation', () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.LocalUser;
 
-        render(EntityInfoContentWithProvider(testId, nodeType));
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
@@ -118,7 +126,7 @@ describe('EntityObjectInformation', () => {
         const nodeType = 'Unknown';
         const databaseId = '42';
 
-        render(EntityInfoContentWithProvider(testId, nodeType, databaseId));
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} databaseId={databaseId} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 

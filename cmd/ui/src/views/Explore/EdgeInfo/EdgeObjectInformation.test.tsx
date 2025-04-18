@@ -35,7 +35,7 @@ const selectedEdge: SelectedEdge = {
     targetNode: { name: 'target_node', id: '2', objectId: '2', type: 'User' },
 };
 
-const EdgeObjectInformationWithProvider = (
+const EdgeObjectInformationWithProvider = () => (
     <ObjectInfoPanelContextProvider>
         <EdgeObjectInformation selectedEdge={selectedEdge} />
     </ObjectInfoPanelContextProvider>
@@ -72,7 +72,7 @@ describe('EdgeObjectInformation', () => {
             })
         );
 
-        render(EdgeObjectInformationWithProvider);
+        render(<EdgeObjectInformationWithProvider />);
 
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 
@@ -99,7 +99,7 @@ describe('EdgeObjectInformation', () => {
             })
         );
 
-        render(EdgeObjectInformationWithProvider);
+        render(<EdgeObjectInformationWithProvider />);
 
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 
