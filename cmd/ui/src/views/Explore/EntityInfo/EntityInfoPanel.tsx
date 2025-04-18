@@ -15,7 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
+import {
+    NoEntitySelectedHeader,
+    NoEntitySelectedMessage,
+    ObjectInfoPanelContextProvider,
+    useFeatureFlag,
+    usePaneStyles,
+} from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import usePreviousValue from 'src/hooks/usePreviousValue';
@@ -76,7 +82,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
 
 const WrappedEntityInfoPanel: React.FC<EntityInfoPanelProps> = (props) => (
     <EntityInfoPanelContextProvider>
-        <EntityInfoPanel {...props} />
+        <ObjectInfoPanelContextProvider>
+            <EntityInfoPanel {...props} />
+        </ObjectInfoPanelContextProvider>
     </EntityInfoPanelContextProvider>
 );
 
