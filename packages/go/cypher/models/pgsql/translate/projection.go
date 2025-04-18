@@ -460,8 +460,16 @@ func (s *Translator) buildTailProjection() error {
 		currentPart.Model.Limit = currentPart.Limit
 	}
 
-	if len(currentPart.OrderBy) > 0 {
-		currentPart.Model.OrderBy = currentPart.OrderBy
+	if len(currentPart.SortItems) > 0 {
+		// If there are expressions in the order by of the current query part they will need to be visited to ensure
+		// that frame references are rewritten
+		for _, orderByExpression := range currentPart.SortItems {
+			if err := RewriteFrameBindings(s.scope, orderByExpression); err != nil {
+				return err
+			}
+		}
+
+		currentPart.Model.OrderBy = currentPart.SortItems
 	}
 
 	return nil

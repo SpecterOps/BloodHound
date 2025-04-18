@@ -367,17 +367,22 @@ func (mr *MockNodeQueryMockRecorder) Delete() *gomock.Call {
 }
 
 // Fetch mocks base method.
-func (m *MockNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error) error {
+func (m *MockNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error, finalCriteria ...graph.Criteria) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Fetch", delegate)
+	varargs := []any{delegate}
+	for _, a := range finalCriteria {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Fetch", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Fetch indicates an expected call of Fetch.
-func (mr *MockNodeQueryMockRecorder) Fetch(delegate any) *gomock.Call {
+func (mr *MockNodeQueryMockRecorder) Fetch(delegate any, finalCriteria ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockNodeQuery)(nil).Fetch), delegate)
+	varargs := append([]any{delegate}, finalCriteria...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockNodeQuery)(nil).Fetch), varargs...)
 }
 
 // FetchIDs mocks base method.

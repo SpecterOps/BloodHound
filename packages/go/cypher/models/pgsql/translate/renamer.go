@@ -122,6 +122,23 @@ func (s *FrameBindingRewriter) enter(node pgsql.SyntaxNode) error {
 			}
 		}
 
+	case *pgsql.OrderBy:
+		switch typedOrderByExpression := typedExpression.Expression.(type) {
+		case pgsql.Identifier:
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedOrderByExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
+			}
+
+		case pgsql.CompoundIdentifier:
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedOrderByExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
+			}
+		}
+
 	case *pgsql.ArrayIndex:
 		switch typedArrayIndexInnerExpression := typedExpression.Expression.(type) {
 		case pgsql.Identifier:

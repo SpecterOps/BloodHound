@@ -152,9 +152,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.treeTranslator.PushParenthetical()
 
 	case *cypher.SortItem:
-		s.query.CurrentPart().OrderBy = append(s.query.CurrentPart().OrderBy, pgsql.OrderBy{
-			Ascending: typedExpression.Ascending,
-		})
+		s.query.CurrentPart().SortItems = append(s.query.CurrentPart().SortItems, pgsql.NewOrderBy(typedExpression.Ascending))
 
 	case *cypher.Projection:
 		if err := s.prepareProjection(typedExpression); err != nil {

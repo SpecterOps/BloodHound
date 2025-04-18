@@ -270,12 +270,12 @@ func (s *Query) CurrentPart() *QueryPart {
 }
 
 type QueryPart struct {
-	Model   *pgsql.Query
-	Frame   *Frame
-	Updates []*Mutations
-	OrderBy []pgsql.OrderBy
-	Skip    models.Optional[pgsql.Expression]
-	Limit   models.Optional[pgsql.Expression]
+	Model     *pgsql.Query
+	Frame     *Frame
+	Updates   []*Mutations
+	SortItems []*pgsql.OrderBy
+	Skip      models.Optional[pgsql.Expression]
+	Limit     models.Optional[pgsql.Expression]
 
 	numReadingClauses  int
 	numUpdatingClauses int
@@ -384,7 +384,7 @@ func (s *QueryPart) ConsumeProperties() map[string]pgsql.Expression {
 }
 
 func (s *QueryPart) CurrentOrderBy() *pgsql.OrderBy {
-	return &s.OrderBy[len(s.OrderBy)-1]
+	return s.SortItems[len(s.SortItems)-1]
 }
 
 type Projection struct {
