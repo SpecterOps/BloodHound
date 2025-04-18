@@ -71,14 +71,14 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
 
     const heightScalar = useRef(getListScalar(window.innerHeight));
 
-    const resetWindow = useCallback(() => {
-        heightScalar.current = getListScalar(window.innerHeight);
-    }, []);
-
     useEffect(() => {
-        window.addEventListener('resize', resetWindow);
-        return () => window.removeEventListener('resize', resetWindow);
-    }, [resetWindow]);
+        const updateHeightScalar = () => {
+            heightScalar.current = getListScalar(window.innerHeight);
+        };
+
+        window.addEventListener('resize', updateHeightScalar);
+        return () => window.removeEventListener('resize', updateHeightScalar);
+    }, []);
 
     const selectorQuery = useQuery({
         queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
@@ -116,13 +116,19 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                 <div className='flex justify-center'>
                     <div
                         className={cn('w-full max-w-[60rem]', {
-                            'max-w-[42rem] lg:w-[28rem] xl:w-[36rem]': selectorType === SeedTypeObjectId,
+                            'max-w-[42rem] max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem]':
+                                selectorType === SeedTypeObjectId,
                         })}>
                         <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
                             <AssetGroupSelectorObjectSelect setSeeds={setSeeds} />
                         ) : (
-                            <Cypher preview={false} setCypherSearchResults={setResults} setSeeds={setSeeds} />
+                            <Cypher
+                                preview={false}
+                                setCypherSearchResults={setResults}
+                                setSeeds={setSeeds}
+                                initialInput={selectorQuery.data?.seeds[0].value}
+                            />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
                             {selectorId !== '' && (

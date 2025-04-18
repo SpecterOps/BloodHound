@@ -44,13 +44,13 @@ interface Updated {
 }
 
 interface Deleted {
-    deleted_at: ISO_DATE_STRING;
-    deleted_by: string;
+    deleted_at: ISO_DATE_STRING | null;
+    deleted_by: string | null;
 }
 
 interface Disabled {
-    disabled_at: ISO_DATE_STRING;
-    disabled_by: string;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
 }
 
 export const AssetGroupTagTypeTier = 1 as const;

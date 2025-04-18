@@ -85,7 +85,7 @@ const TierManagement: FC = () => {
                         }>
                         <Routes>
                             {mapRoutes(childRoutes)}
-                            <Route path='*' element={<Navigate to='details' replace />} />
+                            <Route path='*' element={<Navigate to='details/tag/1' replace />} />
                         </Routes>
                     </Suspense>
                 </div>

@@ -55,14 +55,14 @@ describe('List', async () => {
     it('renders a sortable list for Selectors', async () => {
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(await screen.findByText('app-icon-sort-empty')).toBeInTheDocument();
+        expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
         expect(screen.queryByTestId('tier-management_details_selectors-list_static-order')).not.toBeInTheDocument();
     });
 
     it('renders a sortable list for Labels', async () => {
         render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(await screen.findByText('app-icon-sort-empty')).toBeInTheDocument();
+        expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
         expect(screen.queryByTestId('tier-management_details_labels-list_static-order')).not.toBeInTheDocument();
     });
 

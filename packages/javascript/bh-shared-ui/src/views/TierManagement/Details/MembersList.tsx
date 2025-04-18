@@ -104,7 +104,7 @@ const getFetchCallback = (selectedTag: string | undefined, selectedSelector: str
 const getListHeight = (windoHeight: number) => {
     if (windoHeight > 1080) return 762;
     if (1080 >= windoHeight && windoHeight > 900) return 642;
-    if (900 >= windoHeight) return 498;
+    if (900 >= windoHeight) return 438;
     return 438;
 };
 
@@ -144,14 +144,15 @@ export const MembersList: React.FC<MembersListProps> = ({
 
     const height = useRef(getListHeight(window.innerHeight));
 
-    const resetWindow = useCallback(() => {
-        height.current = getListHeight(window.innerHeight);
-    }, []);
-
     useEffect(() => {
-        window.addEventListener('resize', resetWindow);
-        return () => window.removeEventListener('resize', resetWindow);
-    }, [resetWindow]);
+        const updateListHeight = () => {
+            height.current = getListHeight(window.innerHeight);
+        };
+
+        window.addEventListener('resize', updateListHeight);
+
+        return () => window.removeEventListener('resize', updateListHeight);
+    }, []);
 
     const isItemLoaded = (index: number) => {
         return !!items[index];
