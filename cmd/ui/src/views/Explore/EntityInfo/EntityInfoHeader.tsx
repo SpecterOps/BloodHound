@@ -40,14 +40,16 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
     const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { collapseAllSections } = useEntityInfoPanelContext();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
-    const { setExploreParams } = useExploreParams();
+    const { setExploreParams, expandedPanelSections } = useExploreParams();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
         if (backButtonFlag?.enabled) {
-            setExploreParams({
-                expandedPanelSections: [],
-            });
+            if (expandedPanelSections?.length) {
+                setExploreParams({
+                    expandedPanelSections: [],
+                });
+            }
         } else {
             collapseAllSections();
         }
