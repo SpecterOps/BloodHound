@@ -57,7 +57,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
 
     // GET Tags
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
-        return res(ctx.json({ data: { asset_group_tags: tierMocks.createAssetGroupTags() } }));
+        return res(ctx.json({ data: { asset_group_tags: tierMocks.createAssetGroupTags(5) } }));
     }),
 
     // GET Tag
@@ -92,7 +92,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Tag
-    rest.get('/api/v2/asset-group-tags/:assetGroupId/members?*', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:assetGroupId/members', async (req, res, ctx) => {
         const total = 3000;
         const url = new URL(req.url);
         const { assetGroupId, selectorId } = req.params;

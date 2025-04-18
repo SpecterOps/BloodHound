@@ -30,7 +30,8 @@ import {
     Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
-import { FC, useEffect } from 'react';
+import { DateTime } from 'luxon';
+import { FC, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
@@ -68,6 +69,9 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         enabled: selectorId !== '',
     });
 
+    const [disabled, setDisabled] = useState(selectorQuery.data?.disabled_at === null);
+
+    // Updates the select option if editing an existing selector to match the existing selectors value
     useEffect(() => {
         const type = selectorQuery.data?.seeds[0].type;
         if (type) {
@@ -81,17 +85,36 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
     if (!tagQuery.data) throw new Error('Sorry! We could not find the tag ID specified in the URL.');
 
     return (
-        <Card
-            className={cn('w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-[32rem] p-3 max-h-[36rem]', {
-                '': selectorType === SeedTypeCypher,
-            })}>
+        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-[32rem] p-3 max-h-[36rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
             <CardContent>
+                <div className={cn('mb-4', { hidden: !selectorQuery.data?.allow_disable })}>
+                    <Label htmlFor='disabled_at' className='text-base font-bold'>
+                        Selector Status
+                    </Label>
+                    <div className='flex gap-2 items-center mt-2'>
+                        <Switch
+                            id='disabled_at'
+                            defaultChecked={!disabled}
+                            {...register('disabled_at')}
+                            onCheckedChange={(checked: boolean) => {
+                                if (checked) {
+                                    setValue('disabled_at', DateTime.now().toISO());
+                                    setDisabled(true);
+                                } else {
+                                    setValue('disabled_at', null);
+                                    setDisabled(false);
+                                }
+                            }}
+                        />
+                        <p className='flex items-center ml-2'>{disabled ? 'Enabled' : 'Disabled'}</p>
+                    </div>
+                </div>
                 <p className='font-bold'>
                     Tag: <span className='font-normal'>{tagQuery.data.name}</span>
                 </p>
                 <div className='flex flex-col gap-6 mt-6'>
-                    <div className='flex flex-col gap-6 mt-6'>
+                    <div className='flex flex-col gap-6'>
                         <div>
                             <Label className='text-base font-bold' htmlFor='name'>
                                 Name
@@ -148,9 +171,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                 </SelectPortal>
                             </Select>
                         </div>
-                        <div
-                        // className='hidden'
-                        >
+                        <div className='hidden'>
                             <Label htmlFor='autoCertify' className='text-base font-bold'>
                                 Automatic Certification
                             </Label>
