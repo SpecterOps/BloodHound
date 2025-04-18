@@ -20,8 +20,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -130,5 +134,88 @@ func TestLoginExpiry(t *testing.T) {
 				t.Errorf("For input: %v, got %v, want %v", tc.Input, body["data"], tc.Expected.Body)
 			}
 		}
+	}
+}
+
+func TestLoginResource_Logout(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		redirectURL  string
+		responseCode int
+	}
+	type testData struct {
+		name        string
+		setupMocks  func(*testing.T, *api_mocks.MockAuthenticator)
+		expected    expected
+		userContext func(*testing.T) context.Context
+	}
+
+	mockHost := func(t *testing.T) (*url.URL, string) {
+		host, err := url.Parse("https://example.com")
+		require.NoError(t, err)
+		return host, fmt.Sprintf("%s%s", host, api.UserInterfacePath)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: Logout redirects to UI path",
+			setupMocks: func(t *testing.T, mockAuth *api_mocks.MockAuthenticator) {
+				mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
+			},
+			userContext: func(t *testing.T) context.Context {
+				host, _ := mockHost(t)
+
+				userSession := model.UserSession{
+					BigSerial: model.BigSerial{
+						ID: 1,
+					},
+				}
+
+				authContext := auth.Context{
+					Session: userSession,
+				}
+
+				bhContext := &ctx.Context{
+					Host:    host,
+					AuthCtx: authContext,
+				}
+
+				return context.WithValue(context.Background(), ctx.ValueKey, bhContext)
+			},
+			expected: expected{
+				responseCode: http.StatusOK,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			mockAuth := api_mocks.NewMockAuthenticator(mockCtrl)
+			mockDB := mocks.NewMockDatabase(mockCtrl)
+
+			testCase.setupMocks(t, mockAuth)
+
+			resource := NewLoginResource(config.Configuration{}, mockAuth, mockDB)
+
+			req, err := http.NewRequest("GET", "/api/v2/auth/logout", nil)
+			require.NoError(t, err)
+
+			reqCtx := testCase.userContext(t)
+			req = req.WithContext(reqCtx)
+
+			response := httptest.NewRecorder()
+			resource.Logout(response, req)
+
+			assert.Equal(t, testCase.expected.responseCode, response.Code)
+
+			_, expectedRedirectURL := mockHost(t)
+			assert.Equal(t, expectedRedirectURL, response.Header().Get("Location"))
+		})
 	}
 }
