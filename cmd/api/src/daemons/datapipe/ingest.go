@@ -323,7 +323,6 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 			}
 		} else {
 			if err := resolveRelationshipBeforeSubmit(batch, next); err != nil {
-				// todo: informative slog
 				errs.Add(err)
 			}
 		}
@@ -333,64 +332,101 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 }
 
 // this func attempts to resolve objectids for a rel's source and target nodes.
+// TODO: how does this function cleanup if the feature is limited to just name matching, and not any arbitrary property?
+// todo: what if only one of source/target requires resolution
 func resolveRelationshipBeforeSubmit(batch graph.Batch, rel ein.IngestibleRelationship) error {
 	var (
-		objectIDs   []string
-		nowUTC      = time.Now().UTC()
-		sourceValue = strings.ToUpper(rel.Source)
-		targetValue = strings.ToUpper(rel.Target)
+		nowUTC              = time.Now().UTC()
+		matches             = map[string]string{}
+		ambiguousResolution = false // if multiple nodes matched source/target
 	)
 
 	if err := batch.Nodes().Filter(query.Or(
-		query.Equals(query.NodeProperty(rel.SourceProperty), sourceValue), // todo: only one of source/target may require resolution
-		query.Equals(query.NodeProperty(rel.TargetProperty), targetValue),
+		query.Equals(query.NodeProperty(rel.SourceProperty), strings.ToUpper(rel.Source)),
+		query.Equals(query.NodeProperty(rel.TargetProperty), strings.ToUpper(rel.Target)),
 	)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-		// TODO: can we make safe assumption about ordering of start, end pair in this channel?
+
 		for node := range cursor.Chan() {
-			if objectid, err := node.Properties.Get(string(common.ObjectID)).String(); err != nil {
-				return err
-			} else {
-				objectIDs = append(objectIDs, objectid)
+			props := node.Properties
+
+			if val, _ := props.Get(rel.SourceProperty).String(); strings.EqualFold(val, rel.Source) {
+				if oid, err := props.Get(string(common.ObjectID)).String(); err != nil {
+					slog.Warn(fmt.Sprintf("matched source node missing objectid for %s", rel.Source))
+				} else {
+					if _, hasExisting := matches["source"]; hasExisting {
+						slog.Warn("ambiguous property match on source node. multiple results match.",
+							slog.String("matched property", rel.SourceProperty),
+							slog.String("value", rel.Source))
+						ambiguousResolution = true
+						return nil
+					} else {
+						matches["source"] = oid
+					}
+				}
 			}
 
+			if val, _ := props.Get(rel.TargetProperty).String(); strings.EqualFold(val, rel.Target) {
+				if oid, err := props.Get(string(common.ObjectID)).String(); err != nil {
+					slog.Warn(fmt.Sprintf("matched target node missing objectid for %s", rel.Target))
+				} else {
+					if _, hasExisting := matches["target"]; hasExisting {
+						slog.Warn("ambiguous property match on target node. multiple results match.",
+							slog.String("matched property", rel.TargetProperty),
+							slog.String("value", rel.Target))
+						ambiguousResolution = true
+						return nil
+					} else {
+						matches["target"] = oid
+					}
+				}
+			}
 		}
 		return nil
 	}); err != nil {
 		return err
 	}
 
-	// var startNode, endNode *graph.Node // if both are found, create a rel update
-	if len(objectIDs) == 2 {
-		start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: objectIDs[0],
-			common.LastSeen: nowUTC,
-		}), rel.SourceType)
-
-		end := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: objectIDs[1],
-			common.LastSeen: nowUTC,
-		}), rel.TargetType)
-
-		update := graph.RelationshipUpdate{
-			Start: start,
-			// (wrong) theory: maybe i don't need to provide identity properties at all since i already have the node...
-			StartIdentityProperties: []string{
-				common.ObjectID.String(),
-			},
-			End: end,
-			EndIdentityProperties: []string{
-				common.ObjectID.String(),
-			},
-			Relationship: graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-			// note: no need to set start/end identitykind because this code path is generic-ingest only which has no base kind.
-		}
-
-		return batch.UpdateRelationshipBy(update)
-	} else {
-		slog.Warn(fmt.Sprintf("unable to find an exact name match for %s, %s", rel.Source, rel.Target))
+	if ambiguousResolution {
+		return nil
 	}
 
-	return nil
+	srcID, srcOk := matches["source"]
+	targetID, targetOk := matches["target"]
+
+	if !srcOk || !targetOk {
+		slog.Warn("failed to resolve both nodes by name",
+			slog.String("source", rel.Source),
+			slog.String("target", rel.Target),
+			slog.Bool("resolved_source", srcOk),
+			slog.Bool("resolved_target", targetOk))
+		return nil
+	}
+
+	start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: srcID,
+		common.LastSeen: nowUTC,
+	}), rel.SourceType)
+
+	end := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: targetID,
+		common.LastSeen: nowUTC,
+	}), rel.TargetType)
+
+	update := graph.RelationshipUpdate{
+		Start: start,
+		StartIdentityProperties: []string{
+			common.ObjectID.String(),
+		},
+		End: end,
+		EndIdentityProperties: []string{
+			common.ObjectID.String(),
+		},
+		Relationship: graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+		// note: no need to set start/end identitykind because this code path is generic-ingest only which has no base kind.
+	}
+
+	return batch.UpdateRelationshipBy(update)
+
 }
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {
