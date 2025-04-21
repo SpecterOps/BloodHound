@@ -14,14 +14,36 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
+ALTER TABLE asset_group_history
+	ADD COLUMN IF NOT EXISTS email VARCHAR(330) DEFAULT NULL;
+
+-- Populate email for existing records by looking up the email address from the users table
+UPDATE asset_group_history
+	SET email = (SELECT email_address FROM users WHERE asset_group_history.actor = users.id)
+	WHERE email IS NULL AND actor != 'SYSTEM';
+
+-- Add asset_group_tag_selector_nodes table
+CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
+(
+	selector_id int NOT NULL,
+	node_id bigint NOT NULL,
+	certified int NOT NULL DEFAULT 0,
+	certified_by text,
+	source int,
+	created_at timestamp with time zone,
+	updated_at timestamp with time zone,
+	CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_nodes FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE,
+	PRIMARY KEY (selector_id, node_id)
+	);
+
 -- Add custom_node_kinds table
 CREATE TABLE IF NOT EXISTS custom_node_kinds (
-    id            SERIAL        PRIMARY KEY,
-    kind_name     VARCHAR(256)  NOT NULL,
-    config        JSONB         NOT NULL,
+  id            SERIAL        PRIMARY KEY,
+  kind_name     VARCHAR(256)  NOT NULL,
+  config        JSONB         NOT NULL,
 
-    created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
-    unique(kind_name)
+  unique(kind_name)
 );

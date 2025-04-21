@@ -165,9 +165,6 @@ type Database interface {
 	AssetGroupHistoryData
 	AssetGroupTagData
 	AssetGroupTagSelectorData
-
-	// CustomNodeKinds
-	CustomNodeKindData
 }
 
 type BloodhoundDB struct {
