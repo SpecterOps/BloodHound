@@ -31,7 +31,7 @@ export interface LoginRequest {
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
-export type CreateSelectorRequest = Omit<AssetGroupTagSelector, 'seeds'> & SelectorSeedRequest;
+export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
 
 export type UpdateSelectorRequest = Partial<Omit<CreateSelectorRequest, 'id'>>;
 

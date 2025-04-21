@@ -82,8 +82,6 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
     if (tagQuery.isLoading || selectorQuery.isLoading) return <Skeleton />;
     if (tagQuery.isError || selectorQuery.isError) throw new Error();
 
-    if (!tagQuery.data) throw new Error('Sorry! We could not find the tag ID specified in the URL.');
-
     return (
         <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-[32rem] p-3 max-h-[36rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
@@ -111,7 +109,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                     </div>
                 </div>
                 <p className='font-bold'>
-                    Tag: <span className='font-normal'>{tagQuery.data.name}</span>
+                    Tag: <span className='font-normal'>{tagQuery.data?.name}</span>
                 </p>
                 <div className='flex flex-col gap-6 mt-6'>
                     <div className='flex flex-col gap-6'>

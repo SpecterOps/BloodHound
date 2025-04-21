@@ -147,7 +147,7 @@ describe('Details', async () => {
     it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
         const history = createMemoryHistory({ initialEntries: ['/tier-management/details/tag/1/selector/7/member/7'] });
 
-        render(<Details />, undefined, { history });
+        render(<Details />, { history });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         let selectorsListItems = await within(selectors).findAllByRole('listitem');
