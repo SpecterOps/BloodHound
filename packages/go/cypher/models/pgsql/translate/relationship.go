@@ -51,16 +51,16 @@ func (s *Translator) translateRelationshipPattern(relationshipPattern *cypher.Re
 				}
 			}
 
-			if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
+			if err := s.treeTranslator.AddTranslationConstraint(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), propertyConstraints); err != nil {
 				return err
 			}
 		}
 
 		// Capture the kind matchers for this relationship pattern
 		if len(relationshipPattern.Kinds) > 0 {
-			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, relationshipPattern.Kinds); err != nil {
+			if kindIDs, err := s.kindMapper.MapKinds(relationshipPattern.Kinds); err != nil {
 				return fmt.Errorf("failed to translate kinds: %w", err)
-			} else if err := s.treeTranslator.ConstrainSet(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
+			} else if err := s.treeTranslator.AddTranslationConstraint(pgsql.NewIdentifierSet().Add(bindingResult.Binding.Identifier), pgsql.NewBinaryExpression(
 				pgsql.CompoundIdentifier{bindingResult.Binding.Identifier, pgsql.ColumnKindID},
 				pgsql.OperatorEquals,
 				pgsql.NewAnyExpressionHinted(pgsql.NewLiteral(kindIDs, pgsql.Int2Array)),
@@ -119,10 +119,7 @@ func (s *Translator) translateRelationshipPatternToStep(bindingResult BindingRes
 			return err
 		} else {
 			// Set up the new expansion model here
-			newExpansion := NewExpansionModel()
-
-			newExpansion.MinDepth = models.PointerOptional(relationshipPattern.Range.StartIndex)
-			newExpansion.MaxDepth = models.PointerOptional(relationshipPattern.Range.EndIndex)
+			newExpansion := NewExpansionModel(part, relationshipPattern)
 
 			// Set the path binding in the expansion struct for easier referencing upstream
 			newExpansion.PathBinding = expansionPathBinding

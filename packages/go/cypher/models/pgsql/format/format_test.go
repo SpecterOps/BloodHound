@@ -35,9 +35,7 @@ func mustAsLiteral(value any) pgsql.Literal {
 }
 
 func TestFormat_TypeCastedParenthetical(t *testing.T) {
-	typeCastedParenthetical := pgsql.NewTypeCast(pgsql.Parenthetical{
-		Expression: pgsql.NewLiteral("str", pgsql.Text),
-	}, pgsql.Text)
+	typeCastedParenthetical := pgsql.NewTypeCast(pgsql.NewParenthetical(pgsql.NewLiteral("str", pgsql.Text)), pgsql.Text)
 
 	formattedQuery, err := format.Expression(typeCastedParenthetical, format.NewOutputBuilder())
 

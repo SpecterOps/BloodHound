@@ -15,7 +15,7 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- This table is normally created by dawgs, as defined in schema_up.sql
--- We add it here to maintain a new FK to asset_group_tags below regardless 
+-- We add it here to maintain a new FK to asset_group_tags below regardless
 -- of graph driver selected. Any future changes to the schema should be reflected
 -- in `schema_up.sql` as well
 CREATE TABLE IF NOT EXISTS kind
@@ -106,3 +106,4 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
 -- generic ingest
 ALTER TABLE IF EXISTS file_upload_jobs RENAME TO ingest_jobs;
 ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS is_generic BOOLEAN NOT NULL DEFAULT FALSE;
+

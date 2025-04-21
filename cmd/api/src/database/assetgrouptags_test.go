@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -33,7 +34,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
-		testActor       = "test_actor"
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 		testName        = "test selector name"
 		testDescription = "test description"
 		isDefault       = false
@@ -49,9 +50,9 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, selector.AssetGroupTagId)
 	require.False(t, selector.CreatedAt.IsZero())
-	require.Equal(t, testActor, selector.CreatedBy)
+	require.Equal(t, testActor.ID.String(), selector.CreatedBy)
 	require.False(t, selector.UpdatedAt.IsZero())
-	require.Equal(t, testActor, selector.UpdatedBy)
+	require.Equal(t, testActor.ID.String(), selector.UpdatedBy)
 	require.Empty(t, selector.DisabledAt)
 	require.Empty(t, selector.DisabledBy)
 	require.Equal(t, testName, selector.Name)
@@ -74,7 +75,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
-		testActor       = "test_actor"
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 		testName        = "test selector name"
 		testDescription = "test description"
 		isDefault       = false
@@ -94,9 +95,9 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, readBackSelector.AssetGroupTagId)
 	require.False(t, readBackSelector.CreatedAt.IsZero())
-	require.Equal(t, testActor, readBackSelector.CreatedBy)
+	require.Equal(t, testActor.ID.String(), readBackSelector.CreatedBy)
 	require.False(t, readBackSelector.UpdatedAt.IsZero())
-	require.Equal(t, testActor, readBackSelector.UpdatedBy)
+	require.Equal(t, testActor.ID.String(), readBackSelector.UpdatedBy)
 	require.Empty(t, readBackSelector.DisabledAt)
 	require.Empty(t, readBackSelector.DisabledBy)
 	require.Equal(t, testName, readBackSelector.Name)
@@ -113,8 +114,8 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	var (
 		dbInst            = integration.SetupDB(t)
 		testCtx           = context.Background()
-		testActor         = "test_actor"
-		updateActor       = "updated actor"
+		testActor         = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("11111111-9012-4567-9012-456789012345")}}
+		updateActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("22222222-9012-4567-9012-456789012345")}}
 		testName          = "test selector name"
 		updateName        = "updated name"
 		testDescription   = "test description"
@@ -140,7 +141,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.Name = updateName
 	selector.Description = updateDescription
 	selector.DisabledAt = disabledTime
-	selector.DisabledBy = null.StringFrom(updateActor)
+	selector.DisabledBy = null.StringFrom(updateActor.ID.String())
 	selector.AutoCertify = updateAutoCert
 	selector.Seeds = updateSeeds
 
@@ -150,13 +151,13 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 
 	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
 	require.NoError(t, err)
-	require.Equal(t, selector.AssetGroupTagId, readBackSelector.AssetGroupTagId)      // should be unchanged
-	require.False(t, readBackSelector.CreatedAt.IsZero())                             // should be unchanged
-	require.Equal(t, testActor, readBackSelector.CreatedBy)                           // should be unchanged
-	require.False(t, readBackSelector.UpdatedAt.IsZero())                             // should be updated
-	require.Equal(t, updateActor, readBackSelector.UpdatedBy)                         // should be updated
-	require.Equal(t, disabledTime.Time.UTC(), readBackSelector.DisabledAt.Time.UTC()) // should be updated
-	require.Equal(t, null.StringFrom(updateActor), readBackSelector.DisabledBy)       // should be updated
+	require.Equal(t, selector.AssetGroupTagId, readBackSelector.AssetGroupTagId)            // should be unchanged
+	require.False(t, readBackSelector.CreatedAt.IsZero())                                   // should be unchanged
+	require.Equal(t, testActor.ID.String(), readBackSelector.CreatedBy)                     // should be unchanged
+	require.False(t, readBackSelector.UpdatedAt.IsZero())                                   // should be updated
+	require.Equal(t, updateActor.ID.String(), readBackSelector.UpdatedBy)                   // should be updated
+	require.Equal(t, disabledTime.Time.UTC(), readBackSelector.DisabledAt.Time.UTC())       // should be updated
+	require.Equal(t, null.StringFrom(updateActor.ID.String()), readBackSelector.DisabledBy) // should be updated
 	require.Equal(t, updateName, readBackSelector.Name)
 	require.Equal(t, updateDescription, readBackSelector.Description)
 	require.Equal(t, updateAutoCert, readBackSelector.AutoCertify)
@@ -172,7 +173,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
 		tagType         = model.AssetGroupTagTypeTier
-		testActor       = "test_actor"
+		testActor       = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 		testName        = "test tag name"
 		testDescription = "test tag description"
 		position        = null.Int32{}
@@ -184,9 +185,9 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
-		require.Equal(t, testActor, tag.CreatedBy)
+		require.Equal(t, testActor.ID.String(), tag.CreatedBy)
 		require.False(t, tag.UpdatedAt.IsZero())
-		require.Equal(t, testActor, tag.UpdatedBy)
+		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
 		require.Equal(t, testName, tag.Name)
@@ -198,9 +199,9 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, tagType, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
-		require.Equal(t, testActor, tag.CreatedBy)
+		require.Equal(t, testActor.ID.String(), tag.CreatedBy)
 		require.False(t, tag.UpdatedAt.IsZero())
-		require.Equal(t, testActor, tag.UpdatedBy)
+		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
 		require.Equal(t, testName, tag.Name)
@@ -220,6 +221,149 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Error(t, err)
 	})
 
+}
+
+func TestDatabase_GetAssetGroupTags(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testDescription = "test tag description"
+	)
+
+	var (
+		err            error
+		label1, label2 model.AssetGroupTag
+		tier1, tier2   model.AssetGroupTag
+	)
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", testDescription, null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(1), null.BoolFrom(false))
+	require.NoError(t, err)
+	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 2", testDescription, null.Int32From(2), null.BoolFrom(false))
+	require.NoError(t, err)
+
+	t.Run("filtering for Label returns labels", func(t *testing.T) {
+		ids := []int{
+			label1.ID,
+			label2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeLabel}})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeLabel)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("filtering for Tier returns tiers", func(t *testing.T) {
+		ids := []int{
+			tier1.ID,
+			tier2.ID,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{SQLString: "type = ?", Params: []any{model.AssetGroupTagTypeTier}})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Equal(t, itm.Type, model.AssetGroupTagTypeTier)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+
+	t.Run("no filter returns everything", func(t *testing.T) {
+		ids := []int{
+			label1.ID,
+			label2.ID,
+			tier1.ID,
+			tier2.ID,
+		}
+		types := []model.AssetGroupTagType{
+			model.AssetGroupTagTypeLabel,
+			model.AssetGroupTagTypeTier,
+		}
+
+		items, err := dbInst.GetAssetGroupTags(testCtx, model.SQLFilter{})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 4)
+		for _, itm := range items {
+			if itm.CreatedBy == model.AssetGroupActorSystem {
+				continue
+			}
+			require.Contains(t, types, itm.Type)
+			require.Contains(t, ids, itm.ID)
+		}
+	})
+}
+
+func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
+	var (
+		dbInst  = integration.SetupDB(t)
+		testCtx = context.Background()
+	)
+
+	var (
+		err            error
+		label1, label2 model.AssetGroupTag
+	)
+
+	label1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 1", "", null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", "", null.Int32{}, null.Bool{})
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label1.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, label2.ID, model.User{}, "", "", false, true, null.BoolFrom(false), []model.SelectorSeed{})
+	require.NoError(t, err)
+
+	t.Run("single item count", func(t *testing.T) {
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+	})
+
+	t.Run("multi item count", func(t *testing.T) {
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, label2.ID})
+		require.NoError(t, err)
+		require.Equal(t, 2, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+		require.Equal(t, 2, counts[label2.ID])
+	})
+
+	t.Run("single value set for id with no results", func(t *testing.T) {
+		nonexistentId := 1234
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{nonexistentId})
+		require.NoError(t, err)
+		require.Equal(t, 1, len(counts))
+		require.Equal(t, 0, counts[nonexistentId])
+	})
+
+	t.Run("multi value set for id with no results", func(t *testing.T) {
+		nonexistentId := 1234
+		counts, err := dbInst.GetAssetGroupTagSelectorCounts(testCtx, []int{label1.ID, nonexistentId})
+		require.NoError(t, err)
+		require.Equal(t, 2, len(counts))
+		require.Equal(t, 3, counts[label1.ID])
+		require.Equal(t, 0, counts[nonexistentId])
+	})
 }
 
 func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
@@ -251,10 +395,10 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		}
 	)
 
-	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id", test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
 	created_at := time.Now()
-	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, "id2", test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
+	_, err = dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test2Selector.Name, test2Selector.Description, isDefault, allowDisable, autoCertify, test2Selector.Seeds)
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
@@ -307,4 +451,43 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 
 	})
 
+}
+
+func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testName        = "test selector name"
+		testDescription = "test description"
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = null.BoolFrom(false)
+		testSeeds       = []model.SelectorSeed{
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
+		}
+	)
+
+	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
+	require.NoError(t, err)
+
+	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	require.NoError(t, err)
+	require.Len(t, history, 1)
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
+
+	t.Run("successfully deletes tag", func(t *testing.T) {
+		err := dbInst.DeleteAssetGroupTagSelector(testCtx, model.User{}, selector)
+		require.NoError(t, err)
+
+		// verify selector is gone
+		_, err = dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
+		require.EqualError(t, err, "entity not found")
+
+		// verify a history record was created for the delete action
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.Len(t, history, 2)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)
+	})
 }

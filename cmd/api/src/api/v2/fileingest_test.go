@@ -525,7 +525,6 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 }
 
 func TestIsValidContentTypeForUpload(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
 		name   string
 		header http.Header
@@ -562,7 +561,6 @@ func TestIsValidContentTypeForUpload(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
 			got := v2.IsValidContentTypeForUpload(testCase.header)
 			require.Equal(t, testCase.want, got)
 		})
