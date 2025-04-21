@@ -312,10 +312,10 @@ func (mr *MockDatabaseMockRecorder) CreateCompositionInfo(ctx, nodes, edges any)
 }
 
 // CreateCustomNodeKinds mocks base method.
-func (m *MockDatabase) CreateCustomNodeKinds(ctx context.Context, customNodeKind []model.CustomNodeKind) ([]model.CustomNodeKind, error) {
+func (m *MockDatabase) CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCustomNodeKinds", ctx, customNodeKind)
-	ret0, _ := ret[0].([]model.CustomNodeKind)
+	ret0, _ := ret[0].(model.CustomNodeKinds)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
