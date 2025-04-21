@@ -9747,6 +9747,16 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
+type GenericIngest struct {
+	Node1 *graph.Node
+}
+
+func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryComputer("NAME A", domainsid)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -9855,4 +9865,5 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
+	GenericIngest                                   GenericIngest
 }

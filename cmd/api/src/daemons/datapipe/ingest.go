@@ -322,7 +322,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 				errs.Add(err)
 			}
 		} else {
-			if err := resolveRelationshipBeforeSubmit(batch, next); err != nil {
+			if err := resolveRelationshipByNameMatch(batch, next); err != nil {
 				errs.Add(err)
 			}
 		}
@@ -332,21 +332,40 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 }
 
 // this func attempts to resolve objectids for a rel's source and target nodes.
-// name -> objectid -> submit to batch processor for standard processing flow
+// name (and optional kind filter) --> objectid --> submit to batch processor for standard processing flow
 // TODO: how does this function cleanup if the feature is limited to just name matching, and not any arbitrary property?
 // todo: what if only one of source/target requires resolution
 // todo: change rel -> rels and refactor this to do resolution for many rels in one dawg query
-func resolveRelationshipBeforeSubmit(batch graph.Batch, rel ein.IngestibleRelationship) error {
+func resolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelationship) error {
 	var (
 		nowUTC              = time.Now().UTC()
 		matches             = map[string]string{}
 		ambiguousResolution = false // if multiple nodes matched source/target
+		filter              = func() graph.Criteria {
+			var sourceCriteria, targetCriteria []graph.Criteria
+
+			// always append name filter
+			sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(rel.SourceProperty), strings.ToUpper(rel.Source)))
+			targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(rel.TargetProperty), strings.ToUpper(rel.Target)))
+
+			// optionally append kind filter
+			if rel.SourceKind != nil {
+				sourceCriteria = append(sourceCriteria, query.Kind(query.Node(), rel.SourceKind))
+			}
+
+			if rel.TargetKind != nil {
+				targetCriteria = append(targetCriteria, query.Kind(query.Node(), rel.TargetKind))
+			}
+
+			// form the full filter
+			return query.Or(
+				query.And(sourceCriteria...),
+				query.And(targetCriteria...),
+			)
+		}
 	)
 
-	if err := batch.Nodes().Filter(query.Or(
-		query.Equals(query.NodeProperty(rel.SourceProperty), strings.ToUpper(rel.Source)),
-		query.Equals(query.NodeProperty(rel.TargetProperty), strings.ToUpper(rel.Target)),
-	)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+	if err := batch.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 
 		for node := range cursor.Chan() {
 			props := node.Properties
