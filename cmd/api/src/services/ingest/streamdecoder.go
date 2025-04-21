@@ -31,52 +31,137 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-type tagEvent struct {
-	Name  string
-	Depth int // (1 for top-level keys)
+// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
+// If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
+func ValidateMetaTag(reader io.Reader, schema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
+	decoder := json.NewDecoder(reader)
+	scanner := newTagScanner(decoder)
+
+	meta, err := scanAndDetectMetaOrGraph(scanner, schema)
+	if err != nil {
+		return ingest.Metadata{}, err
+	}
+
+	if readToEnd {
+		if _, err := io.Copy(io.Discard, reader); err != nil {
+			return ingest.Metadata{}, err
+		}
+	}
+
+	return meta, nil
 }
 
-type TagScanner struct {
+// ValidateGraph validates a generic ingest graph payload from a JSON stream.
+// The input is expected to be a JSON object containing one or both of the keys
+// "nodes" and "edges", each mapping to an array of graph elements.
+// Each element is validated against the corresponding JSON Schema provided in the
+// IngestSchema struct. In addition to schema validation, this function enforces
+// constraints not expressible in JSON Schema, such as nested objects and type homogeneity in
+// array-valued properties.
+//
+// If critical errors (e.g., malformed JSON, missing brackets) or a sufficient number
+// of validation errors are encountered, a ValidationReport is returned as an error.
+// If no errors are found, the function returns nil.
+func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
+	v := &validator{
+		decoder:    decoder,
+		nodeSchema: schema.NodeSchema,
+		edgeSchema: schema.EdgeSchema,
+		maxErrors:  15,
+	}
+
+	if err := expectOpeningCurlyBracket(decoder, "graph"); err != nil {
+		v.reportCritical(0, err.Error())
+		return v.report()
+	}
+
+	for decoder.More() {
+		if token, err := decoder.Token(); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return fmt.Errorf("error reading token: %w", err)
+		} else {
+			key, ok := token.(string)
+			if !ok {
+				continue // ignore non-string keys
+			}
+
+			switch key {
+			case "nodes":
+				v.nodesFound = true
+				v.validateArray("nodes", v.nodeSchema)
+				if len(v.criticalErrors) > 0 {
+					return v.report()
+				}
+			case "edges":
+				v.edgesFound = true
+				v.validateArray("edges", v.edgeSchema)
+				if len(v.criticalErrors) > 0 {
+					return v.report()
+				}
+			}
+
+			if len(v.validationErrors) >= v.maxErrors {
+				break
+			}
+		}
+	}
+
+	if err := expectClosingCurlyBracket(decoder, "graph"); err != nil {
+		v.reportCritical(0, err.Error())
+		return v.report()
+	}
+
+	if !v.nodesFound && !v.edgesFound {
+		v.reportCritical(0, "graph tag is empty. at least one of nodes: [] or edges: [] is required")
+	}
+
+	return v.report()
+}
+
+type tagScanner struct {
 	decoder *json.Decoder
 	depth   int
 }
 
-func NewTagScanner(decoder *json.Decoder) *TagScanner {
-	return &TagScanner{
+func newTagScanner(decoder *json.Decoder) *tagScanner {
+	return &tagScanner{
 		decoder: decoder,
 		depth:   0,
 	}
 }
 
-func (s *TagScanner) Next() (tagEvent, error) {
+// nextTopLevelTag only emits string keys at depth 1
+func (s *tagScanner) nextTopLevelTag() (string, error) {
 	for {
 		if tok, err := s.decoder.Token(); err != nil {
-			return tagEvent{}, err
+			return "", err
 		} else {
 			switch t := tok.(type) {
 			case json.Delim:
-				if t == '{' || t == '[' {
+				if t == ingest.DelimOpenBracket || t == ingest.DelimOpenSquareBracket {
 					s.depth++
 				} else { // ']','}'
 					s.depth--
 				}
 			case string:
 				if s.depth == 1 {
-					return tagEvent{Name: t, Depth: 1}, nil
+					return t, nil
 				}
 			}
 		}
 	}
 }
 
-// Token reads the next JSON token and updates depth internally.
-func (s *TagScanner) Token() (json.Token, error) {
+// nextToken reads the next JSON nextToken and updates depth internally.
+func (s *tagScanner) nextToken() (json.Token, error) {
 	tok, err := s.decoder.Token()
 	if err != nil {
 		return nil, err
 	}
 	if d, ok := tok.(json.Delim); ok {
-		if d == '{' || d == '[' {
+		if d == ingest.DelimOpenBracket || d == ingest.DelimOpenSquareBracket {
 			s.depth++
 		} else {
 			s.depth--
@@ -97,7 +182,7 @@ func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
 	return m, nil
 }
 
-func scanAndDetectMetaOrGraph(scanner *TagScanner, schema IngestSchema) (ingest.Metadata, error) {
+func scanAndDetectMetaOrGraph(scanner *tagScanner, schema IngestSchema) (ingest.Metadata, error) {
 	var (
 		dataFound bool
 		metaFound bool
@@ -105,10 +190,10 @@ func scanAndDetectMetaOrGraph(scanner *TagScanner, schema IngestSchema) (ingest.
 	)
 
 	for {
-		if tag, err := scanner.Next(); err != nil {
+		if tag, err := scanner.nextTopLevelTag(); err != nil {
 			return handleScannerError(err, dataFound, metaFound)
 		} else {
-			switch tag.Name {
+			switch tag {
 			case "meta":
 				if m, err := decodeMetaTag(scanner.decoder); err != nil {
 					return m, err
@@ -118,16 +203,21 @@ func scanAndDetectMetaOrGraph(scanner *TagScanner, schema IngestSchema) (ingest.
 				}
 			case "data":
 				// Validate that the data key is followed by an opening '[' array delimiter
-				if tok, err := scanner.Token(); err != nil {
+				if tok, err := scanner.nextToken(); err != nil {
 					return ingest.Metadata{}, ErrInvalidJSON
-				} else if delim, ok := tok.(json.Delim); !ok || delim != '[' {
+				} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
+					slog.Warn("expected '[' after data key", slog.Any("got", tok))
 					return ingest.Metadata{}, ingest.ErrDataTagNotFound
 				}
 				dataFound = true
 			case "graph":
+				// enforce mutual exclusivity
+				if dataFound || metaFound {
+					return ingest.Metadata{}, ingest.ErrMixedIngestFormat
+				}
 				// generic ingest path
 				meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-				if err := ValidateGenericIngest(scanner.decoder, schema); err != nil {
+				if err := ValidateGraph(scanner.decoder, schema); err != nil {
 					if report, ok := err.(ValidationReport); ok {
 						slog.With("validation", report).Warn("generic ingest failed")
 					}
@@ -155,26 +245,6 @@ func handleScannerError(err error, dataFound, metaFound bool) (ingest.Metadata, 
 		}
 	}
 	return m, ErrInvalidJSON
-}
-
-// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
-// If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, schema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
-	decoder := json.NewDecoder(reader)
-	scanner := NewTagScanner(decoder)
-
-	meta, err := scanAndDetectMetaOrGraph(scanner, schema)
-	if err != nil {
-		return ingest.Metadata{}, err
-	}
-
-	if readToEnd {
-		if _, err := io.Copy(io.Discard, reader); err != nil {
-			return ingest.Metadata{}, err
-		}
-	}
-
-	return meta, nil
 }
 
 type validationError struct {
@@ -256,54 +326,6 @@ func formatAggregateErrors(errs []validationError) string {
 	return sb.String()
 }
 
-func expectOpeningSquareBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
-		return fmt.Errorf("error decoding %s array: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '[' {
-		return fmt.Errorf("error opening %s array: expected '[', got %v", name, tok)
-	}
-	return nil
-}
-
-func expectClosingSquareBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
-		return fmt.Errorf("error decoding %s array: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != ']' {
-		return fmt.Errorf("error closing %s array: expected ']', got %v", name, tok)
-	}
-	return nil
-}
-
-func expectOpeningCurlyBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
-		return fmt.Errorf("error decoding %s object: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '{' {
-		return fmt.Errorf("error opening %s object: expected '{', got %v", name, tok)
-	}
-	return nil
-}
-
-func expectClosingCurlyBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
-		return fmt.Errorf("error decoding %s object: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '}' {
-		return fmt.Errorf("error closing %s object: expected '}', got %v", name, tok)
-	}
-	return nil
-}
-
 func isHomogeneousArray(arr []any) bool {
 	if len(arr) == 0 {
 		return true
@@ -316,153 +338,6 @@ func isHomogeneousArray(arr []any) bool {
 		}
 	}
 	return true
-}
-
-/*
-payload will be : { nodes: [], edges: [] }
-*/
-func ValidateGenericIngest(decoder *json.Decoder, schema IngestSchema) error {
-	var (
-		nodesFound, edgesFound = false, false
-		maxErrors              = 15
-
-		criticalErrors   []validationError
-		validationErrors []validationError
-
-		reportCritical = func(index int, msg string) {
-			criticalErrors = append(criticalErrors, validationError{Index: index, Message: msg})
-		}
-		reportValidation = func(index int, msg string) {
-			validationErrors = append(validationErrors, validationError{Index: index, Message: msg})
-		}
-		hasErrors = func() bool {
-			return len(validationErrors) > 0 || len(criticalErrors) > 0
-		}
-	)
-
-	// Validate an array of items (either nodes or edges)
-	validateArray := func(arrayName string, schema *jsonschema.Schema) {
-
-		// eat [
-		if err := expectOpeningSquareBracket(decoder, arrayName); err != nil {
-			reportCritical(0, err.Error())
-			return
-		}
-
-		index := 0
-		for decoder.More() {
-			var item map[string]any
-			if err := decoder.Decode(&item); err != nil {
-				switch err.(type) {
-				case *json.UnmarshalTypeError:
-					reportValidation(index, fmt.Sprintf("%s[%d] type mismatch: %s", arrayName, index, err))
-				default:
-					reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
-				}
-			} else if err := schema.Validate(item); err != nil {
-				reportValidation(index, formatSchemaValidationError(arrayName, index, err))
-			}
-
-			// ensure array homogeneity in "properties". unable to enforce w/ JSON Schema
-			if props, ok := item["properties"].(map[string]any); ok {
-				for key, val := range props {
-					arr, ok := val.([]any)
-					if !ok {
-						continue // skip non-arrays
-					}
-
-					if !isHomogeneousArray(arr) {
-						reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
-					}
-				}
-			}
-
-			if len(validationErrors) >= maxErrors || len(criticalErrors) > 0 {
-				return
-			}
-
-			index++
-		}
-
-		// eat ]
-		if err := expectClosingSquareBracket(decoder, arrayName); err != nil {
-			reportCritical(0, err.Error())
-			return
-		}
-	}
-
-	// eat {
-	if err := expectOpeningCurlyBracket(decoder, "graph"); err != nil {
-		reportCritical(0, err.Error())
-		return ValidationReport{
-			CriticalErrors:   criticalErrors,
-			ValidationErrors: validationErrors,
-		}
-	}
-
-	// Loop to read the JSON stream and identify graph elements
-	for decoder.More() {
-		token, err := decoder.Token()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return fmt.Errorf("error reading token: %w", err)
-		}
-
-		switch key := token.(type) {
-		case string:
-			switch key {
-			case "nodes":
-				nodesFound = true
-				validateArray("nodes", schema.NodeSchema)
-				if len(criticalErrors) > 0 {
-					return ValidationReport{
-						CriticalErrors:   criticalErrors,
-						ValidationErrors: validationErrors,
-					}
-				}
-			case "edges":
-				edgesFound = true
-				validateArray("edges", schema.EdgeSchema)
-				if len(criticalErrors) > 0 {
-					return ValidationReport{
-						CriticalErrors:   criticalErrors,
-						ValidationErrors: validationErrors,
-					}
-				}
-			}
-		}
-
-		if len(validationErrors) >= maxErrors {
-			break
-		}
-	}
-
-	if err := expectClosingCurlyBracket(decoder, "graph"); err != nil {
-		reportCritical(0, err.Error())
-		return ValidationReport{
-			CriticalErrors:   criticalErrors,
-			ValidationErrors: validationErrors,
-		}
-	}
-
-	if !nodesFound && !edgesFound {
-		return ValidationReport{
-			CriticalErrors: []validationError{
-				{Message: "graph tag is empty. atleast one of nodes: [] or edges: [] is required"},
-			},
-		}
-	}
-
-	if hasErrors() {
-		return ValidationReport{
-			CriticalErrors:   criticalErrors,
-			ValidationErrors: validationErrors,
-		}
-	}
-
-	return nil
 }
 
 func ValidateZipFile(reader io.Reader) error {
@@ -482,4 +357,76 @@ func ValidateZipFile(reader io.Reader) error {
 
 		return err
 	}
+}
+
+type validator struct {
+	decoder          *json.Decoder
+	nodeSchema       *jsonschema.Schema
+	edgeSchema       *jsonschema.Schema
+	maxErrors        int
+	nodesFound       bool
+	edgesFound       bool
+	criticalErrors   []validationError
+	validationErrors []validationError
+}
+
+func (v *validator) reportCritical(index int, msg string) {
+	v.criticalErrors = append(v.criticalErrors, validationError{Index: index, Message: msg})
+}
+
+func (v *validator) reportValidation(index int, msg string) {
+	v.validationErrors = append(v.validationErrors, validationError{Index: index, Message: msg})
+}
+
+func (v *validator) hasErrors() bool {
+	return len(v.criticalErrors) > 0 || len(v.validationErrors) > 0
+}
+
+func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
+	if err := expectOpeningSquareBracket(v.decoder, arrayName); err != nil {
+		v.reportCritical(0, err.Error())
+		return
+	}
+
+	index := 0
+	for v.decoder.More() {
+		var item map[string]any
+		if err := v.decoder.Decode(&item); err != nil {
+			switch err.(type) {
+			case *json.UnmarshalTypeError:
+				v.reportValidation(index, fmt.Sprintf("%s[%d] type mismatch: %s", arrayName, index, err))
+			default:
+				v.reportCritical(index, fmt.Sprintf("%s[%d] syntax error: %s", arrayName, index, err))
+			}
+		} else if err := schema.Validate(item); err != nil {
+			v.reportValidation(index, formatSchemaValidationError(arrayName, index, err))
+		}
+
+		if props, ok := item["properties"].(map[string]any); ok {
+			for key, val := range props {
+				if arr, ok := val.([]any); ok && !isHomogeneousArray(arr) {
+					v.reportValidation(index, fmt.Sprintf("%s[%d] schema validation error. properties[\"%s\"] contains a mixed-type array", arrayName, index, key))
+				}
+			}
+		}
+
+		if len(v.validationErrors) >= v.maxErrors || len(v.criticalErrors) > 0 {
+			return
+		}
+		index++
+	}
+
+	if err := expectClosingSquareBracket(v.decoder, arrayName); err != nil {
+		v.reportCritical(0, err.Error())
+	}
+}
+
+func (v *validator) report() error {
+	if v.hasErrors() {
+		return ValidationReport{
+			CriticalErrors:   v.criticalErrors,
+			ValidationErrors: v.validationErrors,
+		}
+	}
+	return nil
 }

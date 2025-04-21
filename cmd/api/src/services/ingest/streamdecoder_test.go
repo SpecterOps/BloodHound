@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package ingest_test
+package ingest
 
 import (
 	"bytes"
@@ -27,7 +27,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +44,12 @@ func Test_ValidateMetaTag(t *testing.T) {
 			name:         "succesful generic payload",
 			rawString:    `{"graph": {"nodes":[]}}`,
 			err:          nil,
+			expectedType: ingest.DataTypeGeneric,
+		},
+		{
+			name:         "enforce mutual exclusivity",
+			rawString:    `{"data": [], "graph": {}}`,
+			err:          ingest.ErrMixedIngestFormat,
 			expectedType: ingest.DataTypeGeneric,
 		},
 		{
@@ -87,12 +92,12 @@ func Test_ValidateMetaTag(t *testing.T) {
 		},
 	}
 
-	schema, err := ingest_service.LoadIngestSchema()
+	schema, err := LoadIngestSchema()
 	require.Nil(t, err)
 
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
-			meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
+			meta, err := ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
 			assert.ErrorIs(t, err, assertion.err)
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)
@@ -101,7 +106,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 	}
 }
 
-func TestTagScanner_Next(t *testing.T) {
+func TestTagScanner_NextTopLevelTag(t *testing.T) {
 	cases := []struct {
 		name     string
 		input    string
@@ -117,17 +122,17 @@ func TestTagScanner_Next(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			scanner := ingest_service.NewTagScanner(json.NewDecoder(strings.NewReader(tc.input)))
+			scanner := newTagScanner(json.NewDecoder(strings.NewReader(tc.input)))
 			var got []string
 			for {
-				tag, err := scanner.Next()
+				tag, err := scanner.nextTopLevelTag()
 				if err != nil {
 					if !errors.Is(err, tc.wantErr) {
 						t.Fatalf("Next() error = %v, want %v", err, tc.wantErr)
 					}
 					break
 				}
-				got = append(got, tag.Name)
+				got = append(got, tag)
 			}
 			if diff := cmp.Diff(tc.wantKeys, got); diff != "" {
 				t.Errorf("Next() keys mismatch (-want +got): %s", diff)
@@ -186,7 +191,7 @@ func prepareReader(assertion genericIngestAssertion) (io.Reader, error) {
 	return nil, errors.New("no payload defined in test case")
 }
 
-func Test_ValidateGenericIngest(t *testing.T) {
+func Test_ValidateGraph(t *testing.T) {
 	var (
 		positiveCases = []genericIngestAssertion{}
 		negativeCases = []genericIngestAssertion{}
@@ -201,7 +206,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 	negativeCases = append(negativeCases, edgeSchemaFailureCases()...)
 	negativeCases = append(negativeCases, itemsWithMultipleFailureCases()...)
 
-	ingestSchema, err := ingest_service.LoadIngestSchema()
+	ingestSchema, err := LoadIngestSchema()
 	require.Nil(t, err, fmt.Sprintf("failed to load ingest schema: %s", err))
 
 	for _, assertion := range negativeCases {
@@ -210,9 +215,9 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			require.Nil(t, err)
 
 			decoder := json.NewDecoder(reader)
-			err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
+			err = ValidateGraph(decoder, ingestSchema)
 
-			report, ok := err.(ingest_service.ValidationReport)
+			report, ok := err.(ValidationReport)
 			require.True(t, ok)
 
 			assert.Equal(t, len(assertion.criticalErrMsgs), len(report.CriticalErrors))
@@ -242,7 +247,7 @@ func Test_ValidateGenericIngest(t *testing.T) {
 			reader := bytes.NewReader(payload)
 			decoder := json.NewDecoder(reader)
 
-			err = ingest_service.ValidateGenericIngest(decoder, ingestSchema)
+			err = ValidateGraph(decoder, ingestSchema)
 			assert.Nil(t, err)
 		})
 	}
@@ -539,12 +544,13 @@ func criticalFailureCases() []genericIngestAssertion {
 	}
 }
 
+// these test cases represent all the ways a node can fail schema validation.
 func nodeSchemaFailureCases() []genericIngestAssertion {
 	return []genericIngestAssertion{
 		{
 			name:            "payload doesn't contain atleast one of nodes or edges",
 			payload:         &testPayload{},
-			criticalErrMsgs: []string{"graph tag is empty. atleast one of nodes: [] or edges: [] is required"},
+			criticalErrMsgs: []string{"graph tag is empty. at least one of nodes: [] or edges: [] is required"},
 		},
 		{
 			name: "node validation: ID is null",
