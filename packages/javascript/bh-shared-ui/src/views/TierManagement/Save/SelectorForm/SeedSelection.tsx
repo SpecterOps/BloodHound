@@ -17,7 +17,6 @@
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { isAxiosError } from 'axios';
 import { createBrowserHistory } from 'history';
 import { GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
@@ -25,17 +24,18 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AssetGroupSelectorObjectSelect } from '../../../../components';
+import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
+import { handleError } from './utils';
 
 const deleteSelector = async (ids: DeleteSelectorParams, options?: RequestOptions) =>
     await apiClient.deleteAssetGroupTagSelector(ids.tagId, ids.selectorId, options).then((res) => res.data.data);
 
-const useDeleteSelector = (tagId: string | number) => {
+const useDeleteSelector = (tagId: string | number | undefined) => {
     const queryClient = useQueryClient();
     return useMutation(deleteSelector, {
         onSettled: () => {
@@ -59,6 +59,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
 
     const [results, setResults] = useState<GraphNodes | null>(null);
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const { handleSubmit, register } = useFormContext<SelectorFormInputs>();
 
@@ -89,23 +90,25 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         enabled: selectorId !== '',
     });
 
-    const handleDeleteSelector = useCallback(async () => {
-        try {
-            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+    const handleDeleteSelector = useCallback(
+        async (response: boolean) => {
+            if (response === false) {
+                setDeleteDialogOpen(false);
+            } else {
+                try {
+                    if (!tagId || !selectorId)
+                        throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
 
-            navigate(`/tier-management/details/tags/${tagId}`);
-        } catch (error) {
-            console.error(error);
+                    await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-            if (isAxiosError(error)) {
-                addNotification(
-                    `An unexpected error occurred while deleting the selector. Message: ${error.response?.statusText}. Please try again.`,
-                    'tier-management_delete-selector',
-                    { anchorOrigin: { vertical: 'top', horizontal: 'right' } }
-                );
+                    navigate(`/tier-management/details/tags/${tagId}`);
+                } catch (error) {
+                    handleError(error, 'deleting', addNotification);
+                }
             }
-        }
-    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+        },
+        [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]
+    );
 
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) throw new Error();
@@ -132,7 +135,11 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
                             {selectorId !== '' && (
-                                <Button variant={'text'} onClick={handleDeleteSelector}>
+                                <Button
+                                    variant={'text'}
+                                    onClick={() => {
+                                        setDeleteDialogOpen(true);
+                                    }}>
                                     <span>
                                         <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
                                     </span>
@@ -162,6 +169,12 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                     />
                 </CardContent>
             </Card>
+            <DeleteConfirmationDialog
+                open={deleteDialogOpen}
+                itemName={selectorQuery.data?.name || 'Selector'}
+                itemType='selector'
+                onClose={handleDeleteSelector}
+            />
         </>
     );
 };

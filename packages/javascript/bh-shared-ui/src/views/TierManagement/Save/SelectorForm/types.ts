@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
 import { ISO_DATE_STRING } from '../../../../utils';
 
 export interface SelectorFormInputs {
@@ -25,6 +25,10 @@ export interface SelectorFormInputs {
     seeds: SelectorSeedRequest[];
 }
 
+export interface CreateSelectorParams {
+    tagId: string | number;
+    values: CreateSelectorRequest;
+}
 export interface DeleteSelectorParams {
     tagId: string | number;
     selectorId: string | number;

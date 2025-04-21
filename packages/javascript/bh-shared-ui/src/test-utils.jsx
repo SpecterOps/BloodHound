@@ -66,8 +66,12 @@ const createProviders = ({ queryClient, history, theme, children }) => {
 
 const customRender = (
     ui,
-    queryClient = createDefaultQueryClient(),
-    { theme = defaultTheme, history = createMemoryHistory(), ...renderOptions } = {}
+    {
+        theme = defaultTheme,
+        history = createMemoryHistory(),
+        queryClient = createDefaultQueryClient(),
+        ...renderOptions
+    } = {}
 ) => {
     const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });

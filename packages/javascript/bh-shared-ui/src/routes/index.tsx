@@ -14,10 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ErrorBoundary } from 'react-error-boundary';
-import { Route } from 'react-router-dom';
-import { GenericErrorBoundaryFallback } from '../components';
-
 export const ROUTE_TIER_MANAGEMENT_ROOT = '/tier-management/*';
 export const ROUTE_TIER_MANAGEMENT_DETAILS = '/details';
 export const ROUTE_TIER_MANAGEMENT_TAG_DETAILS = '/details/tag/:tagId';
@@ -35,35 +31,4 @@ export type Routable = {
     authenticationRequired: boolean;
     navigation: boolean;
     exact?: boolean;
-};
-
-export const mapRoutes = (routes: Routable[], AuthenticatedRoute?: React.FC<{ children: React.ReactElement }>) => {
-    return routes.map((route) => {
-        return route.authenticationRequired && AuthenticatedRoute ? (
-            <Route
-                path={route.path}
-                element={
-                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
-                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                        <AuthenticatedRoute>
-                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                <route.component />
-                            </div>
-                        </AuthenticatedRoute>
-                    </ErrorBoundary>
-                }
-                key={route.path}
-            />
-        ) : (
-            <Route
-                path={route.path}
-                element={
-                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                        <route.component />
-                    </ErrorBoundary>
-                }
-                key={route.path}
-            />
-        );
-    });
 };

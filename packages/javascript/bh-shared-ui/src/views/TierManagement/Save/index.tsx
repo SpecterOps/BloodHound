@@ -30,17 +30,56 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import SelectorForm from './SelectorForm';
 import { TagForm } from './TagForm';
 
 const SaveView: FC = () => {
     const location = useLocation();
+    const { tagId } = useParams();
+    const showSelectorForm = location.pathname.includes('selector');
+
     return (
         <div>
-            <p className='mb-2'>breadcrumbs...</p>
-            {location.pathname.includes('selector') ? <SelectorForm /> : <TagForm />}
+            <Breadcrumb className='mb-2'>
+                <BreadcrumbList>
+                    <BreadcrumbItem>
+                        <BreadcrumbLink>
+                            <Link to={`/tier-management/details`}>Tiers</Link>
+                        </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    {showSelectorForm ? (
+                        <>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link to={`/tier-management/edit/tag/${tagId}`}>Tier Details</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Selector</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </>
+                    ) : (
+                        <>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Tier Details</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </>
+                    )}
+                </BreadcrumbList>
+            </Breadcrumb>
+            {showSelectorForm ? <SelectorForm /> : <TagForm />}
         </div>
     );
 };

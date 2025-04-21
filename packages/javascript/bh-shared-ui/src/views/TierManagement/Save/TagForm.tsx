@@ -70,7 +70,7 @@ export const TagForm: FC = () => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <Card className='min-w-96 w-[672px] p-3'>
+            <Card className='min-w-96 w-[672px] p-3 mt-6'>
                 <CardHeader>
                     <CardTitle>Tier Details</CardTitle>
                 </CardHeader>
@@ -123,16 +123,16 @@ export const TagForm: FC = () => {
                 <Button variant={'secondary'} onClick={history.back}>
                     Cancel
                 </Button>
-                <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                {/* <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
                     Save
-                </Button>
-                {/* <Button
+                </Button> */}
+                <Button
                     variant={'primary'}
                     onClick={() => {
                         navigate(`/tier-management/edit/tag/${tagId}/selector`);
                     }}>
                     Define Selector
-                </Button> */}
+                </Button>
             </div>
         </form>
     );

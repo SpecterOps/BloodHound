@@ -27,7 +27,6 @@ import {
     ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS,
     ROUTE_TIER_MANAGEMENT_TAG_DETAILS,
     Routable,
-    mapRoutes,
 } from '../../routes';
 
 const Details = React.lazy(() => import('./Details/Details'));
@@ -61,7 +60,7 @@ const childRoutes: Routable[] = [
 
 const TierManagement: FC = () => {
     return (
-        <main>
+        <main className='pl-nav-width'>
             <div className='min-h-full min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Tier Management</h1>
                 <p className='mt-6'>
@@ -84,7 +83,9 @@ const TierManagement: FC = () => {
                             </div>
                         }>
                         <Routes>
-                            {mapRoutes(childRoutes)}
+                            {childRoutes.map((route) => {
+                                return <Route path={route.path} element={<route.component />} key={route.path} />;
+                            })}
                             <Route path='*' element={<Navigate to='details/tag/1' replace />} />
                         </Routes>
                     </Suspense>

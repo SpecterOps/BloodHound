@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
+import { rest } from 'msw';
 import * as tierMocks from '../factories/tierManagement';
 
-const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
+const tierHandlers = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
             ctx.json({
@@ -79,6 +79,11 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         return res(
             ctx.json({ data: tierMocks.createSelector(parseInt(tagId as string), parseInt(selectorId as string)) })
         );
+    }),
+
+    // CREATE Selector
+    rest.post('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+        return res(ctx.status(200));
     }),
 
     // PATCH Selector
