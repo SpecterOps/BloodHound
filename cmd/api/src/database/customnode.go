@@ -103,7 +103,7 @@ func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string
 		customNodeKind = model.CustomNodeKind{}
 
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionUpdateCustomNodeKind,
+			Action: model.AuditLogActionDeleteCustomNodeKind,
 			Model:  &customNodeKind,
 		}
 	)
