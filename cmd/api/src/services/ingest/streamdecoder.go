@@ -31,78 +31,141 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
-// If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, ingestSchema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
+type tagEvent struct {
+	Name  string
+	Depth int // (1 for top-level keys)
+}
+
+type TagScanner struct {
+	decoder *json.Decoder
+	depth   int
+}
+
+func NewTagScanner(decoder *json.Decoder) *TagScanner {
+	return &TagScanner{
+		decoder: decoder,
+		depth:   0,
+	}
+}
+
+func (s *TagScanner) Next() (tagEvent, error) {
+	for {
+		if tok, err := s.decoder.Token(); err != nil {
+			return tagEvent{}, err
+		} else {
+			switch t := tok.(type) {
+			case json.Delim:
+				if t == '{' || t == '[' {
+					s.depth++
+				} else { // ']','}'
+					s.depth--
+				}
+			case string:
+				if s.depth == 1 {
+					return tagEvent{Name: t, Depth: 1}, nil
+				}
+			}
+		}
+	}
+}
+
+// Token reads the next JSON token and updates depth internally.
+func (s *TagScanner) Token() (json.Token, error) {
+	tok, err := s.decoder.Token()
+	if err != nil {
+		return nil, err
+	}
+	if d, ok := tok.(json.Delim); ok {
+		if d == '{' || d == '[' {
+			s.depth++
+		} else {
+			s.depth--
+		}
+	}
+	return tok, nil
+}
+
+func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
+	var m ingest.Metadata
+	if err := decoder.Decode(&m); err != nil {
+		slog.Warn("Found invalid metatag, skipping", slog.String("err", err.Error()))
+		return ingest.Metadata{}, nil
+	}
+	if !m.Type.IsValid() {
+		return ingest.Metadata{}, ingest.ErrMetaTagNotFound
+	}
+	return m, nil
+}
+
+func scanAndDetectMetaOrGraph(scanner *TagScanner, schema IngestSchema) (ingest.Metadata, error) {
 	var (
-		depth            = 0
-		decoder          = json.NewDecoder(reader)
-		dataTagFound     = false
-		dataTagValidated = false
-		metaTagFound     = false
-		meta             ingest.Metadata
+		dataFound bool
+		metaFound bool
+		meta      ingest.Metadata
 	)
 
 	for {
-		if token, err := decoder.Token(); err != nil {
-			if errors.Is(err, io.EOF) {
-				if !metaTagFound && !dataTagFound {
-					return ingest.Metadata{}, ingest.ErrNoTagFound
-				} else if !dataTagFound {
-					return ingest.Metadata{}, ingest.ErrDataTagNotFound
-				} else {
-					return ingest.Metadata{}, ingest.ErrMetaTagNotFound
-				}
-			} else {
-				return ingest.Metadata{}, ErrInvalidJSON
-			}
+		if tag, err := scanner.Next(); err != nil {
+			return handleScannerError(err, dataFound, metaFound)
 		} else {
-			//Validate that our data tag is actually opening correctly
-			if dataTagFound && !dataTagValidated {
-				if typed, ok := token.(json.Delim); ok && typed == ingest.DelimOpenSquareBracket {
-					dataTagValidated = true
-				} else {
-					dataTagFound = false
+			switch tag.Name {
+			case "meta":
+				if m, err := decodeMetaTag(scanner.decoder); err != nil {
+					return m, err
+				} else if m.Type.IsValid() {
+					meta = m
+					metaFound = true
 				}
-			}
-			switch typed := token.(type) {
-			case json.Delim:
-				switch typed {
-				case ingest.DelimCloseBracket, ingest.DelimCloseSquareBracket:
-					depth--
-				case ingest.DelimOpenBracket, ingest.DelimOpenSquareBracket:
-					depth++
+			case "data":
+				// Validate that the data key is followed by an opening '[' array delimiter
+				if tok, err := scanner.Token(); err != nil {
+					return ingest.Metadata{}, ErrInvalidJSON
+				} else if delim, ok := tok.(json.Delim); !ok || delim != '[' {
+					return ingest.Metadata{}, ingest.ErrDataTagNotFound
 				}
-			case string:
-				if !metaTagFound && depth == 1 && typed == "meta" {
-					if err := decoder.Decode(&meta); err != nil {
-						slog.Warn("Found invalid metatag, skipping")
-					} else if meta.Type.IsValid() {
-						metaTagFound = true
-					}
-				}
-
-				if !dataTagFound && depth == 1 && typed == "data" {
-					dataTagFound = true
-				}
-
-				if depth == 1 && typed == "graph" {
-					// presence of "graph" key indicates this is a generic ingestion
-					meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-					err := ValidateGenericIngest(decoder, ingestSchema)
+				dataFound = true
+			case "graph":
+				// generic ingest path
+				meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
+				if err := ValidateGenericIngest(scanner.decoder, schema); err != nil {
 					if report, ok := err.(ValidationReport); ok {
-						// log the structured report
-						slog.With("validation", report).Warn("generic ingest validation failed")
-						return meta, err
+						slog.With("validation", report).Warn("generic ingest failed")
 					}
-					break
+					return meta, err
 				}
+				return meta, nil
+			}
+
+			if metaFound && dataFound {
+				return meta, nil
 			}
 		}
+	}
+}
 
-		if dataTagValidated && metaTagFound || meta.Type == ingest.DataTypeGeneric {
-			break
+func handleScannerError(err error, dataFound, metaFound bool) (ingest.Metadata, error) {
+	var m ingest.Metadata
+	if errors.Is(err, io.EOF) {
+		if !dataFound && !metaFound {
+			return m, ingest.ErrNoTagFound
+		} else if !dataFound {
+			return m, ingest.ErrDataTagNotFound
+		} else {
+			return m, ingest.ErrMetaTagNotFound
 		}
+	}
+	return m, ErrInvalidJSON
+}
+
+// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
+// If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
+func ValidateMetaTag(reader io.Reader, schema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
+	decoder := json.NewDecoder(reader)
+	scanner := NewTagScanner(decoder)
+
+	meta, err := scanAndDetectMetaOrGraph(scanner, schema)
+	if err != nil {
+		return ingest.Metadata{}, err
 	}
 
 	if readToEnd {

@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
@@ -89,15 +90,50 @@ func Test_ValidateMetaTag(t *testing.T) {
 	schema, err := ingest_service.LoadIngestSchema()
 	require.Nil(t, err)
 
-	t.Run("Verify ValidateMetaTag for classic collection types-- {meta:{}, data:[]}", func(t *testing.T) {
-		for _, assertion := range assertions {
+	for _, assertion := range assertions {
+		t.Run(assertion.name, func(t *testing.T) {
 			meta, err := ingest_service.ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
 			assert.ErrorIs(t, err, assertion.err)
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)
 			}
-		}
-	})
+		})
+	}
+}
+
+func TestTagScanner_Next(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		wantKeys []string
+		wantErr  error
+	}{
+		{"empty object", `{}`, nil, io.EOF},
+		{"only meta", `{ "meta": {} }`, []string{"meta"}, io.EOF},
+		{"meta and data", `{ "meta": {}, "data": [] }`, []string{"meta", "data"}, io.EOF},
+		{"generic graph", `{ "graph": {"nodes": [], "edges": []} }`, []string{"graph"}, io.EOF},
+		{"nested meta ignored", `{ "nested": { "meta": {} }, "data": [] }`, []string{"nested", "data"}, io.EOF},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			scanner := ingest_service.NewTagScanner(json.NewDecoder(strings.NewReader(tc.input)))
+			var got []string
+			for {
+				tag, err := scanner.Next()
+				if err != nil {
+					if !errors.Is(err, tc.wantErr) {
+						t.Fatalf("Next() error = %v, want %v", err, tc.wantErr)
+					}
+					break
+				}
+				got = append(got, tag.Name)
+			}
+			if diff := cmp.Diff(tc.wantKeys, got); diff != "" {
+				t.Errorf("Next() keys mismatch (-want +got): %s", diff)
+			}
+		})
+	}
 }
 
 type genericIngestAssertion struct {
