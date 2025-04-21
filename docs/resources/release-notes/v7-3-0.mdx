@@ -40,13 +40,13 @@ For our Enterprise customers, the vast majority if you have already migrated off
     - Resolved an ingestion issue with AD trusts inaccurately setting the trust attributes to "0".
     - AZResetPassword edges will no-longer be inserted against members of role-assignable groups.
     - Resolved a specific issue with linking well known groups during ingestion.
-    - The "Collapse all" button on Entity panels is functioning again.
 - **SharpHound (v2.6.5)**
   - New and Improved Features
     - GenericAll, WriteDacl, or WriteOwner edges now validate ObjectType (aceType) settings for creating edges, reducing false positives.
+    - ADCSESCx edges now requires an enabled Computer with a HostCAService edge to the EnterpriseCA, reducing false positives for when the CA host has been decommissioned.
     - SharpHound will no longer attempt to resolve objects with a domain of "." to improve collection performance.
   - Bug Fixes
-    - HostsCAService edges will now generate as a result of CertServices collections and will validate that the target computer is active before creating the edge.
+    - HostsCAService edges will now generate as a result of CertServices collections.
     - Resolved an issue where timezone offsets would occasionally be applied twice on object creation timestamps.
     - _[CE Only]_ SMB information will no longer be collected in DCOnly collections.
 - **AzureHound (v2.3.1)**
@@ -89,18 +89,18 @@ For our Enterprise customers, the vast majority if you have already migrated off
 - Resolved an ingestion issue with AD trusts inaccurately setting the trust attributes to "0".
 - AZResetPassword edges will no-longer be inserted against members of role-assignable groups.
 - Resolved a specific issue with linking well known groups during ingestion.
-- The "Collapse all" button on Entity panels is functioning again.
 
 ## SharpHound (v2.6.5)
 
 ### New and Improved Features
 
 - GenericAll, WriteDacl, or WriteOwner edges now validate ObjectType (aceType) settings for creating edges, reducing false positives.
+- ADCSESCx edges now requires an enabled Computer with a HostCAService edge to the EnterpriseCA, reducing false positives for when the CA host has been decommissioned.
 - SharpHound will no longer attempt to resolve objects with a domain of "." to improve collection performance.
 
 ### Bug Fixes
 
-- HostsCAService edges will now generate as a result of CertServices collections and will validate that the target computer is active before creating the edge.
+- HostsCAService edges will now generate as a result of CertServices collections.
 - Resolved an issue where timezone offsets would occasionally be applied twice on object creation timestamps.
 - _[CE Only]_ SMB information will no longer be collected in DCOnly collections.
 
