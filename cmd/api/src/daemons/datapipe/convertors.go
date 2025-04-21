@@ -250,11 +250,11 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 		converted.RelProps = append(converted.RelProps, ein.NewIngestibleRelationship(
 			ein.IngestibleSource{
 				Source:     issuancePolicy.ObjectIdentifier,
-				SourceType: ad.IssuancePolicy,
+				SourceKind: ad.IssuancePolicy,
 			},
 			ein.IngestibleTarget{
 				Target:     issuancePolicy.GroupLink.ObjectIdentifier,
-				TargetType: issuancePolicy.GroupLink.Kind(),
+				TargetKind: issuancePolicy.GroupLink.Kind(),
 			},
 			ein.IngestibleRel{
 				RelProps: map[string]any{"isacl": false},

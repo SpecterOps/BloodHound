@@ -72,7 +72,7 @@ func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 	return WriteOwnerLimitedPrincipal{
 		SourceData: IngestibleSource{
 			Source:     s.PrincipalSID,
-			SourceType: s.Kind(),
+			SourceKind: s.Kind(),
 		},
 		IsInherited: s.IsInherited,
 	}

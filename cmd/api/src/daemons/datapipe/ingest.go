@@ -288,14 +288,14 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
 			common.LastSeen: nowUTC,
-		}), nextRel.SourceType),
+		}), nextRel.SourceKind),
 		StartIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
-		}), nextRel.TargetType),
+		}), nextRel.TargetKind),
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
@@ -407,12 +407,12 @@ func resolveRelationshipBeforeSubmit(batch graph.Batch, rel ein.IngestibleRelati
 	start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 		common.ObjectID: srcID,
 		common.LastSeen: nowUTC,
-	}), rel.SourceType)
+	}), rel.SourceKind)
 
 	end := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 		common.ObjectID: targetID,
 		common.LastSeen: nowUTC,
-	}), rel.TargetType)
+	}), rel.TargetKind)
 
 	update := graph.RelationshipUpdate{
 		Start: start,
@@ -442,7 +442,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
 			common.LastSeen:      nowUTC,
-		}), nextRel.SourceType),
+		}), nextRel.SourceKind),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
 			ad.DistinguishedName.String(),
@@ -451,7 +451,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
-		}), nextRel.TargetType),
+		}), nextRel.TargetKind),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
