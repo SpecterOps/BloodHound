@@ -23,7 +23,7 @@ parameters:
     schema:
       type: integer
       format: int32
-  - name: member_id
+  - name: asset_group_member_id
     description: ID of member to list selectors
     in: path
     required: true
@@ -33,8 +33,8 @@ parameters:
 
 get:
   operationId: GetAssetGroupSelectorsByMemberId
-  summary: Get Asset Group Tag selectors of a specific member
-  description: Get a list of selectors for an object.
+  summary: Get asset group tag selectors of a specific object by member id
+  description: Get a list of selectors for an object by member id.
   tags:
     - Asset Isolation
     - Enterprise

@@ -320,7 +320,7 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
-  /api/v2/asset-group-tags/{asset_group_tag_id}/member/{member_id}:
+  /api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.member.id.yaml'
   /api/v2/asset-group-tags:
     $ref: './paths/asset-isolation.asset-group-tags.yaml'

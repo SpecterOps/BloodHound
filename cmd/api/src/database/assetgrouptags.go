@@ -362,7 +362,11 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 func (s *BloodhoundDB) GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
 	var selectors model.AssetGroupTagSelectors
 
-	return selectors, CheckError(s.db.WithContext(ctx).Raw("SELECT s.* from asset_group_tag_selectors s JOIN asset_group_tag_selector_nodes n ON s.id = n.node_id JOIN asset_group_tags t ON s.asset_group_tag_id = t.id WHERE t.id = ? AND n.node_id = ?", assetGroupTagId, memberId).Find(&selectors))
+	return selectors, CheckError(s.db.WithContext(ctx).Raw(`
+		SELECT s.* from asset_group_tag_selectors s JOIN 
+		asset_group_tag_selector_nodes n ON s.id = n.node_id JOIN 
+		asset_group_tags t ON s.asset_group_tag_id = t.id WHERE 
+		t.id = ? AND n.node_id = ?`, assetGroupTagId, memberId).Find(&selectors))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {

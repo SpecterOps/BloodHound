@@ -1257,7 +1257,7 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 		})
 }
 
-func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
+func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -1273,11 +1273,19 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 			DeletedKinds: graph.StringsToKinds([]string{"deleted kind"}),
 			Properties:   &graph.Properties{Map: map[string]any{"prop": 1}},
 		}
+		testNode2 = &graph.Node{
+			ID:           0,
+			Kinds:        graph.StringsToKinds([]string{"kind"}),
+			AddedKinds:   graph.StringsToKinds([]string{"added kind"}),
+			DeletedKinds: graph.StringsToKinds([]string{"deleted kind"}),
+			Properties:   &graph.Properties{},
+		}
+		testSelectors = model.AssetGroupTagSelectors{model.AssetGroupTagSelector{Name: "test"}}
 	)
 	defer mockCtrl.Finish()
 
 	apitest.
-		NewHarness(t, resourcesInst.GetAssetGroupTagSelectorsByMemberId).
+		NewHarness(t, resourcesInst.GetAssetGroupTagMemberInfo).
 		Run([]apitest.Case{
 			{
 				Name: "Bad Request - Invalid Asset Group Tag ID",
@@ -1328,8 +1336,6 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 						Return(model.AssetGroupTagSelectors{}, database.ErrNotFound)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil)
-					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
-						Return(testNode, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusNotFound)
@@ -1337,7 +1343,7 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success",
+				Name: "Not found error - no selectors",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
@@ -1347,11 +1353,55 @@ func TestResources_GetAssetGroupSelectorsByMemberId(t *testing.T) {
 						Return(model.AssetGroupTagSelectors{}, nil)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{}, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+
+				},
+			},
+			{
+				Name: "Success - properties in response",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(testSelectors, nil)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
 					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
 						Return(testNode, nil)
 				},
 				Test: func(output apitest.Output) {
+					resp := v2.ListNodeSelectorsResponse{}
 					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.BodyContains(output, "prop")
+					apitest.BodyContains(output, "test")
+					apitest.Equal(output, 1, len(resp.Member.Properties.Map))
+				},
+			},
+			{
+				Name: "Success - no props in response",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagMemberID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetSelectorsByMemberId(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(testSelectors, nil)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{}, nil)
+					mockGraphDb.EXPECT().FetchNodeByGraphId(gomock.Any(), gomock.Any()).
+						Return(testNode2, nil)
+				},
+				Test: func(output apitest.Output) {
+					resp := v2.ListNodeSelectorsResponse{}
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.UnmarshalData(output, &resp)
+					apitest.BodyContains(output, "test")
+					apitest.Equal(output, 0, len(resp.Member.Properties.Map))
 				},
 			},
 		})
