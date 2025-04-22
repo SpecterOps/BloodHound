@@ -2,7 +2,7 @@ package os
 
 import "os"
 
-//go:generate go run go.uber.org/mock/mockgen -destination=./mocks/mock.go -package=mocks . OSService
+//go:generate go run go.uber.org/mock/mockgen -destination=./mocks/mock.go -package=mocks . Service
 type Service interface {
 	Create(name string) (*os.File, error)
 	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
