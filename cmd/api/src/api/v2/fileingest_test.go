@@ -510,11 +510,7 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-<<<<<<< HEAD
-			resources.ProcessIngestFile(response, request)
-=======
 			resources.ProcessIngestTask(response, request)
->>>>>>> main
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
