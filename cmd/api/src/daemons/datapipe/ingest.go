@@ -325,7 +325,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 				errs.Add(err)
 			}
 		} else {
-			if err := resolveRelationshipByNameMatch(batch, next); err != nil {
+			if err := ResolveRelationshipByNameMatch(batch, next); err != nil {
 				errs.Add(err)
 			}
 		}
@@ -339,7 +339,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 // TODO: how does this function cleanup if the feature is limited to just name matching, and not any arbitrary property?
 // todo: what if only one of source/target requires resolution
 // todo: change rel -> rels and refactor this to do resolution for many rels in one dawg query
-func resolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelationship) error {
+func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelationship) error {
 	var (
 		nowUTC              = time.Now().UTC()
 		matches             = map[string]string{}
@@ -369,7 +369,6 @@ func resolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 	)
 
 	if err := batch.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-
 		for node := range cursor.Chan() {
 			props := node.Properties
 

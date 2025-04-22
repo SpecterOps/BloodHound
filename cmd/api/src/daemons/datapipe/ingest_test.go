@@ -73,6 +73,13 @@ func Test_Monday(t *testing.T) {
 			}
 
 			db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				err := datapipe.ResolveRelationshipByNameMatch(batch, ingestibleRel)
+				require.Nil(t, err)
+
+				return nil
+			})
+
+			db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 				// OPEN QUESTION:
 				// how does this wok when sourceKind/targetKind are nil --> ANSWER: panics
 				// expect that source will be not-nil result
