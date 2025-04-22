@@ -18,6 +18,7 @@ import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindPropertie
 import {
     ADSpecificTimeProperties,
     EntityField,
+    NON_DATE_FIELDS,
     formatADSpecificTime,
     formatBoolean,
     formatList,
@@ -94,13 +95,15 @@ describe('Formatting string properties', () => {
     it('handles ISO 8601 formatted date strings and converts it into our standard date display format', () => {
         expect(formatString('2011-10-05T14:48:00.000Z')).toEqual('2011-10-05 07:48 PDT (GMT-0700)');
     });
-    it('does not change the value for functionallevel to be a date', () => {
-        expect(formatString('2016', 'functionallevel')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatString('2016', 'functionallevel')).toEqual('2016');
+    it('does not change the value for fields in non-date-field array to be a date', () => {
+        for (let nonDateField of NON_DATE_FIELDS) {
+            expect(formatString('2016', nonDateField)).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
+            expect(formatString('2016', nonDateField)).toEqual('2016');
+        }
 
         //A date will be returned here if the property is not functionallevel
-        expect(formatString('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatString('2016')).not.toEqual('2016');
+        expect(formatString('2016', 'any_other_field')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
+        expect(formatString('2016', 'any_other_field')).not.toEqual('2016');
     });
 });
 
