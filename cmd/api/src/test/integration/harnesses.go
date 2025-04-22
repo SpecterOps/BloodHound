@@ -9761,14 +9761,14 @@ type GenericIngest struct {
 func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
 	domainsid := RandomDomainSID()
 
-	s.Node1 = graphTestContext.NewActiveDirectoryComputer("name a", domainsid)
-	s.Node2 = graphTestContext.NewActiveDirectoryComputer("name b", domainsid)
+	s.Node1 = graphTestContext.NewActiveDirectoryComputer("NAME A", domainsid)
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("NAME B", domainsid)
 
-	s.Node3 = graphTestContext.NewActiveDirectoryComputer("same name", domainsid)
-	s.Node4 = graphTestContext.NewActiveDirectoryComputer("same name", domainsid)
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node4 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
 
-	s.Node5 = graphTestContext.NewActiveDirectoryComputer("namey name kindy kind", domainsid)
-	s.Node6 = graphTestContext.NewActiveDirectoryUser("namey name kindy kind", domainsid)
+	s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
+	s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
 }
 
 type HarnessDetails struct {

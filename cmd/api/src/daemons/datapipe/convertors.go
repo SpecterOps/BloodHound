@@ -26,7 +26,6 @@ import (
 )
 
 func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
-	// entity has ID "", Kinds[], Properties map[string]any
 	ingestibleNode := ein.IngestibleNode{
 		ObjectID:    entity.ID,
 		PropertyMap: entity.Properties,

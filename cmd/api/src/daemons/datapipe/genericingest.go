@@ -41,10 +41,10 @@ func resolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 				var criteria []graph.Criteria
 
 				if endpoint.MatchBy == ein.MatchByName {
-					criteria = append(criteria, query.Equals(query.NodeProperty(common.Name.String()), endpoint.Value))
+					criteria = append(criteria, query.Equals(query.NodeProperty(common.Name.String()), strings.ToUpper(endpoint.Value)))
 				}
 
-				if endpoint.Kind != nil {
+				if !endpoint.Kind.Is(graph.EmptyKind) { // TODO: its empty string, not nil
 					criteria = append(criteria, query.Kind(query.Node(), endpoint.Kind))
 				}
 

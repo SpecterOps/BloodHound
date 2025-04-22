@@ -368,5 +368,5 @@ type GenericEdge struct {
 type EdgeEndpoint struct {
 	Value   string
 	Kind    string
-	MatchBy string
+	MatchBy string `json:"match_by"`
 }
