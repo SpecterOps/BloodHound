@@ -39,26 +39,16 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 }
 
 func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
-	var (
-		startMatchBy, endMatchBy bool
-	)
-	if entity.Start.MatchBy == "name" {
-		startMatchBy = true
-	}
-	if entity.End.MatchBy == "name" {
-		endMatchBy = true
-	}
-
 	ingestibleRel := ein.NewIngestibleRelationship(
-		ein.IngestibleSource{
-			Value:       entity.Start.Value,
-			MatchByName: startMatchBy,
-			Kind:        graph.StringKind(entity.Start.Kind),
+		ein.IngestibleEndpoint{
+			Value:   entity.Start.Value,
+			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:    graph.StringKind(entity.Start.Kind),
 		},
-		ein.IngestibleTarget{
-			Value:       entity.End.Value,
-			MatchByName: endMatchBy,
-			Kind:        graph.StringKind(entity.End.Kind),
+		ein.IngestibleEndpoint{
+			Value:   entity.End.Value,
+			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:    graph.StringKind(entity.End.Kind),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
@@ -260,11 +250,11 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	props := ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy)
 	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
 		converted.RelProps = append(converted.RelProps, ein.NewIngestibleRelationship(
-			ein.IngestibleSource{
+			ein.IngestibleEndpoint{
 				Value: issuancePolicy.ObjectIdentifier,
 				Kind:  ad.IssuancePolicy,
 			},
-			ein.IngestibleTarget{
+			ein.IngestibleEndpoint{
 				Value: issuancePolicy.GroupLink.ObjectIdentifier,
 				Kind:  issuancePolicy.GroupLink.Kind(),
 			},

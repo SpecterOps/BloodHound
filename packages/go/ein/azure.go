@@ -67,11 +67,11 @@ func ConvertAZAppToNode(app models.App) IngestibleNode {
 func ConvertAZAppRelationships(app models.App) []IngestibleRelationship {
 	return []IngestibleRelationship{
 		NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(app.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.App,
 				Value: strings.ToUpper(app.AppId),
 			},
@@ -102,11 +102,11 @@ func ConvertAZDeviceToNode(device models.Device) IngestibleNode {
 func ConvertAZDeviceRelationships(device models.Device) []IngestibleRelationship {
 	return []IngestibleRelationship{
 		NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(device.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.Device,
 				Value: strings.ToUpper(device.Id),
 			},
@@ -132,11 +132,11 @@ func ConvertAZVMScaleSetToNode(scaleSet models.VMScaleSet) IngestibleNode {
 func ConvertAZVMScaleSetRelationships(scaleSet models.VMScaleSet) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(scaleSet.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.VMScaleSet,
 			Value: strings.ToUpper(scaleSet.Id),
 		},
@@ -149,11 +149,11 @@ func ConvertAZVMScaleSetRelationships(scaleSet models.VMScaleSet) []IngestibleRe
 	// Enumerate System Assigned Identities
 	if scaleSet.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(scaleSet.Id),
 				Kind:  azure.VMScaleSet,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(scaleSet.Identity.PrincipalId),
 			},
@@ -168,11 +168,11 @@ func ConvertAZVMScaleSetRelationships(scaleSet models.VMScaleSet) []IngestibleRe
 	for _, identity := range scaleSet.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(scaleSet.Id),
 					Kind:  azure.VMScaleSet,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -198,11 +198,11 @@ func ConvertAzureVMScaleSetRoleAssignment(data models.AzureRoleAssignments) []In
 				constants.VirtualMachineContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.VMScaleSet,
 						Value: strings.ToUpper(data.ObjectId),
 					},
@@ -220,11 +220,11 @@ func ConvertAzureVMScaleSetRoleAssignment(data models.AzureRoleAssignments) []In
 
 func ConvertAzureOwnerToRel(directoryObject azure2.DirectoryObject, ownerType graph.Kind, targetType graph.Kind, targetId string) IngestibleRelationship {
 	return NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(directoryObject.Id),
 			Kind:  ownerType,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  targetType,
 			Value: strings.ToUpper(targetId),
 		},
@@ -262,11 +262,11 @@ func ConvertAzureAppRoleAssignmentToNodes(data models.AppRoleAssignment) []Inges
 func ConvertAzureAppRoleAssignmentToRel(data models.AppRoleAssignment) IngestibleRelationship {
 	if appRoleKind, hasAppRoleKind := azure.RelationshipKindByAppRoleID[strings.ToLower(data.AppRoleId.String())]; hasAppRoleKind {
 		return NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.PrincipalId.String()),
 				Kind:  azure.ServicePrincipal,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(data.ResourceId),
 			},
@@ -278,11 +278,11 @@ func ConvertAzureAppRoleAssignmentToRel(data models.AppRoleAssignment) Ingestibl
 	}
 
 	return NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: "",
 			Kind:  nil,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  nil,
 			Value: "",
 		},
@@ -307,11 +307,11 @@ func ConvertAzureFunctionAppToNode(data models.FunctionApp) IngestibleNode {
 func ConvertAzureFunctionAppToRels(data models.FunctionApp) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.FunctionApp,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -324,11 +324,11 @@ func ConvertAzureFunctionAppToRels(data models.FunctionApp) []IngestibleRelation
 	// Enumerate System Assigned Identities
 	if data.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.Id),
 				Kind:  azure.FunctionApp,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(data.Identity.PrincipalId),
 			},
@@ -343,11 +343,11 @@ func ConvertAzureFunctionAppToRels(data models.FunctionApp) []IngestibleRelation
 	for _, identity := range data.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(data.Id),
 					Kind:  azure.FunctionApp,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -373,11 +373,11 @@ func ConvertAzureFunctionAppRoleAssignmentToRels(data models.AzureRoleAssignment
 				constants.WebsiteContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.FunctionApp,
 						Value: strings.ToUpper(data.ObjectId),
 					},
@@ -430,11 +430,11 @@ func ConvertAzureGroupToOnPremisesNode(data models.Group) IngestibleNode {
 
 func ConvertAzureGroupToRel(data models.Group) IngestibleRelationship {
 	return NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.TenantId),
 			Kind:  azure.Tenant,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.Group,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -460,11 +460,11 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(member.Id),
 					Kind:  memberType,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.Group,
 					Value: strings.ToUpper(data.GroupId),
 				},
@@ -494,11 +494,11 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(owner.Id),
 					Kind:  ownerType,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.Group,
 					Value: strings.ToUpper(data.GroupId),
 				},
@@ -524,11 +524,11 @@ func ConvertAzureKeyVault(data models.KeyVault) (IngestibleNode, IngestibleRelat
 			Labels: []graph.Kind{azure.KeyVault},
 		},
 		NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.ResourceGroup),
 				Kind:  azure.ResourceGroup,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.KeyVault,
 				Value: strings.ToUpper(data.Id),
 			},
@@ -544,11 +544,11 @@ func ConvertAzureKeyVaultAccessPolicy(data models.KeyVaultAccessPolicy) []Ingest
 
 	for _, relType := range getKeyVaultPermissions(data) {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.ObjectId),
 				Kind:  azure.Entity,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.KeyVault,
 				Value: strings.ToUpper(data.KeyVaultId),
 			},
@@ -568,11 +568,11 @@ func ConvertAzureKeyVaultContributor(data models.KeyVaultContributors) []Ingesti
 	for _, raw := range data.Contributors {
 		if data.KeyVaultId == raw.Contributor.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Contributor.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.KeyVault,
 					Value: strings.ToUpper(data.KeyVaultId),
 				},
@@ -593,11 +593,11 @@ func ConvertAzureKeyVaultKVContributor(data models.KeyVaultKVContributors) []Ing
 	for _, raw := range data.KVContributors {
 		if data.KeyVaultId == raw.KVContributor.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.KVContributor.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.KeyVault,
 					Value: strings.ToUpper(data.KeyVaultId),
 				},
@@ -618,11 +618,11 @@ func ConvertAzureKeyVaultOwnerToRels(data models.KeyVaultOwners) []IngestibleRel
 	for _, raw := range data.Owners {
 		if data.KeyVaultId == raw.Owner.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Owner.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.KeyVault,
 					Value: strings.ToUpper(data.KeyVaultId),
 				},
@@ -642,11 +642,11 @@ func ConvertAzureKeyVaultUserAccessAdminToRels(data models.KeyVaultUserAccessAdm
 	for _, raw := range data.UserAccessAdmins {
 		if data.KeyVaultId == raw.UserAccessAdmin.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.UserAccessAdmin.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.KeyVault,
 					Value: strings.ToUpper(data.KeyVaultId),
 				},
@@ -663,11 +663,11 @@ func ConvertAzureKeyVaultUserAccessAdminToRels(data models.KeyVaultUserAccessAdm
 
 func ConvertAzureManagementGroupDescendantToRel(data azure2.DescendantInfo) IngestibleRelationship {
 	return NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.Properties.Parent.Id),
 			Kind:  azure.ManagementGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.Entity,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -683,11 +683,11 @@ func ConvertAzureManagementGroupOwnerToRels(data models.ManagementGroupOwners) [
 	for _, raw := range data.Owners {
 		if data.ManagementGroupId == raw.Owner.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Owner.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ManagementGroup,
 					Value: strings.ToUpper(data.ManagementGroupId),
 				},
@@ -707,11 +707,11 @@ func ConvertAzureManagementGroupUserAccessAdminToRels(data models.ManagementGrou
 	for _, raw := range data.UserAccessAdmins {
 		if data.ManagementGroupId == raw.UserAccessAdmin.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.UserAccessAdmin.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ManagementGroup,
 					Value: strings.ToUpper(data.ManagementGroupId),
 				},
@@ -734,11 +734,11 @@ func ConvertAzureManagementGroup(data models.ManagementGroup) (IngestibleNode, I
 			},
 			Labels: []graph.Kind{azure.ManagementGroup},
 		}, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ManagementGroup,
 				Value: strings.ToUpper(data.Id),
 			},
@@ -758,11 +758,11 @@ func ConvertAzureResourceGroup(data models.ResourceGroup) (IngestibleNode, Inges
 			},
 			Labels: []graph.Kind{azure.ResourceGroup},
 		}, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.SubscriptionId),
 				Kind:  azure.Subscription,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ResourceGroup,
 				Value: strings.ToUpper(data.Id),
 			},
@@ -778,11 +778,11 @@ func ConvertAzureResourceGroupOwnerToRels(data models.ResourceGroupOwners) []Ing
 	for _, raw := range data.Owners {
 		if data.ResourceGroupId == raw.Owner.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Owner.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ResourceGroup,
 					Value: strings.ToUpper(data.ResourceGroupId),
 				},
@@ -802,11 +802,11 @@ func ConvertAzureResourceGroupUserAccessAdminToRels(data models.ResourceGroupUse
 	for _, raw := range data.UserAccessAdmins {
 		if data.ResourceGroupId == raw.UserAccessAdmin.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.UserAccessAdmin.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ResourceGroup,
 					Value: strings.ToUpper(data.ResourceGroupId),
 				},
@@ -836,11 +836,11 @@ func ConvertAzureRole(data models.Role) (IngestibleNode, IngestibleRelationship)
 			},
 			Labels: []graph.Kind{azure.Role},
 		}, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.Role,
 				Value: roleObjectId,
 			},
@@ -868,11 +868,11 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 			slog.Error(fmt.Sprintf("Error processing role assignment for role %s: %v", roleObjectId, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(roleAssignment.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.Entity,
 					Value: scope,
 				},
@@ -884,11 +884,11 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 		}
 	} else {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(roleAssignment.PrincipalId),
 				Kind:  azure.Entity,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.Role,
 				Value: roleObjectId,
 			},
@@ -935,11 +935,11 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal) ([]IngestibleNod
 	})
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.AppId),
 			Kind:  azure.App,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.ServicePrincipal,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -950,11 +950,11 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal) ([]IngestibleNod
 	))
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.TenantId),
 			Kind:  azure.Tenant,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.ServicePrincipal,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -979,11 +979,11 @@ func ConvertAzureLogicApp(logicApp models.LogicApp) (IngestibleNode, []Ingestibl
 
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(logicApp.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.LogicApp,
 			Value: strings.ToUpper(logicApp.Id),
 		},
@@ -996,11 +996,11 @@ func ConvertAzureLogicApp(logicApp models.LogicApp) (IngestibleNode, []Ingestibl
 	// Enumerate System Assigned Identities
 	if logicApp.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(logicApp.Id),
 				Kind:  azure.LogicApp,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(logicApp.Identity.PrincipalId),
 			},
@@ -1015,11 +1015,11 @@ func ConvertAzureLogicApp(logicApp models.LogicApp) (IngestibleNode, []Ingestibl
 	for _, identity := range logicApp.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(logicApp.Id),
 					Kind:  azure.LogicApp,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -1045,11 +1045,11 @@ func ConvertAzureLogicAppRoleAssignment(roleAssignment models.AzureRoleAssignmen
 				constants.LogicAppContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.LogicApp,
 						Value: strings.ToUpper(roleAssignment.ObjectId),
 					},
@@ -1080,11 +1080,11 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 			slog.Error(fmt.Sprintf(ExtractError, err))
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(owner.Id),
 					Kind:  ownerType,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(data.ServicePrincipalId),
 				},
@@ -1110,11 +1110,11 @@ func ConvertAzureSubscription(data azure2.Subscription) (IngestibleNode, Ingesti
 			Labels: []graph.Kind{azure.Subscription},
 		},
 		NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.Subscription,
 				Value: strings.ToUpper(data.Id),
 			},
@@ -1131,11 +1131,11 @@ func ConvertAzureSubscriptionOwnerToRels(data models.SubscriptionOwners) []Inges
 	for _, raw := range data.Owners {
 		if data.SubscriptionId == raw.Owner.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Owner.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.Subscription,
 					Value: strings.ToUpper(data.SubscriptionId),
 				},
@@ -1156,11 +1156,11 @@ func ConvertAzureSubscriptionUserAccessAdminToRels(data models.SubscriptionUserA
 	for _, raw := range data.UserAccessAdmins {
 		if data.SubscriptionId == raw.UserAccessAdmin.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.UserAccessAdmin.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.Subscription,
 					Value: strings.ToUpper(data.SubscriptionId),
 				},
@@ -1223,11 +1223,11 @@ func ConvertAzureUser(data models.User) (IngestibleNode, IngestibleNode, Ingesti
 			},
 			Labels: []graph.Kind{azure.User},
 		}, onPremNode, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.TenantId),
 				Kind:  azure.Tenant,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.User,
 				Value: strings.ToUpper(data.Id),
 			},
@@ -1252,11 +1252,11 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine) (IngestibleNode, []I
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.VM,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -1269,11 +1269,11 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine) (IngestibleNode, []I
 	// Enumerate System Assigned Identities
 	if data.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.Id),
 				Kind:  azure.VM,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(data.Identity.PrincipalId),
 			},
@@ -1288,11 +1288,11 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine) (IngestibleNode, []I
 	for _, identity := range data.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(data.Id),
 					Kind:  azure.VM,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -1312,11 +1312,11 @@ func ConvertAzureVirtualMachineAdminLoginToRels(data models.VirtualMachineAdminL
 	for _, raw := range data.AdminLogins {
 		if ResourceWithinScope(data.VirtualMachineId, raw.AdminLogin.Properties.Scope) {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.AdminLogin.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1335,11 +1335,11 @@ func ConvertAzureVirtualMachineAvereContributorToRels(data models.VirtualMachine
 	for _, raw := range data.AvereContributors {
 		if data.VirtualMachineId == raw.AvereContributor.Properties.Scope {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.AvereContributor.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1358,11 +1358,11 @@ func ConvertAzureVirtualMachineContributorToRels(data models.VirtualMachineContr
 	for _, raw := range data.Contributors {
 		if ResourceWithinScope(data.VirtualMachineId, raw.Contributor.Properties.Scope) {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Contributor.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1381,11 +1381,11 @@ func ConvertAzureVirtualMachineVMContributorToRels(data models.VirtualMachineVMC
 	for _, raw := range data.VMContributors {
 		if ResourceWithinScope(data.VirtualMachineId, raw.VMContributor.Properties.Scope) {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.VMContributor.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1404,11 +1404,11 @@ func ConvertAzureVirtualMachineOwnerToRels(data models.VirtualMachineOwners) []I
 	for _, raw := range data.Owners {
 		if ResourceWithinScope(data.VirtualMachineId, raw.Owner.Properties.Scope) {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.Owner.GetPrincipalId()),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1427,11 +1427,11 @@ func ConvertAzureVirtualMachineUserAccessAdminToRels(data models.VirtualMachineU
 	for _, raw := range data.UserAccessAdmins {
 		if ResourceWithinScope(data.VirtualMachineId, raw.UserAccessAdmin.Properties.Scope) {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(raw.UserAccessAdmin.Properties.PrincipalId),
 					Kind:  azure.Entity,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.VM,
 					Value: strings.ToUpper(data.VirtualMachineId),
 				},
@@ -1458,11 +1458,11 @@ func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID 
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.ManagedCluster,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -1473,11 +1473,11 @@ func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID 
 	))
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.Id),
 			Kind:  azure.ManagedCluster,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.ResourceGroup,
 			Value: strings.ToUpper(nodeResourceGroupID),
 		},
@@ -1501,11 +1501,11 @@ func ConvertAzureManagedClusterRoleAssignmentToRels(data models.AzureRoleAssignm
 				azure.AKSContributorRole,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.ManagedCluster,
 						Value: strings.ToUpper(data.ObjectId),
 					},
@@ -1532,11 +1532,11 @@ func ConvertAzureContainerRegistry(data models.ContainerRegistry) (IngestibleNod
 	}
 
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(data.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.ContainerRegistry,
 			Value: strings.ToUpper(data.Id),
 		},
@@ -1549,11 +1549,11 @@ func ConvertAzureContainerRegistry(data models.ContainerRegistry) (IngestibleNod
 	// Enumerate System Assigned Identities
 	if data.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(data.Id),
 				Kind:  azure.ContainerRegistry,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(data.Identity.PrincipalId),
 			},
@@ -1568,11 +1568,11 @@ func ConvertAzureContainerRegistry(data models.ContainerRegistry) (IngestibleNod
 	for _, identity := range data.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(data.Id),
 					Kind:  azure.ContainerRegistry,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -1599,11 +1599,11 @@ func ConvertAzureWebApp(webApp models.WebApp) (IngestibleNode, []IngestibleRelat
 
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(webApp.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.WebApp,
 			Value: strings.ToUpper(webApp.Id),
 		},
@@ -1616,11 +1616,11 @@ func ConvertAzureWebApp(webApp models.WebApp) (IngestibleNode, []IngestibleRelat
 	// Enumerate System Assigned Identities
 	if webApp.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(webApp.Id),
 				Kind:  azure.WebApp,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(webApp.Identity.PrincipalId),
 			},
@@ -1635,11 +1635,11 @@ func ConvertAzureWebApp(webApp models.WebApp) (IngestibleNode, []IngestibleRelat
 	for _, identity := range webApp.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(webApp.Id),
 					Kind:  azure.WebApp,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},
@@ -1665,11 +1665,11 @@ func ConvertAzureAutomationAccountRoleAssignment(roleAssignments models.AzureRol
 				constants.AutomationContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.AutomationAccount,
 						Value: strings.ToUpper(roleAssignments.ObjectId),
 					},
@@ -1695,11 +1695,11 @@ func ConvertAzureContainerRegistryRoleAssignment(roleAssignment models.AzureRole
 				constants.ContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.ContainerRegistry,
 						Value: strings.ToUpper(roleAssignment.ObjectId),
 					},
@@ -1726,11 +1726,11 @@ func ConvertAzureWebAppRoleAssignment(roleAssignment models.AzureRoleAssignments
 				constants.WebsiteContributorRoleID,
 			}, strings.ToLower(raw.RoleDefinitionId)) {
 				relationships = append(relationships, NewIngestibleRelationship(
-					IngestibleSource{
+					IngestibleEndpoint{
 						Value: strings.ToUpper(raw.Assignee.GetPrincipalId()),
 						Kind:  azure.Entity,
 					},
-					IngestibleTarget{
+					IngestibleEndpoint{
 						Kind:  azure.WebApp,
 						Value: strings.ToUpper(roleAssignment.ObjectId),
 					},
@@ -1758,11 +1758,11 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
+		IngestibleEndpoint{
 			Value: strings.ToUpper(account.ResourceGroupId),
 			Kind:  azure.ResourceGroup,
 		},
-		IngestibleTarget{
+		IngestibleEndpoint{
 			Kind:  azure.AutomationAccount,
 			Value: strings.ToUpper(account.Id),
 		},
@@ -1775,11 +1775,11 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 	// Enumerate System Assigned Identities
 	if account.Identity.PrincipalId != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
-			IngestibleSource{
+			IngestibleEndpoint{
 				Value: strings.ToUpper(account.Id),
 				Kind:  azure.AutomationAccount,
 			},
-			IngestibleTarget{
+			IngestibleEndpoint{
 				Kind:  azure.ServicePrincipal,
 				Value: strings.ToUpper(account.Identity.PrincipalId),
 			},
@@ -1794,11 +1794,11 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 	for _, identity := range account.Identity.UserAssignedIdentities {
 		if identity.ClientId != "" {
 			relationships = append(relationships, NewIngestibleRelationship(
-				IngestibleSource{
+				IngestibleEndpoint{
 					Value: strings.ToUpper(account.Id),
 					Kind:  azure.AutomationAccount,
 				},
-				IngestibleTarget{
+				IngestibleEndpoint{
 					Kind:  azure.ServicePrincipal,
 					Value: strings.ToUpper(identity.PrincipalId),
 				},

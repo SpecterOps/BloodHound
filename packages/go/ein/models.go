@@ -19,7 +19,7 @@ package ein
 import "github.com/specterops/bloodhound/dawgs/graph"
 
 // Initialize IngestibleRelationship to ensure the RelProps map can't be nil
-func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget, rel IngestibleRel) IngestibleRelationship {
+func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpoint, rel IngestibleRel) IngestibleRelationship {
 	if rel.RelProps == nil {
 		rel.RelProps = make(map[string]any)
 	}
@@ -32,16 +32,17 @@ func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget,
 	}
 }
 
-type IngestibleSource struct {
-	Value       string // usually objectid
-	MatchByName bool   // do an exact-match on name for node resolution. (default is objectid).
-	Kind        graph.Kind
-}
+type IngestMatchStrategy string
 
-type IngestibleTarget struct {
-	Value       string
-	MatchByName bool
-	Kind        graph.Kind
+const (
+	MatchByID   IngestMatchStrategy = "id"
+	MatchByName IngestMatchStrategy = "name"
+)
+
+type IngestibleEndpoint struct {
+	Value   string              // The actual lookup value (either objectid or name)
+	MatchBy IngestMatchStrategy // Strategy used to resolve the node
+	Kind    graph.Kind          // Optional kind filter
 }
 
 type IngestibleRel struct {
@@ -50,8 +51,8 @@ type IngestibleRel struct {
 }
 
 type IngestibleRelationship struct {
-	Source IngestibleSource
-	Target IngestibleTarget
+	Source IngestibleEndpoint
+	Target IngestibleEndpoint
 
 	RelProps map[string]any
 	RelType  graph.Kind

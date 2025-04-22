@@ -69,8 +69,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: "name a", MatchByName: true},
-					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -100,8 +100,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: "name a", MatchByName: true},
-					ein.IngestibleTarget{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -126,8 +126,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: NAME_NOT_EXISTS, MatchByName: true},
-					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -152,8 +152,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: NAME_NOT_EXISTS, MatchByName: true},
-					ein.IngestibleTarget{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -178,8 +178,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: NAME_MULTIPLE_MATCH, MatchByName: true},
-					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleEndpoint{Value: NAME_MULTIPLE_MATCH, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -204,8 +204,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: "name a", MatchByName: true},
-					ein.IngestibleTarget{Value: NAME_MULTIPLE_MATCH, MatchByName: true},
+					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: NAME_MULTIPLE_MATCH, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -230,8 +230,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: NAME_RESOLVED_BY_KINDS, MatchByName: true, Kind: ad.User},
-					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleEndpoint{Value: NAME_RESOLVED_BY_KINDS, MatchBy: ein.MatchByName, Kind: ad.User},
+					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
@@ -261,8 +261,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{Value: "name a", MatchByName: true, Kind: ad.User},
-					ein.IngestibleTarget{Value: "name b", MatchByName: true, Kind: ad.User},
+					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName, Kind: ad.User},
+					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName, Kind: ad.User},
 					ein.IngestibleRel{},
 				)
 
@@ -287,8 +287,8 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleSource{MatchByName: true},
-					ein.IngestibleTarget{MatchByName: true},
+					ein.IngestibleEndpoint{MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 

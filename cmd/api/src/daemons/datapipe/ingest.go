@@ -319,7 +319,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	)
 
 	for _, next := range relationships {
-		if !next.Source.MatchByName && !next.Target.MatchByName { // if no property to match against, do the usual objectid thang
+		if next.Source.MatchBy == ein.MatchByID && next.Target.MatchBy == ein.MatchByID { // if no property to match against, do the usual objectid thang
 			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
 				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
 				errs.Add(err)
