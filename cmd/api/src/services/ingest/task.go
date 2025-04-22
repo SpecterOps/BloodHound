@@ -19,7 +19,6 @@ package ingest
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 )
 
@@ -35,7 +34,7 @@ func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParam
 	newIngestTask := model.IngestTask{
 		FileName:    params.Filename,
 		RequestGUID: params.RequestID,
-		TaskID:      null.Int64From(params.JobID),
+		TaskID:      params.JobID,
 		FileType:    params.FileType,
 		IsGeneric:   params.IsGeneric,
 	}

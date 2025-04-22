@@ -16,16 +16,12 @@
 
 package model
 
-import (
-	"github.com/specterops/bloodhound/src/database/types/null"
-)
-
 type IngestTask struct {
-	FileName    string     `json:"file_name"`
-	RequestGUID string     `json:"request_guid"`
-	TaskID      null.Int64 `json:"task_id"`
-	FileType    FileType   `json:"file_type"`
-	IsGeneric   bool       `json:"is_generic"`
+	FileName    string   `json:"file_name"`
+	RequestGUID string   `json:"request_guid"`
+	TaskID      int64    `json:"task_id"`
+	FileType    FileType `json:"file_type"`
+	IsGeneric   bool     `json:"is_generic"`
 
 	BigSerial
 }

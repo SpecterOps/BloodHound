@@ -33,40 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/utils"
 )
 
-const jobActivityTimeout = time.Minute * 20
-
 var ErrInvalidJSON = errors.New("file is not valid json")
-
-// ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
-func ProcessStaleIngestJobs(ctx context.Context, db IngestData) {
-	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
-	// commit state transitions when shutting down.
-	if ctx.Err() != nil {
-		return
-	}
-
-	var (
-		now       = time.Now().UTC()
-		threshold = now.Add(-jobActivityTimeout)
-	)
-
-	if jobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting running jobs: %v", err))
-	} else {
-		for _, job := range jobs {
-			if job.LastIngest.Before(threshold) {
-				slog.WarnContext(ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
-					job.ID,
-					now.Sub(threshold).Minutes(),
-					job.LastIngest.Format(time.RFC3339)))
-
-				if err := TimeOutIngestJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
-				}
-			}
-		}
-	}
-}
 
 func GetAllIngestJobs(ctx context.Context, db IngestData, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	return db.GetAllIngestJobs(ctx, skip, limit, order, filter)

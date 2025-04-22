@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"time"
 
@@ -31,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const (
@@ -124,14 +124,6 @@ func resetCache(cacher cache.Cache, _ bool) {
 	}
 }
 
-func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		s.processIngestTasks(s.ctx, ingestTasks)
-	}
-}
-
 func (s *Daemon) Start(ctx context.Context) {
 	var (
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
@@ -153,20 +145,107 @@ func (s *Daemon) Start(ctx context.Context) {
 				s.deleteData()
 			}
 
-			// Ingest all available ingest tasks
-			s.ingestAvailableTasks()
+			if s.cfg.DisableIngest {
+				slog.WarnContext(ctx, "Skipping ingest because it was disabled by configuration")
+				// Added to keep logic identical during refactor, may not be necessary
+				if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle, false); err != nil {
+					slog.ErrorContext(
+						ctx,
+						"Failed to set datapipe status to idle",
+						slog.String("err", err.Error()),
+					)
+				}
+			} else if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed to get ingest tasks",
+					slog.String("err", err.Error()),
+				)
+			} else if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIngesting, false); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed to set datapipe status to ingesting",
+					slog.String("err", err.Error()),
+				)
+			} else {
+				for _, ingestTask := range ingestTasks {
+					ingestTaskLogger := slog.Default().With(
+						slog.Group("ingest_task",
+							slog.Int64("id", ingestTask.ID),
+							slog.String("file_name", ingestTask.FileName),
+						),
+					)
 
-			// Manage time-out state progression for ingest jobs
-			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
+					// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
+					// handling assumes that all failures should be logged and not returned.
+					if ctx.Err() != nil {
+						ingestTaskLogger.ErrorContext(
+							ctx,
+							"Context error during ingest task handling",
+							slog.String("err", ctx.Err().Error()),
+						)
+						break
+					}
 
-			// Manage nominal state transitions for ingest jobs
-			ProcessFinishedIngestJobs(s.ctx, s.db)
+					if paths, failed, err := preProcessIngestFile(ctx, s.cfg.TempDirectory(), ingestTask); errors.Is(err, fs.ErrNotExist) {
+						ingestTaskLogger.WarnContext(
+							ctx,
+							"File does not exist for ingest task",
+							slog.String("err", err.Error()),
+						)
+					} else if err != nil {
+						ingestTaskLogger.ErrorContext(
+							ctx,
+							"Failed to preprocess ingest file",
+							slog.String("err", err.Error()),
+						)
+					} else if total, failed, err := processIngestFile(ctx, s.graphdb, paths, failed); err != nil {
+						ingestTaskLogger.ErrorContext(
+							ctx,
+							"Failed to process ingest file",
+							slog.String("err", err.Error()),
+						)
+					} else if job, err := s.db.GetIngestJob(ctx, ingestTask.TaskID); err != nil {
+						ingestTaskLogger.ErrorContext(
+							ctx,
+							"Failed to get ingest job",
+							slog.String("err", err.Error()),
+						)
+					} else if err := updateIngestJob(ctx, s.db, job, total, failed); err != nil {
+						ingestTaskLogger.ErrorContext(
+							ctx,
+							"Failed to update file completion for ingest job",
+							slog.String("err", err.Error()),
+						)
+					}
+				}
+			}
+
+			if err := ProcessStaleIngestJobs(ctx, s.db); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed to process stale ingest jobs",
+					slog.String("err", err.Error()),
+				)
+			}
+
+			if err := ProcessFinishedIngestJobs(ctx, s.db); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Failed to process finished ingest jobs",
+					slog.String("err", err.Error()),
+				)
+			}
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
+			}
+
+			if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle, false); err != nil {
+				slog.ErrorContext(ctx, "Failed to return datapipe status to idle", "err", err)
 			}
 
 			datapipeLoopTimer.Reset(s.tickInterval)

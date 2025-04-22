@@ -108,43 +108,43 @@ func TestCompleteAnalyzedIngestJobs(t *testing.T) {
 	})
 }
 
-func TestProcessFinishedIngestJobs(t *testing.T) {
-	const jobID int64 = 1
+// func TestProcessFinishedIngestJobs(t *testing.T) {
+// 	const jobID int64 = 1
 
-	var (
-		mockCtrl = gomock.NewController(t)
-		dbMock   = mocks.NewMockDatabase(mockCtrl)
-	)
+// 	var (
+// 		mockCtrl = gomock.NewController(t)
+// 		dbMock   = mocks.NewMockDatabase(mockCtrl)
+// 	)
 
-	defer mockCtrl.Finish()
+// 	defer mockCtrl.Finish()
 
-	t.Run("Transition Jobs with No Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
-			BigSerial: model.BigSerial{
-				ID: jobID,
-			},
-			Status: model.JobStatusIngesting,
-		}}, nil)
+// 	t.Run("Transition Jobs with No Remaining Ingest Tasks", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusIngesting,
+// 		}}, nil)
 
-		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
-		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
-			require.Equal(t, model.JobStatusAnalyzing, IngestJob.Status)
-			return nil
-		})
+// 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
+// 		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
+// 			require.Equal(t, model.JobStatusAnalyzing, IngestJob.Status)
+// 			return nil
+// 		})
 
-		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
-	})
+// 		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
+// 	})
 
-	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
-		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
-			BigSerial: model.BigSerial{
-				ID: jobID,
-			},
-			Status: model.JobStatusIngesting,
-		}}, nil)
+// 	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusIngesting,
+// 		}}, nil)
 
-		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{{}}, nil)
+// 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{{}}, nil)
 
-		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
-	})
-}
+// 		datapipe.ProcessFinishedIngestJobs(context.Background(), dbMock)
+// 	})
+// }

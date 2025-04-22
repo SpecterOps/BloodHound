@@ -42,7 +42,7 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ing
 	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
-		return IngestWrapper(batch, reader, meta, adcsEnabled)
+		return IngestWrapper(batch, reader, meta)
 	}
 }
 
@@ -96,7 +96,7 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
 	return errs.Combined()
 }
 
-func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
+func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
 	switch meta.Type {
 	case ingest.DataTypeComputer:
 		if meta.Version >= 5 {
