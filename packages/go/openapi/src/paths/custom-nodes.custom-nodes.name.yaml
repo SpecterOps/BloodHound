@@ -25,7 +25,9 @@ parameters:
 get:
   operationId: GetCustomNode
   summary: Get custom node
-  description: Retrieves custom node
+  description: |
+    Retrieve the configuration for a specific custom node kind.
+    Returns the display settings and metadata for the requested node kind.
   tags:
     - Custom Node Management
     - Community
@@ -46,7 +48,9 @@ get:
 put:
   operationId: UpdateCustomNode
   summary: Update custom node
-  description: Update custom node
+  description: |
+    Update the configuration for a specific custom node kind.
+    Returns the updated configuration for the specific node kind.
   tags:
     - Custom Node Management
     - Community
@@ -76,7 +80,7 @@ put:
 delete:
   operationId: DeleteCustomNode
   summary: Delete custom node
-  description: Delete custom node
+  description: Delete the configuration for a specific custom node kind.
   tags:
     - Custom Node Management
     - Community

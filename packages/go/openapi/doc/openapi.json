@@ -2746,7 +2746,7 @@
       "get": {
         "operationId": "GetCustomNodes",
         "summary": "Get custom nodes",
-        "description": "Retrieves custom nodes",
+        "description": "Retrieve a list of all custom node configurations.\nThis endpoint returns the current set of registered node kinds and their display settings.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2782,7 +2782,7 @@
       "post": {
         "operationId": "CreateCustomNodes",
         "summary": "Create custom nodes",
-        "description": "Creates custom nodes",
+        "description": "Create one or more custom node configurations.\nThis endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2794,8 +2794,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": {
-                  "$ref": "#/components/schemas/model.custom-node.config"
+                "properties": {
+                  "custom_types": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/model.custom-node.config"
+                    }
+                  }
                 }
               }
             }
@@ -2871,7 +2876,7 @@
       "get": {
         "operationId": "GetCustomNode",
         "summary": "Get custom node",
-        "description": "Retrieves custom node",
+        "description": "Retrieve the configuration for a specific custom node kind.\nReturns the display settings and metadata for the requested node kind.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2902,7 +2907,7 @@
       "put": {
         "operationId": "UpdateCustomNode",
         "summary": "Update custom node",
-        "description": "Update custom node",
+        "description": "Update the configuration for a specific custom node kind.\nReturns the updated configuration for the specific node kind.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2948,7 +2953,7 @@
       "delete": {
         "operationId": "DeleteCustomNode",
         "summary": "Delete custom node",
-        "description": "Delete custom node",
+        "description": "Delete the configuration for a specific custom node kind.",
         "tags": [
           "Custom Node Management",
           "Community",

@@ -19,7 +19,9 @@ parameters:
 get:
   operationId: GetCustomNodes
   summary: Get custom nodes
-  description: Retrieves custom nodes
+  description: |
+    Retrieve a list of all custom node configurations.
+    This endpoint returns the current set of registered node kinds and their display settings.
   tags:
     - Custom Node Management
     - Community
@@ -43,7 +45,9 @@ get:
 post:
   operationId: CreateCustomNodes
   summary: Create custom nodes
-  description: Creates custom nodes
+  description: |
+    Create one or more custom node configurations.
+    This endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported
   tags:
     - Custom Node Management
     - Community
@@ -54,8 +58,11 @@ post:
       application/json:
         schema:
           type: object
-          additionalProperties:
-            $ref: './../schemas/model.custom-node.config.yaml'
+          properties:
+            custom_types:
+              type: object
+              additionalProperties:
+                $ref: './../schemas/model.custom-node.config.yaml'
   responses:
     201:
       description: CREATED
