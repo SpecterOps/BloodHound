@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Alert, AlertTitle, Box, Grid } from '@mui/material';
+import { Alert, AlertTitle } from '@mui/material';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
@@ -34,33 +34,28 @@ const NotFound: React.FC = () => {
         }
 
         navigate(ROUTE_LOGIN);
-    }, [isFullyAuthenticated]);
+    }, [isFullyAuthenticated, navigate]);
 
     return (
         <LoginPage>
-            <Grid container spacing={4} justifyContent='center'>
-                <Grid item xs={12}>
-                    <Alert severity='warning'>
-                        <AlertTitle>404 - Page not found</AlertTitle>
-                        There is no page associated with this route. Please contact your system administrator for
-                        assistance.
-                    </Alert>
-                </Grid>
-                <Grid item xs={12}>
-                    <Box mt={2}>
-                        <Button
-                            onClick={() => {
-                                navigate(ROUTE_EXPLORE);
-                            }}
-                            data-testid='page-not-found-go-to-explore'
-                            size='large'
-                            type='button'
-                            className='w-full'>
-                            Go to Explore
-                        </Button>
-                    </Box>
-                </Grid>
-            </Grid>
+            <div className='flex flex-col gap-6'>
+                <Alert severity='warning'>
+                    <AlertTitle>404 - Page not found</AlertTitle>
+                    There is no page associated with this route. Please contact your system administrator for
+                    assistance.
+                </Alert>
+
+                <Button
+                    onClick={() => {
+                        navigate(ROUTE_EXPLORE);
+                    }}
+                    data-testid='page-not-found-go-to-explore'
+                    size='large'
+                    type='button'
+                    className='w-full'>
+                    Go to Explore
+                </Button>
+            </div>
         </LoginPage>
     );
 };
