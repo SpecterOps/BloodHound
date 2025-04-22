@@ -23,12 +23,21 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func CreateIngestTask(ctx context.Context, db IngestData, filename string, fileType model.FileType, requestID string, jobID int64) (model.IngestTask, error) {
+type IngestTaskParams struct {
+	Filename  string
+	FileType  model.FileType
+	RequestID string
+	JobID     int64
+	IsGeneric bool
+}
+
+func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
-		FileName:    filename,
-		RequestGUID: requestID,
-		TaskID:      null.Int64From(jobID),
-		FileType:    fileType,
+		FileName:    params.Filename,
+		RequestGUID: params.RequestID,
+		TaskID:      null.Int64From(params.JobID),
+		FileType:    params.FileType,
+		IsGeneric:   params.IsGeneric,
 	}
 
 	return db.CreateIngestTask(ctx, newIngestTask)
