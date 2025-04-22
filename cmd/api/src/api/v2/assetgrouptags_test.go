@@ -1378,7 +1378,7 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.UnmarshalData(output, &resp)
 					apitest.BodyContains(output, "prop")
 					apitest.BodyContains(output, "test")
-					apitest.Equal(output, 1, len(resp.Member.Properties.Map))
+					apitest.Equal(output, 1, len(resp.Member.Properties))
 				},
 			},
 			{
@@ -1400,7 +1400,7 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.UnmarshalData(output, &resp)
 					apitest.BodyContains(output, "test")
-					apitest.Equal(output, 0, len(resp.Member.Properties.Map))
+					apitest.Equal(output, 0, len(resp.Member.Properties))
 				},
 			},
 		})

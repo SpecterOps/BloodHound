@@ -403,11 +403,11 @@ type member struct {
 }
 
 type assetGroupMemberResponse struct {
-	NodeId      graph.ID         `json:"id"`
-	ObjectID    string           `json:"object_id"`
-	PrimaryKind string           `json:"primary_kind"`
-	Name        string           `json:"name"`
-	Properties  graph.Properties `json:"properties,omitempty"`
+	NodeId      graph.ID       `json:"id"`
+	ObjectID    string         `json:"object_id"`
+	PrimaryKind string         `json:"primary_kind"`
+	Name        string         `json:"name"`
+	Properties  map[string]any `json:"properties,omitempty"`
 
 	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
@@ -477,7 +477,7 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) assetGroup
 	}
 
 	if includeProperties {
-		member.Properties = *node.Properties
+		member.Properties = node.Properties.Map
 	}
 
 	return member
