@@ -17,14 +17,12 @@
 package ad
 
 import (
-	"strings"
-
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 func FilterSessions() graph.Criteria {
@@ -161,14 +159,11 @@ func SelectComputersCandidateFilter(node *graph.Node) bool {
 }
 
 func SelectGPOTierZeroCandidateFilter(node *graph.Node) bool {
-	if tags, err := node.Properties.Get(common.SystemTags.String()).String(); err != nil {
-		return false
-	} else if node.Kinds.ContainsOneOf(ad.Group) {
+	if node.Kinds.ContainsOneOf(ad.Group) {
 		// GPOs don’t apply to groups.
 		return false
-	} else {
-		return strings.Contains(tags, ad.AdminTierZero)
 	}
+	return tiering.IsTierZero(node)
 }
 
 func SelectGPOContainerCandidateFilter(node *graph.Node) bool {

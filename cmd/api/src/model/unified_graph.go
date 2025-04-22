@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
@@ -78,7 +78,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 		Label:         label,
 		Kind:          analysis.GetNodeKind(node).String(),
 		ObjectId:      objectId,
-		IsTierZero:    strings.Contains(systemTags, ad.AdminTierZero),
+		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: strings.Contains(systemTags, OwnedAssetGroupTag),
 		LastSeen:      lastSeen,
 		Properties:    properties,

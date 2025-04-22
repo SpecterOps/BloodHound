@@ -26,6 +26,22 @@ import (
 
 func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocation) {
 	switch formattedName := strings.ToLower(typedExpression.Name); formattedName {
+	case cypher.DurationFunction:
+		if typedExpression.NumArguments() != 1 {
+			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))
+		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
+			s.SetError(err)
+		} else if referenceArgument, typeOK := argument.(pgsql.Literal); !typeOK {
+			s.SetErrorf("expected a string literal for the cypher function: %s but received %T", typedExpression.Name, argument)
+		} else if _, typeOK := referenceArgument.Value.(string); !typeOK {
+			s.SetErrorf("expected a string literal for the cypher function: %s but received %T", typedExpression.Name, argument)
+		} else {
+			// Rewrite the cast type of the literal to the PgSQL interval type. The equivalent PgSQL form does not
+			// require a function call
+			referenceArgument.CastType = pgsql.Interval
+			s.treeTranslator.PushOperand(referenceArgument)
+		}
+
 	case cypher.IdentityFunction:
 		if typedExpression.NumArguments() != 1 {
 			s.SetError(fmt.Errorf("expected only one argument for cypher function: %s", typedExpression.Name))

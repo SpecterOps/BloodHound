@@ -50,32 +50,23 @@ func LoadIngestSchema() (IngestSchema, error) {
 }
 
 func loadSchema(filename string) (*jsonschema.Schema, error) {
-	const schemaDir = "jsonschema"
+	var (
+		schemaDir = "jsonschema"
+		compiler  = jsonschema.NewCompiler()
+	)
 
 	// Read the raw JSON schema file from embed.FS
 	path := fmt.Sprintf("%s/%s", schemaDir, filename)
-	data, err := schemaFiles.ReadFile(path)
-	if err != nil {
+	if data, err := schemaFiles.ReadFile(path); err != nil {
 		return nil, fmt.Errorf("failed to read schema %q: %w", path, err)
-	}
-
-	// Parse the JSON into a generic in-memory representation
-	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
-	if err != nil {
+	} else if document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data)); err != nil { // Parse the JSON into a generic in-memory representation
 		return nil, fmt.Errorf("failed to unmarshal schema %q: %w", path, err)
-	}
-
-	// Create a new compiler and register the document
-	compiler := jsonschema.NewCompiler()
-	if err := compiler.AddResource(filename, document); err != nil {
+	} else if err := compiler.AddResource(filename, document); err != nil {
 		return nil, fmt.Errorf("failed to add resource for schema %q: %w", filename, err)
-	}
-
-	// Compile the schema for validation use
-	schema, err := compiler.Compile(filename)
-	if err != nil {
+	} else if schema, err := compiler.Compile(filename); err != nil {
 		return nil, fmt.Errorf("failed to compile schema %q: %w", filename, err)
+	} else {
+		return schema, nil
 	}
 
-	return schema, nil
 }

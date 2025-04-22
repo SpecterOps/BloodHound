@@ -42,6 +42,7 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
+<<<<<<< HEAD
 type ReadOptions struct {
 	FileType     model.FileType // JSON or ZIP
 	IngestSchema ingest_service.IngestSchema
@@ -63,6 +64,11 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, options ReadOpti
 
 	if meta, err := ingest_service.ParseAndValidateIngestPayload(reader, options.IngestSchema, shouldValidateGeneric, readToEnd); err != nil {
 		return err
+=======
+func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
+	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
+		return fmt.Errorf("error validating meta tag: %w", err)
+>>>>>>> main
 	} else {
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}

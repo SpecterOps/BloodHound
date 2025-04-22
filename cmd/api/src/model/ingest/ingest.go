@@ -222,4 +222,5 @@ var (
 	ErrInvalidDataTag      = errors.New("invalid data tag found")
 	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 	ErrInvalidZipFile      = errors.New("failed to find zip file header")
+	ErrMixedIngestFormat   = errors.New("request must use either the classic format (meta/data) or the generic format (graph), not both")
 )

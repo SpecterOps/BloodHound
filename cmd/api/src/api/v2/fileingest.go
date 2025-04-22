@@ -122,10 +122,18 @@ func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Re
 	}
 }
 
+<<<<<<< HEAD
 func (s Resources) ProcessIngestFile(response http.ResponseWriter, request *http.Request) {
 	var (
 		requestId   = ctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+=======
+func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http.Request) {
+	var (
+		requestId   = ctx.FromRequest(request).RequestID
+		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+		validator   = ingest.NewIngestValidator(s.IngestSchema)
+>>>>>>> main
 	)
 
 	if request.Body != nil {

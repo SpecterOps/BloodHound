@@ -4,7 +4,28 @@
     "type": "object",
     "properties": {
         "id": { "type": "string" },
-        "properties": { "type": ["object", "null"] },
+        "properties": {
+            "type": ["object", "null"],
+            "additionalProperties": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" },
+                    { "type": "boolean" },
+                    { "type": "null" },
+                    {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {  "type": "string" } ,
+                                {  "type": "number" } ,
+                                {  "type": "boolean" } ,
+                                {  "type": "null" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "kinds": {
             "type": ["array"],
             "items": { "type": "string" },

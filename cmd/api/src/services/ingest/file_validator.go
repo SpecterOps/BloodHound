@@ -36,22 +36,6 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.Metadata, error) 
 	return ingest.Metadata{}, ValidateZipFile(tr)
 }
 
-// WriteAndValidateJSON implements FileValidator for JSON ingest files.
-// It streams JSON through a validator while simultaneously writing it to disk.
-//
-// This method is a member of `IngestValidator` to reuse the precompiled
-// node and edge schemas loaded during application startup.
-func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
-	normalizedContent, err := bomenc.NormalizeToUTF8(src)
-	if err != nil {
-		return ingest.Metadata{}, err
-	}
-	tr := io.TeeReader(normalizedContent, dst)
-	metatag, err := ParseAndValidateIngestPayload(tr, s.IngestSchema, true, true)
-
-	return metatag, err
-}
-
 // IngestValidator encapsulates precompiled JSON schemas used to validate
 // graph ingest payloads, including node and edge definitions.
 //
@@ -65,4 +49,20 @@ func NewIngestValidator(schema IngestSchema) IngestValidator {
 	return IngestValidator{
 		IngestSchema: schema,
 	}
+}
+
+// WriteAndValidateJSON implements FileValidator for JSON ingest files.
+// It streams JSON through a validator while simultaneously writing it to disk.
+//
+// This method is a member of `IngestValidator` to reuse the precompiled
+// node and edge schemas loaded during application startup.
+func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (ingest.Metadata, error) {
+	normalizedContent, err := bomenc.NormalizeToUTF8(src)
+	if err != nil {
+		return ingest.Metadata{}, err
+	}
+	tr := io.TeeReader(normalizedContent, dst)
+	metatag, err := ValidateMetaTag(tr, s.IngestSchema, true)
+
+	return metatag, err
 }

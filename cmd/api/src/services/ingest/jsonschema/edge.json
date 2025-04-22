@@ -1,58 +1,129 @@
 {
     "title": "Generic Ingest Edge",
-    "description": "An edge used in a generic graph ingestion system. Each edge connects a start node to an end node using unique identifiers. A kind is required to define the relationship type. Optional properties can include additional metadata. Node lookup can be customized by specifying an `id_property`, otherwise 'objectid' is used by default.",
+    "description": "Defines an edge between two nodes in a generic graph ingestion system. Each edge specifies a start and end node using either a unique identifier (id) or a name-based lookup. A kind is required to indicate the relationship type. Optional properties may include custom attributes. You may optionally constrain the start or end node to a specific kind using the kind field inside each reference.",
     "type": "object",
     "properties": {
         "start": {
             "type": "object",
             "properties": {
-                "id_value": { "type": "string" },
-                "id_property": {
+                "match_by": {
                     "type": "string",
-                    "description": "Edge inserts use this property to perform an exact match search. If not provided, edge inserts default to matching on a node's 'objectid' property."
+                    "enum": ["id", "name"],
+                    "default": "id",
+                    "description": "Whether to match the start node by its unique object ID or by its name property."
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The value used for matching — either an object ID or a name, depending on match_by."
+                },
+                "kind": {
+                    "type": "string",
+                    "description": "Optional kind filter; the referenced node must have this kind."
                 }
             },
-            "required": ["id_value"]
+            "required": ["value"]
         },
         "end": {
             "type": "object",
             "properties": {
-                "id_value": { "type": "string" },
-                "id_property": {
+                "match_by": {
                     "type": "string",
-                    "description": "Edge inserts use this property to perform an exact match search. If not provided, edge inserts default to matching on a node's 'objectid' property."
+                    "enum": ["id", "name"],
+                    "default": "id",
+                    "description": "Whether to match the start node by its unique object ID or by its name property."
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The value used for matching — either an object ID or a name, depending on match_by."
+                },
+                "kind": {
+                    "type": "string",
+                    "description": "Optional kind filter; the referenced node must have this kind."
                 }
             },
-            "required": ["id_value"]
+            "required": ["value"]
         },
         "kind": { "type": "string" },
-        "properties": { "type": ["object", "null"] }
+        "properties": {
+            "type": ["object", "null"],
+            "additionalProperties": {
+                "anyOf": [
+                    { "type": "string" },
+                    { "type": "number" },
+                    { "type": "boolean" },
+                    { "type": "null" },
+                    {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "number" },
+                                { "type": "boolean" },
+                                { "type": "null" }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
     },
     "required": ["start", "end", "kind"],
     "examples": [
         {
-            "start": { "id_value": "user-1234" },
-            "end": { "id_value": "device-5678" },
-            "kind": "USES"
-        },
-        {
             "start": {
-                "id_value": "server-001",
-                "id_property": "hostname"
+                "match_by": "id",
+                "value": "user-1234"
             },
             "end": {
-                "id_value": "rack-01",
-                "id_property": "location_id"
+                "match_by": "id",
+                "value": "server-5678"
             },
-            "kind": "LOCATED_IN",
+            "kind": "has_session",
             "properties": {
-                "installed_at": "2025-04-08"
+                "timestamp": "2025-04-16T12:00:00Z",
+                "duration_minutes": 45
             }
         },
         {
-            "start": { "id_value": "process-1" },
-            "end": { "id_value": "file-1" },
-            "kind": "ACCESSES",
+            "start": {
+                "match_by": "name",
+                "value": "alice",
+                "kind": "User"
+            },
+            "end": {
+                "match_by": "name",
+                "value": "file-server-1",
+                "kind": "Server"
+            },
+            "kind": "accessed_resource",
+            "properties": {
+                "via": "SMB",
+                "sensitive": true
+            }
+        },
+        {
+            "start": {
+                "value": "admin-1"
+            },
+            "end": {
+                "value": "domain-controller-9"
+            },
+            "kind": "admin_to",
+            "properties": {
+                "reason": "elevated_permissions",
+                "confirmed": false
+            }
+        },
+        {
+            "start": {
+                "match_by": "name",
+                "value": "Printer-007"
+            },
+            "end": {
+                "match_by": "id",
+                "value": "network-42"
+            },
+            "kind": "connected_to",
             "properties": null
         }
     ]
