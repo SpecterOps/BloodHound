@@ -19,51 +19,41 @@ package ingest
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
-func expectOpeningSquareBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
+func expectOpenArray(decoder *json.Decoder, name string) error {
+	if tok, err := decoder.Token(); err != nil {
 		return fmt.Errorf("error decoding %s array: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '[' {
+	} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenSquareBracket {
 		return fmt.Errorf("error opening %s array: expected '[', got %v", name, tok)
 	}
 	return nil
 }
 
-func expectClosingSquareBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
+func expectClosingArray(decoder *json.Decoder, name string) error {
+	if tok, err := decoder.Token(); err != nil {
 		return fmt.Errorf("error decoding %s array: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != ']' {
-		return fmt.Errorf("error closing %s array: expected ']', got %v", name, tok)
+	} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimCloseSquareBracket {
+		return fmt.Errorf("error opening %s array: expected ']', got %v", name, tok)
 	}
 	return nil
 }
 
-func expectOpeningCurlyBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
+func expectOpenObject(decoder *json.Decoder, name string) error {
+	if tok, err := decoder.Token(); err != nil {
 		return fmt.Errorf("error decoding %s object: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '{' {
+	} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimOpenBracket {
 		return fmt.Errorf("error opening %s object: expected '{', got %v", name, tok)
 	}
 	return nil
 }
 
-func expectClosingCurlyBracket(decoder *json.Decoder, name string) error {
-	tok, err := decoder.Token()
-	if err != nil {
+func expectClosingObject(decoder *json.Decoder, name string) error {
+	if tok, err := decoder.Token(); err != nil {
 		return fmt.Errorf("error decoding %s object: %w", name, err)
-	}
-	delim, ok := tok.(json.Delim)
-	if !ok || delim != '}' {
+	} else if delim, ok := tok.(json.Delim); !ok || delim != ingest.DelimCloseBracket {
 		return fmt.Errorf("error closing %s object: expected '}', got %v", name, tok)
 	}
 	return nil

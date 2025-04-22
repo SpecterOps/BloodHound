@@ -36,6 +36,21 @@ func WriteAndValidateZip(src io.Reader, dst io.Writer) (ingest.Metadata, error) 
 	return ingest.Metadata{}, ValidateZipFile(tr)
 }
 
+// IngestValidator encapsulates precompiled JSON schemas used to validate
+// graph ingest payloads, including node and edge definitions.
+//
+// This struct allows schema compilation to happen once at application startup,
+// avoiding repeated compilation during each file ingest request.
+type IngestValidator struct {
+	IngestSchema IngestSchema
+}
+
+func NewIngestValidator(schema IngestSchema) IngestValidator {
+	return IngestValidator{
+		IngestSchema: schema,
+	}
+}
+
 // WriteAndValidateJSON implements FileValidator for JSON ingest files.
 // It streams JSON through a validator while simultaneously writing it to disk.
 //
@@ -50,19 +65,4 @@ func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (in
 	metatag, err := ValidateMetaTag(tr, s.IngestSchema, true)
 
 	return metatag, err
-}
-
-// IngestValidator encapsulates precompiled JSON schemas used to validate
-// graph ingest payloads, including node and edge definitions.
-//
-// This struct allows schema compilation to happen once at application startup,
-// avoiding repeated compilation during each file ingest request.
-type IngestValidator struct {
-	IngestSchema IngestSchema
-}
-
-func NewIngestValidator(schema IngestSchema) IngestValidator {
-	return IngestValidator{
-		IngestSchema: schema,
-	}
 }

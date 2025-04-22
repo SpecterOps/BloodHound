@@ -126,13 +126,12 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	var (
 		requestId   = ctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+		validator   = ingest.NewIngestValidator(s.IngestSchema)
 	)
 
 	if request.Body != nil {
 		defer request.Body.Close()
 	}
-
-	validator := ingest.NewIngestValidator(s.IngestSchema)
 
 	if !IsValidContentTypeForUpload(request.Header) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)

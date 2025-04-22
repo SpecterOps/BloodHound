@@ -70,7 +70,7 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 		maxErrors:  15,
 	}
 
-	if err := expectOpeningCurlyBracket(decoder, "graph"); err != nil {
+	if err := expectOpenObject(decoder, "graph"); err != nil {
 		v.reportCritical(0, err.Error())
 		return v.report()
 	}
@@ -108,7 +108,7 @@ func ValidateGraph(decoder *json.Decoder, schema IngestSchema) error {
 		}
 	}
 
-	if err := expectClosingCurlyBracket(decoder, "graph"); err != nil {
+	if err := expectClosingObject(decoder, "graph"); err != nil {
 		v.reportCritical(0, err.Error())
 		return v.report()
 	}
@@ -383,7 +383,7 @@ func (v *validator) hasErrors() bool {
 }
 
 func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
-	if err := expectOpeningSquareBracket(v.decoder, arrayName); err != nil {
+	if err := expectOpenArray(v.decoder, arrayName); err != nil {
 		v.reportCritical(0, err.Error())
 		return
 	}
@@ -416,7 +416,7 @@ func (v *validator) validateArray(arrayName string, schema *jsonschema.Schema) {
 		index++
 	}
 
-	if err := expectClosingSquareBracket(v.decoder, arrayName); err != nil {
+	if err := expectClosingArray(v.decoder, arrayName); err != nil {
 		v.reportCritical(0, err.Error())
 	}
 }
