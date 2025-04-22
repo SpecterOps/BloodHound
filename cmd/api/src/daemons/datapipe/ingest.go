@@ -325,7 +325,8 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 				errs.Add(err)
 			}
 		} else {
-			if err := ResolveRelationshipByNameMatch(batch, next); err != nil {
+			// todo: need to update signature
+			if err := submitUpdate(batch, next); err != nil {
 				errs.Add(err)
 			}
 		}
@@ -339,7 +340,7 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 // TODO: how does this function cleanup if the feature is limited to just name matching, and not any arbitrary property?
 // todo: what if only one of source/target requires resolution
 // todo: change rel -> rels and refactor this to do resolution for many rels in one dawg query
-func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelationship) error {
+func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship) (graph.RelationshipUpdate, error) {
 	var (
 		nowUTC              = time.Now().UTC()
 		matches             = map[string]string{}
@@ -348,8 +349,8 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 			var sourceCriteria, targetCriteria []graph.Criteria
 
 			// always append name filter
-			sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(rel.SourceProperty), strings.ToUpper(rel.Source)))
-			targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(rel.TargetProperty), strings.ToUpper(rel.Target)))
+			sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(rel.SourceProperty), rel.Source))
+			targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(rel.TargetProperty), rel.Target))
 
 			// optionally append kind filter
 			if rel.SourceKind != nil {
@@ -366,9 +367,14 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 				query.And(targetCriteria...),
 			)
 		}
+		result graph.RelationshipUpdate
 	)
 
-	if err := batch.Nodes().Filter(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+	if rel.Source == "" || rel.Target == "" {
+		return result, nil
+	}
+
+	if err := batch.Nodes().Filterf(filter).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for node := range cursor.Chan() {
 			props := node.Properties
 
@@ -406,11 +412,11 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 		}
 		return nil
 	}); err != nil {
-		return err
+		return result, err
 	}
 
 	if ambiguousResolution {
-		return nil
+		return result, nil
 	}
 
 	srcID, srcOk := matches["source"]
@@ -422,7 +428,7 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 			slog.String("target", rel.Target),
 			slog.Bool("resolved_source", srcOk),
 			slog.Bool("resolved_target", targetOk))
-		return nil
+		return result, nil
 	}
 
 	start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
@@ -435,7 +441,7 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 		common.LastSeen: nowUTC,
 	}), rel.TargetKind)
 
-	update := graph.RelationshipUpdate{
+	result = graph.RelationshipUpdate{
 		Start: start,
 		StartIdentityProperties: []string{
 			common.ObjectID.String(),
@@ -448,8 +454,16 @@ func ResolveRelationshipByNameMatch(batch graph.Batch, rel ein.IngestibleRelatio
 		// note: no need to set start/end identitykind because this code path is generic-ingest only which has no base kind.
 	}
 
-	return batch.UpdateRelationshipBy(update)
+	return result, nil
 
+}
+
+func submitUpdate(batch graph.Batch, rel ein.IngestibleRelationship) error {
+	if update, err := ResolveRelationshipByName(batch, rel); err != nil {
+		return err
+	} else {
+		return batch.UpdateRelationshipBy(update)
+	}
 }
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {

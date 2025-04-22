@@ -9749,12 +9749,26 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 
 type GenericIngest struct {
 	Node1 *graph.Node
+	Node2 *graph.Node
+	// Nodes 3 and 4 have the same name to support cases that need to branch on ambiguous resolution
+	Node3 *graph.Node
+	Node4 *graph.Node
+	// Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
+	Node5 *graph.Node
+	Node6 *graph.Node
 }
 
 func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
 	domainsid := RandomDomainSID()
 
-	s.Node1 = graphTestContext.NewActiveDirectoryComputer("NAME A", domainsid)
+	s.Node1 = graphTestContext.NewActiveDirectoryComputer("name a", domainsid)
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("name b", domainsid)
+
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("same name", domainsid)
+	s.Node4 = graphTestContext.NewActiveDirectoryComputer("same name", domainsid)
+
+	s.Node5 = graphTestContext.NewActiveDirectoryComputer("namey name kindy kind", domainsid)
+	s.Node6 = graphTestContext.NewActiveDirectoryUser("namey name kindy kind", domainsid)
 }
 
 type HarnessDetails struct {

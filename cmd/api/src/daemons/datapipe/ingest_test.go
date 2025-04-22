@@ -17,13 +17,10 @@
 package datapipe_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -55,63 +52,266 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 	assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
 }
 
-func Test_Monday(t *testing.T) {
+func Test_ResolveRelationshipByName(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
-	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.GenericIngest.Setup(testContext)
-		return nil
-	},
-		func(harness integration.HarnessDetails, db graph.Database) {
-			ingestibleRel := ein.IngestibleRelationship{
-				SourceProperty: "name",
-				Source:         "name a",
-				// SourceKind:     ad.User,
-				TargetProperty: "name",
-				Target:         "name b",
-				TargetKind:     ad.Computer,
-			}
+	var (
+		NAME_NOT_EXISTS        = "bippity boppity"       // simulates a name that does not exist
+		NAME_MULTIPLE_MATCH    = "same name"             // simulates a name that will be matched by multiple nodes
+		NAME_RESOLVED_BY_KINDS = "namey name kindy kind" // simulates a name that will be matched by multiple nodes but will resolve by optional kind filter
+	)
 
-			db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				err := datapipe.ResolveRelationshipByNameMatch(batch, ingestibleRel)
-				require.Nil(t, err)
-
+	t.Run("Exact match (happy path). Source and target node names both resolve unambiguously to nodes with objectids.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
 				return nil
-			})
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         "name a",
+					TargetProperty: "name",
+					Target:         "name b",
+				}
 
-			db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				// OPEN QUESTION:
-				// how does this wok when sourceKind/targetKind are nil --> ANSWER: panics
-				// expect that source will be not-nil result
-				err := batch.Nodes().Filterf(func() graph.Criteria {
-					var (
-						sourceCriteria, targetCriteria []graph.Criteria
-					)
-					sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(ingestibleRel.SourceProperty), strings.ToUpper(ingestibleRel.Source)))
-					if ingestibleRel.SourceKind != nil {
-						sourceCriteria = append(sourceCriteria, query.Kind(query.Node(), ingestibleRel.SourceKind))
-					}
-					source := query.And(sourceCriteria...)
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
 
-					targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(ingestibleRel.TargetProperty), strings.ToUpper(ingestibleRel.Target)))
-					if ingestibleRel.TargetKind != nil {
-						targetCriteria = append(targetCriteria, query.Kind(query.Node(), ingestibleRel.TargetKind))
-					}
+					startOID, _ := update.Start.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startOID)
 
-					target := query.And(targetCriteria...)
-
-					return query.Or(source, target)
-				}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-					for node := range cursor.Chan() {
-						fmt.Println(node)
-					}
+					endOID, _ := update.End.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endOID)
 
 					return nil
 				})
 
 				require.Nil(t, err)
 
-				return nil
 			})
-		})
+	})
+
+	t.Run("Only source matches. Target node is unmatched by name - update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         "name a",
+					TargetProperty: "name",
+					Target:         NAME_NOT_EXISTS,
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Only target matches.	Source node is unmatched by name - update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         NAME_NOT_EXISTS,
+					TargetProperty: "name",
+					Target:         "name b",
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Neither matches. No node resolves to source or target — update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         NAME_NOT_EXISTS,
+					TargetProperty: "name",
+					Target:         NAME_NOT_EXISTS,
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Multiple matches for source — ambiguity, update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         NAME_MULTIPLE_MATCH,
+					TargetProperty: "name",
+					Target:         "name b",
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Multiple matches for target — ambiguity, update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         "name a",
+					TargetProperty: "name",
+					Target:         NAME_MULTIPLE_MATCH,
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         NAME_RESOLVED_BY_KINDS,
+					SourceKind:     ad.User,
+					TargetProperty: "name",
+					Target:         "name b",
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+
+					startOID, _ := update.Start.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startOID)
+
+					endOID, _ := update.End.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endOID)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Both nodes match but with mismatched kinds. Filtered out due to kind mismatch — update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					Source:         "name a",
+					SourceKind:     ad.User,
+					TargetProperty: "name",
+					Target:         "name b",
+					TargetKind:     ad.User,
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Empty or null Source or Target values — update should be skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.IngestibleRelationship{
+					SourceProperty: "name",
+					TargetProperty: "name",
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
+					require.Nil(t, err)
+					require.Empty(t, update)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
 }
