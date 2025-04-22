@@ -291,6 +291,7 @@ func CollectNodeIDs(relationshipQuery graph.RelationshipQuery) (RelationshipNode
 	})
 }
 
+// Note this does not work with mutations inside the delegate
 func ForEachNodeID(tx graph.Transaction, ids []graph.ID, delegate func(node *graph.Node) error) error {
 	return tx.Nodes().Filterf(func() graph.Criteria {
 		return query.InIDs(query.NodeID(), ids...)
