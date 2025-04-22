@@ -235,12 +235,12 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) IngestibleRelati
 	if containingPrincipal.ObjectIdentifier != "" {
 		return NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     containingPrincipal.ObjectIdentifier,
-				SourceKind: containingPrincipal.Kind(),
+				Value: containingPrincipal.ObjectIdentifier,
+				Kind:  containingPrincipal.Kind(),
 			},
 			IngestibleTarget{
-				Target:     item.ObjectIdentifier,
-				TargetKind: itemType,
+				Value: item.ObjectIdentifier,
+				Kind:  itemType,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -257,12 +257,12 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 	if primaryGroupSid != "" {
 		return NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     item.ObjectIdentifier,
-				SourceKind: itemType,
+				Value: item.ObjectIdentifier,
+				Kind:  itemType,
 			},
 			IngestibleTarget{
-				Target:     primaryGroupSid,
-				TargetKind: ad.Group,
+				Value: primaryGroupSid,
+				Kind:  ad.Group,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": true},
@@ -281,12 +281,12 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 		if strings.HasPrefix(member.ObjectIdentifier, "DN=") {
 			result.DistinguishedNameMembers = append(result.DistinguishedNameMembers, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     member.ObjectIdentifier,
-					SourceKind: member.Kind(),
+					Value: member.ObjectIdentifier,
+					Kind:  member.Kind(),
 				},
 				IngestibleTarget{
-					Target:     group.ObjectIdentifier,
-					TargetKind: ad.Group,
+					Value: group.ObjectIdentifier,
+					Kind:  ad.Group,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": false},
@@ -296,12 +296,12 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 		} else {
 			result.RegularMembers = append(result.RegularMembers, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     member.ObjectIdentifier,
-					SourceKind: member.Kind(),
+					Value: member.ObjectIdentifier,
+					Kind:  member.Kind(),
 				},
 				IngestibleTarget{
-					Target:     group.ObjectIdentifier,
-					TargetKind: ad.Group,
+					Value: group.ObjectIdentifier,
+					Kind:  ad.Group,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): false, "isprimarygroup": false},
@@ -382,12 +382,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			// Create edges for all other ACEs
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     ace.PrincipalSID,
-					SourceKind: ace.Kind(),
+					Value: ace.PrincipalSID,
+					Kind:  ace.Kind(),
 				},
 				IngestibleTarget{
-					Target:     targetID,
-					TargetKind: targetType,
+					Value: targetID,
+					Kind:  targetType,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
@@ -403,12 +403,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 	if len(ownerLimitedPrivs) > 0 {
 
 		// Create an OwnsLimitedRights edge containing all abusable permissions granted to the OWNER RIGHTS SID
-		if ownerPrincipalInfo.Source != "" {
+		if ownerPrincipalInfo.Value != "" {
 			converted = append(converted, NewIngestibleRelationship(
 				ownerPrincipalInfo,
 				IngestibleTarget{
-					Target:     targetID,
-					TargetKind: targetType,
+					Value: targetID,
+					Kind:  targetType,
 				},
 
 				// Owns is never inherited
@@ -425,8 +425,8 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 				converted = append(converted, NewIngestibleRelationship(
 					limitedPrincipal.SourceData,
 					IngestibleTarget{
-						Target:     targetID,
-						TargetKind: targetType,
+						Value: targetID,
+						Kind:  targetType,
 					},
 
 					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
@@ -454,8 +454,8 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 				converted = append(converted, NewIngestibleRelationship(
 					limitedPrincipal.SourceData,
 					IngestibleTarget{
-						Target:     targetID,
-						TargetKind: targetType,
+						Value: targetID,
+						Kind:  targetType,
 					},
 					IngestibleRel{
 						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
@@ -481,8 +481,8 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					converted = append(converted, NewIngestibleRelationship(
 						limitedPrincipal.SourceData,
 						IngestibleTarget{
-							Target:     targetID,
-							TargetKind: targetType,
+							Value: targetID,
+							Kind:  targetType,
 						},
 						IngestibleRel{
 							RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
@@ -500,12 +500,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 		// Or when the doesanyinheritedacegrantownerrights property is false
 
 		// Create a non-traversable OwnsRaw edge for post-processing
-		if ownerPrincipalInfo.Source != "" {
+		if ownerPrincipalInfo.Value != "" {
 			converted = append(converted, NewIngestibleRelationship(
 				ownerPrincipalInfo,
 				IngestibleTarget{
-					Target:     targetID,
-					TargetKind: targetType,
+					Value: targetID,
+					Kind:  targetType,
 				},
 
 				// Owns is never inherited
@@ -521,8 +521,8 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 			converted = append(converted, NewIngestibleRelationship(
 				limitedPrincipal.SourceData,
 				IngestibleTarget{
-					Target:     targetID,
-					TargetKind: targetType,
+					Value: targetID,
+					Kind:  targetType,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
@@ -544,12 +544,12 @@ func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship 
 		} else {
 			converted = append(converted, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     sourceID,
-					SourceKind: ad.User,
+					Value: sourceID,
+					Kind:  ad.User,
 				},
 				IngestibleTarget{
-					Target:     s.ComputerSID,
-					TargetKind: ad.Computer,
+					Value: s.ComputerSID,
+					Kind:  ad.Computer,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): true, "port": s.Port},
@@ -573,12 +573,12 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	for _, target := range user.AllowedToDelegate {
 		data = append(data, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     user.ObjectIdentifier,
-				SourceKind: ad.User,
+				Value: user.ObjectIdentifier,
+				Kind:  ad.User,
 			},
 			IngestibleTarget{
-				Target:     target.ObjectIdentifier,
-				TargetKind: target.Kind(),
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -590,12 +590,12 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	for _, target := range user.HasSIDHistory {
 		data = append(data, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     user.ObjectIdentifier,
-				SourceKind: ad.User,
+				Value: user.ObjectIdentifier,
+				Kind:  ad.User,
 			},
 			IngestibleTarget{
-				Target:     target.ObjectIdentifier,
-				TargetKind: target.Kind(),
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -615,12 +615,12 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	if validCoerceToTGT {
 		data = append(data, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     user.ObjectIdentifier,
-				SourceKind: ad.User,
+				Value: user.ObjectIdentifier,
+				Kind:  ad.User,
 			},
 			IngestibleTarget{
-				Target:     domainsid,
-				TargetKind: ad.Domain,
+				Value: domainsid,
+				Kind:  ad.Domain,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{"isacl": false},
@@ -637,12 +637,12 @@ func ParseChildObjects(data []TypedPrincipal, containerId string, containerType 
 	for _, childObject := range data {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     containerId,
-				SourceKind: containerType,
+				Value: containerId,
+				Kind:  containerType,
 			},
 			IngestibleTarget{
-				Target:     childObject.ObjectIdentifier,
-				TargetKind: childObject.Kind(),
+				Value: childObject.ObjectIdentifier,
+				Kind:  childObject.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -679,12 +679,12 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
 					IngestibleSource{
-						Source:     groupID,
-						SourceKind: ad.LocalGroup,
+						Value: groupID,
+						Kind:  ad.LocalGroup,
 					},
 					IngestibleTarget{
-						Target:     computer.ObjectIdentifier,
-						TargetKind: ad.Computer,
+						Value: computer.ObjectIdentifier,
+						Kind:  ad.Computer,
 					},
 					IngestibleRel{
 						RelProps: map[string]any{ad.IsACL.String(): false},
@@ -696,12 +696,12 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 			for _, member := range group.Members {
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
 					IngestibleSource{
-						Source:     member.ObjectIdentifier,
-						SourceKind: member.Kind(),
+						Value: member.ObjectIdentifier,
+						Kind:  member.Kind(),
 					},
 					IngestibleTarget{
-						Target:     groupID,
-						TargetKind: ad.LocalGroup,
+						Value: groupID,
+						Kind:  ad.LocalGroup,
 					},
 					IngestibleRel{
 						RelProps: map[string]any{ad.IsACL.String(): false},
@@ -720,12 +720,12 @@ func ParseGpLinks(links []GPLink, itemIdentifier string, itemType graph.Kind) []
 	for _, gpLink := range links {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     gpLink.Guid,
-				SourceKind: ad.GPO,
+				Value: gpLink.Guid,
+				Kind:  ad.GPO,
 			},
 			IngestibleTarget{
-				Target:     itemIdentifier,
-				TargetKind: itemType,
+				Value: itemIdentifier,
+				Kind:  itemType,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false, "enforced": gpLink.IsEnforced},
@@ -786,12 +786,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		if dir == TrustDirectionInbound || dir == TrustDirectionBidirectional {
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     domain.ObjectIdentifier,
-					SourceKind: ad.Domain,
+					Value: domain.ObjectIdentifier,
+					Kind:  ad.Domain,
 				},
 				IngestibleTarget{
-					Target:     trust.TargetDomainSid,
-					TargetKind: ad.Domain,
+					Value: trust.TargetDomainSid,
+					Kind:  ad.Domain,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
@@ -809,12 +809,12 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 		if dir == TrustDirectionOutbound || dir == TrustDirectionBidirectional {
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     trust.TargetDomainSid,
-					SourceKind: ad.Domain,
+					Value: trust.TargetDomainSid,
+					Kind:  ad.Domain,
 				},
 				IngestibleTarget{
-					Target:     domain.ObjectIdentifier,
-					TargetKind: ad.Domain,
+					Value: domain.ObjectIdentifier,
+					Kind:  ad.Domain,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{
@@ -839,12 +839,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	for _, target := range computer.AllowedToDelegate {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     computer.ObjectIdentifier,
-				SourceKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleTarget{
-				Target:     target.ObjectIdentifier,
-				TargetKind: target.Kind(),
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -856,12 +856,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	for _, actor := range computer.AllowedToAct {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     actor.ObjectIdentifier,
-				SourceKind: actor.Kind(),
+				Value: actor.ObjectIdentifier,
+				Kind:  actor.Kind(),
 			},
 			IngestibleTarget{
-				Target:     computer.ObjectIdentifier,
-				TargetKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -873,12 +873,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	for _, target := range computer.DumpSMSAPassword {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     computer.ObjectIdentifier,
-				SourceKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleTarget{
-				Target:     target.ObjectIdentifier,
-				TargetKind: target.Kind(),
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -890,12 +890,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	for _, target := range computer.HasSIDHistory {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     computer.ObjectIdentifier,
-				SourceKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleTarget{
-				Target:     target.ObjectIdentifier,
-				TargetKind: target.Kind(),
+				Value: target.ObjectIdentifier,
+				Kind:  target.Kind(),
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -908,12 +908,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		for _, session := range computer.Sessions.Results {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     session.ComputerSID,
-					SourceKind: ad.Computer,
+					Value: session.ComputerSID,
+					Kind:  ad.Computer,
 				},
 				IngestibleTarget{
-					Target:     session.UserSID,
-					TargetKind: ad.User,
+					Value: session.UserSID,
+					Kind:  ad.User,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): false},
@@ -927,12 +927,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		for _, session := range computer.PrivilegedSessions.Results {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     session.ComputerSID,
-					SourceKind: ad.Computer,
+					Value: session.ComputerSID,
+					Kind:  ad.Computer,
 				},
 				IngestibleTarget{
-					Target:     session.UserSID,
-					TargetKind: ad.User,
+					Value: session.UserSID,
+					Kind:  ad.User,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): false},
@@ -946,12 +946,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		for _, session := range computer.RegistrySessions.Results {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     session.ComputerSID,
-					SourceKind: ad.Computer,
+					Value: session.ComputerSID,
+					Kind:  ad.Computer,
 				},
 				IngestibleTarget{
-					Target:     session.UserSID,
-					TargetKind: ad.User,
+					Value: session.UserSID,
+					Kind:  ad.User,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{ad.IsACL.String(): false},
@@ -964,12 +964,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 	if computer.IsDC && computer.DomainSID != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     computer.ObjectIdentifier,
-				SourceKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleTarget{
-				Target:     computer.DomainSID,
-				TargetKind: ad.Domain,
+				Value: computer.DomainSID,
+				Kind:  ad.Domain,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -987,12 +987,12 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 		if validCoerceToTGT {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     computer.ObjectIdentifier,
-					SourceKind: ad.Computer,
+					Value: computer.ObjectIdentifier,
+					Kind:  ad.Computer,
 				},
 				IngestibleTarget{
-					Target:     domainsid,
-					TargetKind: ad.Domain,
+					Value: domainsid,
+					Kind:  ad.Domain,
 				},
 				IngestibleRel{
 					RelProps: map[string]any{"isacl": false},
@@ -1019,12 +1019,12 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 
 	parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
 		IngestibleSource{
-			Source:     localGroup.ObjectIdentifier,
-			SourceKind: ad.LocalGroup,
+			Value: localGroup.ObjectIdentifier,
+			Kind:  ad.LocalGroup,
 		},
 		IngestibleTarget{
-			Target:     computer.ObjectIdentifier,
-			TargetKind: ad.Computer,
+			Value: computer.ObjectIdentifier,
+			Kind:  ad.Computer,
 		},
 		IngestibleRel{
 			RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1035,12 +1035,12 @@ func ConvertLocalGroup(localGroup LocalGroupAPIResult, computer Computer) Parsed
 	for _, member := range localGroup.Results {
 		parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     member.ObjectIdentifier,
-				SourceKind: member.Kind(),
+				Value: member.ObjectIdentifier,
+				Kind:  member.Kind(),
 			},
 			IngestibleTarget{
-				Target:     localGroup.ObjectIdentifier,
-				TargetKind: ad.LocalGroup,
+				Value: localGroup.ObjectIdentifier,
+				Kind:  ad.LocalGroup,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1068,12 +1068,12 @@ func ParseUserRightData(userRight UserRightsAssignmentAPIResult, computer Comput
 	for _, grant := range userRight.Results {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     grant.ObjectIdentifier,
-				SourceKind: grant.Kind(),
+				Value: grant.ObjectIdentifier,
+				Kind:  grant.Kind(),
 			},
 			IngestibleTarget{
-				Target:     computer.ObjectIdentifier,
-				TargetKind: ad.Computer,
+				Value: computer.ObjectIdentifier,
+				Kind:  ad.Computer,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1125,12 +1125,12 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 		enabledCertTemplates = append(enabledCertTemplates, actor.ObjectIdentifier)
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     actor.ObjectIdentifier,
-				SourceKind: ad.CertTemplate,
+				Value: actor.ObjectIdentifier,
+				Kind:  ad.CertTemplate,
 			},
 			IngestibleTarget{
-				Target:     enterpriseCA.ObjectIdentifier,
-				TargetKind: ad.EnterpriseCA,
+				Value: enterpriseCA.ObjectIdentifier,
+				Kind:  ad.EnterpriseCA,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1142,12 +1142,12 @@ func ParseEnterpriseCAMiscData(enterpriseCA EnterpriseCA) []IngestibleRelationsh
 	if enterpriseCA.HostingComputer != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     enterpriseCA.HostingComputer,
-				SourceKind: ad.Computer,
+				Value: enterpriseCA.HostingComputer,
+				Kind:  ad.Computer,
 			},
 			IngestibleTarget{
-				Target:     enterpriseCA.ObjectIdentifier,
-				TargetKind: ad.EnterpriseCA,
+				Value: enterpriseCA.ObjectIdentifier,
+				Kind:  ad.EnterpriseCA,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1177,12 +1177,12 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 				for _, template := range templates {
 					relationships = append(relationships, NewIngestibleRelationship(
 						IngestibleSource{
-							Source:     restriction.Agent.ObjectIdentifier,
-							SourceKind: restriction.Agent.Kind(),
+							Value: restriction.Agent.ObjectIdentifier,
+							Kind:  restriction.Agent.Kind(),
 						},
 						IngestibleTarget{
-							Target:     template,
-							TargetKind: ad.CertTemplate,
+							Value: template,
+							Kind:  ad.CertTemplate,
 						},
 						IngestibleRel{
 							RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1246,12 +1246,12 @@ func ParseRootCAMiscData(rootCA RootCA) []IngestibleRelationship {
 	if domainsid != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     rootCA.ObjectIdentifier,
-				SourceKind: ad.RootCA,
+				Value: rootCA.ObjectIdentifier,
+				Kind:  ad.RootCA,
 			},
 			IngestibleTarget{
-				Target:     domainsid,
-				TargetKind: ad.Domain,
+				Value: domainsid,
+				Kind:  ad.Domain,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},
@@ -1272,12 +1272,12 @@ func ParseNTAuthStoreData(ntAuthStore NTAuthStore) []IngestibleRelationship {
 	if domainsid != "" {
 		relationships = append(relationships, NewIngestibleRelationship(
 			IngestibleSource{
-				Source:     ntAuthStore.ObjectIdentifier,
-				SourceKind: ad.NTAuthStore,
+				Value: ntAuthStore.ObjectIdentifier,
+				Kind:  ad.NTAuthStore,
 			},
 			IngestibleTarget{
-				Target:     domainsid,
-				TargetKind: ad.Domain,
+				Value: domainsid,
+				Kind:  ad.Domain,
 			},
 			IngestibleRel{
 				RelProps: map[string]any{ad.IsACL.String(): false},

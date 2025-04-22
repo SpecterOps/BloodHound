@@ -71,8 +71,8 @@ func (s ACE) Kind() graph.Kind {
 func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 	return WriteOwnerLimitedPrincipal{
 		SourceData: IngestibleSource{
-			Source:     s.PrincipalSID,
-			SourceKind: s.Kind(),
+			Value: s.PrincipalSID,
+			Kind:  s.Kind(),
 		},
 		IsInherited: s.IsInherited,
 	}
@@ -366,7 +366,7 @@ type GenericEdge struct {
 }
 
 type edgePiece struct {
-	ID_Value    string
-	ID_Property string
-	Kind        string
+	Value   string
+	Kind    string
+	MatchBy string
 }

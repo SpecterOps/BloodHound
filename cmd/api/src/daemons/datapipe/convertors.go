@@ -39,14 +39,26 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 }
 
 func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
+	var (
+		startMatchBy, endMatchBy bool
+	)
+	if entity.Start.MatchBy == "name" {
+		startMatchBy = true
+	}
+	if entity.End.MatchBy == "name" {
+		endMatchBy = true
+	}
+
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleSource{
-			Source:   entity.Start.ID_Value,
-			Property: entity.Start.ID_Property,
+			Value:       entity.Start.Value,
+			MatchByName: startMatchBy,
+			Kind:        graph.StringKind(entity.Start.Kind),
 		},
 		ein.IngestibleTarget{
-			Target:   entity.End.ID_Value,
-			Property: entity.Start.ID_Property,
+			Value:       entity.End.Value,
+			MatchByName: endMatchBy,
+			Kind:        graph.StringKind(entity.End.Kind),
 		},
 		ein.IngestibleRel{
 			RelProps: entity.Properties,
@@ -111,7 +123,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData) {
 	baseNodeProp := ein.ConvertObjectToNode(group.IngestBase, ad.Group)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 
-	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source != "" && rel.Target != "" {
+	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source.Value != "" && rel.Target.Value != "" {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, group.Aces, group.ObjectIdentifier, ad.Group)...)
@@ -249,12 +261,12 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
 		converted.RelProps = append(converted.RelProps, ein.NewIngestibleRelationship(
 			ein.IngestibleSource{
-				Source:     issuancePolicy.ObjectIdentifier,
-				SourceKind: ad.IssuancePolicy,
+				Value: issuancePolicy.ObjectIdentifier,
+				Kind:  ad.IssuancePolicy,
 			},
 			ein.IngestibleTarget{
-				Target:     issuancePolicy.GroupLink.ObjectIdentifier,
-				TargetKind: issuancePolicy.GroupLink.Kind(),
+				Value: issuancePolicy.GroupLink.ObjectIdentifier,
+				Kind:  issuancePolicy.GroupLink.Kind(),
 			},
 			ein.IngestibleRel{
 				RelProps: map[string]any{"isacl": false},

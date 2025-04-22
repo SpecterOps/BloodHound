@@ -25,27 +25,23 @@ func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget,
 	}
 
 	return IngestibleRelationship{
-		Source:         source.Source,
-		SourceKind:     source.SourceKind,
-		SourceProperty: source.Property,
-		Target:         target.Target,
-		TargetKind:     target.TargetKind,
-		TargetProperty: target.Property,
-		RelProps:       rel.RelProps,
-		RelType:        rel.RelType,
+		Source:   source,
+		Target:   target,
+		RelProps: rel.RelProps,
+		RelType:  rel.RelType,
 	}
 }
 
 type IngestibleSource struct {
-	Source     string // usually objectid
-	Property   string // optional field to specify a property to do an exact-match on for node resolution (default is objectid)
-	SourceKind graph.Kind
+	Value       string // usually objectid
+	MatchByName bool   // do an exact-match on name for node resolution. (default is objectid).
+	Kind        graph.Kind
 }
 
 type IngestibleTarget struct {
-	Target     string
-	Property   string
-	TargetKind graph.Kind
+	Value       string
+	MatchByName bool
+	Kind        graph.Kind
 }
 
 type IngestibleRel struct {
@@ -54,20 +50,15 @@ type IngestibleRel struct {
 }
 
 type IngestibleRelationship struct {
-	Source         string
-	SourceKind     graph.Kind
-	SourceProperty string // optional property to specify exact-match lookup of `Source`. e.g. "name"
-
-	Target         string
-	TargetKind     graph.Kind
-	TargetProperty string
+	Source IngestibleSource
+	Target IngestibleTarget
 
 	RelProps map[string]any
 	RelType  graph.Kind
 }
 
 func (s IngestibleRelationship) IsValid() bool {
-	return s.Target != "" && s.Source != "" && s.RelProps != nil
+	return s.Target.Value != "" && s.Source.Value != "" && s.RelProps != nil
 }
 
 type IngestibleSession struct {

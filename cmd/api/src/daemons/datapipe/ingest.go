@@ -283,22 +283,22 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 
 func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = nowUTC
-	nextRel.Source = strings.ToUpper(nextRel.Source)
-	nextRel.Target = strings.ToUpper(nextRel.Target)
+	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
+	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 
 	relationshipUpdate := graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
 			common.LastSeen: nowUTC,
-		}), nextRel.SourceKind),
+		}), nextRel.Source.Kind),
 		StartIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
-		}), nextRel.TargetKind),
+		}), nextRel.Target.Kind),
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
 		},
@@ -319,9 +319,9 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	)
 
 	for _, next := range relationships {
-		if next.SourceProperty == "" && next.TargetProperty == "" { // if no property to match against, do the usual objectid thang
+		if !next.Source.MatchByName && !next.Target.MatchByName { // if no property to match against, do the usual objectid thang
 			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
+				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
 				errs.Add(err)
 			}
 		} else {
@@ -349,16 +349,16 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 			var sourceCriteria, targetCriteria []graph.Criteria
 
 			// always append name filter
-			sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(rel.SourceProperty), rel.Source))
-			targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(rel.TargetProperty), rel.Target))
+			sourceCriteria = append(sourceCriteria, query.Equals(query.NodeProperty(common.Name.String()), rel.Source.Value))
+			targetCriteria = append(targetCriteria, query.Equals(query.NodeProperty(common.Name.String()), rel.Target.Value))
 
 			// optionally append kind filter
-			if rel.SourceKind != nil {
-				sourceCriteria = append(sourceCriteria, query.Kind(query.Node(), rel.SourceKind))
+			if rel.Source.Kind != nil {
+				sourceCriteria = append(sourceCriteria, query.Kind(query.Node(), rel.Source.Kind))
 			}
 
-			if rel.TargetKind != nil {
-				targetCriteria = append(targetCriteria, query.Kind(query.Node(), rel.TargetKind))
+			if rel.Target.Kind != nil {
+				targetCriteria = append(targetCriteria, query.Kind(query.Node(), rel.Target.Kind))
 			}
 
 			// form the full filter
@@ -370,7 +370,7 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 		result graph.RelationshipUpdate
 	)
 
-	if rel.Source == "" || rel.Target == "" {
+	if rel.Source.Value == "" || rel.Target.Value == "" {
 		return result, nil
 	}
 
@@ -378,14 +378,13 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 		for node := range cursor.Chan() {
 			props := node.Properties
 
-			if val, _ := props.Get(rel.SourceProperty).String(); strings.EqualFold(val, rel.Source) {
+			if val, _ := props.Get(common.Name.String()).String(); strings.EqualFold(val, rel.Source.Value) {
 				if oid, err := props.Get(string(common.ObjectID)).String(); err != nil {
-					slog.Warn(fmt.Sprintf("matched source node missing objectid for %s", rel.Source))
+					slog.Warn(fmt.Sprintf("matched source node missing objectid for %s", rel.Source.Value))
 				} else {
 					if _, hasExisting := matches["source"]; hasExisting {
-						slog.Warn("ambiguous property match on source node. multiple results match.",
-							slog.String("matched property", rel.SourceProperty),
-							slog.String("value", rel.Source))
+						slog.Warn("ambiguous name match on source node. multiple results match.",
+							slog.String("value", rel.Source.Value))
 						ambiguousResolution = true
 						return nil
 					} else {
@@ -394,14 +393,13 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 				}
 			}
 
-			if val, _ := props.Get(rel.TargetProperty).String(); strings.EqualFold(val, rel.Target) {
+			if val, _ := props.Get(common.Name.String()).String(); strings.EqualFold(val, rel.Target.Value) {
 				if oid, err := props.Get(string(common.ObjectID)).String(); err != nil {
-					slog.Warn(fmt.Sprintf("matched target node missing objectid for %s", rel.Target))
+					slog.Warn(fmt.Sprintf("matched target node missing objectid for %s", rel.Target.Value))
 				} else {
 					if _, hasExisting := matches["target"]; hasExisting {
 						slog.Warn("ambiguous property match on target node. multiple results match.",
-							slog.String("matched property", rel.TargetProperty),
-							slog.String("value", rel.Target))
+							slog.String("value", rel.Target.Value))
 						ambiguousResolution = true
 						return nil
 					} else {
@@ -424,8 +422,8 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 
 	if !srcOk || !targetOk {
 		slog.Warn("failed to resolve both nodes by name",
-			slog.String("source", rel.Source),
-			slog.String("target", rel.Target),
+			slog.String("source", rel.Source.Value),
+			slog.String("target", rel.Target.Value),
 			slog.Bool("resolved_source", srcOk),
 			slog.Bool("resolved_target", targetOk))
 		return result, nil
@@ -434,12 +432,12 @@ func ResolveRelationshipByName(batch graph.Batch, rel ein.IngestibleRelationship
 	start := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 		common.ObjectID: srcID,
 		common.LastSeen: nowUTC,
-	}), rel.SourceKind)
+	}), rel.Source.Kind)
 
 	end := graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 		common.ObjectID: targetID,
 		common.LastSeen: nowUTC,
-	}), rel.TargetKind)
+	}), rel.Target.Kind)
 
 	result = graph.RelationshipUpdate{
 		Start: start,
@@ -468,8 +466,8 @@ func submitUpdate(batch graph.Batch, rel ein.IngestibleRelationship) error {
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = nowUTC
-	nextRel.Source = strings.ToUpper(nextRel.Source)
-	nextRel.Target = strings.ToUpper(nextRel.Target)
+	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
+	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 
 	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
@@ -477,7 +475,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
 			common.LastSeen:      nowUTC,
-		}), nextRel.SourceKind),
+		}), nextRel.Source.Kind),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
 			ad.DistinguishedName.String(),
@@ -486,7 +484,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: nowUTC,
-		}), nextRel.TargetKind),
+		}), nextRel.Target.Kind),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),

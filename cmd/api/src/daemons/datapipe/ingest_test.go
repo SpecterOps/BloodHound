@@ -68,12 +68,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         "name a",
-					TargetProperty: "name",
-					Target:         "name b",
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: "name a", MatchByName: true},
+					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -100,12 +99,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         "name a",
-					TargetProperty: "name",
-					Target:         NAME_NOT_EXISTS,
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: "name a", MatchByName: true},
+					ein.IngestibleTarget{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -127,12 +125,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         NAME_NOT_EXISTS,
-					TargetProperty: "name",
-					Target:         "name b",
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -154,12 +151,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         NAME_NOT_EXISTS,
-					TargetProperty: "name",
-					Target:         NAME_NOT_EXISTS,
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleTarget{Value: NAME_NOT_EXISTS, MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -181,12 +177,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         NAME_MULTIPLE_MATCH,
-					TargetProperty: "name",
-					Target:         "name b",
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: NAME_MULTIPLE_MATCH, MatchByName: true},
+					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -208,12 +203,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         "name a",
-					TargetProperty: "name",
-					Target:         NAME_MULTIPLE_MATCH,
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: "name a", MatchByName: true},
+					ein.IngestibleTarget{Value: NAME_MULTIPLE_MATCH, MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -235,13 +229,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         NAME_RESOLVED_BY_KINDS,
-					SourceKind:     ad.User,
-					TargetProperty: "name",
-					Target:         "name b",
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: NAME_RESOLVED_BY_KINDS, MatchByName: true, Kind: ad.User},
+					ein.IngestibleTarget{Value: "name b", MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -268,14 +260,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					Source:         "name a",
-					SourceKind:     ad.User,
-					TargetProperty: "name",
-					Target:         "name b",
-					TargetKind:     ad.User,
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{Value: "name a", MatchByName: true, Kind: ad.User},
+					ein.IngestibleTarget{Value: "name b", MatchByName: true, Kind: ad.User},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
@@ -297,10 +286,11 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				return nil
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
-				ingestibleRel := ein.IngestibleRelationship{
-					SourceProperty: "name",
-					TargetProperty: "name",
-				}
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleSource{MatchByName: true},
+					ein.IngestibleTarget{MatchByName: true},
+					ein.IngestibleRel{},
+				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					update, err := datapipe.ResolveRelationshipByName(batch, ingestibleRel)
