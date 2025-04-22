@@ -20,13 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"time"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/src/bloodhound"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -39,6 +39,7 @@ const (
 )
 
 type Daemon struct {
+	app                 bloodhound.App
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
@@ -55,6 +56,7 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
 	return &Daemon{
+		app:                 bloodhound.NewApp(connections.RDMS, connections.Graph, cfg),
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,
@@ -155,70 +157,12 @@ func (s *Daemon) Start(ctx context.Context) {
 						slog.String("err", err.Error()),
 					)
 				}
-			} else if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
+			} else if err := s.app.ProcessIngestTasks(ctx); err != nil {
 				slog.ErrorContext(
 					ctx,
-					"Failed to get ingest tasks",
+					"Failed to process ingest tasks",
 					slog.String("err", err.Error()),
 				)
-			} else if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIngesting, false); err != nil {
-				slog.ErrorContext(
-					ctx,
-					"Failed to set datapipe status to ingesting",
-					slog.String("err", err.Error()),
-				)
-			} else {
-				for _, ingestTask := range ingestTasks {
-					ingestTaskLogger := slog.Default().With(
-						slog.Group("ingest_task",
-							slog.Int64("id", ingestTask.ID),
-							slog.String("file_name", ingestTask.FileName),
-						),
-					)
-
-					// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-					// handling assumes that all failures should be logged and not returned.
-					if ctx.Err() != nil {
-						ingestTaskLogger.ErrorContext(
-							ctx,
-							"Context error during ingest task handling",
-							slog.String("err", ctx.Err().Error()),
-						)
-						break
-					}
-
-					if paths, failed, err := preProcessIngestFile(ctx, s.cfg.TempDirectory(), ingestTask); errors.Is(err, fs.ErrNotExist) {
-						ingestTaskLogger.WarnContext(
-							ctx,
-							"File does not exist for ingest task",
-							slog.String("err", err.Error()),
-						)
-					} else if err != nil {
-						ingestTaskLogger.ErrorContext(
-							ctx,
-							"Failed to preprocess ingest file",
-							slog.String("err", err.Error()),
-						)
-					} else if total, failed, err := processIngestFile(ctx, s.graphdb, paths, failed); err != nil {
-						ingestTaskLogger.ErrorContext(
-							ctx,
-							"Failed to process ingest file",
-							slog.String("err", err.Error()),
-						)
-					} else if job, err := s.db.GetIngestJob(ctx, ingestTask.TaskID); err != nil {
-						ingestTaskLogger.ErrorContext(
-							ctx,
-							"Failed to get ingest job",
-							slog.String("err", err.Error()),
-						)
-					} else if err := updateIngestJob(ctx, s.db, job, total, failed); err != nil {
-						ingestTaskLogger.ErrorContext(
-							ctx,
-							"Failed to update file completion for ingest job",
-							slog.String("err", err.Error()),
-						)
-					}
-				}
 			}
 
 			if err := ProcessStaleIngestJobs(ctx, s.db); err != nil {

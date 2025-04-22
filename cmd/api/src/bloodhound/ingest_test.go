@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe_test
+package bloodhound_test
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ import (
 
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/bloodhound"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,15 +31,15 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 		nowUTC     = time.Now().UTC()
 		objectID   = "objectid"
 		properties = map[string]any{
-			datapipe.ReconcileProperty:      false,
+			bloodhound.ReconcileProperty:    false,
 			common.Name.String():            "name",
 			common.OperatingSystem.String(): "temple",
 			ad.DistinguishedName.String():   "distinguished-name",
 		}
-		normalizedProperties = datapipe.NormalizeEinNodeProperties(properties, objectID, nowUTC)
+		normalizedProperties = bloodhound.NormalizeEinNodeProperties(properties, objectID, nowUTC)
 	)
 
-	assert.Nil(t, normalizedProperties[datapipe.ReconcileProperty])
+	assert.Nil(t, normalizedProperties[bloodhound.ReconcileProperty])
 	assert.NotNil(t, normalizedProperties[common.LastSeen.String()])
 	assert.Equal(t, "OBJECTID", normalizedProperties[common.ObjectID.String()])
 	assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])

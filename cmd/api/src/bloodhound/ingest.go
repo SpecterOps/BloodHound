@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package bloodhound
 
 import (
 	"fmt"
@@ -37,6 +37,45 @@ const (
 	IngestCountThreshold = 500
 	ReconcileProperty    = "reconcile"
 )
+
+func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
+	switch meta.Type {
+	case ingest.DataTypeComputer:
+		if meta.Version >= 5 {
+			return decodeBasicData(batch, reader, convertComputerData)
+		}
+	case ingest.DataTypeUser:
+		return decodeBasicData(batch, reader, convertUserData)
+	case ingest.DataTypeGroup:
+		return decodeGroupData(batch, reader)
+	case ingest.DataTypeDomain:
+		return decodeBasicData(batch, reader, convertDomainData)
+	case ingest.DataTypeGPO:
+		return decodeBasicData(batch, reader, convertGPOData)
+	case ingest.DataTypeOU:
+		return decodeBasicData(batch, reader, convertOUData)
+	case ingest.DataTypeSession:
+		return decodeSessionData(batch, reader)
+	case ingest.DataTypeContainer:
+		return decodeBasicData(batch, reader, convertContainerData)
+	case ingest.DataTypeAIACA:
+		return decodeBasicData(batch, reader, convertAIACAData)
+	case ingest.DataTypeRootCA:
+		return decodeBasicData(batch, reader, convertRootCAData)
+	case ingest.DataTypeEnterpriseCA:
+		return decodeBasicData(batch, reader, convertEnterpriseCAData)
+	case ingest.DataTypeNTAuthStore:
+		return decodeBasicData(batch, reader, convertNTAuthStoreData)
+	case ingest.DataTypeCertTemplate:
+		return decodeBasicData(batch, reader, convertCertTemplateData)
+	case ingest.DataTypeAzure:
+		return decodeAzureData(batch, reader)
+	case ingest.DataTypeIssuancePolicy:
+		return decodeBasicData(batch, reader, convertIssuancePolicy)
+	}
+
+	return nil
+}
 
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
 	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
@@ -94,45 +133,6 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
 	}
 
 	return errs.Combined()
-}
-
-func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata) error {
-	switch meta.Type {
-	case ingest.DataTypeComputer:
-		if meta.Version >= 5 {
-			return decodeBasicData(batch, reader, convertComputerData)
-		}
-	case ingest.DataTypeUser:
-		return decodeBasicData(batch, reader, convertUserData)
-	case ingest.DataTypeGroup:
-		return decodeGroupData(batch, reader)
-	case ingest.DataTypeDomain:
-		return decodeBasicData(batch, reader, convertDomainData)
-	case ingest.DataTypeGPO:
-		return decodeBasicData(batch, reader, convertGPOData)
-	case ingest.DataTypeOU:
-		return decodeBasicData(batch, reader, convertOUData)
-	case ingest.DataTypeSession:
-		return decodeSessionData(batch, reader)
-	case ingest.DataTypeContainer:
-		return decodeBasicData(batch, reader, convertContainerData)
-	case ingest.DataTypeAIACA:
-		return decodeBasicData(batch, reader, convertAIACAData)
-	case ingest.DataTypeRootCA:
-		return decodeBasicData(batch, reader, convertRootCAData)
-	case ingest.DataTypeEnterpriseCA:
-		return decodeBasicData(batch, reader, convertEnterpriseCAData)
-	case ingest.DataTypeNTAuthStore:
-		return decodeBasicData(batch, reader, convertNTAuthStoreData)
-	case ingest.DataTypeCertTemplate:
-		return decodeBasicData(batch, reader, convertCertTemplateData)
-	case ingest.DataTypeAzure:
-		return decodeAzureData(batch, reader)
-	case ingest.DataTypeIssuancePolicy:
-		return decodeBasicData(batch, reader, convertIssuancePolicy)
-	}
-
-	return nil
 }
 
 func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
