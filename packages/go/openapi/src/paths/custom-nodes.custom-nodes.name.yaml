@@ -27,6 +27,7 @@ get:
   summary: Get custom node
   description: Retrieves custom node
   tags:
+    - Custom Node Management
     - Community
     - Enterprise
   responses:
@@ -47,6 +48,7 @@ put:
   summary: Update custom node
   description: Update custom node
   tags:
+    - Custom Node Management
     - Community
     - Enterprise
   requestBody:
@@ -76,6 +78,7 @@ delete:
   summary: Delete custom node
   description: Delete custom node
   tags:
+    - Custom Node Management
     - Community
     - Enterprise
   responses:

@@ -21,6 +21,7 @@ get:
   summary: Get custom nodes
   description: Retrieves custom nodes
   tags:
+    - Custom Node Management
     - Community
     - Enterprise
   responses:
@@ -44,6 +45,7 @@ post:
   summary: Create custom nodes
   description: Creates custom nodes
   tags:
+    - Custom Node Management
     - Community
     - Enterprise
   requestBody:

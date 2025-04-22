@@ -156,6 +156,7 @@ x-tagGroups:
       - BloodHound Users
       - Collectors
       - Collection Uploads
+      - Custom Node Management
       - API Info
       - Search
       - Audit
@@ -279,7 +280,7 @@ paths:
   /api/v2/file-upload/accepted-types:
     $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
-  # custom node kind config
+  # custom node management
   /api/v2/customnode:
     $ref: './paths/custom-nodes.custom-nodes.yaml'
   /api/v2/customnode/{kind_name}:

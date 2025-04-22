@@ -2748,6 +2748,7 @@
         "summary": "Get custom nodes",
         "description": "Retrieves custom nodes",
         "tags": [
+          "Custom Node Management",
           "Community",
           "Enterprise"
         ],
@@ -2783,6 +2784,7 @@
         "summary": "Create custom nodes",
         "description": "Creates custom nodes",
         "tags": [
+          "Custom Node Management",
           "Community",
           "Enterprise"
         ],
@@ -2871,6 +2873,7 @@
         "summary": "Get custom node",
         "description": "Retrieves custom node",
         "tags": [
+          "Custom Node Management",
           "Community",
           "Enterprise"
         ],
@@ -2901,6 +2904,7 @@
         "summary": "Update custom node",
         "description": "Update custom node",
         "tags": [
+          "Custom Node Management",
           "Community",
           "Enterprise"
         ],
@@ -2946,6 +2950,7 @@
         "summary": "Delete custom node",
         "description": "Delete custom node",
         "tags": [
+          "Custom Node Management",
           "Community",
           "Enterprise"
         ],
@@ -18034,6 +18039,7 @@
         "BloodHound Users",
         "Collectors",
         "Collection Uploads",
+        "Custom Node Management",
         "API Info",
         "Search",
         "Audit",
