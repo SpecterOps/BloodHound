@@ -34,7 +34,41 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
 	updated_at timestamp with time zone,
 	CONSTRAINT fk_asset_group_tag_selectors_asset_group_tag_selector_nodes FOREIGN KEY (selector_id) REFERENCES asset_group_tag_selectors(id) ON DELETE CASCADE,
 	PRIMARY KEY (selector_id, node_id)
-	);
+);
+
+-- Migrate existing Tier Zero selectors
+WITH inserted_selector AS (
+  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+  SELECT (SELECT id FROM asset_group_tags WHERE name = 'Tier Zero'), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, false
+  FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+  WHERE ag.tag = 'admin_tier_0' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+  RETURNING id, description
+)
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
+
+-- Migrate existing Owned selectors
+WITH inserted_kind AS (
+  INSERT INTO kind (name)
+  SELECT 'Tag_' || replace(name, ' ', '_') as name
+  FROM asset_groups
+  WHERE tag = 'owned'
+  ON CONFLICT DO NOTHING
+  RETURNING id, name
+),
+inserted_tag AS (
+  INSERT INTO asset_group_tags (kind_id, type, name, description, created_at, created_by, updated_at, updated_by)
+  SELECT ik.id, 3, ag.name, ag.name, current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM'
+  FROM inserted_kind ik JOIN asset_groups ag ON ik.name = 'Tag_' || replace(ag.name, ' ', '_')
+  RETURNING id, name
+),
+inserted_selector AS (
+  INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
+  SELECT (SELECT id from inserted_tag), current_timestamp, 'SYSTEM', current_timestamp, 'SYSTEM', s.name, s.selector, false, true, false
+  FROM asset_group_selectors s JOIN asset_groups ag ON ag.id = s.asset_group_id
+  WHERE ag.tag = 'owned' and NOT EXISTS(SELECT 1 FROM asset_group_tag_selectors WHERE name = s.name)
+  RETURNING id, description
+)
+INSERT INTO asset_group_tag_selector_seeds (selector_id, type, value) SELECT id, 1, description FROM inserted_selector;
 
 -- Populate default cypher selectors
 -- Add the following to the GA release migration to enable these for bootstrapped instances
