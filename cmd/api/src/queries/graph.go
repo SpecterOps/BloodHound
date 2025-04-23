@@ -641,7 +641,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		slog.InfoContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
+		slog.DebugContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()

@@ -403,8 +403,15 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
+		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
 		require.NoError(t, err)
+
+		results := make(model.AssetGroupTagSelectors, 0, 2)
+		for _, n := range orig_results {
+			if n.CreatedBy != model.AssetGroupActorSystem {
+				results = append(results, n)
+			}
+		}
 
 		require.Equal(t, 2, len(results))
 		require.Equal(t, test1Selector.Name, results[0].Name)
@@ -433,8 +440,15 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
 		require.NoError(t, err)
+
+		results := make(model.AssetGroupTagSelectors, 0, 1)
+		for _, n := range orig_results {
+			if n.CreatedBy != model.AssetGroupActorSystem {
+				results = append(results, n)
+			}
+		}
 
 		require.Equal(t, 1, len(results))
 		for idx, seed := range test2Selector.Seeds {
