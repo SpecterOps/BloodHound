@@ -75,6 +75,21 @@ func (mr *MockGraphMockRecorder) BatchNodeUpdate(ctx, nodeUpdate any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchNodeUpdate", reflect.TypeOf((*MockGraph)(nil).BatchNodeUpdate), ctx, nodeUpdate)
 }
 
+// CountFilteredNodes mocks base method.
+func (m *MockGraph) CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountFilteredNodes", ctx, filterCriteria)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountFilteredNodes indicates an expected call of CountFilteredNodes.
+func (mr *MockGraphMockRecorder) CountFilteredNodes(ctx, filterCriteria any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountFilteredNodes", reflect.TypeOf((*MockGraph)(nil).CountFilteredNodes), ctx, filterCriteria)
+}
+
 // CountNodesByKind mocks base method.
 func (m *MockGraph) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
 	m.ctrl.T.Helper()
