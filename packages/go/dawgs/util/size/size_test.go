@@ -14,78 +14,68 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package size
+package size_test
 
 import (
+	"github.com/specterops/bloodhound/dawgs/util/size"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func validateMapSizes[K comparable, V any](t *testing.T, mapInst map[K]V, expectedKeySize, expectedElementSize uint8) {
-	var (
-		// Zero size key and element map definition
-		structStructMap                           = map[struct{}]struct{}{}
-		structStructMapType, structStructHmapInst = mapTypeAndValue(structStructMap)
-		structStructHmapSize                      = Of(*structStructHmapInst)
+func TestOfAny(t *testing.T) {
+	var value = "123"
 
-		// Pull the runtime type definition for the map as well as its backing struct
-		mapType, hmapInst = mapTypeAndValue(mapInst)
+	// Size of pointer
+	require.Equal(t, size.Size(0x10), size.OfAny(&value))
 
-		// The expected bucket size is calculated as the size of the key and element types multiplied by the number of
-		// key/element pairs in a bucket
-		expectedBucketSize = uint16(mapType.keysize+mapType.elemsize)*bucketCnt + structStructMapType.bucketsize
-	)
+	// Size of empty struct
+	require.Equal(t, size.Size(0x00), size.OfAny(struct{}{}))
 
-	assert.Equal(t, expectedKeySize, mapType.keysize)
-	assert.Equal(t, expectedElementSize, mapType.elemsize)
-	assert.Equal(t, expectedBucketSize, mapType.bucketsize)
-	assert.Equal(t, structStructHmapSize, Of(*hmapInst))
-	assert.Equal(t, Size(mapType.bucketsize)+structStructHmapSize, OfMap(mapInst))
-}
+	// Size of variable types
+	require.Equal(t, size.Size(0x01), size.OfAny(true))
+	require.Equal(t, size.Size(0x08), size.OfAny(uintptr(0)))
+	require.Equal(t, size.Size(0x08), size.OfAny(complex64(1)))
+	require.Equal(t, size.Size(0x10), size.OfAny(complex128(2)))
 
-func TestMapSizes(t *testing.T) {
-	validateMapSizes(t, map[struct{}]struct{}{}, 0, 0)
-	validateMapSizes(t, map[int8]struct{}{}, 1, 0)
-	validateMapSizes(t, map[int16]struct{}{}, 2, 0)
-	validateMapSizes(t, map[int32]struct{}{}, 4, 0)
-	validateMapSizes(t, map[int64]struct{}{}, 8, 0)
-	validateMapSizes(t, map[string]struct{}{}, 16, 0)
+	require.Equal(t, size.Size(0x40), size.OfAny("test"))
+	require.Equal(t, size.Size(0x08), size.OfAny(uint(0)))
+	require.Equal(t, size.Size(0x01), size.OfAny(uint8(1)))
+	require.Equal(t, size.Size(0x02), size.OfAny(uint16(2)))
+	require.Equal(t, size.Size(0x04), size.OfAny(uint32(3)))
+	require.Equal(t, size.Size(0x08), size.OfAny(uint64(4)))
 
-	validateMapSizes(t, map[struct{}]string{}, 0, 16)
-	validateMapSizes(t, map[int8]string{}, 1, 16)
-	validateMapSizes(t, map[int16]string{}, 2, 16)
-	validateMapSizes(t, map[int32]string{}, 4, 16)
-	validateMapSizes(t, map[int64]string{}, 8, 16)
-	validateMapSizes(t, map[string]string{}, 16, 16)
+	require.Equal(t, size.Size(0x08), size.OfAny(int(0)))
+	require.Equal(t, size.Size(0x01), size.OfAny(int8(1)))
+	require.Equal(t, size.Size(0x02), size.OfAny(int16(2)))
+	require.Equal(t, size.Size(0x04), size.OfAny(int32(3)))
+	require.Equal(t, size.Size(0x08), size.OfAny(int64(4)))
 
-	validateMapSizes(t, map[struct{}]any{}, 0, 16)
-	validateMapSizes(t, map[int8]any{}, 1, 16)
-	validateMapSizes(t, map[int16]any{}, 2, 16)
-	validateMapSizes(t, map[int32]any{}, 4, 16)
-	validateMapSizes(t, map[int64]any{}, 8, 16)
-	validateMapSizes(t, map[string]any{}, 16, 16)
+	require.Equal(t, size.Size(0x04), size.OfAny(float32(6.6)))
+	require.Equal(t, size.Size(0x08), size.OfAny(float64(7.7)))
 
-	var (
-		int8StringMap = map[int8]string{
-			0: "test",
-			1: "test",
-			2: "test",
-			3: "test",
-		}
+	require.Equal(t, size.Size(0x30), size.OfAny([]int{1, 2, 3}))
+	require.Equal(t, size.Size(0x1b), size.OfAny([]int8{1, 2, 3}))
+	require.Equal(t, size.Size(0x1e), size.OfAny([]int16{1, 2, 3}))
+	require.Equal(t, size.Size(0x24), size.OfAny([]int32{1, 2, 3}))
+	require.Equal(t, size.Size(0x30), size.OfAny([]int64{1, 2, 3}))
 
-		int8StringMapSize = OfMap(int8StringMap)
+	require.Equal(t, size.Size(0x30), size.OfAny([]uint{1, 2, 3}))
+	require.Equal(t, size.Size(0x1b), size.OfAny([]uint8{1, 2, 3}))
+	require.Equal(t, size.Size(0x1e), size.OfAny([]uint16{1, 2, 3}))
+	require.Equal(t, size.Size(0x24), size.OfAny([]uint32{1, 2, 3}))
+	require.Equal(t, size.Size(0x30), size.OfAny([]uint64{1, 2, 3}))
 
-		// Subtract the stand-alone map size from the size of the map with value contents taken into consideration to
-		// get the raw content size of the four strings
-		int8StringMapValuesSize = OfMapValues(int8StringMap) - int8StringMapSize
-	)
+	require.Equal(t, size.Size(0x24), size.OfAny([]float32{1, 2, 3}))
+	require.Equal(t, size.Size(0x30), size.OfAny([]float64{1, 2, 3}))
+	require.Equal(t, size.Size(0x30), size.OfAny([]uintptr{1, 2, 3}))
+	require.Equal(t, size.Size(0x30), size.OfAny([]complex64{1, 2, 3}))
+	require.Equal(t, size.Size(0x48), size.OfAny([]complex128{1, 2, 3}))
 
-	validateMapSizes(t, int8StringMap, 1, 16)
+	require.Equal(t, size.Size(0x108), size.OfAny([]string{"a", "baa", "long string"}))
+	require.Equal(t, size.Size(0x1b), size.OfAny([]bool{true, false, true}))
 
-	// Each string contains 16 bytes for the header and 4 additional bytes of data
-	require.Equal(t, Size(4)*4, int8StringMapValuesSize)
+	require.Equal(t, size.Size(0x44), size.OfAny([]any{"aa", 123, false}))
 }
 
 func TestOfValueSlice(t *testing.T) {
@@ -94,5 +84,5 @@ func TestOfValueSlice(t *testing.T) {
 		expectedSize = cap(slice)*8 + 24
 	)
 
-	require.Equal(t, expectedSize, int(OfSlice(slice)))
+	require.Equal(t, expectedSize, int(size.OfSlice(slice)))
 }

@@ -273,19 +273,35 @@ func (s *Properties) MapOrEmpty() map[string]any {
 	return s.Map
 }
 
-func (s *Properties) SizeOf() size.Size {
-	instanceSize := size.Of(*s)
+// mapSize measures the size of a given generic map.
+//
+// Size measurement will be inaccurate for this function by the size of the map's type overhead and
+// bucket allocations.
+//
+// Calculating the exact size of a map is a difficult exercise in runtime behavior quirks and detail.
+// For the purposes of this function, the inaccuracy is not important. Estimation is more than
+// adequate.
+func mapSize[K comparable, V any](mapInst map[K]V) size.Size {
+	var mapSizeEstimate size.Size
 
-	if s.Map != nil {
-		instanceSize += size.OfMapValues(s.Map)
+	for key, value := range mapInst {
+		mapSizeEstimate += size.Of(key)
+		mapSizeEstimate += size.OfAny(value)
 	}
 
+	return mapSizeEstimate
+}
+
+func (s *Properties) SizeOf() size.Size {
+	instanceSize := size.Of(*s)
+	instanceSize += mapSize(s.Map)
+
 	if s.Deleted != nil {
-		instanceSize += size.OfMapValues(s.Deleted)
+		instanceSize += mapSize(s.Deleted)
 	}
 
 	if s.Modified != nil {
-		instanceSize += size.OfMapValues(s.Modified)
+		instanceSize += mapSize(s.Modified)
 	}
 
 	return instanceSize

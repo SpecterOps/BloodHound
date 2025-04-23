@@ -25,6 +25,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/bhlog/measure"
@@ -40,7 +41,7 @@ import (
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
 
-func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *http.Request) {
+func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Request) {
 	var (
 		queryParams    = request.URL.Query()
 		sortByColumns  = queryParams[api.QueryParameterSortBy]
@@ -100,16 +101,16 @@ func (s Resources) ListFileUploadJobs(response http.ResponseWriter, request *htt
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if fileUploadJobs, count, err := ingest.GetAllIngestJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if ingestJobs, count, err := ingest.GetAllIngestJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), fileUploadJobs, limit, skip, count, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(request.Context(), ingestJobs, limit, skip, count, http.StatusOK, response)
 		}
 	}
 }
 
-func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Starting new file upload job")()
+func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Request) {
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Starting new ingest job")()
 	reqCtx := ctx.Get(request.Context())
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
@@ -121,10 +122,11 @@ func (s Resources) StartFileUploadJob(response http.ResponseWriter, request *htt
 	}
 }
 
-func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http.Request) {
+func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http.Request) {
 	var (
-		requestId             = ctx.FromRequest(request).RequestID
-		fileUploadJobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+		requestId   = ctx.FromRequest(request).RequestID
+		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
+		validator   = ingest.NewIngestValidator(s.IngestSchema)
 	)
 
 	if request.Body != nil {
@@ -133,15 +135,33 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 
 	if !IsValidContentTypeForUpload(request.Header) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
-	} else if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
+	} else if jobID, err := strconv.Atoi(jobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
+	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if fileName, fileType, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request); errors.Is(err, ingest.ErrInvalidJSON) {
+	} else if ingestTaskParams, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, ingest.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
+	} else if report, ok := err.(ingest.ValidationReport); ok {
+		var (
+			msgs       = report.BuildAPIError()
+			errDetails = []api.ErrorDetails{}
+		)
+
+		for _, msg := range msgs {
+			errDetails = append(errDetails, api.ErrorDetails{Message: msg})
+		}
+
+		e := &api.ErrorWrapper{
+			HTTPStatus: http.StatusBadRequest,
+			Timestamp:  time.Now(),
+			RequestID:  ctx.FromRequest(request).RequestID,
+			Errors:     errDetails,
+		}
+
+		api.WriteErrorResponse(request.Context(), e, response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, fileName, fileType, requestId, int64(fileUploadJobID)); err != nil {
+	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, ingest.IngestTaskParams{Filename: ingestTaskParams.Filename, FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID), IsGeneric: ingestTaskParams.IsGeneric}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err = ingest.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -150,14 +170,14 @@ func (s Resources) ProcessFileUpload(response http.ResponseWriter, request *http
 	}
 }
 
-func (s Resources) EndFileUploadJob(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Finished file upload job")()
+func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Request) {
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Finished ingest job")()
 
-	fileUploadJobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
+	jobIdString := mux.Vars(request)[FileUploadJobIdPathParameterName]
 
-	if fileUploadJobID, err := strconv.Atoi(fileUploadJobIdString); err != nil {
+	if jobID, err := strconv.Atoi(jobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(fileUploadJobID)); err != nil {
+	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)

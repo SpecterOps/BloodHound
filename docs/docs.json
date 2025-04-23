@@ -367,12 +367,13 @@
                 "pages": [
                   "resources/release-notes/overview",
                   "resources/release-notes/summary",
+                  "resources/release-notes/v7-3-0",
                   "resources/release-notes/v7-2-1",
                   "resources/release-notes/v7-2-0",
-                  "resources/release-notes/2024-12-09-v6-3-0",
                   {
                     "group": "Archive",
                     "pages": [
+                      "resources/release-notes/2024-12-09-v6-3-0",
                       "resources/release-notes/2024-11-14-v6-2-0",
                       "resources/release-notes/2024-10-22-v6-1-0",
                       "resources/release-notes/2024-09-30-v6-0-0",
@@ -860,7 +861,7 @@
   },
   "api": {
     "playground": {
-      "display": "none"
+      "display": "simple"
     }
   },
   "appearance": {
