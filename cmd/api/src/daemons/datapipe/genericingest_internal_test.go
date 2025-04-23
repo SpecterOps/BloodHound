@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ResolveRelationshipsByName(t *testing.T) {
+func Test_ResolveRelationships(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	var (

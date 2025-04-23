@@ -32,8 +32,21 @@ type endpointKey struct {
 	Kind string
 }
 
+func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
+	if endpoint.MatchBy != ein.MatchByName {
+		return
+	}
+	key := endpointKey{
+		Name: strings.ToUpper(endpoint.Value),
+	}
+	if endpoint.Kind != nil {
+		key.Kind = endpoint.Kind.String()
+	}
+	cache[key] = struct{}{}
+}
+
 func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
-	// seen deduplicates Name:Kind pairs from the input batch to ensure that Name:Kind pairs are resolved once.
+	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
 	seen := map[endpointKey]struct{}{}
 
 	if len(rels) == 0 {
@@ -41,26 +54,16 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 	}
 
 	for _, rel := range rels {
-		if rel.Source.MatchBy == ein.MatchByName {
-			kind := ""
-			if rel.Source.Kind != nil {
-				kind = rel.Source.Kind.String()
-			}
-			key := endpointKey{Name: strings.ToUpper(rel.Source.Value), Kind: kind}
-			seen[key] = struct{}{}
-		}
-		if rel.Target.MatchBy == ein.MatchByName {
-			kind := ""
-			if rel.Target.Kind != nil {
-				kind = rel.Target.Kind.String()
-			}
-			key := endpointKey{Name: strings.ToUpper(rel.Target.Value), Kind: kind}
-			seen[key] = struct{}{}
-		}
+		addKey(rel.Source, seen)
+		addKey(rel.Target, seen)
+	}
+	// if nothing to filter, return early
+	if len(seen) == 0 {
+		return map[endpointKey]string{}, nil
 	}
 
 	var (
-		filters     []graph.Criteria
+		filters     = make([]graph.Criteria, 0, len(seen))
 		buildFilter = func(key endpointKey) graph.Criteria {
 			var criteria []graph.Criteria
 
@@ -72,14 +75,9 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 		}
 	)
 
-	// aggregate all Name:Kind pairs in one DAWGs query for 1 round trip
+	// aggregate all Name:Kind pairs in 1 DAWGs query for 1 round trip
 	for key := range seen {
 		filters = append(filters, buildFilter(key))
-	}
-
-	// if no filters to query, return early
-	if len(filters) == 0 {
-		return map[endpointKey]string{}, nil
 	}
 
 	var (
@@ -107,7 +105,7 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 				// record ambiguous matches (when more than one match is found, we cannot disambiguate the requested node and must skip the update)
 				for _, kind := range node.Kinds {
 					key := endpointKey{Name: strings.ToUpper(nameVal), Kind: kind.String()}
-					if _, exists := resolved[key]; exists && resolved[key] != objectID {
+					if existingID, exists := resolved[key]; exists && existingID != objectID {
 						ambiguous[key] = true
 					} else {
 						resolved[key] = objectID
@@ -130,82 +128,67 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 }
 
 func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, identityKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
-
-	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
+	cache, err := resolveAllEndpointsByName(batch, rels)
+	if err != nil {
 		return nil, err
-	} else {
-
-		var (
-			nowUTC  = time.Now().UTC()
-			updates []*graph.RelationshipUpdate
-		)
-
-		for _, rel := range rels {
-			var srcID, targetID string
-			var srcOK, targetOK bool
-
-			if rel.Source.MatchBy == ein.MatchByName {
-				kind := ""
-				if rel.Source.Kind != nil {
-					kind = rel.Source.Kind.String()
-				}
-				key := endpointKey{
-					Name: strings.ToUpper(rel.Source.Value),
-					Kind: kind,
-				}
-				srcID, srcOK = cache[key]
-			} else { // assume value is already objectid when matchby == MatchByID or is unset (for existing paths)
-				srcID, srcOK = rel.Source.Value, rel.Source.Value != ""
-			}
-
-			if rel.Target.MatchBy == ein.MatchByName {
-				kind := ""
-				if rel.Target.Kind != nil {
-					kind = rel.Target.Kind.String()
-				}
-				key := endpointKey{
-					Name: strings.ToUpper(rel.Target.Value),
-					Kind: kind,
-				}
-				targetID, targetOK = cache[key]
-			} else { // assume value is already objectid when matchby == MatchByID or is unset (for existing paths)
-				targetID, targetOK = rel.Target.Value, rel.Target.Value != ""
-			}
-
-			if !srcOK || !targetOK {
-				slog.Warn("skipping unresolved relationship",
-					slog.String("source", rel.Source.Value),
-					slog.String("target", rel.Target.Value),
-					slog.Bool("resolved_source", srcOK),
-					slog.Bool("resolved_target", targetOK))
-				continue
-			}
-
-			rel.RelProps[common.LastSeen.String()] = nowUTC
-
-			update := &graph.RelationshipUpdate{
-				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: srcID,
-					common.LastSeen: nowUTC,
-				}), rel.Source.Kind),
-				StartIdentityProperties: []string{common.ObjectID.String()},
-				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-					common.ObjectID: targetID,
-					common.LastSeen: nowUTC,
-				}), rel.Target.Kind),
-				EndIdentityProperties: []string{common.ObjectID.String()},
-				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-			}
-
-			if identityKind != graph.EmptyKind {
-				update.StartIdentityKind = identityKind
-				update.EndIdentityKind = identityKind
-			}
-
-			updates = append(updates, update)
-		}
-
-		return updates, nil
 	}
 
+	nowUTC := time.Now().UTC()
+	var updates []*graph.RelationshipUpdate
+
+	for _, rel := range rels {
+		srcID, srcOK := resolveEndpointID(rel.Source, cache)
+		targetID, targetOK := resolveEndpointID(rel.Target, cache)
+
+		if !srcOK || !targetOK {
+			slog.Warn("skipping unresolved relationship",
+				slog.String("source", rel.Source.Value),
+				slog.String("target", rel.Target.Value),
+				slog.Bool("resolved_source", srcOK),
+				slog.Bool("resolved_target", targetOK))
+			continue
+		}
+
+		rel.RelProps[common.LastSeen.String()] = nowUTC
+
+		update := &graph.RelationshipUpdate{
+			Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+				common.ObjectID: srcID,
+				common.LastSeen: nowUTC,
+			}), rel.Source.Kind),
+			StartIdentityProperties: []string{common.ObjectID.String()},
+			End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+				common.ObjectID: targetID,
+				common.LastSeen: nowUTC,
+			}), rel.Target.Kind),
+			EndIdentityProperties: []string{common.ObjectID.String()},
+			Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+		}
+
+		if identityKind != graph.EmptyKind {
+			update.StartIdentityKind = identityKind
+			update.EndIdentityKind = identityKind
+		}
+
+		updates = append(updates, update)
+	}
+
+	return updates, nil
+}
+
+func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]string) (string, bool) {
+	if endpoint.MatchBy == ein.MatchByName {
+		key := endpointKey{
+			Name: strings.ToUpper(endpoint.Value),
+			Kind: "",
+		}
+		if endpoint.Kind != nil {
+			key.Kind = endpoint.Kind.String()
+		}
+		id, ok := cache[key]
+		return id, ok
+	}
+
+	// Fallback to raw value if matching by ID
+	return endpoint.Value, endpoint.Value != ""
 }
