@@ -50,3 +50,35 @@ func Test_ParseGraphSortParameters_Success(t *testing.T) {
 	require.Equal(t, orderCriteria[1].SortCriteria.(*cypher.PropertyLookup), query.NodeProperty("name"))
 	require.Equal(t, orderCriteria[1].Direction, query.SortDirectionDescending)
 }
+
+func Test_ParseSortParameters(t *testing.T) {
+	domains := model.DomainSelectors{}
+
+	t.Run("invalid column", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "invalidColumn")
+
+		_, err := api.ParseSortParameters(domains, params)
+		require.ErrorContains(t, err, api.ErrResponseDetailsColumnNotSortable.Error())
+	})
+
+	t.Run("successful sort ascending", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "objectid")
+
+		sortItems, err := api.ParseSortParameters(domains, params)
+		require.Nil(t, err)
+		require.Equal(t, sortItems[0].Direction, model.AscendingSortDirection)
+		require.Equal(t, sortItems[0].Column, "objectid")
+	})
+
+	t.Run("successful sort descending", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "-objectid")
+
+		sortItems, err := api.ParseSortParameters(domains, params)
+		require.Nil(t, err)
+		require.Equal(t, sortItems[0].Direction, model.DescendingSortDirection)
+		require.Equal(t, sortItems[0].Column, "objectid")
+	})
+}

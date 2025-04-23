@@ -463,25 +463,28 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		} else if count, err := s.GraphQuery.CountNodesByKind(request.Context(), assetGroupTag.ToKind()); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMemberResponse{Members: nodeToAssetGroupMembers(nodes, members)}, limit, skip, int(count), http.StatusOK, response)
+			for _, node := range nodes {
+				member := nodeToAssetGroupMember(node, false)
+				members = append(members, member)
+			}
+			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMemberResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
 	}
 }
 
 // Used to minimize the response shape to just the necessary member display fields
-func nodeToAssetGroupMembers(nodes []*graph.Node, members []AssetGroupMemberResponse) []AssetGroupMemberResponse {
-	for _, node := range nodes {
-		var (
-			objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
-			name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
-		)
+func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroupMemberResponse {
+	var (
+		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
+		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
+	)
 
-		members = append(members, AssetGroupMemberResponse{
-			NodeId:      node.ID,
-			ObjectID:    objectID,
-			PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
-			Name:        name,
-		})
+	member := AssetGroupMemberResponse{
+		NodeId:      node.ID,
+		ObjectID:    objectID,
+		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
+		Name:        name,
 	}
-	return members
+
+	return member
 }
