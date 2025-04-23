@@ -281,3 +281,149 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			})
 	})
 }
+
+func Test_ResolveAllEndpointsByName(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	generateKey := func(name, kind string) endpointKey {
+		return endpointKey{
+			Name: name,
+			Kind: kind,
+		}
+	}
+	t.Run("Single match. One node with name and kind found, and valid objectid returned.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ResolveEndpointsByName.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				rel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "alice", Kind: ad.User, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{},
+					ein.IngestibleRel{},
+				)
+
+				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
+
+				cache, err := resolveAllEndpointsByName(batch, rels)
+				require.Nil(t, err)
+				require.Len(t, cache, 2) // cache has keys for 'User' and 'Base'
+
+				key := generateKey("ALICE", "User")
+				require.Contains(t, cache, key)
+				require.NotEmpty(t, cache[key])
+
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+
+	t.Run("No match. Lookup requests name/kind that do not exist in DB.	Empty result map returned.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ResolveEndpointsByName.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				rel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "not alice", Kind: ad.User, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{},
+					ein.IngestibleRel{},
+				)
+
+				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
+
+				cache, err := resolveAllEndpointsByName(batch, rels)
+				require.Nil(t, err)
+				require.Len(t, cache, 0)
+
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+
+	t.Run("Ambiguous match.	Two nodes with same name + kind. Skipped from result map.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ResolveEndpointsByName.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				rel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "SAME NAME", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{},
+					ein.IngestibleRel{},
+				)
+
+				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
+
+				cache, err := resolveAllEndpointsByName(batch, rels)
+				require.Nil(t, err)
+				require.Len(t, cache, 0)
+
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+
+	t.Run("Multiple distinct matches for Alice n Bob. Both returned", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ResolveEndpointsByName.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				rel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "alice", Kind: ad.User, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("GenericDevice"), MatchBy: ein.MatchByName},
+					ein.IngestibleRel{},
+				)
+
+				rels := []ein.IngestibleRelationship{rel} // simulate a "batch"
+
+				cache, err := resolveAllEndpointsByName(batch, rels)
+				require.Nil(t, err)
+				require.Len(t, cache, 3) // Alice node has keys for 'User' and 'Base'. Bob just has GenericBase
+
+				aliceKey := generateKey("ALICE", "User")
+				require.Contains(t, cache, aliceKey)
+				require.NotEmpty(t, cache[aliceKey])
+
+				bobKey := generateKey("BOB", "GenericDevice")
+				require.Contains(t, cache, bobKey)
+				require.NotEmpty(t, cache[bobKey])
+
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+
+	t.Run("Empty input.	Empty result map returned.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.ResolveEndpointsByName.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				rels := []ein.IngestibleRelationship{} // simulate a "batch"
+
+				cache, err := resolveAllEndpointsByName(batch, rels)
+				require.Nil(t, err)
+				require.Len(t, cache, 0)
+
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+}

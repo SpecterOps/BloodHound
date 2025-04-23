@@ -318,28 +318,20 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	)
 
 	for _, next := range relationships {
-		if next.Source.MatchBy == ein.MatchByID && next.Target.MatchBy == ein.MatchByID { // if no property to match against, do the usual objectid thang
-			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
+		// generic ingest supports exact matching on a node's name property
+		if next.Source.MatchBy == ein.MatchByName || next.Target.MatchBy == ein.MatchByName {
+			if err := processRelationshipWithoutOIDs(batch, next); err != nil {
 				errs.Add(err)
 			}
-		} else {
-			// todo: need to update signature
-			if err := submitUpdate(batch, next); err != nil {
+		} else { // else do the usual objectid thang
+			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
+				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
 				errs.Add(err)
 			}
 		}
 
 	}
 	return errs.Combined()
-}
-
-func submitUpdate(batch graph.Batch, rel ein.IngestibleRelationship) error {
-	if update, err := resolveRelationshipByName(batch, rel); err != nil {
-		return err
-	} else {
-		return batch.UpdateRelationshipBy(update)
-	}
 }
 
 func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {

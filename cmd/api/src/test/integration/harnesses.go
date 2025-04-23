@@ -9771,6 +9771,40 @@ func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
 	s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
 }
 
+type ResolveEndpointsByName struct {
+	Node1 *graph.Node
+	// nodes 2 and 3 have the same name + kind, to support cases that need to branch on ambiguous resolution
+	Node2 *graph.Node
+	Node3 *graph.Node
+
+	Node4 *graph.Node
+	// // Nodes 3 and 4 have the same name to support cases that need to branch on ambiguous resolution
+	// Node3 *graph.Node
+	// Node4 *graph.Node
+	// // Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
+	// Node5 *graph.Node
+	// Node6 *graph.Node
+}
+
+func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryUser("ALICE", domainsid)
+
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+
+	s.Node4 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("GenericDevice"))
+
+	// s.Node2 = graphTestContext.NewActiveDirectoryComputer("NAME B", domainsid)
+
+	// s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
+	// s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -9880,4 +9914,5 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
 	GenericIngest                                   GenericIngest
+	ResolveEndpointsByName                          ResolveEndpointsByName
 }
