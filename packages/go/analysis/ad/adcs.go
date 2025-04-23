@@ -63,7 +63,7 @@ func PostADCS(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 			for _, domain := range cache.GetDomains() {
 				innerDomain := domain
 
-				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+				if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) && cache.DoesCAHaveHostingComputer(innerEnterpriseCA) {
 					targetDomains.Add(innerDomain)
 				}
 			}
