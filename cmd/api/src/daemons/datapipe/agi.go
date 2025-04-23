@@ -38,17 +38,82 @@ import (
 	"github.com/specterops/bloodhound/src/services/agi"
 )
 
-func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDB graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Updated asset group isolation tags")()
-
-	if err := commonanalysis.ClearSystemTags(ctx, graphDB); err != nil {
+func updateAssetGroupIsolationTags(ctx context.Context, db agi.AgiData, graphDb graph.Database) error {
+	if assetGroups, err := db.GetAllAssetGroups(ctx, "", model.SQLFilter{}); err != nil {
 		return err
-	}
+	} else {
+		return graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			for _, assetGroup := range assetGroups {
+				if assetGroupNodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+					tagPropertyStr := common.SystemTags.String()
 
-	return agi.UpdateAssetGroupIsolationTags(ctx, db, graphDB)
+					if !assetGroup.SystemGroup {
+						tagPropertyStr = common.UserTags.String()
+					}
+
+					return query.And(
+						query.KindIn(query.Node(), ad.Entity, azure.Entity),
+						query.In(query.NodeProperty(common.ObjectID.String()), assetGroup.Selectors.Strings()),
+						query.Not(query.StringContains(query.NodeProperty(tagPropertyStr), assetGroup.Tag)),
+					)
+				})); err != nil {
+					return err
+				} else {
+					for _, node := range assetGroupNodes {
+						tagPropertyStr := common.SystemTags.String()
+
+						if !assetGroup.SystemGroup {
+							tagPropertyStr = common.UserTags.String()
+						}
+
+						if tags, err := node.Properties.Get(tagPropertyStr).String(); err != nil {
+							if graph.IsErrPropertyNotFound(err) {
+								node.Properties.Set(tagPropertyStr, assetGroup.Tag)
+							} else {
+								return err
+							}
+						} else {
+							node.Properties.Set(tagPropertyStr, tags+" "+assetGroup.Tag)
+						}
+
+						if err := tx.UpdateNode(node); err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			return nil
+		})
+	}
 }
 
-func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
+func clearSystemTags(ctx context.Context, db graph.Database, additionalFilter ...graph.Criteria) error {
+	defer measure.ContextMeasure(ctx, slog.LevelInfo, "clearSystemTags")()
+
+	var (
+		props   = graph.NewProperties()
+		filters = []graph.Criteria{query.IsNotNull(query.NodeProperty(common.SystemTags.String()))}
+	)
+
+	if additionalFilter != nil {
+		filters = append(filters, additionalFilter...)
+	}
+
+	props.Delete(common.SystemTags.String())
+
+	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if ids, err := ops.FetchNodeIDs(tx.Nodes().Filter(query.And(filters...))); err != nil {
+			return err
+		} else {
+			return tx.Nodes().Filterf(func() graph.Criteria {
+				return query.InIDs(query.NodeID(), ids...)
+			}).Update(props)
+		}
+	})
+}
+
+func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Azure Tier Zero")()
 
 	var tenants graph.NodeSet
@@ -157,7 +222,7 @@ func ParallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	return nil
 }
 
-func TagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
+func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
 	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {

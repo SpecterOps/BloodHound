@@ -121,12 +121,12 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorByVersion).RequireAuth()
 	routerInst.GET(fmt.Sprintf("/api/v2/collectors/{%s}/{%s:v[0-9]+.[0-9]+.[0-9]+|latest}/checksum", v2.CollectorTypePathParameterName, v2.CollectorReleaseTagPathParameterName), resources.DownloadCollectorChecksumByVersion).RequireAuth()
 
-	// Collection File Upload API
-	routerInst.GET("/api/v2/file-upload", resources.ListFileUploadJobs).RequireAuth()
+	// Generic Ingest + File Upload API
+	routerInst.GET("/api/v2/file-upload", resources.ListIngestJobs).RequireAuth()
 	routerInst.GET("/api/v2/file-upload/accepted-types", resources.ListAcceptedFileUploadTypes).RequireAuth()
-	routerInst.POST("/api/v2/file-upload/start", resources.StartFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessFileUpload).RequirePermissions(permissions.GraphDBIngest)
-	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndFileUploadJob).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST("/api/v2/file-upload/start", resources.StartIngestJob).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}", v2.FileUploadJobIdPathParameterName), resources.ProcessIngestTask).RequirePermissions(permissions.GraphDBIngest)
+	routerInst.POST(fmt.Sprintf("/api/v2/file-upload/{%s}/end", v2.FileUploadJobIdPathParameterName), resources.EndIngestJob).RequirePermissions(permissions.GraphDBIngest)
 
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(resources.DB)
@@ -324,5 +324,12 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		//TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
+
+		// Custom Node Management
+		routerInst.GET("/api/v2/customnode", resources.GetCustomNodeKinds).RequireAuth(),
+		routerInst.GET(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
+		routerInst.POST("/api/v2/customnode", resources.CreateCustomNodeKind).RequireAuth(),
+		routerInst.PUT(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
 	)
 }

@@ -3,7 +3,7 @@ title: SAML in BloodHound
 description: "BloodHound supports SAML 2.0 for Single Sign On to authenticate users to your tenant environment."
 ---
 
-<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
 This integration provides authentication only, user creation and role management will still occur from within BloodHound's "Manage Users" interface.
 
@@ -32,8 +32,6 @@ Currently, BloodHound requires the configuration of SAML system in the following
 | --- | --- |
 | **IDP Name Format** | urn:oasis:names:tc:SAML:2.0:attrname-format:uri |
 | **Required SAML Attributes** | Either of the following will map to the user's email address in BloodHound:<br/><br/>_http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress_<br/><br/>_urn:oid:0.9.2342.19200300.100.1.3_ |
-| **Tenant Callback URL** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;/acs<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound configuration  <br/>_ |
-| **SP Entity ID** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound configuration_ |
 
 ## BloodHound Icons
 

@@ -72,7 +72,7 @@ func moduleListPackages(modPath string) ([]GoPackage, error) {
 			}
 			packages = append(packages, p)
 		}
-		cmd.Wait()
-		return packages, nil
+
+		return packages, cmd.Wait()
 	}
 }

@@ -43,6 +43,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 	var (
 		collectedErrors      []error
 		compositionIdCounter = analysis.NewCompositionCounter()
+		tieringEnabled       = appcfg.GetTieringEnabled(ctx, db)
 	)
 
 	if err := adAnalysis.FixWellKnownNodeTypes(ctx, graphDB); err != nil {
@@ -57,27 +58,9 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
-	if err := updateAssetGroupIsolationTags(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation tagging failed: %w", err))
-	}
-
-	if err := TagActiveDirectoryTierZero(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("active directory tier zero tagging failed: %w", err))
-	}
-
-	if err := ParallelTagAzureTierZero(ctx, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("azure tier zero tagging failed: %w", err))
-	}
-
-	if tierFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureTierManagement); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving Tiering feature flag: %w", err))
-	} else if tierFlag.Enabled {
-		if err := SelectAssetGroupNodes(ctx, db, graphDB); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("AGT: selecting failed: %w", err))
-		}
-
-		if err := TagAssetGroupNodes(ctx, db, graphDB); err != nil {
-			collectedErrors = append(collectedErrors, fmt.Errorf("AGT: tagging failed: %w", err))
+	if errs := TagAssetGroupsAndTierZero(ctx, db, graphDB); len(errs) > 0 {
+		for _, err := range errs {
+			collectedErrors = append(collectedErrors, fmt.Errorf("tagging asset groups and tier zero failed: %w", err))
 		}
 	}
 
@@ -107,9 +90,11 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		stats.LogStats()
 	}
 
-	if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB); err != nil {
-		collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
-		agiFailed = true
+	if !tieringEnabled {
+		if err := agi.RunAssetGroupIsolationCollections(ctx, db, graphDB); err != nil {
+			collectedErrors = append(collectedErrors, fmt.Errorf("asset group isolation collection failed: %w", err))
+			agiFailed = true
+		}
 	}
 
 	if err := dataquality.SaveDataQuality(ctx, db, graphDB); err != nil {
