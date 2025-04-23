@@ -99,8 +99,8 @@ describe('Formatting string properties', () => {
         expect(formatString('2016', 'functionallevel')).toEqual('2016');
 
         //A date will be returned here if the property is not functionallevel
-        expect(formatString('2016')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
-        expect(formatString('2016')).not.toEqual('2016');
+        expect(formatString('2016', 'lastseen')).toEqual('2016-01-01 00:00 PST (GMT-0800)');
+        expect(formatString('2016', 'lastseen')).not.toEqual('2016');
     });
 });
 
