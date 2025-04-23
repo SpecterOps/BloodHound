@@ -18,10 +18,9 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useNavigate } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
-import { apiClient } from '../../../utils';
+import { apiClient, useAppNavigate } from '../../../utils';
 import { Cypher } from '../Cypher';
 import { DetailsList } from './DetailsList';
 import DynamicDetails from './DynamicDetails';
@@ -96,7 +95,7 @@ const Details: FC = () => {
     const [selectedObject, setSelectedObject] = useState<number | null>(null);
     const [selectedObjectData, setSelectedObjectData] = useState<AssetGroupTagSelectorNode | null>(null);
     const [showCypher, setShowCypher] = useState(false);
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const labelsQuery = useQuery(['asset-group-labels'], () => {
         return apiClient.getAssetGroupLabels().then((res) => {

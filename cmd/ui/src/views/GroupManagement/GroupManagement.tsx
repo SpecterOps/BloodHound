@@ -18,11 +18,14 @@ import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
     EntityKinds,
+    ExploreQueryParams,
     GroupManagementContent,
     HIGH_VALUE_LABEL,
     Permission,
     TIER_ZERO_TAG,
+    createTypedSearchParams,
     searchbarActions,
+    useAppNavigate,
     useExploreParams,
     useFeatureFlag,
     useInitialEnvironment,
@@ -31,7 +34,6 @@ import {
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { setSelectedNode } from 'src/ducks/entityinfo/actions';
 import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
@@ -41,7 +43,7 @@ import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const backButtonFlagQuery = useFeatureFlag('back_button_support');
 
     const { data: environment } = useInitialEnvironment({ orderBy: 'name' });
@@ -75,7 +77,12 @@ const GroupManagement = () => {
             if (backButtonFlagQuery.data?.enabled) {
                 navigate({
                     pathname: ROUTE_EXPLORE,
-                    search: `?selectedItem=${getGraphNodeByObjectId.data?.id}&searchType=node&primarySearch=${openNode?.id}&exploreSearchTab=node`,
+                    search: createTypedSearchParams<ExploreQueryParams>({
+                        selectedItem: getGraphNodeByObjectId.data?.id,
+                        primarySearch: openNode?.id,
+                        searchType: 'node',
+                        exploreSearchTab: 'node',
+                    }),
                 });
             } else {
                 dispatch(searchbarActions.sourceNodeSelected(searchNode));

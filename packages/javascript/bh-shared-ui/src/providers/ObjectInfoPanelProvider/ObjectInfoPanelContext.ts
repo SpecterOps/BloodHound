@@ -14,6 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './AppLink';
-export * from './searchParams';
-export * from './useAppNavigate';
+import React from 'react';
+
+export const ObjectInfoPanelContext = React.createContext<
+    | {
+          isObjectInfoPanelOpen: boolean;
+          setIsObjectInfoPanelOpen: (isOpen: boolean) => void;
+      }
+    | undefined
+>(undefined);
+
+export function useObjectInfoPanelContext() {
+    const context = React.useContext(ObjectInfoPanelContext);
+    if (context === undefined) {
+        throw new Error('useObjectInfoPanelContext must be used within a ObjectInfoPanelContextProvider');
+    }
+    return context;
+}
