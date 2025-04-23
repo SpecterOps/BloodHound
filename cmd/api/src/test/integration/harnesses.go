@@ -9756,6 +9756,13 @@ type GenericIngest struct {
 	// Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
 	Node5 *graph.Node
 	Node6 *graph.Node
+
+	// nodes 7 and 8 only have one kind
+	Node7 *graph.Node
+	Node8 *graph.Node
+
+	Node9  *graph.Node
+	Node10 *graph.Node
 }
 
 func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
@@ -9769,6 +9776,24 @@ func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
 
 	s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
 	s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
+
+	s.Node7 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("KindA"))
+	s.Node8 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "BOBBY",
+	}), graph.StringKind("KindB"))
+
+	s.Node9 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0001",
+		common.Name:     "SERVER-01",
+	}), graph.StringKind("Device"))
+	s.Node10 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0002",
+		common.Name:     "DC-01",
+	}), graph.StringKind("DomainController"))
 }
 
 type ResolveEndpointsByName struct {
@@ -9778,12 +9803,6 @@ type ResolveEndpointsByName struct {
 	Node3 *graph.Node
 
 	Node4 *graph.Node
-	// // Nodes 3 and 4 have the same name to support cases that need to branch on ambiguous resolution
-	// Node3 *graph.Node
-	// Node4 *graph.Node
-	// // Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
-	// Node5 *graph.Node
-	// Node6 *graph.Node
 }
 
 func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {

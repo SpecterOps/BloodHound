@@ -159,7 +159,7 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 		}
 		if rel.Target.MatchBy == ein.MatchByName {
 			kind := ""
-			if rel.Source.Kind != nil {
+			if rel.Target.Kind != nil {
 				kind = rel.Target.Kind.String()
 			}
 			key := endpointKey{Name: strings.ToUpper(rel.Target.Value), Kind: kind}
@@ -185,6 +185,11 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 		filters = append(filters, buildFilter(key))
 	}
 
+	// if no filters to query, return early
+	if len(filters) == 0 {
+		return map[endpointKey]string{}, nil
+	}
+
 	var (
 		resolved  = map[endpointKey]string{}
 		ambiguous = map[endpointKey]bool{}
@@ -203,11 +208,14 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 					continue
 				}
 
+				// edge case: resolve an empty key to match endpoints that provide no Kind filter
+				node.Kinds = append(node.Kinds, graph.EmptyKind)
+
 				// resolve all names found to objectids,
 				// record ambiguous matches (when more than one match is found, we cannot disambiguate the requested node and must skip the update)
 				for _, kind := range node.Kinds {
 					key := endpointKey{Name: strings.ToUpper(nameVal), Kind: kind.String()}
-					if _, exists := resolved[key]; exists {
+					if _, exists := resolved[key]; exists && resolved[key] != objectID {
 						ambiguous[key] = true
 					} else {
 						resolved[key] = objectID
@@ -248,9 +256,13 @@ func resolveRelationshipsByName(
 			var srcOK, targetOK bool
 
 			if rel.Source.MatchBy == ein.MatchByName {
+				kind := ""
+				if rel.Source.Kind != nil {
+					kind = rel.Source.Kind.String()
+				}
 				key := endpointKey{
 					Name: strings.ToUpper(rel.Source.Value),
-					Kind: rel.Source.Kind.String(),
+					Kind: kind,
 				}
 				srcID, srcOK = cache[key]
 			} else { // assume value is already objectid when matchby == MatchByID or is unset (for existing paths)
@@ -258,9 +270,13 @@ func resolveRelationshipsByName(
 			}
 
 			if rel.Target.MatchBy == ein.MatchByName {
+				kind := ""
+				if rel.Target.Kind != nil {
+					kind = rel.Target.Kind.String()
+				}
 				key := endpointKey{
 					Name: strings.ToUpper(rel.Target.Value),
-					Kind: rel.Target.Kind.String(),
+					Kind: kind,
 				}
 				targetID, targetOK = cache[key]
 			} else { // assume value is already objectid when matchby == MatchByID or is unset (for existing paths)

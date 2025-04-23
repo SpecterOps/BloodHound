@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ResolveRelationshipByName(t *testing.T) {
+func Test_ResolveRelationshipsByName(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
 	var (
@@ -45,20 +45,25 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
-					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name a", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name b", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
+					require.Len(t, updates, 1)
 
-					startOID, _ := update.Start.Properties.Get(string(common.ObjectID)).String()
-					require.NotNil(t, startOID)
+					startNode, endNode := updates[0].Start, updates[0].End
 
-					endOID, _ := update.End.Properties.Get(string(common.ObjectID)).String()
-					require.NotNil(t, endOID)
+					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startObjectID)
+					require.True(t, startNode.Kinds.ContainsOneOf(ad.Computer))
+
+					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endObjectID)
+					require.True(t, endNode.Kinds.ContainsOneOf(ad.Computer))
 
 					return nil
 				})
@@ -76,15 +81,15 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			},
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
-					ein.IngestibleEndpoint{Value: "name a", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name a", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -103,14 +108,14 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			func(harness integration.HarnessDetails, db graph.Database) {
 				ingestibleRel := ein.NewIngestibleRelationship(
 					ein.IngestibleEndpoint{Value: NAME_NOT_EXISTS, MatchBy: ein.MatchByName},
-					ein.IngestibleEndpoint{Value: "name b", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "name b", Kind: ad.Computer, MatchBy: ein.MatchByName},
 					ein.IngestibleRel{},
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -134,9 +139,9 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -160,9 +165,9 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -186,9 +191,9 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -198,7 +203,112 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 			})
 	})
 
-	t.Run("Nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
+	t.Run("Kind filters for endpoints are nil. Resolved by name only", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("KindA"), MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "bobby", Kind: graph.StringKind("KindB"), MatchBy: ein.MatchByName},
+					ein.IngestibleRel{},
+				)
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					require.Nil(t, err)
+					require.Len(t, updates, 1)
+
+					startNode, endNode := updates[0].Start, updates[0].End
+
+					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startObjectID)
+					require.True(t, startNode.Kinds.ContainsOneOf(graph.StringKind("KindA")))
+
+					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endObjectID)
+					require.True(t, endNode.Kinds.ContainsOneOf(graph.StringKind("KindB")))
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Mixed resolution strategy. Source uses MatchByName, Target uses MatchByID.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "bob", Kind: graph.StringKind("KindA"), MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{},
+				)
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					require.Nil(t, err)
+					require.Len(t, updates, 1)
+
+					startNode, endNode := updates[0].Start, updates[0].End
+
+					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startObjectID)
+					require.True(t, startNode.Kinds.ContainsOneOf(graph.StringKind("KindA")))
+
+					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endObjectID)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Mixed resolution strategy. Target uses MatchByName, Source uses MatchByID.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "bobby", MatchBy: ein.MatchByName},
+					ein.IngestibleRel{},
+				)
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					require.Nil(t, err)
+					require.Len(t, updates, 1)
+
+					startNode, endNode := updates[0].Start, updates[0].End
+
+					startObjectID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, startObjectID)
+
+					endObjectID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, endObjectID)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Source name matches 2 nodes with the same name but different kinds. Resolution should honor optional kind filter.", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(
 			func(harness *integration.HarnessDetails) error {
 				harness.GenericIngest.Setup(testContext)
@@ -212,13 +322,16 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
+					require.Len(t, updates, 1)
 
-					startOID, _ := update.Start.Properties.Get(string(common.ObjectID)).String()
+					startNode, endNode := updates[0].Start, updates[0].End
+
+					startOID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, startOID)
 
-					endOID, _ := update.End.Properties.Get(string(common.ObjectID)).String()
+					endOID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
 					require.NotNil(t, endOID)
 
 					return nil
@@ -243,9 +356,9 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
 
 					return nil
 				})
@@ -269,9 +382,116 @@ func Test_ResolveRelationshipByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					update, err := resolveRelationshipByName(batch, ingestibleRel)
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
 					require.Nil(t, err)
-					require.Empty(t, update)
+					require.Empty(t, updates)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("ID match fallback. Both source/target use MatchByID.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{},
+				)
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					require.Nil(t, err)
+					require.Len(t, updates, 1)
+
+					startNode, endNode := updates[0].Start, updates[0].End
+
+					startOID, _ := startNode.Properties.Get(string(common.ObjectID)).String()
+					require.Equal(t, "1234", startOID)
+
+					endOID, _ := endNode.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, "5678", endOID)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Batch input, multiple updates returned.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.GenericIngest.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				rels := []ein.IngestibleRelationship{
+					{
+						Source: ein.IngestibleEndpoint{
+							Value:   "bob",
+							MatchBy: ein.MatchByName,
+							Kind:    graph.StringKind("KindA"),
+						},
+						Target: ein.IngestibleEndpoint{
+							Value:   "server-01",
+							MatchBy: ein.MatchByName,
+							Kind:    graph.StringKind("Device"),
+						},
+						RelType: graph.StringKind("AdminTo"),
+						RelProps: map[string]any{
+							"hello": "world",
+						},
+					},
+					{
+						Source: ein.IngestibleEndpoint{
+							Value:   "bobby",
+							MatchBy: ein.MatchByName,
+							Kind:    graph.StringKind("KindB"),
+						},
+						Target: ein.IngestibleEndpoint{
+							Value:   "dc-01",
+							MatchBy: ein.MatchByName,
+							Kind:    graph.StringKind("DomainController"),
+						},
+						RelType: graph.StringKind("HasSession"),
+						RelProps: map[string]any{
+							"isItWednesday": true,
+						},
+					},
+				}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					updates, err := resolveRelationshipsByName(batch, rels)
+					require.Nil(t, err)
+					require.Len(t, updates, 2)
+
+					update1, update2 := updates[0], updates[1]
+
+					startOID, _ := update1.Start.Properties.Get(string(common.ObjectID)).String()
+					require.Equal(t, "1234", startOID)
+					endOID, _ := update1.Start.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, "0001", endOID)
+					require.True(t, update1.Relationship.Kind.Is(graph.StringKind("AdminTo")))
+					relProp1, _ := update1.Relationship.Properties.Get("hello").String()
+					require.Equal(t, "world", relProp1)
+
+					startOID, _ = update2.Start.Properties.Get(string(common.ObjectID)).String()
+					require.Equal(t, "5678", startOID)
+					endOID, _ = update2.Start.Properties.Get(string(common.ObjectID)).String()
+					require.NotNil(t, "0002", endOID)
+					require.True(t, update2.Relationship.Kind.Is(graph.StringKind("HasSession")))
+					relProp2, _ := update2.Relationship.Properties.Get("isItWednesday").Bool()
+					require.Equal(t, true, relProp2)
 
 					return nil
 				})
@@ -308,7 +528,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				cache, err := resolveAllEndpointsByName(batch, rels)
 				require.Nil(t, err)
-				require.Len(t, cache, 2) // cache has keys for 'User' and 'Base'
+				require.Len(t, cache, 3) // cache has keys for 'User' and 'Base' and ""
 
 				key := generateKey("ALICE", "User")
 				require.Contains(t, cache, key)
@@ -390,7 +610,7 @@ func Test_ResolveAllEndpointsByName(t *testing.T) {
 
 				cache, err := resolveAllEndpointsByName(batch, rels)
 				require.Nil(t, err)
-				require.Len(t, cache, 3) // Alice node has keys for 'User' and 'Base'. Bob just has GenericBase
+				require.Len(t, cache, 5) // Alice node has keys for 'User' and 'Base' and "". Bob just has GenericBase and ""
 
 				aliceKey := generateKey("ALICE", "User")
 				require.Contains(t, cache, aliceKey)
