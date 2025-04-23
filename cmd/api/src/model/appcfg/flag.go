@@ -18,6 +18,7 @@ package appcfg
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/src/model"
 )
@@ -86,4 +87,14 @@ type FeatureFlagService interface {
 type GetFlagByKeyer interface {
 	// GetFlagByKey attempts to fetch a FeatureFlag by its key.
 	GetFlagByKey(context.Context, string) (FeatureFlag, error)
+}
+
+// TODO Cleanup after Tiering GA
+func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+	if tierFlag, err := service.GetFlagByKey(ctx, FeatureTierManagement); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch tiering management flag; returning false")
+		return false
+	} else {
+		return tierFlag.Enabled
+	}
 }

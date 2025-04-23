@@ -156,6 +156,7 @@ x-tagGroups:
       - BloodHound Users
       - Collectors
       - Collection Uploads
+      - Custom Node Management
       - API Info
       - Search
       - Audit
@@ -279,6 +280,12 @@ paths:
   /api/v2/file-upload/accepted-types:
     $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
+  # custom node management
+  /api/v2/customnode:
+    $ref: './paths/custom-nodes.custom-nodes.yaml'
+  /api/v2/customnode/{kind_name}:
+    $ref: './paths/custom-nodes.custom-nodes.name.yaml'
+
   # api info
   /api/version:
     $ref: './paths/api-info.version.yaml'
@@ -320,14 +327,16 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
-  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
-    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
-  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
-    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
+  /api/v2/asset-group-tags:
+    $ref: './paths/asset-isolation.asset-group-tags.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.yaml'
   /api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
 
   # graph
   /api/v2/graphs/kinds:

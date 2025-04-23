@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { Alert, AlertTitle, Box, Grid } from '@mui/material';
-import { useAppNavigate } from 'bh-shared-ui';
+import { Alert, AlertTitle } from '@mui/material';
 import React from 'react';
+import { useAppNavigate } from 'bh-shared-ui';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_LOGIN } from 'src/routes/constants';
@@ -28,30 +28,25 @@ const DisabledUser: React.FC = () => {
     const navigate = useAppNavigate();
     return (
         <LoginPage>
-            <Grid container spacing={4} justifyContent='center'>
-                <Grid item xs={12}>
-                    <Alert severity='warning'>
-                        <AlertTitle>Your Account Has Been Disabled</AlertTitle>
-                        Please contact your system administrator for assistance.
-                    </Alert>
-                </Grid>
-                <Grid item xs={12}>
-                    <Box mt={2}>
-                        <Button
-                            onClick={() => {
-                                dispatch(logout());
-                                navigate(ROUTE_LOGIN, { discardQueryParams: true });
-                            }}
-                            data-testid='disabled-user-back-to-login'
-                            size='large'
-                            type='button'
-                            className='w-full'>
-                            Back to Login
-                        </Button>
-                    </Box>
-                </Grid>
-            </Grid>
-        </LoginPage>
+            <div className='flex flex-col gap-8'>
+                <Alert severity='warning'>
+                    <AlertTitle>Your Account Has Been Disabled</AlertTitle>
+                    Please contact your system administrator for assistance.
+                </Alert>
+
+                <Button
+                    onClick={() => {
+                        dispatch(logout());
+                        navigate(ROUTE_LOGIN, { discardQueryParams: true });
+                    }}
+                    data-testid='disabled-user-back-to-login'
+                    size='large'
+                    type='button'
+                    className='w-full'>
+                    Back to Login
+                </Button>
+            </div>
+        </LoginPage >
     );
 };
 
