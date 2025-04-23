@@ -16,8 +16,8 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle } from '@mui/material';
-import React from 'react';
 import { useAppNavigate } from 'bh-shared-ui';
+import React from 'react';
 import LoginPage from 'src/components/LoginPage';
 import { logout } from 'src/ducks/auth/authSlice';
 import { ROUTE_LOGIN } from 'src/routes/constants';
@@ -46,7 +46,7 @@ const DisabledUser: React.FC = () => {
                     Back to Login
                 </Button>
             </div>
-        </LoginPage >
+        </LoginPage>
     );
 };
 
