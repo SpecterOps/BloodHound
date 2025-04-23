@@ -66,16 +66,13 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 Attack steps:
-                <br />
-                1) Obtain a SYSTEM session on a DC in the attacker-controlled domain
-                <br />
-                2) Create a certificate template allowing ESC1 abuse
-                <br />
-                3) Publish the certificate template to an enterprise CA
-                <br />
-                4) Enroll the certificate as a privileged user in the target domain
-                <br />
-                5) Authenticate as the privileged user in the target domain using the certificate
+                <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                    <li>Obtain a SYSTEM session on a DC in the attacker-controlled domain</li>
+                    <li>Create a certificate template allowing ESC1 abuse</li>
+                    <li>Publish the certificate template to an enterprise CA</li>
+                    <li>Enroll the certificate as a privileged user in the target domain</li>
+                    <li>Authenticate as the privileged user in the target domain using the certificate</li>
+                </ol>
             </Typography>
             <Typography variant='body2'>
                 Refer to "From DA to EA with ESC5" under References for more details.

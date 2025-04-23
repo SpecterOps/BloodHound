@@ -37,13 +37,11 @@ const Abuse: FC = () => {
                 <br />
                 <br />
                 Common viable targets with indirect full control over the environment include:
-                <br />
-                - The Exchange Windows Permissions group
-                <br />
-                - Entra ID sync (MSOL_) accounts
-                <br />
-                - Custom groups with administrative control over Tier Zero assets
-                <br />
+                <ul>
+                    <li>The Exchange Windows Permissions group</li>
+                    <li>Entra ID sync (MSOL_) accounts</li>
+                    <li>Custom groups with administrative control over Tier Zero assets</li>
+                </ul>
                 <br />
                 Alternatively, an attacker can target a domain controller (DC) and use resource-based constrained
                 delegation (RBCD) to obtain a local TGT as the DC, which can then be used for a DCSync attack on the
@@ -56,13 +54,11 @@ const Abuse: FC = () => {
             <Typography variant='body2'>
                 The spoofed SID can be added to SID history at three different levels for the attacker-controlled user
                 of the trusted domain:
-                <br />
-                1) In the user's SID History AD attribute
-                <br />
-                2) In the user's Kerberos TGT
-                <br />
-                3) In the user's Kerberos inter-realm TGT
-                <br />
+                <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                    <li>In the user's SID History AD attribute</li>
+                    <li>In the user's Kerberos TGT</li>
+                    <li>In the user's Kerberos inter-realm TGT</li>
+                </ol>
                 <br />
                 The first option enables the attack over both Kerberos and NTLM, whereas the latter two only apply to
                 Kerberos authentication. However, modifying the SID History attribute is risky—it cannot be edited
