@@ -51,7 +51,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -87,7 +87,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -113,7 +113,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -139,7 +139,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -165,7 +165,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -191,7 +191,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -217,7 +217,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -253,7 +253,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -288,7 +288,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -322,7 +322,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -356,7 +356,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -382,7 +382,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Empty(t, updates)
 
@@ -408,7 +408,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				)
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, []ein.IngestibleRelationship{ingestibleRel})
+					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 1)
 
@@ -471,7 +471,7 @@ func Test_ResolveRelationshipsByName(t *testing.T) {
 				}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					updates, err := resolveRelationshipsByName(batch, rels)
+					updates, err := resolveRelationships(batch, rels, graph.EmptyKind)
 					require.Nil(t, err)
 					require.Len(t, updates, 2)
 

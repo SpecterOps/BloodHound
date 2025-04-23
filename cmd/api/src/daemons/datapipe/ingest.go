@@ -311,26 +311,30 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	return batch.UpdateRelationshipBy(relationshipUpdate)
 }
 
-func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+// TODO: TEST!!! on legacy and generic?
+func IngestRelationships(batch graph.Batch, identityKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		nowUTC = time.Now().UTC()
-		errs   = util.NewErrorCollector()
+		// nowUTC = time.Now().UTC()
+		errs = util.NewErrorCollector()
 	)
 
-	for _, next := range relationships {
-		// generic ingest supports exact matching on a node's name property
-		if next.Source.MatchBy == ein.MatchByName || next.Target.MatchBy == ein.MatchByName {
-			if err := processRelationshipWithoutOIDs(batch, next); err != nil {
-				errs.Add(err)
-			}
-		} else { // else do the usual objectid thang
-			if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-				slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
-				errs.Add(err)
-			}
-		}
-
+	updates, err := resolveRelationships(batch, relationships, identityKind)
+	if err != nil {
+		errs.Add(err)
 	}
+
+	for _, update := range updates {
+		if err := batch.UpdateRelationshipBy(*update); err != nil {
+			errs.Add(err)
+		}
+	}
+
+	// for _, next := range relationships {
+	// 	if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
+	// 		slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
+	// 		errs.Add(err)
+	// 	}
+	// }
 	return errs.Combined()
 }
 
