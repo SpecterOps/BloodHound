@@ -257,7 +257,6 @@ func TestFetchNodeByGraphId(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, node)
 
-		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
 		require.Equal(t, harness.AZBaseHarness.User.ID, node.ID)
 	})
 }
