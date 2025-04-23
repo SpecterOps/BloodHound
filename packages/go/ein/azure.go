@@ -46,14 +46,14 @@ var (
 	ErrInvalidType     = errors.New("invalid type returned from directory object")
 )
 
-func ConvertAZAppToNode(app models.App, nowUTC time.Time) IngestibleNode {
+func ConvertAZAppToNode(app models.App, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		PropertyMap: map[string]any{
 			common.Name.String():           strings.ToUpper(fmt.Sprintf("%s@%s", app.DisplayName, app.PublisherDomain)),
 			common.Description.String():    app.Description,
 			common.DisplayName.String():    app.DisplayName,
-			common.LastCollected.String():  nowUTC,
-			common.LastSeen.String():       nowUTC,
+			common.LastCollected.String():  ingestTime,
+			common.LastSeen.String():       ingestTime,
 			common.WhenCreated.String():    ParseISO8601(app.CreatedDateTime),
 			azure.AppID.String():           app.AppId,
 			azure.PublisherDomain.String(): app.PublisherDomain,
@@ -84,7 +84,7 @@ func ConvertAZAppRelationships(app models.App) []IngestibleRelationship {
 	}
 }
 
-func ConvertAZDeviceToNode(device models.Device, nowUTC time.Time) IngestibleNode {
+func ConvertAZDeviceToNode(device models.Device, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		PropertyMap: map[string]any{
 			common.Name.String():                  strings.ToUpper(fmt.Sprintf("%s@%s", device.DisplayName, device.TenantName)),
@@ -94,7 +94,7 @@ func ConvertAZDeviceToNode(device models.Device, nowUTC time.Time) IngestibleNod
 			azure.OperatingSystemVersion.String(): device.OperatingSystemVersion,
 			azure.TrustType.String():              device.TrustType,
 			azure.TenantID.String():               strings.ToUpper(device.TenantId),
-			common.LastCollected.String():         nowUTC,
+			common.LastCollected.String():         ingestTime,
 		},
 		ObjectID: strings.ToUpper(device.Id),
 		Label:    azure.Device,
@@ -120,13 +120,13 @@ func ConvertAZDeviceRelationships(device models.Device) []IngestibleRelationship
 	}
 }
 
-func ConvertAZVMScaleSetToNode(scaleSet models.VMScaleSet, nowUTC time.Time) IngestibleNode {
+func ConvertAZVMScaleSetToNode(scaleSet models.VMScaleSet, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(scaleSet.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(scaleSet.Name),
 			azure.TenantID.String():       strings.ToUpper(scaleSet.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.VMScaleSet,
 	}
@@ -296,13 +296,13 @@ func ConvertAzureAppRoleAssignmentToRel(data models.AppRoleAssignment) Ingestibl
 	)
 }
 
-func ConvertAzureFunctionAppToNode(data models.FunctionApp, nowUTC time.Time) IngestibleNode {
+func ConvertAzureFunctionAppToNode(data models.FunctionApp, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(data.Name),
 			azure.TenantID.String():       strings.ToUpper(data.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.FunctionApp,
 	}
@@ -397,7 +397,7 @@ func ConvertAzureFunctionAppRoleAssignmentToRels(data models.AzureRoleAssignment
 	return relationships
 }
 
-func ConvertAzureGroupToNode(data models.Group, nowUTC time.Time) IngestibleNode {
+func ConvertAzureGroupToNode(data models.Group, ingestTime time.Time) IngestibleNode {
 	return IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
 		PropertyMap: map[string]any{
@@ -411,7 +411,7 @@ func ConvertAzureGroupToNode(data models.Group, nowUTC time.Time) IngestibleNode
 			azure.SecurityEnabled.String():    data.SecurityEnabled,
 			azure.SecurityIdentifier.String(): data.SecurityIdentifier,
 			azure.TenantID.String():           strings.ToUpper(data.TenantId),
-			common.LastCollected.String():     nowUTC,
+			common.LastCollected.String():     ingestTime,
 		},
 		Label: azure.Group,
 	}
@@ -518,14 +518,14 @@ func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelations
 	return relationships
 }
 
-func ConvertAzureKeyVault(data models.KeyVault, nowUTC time.Time) (IngestibleNode, IngestibleRelationship) {
+func ConvertAzureKeyVault(data models.KeyVault, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
 				common.Name.String():                   strings.ToUpper(data.Name),
 				azure.EnableRBACAuthorization.String(): data.Properties.EnableRbacAuthorization,
 				azure.TenantID.String():                strings.ToUpper(data.TenantId),
-				common.LastCollected.String():          nowUTC,
+				common.LastCollected.String():          ingestTime,
 			},
 			Label: azure.KeyVault,
 		},
@@ -731,13 +731,13 @@ func ConvertAzureManagementGroupUserAccessAdminToRels(data models.ManagementGrou
 	return relationships
 }
 
-func ConvertAzureManagementGroup(data models.ManagementGroup, nowUTC time.Time) (IngestibleNode, IngestibleRelationship) {
+func ConvertAzureManagementGroup(data models.ManagementGroup, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
 				common.Name.String():          strings.ToUpper(fmt.Sprintf("%s@%s", data.Properties.DisplayName, data.TenantName)),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): nowUTC,
+				common.LastCollected.String(): ingestTime,
 			},
 			Label: azure.ManagementGroup,
 		}, NewIngestibleRelationship(
@@ -756,13 +756,13 @@ func ConvertAzureManagementGroup(data models.ManagementGroup, nowUTC time.Time) 
 		)
 }
 
-func ConvertAzureResourceGroup(data models.ResourceGroup, nowUTC time.Time) (IngestibleNode, IngestibleRelationship) {
+func ConvertAzureResourceGroup(data models.ResourceGroup, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
 				common.Name.String():          strings.ToUpper(data.Name),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): nowUTC,
+				common.LastCollected.String(): ingestTime,
 			},
 			Label: azure.ResourceGroup,
 		}, NewIngestibleRelationship(
@@ -829,7 +829,7 @@ func ConvertAzureResourceGroupUserAccessAdminToRels(data models.ResourceGroupUse
 	return relationships
 }
 
-func ConvertAzureRole(data models.Role, nowUTC time.Time) (IngestibleNode, IngestibleRelationship) {
+func ConvertAzureRole(data models.Role, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	roleObjectId := fmt.Sprintf("%s@%s", strings.ToUpper(data.Id), strings.ToUpper(data.TenantId))
 	return IngestibleNode{
 			ObjectID: roleObjectId,
@@ -841,7 +841,7 @@ func ConvertAzureRole(data models.Role, nowUTC time.Time) (IngestibleNode, Inges
 				azure.IsBuiltIn.String():      data.IsBuiltIn,
 				azure.RoleTemplateID.String(): data.TemplateId,
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): nowUTC,
+				common.LastCollected.String(): ingestTime,
 			},
 			Label: azure.Role,
 		}, NewIngestibleRelationship(
@@ -913,7 +913,7 @@ func ConvertAzureRoleAssignmentToRels(roleAssignment azure2.UnifiedRoleAssignmen
 	return relationships
 }
 
-func ConvertAzureServicePrincipal(data models.ServicePrincipal, nowUTC time.Time) ([]IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureServicePrincipal(data models.ServicePrincipal, ingestTime time.Time) ([]IngestibleNode, []IngestibleRelationship) {
 	nodes := make([]IngestibleNode, 0)
 	relationships := make([]IngestibleRelationship, 0)
 
@@ -930,7 +930,7 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal, nowUTC time.Time
 			azure.LoginURL.String():               data.LoginUrl,
 			azure.ServicePrincipalType.String():   data.ServicePrincipalType,
 			azure.TenantID.String():               strings.ToUpper(data.TenantId),
-			common.LastCollected.String():         nowUTC,
+			common.LastCollected.String():         ingestTime,
 		},
 		Label: azure.ServicePrincipal,
 	})
@@ -977,13 +977,13 @@ func ConvertAzureServicePrincipal(data models.ServicePrincipal, nowUTC time.Time
 	return nodes, relationships
 }
 
-func ConvertAzureLogicApp(logicApp models.LogicApp, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureLogicApp(logicApp models.LogicApp, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(logicApp.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(logicApp.Name),
 			azure.TenantID.String():       strings.ToUpper(logicApp.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.LogicApp,
 	}
@@ -1109,7 +1109,7 @@ func ConvertAzureServicePrincipalOwnerToRels(data models.ServicePrincipalOwners)
 	return relationships
 }
 
-func ConvertAzureSubscription(data azure2.Subscription, nowUTC time.Time) (IngestibleNode, IngestibleRelationship) {
+func ConvertAzureSubscription(data azure2.Subscription, ingestTime time.Time) (IngestibleNode, IngestibleRelationship) {
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
@@ -1117,7 +1117,7 @@ func ConvertAzureSubscription(data azure2.Subscription, nowUTC time.Time) (Inges
 				common.ObjectID.String():      data.SubscriptionId,
 				common.Name.String():          strings.ToUpper(data.DisplayName),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
-				common.LastCollected.String(): nowUTC,
+				common.LastCollected.String(): ingestTime,
 			},
 			Label: azure.Subscription,
 		},
@@ -1187,7 +1187,7 @@ func ConvertAzureSubscriptionUserAccessAdminToRels(data models.SubscriptionUserA
 	return relationships
 }
 
-func ConvertAzureTenantToNode(data models.Tenant, nowUTC time.Time) IngestibleNode {
+func ConvertAzureTenantToNode(data models.Tenant, ingestTime time.Time) IngestibleNode {
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(data.TenantId),
 		PropertyMap: map[string]any{
@@ -1195,7 +1195,7 @@ func ConvertAzureTenantToNode(data models.Tenant, nowUTC time.Time) IngestibleNo
 			common.ObjectID.String():      data.Id,
 			common.Name.String():          strings.ToUpper(data.DisplayName),
 			azure.TenantID.String():       strings.ToUpper(data.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.Tenant,
 	}
@@ -1208,7 +1208,7 @@ func ConvertAzureTenantToNode(data models.Tenant, nowUTC time.Time) IngestibleNo
 }
 
 // ConvertAzureUser returns the basic node, the on prem node and then the ingestible contains relationship
-func ConvertAzureUser(data models.User, nowUTC time.Time) (IngestibleNode, IngestibleNode, IngestibleRelationship) {
+func ConvertAzureUser(data models.User, ingestTime time.Time) (IngestibleNode, IngestibleNode, IngestibleRelationship) {
 	onPremNode := IngestibleNode{}
 	if data.OnPremisesSecurityIdentifier != "" {
 		onPremNode = IngestibleNode{
@@ -1233,7 +1233,7 @@ func ConvertAzureUser(data models.User, nowUTC time.Time) (IngestibleNode, Inges
 				azure.UserPrincipalName.String(): data.UserPrincipalName,
 				azure.UserType.String():          data.UserType,
 				azure.TenantID.String():          strings.ToUpper(data.TenantId),
-				common.LastCollected.String():    nowUTC,
+				common.LastCollected.String():    ingestTime,
 			},
 			Label: azure.User,
 		}, onPremNode, NewIngestibleRelationship(
@@ -1252,7 +1252,7 @@ func ConvertAzureUser(data models.User, nowUTC time.Time) (IngestibleNode, Inges
 		)
 }
 
-func ConvertAzureVirtualMachine(data models.VirtualMachine, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureVirtualMachine(data models.VirtualMachine, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	relationships := make([]IngestibleRelationship, 0)
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
@@ -1261,7 +1261,7 @@ func ConvertAzureVirtualMachine(data models.VirtualMachine, nowUTC time.Time) (I
 			common.ObjectID.String():        data.Properties.VMId,
 			common.OperatingSystem.String(): data.Properties.StorageProfile.OSDisk.OSType,
 			azure.TenantID.String():         strings.ToUpper(data.TenantId),
-			common.LastCollected.String():   nowUTC,
+			common.LastCollected.String():   ingestTime,
 		},
 		Label: azure.VM,
 	}
@@ -1460,7 +1460,7 @@ func ConvertAzureVirtualMachineUserAccessAdminToRels(data models.VirtualMachineU
 	return relationships
 }
 
-func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID string, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID string, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	relationships := make([]IngestibleRelationship, 0)
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
@@ -1468,7 +1468,7 @@ func ConvertAzureManagedCluster(data models.ManagedCluster, nodeResourceGroupID 
 			common.Name.String():               strings.ToUpper(data.Name),
 			azure.TenantID.String():            strings.ToUpper(data.TenantId),
 			azure.NodeResourceGroupID.String(): strings.ToUpper(nodeResourceGroupID),
-			common.LastCollected.String():      nowUTC,
+			common.LastCollected.String():      ingestTime,
 		},
 		Label: azure.ManagedCluster,
 	}
@@ -1536,14 +1536,14 @@ func ConvertAzureManagedClusterRoleAssignmentToRels(data models.AzureRoleAssignm
 	return relationships
 }
 
-func ConvertAzureContainerRegistry(data models.ContainerRegistry, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureContainerRegistry(data models.ContainerRegistry, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	relationships := make([]IngestibleRelationship, 0)
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(data.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(data.Name),
 			azure.TenantID.String():       strings.ToUpper(data.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.ContainerRegistry,
 	}
@@ -1604,13 +1604,13 @@ func ConvertAzureContainerRegistry(data models.ContainerRegistry, nowUTC time.Ti
 	return node, relationships
 }
 
-func ConvertAzureWebApp(webApp models.WebApp, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureWebApp(webApp models.WebApp, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(webApp.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(webApp.Name),
 			azure.TenantID.String():       strings.ToUpper(webApp.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.WebApp,
 	}
@@ -1764,13 +1764,13 @@ func ConvertAzureWebAppRoleAssignment(roleAssignment models.AzureRoleAssignments
 	return relationships
 }
 
-func ConvertAzureAutomationAccount(account models.AutomationAccount, nowUTC time.Time) (IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureAutomationAccount(account models.AutomationAccount, ingestTime time.Time) (IngestibleNode, []IngestibleRelationship) {
 	node := IngestibleNode{
 		ObjectID: strings.ToUpper(account.Id),
 		PropertyMap: map[string]any{
 			common.Name.String():          strings.ToUpper(account.Name),
 			azure.TenantID.String():       strings.ToUpper(account.TenantId),
-			common.LastCollected.String(): nowUTC,
+			common.LastCollected.String(): ingestTime,
 		},
 		Label: azure.AutomationAccount,
 	}

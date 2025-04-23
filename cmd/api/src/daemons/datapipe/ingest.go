@@ -38,106 +38,106 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, adcsEnabled bool, nowUTC time.Time) error {
+func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, adcsEnabled bool) error {
 	if meta, err := ingest_service.ValidateMetaTag(reader, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
-		return IngestWrapper(batch, reader, meta, adcsEnabled, nowUTC)
+		return IngestWrapper(batch, reader, meta, adcsEnabled)
 	}
 }
 
-func IngestBasicData(batch graph.Batch, converted ConvertedData, nowUTC time.Time) error {
+func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, ad.Entity, converted.NodeProps, nowUTC); err != nil {
+	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, ad.Entity, converted.RelProps, nowUTC); err != nil {
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
 	return errs.Combined()
 }
 
-func IngestGroupData(batch graph.Batch, converted ConvertedGroupData, nowUTC time.Time) error {
+func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, ad.Entity, converted.NodeProps, nowUTC); err != nil {
+	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, ad.Entity, converted.RelProps, nowUTC); err != nil {
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestDNRelationships(batch, converted.DistinguishedNameProps, nowUTC); err != nil {
+	if err := IngestDNRelationships(batch, converted.DistinguishedNameProps); err != nil {
 		errs.Add(err)
 	}
 
 	return errs.Combined()
 }
 
-func IngestAzureData(batch graph.Batch, converted ConvertedAzureData, nowUTC time.Time) error {
+func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, azure.Entity, converted.NodeProps, nowUTC); err != nil {
+	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes, nowUTC); err != nil {
+	if err := IngestNodes(batch, ad.Entity, converted.OnPremNodes); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, azure.Entity, converted.RelProps, nowUTC); err != nil {
+	if err := IngestRelationships(batch, azure.Entity, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
 	return errs.Combined()
 }
 
-func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool, nowUTC time.Time) error {
+func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
 	switch meta.Type {
 	case ingest.DataTypeComputer:
 		if meta.Version >= 5 {
-			return decodeBasicData(batch, reader, convertComputerData, nowUTC)
+			return decodeBasicData(batch, reader, convertComputerData)
 		}
 	case ingest.DataTypeUser:
-		return decodeBasicData(batch, reader, convertUserData, nowUTC)
+		return decodeBasicData(batch, reader, convertUserData)
 	case ingest.DataTypeGroup:
-		return decodeGroupData(batch, reader, nowUTC)
+		return decodeGroupData(batch, reader)
 	case ingest.DataTypeDomain:
-		return decodeBasicData(batch, reader, convertDomainData, nowUTC)
+		return decodeBasicData(batch, reader, convertDomainData)
 	case ingest.DataTypeGPO:
-		return decodeBasicData(batch, reader, convertGPOData, nowUTC)
+		return decodeBasicData(batch, reader, convertGPOData)
 	case ingest.DataTypeOU:
-		return decodeBasicData(batch, reader, convertOUData, nowUTC)
+		return decodeBasicData(batch, reader, convertOUData)
 	case ingest.DataTypeSession:
-		return decodeSessionData(batch, reader, nowUTC)
+		return decodeSessionData(batch, reader)
 	case ingest.DataTypeContainer:
-		return decodeBasicData(batch, reader, convertContainerData, nowUTC)
+		return decodeBasicData(batch, reader, convertContainerData)
 	case ingest.DataTypeAIACA:
-		return decodeBasicData(batch, reader, convertAIACAData, nowUTC)
+		return decodeBasicData(batch, reader, convertAIACAData)
 	case ingest.DataTypeRootCA:
-		return decodeBasicData(batch, reader, convertRootCAData, nowUTC)
+		return decodeBasicData(batch, reader, convertRootCAData)
 	case ingest.DataTypeEnterpriseCA:
-		return decodeBasicData(batch, reader, convertEnterpriseCAData, nowUTC)
+		return decodeBasicData(batch, reader, convertEnterpriseCAData)
 	case ingest.DataTypeNTAuthStore:
-		return decodeBasicData(batch, reader, convertNTAuthStoreData, nowUTC)
+		return decodeBasicData(batch, reader, convertNTAuthStoreData)
 	case ingest.DataTypeCertTemplate:
-		return decodeBasicData(batch, reader, convertCertTemplateData, nowUTC)
+		return decodeBasicData(batch, reader, convertCertTemplateData)
 	case ingest.DataTypeAzure:
-		return decodeAzureData(batch, reader, nowUTC)
+		return decodeAzureData(batch, reader)
 	case ingest.DataTypeIssuancePolicy:
-		return decodeBasicData(batch, reader, convertIssuancePolicy, nowUTC)
+		return decodeBasicData(batch, reader, convertIssuancePolicy)
 	}
 
 	return nil
 }
 
-func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
+func NormalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
 	delete(properties, ReconcileProperty)
-	properties[common.LastSeen.String()] = nowUTC
+	properties[common.LastSeen.String()] = ingestTime
 	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
 
 	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
@@ -168,10 +168,10 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 	return properties
 }
 
-func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
-	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
+func IngestNode(timestampedBatch *TimestampedBatch, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
+	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, timestampedBatch.IngestTime)
 
-	return batch.UpdateNodeBy(graph.NodeUpdate{
+	return timestampedBatch.Batch.UpdateNodeBy(graph.NodeUpdate{
 		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Label),
 		IdentityKind: identityKind,
 		IdentityProperties: []string{
@@ -180,13 +180,13 @@ func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, ne
 	})
 }
 
-func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.IngestibleNode, nowUTC time.Time) error {
+func IngestNodes(batch *TimestampedBatch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
-		if err := IngestNode(batch, nowUTC, identityKind, next); err != nil {
+		if err := IngestNode(batch, identityKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
@@ -194,17 +194,17 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 	return errs.Combined()
 }
 
-func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = nowUTC
+func IngestRelationship(batch *TimestampedBatch, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
+	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.SourceType),
 		StartIdentityKind: nodeIDKind,
 		StartIdentityProperties: []string{
@@ -213,7 +213,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.TargetType),
 		EndIdentityKind: nodeIDKind,
 		EndIdentityProperties: []string{
@@ -222,13 +222,13 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	})
 }
 
-func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship, nowUTC time.Time) error {
+func IngestRelationships(batch *TimestampedBatch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
-		if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
+		if err := IngestRelationship(batch, nodeIDKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
 			errs.Add(err)
 		}
@@ -236,17 +236,17 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	return errs.Combined()
 }
 
-func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = nowUTC
+func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelationship) error {
+	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
-			common.LastSeen:      nowUTC,
+			common.LastSeen:      batch.IngestTime,
 		}), nextRel.SourceType),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -255,7 +255,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.TargetType),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -264,13 +264,13 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 	})
 }
 
-func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRelationship, nowUTC time.Time) error {
+func IngestDNRelationships(batch *TimestampedBatch, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
-		if err := ingestDNRelationship(batch, nowUTC, next); err != nil {
+		if err := ingestDNRelationship(batch, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
 			errs.Add(err)
 		}
@@ -278,19 +278,19 @@ func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRela
 	return errs.Combined()
 }
 
-func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.IngestibleSession) error {
+func ingestSession(batch *TimestampedBatch, nextSession ein.IngestibleSession) error {
 	nextSession.Target = strings.ToUpper(nextSession.Target)
 	nextSession.Source = strings.ToUpper(nextSession.Source)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 			ad.LogonType:    nextSession.LogonType,
 		}), ad.HasSession),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Source,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), ad.Computer),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -299,7 +299,7 @@ func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.Ingestib
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), ad.User),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -308,13 +308,13 @@ func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.Ingestib
 	})
 }
 
-func IngestSessions(batch graph.Batch, sessions []ein.IngestibleSession, nowUTC time.Time) error {
+func IngestSessions(batch *TimestampedBatch, sessions []ein.IngestibleSession) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range sessions {
-		if err := ingestSession(batch, nowUTC, next); err != nil {
+		if err := ingestSession(batch, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
 			errs.Add(err)
 		}

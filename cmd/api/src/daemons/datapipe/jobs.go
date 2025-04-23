@@ -36,6 +36,18 @@ import (
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
+type TimestampedBatch struct {
+	Batch      graph.Batch
+	IngestTime time.Time
+}
+
+func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+	return &TimestampedBatch{
+		Batch:      batch,
+		IngestTime: ingestTime,
+	}
+}
+
 func HasIngestJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
 	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
 		return false, err
@@ -197,7 +209,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType, nowUTC time.Time) (int, int, error) {
+func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType, ingestTime time.Time) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
@@ -210,12 +222,13 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 		failed = 0
 
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file, adcsEnabled, nowUTC); err != nil {
+				} else if err := ReadFileForIngest(timestampedBatch, file, adcsEnabled); err != nil {
 					failed++
 					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}
