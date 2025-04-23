@@ -204,7 +204,7 @@ export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?:
 
 export const formatBoolean = (value: boolean): string => value.toString().toUpperCase();
 
-export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon'];
+export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset'];
 
 export const formatString = (value: string, keyprop?: string) => {
     const potentialDate: any = DateTime.fromISO(value);
