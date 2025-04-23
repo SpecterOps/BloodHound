@@ -36,6 +36,18 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_nodes
 	PRIMARY KEY (selector_id, node_id)
 );
 
+-- Add custom_node_kinds table
+CREATE TABLE IF NOT EXISTS custom_node_kinds (
+  id            SERIAL        PRIMARY KEY,
+  kind_name     VARCHAR(256)  NOT NULL,
+  config        JSONB         NOT NULL,
+
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  unique(kind_name)
+);
+
 -- Migrate existing Tier Zero selectors
 WITH inserted_selector AS (
   INSERT INTO asset_group_tag_selectors (asset_group_tag_id, created_at, created_by, updated_at, updated_by, name, description, is_default, allow_disable, auto_certify)
