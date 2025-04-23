@@ -211,7 +211,6 @@ export const formatString = (value: string, keyprop?: string) => {
     const isDateFieldOrNull = !keyprop || DATE_FIELDS.includes(keyprop || '');
 
     if (potentialDate.invalid === null && isDateFieldOrNull) {
-        console.log({ it: potentialDate.toFormat(LuxonFormat.DATETIME) });
         return potentialDate.toFormat(LuxonFormat.DATETIME);
     }
 
