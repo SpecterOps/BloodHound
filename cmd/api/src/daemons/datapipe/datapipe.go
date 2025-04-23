@@ -157,7 +157,7 @@ func (s *Daemon) Start(ctx context.Context) {
 						slog.String("err", err.Error()),
 					)
 				}
-			} else if err := s.app.ProcessIngestTasks(ctx); err != nil {
+			} else if err := s.app.IngestService.ProcessIngestTasks(ctx); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Failed to process ingest tasks",

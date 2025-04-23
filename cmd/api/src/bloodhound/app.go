@@ -22,17 +22,37 @@ type App struct {
 	db      database.Database
 	graphDB graph.Database
 	cfg     config.Configuration
+
+	// Any number of exported services that are containers to pin methods on
+	// without polluting app into another nasty mess
+	IngestService IngestService
 }
 
 func NewApp(db database.Database, graphDB graph.Database, cfg config.Configuration) App {
-	return App{
+	app := App{
 		db:      db,
 		graphDB: graphDB,
 		cfg:     cfg,
+
+		IngestService: IngestService{db: db, graphDB: graphDB, cfg: cfg},
 	}
+
+	// Initialize each service with the necessary dependancies
+	// Todo: Determine if the ingest service needs all of these?
+	return app
 }
 
-func (s App) ProcessIngestTasks(ctx context.Context) error {
+// Each service can have all of its logic contained, while having access to the
+// dependencies it needs.
+
+// TODO: Put this somewhere else that isn't app.go
+type IngestService struct {
+	db      database.Database
+	graphDB graph.Database
+	cfg     config.Configuration
+}
+
+func (s IngestService) ProcessIngestTasks(ctx context.Context) error {
 	if ingestTasks, err := s.db.GetAllIngestTasks(ctx); err != nil {
 		return fmt.Errorf("get all ingest tasks: %v", err)
 	} else if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIngesting, false); err != nil {
