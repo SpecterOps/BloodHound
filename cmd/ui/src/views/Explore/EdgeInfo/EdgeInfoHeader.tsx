@@ -27,7 +27,7 @@ interface HeaderProps {
     onToggleExpanded: (expanded: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ name = 'None Even Selected', onToggleExpanded, expanded }) => {
+const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
     const dispatch = useAppDispatch();
 
