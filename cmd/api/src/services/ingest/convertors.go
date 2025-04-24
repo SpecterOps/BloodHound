@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package bloodhound
+package ingest
 
 import (
 	"strings"
