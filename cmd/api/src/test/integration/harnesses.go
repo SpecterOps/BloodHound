@@ -9843,6 +9843,9 @@ func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {
 		common.ObjectID: "1234",
 		common.Name:     "BOB",
 	}), graph.StringKind("GenericDevice"))
+
+}
+
 type Version730_Migration_Harness struct {
 	Computer1 *graph.Node
 	Computer2 *graph.Node
