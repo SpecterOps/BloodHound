@@ -146,6 +146,8 @@ const Administration: React.FC = () => {
                     <Container maxWidth='xl'>
                         <Box py={2}>
                             <Suspense
+                                // The key prop is used here because the Suspense components stops transitions after the first lazy load is resolved
+                                key={location.pathname}
                                 fallback={
                                     <Box
                                         position='absolute'

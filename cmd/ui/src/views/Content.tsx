@@ -55,6 +55,8 @@ const Content: React.FC = () => {
     return (
         <Box className={classes.content}>
             <Suspense
+                // The key prop is used here because the Suspense components stops transitions after the first lazy load is resolved
+                key={location.pathname}
                 fallback={
                     <Box
                         position='absolute'
