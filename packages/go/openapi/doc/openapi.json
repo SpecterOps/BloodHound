@@ -2615,62 +2615,19 @@
       "post": {
         "operationId": "UploadFileToJob",
         "summary": "Upload File To Job",
-        "description": "Uploads a collection file to a file upload job. This endpoint supports both:\n- Legacy ingest format (`{ meta: {}, data: [] }`)\n- Generic ingest format (`{ graph: { nodes: [], edges: [] } }`)\n\nOnly one format should be used per request.",
+        "description": "Saves a collection file to a file upload job",
         "tags": [
           "Collection Uploads",
           "Community",
           "Enterprise"
         ],
         "requestBody": {
-          "description": "JSON body representing a collection in either legacy or generic ingest format.",
+          "description": "The body of the file upload request.",
           "content": {
             "application/json": {
               "schema": {
-                "oneOf": [
-                  {"$ref": "#/components/schemas/generic-ingest-payload"},
-                  {"$ref": "#/components/schemas/legacy-ingest-payload"}
-
-                ]
-              },
-              "examples": {
-                "generic": {
-                    "summary": "Generic ingest format",
-                    "value": {
-                        "graph": {
-                            "nodes": [{
-                              "id": "node-1",
-                              "kinds": ["CustomKind"],
-                              "properties": {
-                                "hello": "world",
-                                "a number": 2,
-                                "is it true?": false
-                              }
-                            }],
-                            "edges": [
-                              {
-                                "start": {"id_value": "1234"},
-                                "end": {"id_value": "5678"},
-                                "kind": "connects_to",
-                                "properties": {
-                                  "rating": 0.9
-                                }
-                              },
-                              {
-                                  "start": {
-                                      "id_value": "User A",
-                                      "id_property": "name"
-                                  },
-                                  "end": {
-                                      "id_value": "Computer B",
-                                      "id_property": "name"
-                                  },
-                                  "kind": "logged_in"
-                              }
-                            ]
-                        }
-                    }
-                }
-            }
+                "type": "object"
+              }
             }
           }
         },
@@ -17933,72 +17890,6 @@
           "group-completeness",
           "attack-paths"
         ]
-      },
-      "legacy-ingest-payload": {
-        "type": "object",
-        "required": ["meta", "data"],
-        "properties": {
-          "meta": {
-            "type": "object"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        }
-      },
-      "generic-ingest-payload": {
-          "type": "object",
-          "required": ["graph"],
-          "properties": {
-              "graph": {
-                  "type": "object",
-                  "properties": {
-                      "nodes": {
-                          "type": "array",
-                          "items": {
-                              "type": "object",
-                              "required": ["id", "kinds", "properties"],
-                              "properties": {
-                                  "id": { "type": "string" },
-                                  "kinds": {
-                                      "type": "array",
-                                      "items": { "type": "string" }
-                                  },
-                                  "properties": { "type": "object" }
-                              }
-                          }
-                      },
-                      "edges": {
-                          "type": "array",
-                          "items": {
-                              "type": "object",
-                              "required": ["start", "end"],
-                              "properties": {
-                                  "start": {
-                                      "type": "object",
-                                      "properties": {
-                                          "id_value": { "type": "string" },
-                                          "id_property": { "type": "string" }
-                                      }
-                                  },
-                                  "end": {
-                                      "type": "object",
-                                      "properties": {
-                                          "id_value": { "type": "string" },
-                                          "id_property": { "type": "string" }
-                                      }
-                                  },
-                                  "kind": { "type": "string" },
-                                  "properties": { "type": "object" }
-                              }
-                          }
-                      }
-                  }
-              }
-          }
       }
     },
     "responses": {
