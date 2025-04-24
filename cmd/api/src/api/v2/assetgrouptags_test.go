@@ -1573,22 +1573,12 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 								ObjectID:    "OID-1",
 								PrimaryKind: "User",
 								Name:        "node1",
-								Properties: map[string]any{
-									"name":     "node1",
-									"objectid": "OID-1",
-								},
-								Source: 0,
 							},
 							{
 								NodeId:      2,
 								ObjectID:    "OID-2",
 								PrimaryKind: "Group",
 								Name:        "node2",
-								Properties: map[string]any{
-									"name":     "node2",
-									"objectid": "OID-2",
-								},
-								Source: 0,
 							},
 						},
 					}
