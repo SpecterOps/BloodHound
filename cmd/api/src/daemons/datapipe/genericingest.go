@@ -128,52 +128,52 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 }
 
 func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, identityKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
-	cache, err := resolveAllEndpointsByName(batch, rels)
-	if err != nil {
+	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
 		return nil, err
+	} else {
+		nowUTC := time.Now().UTC()
+		var updates []*graph.RelationshipUpdate
+
+		for _, rel := range rels {
+			srcID, srcOK := resolveEndpointID(rel.Source, cache)
+			targetID, targetOK := resolveEndpointID(rel.Target, cache)
+
+			if !srcOK || !targetOK {
+				slog.Warn("skipping unresolved relationship",
+					slog.String("source", rel.Source.Value),
+					slog.String("target", rel.Target.Value),
+					slog.Bool("resolved_source", srcOK),
+					slog.Bool("resolved_target", targetOK))
+				continue
+			}
+
+			rel.RelProps[common.LastSeen.String()] = nowUTC
+
+			update := &graph.RelationshipUpdate{
+				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: srcID,
+					common.LastSeen: nowUTC,
+				}), rel.Source.Kind),
+				StartIdentityProperties: []string{common.ObjectID.String()},
+				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: targetID,
+					common.LastSeen: nowUTC,
+				}), rel.Target.Kind),
+				EndIdentityProperties: []string{common.ObjectID.String()},
+				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
+			}
+
+			if identityKind != graph.EmptyKind {
+				update.StartIdentityKind = identityKind
+				update.EndIdentityKind = identityKind
+			}
+
+			updates = append(updates, update)
+		}
+
+		return updates, nil
 	}
 
-	nowUTC := time.Now().UTC()
-	var updates []*graph.RelationshipUpdate
-
-	for _, rel := range rels {
-		srcID, srcOK := resolveEndpointID(rel.Source, cache)
-		targetID, targetOK := resolveEndpointID(rel.Target, cache)
-
-		if !srcOK || !targetOK {
-			slog.Warn("skipping unresolved relationship",
-				slog.String("source", rel.Source.Value),
-				slog.String("target", rel.Target.Value),
-				slog.Bool("resolved_source", srcOK),
-				slog.Bool("resolved_target", targetOK))
-			continue
-		}
-
-		rel.RelProps[common.LastSeen.String()] = nowUTC
-
-		update := &graph.RelationshipUpdate{
-			Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: srcID,
-				common.LastSeen: nowUTC,
-			}), rel.Source.Kind),
-			StartIdentityProperties: []string{common.ObjectID.String()},
-			End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-				common.ObjectID: targetID,
-				common.LastSeen: nowUTC,
-			}), rel.Target.Kind),
-			EndIdentityProperties: []string{common.ObjectID.String()},
-			Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-		}
-
-		if identityKind != graph.EmptyKind {
-			update.StartIdentityKind = identityKind
-			update.EndIdentityKind = identityKind
-		}
-
-		updates = append(updates, update)
-	}
-
-	return updates, nil
 }
 
 func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]string) (string, bool) {
