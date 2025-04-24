@@ -31,13 +31,20 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-// ValidateMetaTag ensures that the correct tags are present in a json file for data ingest.
+// ValidateMetaTag scans a JSON stream to detect and validate the metadata tag
+// required for ingesting graph data. It ensures that either top-level "meta" and "data" tags
+// or a "graph" tag is present. "meta"/"data" are for existing hound collections (ad and azure).
+// The "graph" tag supports generic ingest.
+//
+// If shouldValidateGraph is true, the function will also attempt to validate the
+// presence and structure of a "graph" tag alongside the metadata.
+//
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, schema IngestSchema, readToEnd bool) (ingest.Metadata, error) {
+func ValidateMetaTag(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.Metadata, error) {
 	decoder := json.NewDecoder(reader)
 	scanner := newTagScanner(decoder)
 
-	meta, err := scanAndDetectMetaOrGraph(scanner, schema)
+	meta, err := scanAndDetectMetaOrGraph(scanner, shouldValidateGraph, schema)
 	if err != nil {
 		return ingest.Metadata{}, err
 	}
@@ -182,7 +189,7 @@ func decodeMetaTag(decoder *json.Decoder) (ingest.Metadata, error) {
 	return m, nil
 }
 
-func scanAndDetectMetaOrGraph(scanner *tagScanner, schema IngestSchema) (ingest.Metadata, error) {
+func scanAndDetectMetaOrGraph(scanner *tagScanner, shouldValidateGraph bool, schema IngestSchema) (ingest.Metadata, error) {
 	var (
 		dataFound bool
 		metaFound bool
@@ -217,11 +224,13 @@ func scanAndDetectMetaOrGraph(scanner *tagScanner, schema IngestSchema) (ingest.
 				}
 				// generic ingest path
 				meta = ingest.Metadata{Type: ingest.DataTypeGeneric}
-				if err := ValidateGraph(scanner.decoder, schema); err != nil {
-					if report, ok := err.(ValidationReport); ok {
-						slog.With("validation", report).Warn("generic ingest failed")
+				if shouldValidateGraph {
+					if err := ValidateGraph(scanner.decoder, schema); err != nil {
+						if report, ok := err.(ValidationReport); ok {
+							slog.With("validation", report).Warn("generic ingest failed")
+						}
+						return meta, err
 					}
-					return meta, err
 				}
 				return meta, nil
 			}

@@ -62,7 +62,7 @@ func (s *IngestValidator) WriteAndValidateJSON(src io.Reader, dst io.Writer) (in
 		return ingest.Metadata{}, err
 	}
 	tr := io.TeeReader(normalizedContent, dst)
-	metatag, err := ValidateMetaTag(tr, s.IngestSchema, true)
+	metatag, err := ValidateMetaTag(tr, s.IngestSchema, true, true)
 
 	return metatag, err
 }

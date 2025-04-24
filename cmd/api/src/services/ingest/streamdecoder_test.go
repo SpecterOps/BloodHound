@@ -97,7 +97,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
-			meta, err := ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
+			meta, err := ValidateMetaTag(strings.NewReader(assertion.rawString), schema, true, false)
 			assert.ErrorIs(t, err, assertion.err)
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)

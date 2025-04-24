@@ -50,20 +50,18 @@ type ReadOptions struct {
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, options ReadOptions) error {
 
 	var (
-		shouldValidateGeneric = false
-		readToEnd             = false
+		shouldValidateGraph = false
+		readToEnd           = false
 	)
 
-	// if filetype == ZIP, we need to validate against jsonschema because the archive bypassed validation controls at fileupload time
+	// if filetype == ZIP, we need to validate against jsonschema because
+	// the archive bypassed validation controls at file upload time
 	if options.FileType == model.FileTypeZip {
-		shouldValidateGeneric = true
+		shouldValidateGraph = true
 		readToEnd = true
 	}
 
-	// todo: plumb shouldValidateGeneric for zips
-	fmt.Println(">>> todo: ", shouldValidateGeneric)
-
-	if meta, err := ingest_service.ValidateMetaTag(reader, options.IngestSchema, readToEnd); err != nil {
+	if meta, err := ingest_service.ValidateMetaTag(reader, options.IngestSchema, shouldValidateGraph, readToEnd); err != nil {
 		return err
 	} else {
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
