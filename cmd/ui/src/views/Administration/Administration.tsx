@@ -25,7 +25,7 @@ import {
 } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router';
 import {
     DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION,
@@ -180,7 +180,9 @@ const Administration: React.FC = () => {
                                         path='*'
                                         element={
                                             <Navigate
-                                                to={getSubRoute(ROUTE_ADMINISTRATION, DEFAULT_ADMINISTRATION_ROUTE)}
+                                                // using a relative route for this redirect because of the react-router v7 migration
+                                                // https://reactrouter.com/upgrading/v6#v7_relativesplatpath
+                                                to={DEFAULT_ADMINISTRATION_ROUTE}
                                                 replace
                                             />
                                         }

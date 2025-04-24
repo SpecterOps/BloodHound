@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 
 const Home: React.FC = () => {
     return <Navigate to='/explore' />;

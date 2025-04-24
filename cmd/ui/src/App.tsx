@@ -30,10 +30,9 @@ import {
     useShowNavBar,
     useStyles,
 } from 'bh-shared-ui';
-import { createBrowserHistory } from 'history';
 import React, { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { unstable_HistoryRouter as BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { fullyAuthenticatedSelector, initialize } from 'src/ducks/auth/authSlice';
 import { ROUTES, TIER_MANAGEMENT_ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
@@ -124,7 +123,7 @@ const App: React.FC = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <BrowserRouter basename='/ui' history={createBrowserHistory()}>
+            <BrowserRouter basename='/ui'>
                 <NotificationsProvider>
                     <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
                         <Inner />

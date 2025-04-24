@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
                 'react-error-boundary',
                 'react-hook-form',
                 'react-query',
-                'react-router-dom',
+                'react-router',
                 'tailwindcss',
             ],
             preserveSymlinks: true,

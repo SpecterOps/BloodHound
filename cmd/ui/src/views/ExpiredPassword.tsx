@@ -18,7 +18,7 @@ import React from 'react';
 
 import { PasswordResetForm } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME } from 'src/routes/constants';

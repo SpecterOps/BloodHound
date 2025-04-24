@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, AlertTitle } from '@mui/material';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import LoginPage from 'src/components/LoginPage';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPLORE, ROUTE_LOGIN } from 'src/routes/constants';

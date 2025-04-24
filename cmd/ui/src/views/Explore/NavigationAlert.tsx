@@ -16,7 +16,7 @@
 
 import { History, Transition } from 'history';
 import { useCallback, useContext, useEffect } from 'react';
-import { UNSAFE_NavigationContext as NavigationContext, Navigator } from 'react-router-dom';
+import { UNSAFE_NavigationContext as NavigationContext, Navigator } from 'react-router';
 
 // Navigator functionality has been removed in 6 so this adds some
 // of the features we would use back in

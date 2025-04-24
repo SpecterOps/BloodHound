@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { NoDataDialog } from 'bh-shared-ui';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { ROUTE_ADMINISTRATION_FILE_INGEST } from 'src/routes/constants';
 
 type NoDataDialogWithLinksProps = {

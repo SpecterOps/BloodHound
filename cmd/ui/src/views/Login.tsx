@@ -18,7 +18,7 @@ import { Box, CircularProgress } from '@mui/material';
 import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient } from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';

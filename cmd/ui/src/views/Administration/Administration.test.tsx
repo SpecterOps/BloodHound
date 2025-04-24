@@ -16,6 +16,7 @@
 
 import { createMemoryHistory } from 'history';
 import {
+    DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION_DATA_QUALITY,
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
@@ -53,21 +54,21 @@ describe('Administration', () => {
         );
     });
 
-    it('should redirect to nested /file-ingest route if user navigates to /', () => {
+    it('should redirect to nested default administration route if user navigates to /', () => {
         const history = createMemoryHistory();
         history.push('/');
         render(<Administration />, {
             history,
         });
-        expect(history.location.pathname).toBe('/file-ingest');
+        expect(history.location.pathname).toBe(DEFAULT_ADMINISTRATION_ROUTE);
     });
 
-    it('should redirect to nested /file-ingest route if user navigates to an invalid route', () => {
+    it('should redirect to nested default administration route if user navigates to an invalid route', () => {
         const history = createMemoryHistory();
         history.push('/invalid');
         render(<Administration />, {
             history,
         });
-        expect(history.location.pathname).toBe('/file-ingest');
+        expect(history.location.pathname).toBe(DEFAULT_ADMINISTRATION_ROUTE);
     });
 });

@@ -18,7 +18,7 @@ import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { mapRoutes, useFeatureFlag } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
-import { Routes } from 'react-router-dom';
+import { Routes } from 'react-router';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';

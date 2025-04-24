@@ -23,7 +23,7 @@ import { createMemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
-import { Router } from 'react-router-dom';
+import { Router } from 'react-router';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
 

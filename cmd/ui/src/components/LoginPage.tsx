@@ -17,7 +17,7 @@
 import { Box, Container, Paper } from '@mui/material';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { addSnackbar } from 'src/ducks/global/actions';
 import { useAppSelector } from 'src/store';
 
