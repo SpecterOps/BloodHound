@@ -20,10 +20,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNormalizeEinNodeProperties(t *testing.T) {
@@ -45,4 +51,301 @@ func TestNormalizeEinNodeProperties(t *testing.T) {
 	assert.Equal(t, "NAME", normalizedProperties[common.Name.String()])
 	assert.Equal(t, "DISTINGUISHED-NAME", normalizedProperties[ad.DistinguishedName.String()])
 	assert.Equal(t, "TEMPLE", normalizedProperties[common.OperatingSystem.String()])
+}
+
+// verify that ndoes and edges are created or updated based on existing graph state
+func Test_IngestRelationships(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+	t.Run("Create rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "computer a", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "computer b", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was created
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Update rel by exact name match. Source and target node names both resolve to nodes with objectids.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "computer a", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "computer b", Kind: ad.Computer, MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("existing_edge_kind"), RelProps: map[string]any{"hello": "world"}},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was updated
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					rels := []*graph.Relationship{}
+					err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("existing_edge_kind")),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+						for rel := range cursor.Chan() {
+							rels = append(rels, rel)
+						}
+
+						return nil
+					})
+					require.Nil(t, err)
+					// was there only one exact match?
+					require.Len(t, rels, 1)
+					// were properties merged?
+					property, _ := rels[0].Properties.Get("hello").String()
+					require.Equal(t, "world", property)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Create rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was created
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Update rel using source/target nodes that specify objectid.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "1234"},
+					ein.IngestibleEndpoint{Value: "5678"},
+					ein.IngestibleRel{RelType: graph.StringKind("existing_edge_kind"), RelProps: map[string]any{"hello": "world"}},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				// verify an edge was updated
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					rels := []*graph.Relationship{}
+					err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), harness.IngestRelationships.Node1.ID),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node2.ID),
+							query.Kind(query.Relationship(), graph.StringKind("existing_edge_kind")),
+						),
+					).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+						for rel := range cursor.Chan() {
+							rels = append(rels, rel)
+						}
+
+						return nil
+					})
+					require.Nil(t, err)
+					// was there only one exact match?
+					require.Len(t, rels, 1)
+					// were properties merged?
+					property, _ := rels[0].Properties.Get("hello").String()
+					require.Equal(t, "world", property)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Create rel. Source/target nodes' objectid's dont exist. Both nodes get created and rel gets created.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "0001"},
+					ein.IngestibleEndpoint{Value: "0002"},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					nodeIDs := []graph.ID{}
+					// verify start and end nodes were created
+					tx.Nodes().Filter(
+						query.Or(
+							query.Equals(query.Property(query.Node(), "objectid"), "0001"),
+							query.Equals(query.Property(query.Node(), "objectid"), "0002"),
+						)).
+						OrderBy(query.Order(query.Property(query.Node(), "objectid"), query.Ascending())).FetchIDs(
+						func(cursor graph.Cursor[graph.ID]) error {
+							for id := range cursor.Chan() {
+								nodeIDs = append(nodeIDs, id)
+							}
+							return nil
+						},
+					)
+
+					// verify rel created
+					count, err := tx.Relationships().Filter(
+						query.And(
+							query.Equals(query.StartID(), nodeIDs[0]),
+							query.Equals(query.EndID(), nodeIDs[1]),
+							query.Kind(query.Relationship(), graph.StringKind("related_to")),
+						),
+					).Count()
+
+					require.Equal(t, int64(1), count)
+					require.Nil(t, err)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
+
+	t.Run("Dont create rel. Source/target nodes' have names that don't resolve to objectids. Neither node gets created and rel creation is skipped.", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				harness.IngestRelationships.Setup(testContext)
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "bubba", MatchBy: ein.MatchByName},
+					ein.IngestibleEndpoint{Value: "lubba", MatchBy: ein.MatchByName},
+					ein.IngestibleRel{RelType: graph.StringKind("related_to")},
+				)
+				rels := []ein.IngestibleRelationship{ingestibleRel}
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					// verify start and end nodes were not created
+					numNodes, _ := tx.Nodes().Filter(query.Or(
+						query.Equals(query.Property(query.Node(), "name"), "bubba"),
+						query.Equals(query.Property(query.Node(), "name"), "lubba"))).Count()
+					require.Zero(t, numNodes)
+
+					// verify rel not created
+					numRels, _ := tx.Relationships().Filter(query.Kind(query.Relationship(), graph.StringKind("related_to"))).Count()
+					require.Zero(t, numRels)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
 }

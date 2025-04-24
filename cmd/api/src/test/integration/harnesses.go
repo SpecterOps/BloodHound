@@ -9747,6 +9747,27 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
+type IngestRelationships struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+
+	ExistingRel *graph.Relationship
+}
+
+func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "COMPUTER A",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "COMPUTER B",
+	}), graph.StringKind("Computer"))
+
+	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
+}
+
 type GenericIngest struct {
 	Node1 *graph.Node
 	Node2 *graph.Node
@@ -9817,11 +9838,6 @@ func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {
 		common.ObjectID: "1234",
 		common.Name:     "BOB",
 	}), graph.StringKind("GenericDevice"))
-
-	// s.Node2 = graphTestContext.NewActiveDirectoryComputer("NAME B", domainsid)
-
-	// s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
-	// s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
 }
 
 type HarnessDetails struct {
@@ -9934,4 +9950,5 @@ type HarnessDetails struct {
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
 	GenericIngest                                   GenericIngest
 	ResolveEndpointsByName                          ResolveEndpointsByName
+	IngestRelationships                             IngestRelationships
 }

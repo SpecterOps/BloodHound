@@ -311,10 +311,8 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	return batch.UpdateRelationshipBy(relationshipUpdate)
 }
 
-// TODO: TEST!!! on legacy and generic?
 func IngestRelationships(batch graph.Batch, identityKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		// nowUTC = time.Now().UTC()
 		errs = util.NewErrorCollector()
 	)
 
@@ -329,12 +327,6 @@ func IngestRelationships(batch graph.Batch, identityKind graph.Kind, relationshi
 		}
 	}
 
-	// for _, next := range relationships {
-	// 	if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
-	// 		slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source.Value, next.Target.Value, err))
-	// 		errs.Add(err)
-	// 	}
-	// }
 	return errs.Combined()
 }
 
