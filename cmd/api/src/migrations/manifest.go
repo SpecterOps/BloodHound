@@ -51,7 +51,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	const adminRightsCount = "adminrightscount"
 
-	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes")
+	defer measure.LogAndMeasure(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null
@@ -65,6 +65,21 @@ func Version_730_Migration(ctx context.Context, db graph.Database) error {
 		} else {
 			for _, node := range nodes {
 				node.Properties.Delete(adminRightsCount)
+				if err := tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+
+		if nodes, err := ops.FetchNodes(tx.Nodes().Filter(query.And(
+			query.Kind(query.Node(), ad.Computer),
+			query.IsNotNull(query.NodeProperty(ad.SMBSigning.String())),
+			query.Equals(query.NodeProperty(ad.SMBSigning.String()), false),
+		))); err != nil {
+			return err
+		} else {
+			for _, node := range nodes {
+				node.Properties.Delete(ad.SMBSigning.String())
 				if err := tx.UpdateNode(node); err != nil {
 					return err
 				}
