@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 export const useShowNavBar = (routes: any) => {
     const location = useLocation();

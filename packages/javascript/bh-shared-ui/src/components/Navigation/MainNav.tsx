@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, ReactNode } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router';
 import { useApiVersion, useIsMouseDragging } from '../../hooks';
 import { cn } from '../../utils';
 import { persistSearchParams } from '../../utils/searchParams/searchParams';

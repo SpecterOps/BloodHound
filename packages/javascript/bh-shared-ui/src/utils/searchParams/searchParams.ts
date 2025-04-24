@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createSearchParams, Path, To, useSearchParams } from 'react-router-dom';
+import { createSearchParams, Path, To, useSearchParams } from 'react-router';
 import { EnvironmentQueryParams } from '../../hooks/useEnvironmentParams';
 import { ExploreQueryParams } from '../../hooks/useExploreParams';
 
 // FUTURE DEV: SetURLSearchParams is in both v6 and v7, but v6 uses this type internally and v7 exports it.
-// When we upgrade to v7, we can import SetURLSearchParams from react-router-dom
+// When we upgrade to v7, we can import SetURLSearchParams from react-router
 type SetURLSearchParams = ReturnType<typeof useSearchParams>[1];
 
 export type SearchParamKeys = keyof EnvironmentQueryParams | keyof ExploreQueryParams;
@@ -62,7 +62,7 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
 
 /**
  * returns a function for updating all availableParams in search params.
- * @param setSearchParams react-router-doms setSearchParams
+ * @param setSearchParams react-routers setSearchParams
  * @param availableParams all params that can be controlled
  * @returns
  */

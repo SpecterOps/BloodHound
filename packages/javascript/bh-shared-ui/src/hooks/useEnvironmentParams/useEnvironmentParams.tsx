@@ -16,7 +16,7 @@
 
 import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 

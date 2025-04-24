@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { GenericErrorBoundaryFallback } from '../components';
 
 export const ROUTE_TIER_MANAGEMENT = '/tier-management';

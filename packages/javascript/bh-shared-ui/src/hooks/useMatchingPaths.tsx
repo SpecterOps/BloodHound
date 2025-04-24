@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { matchPath, useLocation } from 'react-router-dom';
+import { matchPath, useLocation } from 'react-router';
 
 export const useMatchingPaths = (pattern: string | string[]) => {
     const { pathname } = useLocation();

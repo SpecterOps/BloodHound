@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { NavigateOptions, To, useNavigate } from 'react-router-dom';
+import { NavigateOptions, To, useNavigate } from 'react-router';
 import {
     AppNavigateProps,
     GloballySupportedSearchParams,

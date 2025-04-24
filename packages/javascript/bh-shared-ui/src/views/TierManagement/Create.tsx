@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 export const Create: FC = () => {
     const { state } = useLocation();

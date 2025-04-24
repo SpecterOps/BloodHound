@@ -20,7 +20,7 @@ import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Router } from 'react-router-dom';
+import { Router } from 'react-router';
 import { createMemoryHistory } from 'history';
 import { NotificationsProvider } from './providers';
 import { darkPalette } from './constants';
