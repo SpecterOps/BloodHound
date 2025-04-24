@@ -32,6 +32,8 @@ func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpo
 	}
 }
 
+// IngestMatchStrategy defines how a node should be matched during ingestion—
+// either by its object ID (default) or by its name.
 type IngestMatchStrategy string
 
 const (
@@ -39,10 +41,11 @@ const (
 	MatchByName IngestMatchStrategy = "name"
 )
 
+// IngestibleEndpoint represents a node reference in a relationship to be ingested.
 type IngestibleEndpoint struct {
 	Value   string              // The actual lookup value (either objectid or name)
 	MatchBy IngestMatchStrategy // Strategy used to resolve the node
-	Kind    graph.Kind          // Optional kind filter
+	Kind    graph.Kind          // Optional kind filter to help disambiguate nodes
 }
 
 type IngestibleRel struct {
@@ -50,6 +53,9 @@ type IngestibleRel struct {
 	RelType  graph.Kind
 }
 
+// IngestibleRelationship represents a directional relationship between two nodes
+// intended for ingestion into the graph database. Both endpoints include resolution
+// strategies and optional kind filters.
 type IngestibleRelationship struct {
 	Source IngestibleEndpoint
 	Target IngestibleEndpoint

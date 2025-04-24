@@ -45,6 +45,17 @@ func addKey(endpoint ein.IngestibleEndpoint, cache map[endpointKey]struct{}) {
 	cache[key] = struct{}{}
 }
 
+// resolveAllEndpointsByName attempts to resolve all unique source and target
+// endpoints from a list of ingestible relationships into their corresponding object IDs.
+//
+// Each endpoint is identified by a Name, (optional) Kind pair. A single batch query is
+// used to resolve all endpoints in one round trip.
+//
+// If multiple nodes match a given Name, Kind pair with conflicting object IDs,
+// the match is considered ambiguous and excluded from the result. This can happen because there are no
+// uniqueness guarantees on a node's `Name` property.
+//
+// Returns a map of resolved object IDs. If no matches are found or the input is empty, an empty map is returned.
 func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelationship) (map[endpointKey]string, error) {
 	// seen deduplicates Name:Kind pairs from the input batch to ensure that each Name:Kind pairs is resolved once.
 	seen := map[endpointKey]struct{}{}
@@ -127,6 +138,20 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 	return resolved, nil
 }
 
+// resolveRelationships transforms a list of ingestible relationships into a
+// slice of graph.RelationshipUpdate objects, suitable for ingestion into the
+// graph database.
+//
+// The function resolves all source and target endpoints to their corresponding
+// object IDs if MatchByName is set on an endpoint. Relationships with unresolved
+// or ambiguous endpoints are skipped and logged with a warning.
+//
+// The identityKind parameter determines the identity kind used for both start
+// and end nodes if provided. eg. ad.Base and az.Base are used for *hound collections, and generic ingest has no base kind.
+//
+// Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
+//
+// Returns a slice of valid relationship updates or an error if resolution fails.
 func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, identityKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
 	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
 		return nil, err

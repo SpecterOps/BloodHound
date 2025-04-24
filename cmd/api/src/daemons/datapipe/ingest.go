@@ -311,6 +311,12 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	return batch.UpdateRelationshipBy(relationshipUpdate)
 }
 
+// IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
+//
+// This function first calls resolveRelationships to resolve node identifiers based on name and kind.
+//
+// Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
+// Errors encountered during resolution or update are collected and returned as a single combined error.
 func IngestRelationships(batch graph.Batch, identityKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
