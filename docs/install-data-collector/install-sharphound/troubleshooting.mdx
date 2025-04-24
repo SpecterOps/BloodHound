@@ -119,7 +119,7 @@ First, SharpHound connects via RPC with `SamConnect`.
 Next, SharpHound connects via RPC with `GetMembersInAlias`.
 
 * If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = GetMembersInAlias` and a status depending on the error type.
-* If successful `compstatus.csv` will contain one line per local group in system with the result `Task = GetMembersInAlias - <LOCAL GROUP NAME>` and "Status = Success'
+* If successful `compstatus.csv` will contain one line per computer in system with the result `Task = GetMembersInAlias - <LOCAL GROUP NAME>` and "Status = Success'
 
 **User Rights Assignment**
 
@@ -127,6 +127,7 @@ First, SharpHound connects via RPC with `LSAOpenPolicy`.
 
 * If unsuccessful, `compstatus.csv` will contain a line for the system with the result `Task = LSAOpenPolicy` and a status depending on the error type.
     * `Status = StatusRpcServerUnavailable` means SharpHound cannot access RPC or SMB on the system. Ensure that the system running SharpHound can reach the system via SMB.
+    * `Status = StatusAccessDenied` means SharpHound account is not in the system's local administrators group.
 * If successful, SharpHound continues with the method `LSAEnumerateAccountsWithUserRight` as detailed below.
 
 Next, sharpHound connects via RPC with `LSAEnumerateAccountsWithUserRight`.

@@ -149,6 +149,7 @@ type Graph interface {
 	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
+	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
 }
 
 type GraphQuery struct {
@@ -640,7 +641,7 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	for delegateKey, delegate := range delegates {
 		waitGroup.Add(1)
 
-		slog.InfoContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
+		slog.DebugContext(ctx, fmt.Sprintf("Running entity query %s", delegateKey))
 
 		go func(delegateKey string, delegate any) {
 			defer waitGroup.Done()
@@ -675,6 +676,22 @@ func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) 
 		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
 		return err
 	})
+}
+
+func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
+	var node *graph.Node
+
+	if err := s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		node, err = ops.FetchNode(tx, id)
+		return err
+	}); err != nil {
+		return nil, err
+	} else if node == nil {
+		return nil, fmt.Errorf("node not found for id: %s", id)
+	} else {
+		return node, err
+	}
 }
 
 func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {

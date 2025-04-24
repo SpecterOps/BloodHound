@@ -88,9 +88,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
         setExploreParams({
             expandedPanelSections: labelList,
-            searchType: 'relationship',
-            relationshipQueryType: queryType,
-            relationshipQueryItemId: id,
+            ...(isUnderRenderLimit && {
+                searchType: 'relationship',
+                relationshipQueryType: queryType,
+                relationshipQueryItemId: id,
+            }),
         });
     };
 
@@ -104,8 +106,9 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
     const handleSetV2Graph = async () => {
-        if (!endpoint) setParentExpandedSectionParam();
-        if (endpoint && isUnderRenderLimit) {
+        if (!endpoint) {
+            setParentExpandedSectionParam();
+        } else {
             setExpandedPanelSectionsParams();
         }
     };

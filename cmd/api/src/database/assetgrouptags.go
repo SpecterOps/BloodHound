@@ -55,6 +55,7 @@ type AssetGroupTagSelectorNodeData interface {
 	DeleteSelectorNodesByNodeId(ctx context.Context, selectorId int, nodeId graph.ID) error
 	DeleteSelectorNodesBySelectorIds(ctx context.Context, selectorId ...int) error
 	GetSelectorNodesBySelectorIds(ctx context.Context, selectorIds ...int) ([]model.AssetGroupSelectorNode, error)
+	GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error)
 }
 
 func insertSelectorSeeds(tx *gorm.DB, selectorId int, seeds []model.SelectorSeed) ([]model.SelectorSeed, error) {
@@ -356,6 +357,17 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 	}
 
 	return results, nil
+}
+
+func (s *BloodhoundDB) GetSelectorsByMemberId(ctx context.Context, memberId int, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
+	var selectors model.AssetGroupTagSelectors
+
+	return selectors, CheckError(s.db.WithContext(ctx).Raw(`
+		SELECT s.* from asset_group_tag_selectors s
+		JOIN asset_group_tag_selector_nodes n ON s.id = n.selector_id
+		JOIN asset_group_tags t ON s.asset_group_tag_id = t.id
+		WHERE t.id = ? AND n.node_id = ?
+		`, assetGroupTagId, memberId).Find(&selectors))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {

@@ -21,6 +21,7 @@ import NodeIcon from './NodeIcon';
 export type VirtualizedNodeListItem = {
     name: string;
     objectId: string;
+    graphId?: string;
     kind: string;
     onClick?: (index: number) => void;
 };

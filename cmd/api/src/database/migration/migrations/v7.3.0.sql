@@ -107,3 +107,6 @@ CREATE TABLE IF NOT EXISTS asset_group_tag_selector_seeds
 ALTER TABLE IF EXISTS file_upload_jobs RENAME TO ingest_jobs;
 ALTER TABLE ingest_tasks ADD COLUMN IF NOT EXISTS is_generic BOOLEAN NOT NULL DEFAULT FALSE;
 
+-- GA for ntlm post processing
+UPDATE feature_flags SET user_updatable = false WHERE key = 'ntlm_post_processing';
+UPDATE feature_flags SET enabled = true WHERE key = 'ntlm_post_processing';

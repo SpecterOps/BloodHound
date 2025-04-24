@@ -17,8 +17,9 @@
 package size_test
 
 import (
-	"github.com/specterops/bloodhound/dawgs/util/size"
 	"testing"
+
+	"github.com/specterops/bloodhound/dawgs/util/size"
 
 	"github.com/stretchr/testify/require"
 )

@@ -2780,6 +2780,244 @@
         }
       }
     },
+    "/api/v2/customnode": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetCustomNodes",
+        "summary": "Get custom nodes",
+        "description": "Retrieve a list of all custom node configurations.\nThis endpoint returns the current set of registered node kinds and their display settings.\n",
+        "tags": [
+          "Custom Node Management",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.custom-node"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateCustomNodes",
+        "summary": "Create custom nodes",
+        "description": "Create one or more custom node configurations.\nThis endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported\n",
+        "tags": [
+          "Custom Node Management",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "custom_types": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/model.custom-node.config"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "CREATED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/model.custom-node"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "409": {
+            "description": "**Conflict**\nDuplicate Kind Name\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2024-02-19T19:27:43.866Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "customnodes",
+                      "message": "Conflict: duplicate kind name"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/customnode/{kind_name}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "kind_name",
+          "description": "Kind Name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCustomNode",
+        "summary": "Get custom node",
+        "description": "Retrieve the configuration for a specific custom node kind.\nReturns the display settings and metadata for the requested node kind.\n",
+        "tags": [
+          "Custom Node Management",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.custom-node"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateCustomNode",
+        "summary": "Update custom node",
+        "description": "Update the configuration for a specific custom node kind.\nReturns the updated configuration for the specific node kind.\n",
+        "tags": [
+          "Custom Node Management",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "config": {
+                    "$ref": "#/components/schemas/model.custom-node.config"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.custom-node"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteCustomNode",
+        "summary": "Delete custom node",
+        "description": "Delete the configuration for a specific custom node kind.",
+        "tags": [
+          "Custom Node Management",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/version": {
       "parameters": [
         {
@@ -4387,6 +4625,106 @@
                           "type": "object",
                           "additionalProperties": {
                             "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag of a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_member_id",
+          "description": "ID of member to list selectors",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorsByMemberId",
+        "summary": "Get asset group tag selectors of a specific object by member id",
+        "description": "Get a list of selectors for an object by member id.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "member": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "integer"
+                            },
+                            "selectors": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              }
+                            }
                           }
                         }
                       }
@@ -15855,6 +16193,36 @@
           }
         ]
       },
+      "model.custom-node.config": {
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "model.custom-node": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "kindName": {
+            "type": "string"
+          },
+          "config": {
+            "$ref": "#/components/schemas/model.custom-node.config"
+          }
+        }
+      },
       "model.search-result": {
         "type": "object",
         "properties": {
@@ -16203,76 +16571,6 @@
           }
         }
       },
-      "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
-        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.string-strict": {
-        "type": "string",
-        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.boolean": {
-        "type": "boolean",
-        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "null.boolean": {
-        "type": "object",
-        "properties": {
-          "bool": {
-            "type": "boolean"
-          },
-          "valid": {
-            "description": "Valid is true if `boolean` is not `null`",
-            "type": "boolean"
-          }
-        }
-      },
-      "model.asset-group-tag": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "type": {
-            "type": "integer"
-          },
-          "kind_id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_by": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_by": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "$ref": "#/components/schemas/null.time"
-          },
-          "deleted_by": {
-            "$ref": "#/components/schemas/null.string"
-          },
-          "position": {
-            "$ref": "#/components/schemas/null.int32"
-          },
-          "require_certify": {
-            "$ref": "#/components/schemas/null.boolean"
-          }
-        }
-      },
       "model.asset-group-tags-selector-seed-request": {
         "type": "object",
         "properties": {
@@ -16368,6 +16666,76 @@
             }
           }
         ]
+      },
+      "api.params.predicate.filter.integer-strict": {
+        "type": "integer",
+        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.string-strict": {
+        "type": "string",
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.boolean": {
+        "type": "boolean",
+        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "$ref": "#/components/schemas/null.time"
+          },
+          "deleted_by": {
+            "$ref": "#/components/schemas/null.string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",
@@ -17885,6 +18253,7 @@
         "BloodHound Users",
         "Collectors",
         "Collection Uploads",
+        "Custom Node Management",
         "API Info",
         "Search",
         "Audit",
