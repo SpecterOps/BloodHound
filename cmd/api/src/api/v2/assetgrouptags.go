@@ -399,11 +399,11 @@ type ListNodeSelectorsResponse struct {
 }
 
 type member struct {
-	assetGroupMemberResponse
+	AssetGroupMemberResponse
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
 }
 
-type assetGroupMemberResponse struct {
+type AssetGroupMemberResponse struct {
 	NodeId      graph.ID       `json:"id"`
 	ObjectID    string         `json:"object_id"`
 	PrimaryKind string         `json:"primary_kind"`
@@ -464,13 +464,13 @@ func (s *Resources) GetAssetGroupTagMemberCountsByKind(response http.ResponseWri
 }
 
 // Used to minimize the response shape to just the necessary member display fields
-func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) assetGroupMemberResponse {
+func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroupMemberResponse {
 	var (
 		objectID, _ = node.Properties.GetOrDefault(common.ObjectID.String(), "NO OBJECT ID").String()
 		name, _     = node.Properties.GetWithFallback(common.Name.String(), "NO NAME", common.DisplayName.String(), common.ObjectID.String()).String()
 	)
 
-	member := assetGroupMemberResponse{
+	member := AssetGroupMemberResponse{
 		NodeId:      node.ID,
 		ObjectID:    objectID,
 		PrimaryKind: analysis.GetNodeKindDisplayLabel(node),
@@ -482,15 +482,6 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) assetGroup
 	}
 
 	return member
-}
-
-type AssetGroupMemberResponse struct {
-	NodeId      graph.ID `json:"id"`
-	ObjectID    string   `json:"object_id"`
-	PrimaryKind string   `json:"primary_kind"`
-	Name        string   `json:"name"`
-
-	Source model.AssetGroupSelectorNodeSource `json:"source,omitempty"`
 }
 
 func (s AssetGroupMemberResponse) IsSortable(criteria string) bool {
@@ -533,7 +524,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				member := nodeToAssetGroupMember(node, false)
+				member := nodeToAssetGroupMember(node, true)
 				members = append(members, member)
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMemberResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
