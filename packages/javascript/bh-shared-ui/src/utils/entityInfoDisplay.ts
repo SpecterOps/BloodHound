@@ -204,20 +204,23 @@ export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?:
 
 export const formatBoolean = (value: boolean): string => value.toString().toUpperCase();
 
-export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset'];
-
-export const formatString = (value: string, keyprop?: string) => {
+export const formatDateString = (value: string) => {
     const potentialDate: any = DateTime.fromISO(value);
-    const isDateFieldOrNull = !keyprop || DATE_FIELDS.includes(keyprop || '');
 
-    if (potentialDate.invalid === null && isDateFieldOrNull) {
+    if (potentialDate.invalid === null) {
         return potentialDate.toFormat(LuxonFormat.DATETIME);
     }
 
     return value;
 };
 
-const formatPrimitive = (value: string | number | boolean, kind?: EntityPropertyKind, keyprop?: string): string => {
+export const DATE_FIELDS = ['lastseen', 'whencreated', 'lastlogontimestamp', 'lastlogon', 'pwdlastset'];
+
+export const formatPrimitive = (
+    value: string | number | boolean,
+    kind?: EntityPropertyKind,
+    keyprop?: string
+): string => {
     switch (typeof value) {
         case 'number': {
             return formatNumber(value, kind, keyprop);
@@ -225,9 +228,14 @@ const formatPrimitive = (value: string | number | boolean, kind?: EntityProperty
         case 'boolean': {
             return formatBoolean(value);
         }
-        case 'string': //fallthrough
+        case 'string':
+            if (!keyprop || DATE_FIELDS.includes(keyprop)) {
+                return formatDateString(value);
+            }
+
+            return value;
         default:
-            return formatString(value, keyprop);
+            return value;
     }
 };
 
