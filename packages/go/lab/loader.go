@@ -93,6 +93,7 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				nodeMap[node.ID] = dbNode.ID
 			}
 		}
+
 		for _, edge := range g.Relationships {
 			if startId, ok := nodeMap[edge.FromID]; !ok {
 				return fmt.Errorf("could not find start node %s", edge.FromID)
@@ -100,6 +101,9 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				return fmt.Errorf("could not find end node %s", edge.ToID)
 			} else if props, err := processProperties(edge.Properties); err != nil {
 				return fmt.Errorf("failed to process edge properties: %w", err)
+			} else if testEdge, err := props.Get("testedge").Bool(); err == nil && testEdge {
+				// It's a test edge for a harness test - skip creating it
+				continue
 			} else if _, err := tx.CreateRelationshipByIDs(startId, endId, graph.StringKind(edge.Type), props); err != nil {
 				return fmt.Errorf("could not create relationship `%s` from `%s` to `%s`: %w", edge.Type, edge.FromID, edge.ToID, err)
 			}
@@ -131,6 +135,7 @@ func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
+		boolVal, boolErr := strconv.ParseBool(v)
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
@@ -138,6 +143,8 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else {
 				out.Set(k, ts)
 			}
+		case boolErr == nil:
+			out.Set(k, boolVal)
 		default:
 			out.Set(k, v)
 		}
