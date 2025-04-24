@@ -101,7 +101,7 @@ describe('Formatting string properties', () => {
 
 describe('Formatting strings via formatPrimive', () => {
     it('returns a date string only if passed a string with a matching key', () => {
-        for (let dateField of DATE_FIELDS) {
+        for (const dateField of DATE_FIELDS) {
             expect(formatPrimitive('2016', null, dateField!)).toEqual('2016-01-01 00:00 PST (GMT-0800)');
             expect(formatPrimitive('2016', null, dateField!)).not.toEqual('2016');
         }
