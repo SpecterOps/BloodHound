@@ -18,6 +18,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -29,14 +30,99 @@ import (
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+type AssetGroupTagCounts struct {
+	Selectors int   `json:"selectors"`
+	Members   int64 `json:"members"`
+}
+
+type AssetGroupTagView struct {
+	model.AssetGroupTag
+	Counts *AssetGroupTagCounts `json:"counts,omitempty"`
+}
+
+type GetAssetGroupTagsResponse struct {
+	Tags []AssetGroupTagView `json:"tags"`
+}
+
+func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
+	var rCtx = request.Context()
+
+	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	} else {
+		for name, filters := range queryFilters {
+			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupTag{}, name); err != nil {
+				api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for i, filter := range filters {
+					if !slices.Contains(validPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					queryFilters[name][i].IsStringData = model.AssetGroupTag{}.IsStringColumn(filter.Name)
+				}
+			}
+		}
+
+		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if tags, err := s.DB.GetAssetGroupTags(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			var (
+				resp = GetAssetGroupTagsResponse{
+					Tags: make([]AssetGroupTagView, 0, len(tags)),
+				}
+				selectorCounts map[int]int
+			)
+
+			if paramIncludeCounts {
+				ids := make([]int, 0, len(tags))
+				for i := range tags {
+					ids = append(ids, tags[i].ID)
+				}
+				if selectorCounts, err = s.DB.GetAssetGroupTagSelectorCounts(rCtx, ids); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
+
+			for _, tag := range tags {
+				tview := AssetGroupTagView{AssetGroupTag: tag}
+				if paramIncludeCounts {
+					if n, err := s.GraphQuery.CountNodesByKind(rCtx, tag.ToKind()); err != nil {
+						api.HandleDatabaseError(request, response, err)
+						return
+					} else {
+						tview.Counts = &AssetGroupTagCounts{
+							Selectors: selectorCounts[tag.ID],
+							Members:   n,
+						}
+					}
+				}
+				resp.Tags = append(resp.Tags, tview)
+			}
+			api.WriteBasicResponse(rCtx, resp, http.StatusOK, response)
+		}
+	}
+}
+
 // Checks that the selector seeds are valid.
 func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) error {
+	if len(seeds) <= 0 {
+		return fmt.Errorf("seeds are required")
+	}
 	// all seeds must be of the same type
 	seedType := seeds[0].Type
 
@@ -59,7 +145,9 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 
 func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		sel           model.AssetGroupTagSelector
+		sel = model.AssetGroupTagSelector{
+			AutoCertify: null.BoolFrom(false), // default if unset
+		}
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Create")()
@@ -77,9 +165,19 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if err := validateSelectorSeeds(s.GraphQuery, sel.Seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor.ID.String(), sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
+	} else if selector, err := s.DB.CreateAssetGroupTagSelector(request.Context(), assetTagId, actor, sel.Name, sel.Description, false, true, sel.AutoCertify, sel.Seeds); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
 		api.WriteBasicResponse(request.Context(), selector, http.StatusCreated, response)
 	}
 }
@@ -103,6 +201,8 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else if err := json.NewDecoder(request.Body).Decode(&selUpdateReq); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else {
@@ -154,15 +254,64 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Seeds = nil
 		}
 
-		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), selector); err != nil {
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor, selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if seedsTemp != nil {
 				// seeds were unchanged, set them back to what is stored in the db for the response
 				selector.Seeds = seedsTemp
 			}
+			// Request analysis if scheduled analysis isn't enabled
+			if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			} else if !config.Enabled {
+				if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+					api.HandleDatabaseError(request, response, err)
+					return
+				}
+			}
 			api.WriteBasicResponse(request.Context(), selector, http.StatusOK, response)
 		}
+	}
+}
+
+func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	var (
+		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
+		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
+	)
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Selector Delete")()
+
+	if actor, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if assetTagId, err := strconv.Atoi(assetTagIdStr); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(rawSelectorID); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
+	} else if selector.IsDefault {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "cannot delete a default selector", request), response)
+	} else if err := s.DB.DeleteAssetGroupTagSelector(request.Context(), actor, selector); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else {
+		// Request analysis if scheduled analysis isn't enabled
+		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if !config.Enabled {
+			if err := s.DB.RequestAnalysis(request.Context(), actor.ID.String()); err != nil {
+				api.HandleDatabaseError(request, response, err)
+				return
+			}
+		}
+		api.WriteBasicResponse(request.Context(), selector, http.StatusNoContent, response)
 	}
 }
 

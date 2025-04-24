@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 // ConnectPostgres initializes a connection to PG, and returns errors if any
@@ -100,18 +101,20 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("failed to create in-memory cache for graph queries: %w", err)
 	} else if collectorManifests, err := cfg.SaveCollectorManifests(); err != nil {
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
+	} else if ingestSchema, err := ingest.LoadIngestSchema(); err != nil {
+		return nil, fmt.Errorf("failed to load ingest schema")
 	} else {
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer     = auth.NewAuthorizer(connections.RDMS)
-			datapipeDaemon = datapipe.NewDaemon(ctx, cfg, connections, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second)
+			datapipeDaemon = datapipe.NewDaemon(ctx, cfg, connections, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second, ingestSchema)
 			routerInst     = router.NewRouter(cfg, authorizer, bootstrap.ContentSecurityPolicy)
 			ctxInitializer = database.NewContextInitializer(connections.RDMS)
 			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema)
 
 		// Set neo4j batch and flush sizes
 		neo4jParameters := appcfg.GetNeo4jParameters(ctx, connections.RDMS)

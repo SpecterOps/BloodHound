@@ -85,6 +85,11 @@ const (
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
+	AuditLogActionDeleteAssetGroupTagSelector AuditLogAction = "DeleteAssetGroupTagSelector"
+
+	AuditLogActionCreateCustomNodeKind AuditLogAction = "CreateCustomNodeKind"
+	AuditLogActionUpdateCustomNodeKind AuditLogAction = "UpdateCustomNodeKind"
+	AuditLogActionDeleteCustomNodeKind AuditLogAction = "DeleteCustomNodeKind"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

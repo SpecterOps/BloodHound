@@ -20,9 +20,34 @@ import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
+import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
 import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+
+export const standardLayout = (graph: MultiDirectedGraph) => {
+    forceAtlas2.assign(graph, {
+        iterations: 128,
+        settings: {
+            scalingRatio: 1000,
+            barnesHutOptimize: true,
+        },
+    });
+};
+
+export const sequentialLayout = (graph: MultiDirectedGraph) => {
+    const { assign: assignDagre } = layoutDagre(
+        {
+            graph: {
+                rankdir: RankDirection.LEFT_RIGHT,
+                ranksep: 500,
+            },
+        },
+        graph
+    );
+
+    assignDagre();
+};
 
 export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
     const { nodes, edges } = items;
@@ -50,13 +75,8 @@ export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Th
 
     random.assign(graph, { scale: 1000 });
 
-    forceAtlas2.assign(graph, {
-        iterations: 128,
-        settings: {
-            scalingRatio: 1000,
-            barnesHutOptimize: true,
-        },
-    });
+    // RUN DEFAULT LAYOUT
+    sequentialLayout(graph);
 };
 
 const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOptions: ThemedOptions) => {

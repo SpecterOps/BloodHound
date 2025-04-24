@@ -376,8 +376,8 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 				if publishedCertTemplates := adcsCache.GetPublishedTemplateCache(enterpriseCA.ID); len(publishedCertTemplates) == 0 {
 					// If this enterprise CA has no published templates, then there's no reason to check further
 					return nil
-				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) {
-					// If the CA doesn't chain up to the domain properly then its invalid
+				} else if !adcsCache.DoesCAChainProperlyToDomain(enterpriseCA, domain) || !adcsCache.DoesCAHaveHostingComputer(enterpriseCA) {
+					// If the CA doesn't chain up to the domain properly then its invalid. It also requires a hosting computer
 					return nil
 				} else if ecaValid, err := isEnterpriseCAValidForADCS(enterpriseCA); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error validating EnterpriseCA %d for ADCS relay: %v", enterpriseCA.ID, err))

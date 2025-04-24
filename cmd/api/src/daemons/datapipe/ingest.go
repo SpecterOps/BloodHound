@@ -38,8 +38,8 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, adcsEnabled bool) error {
-	if meta, err := ingest_service.ValidateMetaTag(reader, false); err != nil {
+func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
+	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta, adcsEnabled)
