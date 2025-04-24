@@ -486,7 +486,7 @@ func nodeToAssetGroupMember(node *graph.Node, includeProperties bool) AssetGroup
 
 func (s AssetGroupMemberResponse) IsSortable(criteria string) bool {
 	switch criteria {
-	case "id", "object_id", "name":
+	case "id", "objectid", "name":
 		return true
 	default:
 		return false

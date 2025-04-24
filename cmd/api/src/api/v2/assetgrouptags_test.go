@@ -1438,14 +1438,14 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 			},
 			{
-				Name: "Success with sort by object_id",
+				Name: "Success with sort by objectid",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
-					apitest.AddQueryParam(input, "sort_by", "object_id")
+					apitest.AddQueryParam(input, "sort_by", "objectid")
 				},
 				Setup: func() {
 					params := url.Values{}
-					params.Add("sort_by", "object_id")
+					params.Add("sort_by", "objectid")
 
 					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
 					require.Nil(t, err)
