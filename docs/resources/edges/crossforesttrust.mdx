@@ -1,0 +1,21 @@
+---
+title: CrossForestTrust
+---
+
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+The CrossForestTrust edge represents a trust relationship between two domains/forests. In this relationship, the source node domain has a cross-forest (inter-realm) trust to the destination node domain, allowing principals (users and computers) from the destination domain to access resources in the source domain.
+
+## Abuse Info
+
+The cross-forest trust does not enable a compromise of any of the domains by default.
+
+BloodHound creates separate traversable edges between the domains if the configuration of the trust enables abuse.
+
+## Opsec Considerations
+
+There is no OPSEC associated with this edge.
+
+## References
+
+- [Microsoft AD Trust Technical Documentation](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755321(v=ws.10))
