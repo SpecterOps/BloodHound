@@ -26,12 +26,12 @@ import (
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/src/bloodhound"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 const (
@@ -39,7 +39,7 @@ const (
 )
 
 type Daemon struct {
-	app                 bloodhound.App
+	ingestService       ingest.IngestService
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
@@ -56,7 +56,7 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
 	return &Daemon{
-		app:                 bloodhound.NewApp(connections.RDMS, connections.Graph, cfg),
+		ingestService:       ingest.NewIngestService(connections.RDMS, connections.Graph, cfg),
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,
@@ -157,7 +157,7 @@ func (s *Daemon) Start(ctx context.Context) {
 						slog.String("err", err.Error()),
 					)
 				}
-			} else if err := s.app.IngestService.ProcessIngestTasks(ctx); err != nil {
+			} else if err := s.ingestService.ProcessIngestTasks(ctx); err != nil {
 				slog.ErrorContext(
 					ctx,
 					"Failed to process ingest tasks",
