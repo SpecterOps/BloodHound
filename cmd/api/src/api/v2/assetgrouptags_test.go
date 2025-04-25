@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -1379,6 +1380,231 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 					apitest.UnmarshalData(output, &resp)
 					apitest.BodyContains(output, "test")
 					apitest.Equal(output, 0, len(resp.Member.Properties))
+				},
+			},
+		})
+}
+
+func Test_GetAssetGroupMembersByTag(t *testing.T) {
+	var (
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+		assetGroupTag = model.AssetGroupTag{ID: 1, Name: "Tier Zero"}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.GetAssetGroupMembersByTag).
+		Run([]apitest.Case{
+			{
+				Name: "InvalidAssetGroupTagID",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "invalid")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "Fail with non-sortable column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "invalidColumn")
+				},
+				Setup: func() {
+					params := url.Values{}
+					params.Add("sort_by", "invalidColumn")
+					_, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					require.ErrorIs(t, err, api.ErrResponseDetailsCriteriaNotSortable)
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
+				Name: "Success with sort by id",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "id")
+				},
+				Setup: func() {
+					params := url.Values{}
+					params.Add("sort_by", "id")
+
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					require.Nil(t, err)
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with sort by objectid",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "objectid")
+				},
+				Setup: func() {
+					params := url.Values{}
+					params.Add("sort_by", "objectid")
+
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					require.Nil(t, err)
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with sort by name",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "name")
+				},
+				Setup: func() {
+					params := url.Values{}
+					params.Add("sort_by", "name")
+
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					require.Nil(t, err)
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(orderCriteria, gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with limit",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "limit", "5")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Eq(5)).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with skip",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "skip", "100")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Eq(100), gomock.Any()).
+						Return([]*graph.Node{}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(0), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+					mockGraphDb.EXPECT().
+						GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return([]*graph.Node{
+							{
+								ID:    1,
+								Kinds: []graph.Kind{ad.User},
+								Properties: graph.AsProperties(map[string]any{
+									"objectid": "OID-1",
+									"name":     "node1",
+								})},
+							{
+								ID:    2,
+								Kinds: []graph.Kind{ad.Group},
+								Properties: graph.AsProperties(map[string]any{
+									"objectid": "OID-2",
+									"name":     "node2",
+								})},
+						}, nil)
+					mockGraphDb.EXPECT().
+						CountNodesByKind(gomock.Any(), gomock.Any()).
+						Return(int64(2), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					expected := v2.GetAssetGroupMemberResponse{
+						Members: []v2.AssetGroupMemberResponse{
+							{
+								NodeId:      1,
+								ObjectID:    "OID-1",
+								PrimaryKind: "User",
+								Name:        "node1",
+							},
+							{
+								NodeId:      2,
+								ObjectID:    "OID-2",
+								PrimaryKind: "Group",
+								Name:        "node2",
+							},
+						},
+					}
+					result := v2.GetAssetGroupMemberResponse{}
+					apitest.UnmarshalData(output, &result)
+					require.Equal(t, expected, result)
 				},
 			},
 		})

@@ -184,7 +184,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				return err
 			}
 
-		case pgsql.OrderBy:
+		case *pgsql.OrderBy:
 			// Don't emit 'asc' since it's the default
 			if !typedNextExpr.Ascending {
 				exprStack = append(exprStack, pgsql.FormattingLiteral(" desc"))
