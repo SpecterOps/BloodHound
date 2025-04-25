@@ -135,7 +135,6 @@ func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
-		boolVal, boolErr := strconv.ParseBool(v)
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
@@ -143,8 +142,15 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else {
 				out.Set(k, ts)
 			}
-		case boolErr == nil:
-			out.Set(k, boolVal)
+		case strings.HasPrefix(v, "BOOL:"):
+			_, val, found := strings.Cut(v, "BOOL:")
+			if !found {
+				return nil, fmt.Errorf("could not process bool value `%s`", v)
+			} else if boolVal, err := strconv.ParseBool(val); err != nil {
+				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
+			} else {
+				out.Set(k, boolVal)
+			}
 		default:
 			out.Set(k, v)
 		}
