@@ -4992,30 +4992,9 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `id`, `object_id`, and `name`.\n",
+            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
-            }
-          },
-          {
-            "name": "id",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "object_id",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
-            }
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
         ],
