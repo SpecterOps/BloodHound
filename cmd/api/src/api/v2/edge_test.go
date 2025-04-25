@@ -17,6 +17,7 @@
 package v2_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -303,6 +304,366 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			require.Equal(t, testCase.expected.responseCode, status)
 			require.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
+	}
+}
+
+func TestResources_GetEdgeRelayTargets_BadParameters(t *testing.T) {
+	t.Parallel()
+
+	type httpValues struct {
+		Code   int
+		Header http.Header
+		Body   string
+	}
+
+	cases := []struct {
+		Name     string
+		Request  http.Request
+		Expected httpValues
+	}{
+		{
+			Name: "No Parameters",
+			Request: http.Request{
+				URL: &url.URL{},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				Body:   `{"errors":[{"context":"","message":"Expected edge_type parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Missing Parameters",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase"}},
+				Body:   `{"errors":[{"context":"","message":"Expected source_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Missing Parameters 2",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1"}},
+				Body:   `{"errors":[{"context":"","message":"Expected target_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Wrong Number of Parameters",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2&edge_type=AZRole",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&edge_type=AZRole"}},
+				Body:   `{"errors":[{"context":"","message":"Expected only one edge_type."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Wrong Number of Parameters 2",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2&source_node=3",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&source_node=3"}},
+				Body:   `{"errors":[{"context":"","message":"Expected only one source_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Wrong Number of Parameters 3",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2&target_node=3",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2&target_node=3"}},
+				Body:   `{"errors":[{"context":"","message":"Expected only one target_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Bad Parameter Type",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=LOREMIPSUM&source_node=1&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=LOREMIPSUM&source_node=1&target_node=2"}},
+				Body:   `{"errors":[{"context":"","message":"Invalid edge requested: LOREMIPSUM"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Bad Parameter Type 2",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=GABAGOOL&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=GABAGOOL&target_node=2"}},
+				Body:   `{"errors":[{"context":"","message":"Invalid value for startID: GABAGOOL"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Bad Parameter Type 3",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1.67&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1.67&target_node=2"}},
+				Body:   `{"errors":[{"context":"","message":"Invalid value for startID: 1.67"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+		{
+			Name: "Bad Parameter Type 4",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=lorem%20ipsum",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=lorem%20ipsum"}},
+				Body:   `{"errors":[{"context":"","message":"Invalid value for endID: lorem ipsum"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+	}
+
+	setupInternalState := func() v2.Resources {
+		t.Helper()
+		return v2.Resources{}
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			resources := setupInternalState()
+
+			response := httptest.NewRecorder()
+
+			resources.GetEdgeRelayTargets(response, &testCase.Request)
+			mux.NewRouter().ServeHTTP(response, &testCase.Request)
+
+			actualCode, actualHeader, actualBody := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.Expected.Code, actualCode)
+			assert.Equal(t, testCase.Expected.Header, actualHeader)
+			assert.Equal(t, testCase.Expected.Body, actualBody)
+		})
+	}
+}
+
+func TestResources_GetEdgeRelayTargets_CannotMatchEdge(t *testing.T) {
+	t.Parallel()
+
+	type httpValues struct {
+		Code   int
+		Header http.Header
+		Body   string
+	}
+
+	cases := []struct {
+		Name     string
+		Request  http.Request
+		Expected httpValues
+	}{
+		{
+			Name: "Error Trying to get Matching Edge",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusBadRequest,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				Body:   `{"errors":[{"context":"","message":"Could not find edge matching criteria: Something went wrong"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+	}
+
+	setupInternalState := func(ctx context.Context) v2.Resources {
+		t.Helper()
+
+		ctrl := gomock.NewController(t)
+		mockGraph := graphmocks.NewMockDatabase(ctrl)
+		mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
+
+		res := v2.Resources{
+			Graph: mockGraph,
+		}
+
+		return res
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			resources := setupInternalState(testCase.Request.Context())
+
+			response := httptest.NewRecorder()
+
+			resources.GetEdgeRelayTargets(response, &testCase.Request)
+			mux.NewRouter().ServeHTTP(response, &testCase.Request)
+
+			actualCode, actualHeader, actualBody := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.Expected.Code, actualCode)
+			assert.Equal(t, testCase.Expected.Header, actualHeader)
+			assert.Equal(t, testCase.Expected.Body, actualBody)
+		})
+	}
+}
+
+func TestResources_GetEdgeRelayTargets_CannotGetNodes(t *testing.T) {
+	t.Parallel()
+
+	type httpValues struct {
+		Code   int
+		Header http.Header
+		Body   string
+	}
+
+	cases := []struct {
+		Name     string
+		Request  http.Request
+		Expected httpValues
+	}{
+		{
+			Name: "Error Trying to get Nodes",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusInternalServerError,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				Body:   `{"errors":[{"context":"","message":"Error getting composition for edge: Something went wrong"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+			},
+		},
+	}
+
+	setupInternalState := func(ctx context.Context) v2.Resources {
+		t.Helper()
+
+		ctrl := gomock.NewController(t)
+		mockGraph := graphmocks.NewMockDatabase(ctrl)
+		mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
+		mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(errors.New("Something went wrong"))
+
+		res := v2.Resources{
+			Graph: mockGraph,
+		}
+
+		return res
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			resources := setupInternalState(testCase.Request.Context())
+
+			response := httptest.NewRecorder()
+
+			resources.GetEdgeRelayTargets(response, &testCase.Request)
+			mux.NewRouter().ServeHTTP(response, &testCase.Request)
+
+			actualCode, actualHeader, actualBody := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.Expected.Code, actualCode)
+			assert.Equal(t, testCase.Expected.Header, actualHeader)
+			assert.Equal(t, testCase.Expected.Body, actualBody)
+		})
+	}
+}
+
+func TestResources_GetEdgeRelayTargets_PositiveTest(t *testing.T) {
+	t.Parallel()
+
+	type httpValues struct {
+		Code   int
+		Header http.Header
+		Body   string
+	}
+
+	cases := []struct {
+		Name     string
+		Request  http.Request
+		Expected httpValues
+	}{
+		{
+			Name: "Error Trying to get Nodes",
+			Request: http.Request{
+				URL: &url.URL{
+					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
+				},
+			},
+			Expected: httpValues{
+				Code:   http.StatusOK,
+				Header: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?edge_type=AZBase&source_node=1&target_node=2"}},
+				Body:   `{"data":{"nodes":{},"edges":[]}}`,
+			},
+		},
+	}
+
+	setupInternalState := func(ctx context.Context) v2.Resources {
+		t.Helper()
+
+		ctrl := gomock.NewController(t)
+		mockGraph := graphmocks.NewMockDatabase(ctrl)
+		mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
+		mockGraph.EXPECT().ReadTransaction(ctx, gomock.Any()).Return(nil)
+
+		res := v2.Resources{
+			Graph: mockGraph,
+		}
+
+		return res
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			resources := setupInternalState(testCase.Request.Context())
+
+			response := httptest.NewRecorder()
+
+			resources.GetEdgeRelayTargets(response, &testCase.Request)
+			mux.NewRouter().ServeHTTP(response, &testCase.Request)
+
+			actualCode, actualHeader, actualBody := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.Expected.Code, actualCode)
+			assert.Equal(t, testCase.Expected.Header, actualHeader)
+			assert.Equal(t, testCase.Expected.Body, actualBody)
 		})
 	}
 }
