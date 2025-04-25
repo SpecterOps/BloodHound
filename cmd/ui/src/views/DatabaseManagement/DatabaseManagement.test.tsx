@@ -26,7 +26,7 @@ describe('DatabaseManagement', () => {
         rest.get('/api/v2/self', (req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: createAuthStateWithPermissions([Permission.DB_WIPE]).user,
+                    data: createAuthStateWithPermissions([Permission.WIPE_DB]).user,
                 })
             );
         }),

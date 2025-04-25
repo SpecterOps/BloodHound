@@ -211,7 +211,7 @@ const useDatabaseManagement = () => {
 const DatabaseManagement: FC = () => {
     const { handleMutation, state, dispatch } = useDatabaseManagement();
     const { checkPermission } = usePermissions();
-    const hasPermission = checkPermission(Permission.DB_WIPE);
+    const hasPermission = checkPermission(Permission.WIPE_DB);
 
     const { addNotification, dismissNotification } = useNotifications();
     const notificationKey = 'database-management-permission';
