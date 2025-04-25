@@ -282,3 +282,5 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (n:NodeKind1) match (m:NodeKind2) where m.distinguishedname = '1' + '2' return m
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where n0.kind_ids operator (pg_catalog.&&) array [1]::int2[]), s1 as (select s0.n0 as n0, (n1.id, n1.kind_ids, n1.properties)::nodecomposite as n1 from s0, node n1 where (n1.properties ->> 'distinguishedname' = '1' || '2') and n1.kind_ids operator (pg_catalog.&&) array [2]::int2[]) select s1.n1 as m from s1;
 
+-- case: match (n) where not n.property is not null return n
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (not n0.properties ? 'property')) select s0.n0 as n from s0;
