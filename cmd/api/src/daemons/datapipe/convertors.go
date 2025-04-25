@@ -17,7 +17,6 @@
 package datapipe
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -27,12 +26,10 @@ import (
 
 func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 	ingestibleNode := ein.IngestibleNode{
-		ObjectID:    entity.ID,
+		ObjectID:    strings.ToUpper(entity.ID), // bloodhound convention to uppercase objectid property
 		PropertyMap: entity.Properties,
 		Labels:      graph.StringsToKinds(entity.Kinds),
 	}
-
-	fmt.Printf("convertGenericNode: %+v\n", ingestibleNode)
 
 	converted.NodeProps = append(converted.NodeProps, ingestibleNode)
 }
@@ -40,12 +37,12 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) {
 func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
-			Value:   entity.Start.Value,
+			Value:   strings.ToUpper(entity.Start.Value),
 			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
 			Kind:    graph.StringKind(entity.Start.Kind),
 		},
 		ein.IngestibleEndpoint{
-			Value:   entity.End.Value,
+			Value:   strings.ToUpper(entity.End.Value),
 			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
 			Kind:    graph.StringKind(entity.End.Kind),
 		},
@@ -54,8 +51,6 @@ func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) {
 			RelType:  graph.StringKind(entity.Kind),
 		},
 	)
-
-	fmt.Printf("convertGenericEdge: %+v\n ", ingestibleRel)
 
 	converted.RelProps = append(converted.RelProps, ingestibleRel)
 }
