@@ -503,16 +503,16 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 		queryParams = request.URL.Query()
 	)
 
-	if sort, err := api.ParseGraphSortParameters(AssetGroupMemberResponse{}, queryParams); err != nil {
+	if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMemberResponse{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 10); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
-		api.HandleDatabaseError(request, response, err)
 	} else {
 		if len(sort) == 0 {
 			sort = query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}
@@ -524,8 +524,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				member := nodeToAssetGroupMember(node, false)
-				members = append(members, member)
+				members = append(members, nodeToAssetGroupMember(node, false))
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMemberResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}

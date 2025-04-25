@@ -33,7 +33,7 @@ func Test_ParseGraphSortParameters_InvalidSortColumn(t *testing.T) {
 	params.Add("sort_by", "invalidColumn")
 
 	_, err := api.ParseGraphSortParameters(domains, params)
-	require.ErrorContains(t, err, api.ErrResponseDetailsCriteriaNotSortable.Error())
+	require.ErrorIs(t, err, api.ErrResponseDetailsCriteriaNotSortable)
 }
 
 func Test_ParseGraphSortParameters_Success(t *testing.T) {
@@ -59,7 +59,7 @@ func Test_ParseSortParameters(t *testing.T) {
 		params.Add("sort_by", "invalidColumn")
 
 		_, err := api.ParseSortParameters(domains, params)
-		require.ErrorContains(t, err, api.ErrResponseDetailsColumnNotSortable.Error())
+		require.ErrorIs(t, err, api.ErrResponseDetailsColumnNotSortable)
 	})
 
 	t.Run("successful sort ascending", func(t *testing.T) {

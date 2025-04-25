@@ -341,7 +341,7 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
-  
+
   # graph
   /api/v2/graphs/kinds:
     $ref: './paths/graph.kinds.yaml'

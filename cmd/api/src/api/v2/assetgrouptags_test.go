@@ -1411,6 +1411,26 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 				},
 			},
 			{
+				Name: "Fail with non-sortable column",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, "sort_by", "invalidColumn")
+				},
+				Setup: func() {
+					params := url.Values{}
+					params.Add("sort_by", "invalidColumn")
+					_, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					require.ErrorIs(t, err, api.ErrResponseDetailsCriteriaNotSortable)
+
+					mockDB.EXPECT().
+						GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+				},
+			},
+			{
 				Name: "Success with sort by id",
 				Input: func(input *apitest.Input) {
 					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
