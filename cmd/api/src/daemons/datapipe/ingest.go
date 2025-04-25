@@ -47,6 +47,17 @@ type ReadOptions struct {
 	ADCSEnabled  bool
 }
 
+// ReadFileForIngest orchestrates the ingestion of a file into the graph database,
+// performing any necessary metadata validation and schema enforcement before
+// delegating to the core ingest logic.
+//
+// If the file type is ZIP, additional validation is performed using JSON Schema,
+// and the full stream is consumed to enable downstream readers to function correctly.
+// Zip files are validated here and not at file upload time because it would be expensive to
+// decompress the entire zip into memory.
+// Files that fail this validation step will not be processed further.
+//
+// Returns an error if metadata validation or ingestion fails.
 func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, options ReadOptions) error {
 
 	var (

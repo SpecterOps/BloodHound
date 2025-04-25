@@ -20,6 +20,8 @@
 package datapipe_test
 
 import (
+	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,11 +30,13 @@ import (
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
 
-// verify that ndoes and edges are created or updated based on existing graph state
+// verify that nodes and edges are created or updated based on existing graph state
 func Test_IngestRelationships(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 
@@ -326,5 +330,91 @@ func Test_IngestRelationships(t *testing.T) {
 				require.Nil(t, err)
 
 			})
+	})
+}
+
+// verifies that files that bypassed validation controls due to being uploaded as zips receive validation attention in the datapipe,
+// and that invalid files are not ingested into the graph
+func Test_ReadFileForIngest(t *testing.T) {
+
+	var (
+		testContext     = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		ingestSchema, _ = ingest.LoadIngestSchema()
+		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world"}}]}}`))
+		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
+		// ReadFileForIngest() should kick out, ingesting no graph data
+		invalidReader = bytes.NewReader([]byte(`{"graph":{"nodes": [{"id":1234}]}}`))
+		readOptions   = datapipe.ReadOptions{
+			IngestSchema: ingestSchema,
+			FileType:     model.FileTypeZip,
+			ADCSEnabled:  false,
+		}
+	)
+
+	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				err := datapipe.ReadFileForIngest(batch, validReader, readOptions)
+				require.Nil(t, err)
+				return nil
+			})
+
+			err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+				err = tx.Nodes().
+					Filter(query.Equals(query.Property(query.Node(), "objectid"), "1234")).
+					Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+						numNodes := 0
+						for node := range cursor.Chan() {
+							// assert kinds were added correctly
+							require.Contains(t, node.Kinds, graph.StringKind("kindA"))
+							require.Contains(t, node.Kinds, graph.StringKind("kindB"))
+
+							// assert properties were saved correctly
+							booleanProperty, _ := node.Properties.Get("true").Bool()
+							require.Equal(t, true, booleanProperty)
+							stringProperty, _ := node.Properties.Get("hello").String()
+							require.Equal(t, "world", stringProperty)
+
+							numNodes++
+						}
+
+						// assert 1 node was ingested
+						require.Equal(t, 1, numNodes)
+						return nil
+					})
+
+				require.Nil(t, err)
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
+	})
+
+	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				err := datapipe.ReadFileForIngest(batch, invalidReader, readOptions)
+				require.NotNil(t, err)
+				var report ingest.ValidationReport
+				if errors.As(err, &report) {
+					// verify nodes[0] caused a validation error
+					require.Len(t, report.ValidationErrors, 1)
+				}
+				return nil
+			})
+
+			require.Nil(t, err)
+
+			// verify 0 nodes are creted
+			err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+				numNodes, err := tx.Nodes().Count()
+				require.Nil(t, err)
+				require.Equal(t, int64(0), numNodes)
+				return nil
+			})
+
+			require.Nil(t, err)
+		})
 	})
 }
