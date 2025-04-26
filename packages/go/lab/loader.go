@@ -101,9 +101,6 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				return fmt.Errorf("could not find end node %s", edge.ToID)
 			} else if props, err := processProperties(edge.Properties); err != nil {
 				return fmt.Errorf("failed to process edge properties: %w", err)
-			} else if testEdge, err := props.Get("testedge").Bool(); err == nil && testEdge {
-				// It's a test edge for a harness test - skip creating it
-				continue
 			} else if _, err := tx.CreateRelationshipByIDs(startId, endId, graph.StringKind(edge.Type), props); err != nil {
 				return fmt.Errorf("could not create relationship `%s` from `%s` to `%s`: %w", edge.Type, edge.FromID, edge.ToID, err)
 			}

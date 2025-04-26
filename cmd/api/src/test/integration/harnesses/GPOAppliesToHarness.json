@@ -64,7 +64,7 @@
         "Domain"
       ],
       "properties": {
-        "collected": "True"
+        "collected": "BOOL:True"
       },
       "style": {
         "node-color": "#68ccca"
@@ -73,8 +73,8 @@
     {
       "id": "n1",
       "position": {
-        "x": 552.6850509436979,
-        "y": 50
+        "x": 337.99373237562975,
+        "y": 82.26871070000115
       },
       "caption": "Container1",
       "labels": [
@@ -136,15 +136,15 @@
     {
       "id": "n5",
       "position": {
-        "x": 767.3763665589709,
-        "y": 849.5126610271654
+        "x": 619.1249023799082,
+        "y": 1160.5956511007585
       },
       "caption": "OU3",
       "labels": [
         "OU"
       ],
       "properties": {
-        "blocksinheritance": "False"
+        "blocksinheritance": "BOOL:False"
       },
       "style": {
         "node-color": "#fe9200"
@@ -185,7 +185,7 @@
       "id": "n8",
       "position": {
         "x": 1182.6051899812205,
-        "y": 1160.5956511007582
+        "y": 1160.5956511007585
       },
       "caption": "User3",
       "labels": [
@@ -200,15 +200,15 @@
     {
       "id": "n9",
       "position": {
-        "x": 552.6850509436979,
-        "y": 613.4332223429191
+        "x": 484.8548275767592,
+        "y": 786.5142435917523
       },
       "caption": "OU2",
       "labels": [
         "OU"
       ],
       "properties": {
-        "blocksinheritance": "True"
+        "blocksinheritance": "BOOL:True"
       },
       "style": {
         "node-color": "#fe9200"
@@ -218,7 +218,7 @@
       "id": "n10",
       "position": {
         "x": 75,
-        "y": 996.7399759661055
+        "y": 666.6315358066369
       },
       "caption": "GPO2",
       "labels": [
@@ -233,7 +233,7 @@
       "id": "n11",
       "position": {
         "x": 1182.6051899812205,
-        "y": 849.5126610271654
+        "y": 1015.0836118033953
       },
       "caption": "Group3",
       "labels": [
@@ -256,7 +256,7 @@
         "OU"
       ],
       "properties": {
-        "blocksinheritance": "False"
+        "blocksinheritance": "BOOL:False"
       },
       "style": {
         "node-color": "#fe9200"
@@ -265,8 +265,8 @@
     {
       "id": "n13",
       "position": {
-        "x": 75,
-        "y": 1233.3516707494398
+        "x": 225.23721233218959,
+        "y": 1306.1076903981211
       },
       "caption": "GPO3",
       "labels": [
@@ -281,7 +281,7 @@
       "id": "n14",
       "position": {
         "x": 1182.6051899812205,
-        "y": 540.9552343526805
+        "y": 606.9183308181911
       },
       "caption": "Computer2",
       "labels": [
@@ -297,7 +297,7 @@
       "id": "n15",
       "position": {
         "x": 1182.6051899812205,
-        "y": 418.2164257645104
+        "y": 734.2508315777867
       },
       "caption": "User2",
       "labels": [
@@ -313,7 +313,7 @@
       "id": "n16",
       "position": {
         "x": 1182.6051899812205,
-        "y": 663.6940429408505
+        "y": 479.58583005859543
       },
       "caption": "Group2",
       "labels": [
@@ -373,7 +373,7 @@
       "toId": "n0",
       "type": "GPLink",
       "properties": {
-        "enforced": "False"
+        "enforced": "BOOL:False"
       },
       "style": {}
     },
@@ -382,9 +382,7 @@
       "fromId": "n7",
       "toId": "n2",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -394,9 +392,7 @@
       "fromId": "n7",
       "toId": "n4",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -447,7 +443,7 @@
       "toId": "n12",
       "type": "GPLink",
       "properties": {
-        "enforced": "True"
+        "enforced": "BOOL:True"
       },
       "style": {}
     },
@@ -456,9 +452,7 @@
       "fromId": "n10",
       "toId": "n6",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -468,9 +462,7 @@
       "fromId": "n10",
       "toId": "n8",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -480,9 +472,7 @@
       "fromId": "n13",
       "toId": "n6",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -492,9 +482,7 @@
       "fromId": "n13",
       "toId": "n8",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -505,7 +493,7 @@
       "toId": "n9",
       "type": "GPLink",
       "properties": {
-        "enforced": "False"
+        "enforced": "BOOL:False"
       },
       "style": {}
     },
@@ -538,9 +526,7 @@
       "fromId": "n7",
       "toId": "n15",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }
@@ -550,9 +536,27 @@
       "fromId": "n7",
       "toId": "n14",
       "type": "GPOAppliesTo",
-      "properties": {
-        "testedge": "True"
-      },
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n24",
+      "fromId": "n10",
+      "toId": "n14",
+      "type": "GPOAppliesTo",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n25",
+      "fromId": "n10",
+      "toId": "n15",
+      "type": "GPOAppliesTo",
+      "properties": {},
       "style": {
         "arrow-color": "#7b64ff"
       }

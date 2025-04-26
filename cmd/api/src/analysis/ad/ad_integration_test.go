@@ -1568,12 +1568,24 @@ func TestGPOAppliesTo(t *testing.T) {
 	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/GPOAppliesToHarness.json")
 	require.NoError(t, err)
 
+	// Split edges into test edges and the other edges
+	testEdges := []lab.Edge{}
+	otherEdges := []lab.Edge{}
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.GPOAppliesTo.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
 	err = lab.WriteGraphFixture(graphDB, &fixture)
 	require.NoError(t, err)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		if _, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB); err != nil {
-			t.Fatalf("error creating GPO edges in integration test; %v", err)
+			t.Fatalf("error creating GPOAppliesTo edges in integration test; %v", err)
 		} else {
 			if err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
@@ -1581,105 +1593,29 @@ func TestGPOAppliesTo(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching GPOAppliesTo edges in integration test; %v", err)
 				} else {
-					require.Equal(t, 10, len(results))
+					require.Equal(t, len(testEdges), len(results))
 				}
 
-				// Get nodes
-				if gPO1, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "GPO1")
-				})); err != nil {
-					t.Fatalf("error fetching GPO1 in integration test; %v", err)
-				} else if gPO2, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "GPO2")
-				})); err != nil {
-					t.Fatalf("error fetching GPO2 in integration test; %v", err)
-				} else if gPO3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "GPO3")
-				})); err != nil {
-					t.Fatalf("error fetching GPO3 in integration test; %v", err)
-				} else if user1, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User1")
-				})); err != nil {
-					t.Fatalf("error fetching User1 in integration test; %v", err)
-				} else if user2, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User2")
-				})); err != nil {
-					t.Fatalf("error fetching User2 in integration test; %v", err)
-				} else if user3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User3")
-				})); err != nil {
-					t.Fatalf("error fetching User3 in integration test; %v", err)
-				} else if computer1, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer1")
-				})); err != nil {
-					t.Fatalf("error fetching Computer1 in integration test; %v", err)
-				} else if computer2, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer2")
-				})); err != nil {
-					t.Fatalf("error fetching Computer2 in integration test; %v", err)
-				} else if computer3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer3")
-				})); err != nil {
-					t.Fatalf("error fetching Computer3 in integration test; %v", err)
-				} else {
-
-					// Verify GPOAppliesTo edges created
-					// GPO1
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO1[0], user1[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (1) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO1[0], user2[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (2) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO1[0], computer1[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (3) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO1[0], computer2[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (4) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// GPO2
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO2[0], user2[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (5) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO2[0], computer2[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (6) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO2[0], user3[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (7) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO2[0], computer3[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (8) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// GPO3
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO3[0], user3[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (9) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, gPO3[0], computer3[0], ad.GPOAppliesTo); err != nil {
-						t.Fatalf("error fetching GPOAppliesTo edge (10) in integration test; %v", err)
+				for _, testEdge := range testEdges {
+					if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
+						t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
+					} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
+						t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
+					} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+					})); err != nil || len(fromGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
+					} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+					})); err != nil || len(toGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
+					} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.GPOAppliesTo); err != nil {
+						t.Fatalf("error fetching GPOAppliesTo edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
 					} else {
 						require.NotNil(t, edge)
 					}
 				}
+
 				return nil
 			}); err != nil {
 				t.Fatalf("error in GPOAppliesTo integration test; %v", err)
@@ -1699,12 +1635,24 @@ func TestCanApplyGPO(t *testing.T) {
 	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/CanApplyGPOHarness.json")
 	require.NoError(t, err)
 
+	// Split edges into test edges and the other edges
+	testEdges := []lab.Edge{}
+	otherEdges := []lab.Edge{}
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.CanApplyGPO.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
 	err = lab.WriteGraphFixture(graphDB, &fixture)
 	require.NoError(t, err)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		if _, err := adAnalysis.PostGPOs(testCtx.Context(), graphDB); err != nil {
-			t.Fatalf("error creating GPO edges in integration test; %v", err)
+			t.Fatalf("error creating CanApplyGPO edges in integration test; %v", err)
 		} else {
 			if err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 				if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
@@ -1712,145 +1660,29 @@ func TestCanApplyGPO(t *testing.T) {
 				})); err != nil {
 					t.Fatalf("error fetching CanApplyGPO edges in integration test; %v", err)
 				} else {
-					require.Equal(t, 16, len(results))
+					require.Equal(t, len(testEdges), len(results))
 				}
 
-				// Get nodes
-				if group3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Group3")
-				})); err != nil {
-					t.Fatalf("error fetching Group3 in integration test; %v", err)
-				} else if group4, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Group4")
-				})); err != nil {
-					t.Fatalf("error fetching Group4 in integration test; %v", err)
-				} else if user1, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User1")
-				})); err != nil {
-					t.Fatalf("error fetching User1 in integration test; %v", err)
-				} else if user2, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User2")
-				})); err != nil {
-					t.Fatalf("error fetching User2 in integration test; %v", err)
-				} else if user3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User3")
-				})); err != nil {
-					t.Fatalf("error fetching User3 in integration test; %v", err)
-				} else if user4, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "User4")
-				})); err != nil {
-					t.Fatalf("error fetching User4 in integration test; %v", err)
-				} else if computer1, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer1")
-				})); err != nil {
-					t.Fatalf("error fetching Computer1 in integration test; %v", err)
-				} else if computer2, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer2")
-				})); err != nil {
-					t.Fatalf("error fetching Computer2 in integration test; %v", err)
-				} else if computer3, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer3")
-				})); err != nil {
-					t.Fatalf("error fetching Computer3 in integration test; %v", err)
-				} else if computer4, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
-					return query.Equals(query.NodeProperty(common.Name.String()), "Computer4")
-				})); err != nil {
-					t.Fatalf("error fetching Computer4 in integration test; %v", err)
-				} else {
-
-					// Verify CanApplyGPO edges created
-					// User3
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user3[0], user1[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (1) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user3[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (2) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user3[0], computer1[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (3) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user3[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (4) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// User4
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user4[0], user1[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (5) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user4[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (6) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user4[0], computer1[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (7) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, user4[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (8) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// Group3
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, group3[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (9) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, group3[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (10) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// Group4
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, group4[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (11) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, group4[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (12) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// Computer3
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, computer3[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (13) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, computer3[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (14) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-
-					// Computer4
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, computer4[0], user2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (15) in integration test; %v", err)
-					} else {
-						require.NotNil(t, edge)
-					}
-					if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, computer4[0], computer2[0], ad.CanApplyGPO); err != nil {
-						t.Fatalf("error fetching CanApplyGPO edge (16) in integration test; %v", err)
+				for _, testEdge := range testEdges {
+					if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
+						t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
+					} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
+						t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
+					} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+					})); err != nil || len(fromGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
+					} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+						return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+					})); err != nil || len(toGraphNodeId) != 1 {
+						t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
+					} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.CanApplyGPO); err != nil {
+						t.Fatalf("error fetching CanApplyGPO edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
 					} else {
 						require.NotNil(t, edge)
 					}
 				}
+
 				return nil
 			}); err != nil {
 				t.Fatalf("error in CanApplyGPO integration test; %v", err)
@@ -1859,4 +1691,13 @@ func TestCanApplyGPO(t *testing.T) {
 		assert.NoError(t, err)
 		return nil
 	})
+}
+
+func findNodeByID(nodes []lab.Node, id string) (*lab.Node, bool) {
+	for i := range nodes {
+		if nodes[i].ID == id {
+			return &nodes[i], true
+		}
+	}
+	return nil, false
 }
