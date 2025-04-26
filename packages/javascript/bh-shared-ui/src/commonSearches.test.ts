@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CommonSearches, CommonSearchType } from './commonSearches';
+import { CommonSearches } from './commonSearchesAGI';
 import {
     ActiveDirectoryNodeKind,
     ActiveDirectoryRelationshipKind,
     AzureNodeKind,
     AzureRelationshipKind,
 } from './graphSchema';
+import { CommonSearchType } from './types';
 
 describe('common search list', () => {
     const kindPattern = /:([^ )\]*]+)/gm;

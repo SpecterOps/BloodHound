@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { CommonSearches as prebuiltSearchList } from '../../../commonSearches';
+import { CommonSearches as prebuiltSearchList } from '../../../commonSearchesAGI';
 import { render } from '../../../test-utils';
 import { apiClient } from '../../../utils';
 import CommonSearches from './CommonSearches';

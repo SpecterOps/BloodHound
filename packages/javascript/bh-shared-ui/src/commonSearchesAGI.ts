@@ -16,6 +16,7 @@
 
 import { OWNED_OBJECT_TAG, TIER_ZERO_TAG } from './constants';
 import { ActiveDirectoryPathfindingEdges, AzurePathfindingEdges } from './graphSchema';
+import { CommonSearchType } from './types';
 
 const categoryAD = 'Active Directory';
 const categoryAzure = 'Azure';
@@ -25,15 +26,6 @@ const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 
 const highPrivilegedRoleDisplayNameRegex =
     '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator).*$';
-
-export type CommonSearchType = {
-    subheader: string;
-    category: string;
-    queries: {
-        description: string;
-        cypher: string;
-    }[];
-};
 
 export const CommonSearches: CommonSearchType[] = [
     {
