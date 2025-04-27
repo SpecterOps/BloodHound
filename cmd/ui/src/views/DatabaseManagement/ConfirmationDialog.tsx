@@ -69,6 +69,12 @@ const ConfirmationDialog: FC<{ open: boolean; handleClose: () => void; handleDel
                         fontWeight={theme.typography.fontWeightMedium}>
                         This change is irreversible.
                     </Typography>
+                    <Typography
+                        variant='body1'
+                        color={theme.palette.error.main}
+                        fontWeight={theme.typography.fontWeightMedium}>
+                        Phrase: {confirmationText}
+                    </Typography>
                     <Typography variant='body1'>Please input the phrase prior to click confirm.</Typography>
                     <TextField
                         placeholder={confirmationText}
