@@ -54,31 +54,29 @@ func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyName
 	return tx.Nodes().Filter(
 		query.InIDs(query.NodeID(), nodes.IDs()...),
 	).Query(func(results graph.Result) error {
-		var nodeID graph.ID
+		var (
+			nodeID graph.ID
+			mapper = results.Mapper()
+		)
 
 		for results.Next() {
-			if mapper, err := results.Mapper(); err != nil {
-				return err
-			} else {
-				nodeProperties := map[string]any{}
+			var (
+				nodeProperties = map[string]any{}
+				values         = results.Values()
+			)
 
-				// Map the node ID first
-				if err := mapper.MapNext(&nodeID); err != nil {
-					return err
-				}
-
-				// Map requested properties next by matching the name index
-				for idx := 0; idx < len(propertyNames); idx++ {
-					if next, hasNext := mapper.Next(); !hasNext {
-						return fmt.Errorf("property %s not found in node %d result", propertyNames[idx], nodeID)
-					} else {
-						nodeProperties[propertyNames[idx]] = next
-					}
-				}
-
-				// Update the node in the node set
-				nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
+			// Map the node ID first
+			if !mapper.TryMap(values[0], &nodeID) {
+				return fmt.Errorf("expected node ID as first value but received %T", values[0])
 			}
+
+			// Map requested properties next by matching the name index
+			for idx := 0; idx < len(propertyNames); idx++ {
+				nodeProperties[propertyNames[idx]] = values[1+idx]
+			}
+
+			// Update the node in the node set
+			nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
 		}
 
 		return nil
@@ -173,22 +171,18 @@ func FetchNodesByQuery(tx graph.Transaction, query string, limit int) (graph.Nod
 	} else {
 		defer result.Close()
 
-		for result.Next() {
-			if values, err := result.Mapper(); err != nil {
-				return nodes, err
-			} else {
-				var node = &graph.Node{}
+		// Re: (limit <= 0 || nodes.Len() < limit)
+		//
+		// If the limit is set to < 0 the first part of this condition returns true and short-circuits. Otherwise,
+		// the check goes on to see if there are more nodes in the node set than the specified allowed limit
+		for (limit <= 0 || nodes.Len() < limit) && result.Next() {
+			var node graph.Node
 
-				for values.HasNext() {
-					if values.TryMapNext(node) {
-						nodes.Add(node)
-						if limit > 0 && nodes.Len() >= limit {
-							return nodes, nil
-						}
-						node = &graph.Node{}
-					}
-				}
+			if err := result.Scan(&node); err != nil {
+				return nil, err
 			}
+
+			nodes.Add(&node)
 		}
 
 		return nodes, result.Error()
@@ -207,26 +201,23 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 		defer result.Close()
 
 		for result.Next() {
-			if values, err := result.Mapper(); err != nil {
-				return pathSet, err
-			} else {
-				var (
-					relationship = &graph.Relationship{}
-					node         = &graph.Node{}
-					path         = &graph.Path{}
-				)
+			var (
+				relationship = &graph.Relationship{}
+				node         = &graph.Node{}
+				path         = &graph.Path{}
+				mapper       = result.Mapper()
+			)
 
-				for values.HasNext() {
-					if values.TryMapNext(relationship) {
-						currentPath.Edges = append(currentPath.Edges, relationship)
-						relationship = &graph.Relationship{}
-					} else if values.TryMapNext(node) {
-						currentPath.Nodes = append(currentPath.Nodes, node)
-						node = &graph.Node{}
-					} else if values.TryMapNext(path) {
-						pathSet = append(pathSet, *path)
-						path = &graph.Path{}
-					}
+			for _, nextValue := range result.Values() {
+				if mapper.TryMap(nextValue, relationship) {
+					currentPath.Edges = append(currentPath.Edges, relationship)
+					relationship = &graph.Relationship{}
+				} else if mapper.TryMap(nextValue, node) {
+					currentPath.Nodes = append(currentPath.Nodes, node)
+					node = &graph.Node{}
+				} else if mapper.TryMap(nextValue, path) {
+					pathSet = append(pathSet, *path)
+					path = &graph.Path{}
 				}
 			}
 
