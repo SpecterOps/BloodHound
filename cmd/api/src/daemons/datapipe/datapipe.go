@@ -56,7 +56,7 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
 	return &Daemon{
-		ingestService:       ingest.NewIngestService(connections.RDMS, connections.Graph, cfg),
+		ingestService:       ingest.NewIngestService(connections.RDMS, connections.Graph, cfg, ingestSchema),
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,

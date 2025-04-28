@@ -63,10 +63,11 @@ type IngestService struct {
 	db      database.Database
 	graphDB graph.Database
 	cfg     config.Configuration
+	schema  IngestSchema
 }
 
-func NewIngestService(db database.Database, graphDb graph.Database, cfg config.Configuration) IngestService {
-	return IngestService{db: db, graphDB: graphDb, cfg: cfg}
+func NewIngestService(db database.Database, graphDb graph.Database, cfg config.Configuration, schema IngestSchema) IngestService {
+	return IngestService{db: db, graphDB: graphDb, cfg: cfg, schema: schema}
 }
 
 func (s IngestService) ProcessIngestTasks(ctx context.Context) error {
@@ -105,7 +106,7 @@ func (s IngestService) ProcessIngestTasks(ctx context.Context) error {
 					slog.String("err", err.Error()),
 				)
 				errs = append(errs, fmt.Errorf("preprocess ingest file: %v", err))
-			} else if total, failed, err := processIngestFile(ctx, s.graphDB, paths, failed); err != nil {
+			} else if total, failed, err := processIngestFile(ctx, s.graphDB, s.schema, paths, failed); err != nil {
 				ingestTaskLogger.ErrorContext(
 					ctx,
 					"Failed to process ingest file",
@@ -202,14 +203,14 @@ func preProcessIngestFile(ctx context.Context, tmpDir string, ingestTask model.I
 	}
 }
 
-func processIngestFile(ctx context.Context, graphDB graph.Database, paths []string, failed int) (int, int, error) {
+func processIngestFile(ctx context.Context, graphDB graph.Database, schema IngestSchema, paths []string, failed int) (int, int, error) {
 	return len(paths), failed, graphDB.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, filePath := range paths {
 			file, err := os.Open(filePath)
 			if err != nil {
 				failed++
 				return err
-			} else if err := ReadFileForIngest(batch, file); err != nil {
+			} else if err := ReadFileForIngest(batch, file, schema); err != nil {
 				failed++
 				slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 			}
@@ -271,8 +272,8 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata
 	return nil
 }
 
-func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker) error {
-	if meta, err := ValidateMetaTag(reader, false); err != nil {
+func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, schema IngestSchema) error {
+	if meta, err := ValidateMetaTag(reader, schema, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
 		return IngestWrapper(batch, reader, meta)
