@@ -19,8 +19,8 @@ import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
+import { FeatureFlag } from '../../../components';
 import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
-import { useFeatureFlag } from '../../../hooks';
 import { CommonSearchType } from '../../../types';
 
 const AD_TAB = 'Active Directory';
@@ -100,13 +100,12 @@ const InnerCommonSearches = ({
     );
 };
 
-const CommonSearches = (props: CommonSearchesProps) => {
-    const { data: flag } = useFeatureFlag('tier_management_engine');
-    if (flag?.enabled) {
-        return InnerCommonSearches({ ...props, prebuiltSearchList: prebuiltSearchListAGT });
-    } else {
-        return InnerCommonSearches({ ...props, prebuiltSearchList: prebuiltSearchListAGI });
-    }
-};
+const CommonSearches = (props: CommonSearchesProps) => (
+    <FeatureFlag
+        flagKey='tier_management_engine'
+        enabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGT} />}
+        disabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGI} />}
+    />
+);
 
 export default CommonSearches;
