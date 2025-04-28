@@ -22,7 +22,7 @@ import { EntityKinds } from '../../utils';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
-    handleSourceNodeSelected: (sourceNode: SearchValue) => void;
+    handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
     objectid: string;
     displayname?: string;
     isTierZero?: boolean;
@@ -68,30 +68,34 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (prop
             {props.isOwned && <Field label='Owned Object:' value={true} />}
             {props.displayname && <Field label='Display Name:' value={props.displayname} />}
             <Field label='Object ID:' value={props.objectid} />
-            {props.service_principal_id &&
-                RelatedKindField(
-                    props.handleSourceNodeSelected,
-                    'Service Principal ID:',
-                    AzureNodeKind.ServicePrincipal,
-                    props.service_principal_id,
-                    props.name
-                )}
-            {props.noderesourcegroupid &&
-                RelatedKindField(
-                    props.handleSourceNodeSelected,
-                    'Node Resource Group ID:',
-                    AzureNodeKind.ResourceGroup,
-                    props.noderesourcegroupid,
-                    props.name
-                )}
-            {props.grouplinkid &&
-                RelatedKindField(
-                    props.handleSourceNodeSelected,
-                    'Linked Group ID:',
-                    ActiveDirectoryNodeKind.Group,
-                    props.grouplinkid,
-                    props.name
-                )}
+            {props.handleSourceNodeSelected && (
+                <>
+                    {props.service_principal_id &&
+                        RelatedKindField(
+                            props.handleSourceNodeSelected,
+                            'Service Principal ID:',
+                            AzureNodeKind.ServicePrincipal,
+                            props.service_principal_id,
+                            props.name
+                        )}
+                    {props.noderesourcegroupid &&
+                        RelatedKindField(
+                            props.handleSourceNodeSelected,
+                            'Node Resource Group ID:',
+                            AzureNodeKind.ResourceGroup,
+                            props.noderesourcegroupid,
+                            props.name
+                        )}
+                    {props.grouplinkid &&
+                        RelatedKindField(
+                            props.handleSourceNodeSelected,
+                            'Linked Group ID:',
+                            ActiveDirectoryNodeKind.Group,
+                            props.grouplinkid,
+                            props.name
+                        )}
+                </>
+            )}
         </>
     );
 };
