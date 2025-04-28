@@ -535,7 +535,7 @@ func TestResources_GetEdgeRelayTargets_CannotMatchEdge(t *testing.T) {
 
 			assert.Equal(t, testCase.Expected.Code, actualCode)
 			assert.Equal(t, testCase.Expected.Header, actualHeader)
-			assert.Equal(t, testCase.Expected.Body, actualBody)
+			assert.JSONEq(t, testCase.Expected.Body, actualBody)
 		})
 	}
 }
@@ -599,7 +599,7 @@ func TestResources_GetEdgeRelayTargets_CannotGetNodes(t *testing.T) {
 
 			assert.Equal(t, testCase.Expected.Code, actualCode)
 			assert.Equal(t, testCase.Expected.Header, actualHeader)
-			assert.Equal(t, testCase.Expected.Body, actualBody)
+			assert.JSONEq(t, testCase.Expected.Body, actualBody)
 		})
 	}
 }
@@ -663,7 +663,7 @@ func TestResources_GetEdgeRelayTargets_PositiveTest(t *testing.T) {
 
 			assert.Equal(t, testCase.Expected.Code, actualCode)
 			assert.Equal(t, testCase.Expected.Header, actualHeader)
-			assert.Equal(t, testCase.Expected.Body, actualBody)
+			assert.JSONEq(t, testCase.Expected.Body, actualBody)
 		})
 	}
 }
