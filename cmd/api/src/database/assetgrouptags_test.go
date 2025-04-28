@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
@@ -467,6 +468,37 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 
 }
 
+func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
+	var (
+		dbInst          = integration.SetupDB(t)
+		testCtx         = context.Background()
+		testSelectorId  = 1
+		testNodeId      = uint64(1)
+		certified       = 1
+		testCertifiedBy = "testy"
+		certifiedBy     = null.StringFrom(testCertifiedBy)
+		source          = 1
+		testMemberId    = 1
+		isDefault       = false
+		allowDisable    = true
+		autoCertify     = null.BoolFrom(false)
+		test1Selector   = model.AssetGroupTagSelector{
+			Name:            "test selector name",
+			Description:     "test description",
+			AssetGroupTagId: 1,
+			Seeds: []model.SelectorSeed{
+				{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
+			},
+		}
+	)
+	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
+	require.NoError(t, err)
+	err = dbInst.InsertSelectorNode(testCtx, testSelectorId, graph.ID(testNodeId), model.AssetGroupCertification(certified), certifiedBy, model.AssetGroupSelectorNodeSource(source))
+	require.NoError(t, err)
+	selectors, err := dbInst.GetSelectorsByMemberId(testCtx, testMemberId, test1Selector.AssetGroupTagId)
+	require.NoError(t, err)
+	require.Equal(t, testSelectorId, selectors[0].AssetGroupTagId)
+}
 func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)

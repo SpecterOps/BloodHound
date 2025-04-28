@@ -4612,6 +4612,106 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag of a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_member_id",
+          "description": "ID of member to list selectors",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorsByMemberId",
+        "summary": "Get asset group tag selectors of a specific object by member id",
+        "description": "Get a list of selectors for an object by member id.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "member": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "source": {
+                              "type": "integer"
+                            },
+                            "selectors": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-group-tags": {
       "parameters": [
         {
@@ -4832,6 +4932,117 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ListAssetGroupTagMembersById",
+        "summary": "List asset group tag members by ID",
+        "description": "List members of an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "members": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "object_id": {
+                                    "type": "string"
+                                  },
+                                  "primary_kind": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -16428,76 +16639,6 @@
           }
         }
       },
-      "api.params.predicate.filter.integer-strict": {
-        "type": "integer",
-        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.string-strict": {
-        "type": "string",
-        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "api.params.predicate.filter.boolean": {
-        "type": "boolean",
-        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
-      },
-      "null.boolean": {
-        "type": "object",
-        "properties": {
-          "bool": {
-            "type": "boolean"
-          },
-          "valid": {
-            "description": "Valid is true if `boolean` is not `null`",
-            "type": "boolean"
-          }
-        }
-      },
-      "model.asset-group-tag": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "type": {
-            "type": "integer"
-          },
-          "kind_id": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_by": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_by": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "$ref": "#/components/schemas/null.time"
-          },
-          "deleted_by": {
-            "$ref": "#/components/schemas/null.string"
-          },
-          "position": {
-            "$ref": "#/components/schemas/null.int32"
-          },
-          "require_certify": {
-            "$ref": "#/components/schemas/null.boolean"
-          }
-        }
-      },
       "model.asset-group-tags-selector-seed-request": {
         "type": "object",
         "properties": {
@@ -16593,6 +16734,76 @@
             }
           }
         ]
+      },
+      "api.params.predicate.filter.integer-strict": {
+        "type": "integer",
+        "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.string-strict": {
+        "type": "string",
+        "description": "Filter results by column string value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.boolean": {
+        "type": "boolean",
+        "description": "Filter results by column boolean value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "null.boolean": {
+        "type": "object",
+        "properties": {
+          "bool": {
+            "type": "boolean"
+          },
+          "valid": {
+            "description": "Valid is true if `boolean` is not `null`",
+            "type": "boolean"
+          }
+        }
+      },
+      "model.asset-group-tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "kind_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "$ref": "#/components/schemas/null.time"
+          },
+          "deleted_by": {
+            "$ref": "#/components/schemas/null.string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/null.int32"
+          },
+          "require_certify": {
+            "$ref": "#/components/schemas/null.boolean"
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",

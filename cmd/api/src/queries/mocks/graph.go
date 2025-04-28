@@ -30,6 +30,7 @@ import (
 	reflect "reflect"
 
 	graph "github.com/specterops/bloodhound/dawgs/graph"
+	query "github.com/specterops/bloodhound/dawgs/query"
 	model "github.com/specterops/bloodhound/src/model"
 	queries "github.com/specterops/bloodhound/src/queries"
 	agi "github.com/specterops/bloodhound/src/services/agi"
@@ -92,6 +93,21 @@ func (mr *MockGraphMockRecorder) CountNodesByKind(ctx any, kinds ...any) *gomock
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, kinds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountNodesByKind", reflect.TypeOf((*MockGraph)(nil).CountNodesByKind), varargs...)
+}
+
+// FetchNodeByGraphId mocks base method.
+func (m *MockGraph) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FetchNodeByGraphId", ctx, id)
+	ret0, _ := ret[0].(*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchNodeByGraphId indicates an expected call of FetchNodeByGraphId.
+func (mr *MockGraphMockRecorder) FetchNodeByGraphId(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNodeByGraphId", reflect.TypeOf((*MockGraph)(nil).FetchNodeByGraphId), ctx, id)
 }
 
 // FetchNodesByObjectIDs mocks base method.
@@ -230,18 +246,33 @@ func (mr *MockGraphMockRecorder) GetEntityCountResults(ctx, node, delegates any)
 }
 
 // GetFilteredAndSortedNodes mocks base method.
-func (m *MockGraph) GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error) {
+func (m *MockGraph) GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFilteredAndSortedNodes", orderCriteria, filterCriteria)
-	ret0, _ := ret[0].(graph.NodeSet)
+	ret := m.ctrl.Call(m, "GetFilteredAndSortedNodes", sortItems, filterCriteria)
+	ret0, _ := ret[0].([]*graph.Node)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFilteredAndSortedNodes indicates an expected call of GetFilteredAndSortedNodes.
-func (mr *MockGraphMockRecorder) GetFilteredAndSortedNodes(orderCriteria, filterCriteria any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetFilteredAndSortedNodes(sortItems, filterCriteria any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilteredAndSortedNodes", reflect.TypeOf((*MockGraph)(nil).GetFilteredAndSortedNodes), orderCriteria, filterCriteria)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilteredAndSortedNodes", reflect.TypeOf((*MockGraph)(nil).GetFilteredAndSortedNodes), sortItems, filterCriteria)
+}
+
+// GetFilteredAndSortedNodesPaginated mocks base method.
+func (m *MockGraph) GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFilteredAndSortedNodesPaginated", sortItems, filterCriteria, offset, limit)
+	ret0, _ := ret[0].([]*graph.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFilteredAndSortedNodesPaginated indicates an expected call of GetFilteredAndSortedNodesPaginated.
+func (mr *MockGraphMockRecorder) GetFilteredAndSortedNodesPaginated(sortItems, filterCriteria, offset, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFilteredAndSortedNodesPaginated", reflect.TypeOf((*MockGraph)(nil).GetFilteredAndSortedNodesPaginated), sortItems, filterCriteria, offset, limit)
 }
 
 // GetNodesByKind mocks base method.
