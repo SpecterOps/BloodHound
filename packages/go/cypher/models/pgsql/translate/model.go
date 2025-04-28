@@ -562,16 +562,16 @@ func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.
 
 	switch typedExpression := expression.(type) {
 	case *cypher.NodePattern:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.RelationshipPattern:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.PatternPart:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.ProjectionItem:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Alias
 
 	case *cypher.Variable:
 		variableExpression = typedExpression

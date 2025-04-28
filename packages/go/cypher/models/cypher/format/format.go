@@ -60,8 +60,8 @@ func (s Emitter) formatNodePattern(output io.Writer, nodePattern *cypher.NodePat
 		return err
 	}
 
-	if nodePattern.Binding != nil {
-		if err := s.WriteExpression(output, nodePattern.Binding); err != nil {
+	if nodePattern.Variable != nil {
+		if err := s.WriteExpression(output, nodePattern.Variable); err != nil {
 			return err
 		}
 	}
@@ -109,8 +109,8 @@ func (s Emitter) formatRelationshipPattern(output io.Writer, relationshipPattern
 		}
 	}
 
-	if relationshipPattern.Binding != nil {
-		if err := s.WriteExpression(output, relationshipPattern.Binding); err != nil {
+	if relationshipPattern.Variable != nil {
+		if err := s.WriteExpression(output, relationshipPattern.Variable); err != nil {
 			return err
 		}
 	}
@@ -205,8 +205,8 @@ func (s Emitter) formatPatternElements(output io.Writer, patternElements []*cyph
 }
 
 func (s Emitter) formatPatternPart(output io.Writer, patternPart *cypher.PatternPart) error {
-	if patternPart.Binding != nil {
-		if err := s.WriteExpression(output, patternPart.Binding); err != nil {
+	if patternPart.Variable != nil {
+		if err := s.WriteExpression(output, patternPart.Variable); err != nil {
 			return err
 		}
 
@@ -496,12 +496,12 @@ func (s Emitter) WriteExpression(writer io.Writer, expression cypher.Expression)
 			return err
 		}
 
-		if typedExpression.Binding != nil {
+		if typedExpression.Alias != nil {
 			if _, err := io.WriteString(writer, " as "); err != nil {
 				return err
 			}
 
-			if err := s.WriteExpression(writer, typedExpression.Binding); err != nil {
+			if err := s.WriteExpression(writer, typedExpression.Alias); err != nil {
 				return err
 			}
 		}
@@ -676,7 +676,7 @@ func (s Emitter) WriteExpression(writer io.Writer, expression cypher.Expression)
 			return err
 		}
 
-		if _, err := io.WriteString(writer, strings.Join(typedExpression.Symbols, ".")); err != nil {
+		if _, err := io.WriteString(writer, typedExpression.Symbol); err != nil {
 			return err
 		}
 
@@ -1059,7 +1059,7 @@ func (s Emitter) formatReadingClause(output io.Writer, readingClause *cypher.Rea
 			return err
 		}
 
-		if err := s.WriteExpression(output, readingClause.Unwind.Binding); err != nil {
+		if err := s.WriteExpression(output, readingClause.Unwind.Variable); err != nil {
 			return err
 		}
 	} else {

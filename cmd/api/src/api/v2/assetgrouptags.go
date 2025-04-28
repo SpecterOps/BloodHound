@@ -139,7 +139,7 @@ func validateSelectorSeeds(graph queries.Graph, seeds []model.SelectorSeed) erro
 			return fmt.Errorf("all seeds must be of the same type")
 		}
 		if seed.Type == model.SelectorTypeCypher {
-			if _, err := graph.PrepareCypherQuery(seed.Value, queries.QueryComplexityLimitSelector); err != nil {
+			if _, err := graph.PrepareCypherQuery(seed.Value, queries.DefaultQueryFitnessLowerBoundSelector); err != nil {
 				return fmt.Errorf("cypher is invalid: %v", err)
 			}
 		}

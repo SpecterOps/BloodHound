@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 package analyzer_test
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/cypher/analyzer"
@@ -25,27 +28,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryComplexity(t *testing.T) {
+func TestQueryFitness(t *testing.T) {
+	if updateCases, varSet := os.LookupEnv("CYSQL_UPDATE_CASES"); varSet && strings.ToLower(strings.TrimSpace(updateCases)) == "true" {
+		if err := test.UpdatePositiveTestCasesFitness(); err != nil {
+			fmt.Printf("Error updating cases: %v\n", err)
+		}
+	}
+
 	// Walk through all positive test cases to ensure that the walker can handle all supported types
 	for _, caseLoad := range []string{test.PositiveTestCases, test.MutationTestCases} {
 		for _, testCase := range test.LoadFixture(t, caseLoad).RunnableCases() {
 			t.Run(testCase.Name, func(t *testing.T) {
 				// Only bother with the string match tests
 				if testCase.Type == test.TypeStringMatch {
-					var (
-						details              = test.UnmarshallTestCaseDetails[test.StringMatchTest](t, testCase)
-						parseContext         = frontend.NewContext()
-						queryModel, parseErr = frontend.ParseCypher(parseContext, details.Query)
-					)
+					parseContext := frontend.NewContext()
 
-					if parseErr != nil {
-						t.Fatalf("Parser errors: %s", parseErr.Error())
-					}
-
-					if details.Complexity != nil {
+					if details, err := test.UnmarshallTestCaseDetails[test.StringMatchTest](testCase); err != nil {
+						t.Fatalf("Error unmarshalling test case details: %v", err)
+					} else if queryModel, err := frontend.ParseCypher(parseContext, details.Query); err != nil {
+						t.Fatalf("Parser errors: %s", err.Error())
+					} else if details.ExpectedFitness != nil {
 						complexity, analyzerErr := analyzer.QueryComplexity(queryModel)
-						require.Nil(t, analyzerErr)
-						require.Equal(t, *details.Complexity, complexity.Weight)
+
+						if analyzerErr != nil {
+							require.Nilf(t, analyzerErr, "Unexpected error: %s", analyzerErr.Error())
+						}
+
+						require.Equal(t, *details.ExpectedFitness, complexity.RelativeFitness)
 					}
 				}
 			})
