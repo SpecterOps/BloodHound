@@ -35,16 +35,16 @@ func NewResult(query string, err error, driverResult neo4j.Result) graph.Result 
 	}
 }
 
-func (s *internalResult) Mapper() (graph.ValueMapper, error) {
-	return NewValueMapper(s.driverResult.Record().Values), nil
+func (s *internalResult) Mapper() graph.ValueMapper {
+	return NewValueMapper()
+}
+
+func (s *internalResult) Values() []any {
+	return s.driverResult.Record().Values
 }
 
 func (s *internalResult) Scan(targets ...any) error {
-	if values, err := s.Mapper(); err != nil {
-		return err
-	} else {
-		return values.Scan(targets...)
-	}
+	return graph.ScanNextResult(s, targets...)
 }
 
 func (s *internalResult) Next() bool {

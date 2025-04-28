@@ -27,11 +27,11 @@ import (
 
 func mapTestCase[T, V any](t *testing.T, source T, expected V) {
 	var (
-		mapper = graph.NewValueMapper([]any{source}, mapValue)
 		value  V
+		mapper = NewValueMapper()
 	)
 
-	require.Nil(t, mapper.MapNext(&value))
+	require.True(t, mapper.TryMap(source, &value))
 	require.Equalf(t, expected, value, "Mapping case for type %T to %T failed. Value is: %v", source, &value, value)
 }
 
