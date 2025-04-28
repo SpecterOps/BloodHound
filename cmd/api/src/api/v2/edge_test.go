@@ -619,7 +619,7 @@ func TestResources_GetEdgeRelayTargets_PositiveTest(t *testing.T) {
 		Expected httpValues
 	}{
 		{
-			Name: "Error Trying to get Nodes",
+			Name: "Successful Request",
 			Request: http.Request{
 				URL: &url.URL{
 					RawQuery: "edge_type=AZBase&source_node=1&target_node=2",
