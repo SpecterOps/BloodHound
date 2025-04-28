@@ -27,15 +27,10 @@ type ValueMapper interface {
 	Scan(targets ...any) error
 }
 
-type Scanner interface {
+type Result interface {
 	Next() bool
 	Mapper() (ValueMapper, error)
 	Scan(targets ...any) error
-}
-
-type Result interface {
-	Scanner
-
 	Error() error
 	Close()
 }

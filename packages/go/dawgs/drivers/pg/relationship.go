@@ -110,7 +110,7 @@ func (s *relationshipQuery) Count() (int64, error) {
 
 func (s *relationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cursor[graph.Path]) error) error {
 	return s.QueryAllShortestPaths(func(results graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, results, func(scanner graph.Scanner) (graph.Path, error) {
+		cursor := graph.NewResultIterator(s.ctx, results, func(scanner graph.Result) (graph.Path, error) {
 			var path graph.Path
 			return path, scanner.Scan(&path)
 		})
@@ -124,7 +124,7 @@ func (s *relationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cur
 
 func (s *relationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph.RelationshipTripleResult]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.RelationshipTripleResult, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.RelationshipTripleResult, error) {
 			var (
 				startID        graph.ID
 				relationshipID graph.ID
@@ -150,7 +150,7 @@ func (s *relationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph
 
 func (s *relationshipQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.RelationshipKindsResult]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.RelationshipKindsResult, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.RelationshipKindsResult, error) {
 			var (
 				startID          graph.ID
 				relationshipID   graph.ID
@@ -199,7 +199,7 @@ func (s *relationshipQuery) First() (*graph.Relationship, error) {
 
 func (s *relationshipQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Relationship]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (*graph.Relationship, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (*graph.Relationship, error) {
 			var relationship graph.Relationship
 			return &relationship, scanner.Scan(&relationship)
 		})
@@ -216,7 +216,7 @@ func (s *relationshipQuery) FetchDirection(direction graph.Direction, delegate f
 		return err
 	} else {
 		return s.Query(func(result graph.Result) error {
-			cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.DirectionalResult, error) {
+			cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.DirectionalResult, error) {
 				var (
 					relationship graph.Relationship
 					node         graph.Node
@@ -241,7 +241,7 @@ func (s *relationshipQuery) FetchDirection(direction graph.Direction, delegate f
 
 func (s *relationshipQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.ID, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.ID, error) {
 			var relationshipID graph.ID
 			return relationshipID, scanner.Scan(&relationshipID)
 		})
