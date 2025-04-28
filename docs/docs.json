@@ -320,6 +320,7 @@
                   "resources/edges/gp-link",
                   "resources/edges/has-session",
                   "resources/edges/has-sid-history",
+                  "resources/edges/has-trust-keys",
                   "resources/edges/hosts-ca-service",
                   "resources/edges/issued-signed-by",
                   "resources/edges/local-to-computer",

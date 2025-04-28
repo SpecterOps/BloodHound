@@ -69,6 +69,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ReadGMSAPassword,
                     ActiveDirectoryRelationshipKind.ReadLAPSPassword,
                     ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+                    ActiveDirectoryRelationshipKind.HasTrustKeys,
                 ],
             },
             {

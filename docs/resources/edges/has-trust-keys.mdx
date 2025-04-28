@@ -1,0 +1,65 @@
+---
+title: HasTrustKeys
+---
+
+<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+The relationship's source node is a domain which has the trust keys for the end node trust account. The trust account exist as the domain has an outbound trust to the domain of the trust account. 
+
+The trust keys can be leveraged to authenticate as the trust account and gain access to the trust account's domain.
+
+Abuse Info
+----------
+
+### **Step 1: Obtain Trust Keys**
+
+Trust keys can be dumped with administrative access to a domain controller of the source domain.
+
+On Windows, use Mimikatz to dump the trust keys:
+
+```bash
+lsadump::trust /patch
+```
+
+The trust keys for the target trust account appear under "[ Out ]" for the target domain.
+
+### **Step 2: Authenticate as the Trust Account**
+
+The RC4 version of the trust keys serves as the RC4 Kerberos secret key for the trust account. This can be used directly to request a Kerberos Ticket-Granting Ticket (TGT).
+
+The AES trust keys are not identical to the AES Kerberos secret keys of the trust account due to different salt values. However, you can derive the AES Kerberos secret keys using the cleartext trust key and tools like krbrelayx.py. (See reference: [A Note on Calculating Kerberos Keys for AD Accounts](https://snovvcrash.rocks/2021/05/21/calculating-kerberos-keys.html)).
+
+When authenticating as a trust account, there are two key limitations:
+
+1. Only Kerberos authentication is supported (NTLM authentication is not possible).
+
+2. Only network logins work (interactive logins such as RUNAS, console login, and RDP are not possible).
+
+On Windows, use Rubeus to obtain a TGT:
+
+```bash
+Rubeus.exe asktgt /user:<trust account SAMAccountName> /domain:<target domain DNS name> /rc4:<RC4 trust key> /nowrap /ptt
+```
+
+On Linux, use Impacket’s getTGT.py to obtain a TGT:
+
+```bash
+python getTGT.py <target domain DNS name>/<trust account SAMAccountName> -hashes : <RC4 trust key>
+```
+
+Opsec Considerations
+----------
+
+Authentication via a trust account is unusual and can be detected by Windows security events with the account name of a trust account. Specifically, monitor for:
+
+* Event ID 4768 – A Kerberos authentication ticket (TGT) was requested
+* Event ID 4624 – A successful account login
+
+References
+----------
+* [SID filter as security boundary between domains? (Part 7) - Trust account attack](https://blog.improsec.com/tech-blog/sid-filter-as-security-boundary-between-domains-part-7-trust-account-attack-from-trusting-to-trusted)
+* [Mimikatz GitHub](https://github.com/gentilkiwi/mimikatz)
+* [krbrelayx GitHub](https://github.com/dirkjanm/krbrelayx)
+* [A Note on Calculating Kerberos Keys for AD Accounts](https://snovvcrash.rocks/2021/05/21/calculating-kerberos-keys.html)
+* [Rubeus GitHub](https://github.com/GhostPack/Rubeus)
+* [Impacket getTGT.py](https://github.com/fortra/impacket/blob/master/examples/getTGT.py)
