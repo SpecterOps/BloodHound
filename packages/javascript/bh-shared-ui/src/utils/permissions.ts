@@ -120,5 +120,5 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.WIPE_DB]: {
         authority:'db',
         name: 'Wipe',
-    },    
+    }    
 };
