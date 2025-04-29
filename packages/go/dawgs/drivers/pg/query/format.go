@@ -183,7 +183,6 @@ func (s *NodeUpdateBatch) Add(update graph.NodeUpdate) (*Future[graph.ID], error
 	if key, err := update.Key(); err != nil {
 		return nil, err
 	} else {
-		// TODO: how does this IdentityKind concept carry over to generic-ingested nodes
 		update.Node.AddKinds(update.IdentityKind)
 
 		if len(s.IdentityProperties) == 0 {
