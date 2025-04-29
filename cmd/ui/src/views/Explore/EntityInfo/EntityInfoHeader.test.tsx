@@ -22,7 +22,6 @@ import userEvent from '@testing-library/user-event';
 import { AzureNodeKind, ObjectInfoPanelContext } from 'bh-shared-ui';
 import { createMemoryHistory } from 'history';
 import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 const testProps: HeaderProps = {
     expanded: true,
@@ -66,11 +65,9 @@ const setup = async () => {
 
     const screen = await act(async () => {
         return render(
-            <EntityInfoPanelContextProvider>
-                <ObjectInfoPanelContext.Provider value={mockContextValue}>
-                    <EntityInfoHeader {...testProps} />
-                </ObjectInfoPanelContext.Provider>
-            </EntityInfoPanelContextProvider>,
+            <ObjectInfoPanelContext.Provider value={mockContextValue}>
+                <EntityInfoHeader {...testProps} />
+            </ObjectInfoPanelContext.Provider>,
             { history }
         );
     });

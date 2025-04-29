@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { collapseAllSections, useExploreSelectedItem, useFeatureFlag } from 'bh-shared-ui';
+import { useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
@@ -26,13 +26,9 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
-import { useAppDispatch, useAppSelector } from 'src/store';
 
 const GraphEdgeEventsV2: FC = () => {
-    const graphState = useAppSelector((state) => state.explore);
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
-    const backButtonFlagQuery = useFeatureFlag('back_button_support');
-    const dispatch = useAppDispatch();
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
@@ -40,19 +36,6 @@ const GraphEdgeEventsV2: FC = () => {
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
     const { height, width } = mouseCanvas.style;
-
-    const onClickEdge = useCallback(
-        (id: string) => {
-            if (backButtonFlagQuery.data?.enabled) {
-                setExploreSelectedItem(id);
-            }
-            const exploreGraphId = sigma.getGraph().getEdgeAttribute(id, 'exploreGraphId');
-            const selectedItem = graphState.chartProps.items?.[id] || graphState.chartProps.items?.[exploreGraphId];
-            dispatch(collapseAllSections());
-            if (!selectedItem) return;
-        },
-        [graphState.chartProps.items, sigma, setExploreSelectedItem, backButtonFlagQuery.data?.enabled, dispatch]
-    );
 
     const handleEdgeEvents = useCallback(
         (event: any) => {
@@ -151,7 +134,7 @@ const GraphEdgeEventsV2: FC = () => {
                     //Check if the click happened within the bounds of the label
                     if (viewportX > x1 && viewportX < x2 && viewportY > y1 && viewportY < y2) {
                         if (event.type === 'click') {
-                            onClickEdge(edge);
+                            setExploreSelectedItem(edge);
                         } else {
                             //Hover the edge label
                             if (sigmaContainer) sigmaContainer.style.cursor = 'pointer';
@@ -174,7 +157,7 @@ const GraphEdgeEventsV2: FC = () => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [sigma, mouseCanvas, edgeLabelsCanvas, onClickEdge, sigmaContainer]
+        [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
     return (

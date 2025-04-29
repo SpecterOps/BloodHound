@@ -35,12 +35,8 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setAssetGroupEdit } from 'src/ducks/global/actions';
-import { GlobalOptionsState } from 'src/ducks/global/types';
-import { discardChanges } from 'src/ducks/tierzero/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import usePrompt from 'src/views/Explore/NavigationAlert';
+import { useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
@@ -54,10 +50,6 @@ const GraphViewV2: FC = () => {
     const { data, isLoading, isError } = useAvailableEnvironments();
     const { setSelectedItem } = useExploreSelectedItem();
 
-    const dispatch = useAppDispatch();
-
-    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
-    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
@@ -89,24 +81,6 @@ const GraphViewV2: FC = () => {
 
         setGraphologyGraph(graph);
     }, [graphQuery.data, theme, darkMode, graphQuery.isError]);
-
-    useEffect(() => {
-        if (opts.assetGroupEdit !== null) {
-            dispatch(setAssetGroupEdit(null));
-        }
-    }, [opts.assetGroupEdit, dispatch]);
-
-    //Clear the changelog when leaving the explore page.
-    useEffect(() => {
-        return () => {
-            formIsDirty && dispatch(discardChanges());
-        };
-    }, [dispatch, formIsDirty]);
-
-    usePrompt(
-        'You will lose any unsaved changes if you navigate away from this page without saving. Continue?',
-        formIsDirty
-    );
 
     if (isLoading) {
         return (

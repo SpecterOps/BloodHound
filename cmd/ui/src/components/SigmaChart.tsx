@@ -17,12 +17,10 @@
 import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
-import { FeatureFlag } from 'bh-shared-ui';
 import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphEvents } from 'src/components/GraphEvents';
 import { GraphEventsV2 } from 'src/components/GraphEventsV2';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
@@ -33,7 +31,6 @@ import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
-import GraphEdgeEvents from './GraphEdgeEvents';
 import GraphEdgeEventsV2 from './GraphEdgeEventsV2';
 
 interface SigmaChartProps {
@@ -101,39 +98,18 @@ const SigmaChart = forwardRef(function SigmaChart(
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,
                 }}>
-                <FeatureFlag
-                    flagKey='back_button_support'
-                    enabled={<GraphEdgeEventsV2 />}
-                    disabled={<GraphEdgeEvents />}
-                />
-                <FeatureFlag
-                    flagKey='back_button_support'
-                    enabled={
-                        <GraphEventsV2
-                            onDoubleClickNode={onDoubleClickNode}
-                            onClickNode={onClickNode}
-                            onClickEdge={onClickEdge}
-                            onClickStage={onClickStage}
-                            edgeReducer={edgeReducer}
-                            onRightClickNode={handleContextMenu}
-                            showNodeLabels={showNodeLabels}
-                            showEdgeLabels={showEdgeLabels}
-                            ref={ref}
-                        />
-                    }
-                    disabled={
-                        <GraphEvents
-                            onDoubleClickNode={onDoubleClickNode}
-                            onClickNode={onClickNode}
-                            onClickEdge={onClickEdge}
-                            onClickStage={onClickStage}
-                            edgeReducer={edgeReducer}
-                            onRightClickNode={handleContextMenu}
-                            showNodeLabels={showNodeLabels}
-                            showEdgeLabels={showEdgeLabels}
-                            ref={ref}
-                        />
-                    }
+                <GraphEdgeEventsV2 />
+
+                <GraphEventsV2
+                    onDoubleClickNode={onDoubleClickNode}
+                    onClickNode={onClickNode}
+                    onClickEdge={onClickEdge}
+                    onClickStage={onClickStage}
+                    edgeReducer={edgeReducer}
+                    onRightClickNode={handleContextMenu}
+                    showNodeLabels={showNodeLabels}
+                    showEdgeLabels={showEdgeLabels}
+                    ref={ref}
                 />
             </SigmaContainer>
         </div>
