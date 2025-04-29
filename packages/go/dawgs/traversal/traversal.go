@@ -351,7 +351,7 @@ func (s Traversal) BreadthFirst(ctx context.Context, plan Plan) error {
 						return nil
 					}
 				}
-			}); err != nil && !errors.Is(err, graph.ErrContextTimedOut) {
+			}); err != nil && !errors.Is(err, graph.ErrContextTimedOut) && !errors.Is(err, context.Canceled) {
 				// A worker encountered a fatal error, kill the traversal context
 				doneFunc()
 
