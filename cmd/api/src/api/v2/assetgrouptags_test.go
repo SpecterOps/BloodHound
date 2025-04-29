@@ -1693,7 +1693,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				},
 				Setup: func() {
 					params := url.Values{}
-					_, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					_, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
 
 					mockDB.EXPECT().
@@ -1721,7 +1721,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "id")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
 
 					mockDB.EXPECT().
@@ -1755,7 +1755,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "objectid")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
 
 					mockDB.EXPECT().
@@ -1789,7 +1789,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 					params := url.Values{}
 					params.Add("sort_by", "name")
 
-					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMemberResponse{}, params)
+					orderCriteria, err := api.ParseGraphSortParameters(v2.AssetGroupMember{}, params)
 					require.Nil(t, err)
 
 					mockDB.EXPECT().
@@ -1908,8 +1908,8 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
-					expected := v2.GetAssetGroupMemberResponse{
-						Members: []v2.AssetGroupMemberResponse{
+					expected := v2.GetAssetGroupMembersResponse{
+						Members: []v2.AssetGroupMember{
 							{
 								NodeId:      1,
 								ObjectID:    "OID-1",
@@ -1924,7 +1924,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 							},
 						},
 					}
-					result := v2.GetAssetGroupMemberResponse{}
+					result := v2.GetAssetGroupMembersResponse{}
 					apitest.UnmarshalData(output, &result)
 					require.Equal(t, expected, result)
 				},
