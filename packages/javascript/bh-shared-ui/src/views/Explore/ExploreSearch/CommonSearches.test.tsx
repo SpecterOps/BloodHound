@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { CommonSearches as prebuiltSearchList } from '../../../commonSearchesAGI';
-import { render } from '../../../test-utils';
+import { render, waitForElementToBeRemoved } from '../../../test-utils';
 import { apiClient } from '../../../utils';
 import CommonSearches from './CommonSearches';
 
@@ -45,6 +45,13 @@ const server = setupServer(
     }),
     rest.delete('/api/v2/saved-queries/:id', (req, res, ctx) => {
         return res(ctx.status(201));
+    }),
+    rest.get('/api/v2/features', async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+            })
+        );
     })
 );
 
@@ -56,8 +63,9 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('CommonSearches', () => {
-    it('renders headers', () => {
+    it('renders headers', async () => {
         const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
 
         const header = screen.getByText(/pre-built searches/i);
         const adTab = screen.getByRole('tab', { name: /active directory/i });
@@ -72,8 +80,9 @@ describe('CommonSearches', () => {
         expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Active Directory');
     });
 
-    it('renders search list for the currently active tab', () => {
+    it('renders search list for the currently active tab', async () => {
         const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
 
         const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
         const subheadersForAD = adSearches.map((element) => element.subheader);
@@ -85,6 +94,7 @@ describe('CommonSearches', () => {
 
     it('renders a different list of queries when user switches tab', async () => {
         const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
         const user = userEvent.setup();
 
         // switch tabs to AZ
@@ -101,6 +111,8 @@ describe('CommonSearches', () => {
 
     it(`fetches a user's saved queries when the 'custom searches' tab is clicked`, async () => {
         const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
+
         const user = userEvent.setup();
 
         // switch tabs to user searches
@@ -117,6 +129,8 @@ describe('CommonSearches', () => {
         const screen = render(
             <CommonSearches onSetCypherQuery={onSetCypherQueryMock} onPerformCypherSearch={onPerformCypherSearchMock} />
         );
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
+
         const user = userEvent.setup();
 
         const adSearches = prebuiltSearchList.filter(({ category }) => category === 'Active Directory');
@@ -135,9 +149,9 @@ describe('CommonSearches', () => {
 
     it('deletes a query that a user has saved', async () => {
         const screen = render(<CommonSearches onSetCypherQuery={vi.fn()} onPerformCypherSearch={vi.fn()} />);
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
         const spy = vi.spyOn(apiClient, 'deleteUserQuery');
         const user = userEvent.setup();
-
         // switch tabs to user searches
         const userTab = screen.getByRole('tab', { name: /custom searches/i });
         await user.click(userTab);
