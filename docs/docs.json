@@ -233,6 +233,7 @@
                 "pages": [
                   "resources/edges/overview",
                   "resources/edges/traversable-edges",
+                  "resources/edges/abusetgtdelegation",
                   "resources/edges/adcs-esc1",
                   "resources/edges/adcs-esc10a",
                   "resources/edges/adcs-esc10b",
@@ -298,6 +299,7 @@
                   "resources/edges/can-ps-remote",
                   "resources/edges/can-rdp",
                   "resources/edges/coerce-to-tgt",
+                  "resources/edges/crossforesttrust",
                   "resources/edges/contains",
                   "resources/edges/dc-for",
                   "resources/edges/dc-sync",
@@ -333,6 +335,7 @@
                   "resources/edges/read-laps-password",
                   "resources/edges/remote-interactive-logon-right",
                   "resources/edges/root-ca-for",
+                  "resources/edges/sameforesttrust",
                   "resources/edges/sql-admin",
                   "resources/edges/sync-laps-password",
                   "resources/edges/synced-to-ad-user",
