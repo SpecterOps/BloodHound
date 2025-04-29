@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { rest } from 'msw';
+import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
 import * as tierMocks from '../factories/tierManagement';
 
-const tierHandlers = [
+const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
             ctx.json({
