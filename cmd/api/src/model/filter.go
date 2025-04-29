@@ -17,7 +17,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -55,8 +54,6 @@ const (
 	IdString       = "id"
 	ObjectIdString = "objectid"
 )
-
-var ErrNotFiltered = errors.New("parameter value is not filtered")
 
 type Filtered interface {
 	ValidFilters() map[string][]FilterOperator
@@ -347,9 +344,7 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Req
 
 		for _, value := range values {
 			if filter, err := s.ParseQueryParameterFilter(name, value); err != nil {
-				if !errors.Is(err, ErrNotFiltered) {
-					return nil, err
-				}
+				return nil, err
 			} else {
 				filters.AddFilter(filter)
 			}
