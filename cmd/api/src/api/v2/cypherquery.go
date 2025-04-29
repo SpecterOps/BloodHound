@@ -60,7 +60,7 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	if preparedQuery.HasMutation {
 		graphResponse, err = s.cypherMutation(request, preparedQuery, payload.IncludeProperties)
 	} else {
-		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, payload.IncludeProperties)
+		graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), ctx.RequestID(request), preparedQuery, payload.IncludeProperties)
 	}
 
 	if err != nil {
@@ -100,7 +100,7 @@ func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.P
 		return model.UnifiedGraph{}, err
 	}
 
-	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), preparedQuery, includeProperties); err != nil {
+	if graphResponse, err = s.GraphQuery.RawCypherQuery(request.Context(), ctx.RequestID(request), preparedQuery, includeProperties); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 	} else {
 		auditLogEntry.Status = model.AuditLogStatusSuccess
