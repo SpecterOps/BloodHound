@@ -272,3 +272,10 @@ export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
+
+export type CustomIconDictionary = { [index: string]: string};
+
+export const CUSTOM_ICONS: CustomIconDictionary = {
+    ['custom-computer']: 'coffee',
+    ['custom-server']: 'user',
+};
