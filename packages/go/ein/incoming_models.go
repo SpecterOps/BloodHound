@@ -246,6 +246,7 @@ type Domain struct {
 	ChildObjects []TypedPrincipal
 	Trusts       []Trust
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }
 
 type SessionAPIResult struct {
@@ -336,8 +337,17 @@ type Computer struct {
 	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
+type GPOChanges struct {
+	LocalAdmins        []TypedPrincipal
+	RemoteDesktopUsers []TypedPrincipal
+	DcomUsers          []TypedPrincipal
+	PSRemoteUsers      []TypedPrincipal
+	AffectedComputers  []TypedPrincipal
+}
+
 type OU struct {
 	IngestBase
 	ChildObjects []TypedPrincipal
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }

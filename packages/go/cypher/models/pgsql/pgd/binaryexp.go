@@ -30,6 +30,18 @@ func LessThan(lOperand, rOperand pgsql.Expression) *pgsql.BinaryExpression {
 	return pgsql.NewBinaryExpression(lOperand, pgsql.OperatorLessThan, rOperand)
 }
 
+func LessThanOrEqualTo(lOperand, rOperand pgsql.Expression) *pgsql.BinaryExpression {
+	return pgsql.NewBinaryExpression(lOperand, pgsql.OperatorLessThanOrEqualTo, rOperand)
+}
+
+func GreaterThan(lOperand, rOperand pgsql.Expression) *pgsql.BinaryExpression {
+	return pgsql.NewBinaryExpression(lOperand, pgsql.OperatorGreaterThan, rOperand)
+}
+
+func GreaterThanOrEqualTo(lOperand, rOperand pgsql.Expression) *pgsql.BinaryExpression {
+	return pgsql.NewBinaryExpression(lOperand, pgsql.OperatorGreaterThanOrEqualTo, rOperand)
+}
+
 func Equals(lOperand, rOperand pgsql.Expression) *pgsql.BinaryExpression {
 	return pgsql.NewBinaryExpression(lOperand, pgsql.OperatorEquals, rOperand)
 }

@@ -1096,3 +1096,21 @@ func TestQueryBuilder_Analyze(t *testing.T) {
 		),
 	)))
 }
+
+func Test_FormatCypherOrder(t *testing.T) {
+	var (
+		sortItems = query.SortItems{
+			{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending},
+			{SortCriteria: query.Node(), Direction: query.SortDirectionDescending},
+			{SortCriteria: query.Relationship(), Direction: query.SortDirectionAscending},
+		}
+	)
+
+	require.Equal(t, true, sortItems.FormatCypherOrder().Items[0].Ascending)
+	require.Equal(t, false, sortItems.FormatCypherOrder().Items[1].Ascending)
+	require.Equal(t, true, sortItems.FormatCypherOrder().Items[2].Ascending)
+
+	require.Equal(t, query.NodeID(), sortItems.FormatCypherOrder().Items[0].Expression)
+	require.Equal(t, query.Node(), sortItems.FormatCypherOrder().Items[1].Expression)
+	require.Equal(t, query.Relationship(), sortItems.FormatCypherOrder().Items[2].Expression)
+}

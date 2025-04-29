@@ -94,7 +94,7 @@ func (s *ProjectionVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
 }
 
 func (s *ProjectionVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.currentItem.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+	s.currentItem.Alias = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *ProjectionVisitor) EnterOC_Order(ctx *parser.OC_OrderContext) {
@@ -278,7 +278,7 @@ func (s *UnwindVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
 }
 
 func (s *UnwindVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.Unwind.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+	s.Unwind.Variable = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 type ReadingClauseVisitor struct {
@@ -729,5 +729,5 @@ func (s *PropertyExpressionVisitor) EnterOC_PropertyKeyName(ctx *parser.OC_Prope
 }
 
 func (s *PropertyExpressionVisitor) ExitOC_PropertyKeyName(ctx *parser.OC_PropertyKeyNameContext) {
-	s.PropertyLookup.AddLookupSymbol(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
+	s.PropertyLookup.SetSymbol(s.ctx.Exit().(*SymbolicNameOrReservedWordVisitor).Name)
 }

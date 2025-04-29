@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryNodeKind, AzureNodeKind } from 'bh-shared-ui';
+import { ActiveDirectoryNodeKind, AzureNodeKind, EntityKinds, ObjectInfoPanelContextProvider } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
@@ -67,6 +67,22 @@ const server = setupServer(
     })
 );
 
+const EntityInfoContentWithProvider = ({
+    testId,
+    nodeType,
+    databaseId,
+}: {
+    testId: string;
+    nodeType: EntityKinds | string;
+    databaseId?: string;
+}) => (
+    <EntityInfoPanelContextProvider>
+        <ObjectInfoPanelContextProvider>
+            <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
+        </ObjectInfoPanelContextProvider>
+    </EntityInfoPanelContextProvider>
+);
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
@@ -74,12 +90,9 @@ afterAll(() => server.close());
 describe('EntityInfoContent', () => {
     it('AZRole information panel will not display a section for PIM Assignments', async () => {
         const testId = '1';
+        const nodeType = AzureNodeKind.Role;
 
-        render(
-            <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={AzureNodeKind.Role} />
-            </EntityInfoPanelContextProvider>
-        );
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
         expect(screen.queryByText('PIM Assignments')).not.toBeInTheDocument();
     });
@@ -88,12 +101,9 @@ describe('EntityInfoContent', () => {
 describe('EntityObjectInformation', () => {
     it('Calls the `Base` endpoint for a LocalGroup type node', async () => {
         const testId = '1';
+        const nodeType = ActiveDirectoryNodeKind.LocalGroup;
 
-        render(
-            <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalGroup} />
-            </EntityInfoPanelContextProvider>
-        );
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
@@ -102,12 +112,9 @@ describe('EntityObjectInformation', () => {
 
     it('Calls the `Base` endpoint for a LocalUser type node', async () => {
         const testId = '1';
+        const nodeType = ActiveDirectoryNodeKind.LocalUser;
 
-        render(
-            <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={ActiveDirectoryNodeKind.LocalUser} />
-            </EntityInfoPanelContextProvider>
-        );
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
@@ -116,12 +123,10 @@ describe('EntityObjectInformation', () => {
 
     it('Calls the cypher search endpoint for a node with a type that is not in our schema', async () => {
         const testId = '1';
+        const nodeType = 'Unknown';
+        const databaseId = '42';
 
-        render(
-            <EntityInfoPanelContextProvider>
-                <EntityInfoContent id={testId} nodeType={'Unknown'} databaseId='42' />
-            </EntityInfoPanelContextProvider>
-        );
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} databaseId={databaseId} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 

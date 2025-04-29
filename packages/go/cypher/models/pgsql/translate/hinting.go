@@ -17,8 +17,11 @@
 package translate
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+
+	"github.com/specterops/bloodhound/dawgs/graph"
 
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
@@ -157,7 +160,7 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 			return inferBinaryExpressionType(typedExpression)
 		}
 
-	case pgsql.Parenthetical:
+	case *pgsql.Parenthetical:
 		return InferExpressionType(typedExpression.Expression)
 
 	default:
@@ -166,8 +169,46 @@ func InferExpressionType(expression pgsql.Expression) (pgsql.DataType, error) {
 	}
 }
 
-func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
+type contextAwareKindMapper struct {
+	ctx        context.Context
+	kindMapper pgsql.KindMapper
+}
+
+func newContextAwareKindMapper(ctx context.Context, kindMapper pgsql.KindMapper) *contextAwareKindMapper {
+	return &contextAwareKindMapper{
+		ctx:        ctx,
+		kindMapper: kindMapper,
+	}
+}
+
+func (s *contextAwareKindMapper) MapKinds(kinds graph.Kinds) ([]int16, error) {
+	return s.kindMapper.MapKinds(s.ctx, kinds)
+}
+
+func applyTypeFunctionLikeTypeHints(kindMapper *contextAwareKindMapper, expression *pgsql.BinaryExpression) error {
 	switch typedLOperand := expression.LOperand.(type) {
+	case pgsql.CompoundIdentifier:
+		switch typedLOperand.Field() {
+		case pgsql.ColumnKindID:
+			// In the case where the left operand is a reference to the kind ID column of an edge entity
+			// it is assumed that the query is utilizing the type(...) cypher function. This indicates
+			// a need to look at the right operand to inspect if it must be marshalled from the text
+			// representation of a kind to its associated kind ID.
+			switch typedROperand := expression.ROperand.(type) {
+			case pgsql.Literal:
+				if typedROperand.CastType == pgsql.Text {
+					// Only translate the right operand if it is a text literal
+					if kinds, err := graph.AsKinds([]any{typedROperand.Value}); err != nil {
+						return err
+					} else if kindIDs, err := kindMapper.MapKinds(kinds); err != nil {
+						return err
+					} else {
+						expression.ROperand = pgsql.NewLiteral(kindIDs[0], pgsql.Int2)
+					}
+				}
+			}
+		}
+
 	case pgsql.AnyExpression:
 		if rOperandTypeHint, err := InferExpressionType(expression.ROperand); err != nil {
 			return err
@@ -208,6 +249,28 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 	}
 
 	switch typedROperand := expression.ROperand.(type) {
+	case pgsql.CompoundIdentifier:
+		switch typedROperand.Field() {
+		case pgsql.ColumnKindID:
+			// In the case where the left operand is a reference to the kind ID column of an edge entity
+			// it is assumed that the query is utilizing the type(...) cypher function. This indicates
+			// a need to look at the right operand to inspect if it must be marshalled from the text
+			// representation of a kind to its associated kind ID.
+			switch typedLOperand := expression.LOperand.(type) {
+			case pgsql.Literal:
+				if typedLOperand.CastType == pgsql.Text {
+					// Only translate the right operand if it is a text literal
+					if kinds, err := graph.AsKinds([]any{typedLOperand.Value}); err != nil {
+						return err
+					} else if kindIDs, err := kindMapper.MapKinds(kinds); err != nil {
+						return err
+					} else {
+						expression.LOperand = pgsql.NewLiteral(kindIDs[0], pgsql.Int2)
+					}
+				}
+			}
+		}
+
 	case pgsql.AnyExpression:
 		if lOperandTypeHint, err := InferExpressionType(expression.LOperand); err != nil {
 			return err
@@ -253,7 +316,7 @@ func applyTypeFunctionLikeTypeHints(expression *pgsql.BinaryExpression) error {
 	return nil
 }
 
-func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
+func applyBinaryExpressionTypeHints(kindMapper *contextAwareKindMapper, expression *pgsql.BinaryExpression) error {
 	switch expression.Operator {
 	case pgsql.OperatorPropertyLookup:
 		// Don't directly hint property lookups but replace the operator with the JSON operator
@@ -265,5 +328,5 @@ func applyBinaryExpressionTypeHints(expression *pgsql.BinaryExpression) error {
 		return err
 	}
 
-	return applyTypeFunctionLikeTypeHints(expression)
+	return applyTypeFunctionLikeTypeHints(kindMapper, expression)
 }

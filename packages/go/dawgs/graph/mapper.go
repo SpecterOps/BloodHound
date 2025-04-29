@@ -404,35 +404,60 @@ func NewValueMapper(values []any, mappers ...MapFunc) ValueMapper {
 	}
 }
 
-func (s *valueMapper) Count() int {
-	return len(s.values)
+func (s *valueMapper) Remaining() []any {
+	valuesCopy := make([]any, len(s.values)-s.idx)
+	copy(valuesCopy, s.values[s.idx:])
+
+	return valuesCopy
 }
 
-func (s *valueMapper) Next() (any, error) {
+func (s *valueMapper) HasNext() bool {
+	return s.idx < len(s.values)
+}
+
+func (s *valueMapper) Next() (any, bool) {
 	if s.idx >= len(s.values) {
-		return nil, fmt.Errorf("attempting to get more values than returned - saw %d but wanted %d", len(s.values), s.idx+1)
+		return nil, false
 	}
 
 	nextValue := s.values[s.idx]
 	s.idx++
 
-	return nextValue, nil
+	return nextValue, true
 }
 
-func (s *valueMapper) Map(target any) error {
-	if rawValue, err := s.Next(); err != nil {
-		return err
-	} else {
-		for _, mapperFunc := range s.mapperFuncs {
-			if mapped, err := mapperFunc(rawValue, target); err != nil {
-				return err
-			} else if mapped {
-				return nil
-			}
+func (s *valueMapper) MapNext(target any) error {
+	rawValue, hasNext := s.Next()
+
+	if !hasNext {
+		return nil
+	}
+
+	for _, mapperFunc := range s.mapperFuncs {
+		if mapped, err := mapperFunc(rawValue, target); err != nil {
+			return err
+		} else if mapped {
+			return nil
 		}
 	}
 
 	return fmt.Errorf("unsupported scan type %T", target)
+}
+
+func (s *valueMapper) Previous() {
+	if s.idx > 0 {
+		s.idx--
+	}
+}
+
+func (s *valueMapper) TryMapNext(target any) bool {
+	mapped := s.MapNext(target) == nil
+
+	if !mapped {
+		s.Previous()
+	}
+
+	return mapped
 }
 
 func SliceOf[T any](raw any) ([]T, error) {
@@ -454,25 +479,9 @@ func SliceOf[T any](raw any) ([]T, error) {
 	}
 }
 
-func (s *valueMapper) MapOptions(targets ...any) (any, error) {
-	if rawValue, err := s.Next(); err != nil {
-		return nil, err
-	} else {
-		for _, target := range targets {
-			for _, mapperFunc := range s.mapperFuncs {
-				if mapped, _ := mapperFunc(rawValue, target); mapped {
-					return target, nil
-				}
-			}
-		}
-
-		return nil, fmt.Errorf("no matching target given for type: %T", rawValue)
-	}
-}
-
 func (s *valueMapper) Scan(targets ...any) error {
 	for idx, mapValue := range targets {
-		if err := s.Map(mapValue); err != nil {
+		if err := s.MapNext(mapValue); err != nil {
 			return err
 		} else {
 			targets[idx] = mapValue

@@ -18,4 +18,5 @@ import MainNav from './MainNav';
 import SubNav from './SubNav';
 import { MainNavData } from './types';
 
+export * from './utils';
 export { MainNav, SubNav, type MainNavData };

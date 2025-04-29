@@ -56,7 +56,7 @@ func rewriteCompoundIdentifierScopeReference(scope *Scope, identifier pgsql.Comp
 }
 
 type FrameBindingRewriter struct {
-	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+	walk.Visitor[pgsql.SyntaxNode]
 
 	scope *Scope
 }
@@ -119,6 +119,23 @@ func (s *FrameBindingRewriter) enter(node pgsql.SyntaxNode) error {
 					// This is being done in case the top-level parameter is a value-type
 					typedExpression.Parameters[idx] = rewritten
 				}
+			}
+		}
+
+	case *pgsql.OrderBy:
+		switch typedOrderByExpression := typedExpression.Expression.(type) {
+		case pgsql.Identifier:
+			if rewritten, err := rewriteIdentifierScopeReference(s.scope, typedOrderByExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
+			}
+
+		case pgsql.CompoundIdentifier:
+			if rewritten, err := rewriteCompoundIdentifierScopeReference(s.scope, typedOrderByExpression); err != nil {
+				return err
+			} else {
+				typedExpression.Expression = rewritten
 			}
 		}
 
@@ -286,7 +303,7 @@ func RewriteFrameBindings(scope *Scope, expression pgsql.Expression) error {
 	}
 
 	return walk.PgSQL(expression, &FrameBindingRewriter{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
-		scope:               scope,
+		Visitor: walk.NewVisitor[pgsql.SyntaxNode](),
+		scope:   scope,
 	})
 }

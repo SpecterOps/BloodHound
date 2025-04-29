@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cache"
@@ -30,12 +29,9 @@ import (
 	graphMocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -59,55 +55,55 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 	)
 
 	t.Run("invalid cypher", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherInvalid, queries.QueryComplexityLimitExplore)
+		_, err := gq.PrepareCypherQuery(rawCypherInvalid, queries.DefaultQueryFitnessLowerBoundExplore)
 		assert.ErrorContains(t, err, "mismatched input 'derp'")
 	})
 
 	t.Run("valid cypher with mutation while mutations disabled", func(t *testing.T) {
-		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation, queries.QueryComplexityLimitExplore)
+		_, err := gqMutDisable.PrepareCypherQuery(rawCypherMutation, queries.DefaultQueryFitnessLowerBoundExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher with mutation", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation, queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherMutation, queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, true)
 	})
 
 	t.Run("valid cypher pathfinding with expansion", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherPathfindingExpansion, queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherPathfindingExpansion, queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher without mutation with expansion", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherReadExpansion, queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherReadExpansion, queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
 
 	t.Run("valid cypher with creation and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherCreationAndExpansion, queries.QueryComplexityLimitExplore)
+		_, err := gq.PrepareCypherQuery(rawCypherCreationAndExpansion, queries.DefaultQueryFitnessLowerBoundExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher with deletion and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherDeleteAndExpansion, queries.QueryComplexityLimitExplore)
+		_, err := gq.PrepareCypherQuery(rawCypherDeleteAndExpansion, queries.DefaultQueryFitnessLowerBoundExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 	t.Run("valid cypher with updates and expansion", func(t *testing.T) {
-		_, err := gq.PrepareCypherQuery(rawCypherUpdateAndExpansion, queries.QueryComplexityLimitExplore)
+		_, err := gq.PrepareCypherQuery(rawCypherUpdateAndExpansion, queries.DefaultQueryFitnessLowerBoundExplore)
 		assert.ErrorContains(t, err, "not supported")
 	})
 
 	t.Run("valid cypher without mutation while mutations disabled", func(t *testing.T) {
-		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery(rawCypherRead, queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
@@ -115,118 +111,35 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 
 func TestGraphQuery_RawCypherQuery(t *testing.T) {
 	var (
-		mockCtrl       = gomock.NewController(t)
-		mockGraphDB    = graphMocks.NewMockDatabase(mockCtrl)
-		gq             = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{})
-		outerBHCtxInst = &bhCtx.Context{
-			StartTime: time.Now(),
-			Timeout:   time.Second * 5,
-			RequestID: must.NewUUIDv4().String(),
-			AuthCtx:   auth.Context{},
-			Host: &url.URL{
-				Scheme: "http",
-				Host:   "example.com",
-			},
-		}
+		mockCtrl    = gomock.NewController(t)
+		mockGraphDB = graphMocks.NewMockDatabase(mockCtrl)
+		gq          = queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{})
 	)
 
-	t.Run("RawCypherQuery user set timeouts successfully", func(t *testing.T) {
-
-		// First validate that user set timeouts work
-		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-			innerBHCtxInst := bhCtx.Get(ctx)
-
-			require.Equal(t, outerBHCtxInst.Timeout, innerBHCtxInst.Timeout)
-
-			// Validate that the options are being set correctly
-			if len(options) != 1 {
-				t.Fatalf("Expected only one transaction option for RawCypherQuery but saw: %d", len(options))
-			}
-
-			// Create a new transaction config to capture the query timeout logic
-			txConfig := &graph.TransactionConfig{}
-			options[0](txConfig)
-
-			require.Equal(t, outerBHCtxInst.Timeout, txConfig.Timeout)
-
-			return nil
-		})
-
-		preparedQuery, err := gq.PrepareCypherQuery("match (n:Label) return n;", queries.QueryComplexityLimitExplore)
-		require.Nil(t, err)
-
-		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
-		require.Nil(t, err)
-
-	})
-
 	t.Run("RawCypherQuery query complexity controls", func(t *testing.T) {
-		// Validate that query complexity controls are working
-		// Scenario 1:
-		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-			// Validate that the options are being set correctly
-			if len(options) != 1 {
-				t.Fatalf("Expected only one transaction option for RawCypherQuery but saw: %d", len(options))
-			}
-
-			// Create a new transaction config to capture the query timeout logic
-			txConfig := &graph.TransactionConfig{}
-			options[0](txConfig)
-
-			require.Equal(t, time.Second*225, txConfig.Timeout)
-
-			return nil
-		}).Times(1)
-
-		// Scenario 2:
-		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, txDelegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
-			// Validate that the options are being set correctly
-			if len(options) != 1 {
-				t.Fatalf("Expected only one transaction option for RawCypherSearch but saw: %d", len(options))
-			}
-
-			// Create a new transaction config to capture the query timeout logic
-			txConfig := &graph.TransactionConfig{}
-			options[0](txConfig)
-
-			require.Equal(t, time.Second*5, txConfig.Timeout)
-
-			return nil
-		}).Times(1)
+		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 		// Scenario 1:
-		// Unset the user-set timeout in the BH context to validate QC runtime reduction of a complex query
-		// This will be set to a default of 15 min or 900 sec
-		// availableRuntime = 900 sec, query cost = 15
-		// reductionFactor = 1 + (15/5) = 4
-		// Therefore actual timeout = availableRuntime/reductionFactor : 900/4 = 225sec
-
-		outerBHCtxInst.Timeout = 0
-		preparedQuery, err := gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", queries.QueryComplexityLimitExplore)
+		// Passing query
+		preparedQuery, err := gq.PrepareCypherQuery("match (:Computer)-[:HasSession*..]->(:User)-[:MemberOf*..]->(:Group) return n;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
-		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(context.Background(), preparedQuery, false)
 		require.Nil(t, err)
 
 		// Scenario 2:
-		// Prove that overriding QC with a user-preference works
-		// This will be directly used as the config timeout, without any reduction factor
-		outerBHCtxInst.Timeout = time.Second * 5
-
-		preparedQuery, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", queries.QueryComplexityLimitExplore)
-		require.Nil(t, err)
-
-		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
-		require.Nil(t, err)
+		// Rejected query
+		_, err = gq.PrepareCypherQuery("match ()-[:HasSession*..]->()-[:MemberOf*..]->() return n;", queries.DefaultQueryFitnessLowerBoundExplore)
+		require.NotNil(t, err)
 	})
 
 	t.Run("RawCypherQuery read query leverages read tx", func(t *testing.T) {
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 		mockGraphDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
-		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;", queries.QueryComplexityLimitExplore)
+		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		_, err = gq.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(context.Background(), preparedQuery, false)
 		require.Nil(t, err)
 	})
 
@@ -235,10 +148,10 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 		qgWMut := queries.NewGraphQuery(mockGraphDB, cache.Cache{}, config.Configuration{EnableCypherMutations: true})
-		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;", queries.QueryComplexityLimitExplore)
+		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		_, err = qgWMut.RawCypherQuery(outerBHCtxInst.ConstructGoContext(), preparedQuery, false)
+		_, err = qgWMut.RawCypherQuery(context.Background(), preparedQuery, false)
 		require.Nil(t, err)
 	})
 }

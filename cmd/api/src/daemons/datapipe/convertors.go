@@ -100,6 +100,10 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData) {
 	domainTrustData := ein.ParseDomainTrusts(domain)
 	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
 	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
+
+	parsedLocalGroupData := ein.ParseGPOChanges(domain.GPOChanges)
+	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
 }
 
 func convertGPOData(gpo ein.GPO, converted *ConvertedData) {
@@ -120,6 +124,10 @@ func convertOUData(ou ein.OU, converted *ConvertedData) {
 	if len(ou.ChildObjects) > 0 {
 		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(ou.ChildObjects, ou.ObjectIdentifier, ad.OU)...)
 	}
+
+	parsedLocalGroupData := ein.ParseGPOChanges(ou.GPOChanges)
+	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
 }
 
 func convertSessionData(session ein.Session, converted *ConvertedSessionData) {

@@ -22,8 +22,9 @@ import {
     SelectedEdge,
     apiClient,
     formatObjectInfoFields,
+    useObjectInfoPanelContext,
 } from 'bh-shared-ui';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
@@ -32,15 +33,15 @@ const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | n
     `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
 
 const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
 
     const previousId = usePreviousValue(selectedEdge.id);
 
     useEffect(() => {
         if (previousId !== selectedEdge.id) {
-            setIsExpanded(true);
+            setIsObjectInfoPanelOpen(true);
         }
-    }, [previousId, selectedEdge.id]);
+    }, [previousId, selectedEdge.id, setIsObjectInfoPanelOpen]);
 
     const {
         data: cypherResponse,
@@ -87,11 +88,11 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     const sectionLabel = 'Relationship Information';
 
     const handleOnChange = () => {
-        setIsExpanded(!isExpanded);
+        setIsObjectInfoPanelOpen(!isObjectInfoPanelOpen);
     };
 
     return (
-        <EdgeInfoCollapsibleSection isExpanded={isExpanded} onChange={handleOnChange} label={sectionLabel}>
+        <EdgeInfoCollapsibleSection isExpanded={isObjectInfoPanelOpen} onChange={handleOnChange} label={sectionLabel}>
             <FieldsContainer>
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

@@ -227,6 +227,40 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	})
 }
 
+func TestGetPrimaryNodeKindCounts(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.SetupActiveDirectory()
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.GraphQuery{
+			Graph: db,
+		}
+
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity, azure.Entity)
+		require.Nil(t, err)
+
+		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
+		require.Greater(t, len(results), 1)
+	})
+}
+
+func TestFetchNodeByGraphId(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZBaseHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.GraphQuery{Graph: db}
+
+		node, err := graphQuery.FetchNodeByGraphId(context.Background(), harness.AZBaseHarness.User.ID)
+		require.Nil(t, err)
+		require.NotNil(t, node)
+
+		require.Equal(t, harness.AZBaseHarness.User.ID, node.ID)
+	})
+}
+
 func TestGetEntityResults_Cache(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})

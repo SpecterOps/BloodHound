@@ -27,10 +27,10 @@ import (
 )
 
 type Translator struct {
-	walk.HierarchicalVisitor[cypher.SyntaxNode]
+	walk.Visitor[cypher.SyntaxNode]
 
 	ctx            context.Context
-	kindMapper     pgsql.KindMapper
+	kindMapper     *contextAwareKindMapper
 	translation    Result
 	treeTranslator *ExpressionTreeTranslator
 	query          *Query
@@ -42,14 +42,16 @@ func NewTranslator(ctx context.Context, kindMapper pgsql.KindMapper, parameters 
 		parameters = map[string]any{}
 	}
 
+	ctxAwareKindMapper := newContextAwareKindMapper(ctx, kindMapper)
+
 	return &Translator{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[cypher.SyntaxNode](),
+		Visitor: walk.NewVisitor[cypher.SyntaxNode](),
 		translation: Result{
 			Parameters: parameters,
 		},
 		ctx:            ctx,
-		kindMapper:     kindMapper,
-		treeTranslator: NewExpressionTreeTranslator(),
+		kindMapper:     ctxAwareKindMapper,
+		treeTranslator: NewExpressionTreeTranslator(ctxAwareKindMapper),
 		query:          &Query{},
 		scope:          NewScope(),
 	}
@@ -64,7 +66,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		*cypher.Negation, *cypher.Create, *cypher.Where, *cypher.ListLiteral,
 		*cypher.FunctionInvocation, *cypher.Order, *cypher.RemoveItem, *cypher.SetItem,
 		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete, *cypher.With,
-		*cypher.Return, *cypher.MultiPartQuery, *cypher.Properties:
+		*cypher.Return, *cypher.MultiPartQuery, *cypher.Properties, *cypher.KindMatcher:
 
 	case *cypher.MultiPartQueryPart:
 		if err := s.prepareMultiPartQueryPart(typedExpression); err != nil {
@@ -83,11 +85,6 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.treeTranslator.PushOperand(pgsql.KindListLiteral{
 			Values: typedExpression,
 		})
-
-	case *cypher.KindMatcher:
-		if err := s.translateKindMatcher(typedExpression); err != nil {
-			s.SetError(err)
-		}
 
 	case *cypher.Parameter:
 		var (
@@ -150,9 +147,7 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		s.treeTranslator.PushParenthetical()
 
 	case *cypher.SortItem:
-		s.query.CurrentPart().OrderBy = append(s.query.CurrentPart().OrderBy, pgsql.OrderBy{
-			Ascending: typedExpression.Ascending,
-		})
+		s.query.CurrentPart().SortItems = append(s.query.CurrentPart().SortItems, pgsql.NewOrderBy(typedExpression.Ascending))
 
 	case *cypher.Projection:
 		if err := s.prepareProjection(typedExpression); err != nil {
@@ -286,10 +281,8 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.KindMatcher:
-		if matcher, err := s.treeTranslator.PopOperand(); err != nil {
+		if err := s.translateKindMatcher(typedExpression); err != nil {
 			s.SetError(err)
-		} else {
-			s.treeTranslator.PushOperand(matcher)
 		}
 
 	case *cypher.Parenthetical:
@@ -300,7 +293,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 			s.SetError(err)
 		} else {
 			parenthetical.Expression = wrappedExpression
-			s.treeTranslator.PushOperand(*parenthetical)
+			s.treeTranslator.PushOperand(parenthetical)
 		}
 
 	case *cypher.FunctionInvocation:
@@ -322,7 +315,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		} else {
 			for cursor := operand; cursor != nil; {
 				switch typedCursor := cursor.(type) {
-				case pgsql.Parenthetical:
+				case *pgsql.Parenthetical:
 					// Unwrap parentheticals
 					cursor = typedCursor.Expression
 					continue
@@ -369,7 +362,7 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 
 	case *cypher.Where:
 		// Assign the last operands as identifier set constraints
-		if err := s.treeTranslator.PopRemainingExpressionsAsConstraints(); err != nil {
+		if err := s.treeTranslator.PopRemainingExpressionsAsUserConstraints(); err != nil {
 			s.SetError(err)
 		}
 

@@ -394,6 +394,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.16":
+  version: 1.0.0-alpha.16
+  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.16"
+  dependencies:
+    "@radix-ui/react-accordion": ^1.1.2
+    "@radix-ui/react-checkbox": ^1.1.2
+    "@radix-ui/react-dialog": ^1.1.2
+    "@radix-ui/react-label": ^2.1.0
+    "@radix-ui/react-popover": ^1.1.2
+    "@radix-ui/react-select": ^2.1.1
+    "@radix-ui/react-slot": ^1.1.0
+    "@radix-ui/react-switch": ^1.0.2
+    "@radix-ui/react-tooltip": ^1.1.3
+    "@radix-ui/react-visually-hidden": ^1.1.0
+    "@tanstack/react-table": ^8.17.3
+    class-variance-authority: ^0.7.0
+    clsx: ^2.1.1
+    date-fns: ^3.0.0
+    embla-carousel: ^8.3.0
+    embla-carousel-autoplay: ^8.3.0
+    embla-carousel-react: ^8.3.0
+    lucide-react: ^0.436.0
+    react-day-picker: 8.10.1
+    tailwind-merge: ^2.3.0
+    tailwindcss-animate: ^1.0.7
+  peerDependencies:
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    tailwindcss: ^3.4.3
+  checksum: 91f3843fc992b462f91e20e3f2a49419ced8a6d93bf71f56c1ef67b237f56aefafc62d9a5de380c7fce8e07e5b34f85a793d2c5a0c3792547fe7da94f95779b4
+  languageName: node
+  linkType: hard
+
 "@braintree/sanitize-url@npm:=6.0.2":
   version: 6.0.2
   resolution: "@braintree/sanitize-url@npm:6.0.2"
@@ -4779,7 +4812,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bloodhound-ui@workspace:cmd/ui"
   dependencies:
-    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.15
+    "@bloodhoundenterprise/doodleui": ^1.0.0-alpha.16
     "@date-io/luxon": ^1.3.13
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
@@ -5013,17 +5046,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30001587":
-  version: 1.0.30001597
-  resolution: "caniuse-lite@npm:1.0.30001597"
-  checksum: ec6a2cf0fd49f37d16732e6595939fc80a125dcd188a950bc936c61b4ad53becc0fe51bf2d9a625415de7b1cb23bd835f220e8b68d8ab951a940edeea65476fd
-  languageName: node
-  linkType: hard
-
-"caniuse-lite@npm:^1.0.30001646, caniuse-lite@npm:^1.0.30001688":
-  version: 1.0.30001692
-  resolution: "caniuse-lite@npm:1.0.30001692"
-  checksum: 484113e3fabbe223fff0380c25c861da265a34c3f75bb5af1f254423b43e713a3c7f0c313167df52fb203f42ea68bd0df8a9e73642becfe1e9fa5734b5fc55a5
+"caniuse-lite@npm:^1.0.30001587, caniuse-lite@npm:^1.0.30001646, caniuse-lite@npm:^1.0.30001688":
+  version: 1.0.30001714
+  resolution: "caniuse-lite@npm:1.0.30001714"
+  checksum: e68fbee9a115f842f0d907e033f14e8d476f965473556fb993c8870854a2608573eebf4dbc2aa5b03caa9c6224ff4afe63ea8c702566fbbcb78c369fba72395b
   languageName: node
   linkType: hard
 

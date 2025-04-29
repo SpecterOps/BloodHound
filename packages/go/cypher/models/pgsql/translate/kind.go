@@ -17,6 +17,7 @@
 package translate
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
@@ -45,11 +46,13 @@ func newPGKindIDMatcher(scope *Scope, treeTranslator *ExpressionTreeTranslator, 
 }
 
 func (s *Translator) translateKindMatcher(kindMatcher *cypher.KindMatcher) error {
-	if variable, isVariable := kindMatcher.Reference.(*cypher.Variable); !isVariable {
-		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", kindMatcher.Reference)
-	} else if binding, resolved := s.scope.LookupString(variable.Symbol); !resolved {
-		return fmt.Errorf("unable to find identifier %s", variable.Symbol)
-	} else if kindIDs, err := s.kindMapper.MapKinds(s.ctx, kindMatcher.Kinds); err != nil {
+	if operand, err := s.treeTranslator.PopOperand(); err != nil {
+		return errors.New("expected kind matcher to have one valid operand")
+	} else if identifier, isIdentifier := operand.(pgsql.Identifier); !isIdentifier {
+		return fmt.Errorf("expected variable for kind matcher reference but found type: %T", operand)
+	} else if binding, resolved := s.scope.Lookup(identifier); !resolved {
+		return fmt.Errorf("unable to find identifier %s", identifier)
+	} else if kindIDs, err := s.kindMapper.MapKinds(kindMatcher.Kinds); err != nil {
 		return fmt.Errorf("failed to translate kinds: %w", err)
 	} else {
 		return newPGKindIDMatcher(s.scope, s.treeTranslator, binding, kindIDs)

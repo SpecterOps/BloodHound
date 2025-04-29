@@ -17,11 +17,11 @@
 package integration
 
 import (
+	"embed"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
@@ -33,6 +33,9 @@ import (
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/harnesses"
 )
+
+//go:embed harnesses
+var Harnesses embed.FS
 
 func RandomObjectID(t test.Controller) string {
 	newUUID, err := uuid.NewV4()
@@ -65,65 +68,6 @@ const (
 
 type GraphTestHarness interface {
 	Setup(testContext *GraphTestContext)
-}
-
-type CompletenessHarness struct {
-	UserA        *graph.Node
-	UserB        *graph.Node
-	UserC        *graph.Node
-	UserD        *graph.Node
-	UserInactive *graph.Node
-	ComputerA    *graph.Node
-	ComputerB    *graph.Node
-	ComputerC    *graph.Node
-	ComputerD    *graph.Node
-	Group        *graph.Node
-	DomainSid    string
-}
-
-func (s *CompletenessHarness) Setup(testCtx *GraphTestContext) {
-	s.DomainSid = RandomDomainSID()
-	s.UserA = testCtx.NewActiveDirectoryUser("CUserA", s.DomainSid)
-	s.UserB = testCtx.NewActiveDirectoryUser("CUserB", s.DomainSid)
-	s.UserC = testCtx.NewActiveDirectoryUser("CUserC", s.DomainSid)
-	s.UserD = testCtx.NewActiveDirectoryUser("CUserD", s.DomainSid)
-	s.Group = testCtx.NewActiveDirectoryGroup("CGroup", s.DomainSid)
-	s.UserInactive = testCtx.NewActiveDirectoryUser("CUserInactive", s.DomainSid)
-	s.ComputerA = testCtx.NewActiveDirectoryComputer("CComputerA", s.DomainSid)
-	s.ComputerB = testCtx.NewActiveDirectoryComputer("CComputerB", s.DomainSid)
-	s.ComputerC = testCtx.NewActiveDirectoryComputer("CComputerC", s.DomainSid)
-	s.ComputerD = testCtx.NewActiveDirectoryComputer("CComputerD", s.DomainSid)
-
-	testCtx.NewRelationship(s.ComputerA, s.UserA, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerA, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerB, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.UserA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserInactive, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.Group, s.ComputerC, ad.AdminTo)
-	testCtx.NewRelationship(s.UserD, s.ComputerC, ad.AdminTo)
-	s.UserA.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserA)
-	s.UserB.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserB)
-	s.UserC.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserC)
-	s.UserD.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserD)
-	s.UserInactive.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC().Add(-time.Hour*3000))
-	testCtx.UpdateNode(s.UserInactive)
-	s.ComputerC.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerC.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerC)
-	s.ComputerD.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerD.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerD)
 }
 
 type TrustDCSyncHarness struct {
@@ -8873,6 +8817,7 @@ type CoerceAndRelayNTLMtoADCS struct {
 	AuthenticatedUsersGroup *graph.Node
 	CertTemplate1           *graph.Node
 	Computer                *graph.Node
+	CAHost                  *graph.Node
 	Domain                  *graph.Node
 	EnterpriseCA1           *graph.Node
 	NTAuthStore             *graph.Node
@@ -8896,6 +8841,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireSPN:          false,
 		SubjectAltRequireUPN:          false,
 	})
+	s.CAHost = graphTestContext.NewActiveDirectoryComputer("CAHost", domainSid)
 	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
@@ -8904,6 +8850,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Computer, s.EnterpriseCA1, ad.Enroll)
 	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CAHost, s.EnterpriseCA1, ad.HostsCAService)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
@@ -8920,6 +8867,8 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)
+	s.CAHost.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.CAHost)
 	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
@@ -9803,6 +9752,23 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
+type Version730_Migration_Harness struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+}
+
+func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.SMBSigning.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer1)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -9818,7 +9784,6 @@ type HarnessDetails struct {
 	MembershipHarness                               MembershipHarness
 	ForeignHarness                                  ForeignDomainHarness
 	TrustDCSync                                     TrustDCSyncHarness
-	Completeness                                    CompletenessHarness
 	AZBaseHarness                                   AZBaseHarness
 	AZGroupMembership                               AZGroupMembershipHarness
 	AZManagementGroup                               AZManagementGroupHarness
@@ -9912,4 +9877,5 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
+	Version730_Migration                            Version730_Migration_Harness
 }

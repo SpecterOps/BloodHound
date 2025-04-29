@@ -129,13 +129,14 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 
 				nodes := composition.AllNodes()
 
-				require.Equal(t, 6, len(nodes))
+				require.Equal(t, 7, len(nodes))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Computer))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.CertTemplate1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.EnterpriseCA1))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.RootCA))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.Domain))
 				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.NTAuthStore))
+				require.True(t, nodes.Contains(harness.NTLMCoerceAndRelayNTLMToADCS.AuthenticatedUsersGroup))
 			}
 			return nil
 		})
@@ -296,7 +297,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)
@@ -315,7 +316,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 				}).First(); err != nil {
 				t.Fatalf("error fetching NTLM to SMB edge in integration test: %v", err)
 			} else {
-				relayTargets, err := ad2.GetVulnerableComputersForRelayNTLMToSMB(context.Background(), db, edge)
+				relayTargets, err := ad2.GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(context.Background(), db, edge)
 				require.NoError(t, err)
 
 				require.Len(t, relayTargets, 1)

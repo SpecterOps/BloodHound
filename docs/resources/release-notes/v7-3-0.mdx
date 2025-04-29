@@ -1,0 +1,109 @@
+---
+title: "2025-04-22 Release Notes (v7.3.0)"
+---
+
+## Announcements
+
+### Deep Linking Early Access is Live\!
+Not content with "just a back button," we went all-in, adding full deep-link support to the application. This supports going "forward" and "back" in the application and allows sharing links among teams when something interesting is discovered. This functionality may be enabled within the "Early Access" configuration section of the "Administration" section.\
+  \
+  BloodHound Enterprise customers will see support for deep linking across both the Attack Paths and Posture pages.\
+  \
+  Within the Explore view, links should include:
+  - Currently selected search tab
+  - The content searched within that tab (objects, cypher, etc)
+  - Any selected object or edge on the graph
+  - Selected Entity panel exp
+  - Selected graph layout
+
+### BloodHound Enterprise APIv1 Retirement (ETA: BlackHat 2025)
+
+BloodHound Enterprise APIv1 has served us well for many years but its time has come to an end. We will begin the process towards complete deprecation of our first API version and expect to complete the removal around BlackHat 2025 of this year (August). Thankfully, our CE customers have no need to worry about this transition, as APIv1 was never included in the product.
+
+For our Enterprise customers, the vast majority if you have already migrated off and will experience no impact as a result of this change. For the small number who still have integrations utilizing the old version, your TAM will reach out to you to help with your migration.
+
+## Summary
+
+- **BloodHound (v7.3.0)**
+  - New and Improved Features
+    - Deep-linking Early Access for all BloodHound\!
+    - NTLM relay is generally available.
+    - _[BHE Only]_ Introducing a new Collector Downloads page!
+    - Default layout on Explore is now Sequential.
+    - Added a "Relay Targets" entity panel to the CoerceAndRelayNTLMtoADCS edge type.
+    - Multiple Cypher enhancements and performance improvements for environments hosted in PostgreSQL graph databases.
+    - _[BHE Only]_ Removed the legacy `admin_rights_count` property from all user objects.
+    - _[BHE Only]_ Deprecated the "petri dish" view of Tier Zero, this will now display the Group Management page.
+  - Bug Fixes
+    - Resolved latent false positives related to CoerceAndRelayNTLMtoSMB (this fix will require recollecting SMB data).
+    - _[CE Only]_ GPOLocalGroup ingestion has been fixed (Huge thank you to [@martanne](https://github.com/martanne)!).
+    - Resolved an ingestion issue with AD trusts inaccurately setting the trust attributes to "0".
+    - AZResetPassword edges will no-longer be inserted against members of role-assignable groups.
+    - Resolved a specific issue with linking well known groups during ingestion.
+- **SharpHound (v2.6.5)**
+  - New and Improved Features
+    - GenericAll, WriteDacl, or WriteOwner edges now validate ObjectType (aceType) settings for creating edges, reducing false positives.
+    - ADCSESCx edges now requires an enabled Computer with a HostCAService edge to the EnterpriseCA, reducing false positives for when the CA host has been decommissioned.
+    - SharpHound will no longer attempt to resolve objects with a domain of "." to improve collection performance.
+  - Bug Fixes
+    - HostsCAService edges will now generate as a result of CertServices collections.
+    - Resolved an issue where timezone offsets would occasionally be applied twice on object creation timestamps.
+    - _[CE Only]_ SMB information will no longer be collected in DCOnly collections.
+- **AzureHound (v2.3.1)**
+  - _This release utilizes an updated signing certificate for BloodHound Enterprise customers. It does not contain any functional modifications._
+
+## BloodHound (v7.3.0)
+
+### New and Improved Features
+
+- **Deep-linking Early Access** - Not content with "just a back button," we went all-in, adding full deep-link support to the application. This supports going "forward" and "back" in the application and allows sharing links among teams when something interesting is discovered. This functionality may be enabled within the "Early Access" configuration section of the "Administration" section.\
+  \
+  BloodHound Enterprise customers will see support for deep linking across both the Attack Paths and Posture pages.\
+  \
+  Within the Explore view, links should include:
+  - Currently selected search tab
+  - The content searched within that tab (objects, cypher, etc)
+  - Any selected object or edge on the graph
+  - Selected Entity panel exp
+  - Selected graph layout
+- **NTLM relay is generally available** - After a successful early access period, NTLM relay attack paths are now generally available to all customers. This feature requires SharpHound v2.6.X+ and we highly recommend updating to the latest version of SharpHound to remediate all known bugs.
+- **_[BHE Only]_ New Collector Downloads page** - Long overdue for an upgrade, the BloodHound Enterprise Collector Downloads page is brand new. This new page adds several functional enhancements for all customers, including:\
+  - Breaks up AzureHound downloads into separate artifacts to reduce issues with AV flagging non-Windows binaries.
+  - Displays the release date of each collector client.
+  - Adds the ability to directly download the previous five versions of each client released (these will become available through future releases - they were not backfilled for this release).
+  - Adds the ability for download pre-release collector versions, when available.
+  - Adds ability to directly download CE collectors for instances where these are beneficial.
+  - Utilizes a new API path to avoid ad-blocking utilities from preventing display of the downloads.
+  <img src="/assets/new_collector_downloads.png"/>
+- **Default Explore layout: Sequential** - After running a query, most of our users change the layout to "Sequential." We decided it was time to save you the clicks and make this the default layout going forward!
+- **CoerceAndRelayNTLMToADCS Relay Targets** - Added a "Relay Targets" entity panel to the CoerceAndRelayNTLMToADCS edge type to provide the available relay targets for the Attack Path.
+  <img src="/assets/CoerceNTLMADCS_RelayTargets.png"/>
+- Multiple Cypher enhancements and performance improvements for environments hosted in PostgreSQL graph databases.
+- _[BHE Only]_ Removed the legacy `admin_rights_count` property from all user objects.
+- _[BHE Only]_ Deprecated the "petri dish" view of Tier Zero, this will now display the Group Management page.
+
+### Bug Fixes
+
+- Resolved latent false positives related to CoerceAndRelayNTLMtoSMB (this fix will require recollecting SMB data).
+- _[CE Only]_ GPOLocalGroup ingestion has been fixed (Huge thank you to [@martanne](https://github.com/martanne)!).
+- Resolved an ingestion issue with AD trusts inaccurately setting the trust attributes to "0".
+- AZResetPassword edges will no-longer be inserted against members of role-assignable groups.
+- Resolved a specific issue with linking well known groups during ingestion.
+
+## SharpHound (v2.6.5)
+
+### New and Improved Features
+
+- GenericAll, WriteDacl, or WriteOwner edges now validate ObjectType (aceType) settings for creating edges, reducing false positives.
+- ADCSESCx edges now requires an enabled Computer with a HostCAService edge to the EnterpriseCA, reducing false positives for when the CA host has been decommissioned.
+- SharpHound will no longer attempt to resolve objects with a domain of "." to improve collection performance.
+
+### Bug Fixes
+
+- HostsCAService edges will now generate as a result of CertServices collections.
+- Resolved an issue where timezone offsets would occasionally be applied twice on object creation timestamps.
+- _[CE Only]_ SMB information will no longer be collected in DCOnly collections.
+
+## AzureHound (v2.3.1)
+
+_This release utilizes an updated signing certificate for BloodHound Enterprise customers. It does not contain any functional modifications._

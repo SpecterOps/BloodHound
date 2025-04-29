@@ -34,6 +34,7 @@ import {
     Flag,
     PageWithTitle,
     Permission,
+    useAppNavigate,
     useFeatureFlags,
     useMountEffect,
     useNotifications,
@@ -41,7 +42,6 @@ import {
     useToggleFeatureFlag,
 } from 'bh-shared-ui';
 import { FC, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { setDarkMode } from 'src/ducks/global/actions';
 import { useAppDispatch } from 'src/store';
 
@@ -116,7 +116,7 @@ export const EarlyAccessFeaturesWarningDialog: React.FC<{
 const EarlyAccessFeatures: FC = () => {
     const [showWarningDialog, setShowWarningDialog] = useState(true);
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const { data, isLoading, isError } = useFeatureFlags();
     const toggleFeatureFlag = useToggleFeatureFlag();
 

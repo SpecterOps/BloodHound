@@ -69,7 +69,7 @@ func (s *Translator) translateWith() error {
 			}
 		}
 
-		if projectionConstraint, err := s.treeTranslator.ConsumeSet(s.scope.CurrentFrame().Known().RemoveSet(aggregatedItems.RootIdentifiers())); err != nil {
+		if projectionConstraint, err := s.treeTranslator.ConsumeConstraintsFromVisibleSet(s.scope.CurrentFrame().Known().RemoveSet(aggregatedItems.RootIdentifiers())); err != nil {
 			return err
 		} else if err := RewriteFrameBindings(s.scope, projectionConstraint.Expression); err != nil {
 			return err

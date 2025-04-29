@@ -1,0 +1,96 @@
+# Copyright 2025 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: './../parameters/header.prefer.yaml'
+  - name: kind_name
+    description: Kind Name
+    in: path
+    required: true
+    schema:
+      type: string
+get:
+  operationId: GetCustomNode
+  summary: Get custom node
+  description: |
+    Retrieve the configuration for a specific custom node kind.
+    Returns the display settings and metadata for the requested node kind.
+  tags:
+    - Custom Node Management
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/model.custom-node.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+put:
+  operationId: UpdateCustomNode
+  summary: Update custom node
+  description: |
+    Update the configuration for a specific custom node kind.
+    Returns the updated configuration for the specific node kind.
+  tags:
+    - Custom Node Management
+    - Community
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            config:
+              $ref: './../schemas/model.custom-node.config.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/model.custom-node.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+delete:
+  operationId: DeleteCustomNode
+  summary: Delete custom node
+  description: Delete the configuration for a specific custom node kind.
+  tags:
+    - Custom Node Management
+    - Community
+    - Enterprise
+  responses:
+    200:
+      description: OK
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

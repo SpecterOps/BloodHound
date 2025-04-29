@@ -67,8 +67,8 @@ const (
 var (
 	errBadRelatedEntityReturnType = errors.New("invalid return type requested for related entities")
 	errParameterRequired          = errors.New("missing required parameter")
-	errParameterSkip              = errors.New("invalid skip parameter")
-	errParameterRelatedEntityType = errors.New("invalid related entity type")
+	ErrParameterSkip              = errors.New("invalid skip parameter")
+	ErrParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
 func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, objectID string, request *http.Request) (any, int, *api.ErrorWrapper) {
@@ -269,13 +269,13 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 		}
 
 	default:
-		return nil, 0, errParameterRelatedEntityType
+		return nil, 0, ErrParameterRelatedEntityType
 	}
 
 	nodeCount := nodeSet.Len()
 
 	if skip > nodeCount {
-		return nil, 0, errParameterSkip
+		return nil, 0, ErrParameterSkip
 	}
 
 	if skip+limit > nodeCount {
@@ -314,9 +314,9 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		}
 	} else {
 		if nodes, count, err := listRelatedEntityType(ctx, s.Graph, relatedEntityType, objectID, skip, limit); err != nil {
-			if errors.Is(err, errParameterSkip) {
+			if errors.Is(err, ErrParameterSkip) {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, skip), request), response)
-			} else if errors.Is(err, errParameterRelatedEntityType) {
+			} else if errors.Is(err, ErrParameterRelatedEntityType) {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusNotFound, fmt.Sprintf("no matching related entity list type for %s", relatedEntityType), request), response)
 			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, "calculating the request results exceeded memory limitations due to the volume of objects involved", request), response)
@@ -406,9 +406,9 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter %s is required", objectIDQueryParameterName), request), response)
 	} else if relatedEntityTypeStr := queryVars.Get(relatedEntityTypeQueryParameterName); relatedEntityTypeStr != "" {
 		s.GetAZRelatedEntities(request.Context(), response, request, objectID)
-	} else if hydrateCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterHydrateCounts), true); err != nil {
+	} else if includeCounts, err := api.ParseOptionalBool(queryVars.Get(api.QueryParameterIncludeCounts), true); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.Graph, entityType, objectID, hydrateCounts); err != nil {
+	} else if entityInformation, err := GetAZEntityInformation(request.Context(), s.Graph, entityType, objectID, includeCounts); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
 		} else {

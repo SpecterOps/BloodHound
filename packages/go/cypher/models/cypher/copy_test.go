@@ -55,7 +55,7 @@ func TestCopy(t *testing.T) {
 				Match: &model2.Match{
 					Optional: true,
 					Pattern: []*model2.PatternPart{{
-						Binding:                 model2.NewVariableWithSymbol("p"),
+						Variable:                model2.NewVariableWithSymbol("p"),
 						ShortestPathPattern:     true,
 						AllShortestPathsPattern: true,
 						PatternElements:         []*model2.PatternElement{},
@@ -123,7 +123,7 @@ func TestCopy(t *testing.T) {
 	})
 	validateCopy(t, &model2.ProjectionItem{})
 	validateCopy(t, &model2.PropertyLookup{
-		Symbols: []string{"a", "b", "c"},
+		Symbol: "a",
 	})
 	validateCopy(t, &model2.Set{})
 	validateCopy(t, &model2.Delete{
@@ -137,17 +137,17 @@ func TestCopy(t *testing.T) {
 	validateCopy(t, &model2.Disjunction{})
 	validateCopy(t, &model2.ExclusiveDisjunction{})
 	validateCopy(t, &model2.PatternPart{
-		Binding:                 model2.NewVariableWithSymbol("p"),
+		Variable:                model2.NewVariableWithSymbol("p"),
 		ShortestPathPattern:     true,
 		AllShortestPathsPattern: true,
 	})
 	validateCopy(t, &model2.PatternElement{})
 	validateCopy(t, &model2.Negation{})
 	validateCopy(t, &model2.NodePattern{
-		Binding: model2.NewVariableWithSymbol("n"),
+		Variable: model2.NewVariableWithSymbol("n"),
 	})
 	validateCopy(t, &model2.RelationshipPattern{
-		Binding:   model2.NewVariableWithSymbol("r"),
+		Variable:  model2.NewVariableWithSymbol("r"),
 		Direction: graph.DirectionOutbound,
 	})
 	validateCopy(t, &model2.PatternRange{

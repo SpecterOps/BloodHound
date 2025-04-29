@@ -32,9 +32,11 @@ type CancelableErrorHandler interface {
 	SetErrorf(format string, args ...any)
 }
 
-type HierarchicalVisitor[N any] interface {
+type Visitor[N any] interface {
 	CancelableErrorHandler
 
+	Consume()
+	WasConsumed() bool
 	Enter(node N)
 	Visit(node N)
 	Exit(node N)
@@ -72,21 +74,34 @@ func NewCancelableErrorHandler() CancelableErrorHandler {
 	return &cancelableErrorHandler{}
 }
 
-type composableHierarchicalVisitor[N any] struct {
+type composableVisitor[N any] struct {
 	CancelableErrorHandler
+
+	currentSyntaxNodeConsumed bool
 }
 
-func (s composableHierarchicalVisitor[N]) Enter(node N) {
+func (s *composableVisitor[N]) Consume() {
+	s.currentSyntaxNodeConsumed = true
 }
 
-func (s composableHierarchicalVisitor[N]) Visit(node N) {
+func (s *composableVisitor[N]) WasConsumed() bool {
+	consumed := s.currentSyntaxNodeConsumed
+	s.currentSyntaxNodeConsumed = false
+
+	return consumed
 }
 
-func (s composableHierarchicalVisitor[N]) Exit(node N) {
+func (s *composableVisitor[N]) Enter(node N) {
 }
 
-func NewComposableHierarchicalVisitor[E any]() HierarchicalVisitor[E] {
-	return composableHierarchicalVisitor[E]{
+func (s *composableVisitor[N]) Visit(node N) {
+}
+
+func (s *composableVisitor[N]) Exit(node N) {
+}
+
+func NewVisitor[E any]() Visitor[E] {
+	return &composableVisitor[E]{
 		CancelableErrorHandler: NewCancelableErrorHandler(),
 	}
 }
@@ -102,16 +117,16 @@ const (
 type SimpleVisitorFunc[N any] func(node N, errorHandler CancelableErrorHandler)
 
 type simpleVisitor[N any] struct {
-	HierarchicalVisitor[N]
+	Visitor[N]
 
 	order       Order
 	visitorFunc SimpleVisitorFunc[N]
 }
 
-func NewSimpleVisitor[N any](visitorFunc SimpleVisitorFunc[N]) HierarchicalVisitor[N] {
+func NewSimpleVisitor[N any](visitorFunc SimpleVisitorFunc[N]) Visitor[N] {
 	return &simpleVisitor[N]{
-		HierarchicalVisitor: NewComposableHierarchicalVisitor[N](),
-		visitorFunc:         visitorFunc,
+		Visitor:     NewVisitor[N](),
+		visitorFunc: visitorFunc,
 	}
 }
 
@@ -162,96 +177,7 @@ func (s *Cursor[N]) NextBranch() N {
 	return nextBranch
 }
 
-type OrderedVisitors[N any] struct {
-	visitors []HierarchicalVisitor[N]
-	done     []bool
-	err      error
-}
-
-func NewOrderedVisitors[N any](visitors ...HierarchicalVisitor[N]) HierarchicalVisitor[N] {
-	return &OrderedVisitors[N]{
-		visitors: visitors,
-		done:     make([]bool, len(visitors)),
-	}
-}
-
-func (s *OrderedVisitors[N]) Done() bool {
-	if s.err != nil {
-		return true
-	}
-
-	return len(s.visitors) == 0
-}
-
-func (s *OrderedVisitors[N]) Error() error {
-	var errs []error
-
-	if s.err != nil {
-		errs = append(errs, s.err)
-	}
-
-	for _, visitor := range s.visitors {
-		if err := visitor.Error(); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-func (s *OrderedVisitors[N]) SetDone() {
-	for idx := 0; idx < len(s.done); idx++ {
-		s.done[idx] = true
-	}
-}
-
-func (s *OrderedVisitors[N]) SetVisitorDone(idx int) {
-	s.done[idx] = true
-}
-
-func (s *OrderedVisitors[N]) SetError(err error) {
-	s.err = err
-}
-
-func (s *OrderedVisitors[N]) SetErrorf(format string, args ...any) {
-	s.SetError(fmt.Errorf(format, args...))
-}
-
-func (s *OrderedVisitors[N]) eachVisitor(eachFunc func(visitor HierarchicalVisitor[N])) {
-	for idx, visitor := range s.visitors {
-		if s.done[idx] {
-			continue
-		}
-
-		eachFunc(visitor)
-
-		if visitor.Error() != nil {
-			s.SetDone()
-		} else if visitor.Done() {
-			s.SetVisitorDone(idx)
-		}
-	}
-}
-
-func (s *OrderedVisitors[N]) Enter(node N) {
-	s.eachVisitor(func(visitor HierarchicalVisitor[N]) {
-		visitor.Enter(node)
-	})
-}
-
-func (s *OrderedVisitors[N]) Visit(node N) {
-	s.eachVisitor(func(visitor HierarchicalVisitor[N]) {
-		visitor.Visit(node)
-	})
-}
-
-func (s *OrderedVisitors[N]) Exit(node N) {
-	s.eachVisitor(func(visitor HierarchicalVisitor[N]) {
-		visitor.Exit(node)
-	})
-}
-
-func Generic[E any](node E, visitor HierarchicalVisitor[E], cursorConstructor func(node E) (*Cursor[E], error)) error {
+func Generic[E any](node E, visitor Visitor[E], cursorConstructor func(node E) (*Cursor[E], error)) error {
 	var stack []*Cursor[E]
 
 	if cursor, err := cursorConstructor(node); err != nil {
@@ -274,7 +200,7 @@ func Generic[E any](node E, visitor HierarchicalVisitor[E], cursorConstructor fu
 			}
 		}
 
-		if nextNode.HasNext() {
+		if nextNode.HasNext() && !visitor.WasConsumed() {
 			if !isFirstVisit {
 				visitor.Visit(nextNode.Node)
 
@@ -302,28 +228,10 @@ func Generic[E any](node E, visitor HierarchicalVisitor[E], cursorConstructor fu
 	return nil
 }
 
-func PgSQL(node pgsql.SyntaxNode, visitors ...HierarchicalVisitor[pgsql.SyntaxNode]) error {
-	if node == nil {
-		return nil
-	}
-
-	if len(visitors) == 1 {
-		// If there's only one visitor no need to wrap and add indirection to visit calls
-		return Generic(node, visitors[0], newSQLWalkCursor)
-	}
-
-	return Generic(node, NewOrderedVisitors[pgsql.SyntaxNode](visitors...), newSQLWalkCursor)
+func PgSQL(node pgsql.SyntaxNode, visitor Visitor[pgsql.SyntaxNode]) error {
+	return Generic(node, visitor, newSQLWalkCursor)
 }
 
-func Cypher(node cypher.SyntaxNode, visitors ...HierarchicalVisitor[cypher.SyntaxNode]) error {
-	if node == nil {
-		return nil
-	}
-
-	if len(visitors) == 1 {
-		// If there's only one visitor no need to wrap and add indirection to visit calls
-		return Generic(node, visitors[0], newCypherWalkCursor)
-	}
-
-	return Generic(node, NewOrderedVisitors[cypher.SyntaxNode](visitors...), newCypherWalkCursor)
+func Cypher(node cypher.SyntaxNode, visitor Visitor[cypher.SyntaxNode]) error {
+	return Generic(node, visitor, newCypherWalkCursor)
 }

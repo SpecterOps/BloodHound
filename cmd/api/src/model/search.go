@@ -19,7 +19,6 @@ package model
 import (
 	"errors"
 	"net/http"
-	"net/url"
 	"slices"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -28,11 +27,19 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
+const (
+	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
+	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
+	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
+	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
+)
+
 type DomainSelector struct {
-	Type      string `json:"type"`
-	Name      string `json:"name"`
-	ObjectID  string `json:"id"`
-	Collected bool   `json:"collected"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	ObjectID    string `json:"id"`
+	Collected   bool   `json:"collected"`
+	ImpactValue int    `json:"impactValue,omitempty"`
 }
 
 type DomainSelectors []DomainSelector
@@ -84,46 +91,6 @@ func (s DomainSelectors) GetValidFilterPredicatesAsStrings(column string) ([]str
 		}
 		return stringPredicates, nil
 	}
-}
-
-type OrderCriterion struct {
-	Property string
-	Order    graph.Criteria
-}
-
-type OrderCriteria []OrderCriterion
-
-const (
-	ErrResponseDetailsBadQueryParameterFilters    = "there are errors in the query parameter filters specified"
-	ErrResponseDetailsFilterPredicateNotSupported = "the specified filter predicate is not supported for this column"
-	ErrResponseDetailsColumnNotFilterable         = "the specified column cannot be filtered"
-	ErrResponseDetailsColumnNotSortable           = "the specified column cannot be sorted"
-)
-
-func (s DomainSelectors) GetOrderCriteria(params url.Values) (OrderCriteria, error) {
-	var (
-		sortByColumns = params["sort_by"]
-		orderCriteria OrderCriteria
-	)
-
-	for _, column := range sortByColumns {
-		criterion := OrderCriterion{}
-
-		if string(column[0]) == "-" {
-			column = column[1:]
-			criterion.Order = query.Descending()
-		} else {
-			criterion.Order = query.Ascending()
-		}
-		criterion.Property = column
-
-		if !s.IsSortable(column) {
-			return OrderCriteria{}, errors.New(ErrResponseDetailsColumnNotSortable)
-		}
-
-		orderCriteria = append(orderCriteria, criterion)
-	}
-	return orderCriteria, nil
 }
 
 func (s DomainSelectors) GetFilterCriteria(request *http.Request) (graph.Criteria, error) {

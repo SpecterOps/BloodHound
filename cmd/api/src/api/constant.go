@@ -40,7 +40,7 @@ const (
 
 	// Query parameters
 	QueryParameterSortBy         = "sort_by"
-	QueryParameterHydrateCounts  = "counts"
+	QueryParameterIncludeCounts  = "counts"
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
@@ -51,6 +51,7 @@ const (
 	URIPathVariableAssetGroupSelectorID              = "asset_group_selector_id"
 	URIPathVariableAssetGroupTagID                   = "asset_group_tag_id"
 	URIPathVariableAssetGroupTagSelectorID           = "asset_group_tag_selector_id"
+	URIPathVariableAssetGroupTagMemberID             = "asset_group_tag_member_id"
 	URIPathVariableAttackPathID                      = "attack_path_id"
 	URIPathVariableClientID                          = "client_id"
 	URIPathVariableDataType                          = "data_type"

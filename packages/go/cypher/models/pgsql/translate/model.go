@@ -61,11 +61,26 @@ type NodeSelect struct {
 	Constraints pgsql.Expression
 }
 
+type expansionOptions struct {
+	FindShortestPath     bool
+	FindAllShortestPaths bool
+	MinDepth             models.Optional[int64]
+	MaxDepth             models.Optional[int64]
+}
+
+func newExpansionOptions(part *PatternPart, relationshipPattern *cypher.RelationshipPattern) expansionOptions {
+	return expansionOptions{
+		FindShortestPath:     part.ShortestPath,
+		FindAllShortestPaths: part.AllShortestPaths,
+		MinDepth:             models.PointerOptional(relationshipPattern.Range.StartIndex),
+		MaxDepth:             models.PointerOptional(relationshipPattern.Range.EndIndex),
+	}
+}
+
 type Expansion struct {
 	Frame       *Frame
 	PathBinding *BoundIdentifier
-	MinDepth    models.Optional[int64]
-	MaxDepth    models.Optional[int64]
+	Options     expansionOptions
 
 	PrimerNodeConstraints              pgsql.Expression
 	PrimerNodeSatisfactionProjection   pgsql.SelectItem
@@ -90,8 +105,10 @@ type Expansion struct {
 	Projection []pgsql.SelectItem
 }
 
-func NewExpansionModel() *Expansion {
-	return &Expansion{}
+func NewExpansionModel(part *PatternPart, relationshipPattern *cypher.RelationshipPattern) *Expansion {
+	return &Expansion{
+		Options: newExpansionOptions(part, relationshipPattern),
+	}
 }
 
 func (s *Expansion) CompletePattern(traversalStep *TraversalStep) error {
@@ -173,9 +190,15 @@ func (s *TraversalStep) FlipNodes() {
 		s.Expansion.Value.FlipDirection()
 	}
 
-	oldLeftNode := s.LeftNode
+	var (
+		oldLeftNode      = s.LeftNode
+		oldLeftNodeBound = s.LeftNodeBound
+	)
+
 	s.LeftNode = s.RightNode
+	s.LeftNodeBound = s.RightNodeBound
 	s.RightNode = oldLeftNode
+	s.RightNodeBound = oldLeftNodeBound
 
 	switch s.Direction {
 	case graph.DirectionOutbound:
@@ -247,12 +270,12 @@ func (s *Query) CurrentPart() *QueryPart {
 }
 
 type QueryPart struct {
-	Model   *pgsql.Query
-	Frame   *Frame
-	Updates []*Mutations
-	OrderBy []pgsql.OrderBy
-	Skip    models.Optional[pgsql.Expression]
-	Limit   models.Optional[pgsql.Expression]
+	Model     *pgsql.Query
+	Frame     *Frame
+	Updates   []*Mutations
+	SortItems []*pgsql.OrderBy
+	Skip      models.Optional[pgsql.Expression]
+	Limit     models.Optional[pgsql.Expression]
 
 	numReadingClauses  int
 	numUpdatingClauses int
@@ -361,7 +384,7 @@ func (s *QueryPart) ConsumeProperties() map[string]pgsql.Expression {
 }
 
 func (s *QueryPart) CurrentOrderBy() *pgsql.OrderBy {
-	return &s.OrderBy[len(s.OrderBy)-1]
+	return s.SortItems[len(s.SortItems)-1]
 }
 
 type Projection struct {
@@ -539,16 +562,16 @@ func extractIdentifierFromCypherExpression(expression cypher.Expression) (pgsql.
 
 	switch typedExpression := expression.(type) {
 	case *cypher.NodePattern:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.RelationshipPattern:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.PatternPart:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Variable
 
 	case *cypher.ProjectionItem:
-		variableExpression = typedExpression.Binding
+		variableExpression = typedExpression.Alias
 
 	case *cypher.Variable:
 		variableExpression = typedExpression

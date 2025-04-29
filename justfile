@@ -64,9 +64,6 @@ _prep-steps:
   @just goimports
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
-  @just build > tmp/build-output.txt
-  @just test -y > tmp/yarn-test-output.txt
-  @just test -g -i > tmp/go-test-output.txt
 
 goimports:
   @ echo "Running goimports, check for file drift"

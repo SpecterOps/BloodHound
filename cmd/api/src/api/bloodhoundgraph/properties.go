@@ -17,37 +17,18 @@
 package bloodhoundgraph
 
 import (
-	"fmt"
-	"log/slog"
-	"strings"
-
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
-
-// We ignore the property lookup errors here since there's no clear path for a caller to handle it. Logging is also
-// restricted to debug verbosity as anything more permissive could potentially flood centralized infrastructure in
-// production
-
-func getNodeLevel(target *graph.Node) (int, bool) {
-	if startSystemTags, err := target.Properties.Get(common.SystemTags.String()).String(); err == nil {
-		slog.Debug(fmt.Sprintf("Unable to find a %s property for node %d with kinds %v", common.SystemTags.String(), target.ID, target.Kinds))
-	} else if strings.Contains(startSystemTags, ad.AdminTierZero) {
-		return 0, true
-	}
-
-	return -1, false
-}
 
 func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	properties := target.Properties.Map
 
 	// Set the node level. This is legacy behavior that should be eventually refactored. The UI should be able to
 	// consume the system_tags and user_tags properties directly.
-	if nodeLevel, hasLevel := getNodeLevel(target); hasLevel {
-		properties["level"] = nodeLevel
+	if tiering.IsTierZero(target) {
+		properties["level"] = 0
 	}
 
 	// Set the legacy node type

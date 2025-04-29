@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -25,15 +26,17 @@ import (
 	"reflect"
 	"testing"
 
+	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/src/utils"
-
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/stretchr/testify/require"
+	"github.com/specterops/bloodhound/src/utils/test"
 
 	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/api"
+	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -906,5 +909,93 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 				t.Errorf("handler returned wrong status code: got %v want %v", status, tc.Expected.Code)
 			}
 		}
+	}
+}
+
+func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockGraph *graphmocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name             string
+		buildRequest     func() *http.Request
+		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
+		expected         expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				return request
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"Error getting quality stat: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+		{
+			name: "Success - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				return request
+			},
+			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				t.Helper()
+				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockGraph: graphmocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.emulateWithMocks(t, mocks, request)
+
+			resources := v2.Resources{
+				Graph: mocks.mockGraph,
+			}
+
+			response := httptest.NewRecorder()
+
+			resources.GetDatabaseCompleteness(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
+		})
 	}
 }

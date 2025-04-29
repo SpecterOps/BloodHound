@@ -35,12 +35,12 @@ func NewResult(query string, err error, driverResult neo4j.Result) graph.Result 
 	}
 }
 
-func (s *internalResult) Values() (graph.ValueMapper, error) {
+func (s *internalResult) Mapper() (graph.ValueMapper, error) {
 	return NewValueMapper(s.driverResult.Record().Values), nil
 }
 
 func (s *internalResult) Scan(targets ...any) error {
-	if values, err := s.Values(); err != nil {
+	if values, err := s.Mapper(); err != nil {
 		return err
 	} else {
 		return values.Scan(targets...)

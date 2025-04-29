@@ -19,6 +19,7 @@ import General from './General';
 import LinuxAbuse from './LinuxAbuse';
 import Opsec from './Opsec';
 import References from './References';
+import RelayTargets from './RelayTargets';
 import WindowsAbuse from './WindowsAbuse';
 
 const CoerceAndRelayNTLMToADCS = {
@@ -28,6 +29,7 @@ const CoerceAndRelayNTLMToADCS = {
     opsec: Opsec,
     references: References,
     composition: Composition,
+    relaytargets: RelayTargets,
 };
 
 export default CoerceAndRelayNTLMToADCS;

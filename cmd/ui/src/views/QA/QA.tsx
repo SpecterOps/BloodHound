@@ -25,9 +25,9 @@ import {
     PageWithTitle,
     SelectedEnvironment,
     TenantInfo,
+    useInitialEnvironment,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { dataCollectionMessage } from './utils';
 
 const useStyles = makeStyles((theme) => ({

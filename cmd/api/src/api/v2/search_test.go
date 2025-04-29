@@ -113,7 +113,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 			{
 				Name: "GraphQueryError",
 				Setup: func() {
-					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, fmt.Errorf("Some error"))
+					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, fmt.Errorf("Some error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -122,7 +122,7 @@ func TestResources_GetAvailableDomains(t *testing.T) {
 			{
 				Name: "Success",
 				Setup: func() {
-					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return(graph.NodeSet{}, nil)
+					mockGraphQueries.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

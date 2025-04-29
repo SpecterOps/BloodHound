@@ -20,6 +20,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/specterops/bloodhound/cypher/models/walk"
+
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
@@ -78,10 +80,10 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 
 		isRelationshipQuery = false
 
-		bindWalk = cypher.NewVisitor(func(stack *cypher.WalkStack, branch cypher.Expression) error {
-			switch typedElement := branch.(type) {
+		bindWalk = walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+			switch typedNode := node.(type) {
 			case *cypher.Variable:
-				switch typedElement.Symbol {
+				switch typedNode.Symbol {
 				case NodeSymbol:
 					singleNodeBound = true
 
@@ -98,9 +100,7 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 					isRelationshipQuery = true
 				}
 			}
-
-			return nil
-		}, nil)
+		})
 	)
 
 	// Zip through updating clauses first
@@ -113,11 +113,11 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 
 		switch typedClause := typedUpdatingClause.Clause.(type) {
 		case *cypher.Create:
-			if err := cypher.Walk(typedClause, cypher.NewVisitor(func(stack *cypher.WalkStack, element cypher.Expression) error {
-				switch typedElement := element.(type) {
+			if err := walk.Cypher(typedClause, walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+				switch typedNode := node.(type) {
 				case *cypher.NodePattern:
-					if patternBinding, typeOK := typedElement.Binding.(*cypher.Variable); !typeOK {
-						return fmt.Errorf("expected variable for pattern binding but got: %T", typedElement.Binding)
+					if patternBinding, typeOK := typedNode.Variable.(*cypher.Variable); !typeOK {
+						errorHandler.SetErrorf("expected variable for pattern binding but got: %T", typedNode.Variable)
 					} else {
 						switch patternBinding.Symbol {
 						case NodeSymbol:
@@ -132,8 +132,8 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 					}
 
 				case *cypher.RelationshipPattern:
-					if patternBinding, typeOK := typedElement.Binding.(*cypher.Variable); !typeOK {
-						return fmt.Errorf("expected variable for pattern binding but got: %T", typedElement.Binding)
+					if patternBinding, typeOK := typedNode.Variable.(*cypher.Variable); !typeOK {
+						errorHandler.SetErrorf("expected variable for pattern binding but got: %T", typedNode.Variable)
 					} else {
 						switch patternBinding.Symbol {
 						case EdgeSymbol:
@@ -141,14 +141,12 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 						}
 					}
 				}
-
-				return nil
-			}, nil)); err != nil {
+			})); err != nil {
 				return err
 			}
 
 		case *cypher.Delete:
-			if err := cypher.Walk(typedClause, bindWalk); err != nil {
+			if err := walk.Cypher(typedClause, bindWalk); err != nil {
 				return err
 			}
 		}
@@ -156,14 +154,14 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 
 	// Is there a where clause?
 	if firstReadingClause := GetFirstReadingClause(s.regularQuery); firstReadingClause != nil && firstReadingClause.Match.Where != nil {
-		if err := cypher.Walk(firstReadingClause.Match.Where, bindWalk); err != nil {
+		if err := walk.Cypher(firstReadingClause.Match.Where, bindWalk); err != nil {
 			return err
 		}
 	}
 
 	// Is there a return clause
 	if s.regularQuery.SingleQuery.SinglePartQuery.Return != nil {
-		if err := cypher.Walk(s.regularQuery.SingleQuery.SinglePartQuery.Return, bindWalk); err != nil {
+		if err := walk.Cypher(s.regularQuery.SingleQuery.SinglePartQuery.Return, bindWalk); err != nil {
 			return err
 		}
 	}
@@ -176,14 +174,14 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 	if singleNodeBound && !creatingSingleNode {
 		// Bind the single-node variable
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(NodeSymbol),
+			Variable: cypher.NewVariableWithSymbol(NodeSymbol),
 		})
 	}
 
 	if startNodeBound {
 		// Bind the start-node variable
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(EdgeStartSymbol),
+			Variable: cypher.NewVariableWithSymbol(EdgeStartSymbol),
 		})
 	}
 
@@ -197,7 +195,7 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 			if edgeBound {
 				// Bind the edge variable
 				patternPart.AddPatternElements(&cypher.RelationshipPattern{
-					Binding:   cypher.NewVariableWithSymbol(EdgeSymbol),
+					Variable:  cypher.NewVariableWithSymbol(EdgeSymbol),
 					Direction: graph.DirectionOutbound,
 				})
 			} else {
@@ -215,13 +213,13 @@ func (s *Builder) prepareMatch(allShortestPaths bool) error {
 	if endNodeBound {
 		// Add an empty node pattern if the end node isn't bound, and we aren't creating it
 		patternPart.AddPatternElements(&cypher.NodePattern{
-			Binding: cypher.NewVariableWithSymbol(EdgeEndSymbol),
+			Variable: cypher.NewVariableWithSymbol(EdgeEndSymbol),
 		})
 	}
 
 	if allShortestPaths {
 		patternPart.AllShortestPathsPattern = true
-		patternPart.Binding = cypher.NewVariableWithSymbol(PathSymbol)
+		patternPart.Variable = cypher.NewVariableWithSymbol(PathSymbol)
 
 		// Update all relationship PatternElements to expand fully (*..)
 		for _, patternElement := range patternPart.PatternElements {
@@ -292,7 +290,7 @@ func (s *Builder) Apply(criteria ...graph.Criteria) {
 			s.regularQuery.SingleQuery.SinglePartQuery.AddUpdatingClause(cypher.Copy(typedCriteria))
 
 		default:
-			panic(fmt.Errorf("invalid type for dawgs query: %T %+v", criteria, criteria))
+			panic(fmt.Errorf("invalid type for dawgs query: %T %+v", typedCriteria, typedCriteria))
 		}
 	}
 }

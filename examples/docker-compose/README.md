@@ -1,5 +1,7 @@
 # BloodHound Community Edition Docker Compose Example
 
+**NOTE:** We recommend [installing BloodHound Community Edition using bloodhound-cli](https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart). However, if you'd prefer to install it via Docker Compose, please follow the instructions below. 
+
 BloodHound Community Edition is composed of three distinct parts:
 
 -   A PostgreSQL database used for application state storage

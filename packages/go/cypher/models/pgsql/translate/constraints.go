@@ -215,29 +215,6 @@ type Constraint struct {
 	Expression   pgsql.Expression
 }
 
-func (s *Constraint) Merge(other *Constraint) error {
-	if other.Dependencies != nil && other.Expression != nil {
-		newExpression := pgsql.OptionalAnd(s.Expression, other.Expression)
-
-		switch typedNewExpression := newExpression.(type) {
-		case *pgsql.UnaryExpression:
-			if err := applyUnaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-
-		case *pgsql.BinaryExpression:
-			if err := applyBinaryExpressionTypeHints(typedNewExpression); err != nil {
-				return err
-			}
-		}
-
-		s.Dependencies.MergeSet(other.Dependencies)
-		s.Expression = newExpression
-	}
-
-	return nil
-}
-
 // ConstraintTracker is a tool for associating constraints (e.g. binary or unary expressions
 // that constrain a set of identifiers) with the identifier set they constrain.
 //
@@ -275,7 +252,7 @@ func (s *ConstraintTracker) HasConstraints(scope *pgsql.IdentifierSet) (bool, er
 	return false, nil
 }
 
-func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
+func (s *ConstraintTracker) ConsumeAll(kindMapper *contextAwareKindMapper) (*Constraint, error) {
 	var (
 		constraintExpressions = make([]pgsql.Expression, len(s.Constraints))
 		matchedDependencies   = pgsql.NewIdentifierSet()
@@ -289,7 +266,7 @@ func (s *ConstraintTracker) ConsumeAll() (*Constraint, error) {
 	// Clear the internal constraint slice
 	s.Constraints = s.Constraints[:0]
 
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+	if conjoined, err := ConjoinExpressions(kindMapper, constraintExpressions); err != nil {
 		return nil, err
 	} else {
 		return &Constraint{
@@ -305,7 +282,7 @@ be satisfied by the scope's identifiers.
 
 ```
 
-	scope := pgsql.IdentifierSet{
+	visible := pgsql.IdentifierSet{
 		"a": struct{}{},
 		"b": struct{}{},
 	}
@@ -325,11 +302,11 @@ be satisfied by the scope's identifiers.
 		}},
 	}
 
-	satisfiedScope, expression := tracker.ConsumeSet(scope)
+	satisfiedConstraints, expression := tracker.ConsumeSet(visible)
 
 ```
 */
-func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint, error) {
+func (s *ConstraintTracker) ConsumeSet(kindMapper *contextAwareKindMapper, visible *pgsql.IdentifierSet) (*Constraint, error) {
 	var (
 		matchedDependencies   = pgsql.NewIdentifierSet()
 		constraintExpressions []pgsql.Expression
@@ -342,7 +319,7 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 		// to be consumed even if the dependencies are satisfied
 		if syntaxNodeSatisfied, err := isSyntaxNodeSatisfied(nextConstraint.Expression); err != nil {
 			return nil, err
-		} else if !syntaxNodeSatisfied || !scope.Satisfies(nextConstraint.Dependencies) {
+		} else if !syntaxNodeSatisfied || !visible.Satisfies(nextConstraint.Dependencies) {
 			// This constraint isn't satisfied, move to the next one
 			idx += 1
 		} else {
@@ -357,7 +334,7 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 		}
 	}
 
-	if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
+	if conjoined, err := ConjoinExpressions(kindMapper, constraintExpressions); err != nil {
 		return nil, err
 	} else {
 		return &Constraint{
@@ -367,7 +344,7 @@ func (s *ConstraintTracker) ConsumeSet(scope *pgsql.IdentifierSet) (*Constraint,
 	}
 }
 
-func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
+func (s *ConstraintTracker) Constrain(kindMapper *contextAwareKindMapper, dependencies *pgsql.IdentifierSet, constraintExpression pgsql.Expression) error {
 	for _, constraint := range s.Constraints {
 		if constraint.Dependencies.Matches(dependencies) {
 			joinedExpression := pgsql.NewBinaryExpression(
@@ -376,7 +353,7 @@ func (s *ConstraintTracker) Constrain(dependencies *pgsql.IdentifierSet, constra
 				constraint.Expression,
 			)
 
-			if err := applyBinaryExpressionTypeHints(joinedExpression); err != nil {
+			if err := applyBinaryExpressionTypeHints(kindMapper, joinedExpression); err != nil {
 				return err
 			}
 
@@ -434,7 +411,7 @@ const (
 	nonRecursivePattern = false
 )
 
-func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, tracker *ConstraintTracker) (PatternConstraints, error) {
+func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, traversalStep *TraversalStep, treeTranslator *ExpressionTreeTranslator) (PatternConstraints, error) {
 	var (
 		constraints PatternConstraints
 		err         error
@@ -450,7 +427,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	// Track the identifiers visible at this frame to correctly assign the remaining constraints
 	knownBindings := traversalStep.Frame.Known()
 
-	if constraints.LeftNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.LeftNode, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 
@@ -466,7 +443,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	traversalStep.Frame.Export(traversalStep.Edge.Identifier)
 	knownBindings.Add(traversalStep.Edge.Identifier)
 
-	if constraints.Edge, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.Edge, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 
@@ -474,7 +451,7 @@ func consumePatternConstraints(isFirstTraversalStep, isRecursivePattern bool, tr
 	traversalStep.Frame.Export(traversalStep.RightNode.Identifier)
 	knownBindings.Add(traversalStep.RightNode.Identifier)
 
-	if constraints.RightNode, err = tracker.ConsumeSet(knownBindings); err != nil {
+	if constraints.RightNode, err = treeTranslator.ConsumeConstraintsFromVisibleSet(knownBindings); err != nil {
 		return constraints, err
 	}
 

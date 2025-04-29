@@ -58,4 +58,6 @@ export * from './useIsMouseDragging';
 
 export * from './useMatchingPaths';
 
+export * from './useInitialEnvironment';
+
 export * from './usePreviousValue';

@@ -61,6 +61,8 @@ const (
 	OperatorIs                   = Operator("is")
 	OperatorIsNot                = Operator("is not")
 	OperatorNot                  = Operator("not")
+	OperatorAnd                  = Operator("and")
+	OperatorOr                   = Operator("or")
 	OperatorInvalid              = Operator("")
 )
 

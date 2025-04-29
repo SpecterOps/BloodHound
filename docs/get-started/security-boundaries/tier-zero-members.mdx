@@ -2,13 +2,11 @@
 title: "Tier Zero: Members and Modification"
 ---
 
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>   
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>   
 
-While implementing a tiered model remains the best path toward securing your overall environment, BloodHound Enterprise enables your teams to identify and remediate the paths towards control of Tier Zero assets without necessarily implementing a strict tiering model.
+BloodHound Enterprise borrows from [Microsoft's Enhanced Security Administration Environment (ESAE - Retired)](https://learn.microsoft.com/en-us/security/compass/esae-retirement) model in using the term "Tier Zero." In this model, Tier Zero is the set of objects with full control over the environment AND _any objects with control over those objects_. You may also be familiar with [Microsoft's Enterprise Access Model (EAM)](https://learn.microsoft.com/en-us/security/compass/privileged-access-access-model), which later replaced ESAE; however, they recommend effectively the same advice.
 
-BloodHound Enterprise borrows from [Microsoft's Enhanced Security Administration Environment (ESAE - Retired)](https://learn.microsoft.com/en-us/security/compass/esae-retirement) model in utilizing the term "Tier Zero." In this model, Tier Zero is the set of objects with full control over the environment AND _any objects with control over those objects_. You may also be familiar with [Microsoft's Enterprise Access Model (EAM)](https://learn.microsoft.com/en-us/security/compass/privileged-access-access-model), which later replaced ESAE; however, they recommend effectively the same advice.
-
-
+Although implementing a tiered model remains the best path toward securing your overall environment, BloodHound Enterprise enables your teams to identify and remediate the paths towards control of Tier Zero assets without necessarily implementing a strict tiering model.
 
 Jonas Bülow Knudsen, one of our BloodHound Enterprise team members, has written this fantastic blog on implementing a tiering model in your environment: [Establish security boundaries in your on-prem AD and Azure environment](https://posts.specterops.io/establish-security-boundaries-in-your-on-prem-ad-and-azure-environment-dcb44498cfc2).
 
@@ -30,9 +28,10 @@ BloodHound Enterprise will automatically identify many Tier Zero objects within 
 
 ### Active Directory
 
-In Active Directory, BloodHound Enterprise starts primarily with the default groups that maintain full control of a domain or have the (effectively) irrevocable ability to gain access to those groups. These include (default SID suffixes are provided for reference):
+In Active Directory, BloodHound Enterprise starts primarily with the default groups that maintain full control of a domain or have the (effectively) irrevocable ability to gain access to those groups. These include (default RIDs are provided for reference):
 
 * Domain head object
+* AdminSDHolder object
 * Built-in Administrator account (-500)
 * Domain Admins (-512)
 * Domain Controllers (-516)

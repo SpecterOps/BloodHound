@@ -33,19 +33,16 @@ func TestWalk(t *testing.T) {
 
 	// Walk through all positive test cases to ensure that the walker can visit the involved types
 	for _, testCase := range test.LoadFixture(t, test.PositiveTestCases).RunnableCases() {
-		// Only bother with the string match tests
 		if testCase.Type == test.TypeStringMatch {
-			var (
-				details              = test.UnmarshallTestCaseDetails[test.StringMatchTest](t, testCase)
-				parseContext         = frontend.NewContext()
-				queryModel, parseErr = frontend.ParseCypher(parseContext, details.Query)
-			)
+			parseContext := frontend.NewContext()
 
-			if parseErr != nil {
-				t.Fatalf("Parser errors: %s", parseErr.Error())
+			if details, err := test.UnmarshallTestCaseDetails[test.StringMatchTest](testCase); err != nil {
+				t.Fatalf("Error unmarshalling test case details: %v", err)
+			} else if queryModel, err := frontend.ParseCypher(parseContext, details.Query); err != nil {
+				t.Fatalf("Parser errors: %s", err.Error())
+			} else {
+				require.Nil(t, walk.Cypher(queryModel, visitor))
 			}
-
-			require.Nil(t, walk.Cypher(queryModel, visitor))
 		}
 	}
 }

@@ -19,14 +19,12 @@ package analysis
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"slices"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -54,88 +52,16 @@ func NewCompositionCounter() CompositionCounter {
 	}
 }
 
-var (
-	metaKind       = graph.StringKind("Meta")
-	metaDetailKind = graph.StringKind("MetaDetail")
-)
-
-func AllTaggedNodesFilter(additionalFilter graph.Criteria) graph.Criteria {
-	var (
-		filters = []graph.Criteria{
-			query.IsNotNull(query.NodeProperty(common.SystemTags.String())),
-		}
-	)
-
-	if additionalFilter != nil {
-		filters = append(filters, additionalFilter)
-	}
-
-	return query.And(filters...)
-}
-
 func GetNodeKindDisplayLabel(node *graph.Node) string {
 	return GetNodeKind(node).String()
 }
 
 func GetNodeKind(node *graph.Node) graph.Kind {
-	var (
-		resultKind = graph.StringKind(NodeKindUnknown)
-		baseKind   = resultKind
-	)
-
-	for _, kind := range node.Kinds {
-		// If this is a BHE meta kind, return early
-		if kind.Is(metaKind, metaDetailKind) {
-			return metaKind
-		} else if kind.Is(ad.Entity, azure.Entity) {
-			baseKind = kind
-		} else if kind.Is(ad.LocalGroup) {
-			// Allow ad.LocalGroup to overwrite NodeKindUnknown, but nothing else
-			if resultKind.String() == NodeKindUnknown {
-				resultKind = kind
-			}
-		} else if slices.Contains(ValidKinds(), kind) {
-			resultKind = kind
-		}
-	}
-
-	if resultKind.String() == NodeKindUnknown {
-		return baseKind
-	} else {
-		return resultKind
-	}
-}
-
-func ClearSystemTags(ctx context.Context, db graph.Database) error {
-	defer measure.ContextMeasure(ctx, slog.LevelInfo, "ClearSystemTagsIncludeMeta")()
-
-	var (
-		props = graph.NewProperties()
-	)
-
-	props.Delete(common.SystemTags.String())
-
-	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if ids, err := ops.FetchNodeIDs(tx.Nodes().Filter(AllTaggedNodesFilter(nil))); err != nil {
-			return err
-		} else {
-			return tx.Nodes().Filterf(func() graph.Criteria {
-				return query.InIDs(query.NodeID(), ids...)
-			}).Update(props)
-		}
-	})
-}
-
-func ValidKinds() []graph.Kind {
-	var (
-		metaKinds = []graph.Kind{metaKind, metaDetailKind}
-	)
-
-	return slicesext.Concat(ad.Nodes(), ad.Relationships(), azure.NodeKinds(), azure.Relationships(), metaKinds)
+	return graphschema.PrimaryNodeKind(node.Kinds)
 }
 
 func ParseKind(rawKind string) (graph.Kind, error) {
-	for _, kind := range ValidKinds() {
+	for kind := range graphschema.ValidKinds {
 		if kind.String() == rawKind {
 			return kind, nil
 		}

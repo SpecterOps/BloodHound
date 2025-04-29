@@ -2,7 +2,7 @@
 title: Install and Upgrade SharpHound Enterprise
 ---
 
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
 ## Purpose
 
@@ -83,7 +83,7 @@ BHE users may use it during SharpHound Enterprise deployment or upgrades.
 
 
 14. If using a gMSA, according to our [Hardening Guidelines](/manage-bloodhound/securing-bloodhound-and-collectors/sharphound-hardening), change the service to run as the gMSA as described in [Add the gMSA to the SharpHound Enterprise service](/install-data-collector/install-sharphound/create-gmsa).
-15. Start the service once; the startup will fail but trigger the creation of the configuration and log directory in the service account's user directory: "%AppData%\\BloodHoundEnterprise"
+15. Start the service once; the startup will fail but trigger the creation of the configuration and log directory in the service account's user directory: "%AppData%\Roaming\BloodHoundEnterprise"
 16. Change the files "settings.json" and "auth.json" in the configuration described in [SharpHound Enterprise Local Configuration](/install-data-collector/install-sharphound/local-configuration). In most cases, only the following needs to change:
     * In "settings.json"
         * Set "RestEndpoint" to the BloodHound Enterprise domain name in the format: "CODENAME.bloodhoundenterprise.io". This is the domain that the service connects to.

@@ -19,16 +19,17 @@
 package graph
 
 type ValueMapper interface {
-	Next() (any, error)
-	Map(target any) error
-	MapOptions(target ...any) (any, error)
+	Remaining() []any
+	HasNext() bool
+	Next() (any, bool)
+	MapNext(target any) error
+	TryMapNext(target any) bool
 	Scan(targets ...any) error
-	Count() int
 }
 
 type Scanner interface {
 	Next() bool
-	Values() (ValueMapper, error)
+	Mapper() (ValueMapper, error)
 	Scan(targets ...any) error
 }
 
@@ -47,7 +48,7 @@ func (s ErrorResult) Next() bool {
 	return false
 }
 
-func (s ErrorResult) Values() (ValueMapper, error) {
+func (s ErrorResult) Mapper() (ValueMapper, error) {
 	return nil, s.err
 }
 
@@ -110,7 +111,7 @@ type NodeQuery interface {
 
 	// Fetch completes the query and captures a cursor for iterating the result set. This cursor is passed to the given
 	// delegate. Errors from the delegate are returned upwards as the error result of this call.
-	Fetch(delegate func(cursor Cursor[*Node]) error) error
+	Fetch(delegate func(cursor Cursor[*Node]) error, finalCriteria ...Criteria) error
 
 	// FetchIDs completes the query and captures a cursor for iterating the result set. This cursor is passed to the given
 	// delegate. Errors from the delegate are returned upwards as the error result of this call.

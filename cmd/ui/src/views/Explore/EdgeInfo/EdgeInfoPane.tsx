@@ -15,14 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import { SelectedEdge, collapseAllSections, useExploreParams, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
+import {
+    ObjectInfoPanelContextProvider,
+    SelectedEdge,
+    collapseAllSections,
+    useExploreParams,
+    useFeatureFlag,
+    usePaneStyles,
+} from 'bh-shared-ui';
 import React, { useEffect, useState } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
 import { useAppDispatch } from 'src/store';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 
-const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge: SelectedEdge | null }> = ({ sx, selectedEdge }) => {
+interface EdgeInfoPaneProps {
+    sx?: SxProps;
+    selectedEdge: SelectedEdge | null;
+}
+
+const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
     const { expandedPanelSections } = useExploreParams();
@@ -59,4 +71,10 @@ const EdgeInfoPane: React.FC<{ sx?: SxProps; selectedEdge: SelectedEdge | null }
     );
 };
 
-export default EdgeInfoPane;
+const WrappedEdgeInfoPane: React.FC<EdgeInfoPaneProps> = (props) => (
+    <ObjectInfoPanelContextProvider>
+        <EdgeInfoPane {...props} />
+    </ObjectInfoPanelContextProvider>
+);
+
+export default WrappedEdgeInfoPane;

@@ -167,7 +167,7 @@ func (s *Translator) buildUpdates() error {
 		}
 
 		if len(identifierMutation.KindAssignments) > 0 {
-			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, identifierMutation.KindAssignments); err != nil {
+			if kindIDs, err := s.kindMapper.MapKinds(identifierMutation.KindAssignments); err != nil {
 				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 			} else {
 				arrayLiteral := pgsql.ArrayLiteral{
@@ -184,7 +184,7 @@ func (s *Translator) buildUpdates() error {
 		}
 
 		if len(identifierMutation.KindRemovals) > 0 {
-			if kindIDs, err := s.kindMapper.MapKinds(s.ctx, identifierMutation.KindRemovals); err != nil {
+			if kindIDs, err := s.kindMapper.MapKinds(identifierMutation.KindRemovals); err != nil {
 				s.SetError(fmt.Errorf("failed to translate kinds: %w", err))
 			} else {
 				arrayLiteral := pgsql.ArrayLiteral{

@@ -28,6 +28,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/src/services/ingest"
 )
 
 type ListPermissionsResponse struct {
@@ -108,6 +109,7 @@ type Resources struct {
 	CollectorManifests         config.CollectorManifests
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
+	IngestSchema               ingest.IngestSchema
 }
 
 func NewResources(
@@ -119,6 +121,7 @@ func NewResources(
 	collectorManifests config.CollectorManifests,
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
+	ingestSchema ingest.IngestSchema,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -131,5 +134,6 @@ func NewResources(
 		CollectorManifests:         collectorManifests,
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
+		IngestSchema:               ingestSchema,
 	}
 }
