@@ -23,19 +23,19 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func AsTime(value any) (time.Time, error) {
+func AsTime(value any) (time.Time, bool) {
 	switch typedValue := value.(type) {
 	case dbtype.Time:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.LocalTime:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.Date:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.LocalDateTime:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	default:
 		return graph.AsTime(value)
@@ -45,7 +45,7 @@ func AsTime(value any) (time.Time, error) {
 func mapValue(rawValue, target any) bool {
 	switch typedTarget := target.(type) {
 	case *time.Time:
-		if value, err := AsTime(rawValue); err == nil {
+		if value, typeOK := AsTime(rawValue); typeOK {
 			*typedTarget = value
 			return true
 		}

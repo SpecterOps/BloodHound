@@ -18,34 +18,49 @@ package pg
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func mapKinds(ctx context.Context, kindMapper KindMapper, untypedValue any) (graph.Kinds, error) {
-	var kindIDs []int16
+func mapKinds(ctx context.Context, kindMapper KindMapper, untypedValue any) (graph.Kinds, bool) {
+	var (
+		// Default assumption is that the untyped value contains a type that can be mapped from
+		validType = true
+		kindIDs   []int16
+	)
 
 	switch typedValue := untypedValue.(type) {
 	case []any:
 		kindIDs = make([]int16, len(typedValue))
 
 		for idx, untypedElement := range typedValue {
-			if typedElement, typeOK := untypedElement.(int16); !typeOK {
-				return nil, fmt.Errorf("unable to type convert %T into a graph kind", untypedElement)
-			} else {
+			if typedElement, typeOK := untypedElement.(int16); typeOK {
 				kindIDs[idx] = typedElement
 			}
 		}
 
 	case []int16:
 		kindIDs = typedValue
+
+	default:
+		// This is not a valid type to map to graph Kinds
+		validType = false
 	}
 
-	return kindMapper.MapKindIDs(ctx, kindIDs)
+	// Guard to prevent unnecessary thrashing of critical sections if there are no kind IDs to resolve
+	if len(kindIDs) > 0 {
+		// Ignoring the error here is intentional. Failure to map the kinds here does not imply a fatal error.
+		if mappedKinds, err := kindMapper.MapKindIDs(ctx, kindIDs); err == nil {
+			return mappedKinds, true
+		}
+	}
+
+	// Return validType here in case there was a type match (in which case the mapper succeeded) but the type did not
+	// contain a valid kind ID to map to
+	return nil, validType
 }
 
-func newPGMapFunc(ctx context.Context, kindMapper KindMapper) graph.MapFunc {
+func newMapFunc(ctx context.Context, kindMapper KindMapper) graph.MapFunc {
 	return func(value, target any) bool {
 		switch typedTarget := target.(type) {
 		case *graph.Relationship:
@@ -90,7 +105,7 @@ func newPGMapFunc(ctx context.Context, kindMapper KindMapper) graph.MapFunc {
 			}
 
 		case *graph.Kinds:
-			if mappedKinds, err := mapKinds(ctx, kindMapper, value); err == nil {
+			if mappedKinds, typeOK := mapKinds(ctx, kindMapper, value); typeOK {
 				*typedTarget = mappedKinds
 				return true
 			}
@@ -101,5 +116,5 @@ func newPGMapFunc(ctx context.Context, kindMapper KindMapper) graph.MapFunc {
 }
 
 func NewValueMapper(ctx context.Context, kindMapper KindMapper) graph.ValueMapper {
-	return graph.NewValueMapper(newPGMapFunc(ctx, kindMapper))
+	return graph.NewValueMapper(newMapFunc(ctx, kindMapper))
 }
