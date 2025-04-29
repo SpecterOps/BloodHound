@@ -171,9 +171,9 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
-export type AssetGroupTagResponse = BasicResponse<AssetGroupTag>;
-export type AssetGroupTagsResponse = BasicResponse<{ asset_group_tags: AssetGroupTag[] }>;
-export type AssetGroupSelectorResponse = BasicResponse<AssetGroupTagSelector>;
+export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
+export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;
+export type AssetGroupSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
 export type AssetGroupSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupMemberResponse = PaginatedResponse<{ members: AssetGroupTagSelectorMember[] }>;
 export type AssetGroupMemberInfoResponse = PaginatedResponse<{ member: AssetGroupTagMemberInfo }>;

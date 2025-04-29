@@ -77,7 +77,6 @@ export const TagForm: FC = () => {
                 <CardContent>
                     <div className='flex justify-between'>
                         <span>Tier Information</span>
-                        {/* {tagQuery.data && <span>Updating: {tagQuery.data.name}</span>} */}
                     </div>
                     <div onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6 mt-6'>
                         <div>
@@ -85,7 +84,7 @@ export const TagForm: FC = () => {
                             <Input
                                 id='name'
                                 type='text'
-                                {...register('name', { required: true, value: tagQuery.data?.name })}
+                                {...register('name', { required: true, value: tagQuery.data?.tag.name })}
                                 className={
                                     'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
                                 }
@@ -98,7 +97,7 @@ export const TagForm: FC = () => {
                             <Label htmlFor='description'>Description</Label>
                             <textarea
                                 id='description'
-                                {...register('description', { value: tagQuery.data?.description })}
+                                {...register('description', { value: tagQuery.data?.tag.description })}
                                 placeholder='Description Input'
                                 rows={3}
                                 className={
@@ -106,13 +105,13 @@ export const TagForm: FC = () => {
                                 }
                             />
                         </div>
-                        <div
-                        // className='hidden'
-                        >
+                        <div className='hidden'>
                             <Label htmlFor='certificationRequired'>Required Certificaiton</Label>
                             <Switch
                                 id='certificationRequired'
-                                {...register('certificationRequired', { value: tagQuery.data?.requireCertify || true })}
+                                {...register('certificationRequired', {
+                                    value: tagQuery.data?.tag.requireCertify || true,
+                                })}
                                 label='Enable this to mandate certification for all objects within this tier'
                                 defaultChecked></Switch>
                         </div>
@@ -123,9 +122,6 @@ export const TagForm: FC = () => {
                 <Button variant={'secondary'} onClick={history.back}>
                     Cancel
                 </Button>
-                {/* <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
-                    Save
-                </Button> */}
                 <Button
                     variant={'primary'}
                     onClick={() => {

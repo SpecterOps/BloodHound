@@ -22,7 +22,7 @@ import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import SelectorForm from '.';
 import { tierHandlers } from '../../../../mocks';
-import { act, render, screen, waitFor } from '../../../../test-utils';
+import { act, longWait, render, screen } from '../../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../../utils';
 
 const testSelector = {
@@ -131,30 +131,21 @@ describe('Selector Form', () => {
         const selectorStatusSwitch = screen.getByLabelText('Selector Status');
         expect(selectorStatusSwitch).toBeInTheDocument();
         expect(selectorStatusSwitch).toHaveValue('on');
-        waitFor(
-            () => {
-                expect(screen.getByText('Enabled')).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
+        });
 
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
-        waitFor(
-            () => {
-                expect(nameInput).toHaveValue('foo');
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(nameInput).toHaveValue('foo');
+        });
 
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
-        waitFor(
-            () => {
-                expect(descriptionInput).toHaveValue('bar');
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(descriptionInput).toHaveValue('bar');
+        });
 
         // This switch is technically hidden until certification is implemented but is still in the form
         const autoCertifySwitch = screen.queryByLabelText('Automatic Certification');
@@ -164,19 +155,13 @@ describe('Selector Form', () => {
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
-        waitFor(
-            () => {
-                expect(screen.getByText('Cypher Search')).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(screen.getByText('Cypher Search')).toBeInTheDocument();
+        });
         // The delete button should render because this selector exists and can be deleted
-        waitFor(
-            () => {
-                expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+        });
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
 
@@ -196,14 +181,11 @@ describe('Selector Form', () => {
         expect(selectorStatusSwitch).toBeInTheDocument();
         expect(selectorStatusSwitch).toHaveValue('on');
 
-        waitFor(
-            async () => {
-                expect(screen.getByText('Enabled')).toBeInTheDocument();
-                await user.click(selectorStatusSwitch);
-                expect(screen.getByText('Disabled')).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(async () => {
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
+            await user.click(selectorStatusSwitch);
+            expect(screen.getByText('Disabled')).toBeInTheDocument();
+        });
     });
 
     it('shows an error message when unable to delete a selector', async () => {
@@ -225,17 +207,14 @@ describe('Selector Form', () => {
             await user.click(screen.getByRole('button', { name: /Delete Selector/ }));
         });
 
-        waitFor(
-            async () => {
-                expect(screen.getByText('Delete foo?')).toBeInTheDocument();
+        longWait(async () => {
+            expect(screen.getByText('Delete foo?')).toBeInTheDocument();
 
-                await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this selector');
-                await user.click(screen.getByRole('button', { name: /Confirm/ }));
+            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this selector');
+            await user.click(screen.getByRole('button', { name: /Confirm/ }));
 
-                expect(await screen.findByText('get rekt')).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+            expect(await screen.findByText('get rekt')).toBeInTheDocument();
+        });
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
@@ -248,12 +227,9 @@ describe('Selector Form', () => {
 
         await user.click(screen.getByRole('button', { name: /Cancel/ }));
 
-        waitFor(
-            () => {
-                expect(history.location.pathname).toBe(detailsPath);
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(history.location.pathname).toBe(detailsPath);
+        });
     });
 
     test('a name value is required to submit the form', async () => {
@@ -265,12 +241,9 @@ describe('Selector Form', () => {
 
         await user.click(screen.getByRole('button', { name: /Save/ }));
 
-        waitFor(
-            () => {
-                expect(screen.getByText('Please provide a name for the selector')).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(screen.getByText('Please provide a name for the selector')).toBeInTheDocument();
+        });
     });
 
     test('filling in the name value submits the form and navigates back to the details page', async () => {
@@ -294,12 +267,9 @@ describe('Selector Form', () => {
 
         expect(screen.queryByText('Please provide a name for the selector')).not.toBeInTheDocument();
 
-        waitFor(
-            () => {
-                expect(history.location.pathname).toBe(detailsPath);
-            },
-            { timeout: 10000 }
-        );
+        longWait(() => {
+            expect(history.location.pathname).toBe(detailsPath);
+        });
     });
 
     test('the object selector list is prepopluated correctly according to the selector seeds', async () => {

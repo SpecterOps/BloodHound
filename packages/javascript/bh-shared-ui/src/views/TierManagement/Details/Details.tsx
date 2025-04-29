@@ -60,7 +60,7 @@ const Details: FC = () => {
         queryKey: ['asset-group-tags'],
         queryFn: async () => {
             return apiClient.getAssetGroupTags().then((res) => {
-                return res.data.data['asset_group_tags'];
+                return res.data.data['tags'];
             });
         },
     });
@@ -129,7 +129,7 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4 grow-1'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 h-full *:grow-0 *:basis-1/3'>
-                    <div className=''>
+                    <div>
                         <DetailsList
                             title='Tiers'
                             listQuery={tagsQuery}

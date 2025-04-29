@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isAxiosError } from 'axios';
+import { isAxiosError } from 'js-client-library';
 import { OptionsObject } from 'notistack';
 
 export const handleError = (

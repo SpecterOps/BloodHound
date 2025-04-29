@@ -79,7 +79,7 @@ const DynamicDetails: FC<DynamicDetailsProps> = ({ data, isCypher }) => {
         return null;
     }
 
-    const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.ISO_8601_SLASHES);
+    const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
     return (
         <Card className='h-64 mb-8 px-6 pt-6 max-w-[32rem] select-none overflow-y-auto'>

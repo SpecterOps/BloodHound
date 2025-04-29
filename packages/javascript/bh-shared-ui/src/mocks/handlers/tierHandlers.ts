@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { rest } from 'msw';
+import { DefaultBodyType, MockedRequest, rest, RestHandler } from 'msw';
 import * as tierMocks from '../factories/tierManagement';
 
-const tierHandlers = [
+const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     rest.get('/api/v2/features', async (_req, res, ctx) => {
         return res(
             ctx.json({
@@ -57,14 +57,14 @@ const tierHandlers = [
 
     // GET Tags
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
-        return res(ctx.json({ data: { asset_group_tags: tierMocks.createAssetGroupTags(5) } }));
+        return res(ctx.json({ data: { tags: tierMocks.createAssetGroupTags(5) } }));
     }),
 
     // GET Tag
     rest.get('/api/v2/asset-group-tags/:tagId', async (req, res, ctx) => {
         const { tagId } = req.params;
 
-        return res(ctx.json({ data: tierMocks.createAssetGroupTag(parseInt(tagId as string)) }));
+        return res(ctx.json({ data: { tag: tierMocks.createAssetGroupTag(parseInt(tagId as string)) } }));
     }),
 
     // GET Selectors
@@ -77,7 +77,9 @@ const tierHandlers = [
     rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (req, res, ctx) => {
         const { tagId, selectorId } = req.params;
         return res(
-            ctx.json({ data: tierMocks.createSelector(parseInt(tagId as string), parseInt(selectorId as string)) })
+            ctx.json({
+                data: { selector: tierMocks.createSelector(parseInt(tagId as string), parseInt(selectorId as string)) },
+            })
         );
     }),
 
