@@ -43,6 +43,13 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+const (
+	assetGroupPreviewSelectorDefaultLimit = 200
+
+	includeProperties = true
+	excludeProperties = false
+)
+
 type AssetGroupTagCounts struct {
 	Selectors int   `json:"selectors"`
 	Members   int64 `json:"members"`
@@ -490,7 +497,7 @@ func (s *Resources) GetAssetGroupTagMemberInfo(response http.ResponseWriter, req
 	} else if node, err := queries.Graph.FetchNodeByGraphId(s.GraphQuery, request.Context(), graph.ID(memberID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{nodeToAssetGroupMember(node, true), selectors}}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), MemberInfoResponse{Member: memberInfo{nodeToAssetGroupMember(node, includeProperties), selectors}}, http.StatusOK, response)
 	}
 }
 
@@ -525,7 +532,7 @@ func (s *Resources) GetAssetGroupMembersByTag(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 		} else {
 			for _, node := range nodes {
-				members = append(members, nodeToAssetGroupMember(node, false))
+				members = append(members, nodeToAssetGroupMember(node, excludeProperties))
 			}
 			api.WriteResponseWrapperWithPagination(request.Context(), GetAssetGroupMembersResponse{Members: members}, limit, skip, int(count), http.StatusOK, response)
 		}
@@ -542,7 +549,7 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		members = []AssetGroupMember{}
 	)
 
-	if limit, err := ParseLimitQueryParameter(request.URL.Query(), 200); err != nil {
+	if limit, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupPreviewSelectorDefaultLimit); err != nil {
 		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else if err := json.NewDecoder(request.Body).Decode(&seeds); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
@@ -557,7 +564,7 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		nodes := datapipe.FetchNodesFromSeeds(request.Context(), s.Graph, seeds.Seeds, model.AssetGroupExpansionMethodAll, limit)
 		for _, node := range nodes {
 			if node.Node != nil {
-				members = append(members, nodeToAssetGroupMember(node.Node, false))
+				members = append(members, nodeToAssetGroupMember(node.Node, excludeProperties))
 			}
 		}
 
