@@ -84,10 +84,23 @@ func TestQueryParameterFilterParser_ParseQueryParameterFilter(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
-			name: "fail - error when parsing an invalid parameter",
+			name: "success - default to eq when parsing a non predicate parameter",
 			args: args{
 				name:  "parameter",
-				value: "eq : hello world",
+				value: "hello world",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    "hello world",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "fail - unknown operator",
+			args: args{
+				name:  "parameter",
+				value: "foo:hello world",
 			},
 			wantErr: assert.Error,
 		},
