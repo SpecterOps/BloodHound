@@ -142,7 +142,6 @@ func TestLoginResource_Logout(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		redirectURL  string
 		responseCode int
 	}
 	type testData struct {
