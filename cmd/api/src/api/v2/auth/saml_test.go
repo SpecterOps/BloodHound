@@ -21,10 +21,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils"
-	"github.com/stretchr/testify/assert"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -32,6 +28,11 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/src/utils"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
