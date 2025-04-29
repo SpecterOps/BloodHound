@@ -19,7 +19,7 @@ import { AssetGroupTagSelectorMember } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AppIcon } from '../../../components';
+import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { DetailsList } from './DetailsList';
@@ -96,6 +96,18 @@ const Details: FC = () => {
     return (
         <div>
             <div className='flex mt-6 gap-8'>
+                <CreateMenu
+                    createMenuTitle='Create Selector'
+                    disabled={!tagId}
+                    menuItems={[
+                        {
+                            title: 'Create Selector',
+                            onClick: () => {
+                                navigate(getEditPath(tagId, selectorId));
+                            },
+                        },
+                    ]}
+                />
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3 invisible'>
                         <div className='flex items-center align-middle'>
