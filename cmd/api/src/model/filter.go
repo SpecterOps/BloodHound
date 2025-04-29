@@ -325,7 +325,11 @@ func (s QueryParameterFilterParser) ParseQueryParameterFilter(name, value string
 		}
 	}
 
-	return QueryParameterFilter{}, ErrNotFiltered
+	return QueryParameterFilter{
+		Name:     name,
+		Operator: Equals,
+		Value:    value,
+	}, nil
 }
 
 func (s QueryParameterFilterParser) ParseQueryParameterFilters(request *http.Request) (QueryParameterFilterMap, error) {
