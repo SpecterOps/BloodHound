@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { isAxiosError } from 'axios';
-=======
 // Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
@@ -18,7 +15,6 @@ import { isAxiosError } from 'axios';
 // SPDX-License-Identifier: Apache-2.0
 
 import { isAxiosError } from 'js-client-library';
->>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
 import { OptionsObject } from 'notistack';
 
 export const handleError = (
