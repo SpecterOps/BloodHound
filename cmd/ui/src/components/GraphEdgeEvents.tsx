@@ -27,7 +27,7 @@ import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
 
-const GraphEdgeEventsV2: FC = () => {
+const GraphEdgeEvents: FC = () => {
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
@@ -176,4 +176,4 @@ const GraphEdgeEventsV2: FC = () => {
     );
 };
 
-export default GraphEdgeEventsV2;
+export default GraphEdgeEvents;

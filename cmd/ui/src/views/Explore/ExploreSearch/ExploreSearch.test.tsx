@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,43 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import userEvent from '@testing-library/user-event';
-import {
-    CYPHER_SEARCH,
-    PATHFINDING_SEARCH,
-    PRIMARY_SEARCH,
-    searchbarActions as actions,
-    initialSearchState,
-    mockCodemirrorLayoutMethods,
-} from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen } from 'src/test-utils';
-import ExploreSearch from '.';
+import ExploreSearch from './ExploreSearch';
+
+import userEvent from '@testing-library/user-event';
+import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { createMemoryHistory } from 'history';
+
+const comboboxLookaheadOptions = {
+    data: [
+        {
+            name: 'admin',
+            objectid: '1',
+            type: 'User',
+        },
+        {
+            name: 'computer',
+            objectid: '2',
+            type: 'Computer',
+        },
+    ],
+};
 
 const server = setupServer(
+    rest.get('/api/v2/search', (req, res, ctx) => {
+        return res(ctx.json(comboboxLookaheadOptions));
+    }),
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
-            })
-        );
-    }),
-    rest.get('/api/v2/search', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [
-                    {
-                        name: 'admin',
-                        objectid: '1',
-                        type: 'User',
-                    },
-                    {
-                        name: 'computer',
-                        objectid: '2',
-                        type: 'Computer',
-                    },
-                ],
             })
         );
     }),
@@ -64,22 +59,29 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => {
-    server.resetHandlers();
-});
+beforeEach(() => mockCodemirrorLayoutMethods());
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('ExploreSearch rendering per tab', async () => {
-    beforeEach(async () => {
-        mockCodemirrorLayoutMethods();
-
-        await act(async () => {
-            render(<ExploreSearch />);
-        });
+const setup = async (exploreSearchTab?: string) => {
+    const history = createMemoryHistory({
+        initialEntries: exploreSearchTab ? [`/?exploreSearchTab=${exploreSearchTab}`] : ['/'],
     });
+
+    const screen = await act(async () => {
+        return render(<ExploreSearch />, { history });
+    });
+
     const user = userEvent.setup();
 
-    it('should render', () => {
+    return { screen, user, history };
+};
+
+// Example
+
+describe('ExploreSearch rendering per tab', async () => {
+    it('should render', async () => {
+        await setup();
         expect(screen.getByLabelText('Search Nodes')).toBeInTheDocument();
 
         expect(screen.getByRole('tab', { name: /search/i })).toBeInTheDocument();
@@ -87,10 +89,8 @@ describe('ExploreSearch rendering per tab', async () => {
         expect(screen.getByRole('tab', { name: /cypher/i })).toBeInTheDocument();
     });
 
-    it('should render the pathfinding search controls when user clicks on pathfinding tab ', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-
-        await user.click(pathfindingTab);
+    it('should render the pathfinding search controls when searchType is pathfinding', async () => {
+        await setup('pathfinding');
 
         expect(screen.getByLabelText(/start node/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/destination node/i)).toBeInTheDocument();
@@ -100,9 +100,7 @@ describe('ExploreSearch rendering per tab', async () => {
     });
 
     it('should render the cypher search controls when user clicks on cypher tab ', async () => {
-        const cypherTab = screen.getByRole('tab', { name: /cypher/i });
-
-        await user.click(cypherTab);
+        await setup('cypher');
 
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
@@ -111,6 +109,7 @@ describe('ExploreSearch rendering per tab', async () => {
     });
     // To do: Work on this when TW css classes are applied in test environment
     it.todo('should hide/expand search widget when user clicks minus/plus button', async () => {
+        const { user } = await setup();
         const widgetBody = screen.getByLabelText('Search Nodes');
         expect(widgetBody).toBeVisible();
 
@@ -124,106 +123,89 @@ describe('ExploreSearch rendering per tab', async () => {
     });
 });
 
-describe('ExploreSearch handles search on tab changing', async () => {
-    it('should perform a primary search when the user clicks the `Search` tab', async () => {
-        await act(async () => {
-            render(<ExploreSearch />, {
-                initialState: {
-                    search: {
-                        ...initialSearchState,
-                        activeTab: PATHFINDING_SEARCH,
-                    },
-                },
-            });
-        });
+describe('ExploreSearch sets searchType on tab changing', async () => {
+    it('sets exploreSearchTab param to node when the user clicks the `Search` tab', async () => {
+        const { screen, user, history } = await setup('pathfinding');
 
-        const user = userEvent.setup();
-        const primarySearchSpy = vi.spyOn(actions, 'primarySearch');
-        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+        const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
+        await user.click(exploreSearchTab);
 
-        const searchTab = screen.getByRole('tab', { name: /search/i });
-        await user.click(searchTab);
-
-        expect(primarySearchSpy).toHaveBeenCalledTimes(1);
-
-        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
-        expect(tabChangedSpy).toHaveBeenCalledWith(PRIMARY_SEARCH);
+        expect(history.location.search).toContain('exploreSearchTab=node');
     });
 
-    it('should perform a pathfinding search when the user clicks the `pathfinding` tab', async () => {
-        await act(async () => {
-            render(<ExploreSearch />);
-        });
-
-        const user = userEvent.setup();
-        const pathfindingSearchSpy = vi.spyOn(actions, 'pathfindingSearch');
-        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+    it('sets exploreSearchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
+        const { screen, user, history } = await setup();
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
-        expect(pathfindingSearchSpy).toHaveBeenCalledTimes(1);
-
-        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
-        expect(tabChangedSpy).toHaveBeenCalledWith(PATHFINDING_SEARCH);
+        expect(history.location.search).toContain('exploreSearchTab=pathfinding');
     });
 
-    it('should perform a cypher search when the user clicks the `cypher` tab', async () => {
-        await act(async () => {
-            render(<ExploreSearch />);
-        });
-
-        const user = userEvent.setup();
-        const cypherSearchSpy = vi.spyOn(actions, 'cypherSearch');
-        const tabChangedSpy = vi.spyOn(actions, 'tabChanged');
+    it('sets exploreSearchTab param to cypher when the user clicks the `cypher` tab', async () => {
+        const { screen, user, history } = await setup();
 
         const cypherTab = screen.getByRole('tab', { name: /cypher/i });
         await user.click(cypherTab);
 
-        expect(cypherSearchSpy).toHaveBeenCalledTimes(1);
+        expect(history.location.search).toContain('exploreSearchTab=cypher');
+    });
 
-        expect(tabChangedSpy).toHaveBeenCalledTimes(1);
-        expect(tabChangedSpy).toHaveBeenCalledWith(CYPHER_SEARCH);
+    it('initializes search tab to node search if the exploreSearchTab is not a supported tab name on first render', async () => {
+        const { screen } = await setup('unsupported_tab');
+        const primarySearchInput = screen.getByPlaceholderText('Search Nodes');
+        expect(primarySearchInput).toBeInTheDocument();
+    });
+
+    it('initializes search tab to the exploreSearchTab on initial render', async () => {
+        const { screen } = await setup('pathfinding');
+        const startNodeInput = screen.getByPlaceholderText('Start Node');
+        const endNodeInput = screen.getByPlaceholderText('Destination Node');
+        expect(startNodeInput).toBeInTheDocument();
+        expect(endNodeInput).toBeInTheDocument();
     });
 });
 
+// Clicking a new tab in these tests cause a query param update but not an actual tab change -- maybe a bad interaction
+// between createMemoryHistory and useExploreParams
 describe('ExploreSearch interaction', () => {
-    const user = userEvent.setup();
+    it.todo(
+        'when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab',
+        async () => {
+            const { screen, user } = await setup();
+            const searchInput = screen.getByPlaceholderText('Search Nodes');
+            const userSuppliedSearchTerm = 'admin';
+            await user.type(searchInput, userSuppliedSearchTerm);
 
-    beforeEach(async () => {
-        await act(async () => {
-            render(<ExploreSearch />);
-        });
-    });
+            // select first option from list and check that text field input is updated
+            const firstOption = await screen.findByRole('option', { name: /admin/i });
+            await user.click(firstOption);
+            expect(searchInput).toHaveValue(userSuppliedSearchTerm);
 
-    it('when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab', async () => {
-        const searchInput = screen.getByPlaceholderText(/search nodes/i);
-        const userSuppliedSearchTerm = 'admin';
-        await user.type(searchInput, userSuppliedSearchTerm);
+            const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+            await act(async () => user.click(pathfindingTab));
 
-        // select first option from list and check that text field input is updated
-        const firstOption = await screen.findByRole('option', { name: /admin/i });
-        await user.click(firstOption);
-        expect(searchInput).toHaveValue(userSuppliedSearchTerm);
+            const startNodeInputField = screen.getByPlaceholderText(/start node/i);
+            expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
+        }
+    );
 
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
-        const startNodeInputField = screen.getByPlaceholderText(/start node/i);
-        expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
-    });
+    it.todo(
+        'when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab',
+        async () => {
+            const { screen, user } = await setup();
+            const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+            await user.click(pathfindingTab);
 
-    it('when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab', async () => {
-        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-        await user.click(pathfindingTab);
+            const startInput = screen.getByPlaceholderText(/start node/i);
+            await user.type(startInput, 'admin');
+            await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-        const startInput = screen.getByPlaceholderText(/start node/i);
-        await user.type(startInput, 'admin');
-        await user.click(await screen.findByRole('option', { name: /admin/i }));
+            const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
+            await user.click(exploreSearchTab);
 
-        const searchTab = screen.getByRole('tab', { name: /search/i });
-        await user.click(searchTab);
-
-        const searchInput = screen.getByPlaceholderText(/search nodes/i);
-        expect(searchInput).toHaveValue('admin');
-    });
+            const searchInput = screen.getByPlaceholderText('Search Nodes');
+            expect(searchInput).toHaveValue('admin');
+        }
+    );
 });

@@ -23,7 +23,7 @@ const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
 const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
 const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
-const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphViewV2'));
+const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
 const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));

@@ -21,7 +21,7 @@ import Graph, { MultiDirectedGraph } from 'graphology';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphEventsV2 } from 'src/components/GraphEventsV2';
+import { GraphEvents } from 'src/components/GraphEvents';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
 import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
@@ -31,7 +31,7 @@ import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
-import GraphEdgeEventsV2 from './GraphEdgeEventsV2';
+import GraphEdgeEvents from './GraphEdgeEvents';
 
 interface SigmaChartProps {
     graph: Graph<Attributes, Attributes, Attributes>;
@@ -98,9 +98,9 @@ const SigmaChart = forwardRef(function SigmaChart(
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,
                 }}>
-                <GraphEdgeEventsV2 />
+                <GraphEdgeEvents />
 
-                <GraphEventsV2
+                <GraphEvents
                     onDoubleClickNode={onDoubleClickNode}
                     onClickNode={onClickNode}
                     onClickEdge={onClickEdge}

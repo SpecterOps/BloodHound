@@ -40,7 +40,7 @@ export interface GraphEventProps {
     showEdgeLabels?: boolean;
 }
 
-export const GraphEventsV2 = forwardRef(function GraphEvents(
+export const GraphEvents = forwardRef(function GraphEvents(
     {
         onDoubleClickNode,
         onClickNode,

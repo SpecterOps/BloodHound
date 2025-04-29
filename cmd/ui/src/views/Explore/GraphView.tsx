@@ -38,11 +38,11 @@ import SigmaChart from 'src/components/SigmaChart';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
-import ContextMenuV2 from './ContextMenu/ContextMenuV2';
-import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
+import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 
-const GraphViewV2: FC = () => {
+const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
@@ -125,7 +125,7 @@ const GraphViewV2: FC = () => {
             />
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
-                <ExploreSearchV2 />
+                <ExploreSearch />
                 <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
                     <GraphButtons
                         onExportJson={() => {
@@ -184,11 +184,11 @@ const GraphViewV2: FC = () => {
                 </Popper>
             </div>
             <GraphItemInformationPanel />
-            <ContextMenuV2 contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
     );
 };
 
-export default GraphViewV2;
+export default GraphView;
