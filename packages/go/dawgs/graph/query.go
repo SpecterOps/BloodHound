@@ -24,6 +24,11 @@ type Result interface {
 	Next() bool
 	Values() []any
 	Mapper() ValueMapper
+
+	// Scan takes a list of target any and attempts to map the next row from the result to the targets. This function
+	// is semantically equivalent to calling graph.ScanNextResult(...)
+	//
+	// This is Deprecated. Call the graph.ScanNextResult(...) function.
 	Scan(targets ...any) error
 	Error() error
 	Close()

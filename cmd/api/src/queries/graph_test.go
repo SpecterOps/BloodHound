@@ -123,7 +123,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		// Passing query
 		preparedQuery, err := gq.PrepareCypherQuery("match (:Computer)-[:HasSession*..]->(:User)-[:MemberOf*..]->(:Group) return n;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
-		_, err = gq.RawCypherQuery(context.Background(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(context.Background(), "", preparedQuery, false)
 		require.Nil(t, err)
 
 		// Scenario 2:
@@ -139,7 +139,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		preparedQuery, err := gq.PrepareCypherQuery("match (b) where b.name = 'harley' return b;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		_, err = gq.RawCypherQuery(context.Background(), preparedQuery, false)
+		_, err = gq.RawCypherQuery(context.Background(), "", preparedQuery, false)
 		require.Nil(t, err)
 	})
 
@@ -151,7 +151,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 		preparedQuery, err := qgWMut.PrepareCypherQuery("match (b) where b.name = 'bruce' remove b.prop return b;", queries.DefaultQueryFitnessLowerBoundExplore)
 		require.Nil(t, err)
 
-		_, err = qgWMut.RawCypherQuery(context.Background(), preparedQuery, false)
+		_, err = qgWMut.RawCypherQuery(context.Background(), "", preparedQuery, false)
 		require.Nil(t, err)
 	})
 }
