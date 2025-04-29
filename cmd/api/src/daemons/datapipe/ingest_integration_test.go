@@ -55,7 +55,10 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					// TODO: CI uses neo4j as the graph driver. this forces us to pass a non-empty
+					// kind to the identityKind parameter of IngestRelationships(). PG can handle empty kinds, neo cannot
+					// may want to update CI to run on the pg graph driver
+					err := datapipe.IngestRelationships(batch, graph.StringKind("Generic"), rels)
 					require.Nil(t, err)
 					return nil
 				})
