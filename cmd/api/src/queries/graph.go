@@ -147,7 +147,7 @@ type Graph interface {
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
 	BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeUpdate) error
-	RawCypherQuery(ctx context.Context, requestID string, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
+	RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error)
 	PrepareCypherQuery(rawCypher string, queryComplexityLimit int64) (PreparedQuery, error)
 	UpdateSelectorTags(ctx context.Context, db agi.AgiData, selectors model.UpdatedAssetGroupSelectors) error
 	FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error)
@@ -428,9 +428,8 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 }
 
 // RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
-// query execution. This function takes in a generic request ID string to help match intent and execution results in
-// the application log.
-func (s *GraphQuery) RawCypherQuery(ctx context.Context, requestID string, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+// query execution.
+func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		err error
 
@@ -448,11 +447,11 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, requestID string, pQuer
 		}
 	)
 
-	slog.Info(
+	slog.InfoContext(
+		ctx,
 		"Preparing user cypher query",
-		"query", pQuery.StrippedQuery,
-		"fitness", pQuery.complexity.RelativeFitness,
-		"request_id", requestID,
+		slog.String("query", pQuery.StrippedQuery),
+		slog.Int64("fitness", pQuery.complexity.RelativeFitness),
 	)
 
 	if pQuery.HasMutation {
@@ -463,12 +462,12 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, requestID string, pQuer
 		err = s.Graph.ReadTransaction(ctx, txDelegate)
 	}
 
-	slog.Info(
+	slog.InfoContext(
+		ctx,
 		"Executed user cypher query",
-		"query", pQuery.StrippedQuery,
-		"fitness", pQuery.complexity.RelativeFitness,
-		"elapsed", time.Since(start),
-		"request_id", requestID,
+		slog.String("query", pQuery.StrippedQuery),
+		slog.Int64("fitness", pQuery.complexity.RelativeFitness),
+		slog.Duration("elapsed", time.Since(start)),
 	)
 
 	if err != nil {

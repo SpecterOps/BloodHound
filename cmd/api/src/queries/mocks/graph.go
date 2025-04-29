@@ -346,18 +346,18 @@ func (mr *MockGraphMockRecorder) PrepareCypherQuery(rawCypher, queryComplexityLi
 }
 
 // RawCypherQuery mocks base method.
-func (m *MockGraph) RawCypherQuery(ctx context.Context, requestID string, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
+func (m *MockGraph) RawCypherQuery(ctx context.Context, pQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, requestID, pQuery, includeProperties)
+	ret := m.ctrl.Call(m, "RawCypherQuery", ctx, pQuery, includeProperties)
 	ret0, _ := ret[0].(model.UnifiedGraph)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RawCypherQuery indicates an expected call of RawCypherQuery.
-func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, requestID, pQuery, includeProperties any) *gomock.Call {
+func (mr *MockGraphMockRecorder) RawCypherQuery(ctx, pQuery, includeProperties any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, requestID, pQuery, includeProperties)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawCypherQuery", reflect.TypeOf((*MockGraph)(nil).RawCypherQuery), ctx, pQuery, includeProperties)
 }
 
 // SearchByNameOrObjectID mocks base method.

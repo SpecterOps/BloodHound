@@ -170,7 +170,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -205,7 +205,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -240,7 +240,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
 						"1": {
 							Label: "label",

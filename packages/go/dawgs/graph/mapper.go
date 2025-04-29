@@ -144,27 +144,24 @@ func AsKinds(rawValue any) (Kinds, error) {
 	}
 }
 
-func AsTime(value any) (time.Time, error) {
+func AsTime(value any) (time.Time, bool) {
 	switch typedValue := value.(type) {
 	case string:
-		if parsedTime, err := time.Parse(time.RFC3339Nano, typedValue); err != nil {
-			return time.Time{}, err
-		} else {
-			return parsedTime, nil
+		if parsedTime, err := time.Parse(time.RFC3339Nano, typedValue); err == nil {
+			return parsedTime, true
 		}
 
 	case float64:
-		return time.Unix(int64(typedValue), 0), nil
+		return time.Unix(int64(typedValue), 0), true
 
 	case int64:
-		return time.Unix(typedValue, 0), nil
+		return time.Unix(typedValue, 0), true
 
 	case time.Time:
-		return typedValue, nil
-
-	default:
-		return time.Time{}, fmt.Errorf("unexecpted type %T will not negotiate to time.Time", value)
+		return typedValue, true
 	}
+
+	return time.Time{}, false
 }
 
 func defaultMapValue(rawValue, target any) bool {
@@ -362,7 +359,7 @@ func defaultMapValue(rawValue, target any) bool {
 		}
 
 	case *time.Time:
-		if value, err := AsTime(rawValue); err == nil {
+		if value, typeOK := AsTime(rawValue); typeOK {
 			*typedTarget = value
 			return true
 		}

@@ -195,10 +195,10 @@ func (s *RelationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cur
 	} else {
 		defer result.Close()
 
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.Path, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.Path, error) {
 			var (
 				nextPath graph.Path
-				err      = scanner.Scan(&nextPath)
+				err      = result.Scan(&nextPath)
 			)
 
 			return nextPath, err
@@ -211,12 +211,12 @@ func (s *RelationshipQuery) FetchAllShortestPaths(delegate func(cursor graph.Cur
 
 func (s *RelationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph.RelationshipTripleResult]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.RelationshipTripleResult, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.RelationshipTripleResult, error) {
 			var (
 				startID        graph.ID
 				relationshipID graph.ID
 				endID          graph.ID
-				err            = scanner.Scan(&startID, &relationshipID, &endID)
+				err            = result.Scan(&startID, &relationshipID, &endID)
 			)
 
 			return graph.RelationshipTripleResult{
@@ -237,13 +237,13 @@ func (s *RelationshipQuery) FetchTriples(delegate func(cursor graph.Cursor[graph
 
 func (s *RelationshipQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.RelationshipKindsResult]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.RelationshipKindsResult, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.RelationshipKindsResult, error) {
 			var (
 				startID          graph.ID
 				relationshipID   graph.ID
 				relationshipKind graph.Kind
 				endID            graph.ID
-				err              = scanner.Scan(&startID, &relationshipID, &relationshipKind, &endID)
+				err              = result.Scan(&startID, &relationshipID, &relationshipKind, &endID)
 			)
 
 			return graph.RelationshipKindsResult{
@@ -282,9 +282,9 @@ func (s *RelationshipQuery) First() (*graph.Relationship, error) {
 
 func (s *RelationshipQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Relationship]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (*graph.Relationship, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (*graph.Relationship, error) {
 			var relationship graph.Relationship
-			return &relationship, scanner.Scan(&relationship)
+			return &relationship, result.Scan(&relationship)
 		})
 
 		defer cursor.Close()
@@ -299,13 +299,13 @@ func (s *RelationshipQuery) FetchDirection(direction graph.Direction, delegate f
 		return err
 	} else {
 		return s.Query(func(result graph.Result) error {
-			cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.DirectionalResult, error) {
+			cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.DirectionalResult, error) {
 				var (
 					relationship graph.Relationship
 					node         graph.Node
 				)
 
-				if err := scanner.Scan(&relationship, &node); err != nil {
+				if err := result.Scan(&relationship, &node); err != nil {
 					return graph.DirectionalResult{}, err
 				}
 
@@ -324,9 +324,9 @@ func (s *RelationshipQuery) FetchDirection(direction graph.Direction, delegate f
 
 func (s *RelationshipQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Result) (graph.ID, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.ID, error) {
 			var relationshipID graph.ID
-			return relationshipID, scanner.Scan(&relationshipID)
+			return relationshipID, result.Scan(&relationshipID)
 		})
 
 		defer cursor.Close()
