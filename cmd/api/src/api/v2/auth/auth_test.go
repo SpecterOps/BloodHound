@@ -4012,3 +4012,155 @@ func TestManagementResource_GetSelf(t *testing.T) {
 		})
 	}
 }
+
+func TestManagementResource_EnrollMFA(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		responseBody string
+		responseCode int
+	}
+	type testData struct {
+		name       string
+		userID     string
+		setupMocks func(*testing.T, *mocks.MockDatabase)
+		payload    auth.MFAEnrollmentRequest
+		expected   expected
+	}
+
+	validUUID := "00000000-0000-0000-0000-000000000001"
+
+	tt := []testData{
+		{
+			name:   "Error: Invalid user ID format - Bad Request",
+			userID: "invalid-uuid",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+			},
+			payload: auth.MFAEnrollmentRequest{
+				Secret: "valid-secret",
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+			},
+		},
+		{
+			name:   "Error: User not found - Internal Server Error",
+			userID: validUUID,
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, sql.ErrNoRows)
+			},
+			payload: auth.MFAEnrollmentRequest{
+				Secret: "valid-secret",
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name:   "Error: Database error - Internal Server Error",
+			userID: validUUID,
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("database error"))
+			},
+			payload: auth.MFAEnrollmentRequest{
+				Secret: "valid-secret",
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name:   "Error: User is SSO - Bad Request",
+			userID: validUUID,
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				userID, _ := uuid.FromString(validUUID)
+				user := model.User{
+					PrincipalName: "john.doe",
+					SSOProviderID: null.Int32From(1),
+					AuthSecret:    &model.AuthSecret{},
+					Unique: model.Unique{
+						ID: userID,
+					},
+				}
+				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(user, nil)
+			},
+			payload: auth.MFAEnrollmentRequest{
+				Secret: "valid-secret",
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"Invalid operation, user is SSO"}]}`,
+			},
+		},
+		{
+			name:   "Error: MFA already activated - Bad Request",
+			userID: validUUID,
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				userID, _ := uuid.FromString(validUUID)
+				user := model.User{
+					PrincipalName: "john.doe",
+					AuthSecret: &model.AuthSecret{
+						TOTPActivated: true,
+					},
+					Unique: model.Unique{
+						ID: userID,
+					},
+				}
+				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(user, nil)
+			},
+			payload: auth.MFAEnrollmentRequest{
+				Secret: "valid-secret",
+			},
+			expected: expected{
+				responseCode: http.StatusBadRequest,
+				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"multi-factor authentication already active"}]}`,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+
+			testCase.setupMocks(t, mockDB)
+
+			mockHost, _ := url.Parse("https://example.com")
+			requestContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+				Host: mockHost,
+			})
+
+			payloadBytes, err := json.Marshal(testCase.payload)
+			require.NoError(t, err)
+
+			endpointURL := fmt.Sprintf("/api/v2/users/%s/mfa/enroll", testCase.userID)
+			req, err := http.NewRequest("POST", endpointURL, bytes.NewReader(payloadBytes))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			req = req.WithContext(requestContext)
+
+			vars := map[string]string{
+				api.URIPathVariableUserID: testCase.userID,
+			}
+			req = mux.SetURLVars(req, vars)
+
+			response := httptest.NewRecorder()
+			resources.EnrollMFA(response, req)
+
+			assert.Equal(t, testCase.expected.responseCode, response.Code)
+
+			if testCase.expected.responseBody != "" {
+				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+				require.NoError(t, err)
+				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
+			}
+		})
+	}
+}
