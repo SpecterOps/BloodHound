@@ -58,7 +58,7 @@ const ConfirmationDialog: React.FC<{
                             <DialogDescription className='text-sm'>
                                 Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
-                                    placeholder={challengeTxt.toLowerCase()}
+                                    placeholder={challengeTxt}
                                     className='border-t-0 border-l-0 border-r-0 rounded-none border-black dark:border-white bg-transparent dark:bg-transparent placeholder-neutral-dark-10 dark:placeholder-neutral-light-10 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2'
                                     onChange={(e) => setChallengeTxtReply(e.target.value)}
                                     value={challengeTxtReply}

@@ -17,6 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Alert, Box, Checkbox, FormControl, FormControlLabel, FormGroup, Typography } from '@mui/material';
 import {
+    DeleteConfirmationDialog,
     FeatureFlag,
     PageWithTitle,
     Permission,
@@ -30,7 +31,6 @@ import { FC, useReducer } from 'react';
 import { useMutation } from 'react-query';
 import { useSelector } from 'react-redux';
 import { selectAllAssetGroupIds, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import ConfirmationDialog from './ConfirmationDialog';
 
 const initialState: State = {
     deleteCollectedGraphData: false,
@@ -353,10 +353,17 @@ const DatabaseManagement: FC = () => {
                 </Box>
             </Box>
 
-            <ConfirmationDialog
+            <DeleteConfirmationDialog
                 open={state.openDialog}
-                handleClose={() => dispatch({ type: 'close_dialog' })}
-                handleDelete={() => handleMutation()}
+                onClose={(response) => {
+                    if (response) {
+                        handleMutation();
+                    }
+                    dispatch({ type: 'close_dialog' });
+                }}
+                itemName='the current environment'
+                itemType='environment'
+                error=''
             />
         </PageWithTitle>
     );
