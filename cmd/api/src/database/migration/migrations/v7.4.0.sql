@@ -168,3 +168,6 @@ SELECT
 	2,
 	d.cypher
 FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
+
+-- Delete the `back_button_support` feature flag
+DELETE FROM feature_flags WHERE key = 'back_button_support';
