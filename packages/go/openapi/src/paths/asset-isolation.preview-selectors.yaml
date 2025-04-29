@@ -19,13 +19,13 @@ parameters:
 post:
   operationId: PreviewSelectors
   summary: Preview Selectors
-  description: Preview to members a selector with select.
+  description: Sample preview of members selected by provided selector seeds.
   tags:
     - Asset Isolation
     - Community
     - Enterprise
   requestBody:
-    description: The request body of seeds for previewing what a selector will select. 
+    description: The request body of seeds for previewing what a selector will select.
     required: true
     content:
       application/json:

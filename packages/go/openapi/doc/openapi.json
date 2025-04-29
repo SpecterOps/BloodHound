@@ -5548,7 +5548,7 @@
       "post": {
         "operationId": "PreviewSelectors",
         "summary": "Preview Selectors",
-        "description": "Preview to members a selector with select.",
+        "description": "Sample preview of members selected by provided selector seeds.",
         "tags": [
           "Asset Isolation",
           "Community",
