@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Card, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
-import { CardContent } from '@mui/material';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { GraphNodes, SeedTypeCypher } from 'js-client-library';

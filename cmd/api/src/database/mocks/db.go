@@ -311,6 +311,21 @@ func (mr *MockDatabaseMockRecorder) CreateCompositionInfo(ctx, nodes, edges any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCompositionInfo", reflect.TypeOf((*MockDatabase)(nil).CreateCompositionInfo), ctx, nodes, edges)
 }
 
+// CreateCustomNodeKinds mocks base method.
+func (m *MockDatabase) CreateCustomNodeKinds(ctx context.Context, customNodeKind model.CustomNodeKinds) (model.CustomNodeKinds, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateCustomNodeKinds", ctx, customNodeKind)
+	ret0, _ := ret[0].(model.CustomNodeKinds)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateCustomNodeKinds indicates an expected call of CreateCustomNodeKinds.
+func (mr *MockDatabaseMockRecorder) CreateCustomNodeKinds(ctx, customNodeKind any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).CreateCustomNodeKinds), ctx, customNodeKind)
+}
+
 // CreateIngestJob mocks base method.
 func (m *MockDatabase) CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error) {
 	m.ctrl.T.Helper()
@@ -619,6 +634,20 @@ func (m *MockDatabase) DeleteAuthToken(ctx context.Context, authToken model.Auth
 func (mr *MockDatabaseMockRecorder) DeleteAuthToken(ctx, authToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAuthToken", reflect.TypeOf((*MockDatabase)(nil).DeleteAuthToken), ctx, authToken)
+}
+
+// DeleteCustomNodeKind mocks base method.
+func (m *MockDatabase) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCustomNodeKind", ctx, kindName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCustomNodeKind indicates an expected call of DeleteCustomNodeKind.
+func (mr *MockDatabaseMockRecorder) DeleteCustomNodeKind(ctx, kindName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).DeleteCustomNodeKind), ctx, kindName)
 }
 
 // DeleteIngestTask mocks base method.
@@ -1196,6 +1225,36 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(ctx, parameter any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), ctx, parameter)
 }
 
+// GetCustomNodeKind mocks base method.
+func (m *MockDatabase) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomNodeKind", ctx, kindName)
+	ret0, _ := ret[0].(model.CustomNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomNodeKind indicates an expected call of GetCustomNodeKind.
+func (mr *MockDatabaseMockRecorder) GetCustomNodeKind(ctx, kindName any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKind), ctx, kindName)
+}
+
+// GetCustomNodeKinds mocks base method.
+func (m *MockDatabase) GetCustomNodeKinds(ctx context.Context) ([]model.CustomNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomNodeKinds", ctx)
+	ret0, _ := ret[0].([]model.CustomNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomNodeKinds indicates an expected call of GetCustomNodeKinds.
+func (mr *MockDatabaseMockRecorder) GetCustomNodeKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomNodeKinds", reflect.TypeOf((*MockDatabase)(nil).GetCustomNodeKinds), ctx)
+}
+
 // GetDatapipeStatus mocks base method.
 func (m *MockDatabase) GetDatapipeStatus(ctx context.Context) (model.DatapipeStatusWrapper, error) {
 	m.ctrl.T.Helper()
@@ -1499,6 +1558,21 @@ func (mr *MockDatabaseMockRecorder) GetSelectorNodesBySelectorIds(ctx any, selec
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx}, selectorIds...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorNodesBySelectorIds", reflect.TypeOf((*MockDatabase)(nil).GetSelectorNodesBySelectorIds), varargs...)
+}
+
+// GetSelectorsByMemberId mocks base method.
+func (m *MockDatabase) GetSelectorsByMemberId(ctx context.Context, memberId, assetGroupTagId int) (model.AssetGroupTagSelectors, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSelectorsByMemberId", ctx, memberId, assetGroupTagId)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSelectorsByMemberId indicates an expected call of GetSelectorsByMemberId.
+func (mr *MockDatabaseMockRecorder) GetSelectorsByMemberId(ctx, memberId, assetGroupTagId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectorsByMemberId", reflect.TypeOf((*MockDatabase)(nil).GetSelectorsByMemberId), ctx, memberId, assetGroupTagId)
 }
 
 // GetSharedSavedQueries mocks base method.
@@ -1961,6 +2035,21 @@ func (m *MockDatabase) UpdateAuthToken(ctx context.Context, authToken model.Auth
 func (mr *MockDatabaseMockRecorder) UpdateAuthToken(ctx, authToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthToken", reflect.TypeOf((*MockDatabase)(nil).UpdateAuthToken), ctx, authToken)
+}
+
+// UpdateCustomNodeKind mocks base method.
+func (m *MockDatabase) UpdateCustomNodeKind(ctx context.Context, customNodeKind model.CustomNodeKind) (model.CustomNodeKind, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCustomNodeKind", ctx, customNodeKind)
+	ret0, _ := ret[0].(model.CustomNodeKind)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCustomNodeKind indicates an expected call of UpdateCustomNodeKind.
+func (mr *MockDatabaseMockRecorder) UpdateCustomNodeKind(ctx, customNodeKind any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCustomNodeKind", reflect.TypeOf((*MockDatabase)(nil).UpdateCustomNodeKind), ctx, customNodeKind)
 }
 
 // UpdateIngestJob mocks base method.

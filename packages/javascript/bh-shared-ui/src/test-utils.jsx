@@ -18,7 +18,7 @@
 import React from 'react';
 import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
-import { render, renderHook } from '@testing-library/react';
+import { render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Router } from 'react-router-dom';
 import { createMemoryHistory } from 'history';
@@ -94,3 +94,7 @@ const customRenderHook = (
 export * from '@testing-library/react';
 // override render and renderHook methods
 export { customRender as render, customRenderHook as renderHook };
+
+export const longWait = (cb) => {
+    waitFor(cb, { timeout: 10000 });
+};

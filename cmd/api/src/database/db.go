@@ -42,11 +42,12 @@ var (
 )
 
 var (
-	ErrDuplicateAGName          = errors.New("duplicate asset group name")
-	ErrDuplicateAGTag           = errors.New("duplicate asset group tag")
-	ErrDuplicateSSOProviderName = errors.New("duplicate sso provider name")
-	ErrDuplicateUserPrincipal   = errors.New("duplicate user principal name")
-	ErrDuplicateEmail           = errors.New("duplicate user email address")
+	ErrDuplicateAGName             = errors.New("duplicate asset group name")
+	ErrDuplicateAGTag              = errors.New("duplicate asset group tag")
+	ErrDuplicateSSOProviderName    = errors.New("duplicate sso provider name")
+	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
+	ErrDuplicateEmail              = errors.New("duplicate user email address")
+	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -165,6 +166,9 @@ type Database interface {
 	AssetGroupTagData
 	AssetGroupTagSelectorData
 	AssetGroupTagSelectorNodeData
+
+	// Custom Node Kinds
+	CustomNodeKindData
 }
 
 type BloodhoundDB struct {

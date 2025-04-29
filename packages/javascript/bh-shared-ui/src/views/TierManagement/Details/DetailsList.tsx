@@ -28,9 +28,11 @@ type DetailsListItem = {
     count: number;
 };
 
+type ListQuery = UseQueryResult<DetailsListItem[], unknown>;
+
 type DetailsListProps = {
     title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: UseQueryResult<DetailsListItem[], unknown>;
+    listQuery: ListQuery;
     selected: string | undefined;
     onSelect: (id: number) => void;
 };
@@ -80,12 +82,12 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             return skeleton(title, index);
                         })
                     ) : listQuery.isError ? (
-                        <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+                        <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
                         listQuery.data
-                            .sort((a, b) => {
+                            ?.sort((a, b) => {
                                 switch (sortOrder) {
                                     case 'asc':
                                         return a.name.localeCompare(b.name);
@@ -100,7 +102,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                     <li
                                         key={listItem.id}
                                         className={cn(
-                                            'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
+                                            'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
                                             {
                                                 'bg-neutral-light-4 dark:bg-neutral-dark-4':
                                                     selected === listItem.id.toString(),

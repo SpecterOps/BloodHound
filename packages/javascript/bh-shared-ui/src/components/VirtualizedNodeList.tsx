@@ -23,6 +23,7 @@ import NodeIcon from './NodeIcon';
 export type VirtualizedNodeListItem = {
     name: string;
     objectId: string;
+    graphId?: string;
     kind: string;
     onClick?: (index: number) => void;
 };
@@ -58,7 +59,7 @@ const Row = ({ data, index, style }: ListChildComponentProps<VirtualizableNodes>
     return (
         <li
             className={cn(
-                'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y-[1px] border-y-neutral-light-5 dark:border-y-neutral-dark-5',
+                'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5 dark:border-y-neutral-dark-5',
                 {
                     'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
                 }

@@ -48,7 +48,11 @@ const getListScalar = (windoHeight: number) => {
     if (windoHeight > 1080) return 18;
     if (1080 >= windoHeight && windoHeight > 900) return 14;
     if (900 >= windoHeight) return 10;
+<<<<<<< HEAD
     return 438;
+=======
+    return 8;
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
 };
 
 const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({
@@ -130,7 +134,11 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                                 preview={false}
                                 setCypherSearchResults={setResults}
                                 setSeeds={setSeeds}
+<<<<<<< HEAD
                                 initialInput={selectorQuery.data?.seeds[0].value}
+=======
+                                initialInput={selectorQuery.data?.selector.seeds[0].value}
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
@@ -171,7 +179,11 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
             </Card>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
+<<<<<<< HEAD
                 itemName={selectorQuery.data?.name || 'Selector'}
+=======
+                itemName={selectorQuery.data?.selector.name || 'Selector'}
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
                 itemType='selector'
                 onClose={handleDeleteSelector}
             />

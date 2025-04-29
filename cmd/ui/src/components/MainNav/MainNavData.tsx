@@ -30,7 +30,7 @@ export const useMainNavLogoData = (): MainNavData['logo'] => {
     const soImageUrlLightMode = '/img/banner-so-light-mode.png';
     return {
         project: {
-            route: routes.ROUTE_HOME,
+            route: routes.ROUTE_EXPLORE,
             icon: <AppIcon.BHCELogo size={24} className='scale-150 text-[#e61616]' />, // Note: size 24 icon looked too small in comparison so had to scale it up a bit because upping the size misaligns it
             image: {
                 imageUrl: `${import.meta.env.BASE_URL}${darkMode ? bhceImageUrlDarkMode : bhceImageUrlLightMode}`,

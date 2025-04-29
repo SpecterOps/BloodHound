@@ -18,10 +18,10 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorMember } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
-import { apiClient } from '../../../utils';
+import { apiClient, useAppNavigate } from '../../../utils';
 import { DetailsList } from './DetailsList';
 import { SelectedDetails } from './DynamicDetails';
 import { MembersList } from './MembersList';
@@ -51,7 +51,7 @@ export const getEditButtonState = (
 };
 
 const Details: FC = () => {
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const { tagId = '1', selectorId, memberId } = useParams();
     const [selectedMember, setSelectedMember] = useState<AssetGroupTagSelectorMember | null>(null);
     const [showCypher, setShowCypher] = useState(false);
@@ -60,7 +60,7 @@ const Details: FC = () => {
         queryKey: ['asset-group-tags'],
         queryFn: async () => {
             return apiClient.getAssetGroupTags().then((res) => {
-                return res.data.data['asset_group_tags'];
+                return res.data.data['tags'];
             });
         },
     });
@@ -129,7 +129,7 @@ const Details: FC = () => {
             </div>
             <div className='flex gap-8 mt-4 grow-1'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 h-full *:grow-0 *:basis-1/3'>
-                    <div className=''>
+                    <div>
                         <DetailsList
                             title='Tiers'
                             listQuery={tagsQuery}

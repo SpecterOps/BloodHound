@@ -1,3 +1,22 @@
+<<<<<<< HEAD
+=======
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory } from 'history';
 import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
@@ -6,7 +25,11 @@ import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import SelectorForm from '.';
 import { tierHandlers } from '../../../../mocks';
+<<<<<<< HEAD
 import { act, render, screen, waitFor } from '../../../../test-utils';
+=======
+import { act, longWait, render, screen } from '../../../../test-utils';
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
 import { mockCodemirrorLayoutMethods } from '../../../../utils';
 
 const testSelector = {
@@ -115,6 +138,7 @@ describe('Selector Form', () => {
         const selectorStatusSwitch = screen.getByLabelText('Selector Status');
         expect(selectorStatusSwitch).toBeInTheDocument();
         expect(selectorStatusSwitch).toHaveValue('on');
+<<<<<<< HEAD
         waitFor(
             () => {
                 expect(screen.getByText('Enabled')).toBeInTheDocument();
@@ -139,6 +163,23 @@ describe('Selector Form', () => {
             },
             { timeout: 10000 }
         );
+=======
+        longWait(() => {
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
+        });
+
+        const nameInput = screen.getByLabelText('Name');
+        expect(nameInput).toBeInTheDocument();
+        longWait(() => {
+            expect(nameInput).toHaveValue('foo');
+        });
+
+        const descriptionInput = screen.getByLabelText('Description');
+        expect(descriptionInput).toBeInTheDocument();
+        longWait(() => {
+            expect(descriptionInput).toHaveValue('bar');
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
 
         // This switch is technically hidden until certification is implemented but is still in the form
         const autoCertifySwitch = screen.queryByLabelText('Automatic Certification');
@@ -148,6 +189,7 @@ describe('Selector Form', () => {
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
         // Cypher Search renders because that is the seed type of the first seed of this selector
+<<<<<<< HEAD
         waitFor(
             () => {
                 expect(screen.getByText('Cypher Search')).toBeInTheDocument();
@@ -161,6 +203,15 @@ describe('Selector Form', () => {
             },
             { timeout: 10000 }
         );
+=======
+        longWait(() => {
+            expect(screen.getByText('Cypher Search')).toBeInTheDocument();
+        });
+        // The delete button should render because this selector exists and can be deleted
+        longWait(() => {
+            expect(screen.getByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
 
@@ -180,6 +231,7 @@ describe('Selector Form', () => {
         expect(selectorStatusSwitch).toBeInTheDocument();
         expect(selectorStatusSwitch).toHaveValue('on');
 
+<<<<<<< HEAD
         waitFor(
             async () => {
                 expect(screen.getByText('Enabled')).toBeInTheDocument();
@@ -188,6 +240,13 @@ describe('Selector Form', () => {
             },
             { timeout: 10000 }
         );
+=======
+        longWait(async () => {
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
+            await user.click(selectorStatusSwitch);
+            expect(screen.getByText('Disabled')).toBeInTheDocument();
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
     });
 
     it('shows an error message when unable to delete a selector', async () => {
@@ -209,6 +268,7 @@ describe('Selector Form', () => {
             await user.click(screen.getByRole('button', { name: /Delete Selector/ }));
         });
 
+<<<<<<< HEAD
         waitFor(
             async () => {
                 expect(screen.getByText('Delete foo?')).toBeInTheDocument();
@@ -220,6 +280,16 @@ describe('Selector Form', () => {
             },
             { timeout: 10000 }
         );
+=======
+        longWait(async () => {
+            expect(screen.getByText('Delete foo?')).toBeInTheDocument();
+
+            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), 'delete this selector');
+            await user.click(screen.getByRole('button', { name: /Confirm/ }));
+
+            expect(await screen.findByText('get rekt')).toBeInTheDocument();
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
@@ -232,12 +302,18 @@ describe('Selector Form', () => {
 
         await user.click(screen.getByRole('button', { name: /Cancel/ }));
 
+<<<<<<< HEAD
         waitFor(
             () => {
                 expect(history.location.pathname).toBe(detailsPath);
             },
             { timeout: 10000 }
         );
+=======
+        longWait(() => {
+            expect(history.location.pathname).toBe(detailsPath);
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
     });
 
     test('a name value is required to submit the form', async () => {
@@ -249,12 +325,18 @@ describe('Selector Form', () => {
 
         await user.click(screen.getByRole('button', { name: /Save/ }));
 
+<<<<<<< HEAD
         waitFor(
             () => {
                 expect(screen.getByText('Please provide a name for the selector')).toBeInTheDocument();
             },
             { timeout: 10000 }
         );
+=======
+        longWait(() => {
+            expect(screen.getByText('Please provide a name for the selector')).toBeInTheDocument();
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
     });
 
     test('filling in the name value submits the form and navigates back to the details page', async () => {
@@ -278,12 +360,18 @@ describe('Selector Form', () => {
 
         expect(screen.queryByText('Please provide a name for the selector')).not.toBeInTheDocument();
 
+<<<<<<< HEAD
         waitFor(
             () => {
                 expect(history.location.pathname).toBe(detailsPath);
             },
             { timeout: 10000 }
         );
+=======
+        longWait(() => {
+            expect(history.location.pathname).toBe(detailsPath);
+        });
+>>>>>>> c01a65f741b72a4b3935333b7c1231d7f95d3465
     });
 
     test('the object selector list is prepopluated correctly according to the selector seeds', async () => {

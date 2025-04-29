@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { createMemoryHistory } from 'history';
 import { setupServer } from 'msw/node';
 import { tierHandlers } from '../../../mocks/handlers';
-import { render, screen, waitFor, within } from '../../../test-utils';
+import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
 const server = setupServer(...tierHandlers);
@@ -43,14 +43,10 @@ describe('Details', async () => {
         expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
         expect(await screen.findByTestId('tier-management_details_selectors-list')).toBeInTheDocument();
         expect(await screen.findByTestId('tier-management_details_members-list')).toBeInTheDocument();
-
-        // expect(screen.getByRole('button', { name: /Create/ })).toBeInTheDocument();
     });
 
     it('has Tier Zero tier selected by default and no selectors or objects are selected', async () => {
         render(<Details />);
-
-        // const editButton = screen.getByRole('button', { name: /Edit/ });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -58,10 +54,11 @@ describe('Details', async () => {
         const objects = await screen.findByTestId('tier-management_details_members-list');
         const objectsListItems = await within(objects).findAllByRole('listitem');
 
-        expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
-
-        // The Tier Zero tier is selected by default
-        expect(await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        longWait(() => {
+            expect(screen.getByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
+            // The Tier Zero tier is selected by default
+            expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        });
 
         // No selector is selected to begin with
         selectorsListItems.forEach((li) => {
@@ -72,10 +69,6 @@ describe('Details', async () => {
         objectsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
-
-        // Commented out for now since editing a tag is a later implementation
-        // // Since a Tier is selected, the edit button is a viable target
-        // expect(editButton).toBeEnabled();
     });
 
     it('handles object selection when a tier is already selected', async () => {
@@ -91,20 +84,19 @@ describe('Details', async () => {
         // After selecting an object, the edit action is not viable and thus the button is not rendered
         expect(screen.queryByRole('button', { name: /Edit/ })).toBeNull();
 
-        // The Tier Zero tier is still selected when selecting an object that is within it
-        expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        longWait(() => {
+            // The Tier Zero tier is still selected when selecting an object that is within it
+            expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        });
 
         // No selector is selected
         selectorsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
-        waitFor(
-            async () => {
-                expect(await screen.findByTestId('tier-management_details_members-list_active-members-item-5'));
-            },
-            { timeout: 10000 }
-        );
+        longWait(async () => {
+            expect(await screen.findByTestId('tier-management_details_members-list_active-members-item-5'));
+        });
     });
 
     it('handles selector selection when a tier and object are already selected', async () => {
@@ -118,30 +110,26 @@ describe('Details', async () => {
 
         await user.click(selector7);
 
-        waitFor(
-            async () => {
-                // The selector now displays as selected
-                expect(
-                    await screen.findByTestId('tier-management_details_selectors-list_active-selectors-item-7')
-                ).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(async () => {
+            // The selector now displays as selected
+            expect(
+                await screen.findByTestId('tier-management_details_selectors-list_active-selectors-item-7')
+            ).toBeInTheDocument();
+        });
 
         // Selecting a selector after having an Object selected will deselect that Object
         objectsListItems.forEach((li) => {
             expect(li.childNodes).toHaveLength(1);
         });
 
-        // The Tier Zero tier is still selected when selecting a selector that is within it
-        expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        longWait(() => {
+            // The Tier Zero tier is still selected when selecting a selector that is within it
+            expect(screen.getByTestId('tier-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+        });
 
-        waitFor(
-            async () => {
-                expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(async () => {
+            expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
+        });
     });
 
     it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
@@ -155,7 +143,10 @@ describe('Details', async () => {
         const objects = await screen.findByTestId('tier-management_details_members-list');
         let objectsListItems = await within(objects).findAllByRole('listitem');
 
-        await user.click(screen.getByText('Tier-2'));
+        longWait(async () => {
+            expect(screen.getByText('Tier-2')).toBeInTheDocument();
+            await user.click(screen.getByText('Tier-2'));
+        });
 
         // This list rerenders with different list items so we have to grab those again
         selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -169,13 +160,10 @@ describe('Details', async () => {
             expect(li.childNodes).toHaveLength(1);
         });
 
-        waitFor(
-            async () => {
-                expect(
-                    await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-3')
-                ).toBeInTheDocument();
-            },
-            { timeout: 10000 }
-        );
+        longWait(async () => {
+            expect(
+                await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-3')
+            ).toBeInTheDocument();
+        });
     });
 });
