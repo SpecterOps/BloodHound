@@ -32,7 +32,7 @@ import (
 // into its corresponding internal ingest representation, appending it to the provided ConvertedData.
 //
 // T represents a specific ingest type (e.g., User, Computer, Group, etc.).
-type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
+type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
 
 // The identityKind applied to the nodes is typically set at the batch level (e.g., ad.Entity or az.Entity).
 // In generic ingest scenarios, no identityKind is applied by default, allowing kinds to be specified per node.
@@ -55,7 +55,9 @@ func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversion
 			return err
 		} else {
 			count++
-			conversionFunc(decodeTarget, &convertedData)
+			if err := conversionFunc(decodeTarget, &convertedData); err != nil {
+				errs.Add(err)
+			}
 		}
 
 		if count == IngestCountThreshold {
@@ -95,7 +97,7 @@ func decodeGroupData(batch graph.Batch, decoder *json.Decoder) error {
 			return err
 		} else {
 			count++
-			convertGroupData(group, &convertedData)
+			_ = convertGroupData(group, &convertedData)
 			if count == IngestCountThreshold {
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -133,7 +135,7 @@ func decodeSessionData(batch graph.Batch, decoder *json.Decoder) error {
 			return err
 		} else {
 			count++
-			convertSessionData(session, &convertedData)
+			_ = convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
 				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
 					errs.Add(err)

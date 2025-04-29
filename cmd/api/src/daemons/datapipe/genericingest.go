@@ -17,12 +17,14 @@
 package datapipe
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/common"
 )
@@ -156,8 +158,11 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
 		return nil, err
 	} else {
-		nowUTC := time.Now().UTC()
-		var updates []*graph.RelationshipUpdate
+		var (
+			nowUTC  = time.Now().UTC()
+			updates []*graph.RelationshipUpdate
+			errs    = util.NewErrorCollector()
+		)
 
 		for _, rel := range rels {
 			srcID, srcOK := resolveEndpointID(rel.Source, cache)
@@ -169,6 +174,9 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 					slog.String("target", rel.Target.Value),
 					slog.Bool("resolved_source", srcOK),
 					slog.Bool("resolved_target", targetOK))
+				errs.Add(
+					fmt.Errorf("skipping invalid relationship. unable to resolve endpoints. source: %s, target: %s", rel.Source.Value, rel.Target.Value),
+				)
 				continue
 			}
 
@@ -196,7 +204,7 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 			updates = append(updates, update)
 		}
 
-		return updates, nil
+		return updates, errs.Combined()
 	}
 
 }
