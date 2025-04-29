@@ -390,6 +390,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 	})
 
 	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
+		// todo: make this databaseTestWithSetup()
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
 			err := datapipe.ReadFileForIngest(batch, invalidReader, readOptions)
 			require.NotNil(t, err)
