@@ -18,12 +18,13 @@ package auth_test
 
 import (
 	"context"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
