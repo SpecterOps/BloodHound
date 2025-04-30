@@ -21,10 +21,17 @@ import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 describe('DeleteConfirmationDialog', () => {
     const user = userEvent.setup();
     const testOnClose = vi.fn();
+    const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
         render(
-            <DeleteConfirmationDialog open={true} onClose={testOnClose} itemName='test-item' itemType='test-type' />
+            <DeleteConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onClose={testOnClose}
+                itemName='test-item'
+                itemType='test-type'
+            />
         );
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
     });

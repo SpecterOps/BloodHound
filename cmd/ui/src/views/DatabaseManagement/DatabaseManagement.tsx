@@ -364,7 +364,6 @@ const DatabaseManagement: FC = () => {
                 }}
                 itemName='the current environment'
                 itemType='environment'
-                error=''
             />
         </PageWithTitle>
     );

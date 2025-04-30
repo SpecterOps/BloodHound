@@ -21,9 +21,18 @@ import ConfirmationDialog from './ConfirmationDialog';
 describe('ConfirmationDialog', () => {
     const user = userEvent.setup();
     const testOnClose = vi.fn();
+    const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
-        render(<ConfirmationDialog open={true} onClose={testOnClose} text='text-test' title='title-test' />);
+        render(
+            <ConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onClose={testOnClose}
+                text='text-test'
+                title='title-test'
+            />
+        );
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
     });
 
