@@ -256,20 +256,22 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 	return properties
 }
 
-func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
+func IngestNode(batch graph.Batch, nowUTC time.Time, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
+	nodeKinds := []graph.Kind{}
+	if baseKind != graph.EmptyKind {
+		nodeKinds = append(nodeKinds, baseKind)
+	}
+	nodeKinds = append(nodeKinds, nextNode.Labels...)
+
 	var (
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
 		nodeUpdate           = graph.NodeUpdate{
-			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Labels...),
+			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
 			IdentityProperties: []string{
 				common.ObjectID.String(),
 			},
 		}
 	)
-
-	if identityKind != graph.EmptyKind {
-		nodeUpdate.IdentityKind = identityKind
-	}
 
 	return batch.UpdateNodeBy(nodeUpdate)
 }
