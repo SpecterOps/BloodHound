@@ -52,8 +52,8 @@ describe('DeleteConfirmationDialog', () => {
     it('should fire Cancel once with false', async () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-        expect(testOnClose).toHaveBeenCalledWith(false);
         expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testOnConfirm).toHaveBeenCalledTimes(0);
     });
 
     it('should fire Confirm once with true after typing challenge text', async () => {
@@ -61,7 +61,7 @@ describe('DeleteConfirmationDialog', () => {
         expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(testOnClose).toHaveBeenCalledWith(true);
-        expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testOnClose).toHaveBeenCalledTimes(0);
+        expect(testOnConfirm).toHaveBeenCalledTimes(1);
     });
 });
