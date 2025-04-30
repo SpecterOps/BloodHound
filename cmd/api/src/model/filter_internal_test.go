@@ -19,42 +19,117 @@ package model
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQueryParameterFilterParser_ParseQueryParameterFilter(t *testing.T) {
+	t.Parallel()
+
 	parser := NewQueryParameterFilterParser()
 
-	t.Run("parser should parse a parameter filter", func(t *testing.T) {
-		if filter, err := parser.ParseQueryParameterFilter("parameter", "eq:auth.value"); err != nil {
-			t.Fatalf("Failed parsing query parameter: %v", err)
-		} else {
-			require.Equal(t, filter.Name, "parameter")
-			require.Equal(t, "auth.value", filter.Value)
-		}
-	})
+	type args struct {
+		name  string
+		value string
+	}
 
-	t.Run("parser should parse a parameter with ~", func(t *testing.T) {
-		if filter, err := parser.ParseQueryParameterFilter("parameter", "~eq:auth.value"); err != nil {
-			t.Fatalf("Failed parsing query parameter: %v", err)
-		} else {
-			require.Equal(t, filter.Name, "parameter")
-			require.Equal(t, "auth.value", filter.Value)
-		}
-	})
+	type expected struct {
+		name     string
+		value    string
+		operator FilterOperator
+	}
 
-	t.Run("parser should parse a parameter filter with spacing", func(t *testing.T) {
-		if filter, err := parser.ParseQueryParameterFilter("parameter", "eq:hello world"); err != nil {
-			t.Fatalf("Failed parsing query parameter: %v", err)
-		} else {
-			require.Equal(t, filter.Name, "parameter")
-			require.Equal(t, "hello world", filter.Value)
-		}
-	})
+	tests := []struct {
+		name     string
+		args     args
+		expected expected
+		wantErr  assert.ErrorAssertionFunc
+	}{
+		{
+			name: "success - parser should parse a parameter filter",
+			args: args{
+				name:  "parameter",
+				value: "eq:auth.value",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    "auth.value",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "success - parser should parse a parameter with ~ filter",
+			args: args{
+				name:  "parameter",
+				value: "~eq:auth.value",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    "auth.value",
+				operator: ApproximatelyEquals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "success - parser should parse a parameter filter with spacing",
+			args: args{
+				name:  "parameter",
+				value: "eq:hello world",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    "hello world",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "success - default to eq when parsing a non predicate parameter",
+			args: args{
+				name:  "parameter",
+				value: "hello world",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    "hello world",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "success - colon is included in value if predicate is omitted",
+			args: args{
+				name:  "parameter",
+				value: ":hello_world",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    ":hello_world",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "fail - unknown operator",
+			args: args{
+				name:  "parameter",
+				value: "foo:hello world",
+			},
+			wantErr: assert.Error,
+		},
+	}
 
-	t.Run("error when parsing an invalid parameter", func(t *testing.T) {
-		_, err := parser.ParseQueryParameterFilter("parameter", "eq : hello world")
-		require.Error(t, err)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
+			if res, err := parser.ParseQueryParameterFilter(tt.args.name, tt.args.value); !tt.wantErr(t, err) {
+				t.Errorf("ParseQueryParameterFilter() returned an unexpected error = %v", err)
+			} else {
+				assert.Equal(t, tt.expected.name, res.Name)
+				assert.Equal(t, tt.expected.value, res.Value)
+				assert.Equal(t, tt.expected.operator, res.Operator)
+			}
+		})
+	}
 }
