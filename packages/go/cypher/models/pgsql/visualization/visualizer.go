@@ -28,7 +28,7 @@ import (
 )
 
 type SQLVisualizer struct {
-	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+	walk.Visitor[pgsql.SyntaxNode]
 
 	Graph  Graph
 	stack  []Node
@@ -82,7 +82,7 @@ func (s *SQLVisualizer) Exit(node pgsql.SyntaxNode) {
 
 func SQLToDigraph(node pgsql.SyntaxNode) (Graph, error) {
 	visualizer := &SQLVisualizer{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
+		Visitor: walk.NewVisitor[pgsql.SyntaxNode](),
 	}
 
 	if title, err := format.SyntaxNode(node); err != nil {

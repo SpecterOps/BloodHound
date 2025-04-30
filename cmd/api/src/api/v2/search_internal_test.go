@@ -30,13 +30,13 @@ import (
 func Test_SetNodeProperties(t *testing.T) {
 	tests := []struct {
 		name     string
-		nodes    graph.NodeSet
+		nodes    []*graph.Node
 		expected model.DomainSelectors
 	}{
 		{
 			name: "basic case",
-			nodes: graph.NodeSet{
-				1: &graph.Node{
+			nodes: []*graph.Node{
+				{
 					ID: 1,
 					Properties: &graph.Properties{
 						Map: map[string]any{
@@ -57,8 +57,8 @@ func Test_SetNodeProperties(t *testing.T) {
 		},
 		{
 			name: "azure tenant",
-			nodes: graph.NodeSet{
-				1: &graph.Node{
+			nodes: []*graph.Node{
+				{
 					Properties: &graph.Properties{
 						Map: map[string]any{
 							common.ObjectID.String():  "2",
@@ -80,8 +80,8 @@ func Test_SetNodeProperties(t *testing.T) {
 		},
 		{
 			name: "missing properties",
-			nodes: graph.NodeSet{
-				1: &graph.Node{
+			nodes: []*graph.Node{
+				{
 					Properties: &graph.Properties{
 						Map: map[string]any{},
 					},

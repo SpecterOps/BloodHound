@@ -60,7 +60,7 @@ func (s *NodePatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
 }
 
 func (s *NodePatternVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.NodePattern.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+	s.NodePattern.Variable = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *NodePatternVisitor) EnterOC_LabelName(ctx *parser.OC_LabelNameContext) {
@@ -135,7 +135,7 @@ func (s *RelationshipPatternVisitor) EnterOC_Variable(ctx *parser.OC_VariableCon
 }
 
 func (s *RelationshipPatternVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.RelationshipPattern.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+	s.RelationshipPattern.Variable = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *RelationshipPatternVisitor) EnterOC_LeftArrowHead(ctx *parser.OC_LeftArrowHeadContext) {
@@ -280,7 +280,7 @@ func (s *PatternPartVisitor) EnterOC_Variable(ctx *parser.OC_VariableContext) {
 }
 
 func (s *PatternPartVisitor) ExitOC_Variable(ctx *parser.OC_VariableContext) {
-	s.PatternPart.Binding = s.ctx.Exit().(*VariableVisitor).Variable
+	s.PatternPart.Variable = s.ctx.Exit().(*VariableVisitor).Variable
 }
 
 func (s *PatternPartVisitor) EnterOC_NodePattern(ctx *parser.OC_NodePatternContext) {

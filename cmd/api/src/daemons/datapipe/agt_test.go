@@ -41,17 +41,13 @@ func TestAGT_FetchNodesFromSeeds_Expansions(t *testing.T) {
 	)
 
 	t.Run("FetchNodesFromSeeds with no expansion", func(t *testing.T) {
-		result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodNone)
-		require.NoError(t, err)
-
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodNone, -1)
 		require.Len(t, result, 1)
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
 	})
 
 	t.Run("FetchNodesFromSeeds with only child expansion", func(t *testing.T) {
-		result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren)
-		require.NoError(t, err)
-
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren, -1)
 		require.Len(t, result, 2)
 
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
@@ -59,9 +55,7 @@ func TestAGT_FetchNodesFromSeeds_Expansions(t *testing.T) {
 	})
 
 	t.Run("FetchNodesFromSeeds with only parent expansion", func(t *testing.T) {
-		result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodParents)
-		require.NoError(t, err)
-
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodParents, -1)
 		require.Len(t, result, 2)
 
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
@@ -69,21 +63,26 @@ func TestAGT_FetchNodesFromSeeds_Expansions(t *testing.T) {
 	})
 
 	t.Run("FetchNodesFromSeeds with all expansions", func(t *testing.T) {
-		result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodAll)
-		require.NoError(t, err)
-
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodAll, -1)
 		require.Len(t, result, 3)
 
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.UserC.ID].Source, model.AssetGroupSelectorNodeSourceChild)
 		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitA.ID].Source, model.AssetGroupSelectorNodeSourceParent)
 	})
+
+	t.Run("FetchNodesFromSeeds with all expansions with limit for seeds only", func(t *testing.T) {
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodAll, 1)
+		require.Len(t, result, 1)
+
+		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
+	})
 }
 
 func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
-	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves AD group members", func(t *testing.T) {
+	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves AD group members without limit", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.MembershipHarness.Setup(testContext)
 			return nil
@@ -93,9 +92,7 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 				seeds           = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: seedObjectId}}
 			)
 
-			result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren)
-			require.NoError(t, err)
-
+			result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren, -1)
 			require.Len(t, result, 3)
 
 			require.Equal(t, result[testContext.Harness.MembershipHarness.GroupB.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
@@ -104,7 +101,7 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 		})
 	})
 
-	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves AZ group members", func(t *testing.T) {
+	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves AZ group members without limit", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.AZGroupMembership.Setup(testContext)
 			return nil
@@ -113,9 +110,7 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 				seedObjectId, _ = testContext.Harness.AZGroupMembership.Group.Properties.Get(common.ObjectID.String()).String()
 				seeds           = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: seedObjectId}}
 			)
-			result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren)
-			require.NoError(t, err)
-
+			result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren, -1)
 			require.Len(t, result, 4)
 
 			require.Equal(t, result[testContext.Harness.AZGroupMembership.Group.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
@@ -125,7 +120,7 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 		})
 	})
 
-	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves OU contained entities", func(t *testing.T) {
+	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves OU contained entities without limit", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.OUHarness.Setup(testContext)
 			return nil
@@ -134,15 +129,35 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 				seedObjectId, _ = testContext.Harness.OUHarness.OUA.Properties.Get(common.ObjectID.String()).String()
 				seeds           = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: seedObjectId}}
 			)
-			result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren)
-			require.NoError(t, err)
-
+			result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren, -1)
 			require.Len(t, result, 4)
 
 			require.Equal(t, result[testContext.Harness.OUHarness.OUA.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
 			require.Equal(t, result[testContext.Harness.OUHarness.OUC.ID].Source, model.AssetGroupSelectorNodeSourceChild)
 			require.Equal(t, result[testContext.Harness.OUHarness.UserA.ID].Source, model.AssetGroupSelectorNodeSourceChild)
 			require.Equal(t, result[testContext.Harness.OUHarness.UserB.ID].Source, model.AssetGroupSelectorNodeSourceChild)
+		})
+	})
+
+	t.Run("FetchNodesFromSeeds_ChildExpansion with limit", func(t *testing.T) {
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.OUHarness.Setup(testContext)
+			return nil
+		}, func(harness integration.HarnessDetails, db graph.Database) {
+			var (
+				seedObjectId, _ = testContext.Harness.OUHarness.OUA.Properties.Get(common.ObjectID.String()).String()
+				seeds           = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: seedObjectId}}
+			)
+			result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodChildren, 2)
+			require.Len(t, result, 2)
+
+			require.Equal(t, result[testContext.Harness.OUHarness.OUA.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
+			for id, node := range result {
+				if id != testContext.Harness.OUHarness.OUA.ID {
+					require.Contains(t, []graph.ID{testContext.Harness.OUHarness.OUC.ID, testContext.Harness.OUHarness.UserA.ID, testContext.Harness.OUHarness.UserB.ID}, id)
+					require.Equal(t, node.Source, model.AssetGroupSelectorNodeSourceChild)
+				}
+			}
 		})
 	})
 }
@@ -152,17 +167,29 @@ func TestAGT_FetchNodesFromSeeds_ParentExpansion(t *testing.T) {
 	testContext.SetupActiveDirectory()
 
 	var (
-		ouCObjectId, _ = testContext.Harness.GPOEnforcement.OrganizationalUnitC.Properties.Get(common.ObjectID.String()).String()
-		seeds          = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: ouCObjectId}}
+		userCObjectId, _ = testContext.Harness.GPOEnforcement.UserC.Properties.Get(common.ObjectID.String()).String()
+		seeds            = []model.SelectorSeed{{Type: model.SelectorTypeObjectId, Value: userCObjectId}}
 	)
 
-	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves OUs from entities", func(t *testing.T) {
-		result, err := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodParents)
-		require.NoError(t, err)
+	t.Run("TestAGT_FetchNodesFromSeeds_ParentExpansion retrieves OUs from entities without limit", func(t *testing.T) {
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodParents, -1)
+		require.Len(t, result, 3)
 
+		require.Equal(t, result[testContext.Harness.GPOEnforcement.UserC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
+		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceParent)
+		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitA.ID].Source, model.AssetGroupSelectorNodeSourceParent)
+	})
+
+	t.Run("TestAGT_FetchNodesFromSeeds_ParentExpansion with limit", func(t *testing.T) {
+		result := FetchNodesFromSeeds(context.Background(), testContext.Graph.Database, seeds, model.AssetGroupExpansionMethodParents, 2)
 		require.Len(t, result, 2)
 
-		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
-		require.Equal(t, result[testContext.Harness.GPOEnforcement.OrganizationalUnitA.ID].Source, model.AssetGroupSelectorNodeSourceParent)
+		require.Equal(t, result[testContext.Harness.GPOEnforcement.UserC.ID].Source, model.AssetGroupSelectorNodeSourceSeed)
+		for id, node := range result {
+			if id != testContext.Harness.GPOEnforcement.UserC.ID {
+				require.Contains(t, []graph.ID{testContext.Harness.GPOEnforcement.OrganizationalUnitA.ID, testContext.Harness.GPOEnforcement.OrganizationalUnitC.ID}, id)
+				require.Equal(t, node.Source, model.AssetGroupSelectorNodeSourceParent)
+			}
+		}
 	})
 }

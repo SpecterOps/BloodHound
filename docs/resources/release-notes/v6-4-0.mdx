@@ -1,0 +1,76 @@
+---
+title: 2025-01-14 Release Notes (v6.4.0)
+---
+
+## Announcements
+
+### Improved Analysis Algorithm Default Enabled
+
+In the December v6.3.0 release, we introduced a new analysis algorithm under Early Access. In this release, all customers who have not manually disabled the feature after our last hotfix will have the algorithm enabled in preparation for general availability shortly. This feature:
+
+* Improve risk scoring fidelity for all finding types (including a significant enhancement for scoring Large Default Group and Kerberos Abuse findings).
+* Measure risk at each individual finding, enabling users to understand more granularly which paths to focus on first.
+* Support the inclusion of hybrid paths in risk scoring (Azure assets will now contribute to measured risk in AD and vice versa) and introduce new associated finding types.
+
+If you encounter any issues, you may revert to the previous analysis algorithm under the **Administration -> Early Access** configuration screen. Please contact your TAM with any problems you encounter!
+
+### Upcoming Webinar: Misconfiguration Manager Detections Update
+
+During this webinar, Josh Prager will discuss updates made to the DETECT section of the Misconfiguration Manager project and his method of researching the related attack techniques.
+
+Register today: https://specterops.zoom.us/webinar/register/WN_fP5TW3MbR-6amU24YCeGPA#/registration
+
+## Summary
+
+* **BloodHound (v6.4.0)**
+  * New and Improved Features
+    * Just-in-time user provisioning and role assertion via Single Sign-On (SSO).
+    * SSO providers are now updateable.
+    * Added "Download SAML SP Certificate" to SSO configuration windows to improve the ability to utilize certificate pinning or encrypted assertions.
+    * Administrators may no longer modify their own accounts.
+    * Removed Performance Log Users, DNSAdmins, and Distributed COM Users from default Tier Zero / High Value.
+    * *[BHE Only]* Enabled Improved Analysis Algorithm by default on all environments that have not manually disabled it.
+    * *[BHE Only]* Improved finding sort order on the Attack Paths page.
+    * *[BHE Only]* Multiple consistency improvements on the updated Posture page.
+  * Bug Fixes
+    * The Foreign Members accordion on Domain entity panels should now load correctly.
+    * Fixed the Reader count for AZKeyVault objects.
+    * Fixed abuse info data for AllExtendedRights and ReadLAPSPassword edges.
+    * *[BHE Only]* Resolved an issue that prevented ingesting AzureHound data via file upload.
+
+* **SharpHound (v2.5.13)**
+  * New and Improved Features
+    * SharpHound will no longer attempt to connect to the same domain multiple times after a failure, improving performance under specific circumstances.
+
+* **AzureHound (v2.2.1)**
+  * *No new release.*
+
+### BloodHound (v6.4.0)
+
+#### New and Improved Features
+
+* **Just-in-time user provisioning and role assertion via Single Sign-On (SSO)** - Manual user-creation processes be gone; BloodHound now optionally supports just-in-time user provisioning via all SSO provider types. Additionally, Administrators may allow identity providers to assert the role assigned to a BloodHound user during the SSO sign-in process. Enable these settings today under **Administration -> SSO Configuration**.
+* **SSO providers are now updateable** - If you need to move to a new SSO provider or want to enable the new just-in-time provisioning features, SSO providers are now updateable! Administrators may browse to Administration -> SSO Configuration and click on the 3-dot hamburger menu next to any SSO configuration to update its configuration, including updating new metadata.xml for SAML updates.
+* **Download SAML SP Certificate** - For our customers who plan want to implement additional restrictions on SAML login flows, such as pinning or encrypted assertions, the SP certificate is now available for download by clicking on any configured SAML SSO configuration in BloodHound.
+* **Administrators may no longer modify their own accounts** - To prevent accidental lockouts or other issues, Administrators may no longer modify their own role assignment or delete their own accounts.
+* **Removed Performance Log Users, DNSAdmins, and Distributed COM Users from default Tier Zero / High Value** - We are removing these groups from default Tier Zero for various reasons. [Microsoft has patched](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2024-38061) the issues that allowed escalation from the Performance Log Users and Distributed COM Users group. Separately, DNSAdmins only allowed escalation for environments running Microsoft DNS via Active Directory; this did not apply to customers running alternative DNS solutions. For BloodHound users who do run Active Directory DNS, we strongly recommend manually adding this group to Tier Zero.
+* *[BHE Only]* Enabled Improved Analysis Algorithm by default on all environments that have not manually disabled it.
+* *[BHE Only]* Improved finding sort order on the Attack Paths page.
+* *[BHE Only]* Multiple consistency improvements on the updated Posture page.
+
+#### Bug Fixes
+
+* The Foreign Members accordion on Domain entity panels should now load correctly.
+* Fixed the Reader count for AZKeyVault objects.
+* Fixed abuse info data for AllExtendedRights and ReadLAPSPassword edges.
+* *[BHE Only]* Resolved an issue that prevented ingesting AzureHound data via file upload.
+
+### SharpHound (v2.5.13)
+
+#### New and Improved Features
+
+* SharpHound will no longer attempt to connect to the same domain multiple times after a failure, improving performance under specific circumstances.
+
+### AzureHound (v2.2.1)
+
+*No new release.*
