@@ -62,7 +62,6 @@ func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 func IgnoreFilters() []string {
 	return []string{
 		"scope",
-		"counts",
 	}
 }
 
