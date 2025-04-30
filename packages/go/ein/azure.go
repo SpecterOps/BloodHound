@@ -1863,7 +1863,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 	nodes = append(nodes, targetAZRole)
 
-	if policyAssignment.EndUserAssignmentRequiresApproval == false {
+	if !policyAssignment.EndUserAssignmentRequiresApproval {
 		// We cannot create the edge or nodes if the assignment requires approval
 		return nodes, rels
 	} else if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
