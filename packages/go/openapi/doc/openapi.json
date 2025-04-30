@@ -5615,7 +5615,7 @@
                   "seeds": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
                     }
                   }
                 }
@@ -16911,7 +16911,7 @@
           }
         }
       },
-      "model.asset-group-tags-selector-seed-request": {
+      "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
           "type": {
@@ -16937,25 +16937,10 @@
           "seeds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
             }
           }
         }
-      },
-      "model.asset-group-tags-selector-seed-response": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
-          },
-          {
-            "properties": {
-              "selector_id": {
-                "type": "integer"
-              }
-            }
-          }
-        ]
       },
       "model.asset-group-tags-selector-response": {
         "allOf": [
@@ -17000,7 +16985,7 @@
               "seeds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-response"
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
                 }
               }
             }

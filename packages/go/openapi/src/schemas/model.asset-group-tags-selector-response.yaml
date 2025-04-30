@@ -43,4 +43,4 @@ allOf:
       seeds:
         type: array
         items:
-          $ref: './../schemas/model.asset-group-tags-selector-seed-response.yaml'
+          $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'

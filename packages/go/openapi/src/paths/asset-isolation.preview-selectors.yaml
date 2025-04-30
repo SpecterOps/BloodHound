@@ -35,7 +35,7 @@ post:
             seeds:
               type: array
               items:
-                $ref: './../schemas/model.asset-group-tags-selector-seed-request.yaml'
+                $ref: './../schemas/model.asset-group-tags-selector-seed.yaml'
   responses:
     200:
       description: OK
