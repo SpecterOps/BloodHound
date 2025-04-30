@@ -5437,6 +5437,56 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelector",
+        "summary": "Get Asset Group Tag Selector",
+        "description": "Retrieves an asset group tag selector by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "selector": {
+                          "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "patch": {
         "operationId": "UpdateAssetGroupTagSelector",
         "summary": "Update Asset Group Tag Selector",
