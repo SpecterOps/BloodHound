@@ -71,24 +71,32 @@ const InnerElement = ({ style, ...rest }: any) => (
         {...rest}></ul>
 );
 
-const getFetchCallback = (selectedTag: string | undefined, selectedSelector: string | undefined) => {
+const getFetchCallback = (
+    selectedTag: string | undefined,
+    selectedSelector: string | undefined,
+    sortOrder: SortOrder
+) => {
     if (!selectedTag) return;
+
+    const sort_by = sortOrder === 'asc' ? 'name' : '-name';
 
     if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit).then((res) => {
-                const response = {
-                    data: res.data.data['members'],
-                    skip: res.data.skip,
-                    limit: res.data.limit,
-                    total: res.data.count,
-                };
-                return response;
-            });
+            return apiClient
+                .getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit, sort_by)
+                .then((res) => {
+                    const response = {
+                        data: res.data.data['members'],
+                        skip: res.data.skip,
+                        limit: res.data.limit,
+                        total: res.data.count,
+                    };
+                    return response;
+                });
         };
     } else {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit).then((res) => {
+            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit, sort_by).then((res) => {
                 const response = {
                     data: res.data.data['members'],
                     skip: res.data.skip,
@@ -139,6 +147,7 @@ export const MembersList: React.FC<MembersListProps> = ({
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
     const previousSelector = usePreviousValue<string | undefined>(selectedSelector);
     const previousTier = usePreviousValue<string | undefined>(selectedTag);
+    const previousSortOrder = usePreviousValue<SortOrder>(sortOrder);
 
     const itemData = { onClick, selected, items, title: 'Members' };
 
@@ -166,7 +175,7 @@ export const MembersList: React.FC<MembersListProps> = ({
 
             const limit = stopIndex - startIndex + 1;
 
-            const fetchData = getFetchCallback(selectedTag, selectedSelector);
+            const fetchData = getFetchCallback(selectedTag, selectedSelector, sortOrder);
 
             if (fetchData)
                 return fetchData({ skip: startIndex, limit: limit })
@@ -183,8 +192,15 @@ export const MembersList: React.FC<MembersListProps> = ({
                         setIsFetching(false);
                     });
         },
-        [items, isFetching, selectedSelector, selectedTag]
+        [items, isFetching, selectedSelector, selectedTag, sortOrder]
     );
+
+    const resetAndLoadMore = useCallback(() => {
+        if (infiniteLoaderRef?.current?.resetloadMoreItemsCache) {
+            infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
+        }
+        loadMoreItems(0, 128);
+    }, [loadMoreItems]);
 
     // Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
     // a selector is selected or not, this useEffect is used so that the cache of the `InfiniteLoader`
@@ -192,19 +208,23 @@ export const MembersList: React.FC<MembersListProps> = ({
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (previousSelector !== selectedSelector || previousTier !== selectedTag) {
-            if (infiniteLoaderRef?.current?.resetloadMoreItemsCache)
-                infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
-            loadMoreItems(0, 128);
+        if (previousSelector !== selectedSelector || previousTier !== selectedTag || previousSortOrder !== sortOrder) {
+            resetAndLoadMore();
         }
-    }, [selectedSelector, selectedTag, loadMoreItems, previousSelector, previousTier]);
+    }, [selectedSelector, selectedTag, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>
             <SortableHeader
                 title={'Objects'}
                 onSort={() => {
-                    sortOrder === 'desc' ? setSortOrder('asc') : setSortOrder('desc');
+                    setSortOrder((prev) => {
+                        if (prev === 'asc') {
+                            return 'desc';
+                        } else {
+                            return 'asc';
+                        }
+                    });
                 }}
                 sortOrder={sortOrder}
                 classes={{

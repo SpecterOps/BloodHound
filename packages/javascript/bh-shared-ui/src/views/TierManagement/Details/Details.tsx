@@ -78,11 +78,11 @@ const Details: FC = () => {
             if (!tagId) return 0;
 
             if (!selectorId)
-                return apiClient.getAssetGroupTagMembers(tagId, 0, 1).then((res) => {
+                return apiClient.getAssetGroupTagMembers(tagId, 0, 1, 'name').then((res) => {
                     return res.data.count;
                 });
 
-            return apiClient.getAssetGroupSelectorMembers(tagId, selectorId, 0, 1).then((res) => {
+            return apiClient.getAssetGroupSelectorMembers(tagId, selectorId, 0, 1, 'name').then((res) => {
                 return res.data.count;
             });
         },
@@ -93,34 +93,36 @@ const Details: FC = () => {
     return (
         <div>
             <div className='flex mt-6 gap-8'>
-                <CreateMenu
-                    createMenuTitle='Create Selector'
-                    disabled={!tagId}
-                    menuItems={[
-                        {
-                            title: 'Create Selector',
-                            onClick: () => {
-                                navigate(getEditPath(tagId, selectorId));
-                            },
-                        },
-                    ]}
-                />
                 <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3 invisible'>
+                    <div className='flex justify-start gap-4 items-center basis-2/3'>
                         <div className='flex items-center align-middle'>
-                            <div>
-                                <AppIcon.Info className='mr-4 ml-2' size={24} />
+                            <CreateMenu
+                                createMenuTitle='Create Selector'
+                                disabled={!tagId}
+                                menuItems={[
+                                    {
+                                        title: 'Create Selector',
+                                        onClick: () => {
+                                            navigate(`/tier-management/edit/tag/${tagId}/selector`);
+                                        },
+                                    },
+                                ]}
+                            />
+                            <div className='hidden'>
+                                <div>
+                                    <AppIcon.Info className='mr-4 ml-2' size={24} />
+                                </div>
+                                <span>
+                                    To create additional tiers{' '}
+                                    <Button
+                                        variant='text'
+                                        asChild
+                                        className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
+                                        <a href='#'>contact sales</a>
+                                    </Button>{' '}
+                                    in order to upgrade for multi-tier analysis.
+                                </span>
                             </div>
-                            <span>
-                                To create additional tiers{' '}
-                                <Button
-                                    variant='text'
-                                    asChild
-                                    className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
-                                    <a href='#'>contact sales</a>
-                                </Button>{' '}
-                                in order to upgrade for multi-tier analysis.
-                            </span>
                         </div>
                     </div>
                     <div className='flex justify-start basis-1/3'>
