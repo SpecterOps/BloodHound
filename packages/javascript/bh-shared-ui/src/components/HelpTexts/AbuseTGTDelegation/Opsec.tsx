@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,14 @@
 import { Typography } from '@mui/material';
 import { FC } from 'react';
 
-const References: FC = () => {
-    return <Typography>No Information Available</Typography>;
+const Opsec: FC = () => {
+    return (
+        <Typography variant='body2'>
+            The attack can be detected by correlating Windows security events from the attacker-controlled host and the
+            target. See the reference "Hunting in Active Directory: Unconstrained Delegation & Forests Trusts" for
+            details.
+        </Typography>
+    );
 };
 
-export default References;
+export default Opsec;

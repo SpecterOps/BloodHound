@@ -90,6 +90,7 @@ func TestNodeQueryOrderByNodeIdWithLimit(t *testing.T) {
 	mockResult.EXPECT().Error().Return(nil)
 	mockResult.EXPECT().Next().AnyTimes()
 	mockResult.EXPECT().Close().Return().Times(2)
+
 	nodeQueryInst.Filter(
 		query.Equals(query.NodeProperty("prop"), "1234"),
 	)
