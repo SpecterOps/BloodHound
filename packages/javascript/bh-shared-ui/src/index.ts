@@ -51,8 +51,6 @@ declare module '@mui/material/IconButton' {
     }
 }
 
-export * from './commonSearches';
-
 export * from './components';
 
 export * from './constants';
