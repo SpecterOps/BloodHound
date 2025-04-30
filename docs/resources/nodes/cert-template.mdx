@@ -37,7 +37,8 @@ The node supports the properties of the table. Three types of property names wil
 | Enrollment Flags | enrollmentflag | msPKI-Enrollment-Flag | Contains enrollment-related flags. |
 | Issuance Policies Required | issuancepolicies | msPKI-RA-Policies | Contains the list of required policy OIDs from those who sign enrollment requests. |
 | Issuance Policy Extensions | certificatepolicy | msPKI-Certificate-Policy | List of issuance polices that are included in issued certificates. |
-| Last Collected by BloodHound | lastseen | -   | When the object was last collected and ingested in BloodHound. |
+| Last Collected by BloodHound | lastcollected | -   | The most recent time the object was collected and ingested in BloodHound. |
+| Last Seen by BloodHound | lastseen | -   | The most recent time the object or a reference to it was collected and ingested in BloodHound. |
 | No Security Extension | nosecurityextension | msPKI-Certificate-Name-Flag (CT\_FLAG\_NO\_SECURITY\_  <br/>EXTENSION) | Whether issued certificates will include a certificate extension (SID of the enrollee), which may be required for authentication. |
 | OID | oid | msPKI-Cert-Template-OID | Specifies the object identifier of the certificate template. |
 | Renewal Period | renewalperiod | pKIOverlapPeriod | The period by which issued certificates should be renewed before they expire. |
