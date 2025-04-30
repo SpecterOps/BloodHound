@@ -50,7 +50,7 @@ const ConfirmationDialog: React.FC<{
         setTimeout(() => {
             setChallengeTxtReply('');
         }, 1000);
-    }, []);
+    }, [onConfirm]);
 
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>

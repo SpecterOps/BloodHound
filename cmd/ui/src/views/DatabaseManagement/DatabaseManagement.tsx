@@ -182,6 +182,7 @@ const useDatabaseManagement = () => {
 
     const handleMutation = () => {
         const assetGroupIds = [];
+
         if (deleteAllAssetGroupSelectors) {
             assetGroupIds.push(...allAssetGroupIds);
         } else if (deleteCustomHighValueSelectors) {
@@ -359,8 +360,8 @@ const DatabaseManagement: FC = () => {
                     dispatch({ type: 'close_dialog' });
                 }}
                 onConfirm={() => {
-                    handleMutation();
                     dispatch({ type: 'close_dialog' });
+                    handleMutation();
                 }}
                 itemName='the current environment'
                 itemType='environment'

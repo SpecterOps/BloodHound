@@ -154,5 +154,10 @@ describe('DatabaseManagement', () => {
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
+
+        const successMessage = screen.getByText(
+            /Deletion of the data is under way. Depending on data volume, this may take some time to complete./i
+        );
+        expect(successMessage).toBeInTheDocument();
     });
 });
