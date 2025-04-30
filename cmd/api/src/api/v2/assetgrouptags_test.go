@@ -654,6 +654,109 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 	})
 }
 
+func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+		handler   = http.HandlerFunc(resources.GetAssetGroupTagSelector)
+		endpoint  = fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID)
+
+		assetGroupTagId = "5"
+		selectorId      = "7"
+		selector        = model.AssetGroupTagSelector{
+			AssetGroupTagId: 5,
+			ID:              7,
+			Name:            "Selector 7",
+			Description:     "777",
+		}
+	)
+
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", endpoint, nil)
+	require.Nil(t, err)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	t.Run("successfully got asset group tag selector", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 5).Return(model.AssetGroupTag{ID: 5}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 7).Return(selector, nil)
+
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: selectorId})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusOK, response.Code)
+
+		bodyBytes, err := io.ReadAll(response.Body)
+		require.Nil(t, err)
+
+		var result struct {
+			Data v2.GetSelectorResponse `json:"data"`
+		}
+		err = json.Unmarshal(bodyBytes, &result)
+		require.Nil(t, err)
+
+		require.Equal(t, selector, result.Data.Selector)
+	})
+
+	t.Run("asset group tag doesn't exist error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).Return(model.AssetGroupTag{}, database.ErrNotFound)
+
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: selectorId})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+	})
+
+	t.Run("asset group tag selector doesn't exist error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 5).Return(model.AssetGroupTag{ID: 5}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 7).Return(model.AssetGroupTagSelector{}, database.ErrNotFound)
+
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: selectorId})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+	})
+
+	t.Run("asset group tag id malformed error", func(t *testing.T) {
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: "", api.URIPathVariableAssetGroupTagSelectorID: selectorId})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+	})
+
+	t.Run("selector id malformed error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 5).Return(model.AssetGroupTag{}, nil)
+
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: ""})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+		require.Contains(t, response.Body.String(), api.ErrorResponseDetailsIDMalformed)
+	})
+
+	t.Run("asset group tag id does not equal selector id", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 5).Return(model.AssetGroupTag{ID: 5}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 7).Return(model.AssetGroupTagSelector{AssetGroupTagId: 7}, nil)
+
+		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: selectorId})
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusNotFound, response.Code)
+		require.Contains(t, response.Body.String(), "selector is not part of asset group tag")
+	})
+}
+
 func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 	var (
 		mockCtrl      = gomock.NewController(t)

@@ -331,7 +331,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
-type getSelectorResponse struct {
+type GetSelectorResponse struct {
 	Selector model.AssetGroupTagSelector `json:"selector"`
 }
 
@@ -349,7 +349,7 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 	} else if selector.AssetGroupTagId != assetTagId {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else {
-		api.WriteBasicResponse(request.Context(), getSelectorResponse{Selector: selector}, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), GetSelectorResponse{Selector: selector}, http.StatusOK, response)
 	}
 }
 
