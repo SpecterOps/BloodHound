@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -58,7 +59,8 @@ func Test_IngestRelationships(t *testing.T) {
 					// TODO: CI uses neo4j as the graph driver. this forces us to pass a non-empty
 					// kind to the identityKind parameter of IngestRelationships(). PG can handle empty kinds, neo cannot
 					// may want to update CI to run on the pg graph driver
-					err := datapipe.IngestRelationships(batch, graph.StringKind("Generic"), rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.StringKind("Generic"), rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -101,7 +103,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -154,7 +157,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -197,7 +201,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -250,7 +255,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})
@@ -312,7 +318,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
+					timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+					err := datapipe.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.ErrorContains(t, err, "skipping invalid relationship")
 					return nil
 				})
@@ -359,8 +366,8 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 	t.Run("happy path. a file uploaded as a zip passes validation and is written to the graph", func(t *testing.T) {
 		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
-
-			err := datapipe.ReadFileForIngest(batch, validReader, readOptions)
+			timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+			err := datapipe.ReadFileForIngest(timestampedBatch, validReader, readOptions)
 			require.Nil(t, err)
 
 		}, func(details integration.HarnessDetails, tx graph.Transaction) {
@@ -395,7 +402,8 @@ func Test_ReadFileForIngest(t *testing.T) {
 	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
 			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-				err := datapipe.ReadFileForIngest(batch, invalidReader, readOptions)
+				timestampedBatch := datapipe.NewTimestampedBatch(batch, time.Now().UTC())
+				err := datapipe.ReadFileForIngest(timestampedBatch, invalidReader, readOptions)
 				require.NotNil(t, err)
 				var report ingest.ValidationReport
 				if errors.As(err, &report) {

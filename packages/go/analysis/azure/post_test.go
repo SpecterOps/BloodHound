@@ -265,7 +265,7 @@ func TestFetchTenants(t *testing.T) {
 		)
 		mockTx.EXPECT().Nodes().Return(mockNodeQuery)
 		mockNodeQuery.EXPECT().Filterf(gomock.Any()).Return(mockFilterf)
-		mockFilterf.EXPECT().Fetch(gomock.AssignableToTypeOf(func(graph.Cursor[*graph.Node]) error { return nil })).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error) error {
+		mockFilterf.EXPECT().Fetch(gomock.AssignableToTypeOf(func(graph.Cursor[*graph.Node]) error { return nil }), gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...any) error {
 			mockCursor := graph_mocks.NewMockCursor[*graph.Node](ctrl)
 			c := make(chan *graph.Node, 1)
 			go func() {

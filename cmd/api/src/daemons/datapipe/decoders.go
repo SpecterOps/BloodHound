@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
@@ -32,12 +33,11 @@ import (
 // into its corresponding internal ingest representation, appending it to the provided ConvertedData.
 //
 // T represents a specific ingest type (e.g., User, Computer, Group, etc.).
-type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
+type ConversionFunc[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time) error
 
 // The identityKind applied to the nodes is typically set at the batch level (e.g., ad.Entity or az.Entity).
 // In generic ingest scenarios, no identityKind is applied by default, allowing kinds to be specified per node.
-func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversionFunc ConversionFunc[T], identityKind graph.Kind) error {
-
+func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFunc[T], identityKind graph.Kind) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -55,7 +55,7 @@ func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversion
 			return err
 		} else {
 			count++
-			if err := conversionFunc(decodeTarget, &convertedData); err != nil {
+			if err := conversionFunc(decodeTarget, &convertedData, batch.IngestTime); err != nil {
 				errs.Add(err)
 			}
 		}
@@ -79,7 +79,7 @@ func decodeBasicData[T any](batch graph.Batch, decoder *json.Decoder, conversion
 	return errs.Combined()
 }
 
-func decodeGroupData(batch graph.Batch, decoder *json.Decoder) error {
+func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 
 	var (
 		convertedData = ConvertedGroupData{}
@@ -97,7 +97,7 @@ func decodeGroupData(batch graph.Batch, decoder *json.Decoder) error {
 			return err
 		} else {
 			count++
-			_ = convertGroupData(group, &convertedData)
+			_ = convertGroupData(group, &convertedData, batch.IngestTime)
 			if count == IngestCountThreshold {
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -118,7 +118,7 @@ func decodeGroupData(batch graph.Batch, decoder *json.Decoder) error {
 	return errs.Combined()
 }
 
-func decodeSessionData(batch graph.Batch, decoder *json.Decoder) error {
+func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
@@ -155,7 +155,7 @@ func decodeSessionData(batch graph.Batch, decoder *json.Decoder) error {
 	return errs.Combined()
 }
 
-func decodeAzureData(batch graph.Batch, decoder *json.Decoder) error {
+func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
@@ -172,7 +172,7 @@ func decodeAzureData(batch graph.Batch, decoder *json.Decoder) error {
 			return err
 		} else {
 			convert := getKindConverter(data.Kind)
-			convert(data.Data, &convertedData)
+			convert(data.Data, &convertedData, batch.IngestTime)
 			count++
 			if count == IngestCountThreshold {
 				if err = IngestAzureData(batch, convertedData); err != nil {

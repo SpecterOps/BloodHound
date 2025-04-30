@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
@@ -154,12 +153,11 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 // Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
 //
 // Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
-	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
+func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
+	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
 		return nil, err
 	} else {
 		var (
-			nowUTC  = time.Now().UTC()
 			updates []*graph.RelationshipUpdate
 			errs    = util.NewErrorCollector()
 		)
@@ -180,7 +178,7 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 				continue
 			}
 
-			rel.RelProps[common.LastSeen.String()] = nowUTC
+			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
 			// this sucks
 			startKinds := []graph.Kind{rel.Source.Kind}
@@ -195,12 +193,12 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 			update := &graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: srcID,
-					common.LastSeen: nowUTC,
+					common.LastSeen: batch.IngestTime,
 				}), startKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
 				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: targetID,
-					common.LastSeen: nowUTC,
+					common.LastSeen: batch.IngestTime,
 				}), endKinds...),
 				EndIdentityProperties: []string{common.ObjectID.String()},
 				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),

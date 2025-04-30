@@ -18,48 +18,96 @@ import {
     Button,
     Card,
     CardContent,
+    CardDescription,
     CardHeader,
-    CardTitle,
     Table,
     TableBody,
     TableCell,
     TableRow,
 } from '@bloodhoundenterprise/doodleui';
-import { faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { SeedTypeObjectId } from 'js-client-library';
+import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useState } from 'react';
 import { SearchValue } from '../../store';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 
+export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
+export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
+
+const mapSeeds = (seeds: SelectorSeedRequest[]): AssetGroupSelectedNodes => {
+    return seeds.map((seed) => {
+        return { objectid: seed.value };
+    });
+};
+
 const AssetGroupSelectorObjectSelect: FC<{
-    selectedNodes: (SearchValue & { memberCount?: number })[];
-    onSelectNode: (node: SearchValue & { memberCount?: number }) => void;
-    onDeleteNode: (nodeObjectId: string) => void;
-}> = ({ selectedNodes, onSelectNode, onDeleteNode }) => {
+    setSeeds: (seeds: SelectorSeedRequest[]) => void;
+    seeds?: SelectorSeedRequest[];
+}> = ({ setSeeds, seeds = [] }) => {
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [showDeleteIcons, setShowDeleteIcons] = useState<boolean>(false);
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(mapSeeds(seeds));
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
-            onSelectNode(node);
+            setSelectedNodes((prev) => {
+                if (
+                    prev.find((iteratedNode) => {
+                        return iteratedNode.objectid === node.objectid;
+                    })
+                ) {
+                    return prev;
+                }
+
+                const updatedNodes = [...prev, node];
+
+                const seeds = updatedNodes.map((node) => {
+                    return { type: SeedTypeObjectId, value: node.objectid };
+                });
+
+                setSeeds(seeds);
+
+                return updatedNodes;
+            });
+
             setSearchTerm('');
         },
-        [onSelectNode]
+        [setSeeds]
+    );
+
+    const handleDeleteNode = useCallback(
+        (node: SearchValue) => {
+            setSelectedNodes((prev) => {
+                const filteredNodes = prev.filter((n) => {
+                    return n.objectid !== node.objectid;
+                });
+
+                const seeds = filteredNodes.map((node) => {
+                    return { type: SeedTypeObjectId, value: node.objectid };
+                });
+
+                setSeeds(seeds);
+
+                return filteredNodes;
+            });
+        },
+        [setSeeds]
     );
 
     return (
-        <div className='max-w-2xl'>
-            <Card className='mt-5'>
-                <CardHeader>
-                    <CardTitle className='text-md'>Object Selector </CardTitle>
+        <div>
+            <Card className='rounded-lg'>
+                <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
+                    Object Selector
+                    <CardDescription className='pt-3 font-normal'>
+                        Use the input field to add objects to the list
+                    </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <p className='text-sm'>
-                        Use the input field to add objects and the edit button to remove objects from the list
-                    </p>
-                    <div className='flex content-center'>
-                        <div className='w-[12rem] mt-3'>
+                <CardContent className='pl-6'>
+                    <div className='flex content-center mt-3'>
+                        <div className='w-2xs mt-3'>
                             <ExploreSearchCombobox
                                 labelText='Search Objects To Add'
                                 inputValue={searchTerm}
@@ -69,29 +117,19 @@ const AssetGroupSelectorObjectSelect: FC<{
                                 variant='standard'
                             />
                         </div>
-                        <Button
-                            data-testid='selector-object-search_edit-button'
-                            className='rounded-full ml-5 mt-1'
-                            variant={'icon'}
-                            onClick={() => setShowDeleteIcons((prev) => !prev)}
-                            aria-label='Edit selected objects'>
-                            <FontAwesomeIcon icon={faPencil} size='lg' />
-                        </Button>
                     </div>
                     <Table className='mt-5 w-full table-fixed'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedNodes.map((node) => (
-                                <TableRow key={node.objectid} className='border-y-[1px] p-0 *:p-0 *:h-12'>
-                                    {showDeleteIcons && (
-                                        <TableCell className='*:p-0 text-center w-[30px]'>
-                                            <Button
-                                                variant={'text'}
-                                                onClick={() => onDeleteNode(node.objectid)}
-                                                aria-label='Remove object'>
-                                                <FontAwesomeIcon icon={faTrashCan} />
-                                            </Button>
-                                        </TableCell>
-                                    )}
+                                <TableRow key={node.objectid} className='border-y p-0 *:p-0 *:h-12'>
+                                    <TableCell className='*:p-0 text-center w-[30px]'>
+                                        <Button
+                                            variant={'text'}
+                                            onClick={() => handleDeleteNode(node)}
+                                            aria-label='Remove object'>
+                                            <FontAwesomeIcon icon={faTrashCan} />
+                                        </Button>
+                                    </TableCell>
                                     <TableCell className='text-center w-[84px]'>
                                         <NodeIcon nodeType={node.type || ''} />
                                     </TableCell>

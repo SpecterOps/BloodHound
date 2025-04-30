@@ -190,10 +190,8 @@ func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *g
 		OR (m:User AND ct.subjectaltrequiredns = false AND ct.subjectaltrequiredomaindns = false)
 		)
 		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
-		WITH *, relationships(p3) AS r
-		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-		AND (
+		MATCH p3 = (d)<-[r:SameForestTrust*0..]-()<-[:DCFor]-(dc:Computer)
+		WHERE (
 			dc.strongcertificatebindingenforcementraw = 0
 			OR dc.strongcertificatebindingenforcementraw = 1
 		)
@@ -419,8 +417,7 @@ func adcsESC9APath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.TrustedBy),
-				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Relationship(), ad.SameForestTrust),
 				query.Kind(query.Start(), ad.Domain),
 			)).
 		Inbound(query.And(
@@ -505,8 +502,7 @@ func adcsESC9bPath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.TrustedBy),
-				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Relationship(), ad.SameForestTrust),
 				query.Kind(query.Start(), ad.Domain),
 			)).
 		Inbound(query.And(
@@ -529,10 +525,8 @@ func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *g
 			OR ct.schemaversion = 1
 		)
 		MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-		MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
-		WITH *, relationships(p3) AS r
-		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-		AND (
+		MATCH p3 = (d)<-[r:SameForestTrust*0..]-()<-[:DCFor]-(dc:Computer)
+		WHERE (
 			dc.strongcertificatebindingenforcementraw = 0
 			OR dc.strongcertificatebindingenforcementraw = 1
 		)

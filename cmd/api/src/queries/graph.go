@@ -49,7 +49,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/config"
-	bhCtx "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/utils"
@@ -61,8 +60,8 @@ const (
 	SearchTypeExact SearchType = "exact"
 	SearchTypeFuzzy SearchType = "fuzzy"
 
-	QueryComplexityLimitSelector = 25
-	QueryComplexityLimitExplore  = 50
+	DefaultQueryFitnessLowerBoundSelector = -3
+	DefaultQueryFitnessLowerBoundExplore  = -7
 )
 
 var (
@@ -140,8 +139,10 @@ type Graph interface {
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
+	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
-	GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error)
+	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
+	GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error)
 	FetchNodesByObjectIDs(ctx context.Context, objectIDs ...string) (graph.NodeSet, error)
 	FetchNodesByObjectIDsAndKinds(ctx context.Context, kinds graph.Kinds, objectIDs ...string) (graph.NodeSet, error)
 	ValidateOUs(ctx context.Context, ous []string) ([]string, error)
@@ -366,7 +367,7 @@ func (s *GraphQuery) SearchNodesByName(ctx context.Context, nodeKinds graph.Kind
 type PreparedQuery struct {
 	query         string
 	StrippedQuery string
-	complexity    *analyzer.ComplexityMeasure
+	complexity    analyzer.ComplexityMeasure
 	HasMutation   bool
 }
 
@@ -404,10 +405,10 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 		return graphQuery, err
 	} else if err = s.strippedCypherEmitter.Write(queryModel, strippedQueryBuffer); err != nil {
 		return graphQuery, err
-	} else if !s.DisableCypherComplexityLimit && complexityMeasure.Weight > queryComplexityLimit {
-		// log query details if it is rejected due to high complexity
+	} else if !s.DisableCypherComplexityLimit && complexityMeasure.RelativeFitness <= queryComplexityLimit {
+		// log query details if it is rejected due to poor fitness
 		slog.Error(
-			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.Weight, queryComplexityLimit),
+			fmt.Sprintf("Query rejected. Query weight: %d. Maximum allowed weight: %d", complexityMeasure.RelativeFitness, queryComplexityLimit),
 			"query", strippedQueryBuffer.String(),
 		)
 
@@ -431,69 +432,33 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		err error
 
 		graphResponse = model.NewUnifiedGraph()
-		bhCtxInst     = bhCtx.Get(ctx)
+		start         = time.Now()
+
+		txDelegate = func(tx graph.Transaction) error {
+			if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
+				return err
+			} else {
+				graphResponse.AddPathSet(pathSet, includeProperties)
+			}
+
+			return nil
+		}
 	)
 
-	txDelegate := func(tx graph.Transaction) error {
-		if pathSet, err := ops.FetchPathSetByQuery(tx, pQuery.query); err != nil {
-			return err
-		} else {
-			graphResponse.AddPathSet(pathSet, includeProperties)
-		}
-
-		return nil
-	}
-
-	txOptions := func(config *graph.TransactionConfig) {
-		// The upperbound for this query must be either the custom request timeout (capped at maxRuntime
-		// below), or if it isn't supplied then 15 minutes - since longer timeouts may call OOM kills.
-		var (
-			maxTimeout     = 30 * time.Minute
-			defaultTimeout = 15 * time.Minute
-		)
-
-		if bhCtxInst.Timeout > maxTimeout {
-			slog.DebugContext(ctx, fmt.Sprintf("Custom timeout is too large, using the maximum allowable timeout of %0.f minutes instead", maxTimeout.Minutes()))
-			bhCtxInst.Timeout = maxTimeout
-		}
-
-		availableRuntime := bhCtxInst.Timeout
-		if availableRuntime > 0 {
-			slog.DebugContext(ctx, fmt.Sprintf("Available timeout for query is set to: %0.f seconds", availableRuntime.Seconds()))
-		} else {
-			availableRuntime = defaultTimeout
-			if !s.DisableCypherComplexityLimit {
-				var reductionFactor int64
-				availableRuntime, reductionFactor = applyTimeoutReduction(pQuery.complexity.Weight, availableRuntime)
-
-				slog.Info(
-					fmt.Sprintf("Available timeout for query is set to: %.2f seconds", availableRuntime.Seconds()),
-					"query", pQuery.StrippedQuery,
-					"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
-					"reduction factor", strconv.FormatInt(reductionFactor, 10),
-				)
-			}
-		}
-
-		// Set the timeout for this DB interaction
-		config.Timeout = availableRuntime
-	}
-
-	start := time.Now()
-
-	// TODO: verify write vs read tx need differentiation after PG migration
 	if pQuery.HasMutation {
-		err = s.Graph.WriteTransaction(ctx, txDelegate, txOptions)
+		// If the mutation is complex it is still worth spinning it into a write transaction in case it fails,
+		// deadlocks or otherwise rolls back
+		err = s.Graph.WriteTransaction(ctx, txDelegate)
 	} else {
-		err = s.Graph.ReadTransaction(ctx, txDelegate, txOptions)
+		err = s.Graph.ReadTransaction(ctx, txDelegate)
 	}
 
 	runtime := time.Since(start)
 
 	slog.Info(
-		fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.Weight, runtime.Seconds()),
+		fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.RelativeFitness, runtime.Seconds()),
 		"query", pQuery.StrippedQuery,
-		"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
+		"query cost", fmt.Sprintf("%d", pQuery.complexity.RelativeFitness),
 	)
 
 	if err != nil {
@@ -501,7 +466,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		if util.IsNeoTimeoutError(err) {
 			slog.Error("Neo4j timed out while executing cypher query",
 				"query", pQuery.StrippedQuery,
-				"query cost", fmt.Sprintf("%d", pQuery.complexity.Weight),
+				"query cost", fmt.Sprintf("%d", pQuery.complexity.RelativeFitness),
 			)
 		} else {
 			slog.WarnContext(ctx, fmt.Sprintf("RawCypherQuery failed: %v", err))
@@ -668,14 +633,18 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	return results
 }
 
-func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+func (s *GraphQuery) CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error) {
 	var numNodes int64
 
 	return numNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
-		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
+		numNodes, err = tx.Nodes().Filter(filterCriteria).Count()
 		return err
 	})
+}
+
+func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+	return s.CountFilteredNodes(ctx, (query.KindIn(query.Node(), kinds...)))
 }
 
 func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {
@@ -724,31 +693,40 @@ func (s *GraphQuery) GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (g
 	})
 }
 
-func (s *GraphQuery) GetFilteredAndSortedNodes(orderCriteria model.OrderCriteria, filterCriteria graph.Criteria) (graph.NodeSet, error) {
-	var nodes graph.NodeSet
+func (s *GraphQuery) GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error) {
+	return s.GetFilteredAndSortedNodesPaginated(sortItems, filterCriteria, 0, 0)
+}
 
-	if err := s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+func (s *GraphQuery) GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error) {
+	var (
+		nodes         []*graph.Node
+		finalCriteria []graph.Criteria
+	)
+
+	return nodes, s.Graph.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
 		nodeQuery := tx.Nodes().Filterf(func() graph.Criteria {
 			return filterCriteria
 		})
 
-		if len(orderCriteria) > 0 {
-			for _, order := range orderCriteria {
-				nodeQuery = nodeQuery.OrderBy(query.Order(query.NodeProperty(order.Property), order.Order))
+		if offset > 0 {
+			finalCriteria = append(finalCriteria, query.Offset(offset))
+		}
+
+		if limit > 0 {
+			finalCriteria = append(finalCriteria, query.Limit(limit))
+		}
+
+		if len(sortItems) > 0 {
+			finalCriteria = append(finalCriteria, sortItems.FormatCypherOrder())
+		}
+
+		return nodeQuery.Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				nodes = append(nodes, node)
 			}
-		}
-
-		if fetchedNodes, err := ops.FetchNodeSet(nodeQuery); err != nil {
-			return err
-		} else {
-			nodes = fetchedNodes
-		}
-
-		return nil
-	}); err != nil {
-		return graph.NodeSet{}, err
-	}
-	return nodes, nil
+			return nil
+		}, finalCriteria...)
+	})
 }
 
 // FetchNodesByObjectIDs takes a list of objectIDs. Returns a graph.NodeSet for found results

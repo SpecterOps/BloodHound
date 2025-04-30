@@ -16,14 +16,15 @@
 
 import { Box, CircularProgress } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { mapRoutes, useFeatureFlag } from 'bh-shared-ui';
+import { GenericErrorBoundaryFallback, useFeatureFlag } from 'bh-shared-ui';
 import React, { Suspense, useEffect } from 'react';
-import { Routes } from 'react-router-dom';
+import { ErrorBoundary } from 'react-error-boundary';
+import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
-import { ROUTES, TIER_MANAGEMENT_ROUTES } from 'src/routes';
+import { ROUTES, TIER_MANAGEMENT_ROUTE } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const useStyles = makeStyles({
@@ -54,26 +55,59 @@ const Content: React.FC = () => {
 
     return (
         <Box className={classes.content}>
-            <Suspense
-                fallback={
-                    <Box
-                        position='absolute'
-                        top='0'
-                        left='0'
-                        right='0'
-                        bottom='0'
-                        display='flex'
-                        alignItems='center'
-                        justifyContent='center'
-                        zIndex={1000}>
-                        <CircularProgress color='primary' size={80} />
-                    </Box>
-                }>
-                <Routes>
-                    {mapRoutes(ROUTES, AuthenticatedRoute)}
-                    {mapTierRoutes && mapRoutes(TIER_MANAGEMENT_ROUTES, AuthenticatedRoute)}
-                </Routes>
-            </Suspense>
+            <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
+                <Suspense
+                    fallback={
+                        <Box
+                            position='absolute'
+                            top='0'
+                            left='0'
+                            right='0'
+                            bottom='0'
+                            display='flex'
+                            alignItems='center'
+                            justifyContent='center'
+                            zIndex={1000}>
+                            <CircularProgress color='primary' size={80} />
+                        </Box>
+                    }>
+                    <Routes>
+                        {ROUTES.map((route) => {
+                            return route.authenticationRequired ? (
+                                <Route
+                                    path={route.path}
+                                    element={
+                                        // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
+                                        <AuthenticatedRoute>
+                                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
+                                                <route.component />
+                                            </div>
+                                        </AuthenticatedRoute>
+                                    }
+                                    key={route.path}
+                                />
+                            ) : (
+                                <Route path={route.path} element={<route.component />} key={route.path} />
+                            );
+                        })}
+                        {mapTierRoutes && (
+                            <Route
+                                path={TIER_MANAGEMENT_ROUTE.path}
+                                element={
+                                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
+                                    <AuthenticatedRoute>
+                                        <div
+                                            className={`h-full ${TIER_MANAGEMENT_ROUTE.navigation && 'pl-nav-width'} `}>
+                                            <TIER_MANAGEMENT_ROUTE.component />
+                                        </div>
+                                    </AuthenticatedRoute>
+                                }
+                                key={TIER_MANAGEMENT_ROUTE.path}
+                            />
+                        )}
+                    </Routes>
+                </Suspense>
+            </ErrorBoundary>
         </Box>
     );
 };
