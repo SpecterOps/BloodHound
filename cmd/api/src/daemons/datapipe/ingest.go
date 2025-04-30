@@ -79,14 +79,35 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 	}
 }
 
-func IngestBasicData(batch *TimestampedBatch, identityKind graph.Kind, converted ConvertedData) error {
+func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
-	if err := IngestNodes(batch, identityKind, converted.NodeProps); err != nil {
+	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
 		errs.Add(err)
 	}
 
-	if err := IngestRelationships(batch, identityKind, converted.RelProps); err != nil {
+	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
+		errs.Add(err)
+	}
+
+	return errs.Combined()
+}
+
+// IngestGenericData writes generic graph data into the database using the provided batch.
+// It attempts to ingest all nodes and relationships from the ConvertedData object.
+//
+// Because generic entities do not have a predefined base kind (unlike AZ or AD), this function passes
+// graph.EmptyKind to the node and relationship ingestion functions. This indicates that no
+// base kind should be applied uniformly to all ingested entities, and instead the kind(s)
+// defined directly on each node or edge (if any) are used as-is.
+func IngestGenericData(batch *TimestampedBatch, converted ConvertedData) error {
+	errs := util.NewErrorCollector()
+
+	if err := IngestNodes(batch, graph.EmptyKind, converted.NodeProps); err != nil {
+		errs.Add(err)
+	}
+
+	if err := IngestRelationships(batch, graph.EmptyKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -139,36 +160,38 @@ func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Me
 
 type ingestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error
 
-func defaultBasicHandler[T any](conversionFunc ConversionFunc[T]) ingestHandler {
+func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) ingestHandler {
 	return func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
 		decoder, err := getDefaultDecoder(reader)
 		if err != nil {
 			return err
 		}
-		return decodeBasicData(batch, decoder, conversionFunc, ad.Entity)
+		return decodeBasicData(batch, decoder, conversionFunc)
 	}
 }
 
 var ingestHandlers = map[ingest.DataType]ingestHandler{
 	ingest.DataTypeGeneric: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		// decode nodes, if present
 		decoder, err := CreateIngestDecoder(reader, "nodes", 2)
 		if errors.Is(err, ingest.ErrDataTagNotFound) {
 			slog.Debug("no nodes found in generic ingest payload; continuing to edges")
 		} else if err != nil {
 			return err
 		} else {
-			if err = decodeBasicData(batch, decoder, convertGenericNode, graph.EmptyKind); err != nil {
+			if err = decodeGenericData(batch, decoder, convertGenericNode); err != nil {
 				return err
 			}
 		}
 
+		// decode edges, if present
 		decoder, err = CreateIngestDecoder(reader, "edges", 2)
 		if errors.Is(err, ingest.ErrDataTagNotFound) {
 			slog.Debug("no edges found in generic ingest payload")
 		} else if err != nil {
 			return err
 		} else {
-			return decodeBasicData(batch, decoder, convertGenericEdge, graph.EmptyKind)
+			return decodeGenericData(batch, decoder, convertGenericEdge)
 		}
 
 		return nil
@@ -177,7 +200,7 @@ var ingestHandlers = map[ingest.DataType]ingestHandler{
 		if decoder, err := getDefaultDecoder(reader); err != nil {
 			return err
 		} else if meta.Version >= 5 {
-			return decodeBasicData(batch, decoder, convertComputerData, ad.Entity)
+			return decodeBasicData(batch, decoder, convertComputerData)
 		} else {
 			return nil
 		}
@@ -257,13 +280,8 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, inge
 }
 
 func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
-	nodeKinds := []graph.Kind{}
-	if baseKind != graph.EmptyKind {
-		nodeKinds = append(nodeKinds, baseKind)
-	}
-	nodeKinds = append(nodeKinds, nextNode.Labels...)
-
 	var (
+		nodeKinds            = mergeBaseKind(baseKind, nextNode.Labels...)
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
 			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
@@ -276,49 +294,18 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 	return batch.Batch.UpdateNodeBy(nodeUpdate)
 }
 
-func IngestNodes(batch *TimestampedBatch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
+func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
-		if err := IngestNode(batch, identityKind, next); err != nil {
+		if err := IngestNode(batch, baseKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
 	}
 	return errs.Combined()
-}
-
-func IngestRelationship(batch *TimestampedBatch, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
-	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
-	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
-
-	relationshipUpdate := graph.RelationshipUpdate{
-		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Source,
-			common.LastSeen: batch.IngestTime,
-		}), nextRel.Source.Kind),
-		StartIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Target,
-			common.LastSeen: batch.IngestTime,
-		}), nextRel.Target.Kind),
-		EndIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	}
-
-	if nodeIDKind != graph.EmptyKind {
-		relationshipUpdate.StartIdentityKind = nodeIDKind
-		relationshipUpdate.EndIdentityKind = nodeIDKind
-	}
-
-	return batch.Batch.UpdateRelationshipBy(relationshipUpdate)
 }
 
 // IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
@@ -327,12 +314,12 @@ func IngestRelationship(batch *TimestampedBatch, nodeIDKind graph.Kind, nextRel 
 //
 // Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
 // Errors encountered during resolution or update are collected and returned as a single combined error.
-func IngestRelationships(batch *TimestampedBatch, identityKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
-	updates, err := resolveRelationships(batch, relationships, identityKind)
+	updates, err := resolveRelationships(batch, relationships, baseKind)
 	if err != nil {
 		errs.Add(err)
 	}

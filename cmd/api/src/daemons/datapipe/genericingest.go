@@ -180,15 +180,8 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 
 			rel.RelProps[common.LastSeen.String()] = batch.IngestTime
 
-			// this sucks
-			startKinds := []graph.Kind{rel.Source.Kind}
-			if baseKind != graph.EmptyKind {
-				startKinds = append(startKinds, baseKind)
-			}
-			endKinds := []graph.Kind{rel.Target.Kind}
-			if baseKind != graph.EmptyKind {
-				endKinds = append(endKinds, baseKind)
-			}
+			startKinds := mergeBaseKind(baseKind, rel.Source.Kind)
+			endKinds := mergeBaseKind(baseKind, rel.Target.Kind)
 
 			update := &graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
@@ -227,4 +220,20 @@ func resolveEndpointID(endpoint ein.IngestibleEndpoint, cache map[endpointKey]st
 
 	// Fallback to raw value if matching by ID
 	return endpoint.Value, endpoint.Value != ""
+}
+
+// MergeNodeKinds returns a combined list of node kinds, optionally including the baseKind.
+//
+// EmptyKind is used as a sentinel value to indicate that there is no global or inherited kind
+// to apply to this node, unlike AD and AZ, which have a base kind (Base or AZBase) applied to all entities.
+//
+// This is especially important for generic ingest flows, where each node defines its own kind(s) explicitly,
+// and no shared base kind should be enforced.
+func mergeBaseKind(baseKind graph.Kind, additionalKinds ...graph.Kind) []graph.Kind {
+	var kinds []graph.Kind
+	if baseKind != graph.EmptyKind {
+		kinds = append(kinds, baseKind)
+	}
+	kinds = append(kinds, additionalKinds...)
+	return kinds
 }

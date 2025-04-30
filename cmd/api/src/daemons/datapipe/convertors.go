@@ -25,10 +25,9 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func convertGenericNode(entity ein.GenericNode, converted *ConvertedData, ingestTime time.Time) error {
+func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
 	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
 
 	node := ein.IngestibleNode{
@@ -40,8 +39,6 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData, ingest
 	if node.PropertyMap == nil {
 		node.PropertyMap = make(map[string]any)
 	}
-
-	node.PropertyMap[common.LastCollected.String()] = ingestTime
 
 	// If a "objectid" is present in the property map, verify it matches the top-level ID
 	if propertyID, ok := node.PropertyMap["objectid"]; ok && propertyID != objectID {
@@ -56,8 +53,7 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData, ingest
 	return nil
 }
 
-// todo: consider seperate interface for generic convertors...
-func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData, ingestTime time.Time) error {
+func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
 	ingestibleRel := ein.NewIngestibleRelationship(
 		ein.IngestibleEndpoint{
 			Value:   strings.ToUpper(entity.Start.Value),

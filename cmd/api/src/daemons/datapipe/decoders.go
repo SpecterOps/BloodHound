@@ -24,20 +24,19 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 )
+
+type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time) error
 
 // ConversionFunc is a function that transforms a decoded JSON object (of type T)
 // into its corresponding internal ingest representation, appending it to the provided ConvertedData.
 //
 // T represents a specific ingest type (e.g., User, Computer, Group, etc.).
-type ConversionFunc[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time) error
+type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
 
-// The identityKind applied to the nodes is typically set at the batch level (e.g., ad.Entity or az.Entity).
-// In generic ingest scenarios, no identityKind is applied by default, allowing kinds to be specified per node.
-func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFunc[T], identityKind graph.Kind) error {
+func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFuncWithTime[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -61,7 +60,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 		}
 
 		if count == IngestCountThreshold {
-			if err := IngestBasicData(batch, identityKind, convertedData); err != nil {
+			if err := IngestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -71,7 +70,49 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 	}
 
 	if count > 0 {
-		if err := IngestBasicData(batch, identityKind, convertedData); err != nil {
+		if err := IngestBasicData(batch, convertedData); err != nil {
+			errs.Add(err)
+		}
+	}
+
+	return errs.Combined()
+}
+
+func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFunc[T]) error {
+	var (
+		count         = 0
+		convertedData ConvertedData
+		errs          = util.NewErrorCollector()
+	)
+
+	for decoder.More() {
+		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
+		var decodeTarget T
+		if err := decoder.Decode(&decodeTarget); err != nil {
+			slog.Error(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		} else {
+			count++
+			if err := conversionFunc(decodeTarget, &convertedData); err != nil {
+				errs.Add(err)
+			}
+		}
+
+		if count == IngestCountThreshold {
+			if err := IngestGenericData(batch, convertedData); err != nil {
+				errs.Add(err)
+			}
+			convertedData.Clear()
+			count = 0
+
+		}
+	}
+
+	if count > 0 {
+		if err := IngestGenericData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
