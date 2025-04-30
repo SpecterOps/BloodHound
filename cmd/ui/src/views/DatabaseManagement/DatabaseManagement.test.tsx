@@ -150,7 +150,7 @@ describe('DatabaseManagement', () => {
         await user.click(proceedButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Please delete my data');
+        await user.type(textField, 'Delete this environment');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);
