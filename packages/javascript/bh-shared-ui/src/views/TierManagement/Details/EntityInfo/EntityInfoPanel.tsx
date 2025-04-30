@@ -36,7 +36,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
     const previousSelectedNode = usePreviousValue(selectedNode);
 
     useEffect(() => {
-        if (previousSelectedNode?.node_id !== selectedNode?.node_id) {
+        if (previousSelectedNode?.id !== selectedNode?.id) {
             setExpandedSections({ 'Object Information': true });
         }
     }, [setExpandedSections, previousSelectedNode, selectedNode]);
@@ -61,7 +61,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
                 }}>
                 {selectedNode ? (
                     <EntityInfoContent
-                        id={selectedNode.node_id}
+                        id={selectedNode.id}
                         nodeType={selectedNode.primary_kind}
                         properties={selectedNode.properties}
                     />
