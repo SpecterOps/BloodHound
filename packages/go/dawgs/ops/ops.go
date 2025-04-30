@@ -197,6 +197,8 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 						pathSet = append(pathSet, *path)
 						path = &graph.Path{}
 					}
+
+					values.Next()
 				}
 			}
 
