@@ -38,6 +38,8 @@ const (
 	PrincipalTypeUser             = "User"
 )
 
+var AZRoleManagementPolicyAssignment = enums.Kind("AZRoleManagementPolicyAssignment")
+
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
 	switch kind {
 	case enums.KindAZApp:
@@ -142,6 +144,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureAutomationAccount
 	case enums.KindAZAutomationAccountRoleAssignment:
 		return convertAzureAutomationAccountRoleAssignment
+	case AZRoleManagementPolicyAssignment:
+		return convertAzureRoleManagementPolicyAssignment
 	default:
 		// TODO: we should probably have a hook or something to log the unknown type
 		return func(rm json.RawMessage, cd *ConvertedAzureData, now time.Time) {}
@@ -710,5 +714,18 @@ func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted 
 		slog.Error(fmt.Sprintf(SerialError, "azure automation account role assignments", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureAutomationAccountRoleAssignment(data)...)
+	}
+}
+
+// convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter
+func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData) {
+	var data models.RoleManagementPolicyAssignment
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "AzureRoleAssignments", err))
+	} else {
+		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data)
+		converted.NodeProps = append(converted.NodeProps, nodes...)
+		converted.RelProps = append(converted.RelProps, relationships...)
 	}
 }

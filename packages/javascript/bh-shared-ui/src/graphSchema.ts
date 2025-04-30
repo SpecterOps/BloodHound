@@ -905,6 +905,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    AZRoleApproval = 'AZRoleApproval',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1002,6 +1003,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.AZRoleApproval:
+            return 'AZRoleApproval';
         default:
             return undefined;
     }
@@ -1040,6 +1043,14 @@ export enum AzureKindProperties {
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
     RoleTemplateID = 'templateid',
+    RoleDefinitionId = 'roledefinitionid',
+    EndUserAssignmentRequiresApproval = 'enduserassignmentrequiresapproval',
+    EndUserAssignmentRequiresCAPAuthenticationContext = 'enduserassignmentrequirescapauthenticationcontext',
+    EndUserAssignmentUserApprovers = 'enduserassignmentuserapprovers',
+    EndUserAssignmentGroupApprovers = 'enduserassignmentgroupapprovers',
+    EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
+    EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
+    EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1107,6 +1118,22 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Sign In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
+        case AzureKindProperties.RoleDefinitionId:
+            return 'Role Definition Id';
+        case AzureKindProperties.EndUserAssignmentRequiresApproval:
+            return 'EndUser Assignment Requires Approval';
+        case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
+            return 'EndUser Assignment Requires CAP AuthenticationContext';
+        case AzureKindProperties.EndUserAssignmentUserApprovers:
+            return 'EndUser Assignment User Approvers';
+        case AzureKindProperties.EndUserAssignmentGroupApprovers:
+            return 'EndUser Assignment Group Approvers';
+        case AzureKindProperties.EndUserAssignmentRequiresMFA:
+            return 'EndUser Assignment Requires MFA';
+        case AzureKindProperties.EndUserAssignmentRequiresJustification:
+            return 'EndUser Assignment Requires Justification';
+        case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
+            return 'EndUser Assignment Requires Ticket Information';
         default:
             return undefined;
     }
