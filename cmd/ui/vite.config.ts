@@ -52,7 +52,6 @@ export default defineConfig(({ mode }) => {
                 '@mui/material',
                 '@mui/styles',
                 '@mui/lab',
-                'axios',
                 'downshift',
                 'history',
                 'notistack',
