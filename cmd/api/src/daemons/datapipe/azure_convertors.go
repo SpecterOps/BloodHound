@@ -716,7 +716,7 @@ func convertAzureAutomationAccountRoleAssignment(raw json.RawMessage, converted 
 }
 
 // convertAzureRoleManagementPolicyAssignment implements function signature required in getKindConverter
-func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData) {
+func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
 	var data models.RoleManagementPolicyAssignment
 
 	if err := json.Unmarshal(raw, &data); err != nil {
