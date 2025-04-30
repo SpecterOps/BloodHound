@@ -139,6 +139,7 @@ type Graph interface {
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
 	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
+	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
 	GetFilteredAndSortedNodes(sortItems query.SortItems, filterCriteria graph.Criteria) ([]*graph.Node, error)
@@ -632,14 +633,18 @@ func (s *GraphQuery) GetEntityCountResults(ctx context.Context, node *graph.Node
 	return results
 }
 
-func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+func (s *GraphQuery) CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error) {
 	var numNodes int64
 
 	return numNodes, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var err error
-		numNodes, err = tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).Count()
+		numNodes, err = tx.Nodes().Filter(filterCriteria).Count()
 		return err
 	})
+}
+
+func (s *GraphQuery) CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error) {
+	return s.CountFilteredNodes(ctx, (query.KindIn(query.Node(), kinds...)))
 }
 
 func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*graph.Node, error) {

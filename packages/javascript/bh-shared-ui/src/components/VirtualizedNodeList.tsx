@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { List, ListItemButton, Tooltip } from '@mui/material';
+import { Tooltip } from '@bloodhoundenterprise/doodleui';
+import { GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { cn } from '../utils';
 import NodeIcon from './NodeIcon';
 
 export type VirtualizedNodeListItem = {
@@ -26,33 +28,42 @@ export type VirtualizedNodeListItem = {
     onClick?: (index: number) => void;
 };
 
-interface VirtualizedNodeListProps {
-    nodes: VirtualizedNodeListItem[];
-    itemSize?: number;
-}
+const isGraphNode = (node: any): node is GraphNode => {
+    return node.label !== undefined;
+};
 
-const normalizeItem = (item: VirtualizedNodeListItem): VirtualizedNodeListItem => ({
-    name: item.name || item.objectId || 'Unknown',
-    objectId: item.objectId,
-    kind: item.kind || '',
-    onClick: item.onClick,
-});
+const normalizeItem = (item: VirtualizedNodeListItem | GraphNode): VirtualizedNodeListItem => {
+    if (isGraphNode(item))
+        return {
+            ...item,
+            name: item.label || item.objectId || 'NO NAME',
+        };
+    else
+        return {
+            ...item,
+            name: item.name || item.objectId || 'NO NAME',
+        };
+};
 
 const InnerElement = ({ style, ...rest }: any) => (
     // Top margin is adjusted to account for FixedSizeList's default of 'overflow: auto'
     // causing the scrollbar to render even for a single node
-    <List component='ul' disablePadding style={{ ...style, overflowX: 'hidden', marginTop: 0 }} {...rest} />
+    <ul style={{ ...style, overflowX: 'hidden', marginTop: 0 }} {...rest}></ul>
 );
 
-const Row = ({ data, index, style }: ListChildComponentProps<VirtualizedNodeListItem[]>) => {
+const Row = ({ data, index, style }: ListChildComponentProps<VirtualizableNodes>) => {
     const items = data;
     const item = items[index];
     const normalizedItem = normalizeItem(item);
-    const itemClass = index % 2 ? 'odd-item' : 'even-item';
 
     return (
-        <ListItemButton
-            className={itemClass}
+        <li
+            className={cn(
+                'bg-neutral-light-2 dark:bg-neutral-dark-2 flex items-center pl-2 border-y border-y-neutral-light-5 dark:border-y-neutral-dark-5',
+                {
+                    'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
+                }
+            )}
             style={{
                 ...style,
                 padding: '0 8px',
@@ -60,19 +71,27 @@ const Row = ({ data, index, style }: ListChildComponentProps<VirtualizedNodeList
             onClick={() => normalizedItem.onClick?.(index)}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip title={normalizedItem.name}>
-                <div style={{ minWidth: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {normalizedItem.name}
-                </div>
+            <Tooltip tooltip={normalizedItem.name}>
+                <div className='truncate text-ellipsis ml-10'>{normalizedItem.name}</div>
             </Tooltip>
-        </ListItemButton>
+        </li>
     );
 };
 
-const VirtualizedNodeList = ({ nodes, itemSize = 32 }: VirtualizedNodeListProps) => {
+type NodeList<T> = T[];
+
+export type VirtualizableNodes = NodeList<VirtualizedNodeListItem | GraphNode>;
+
+interface VirtualizedNodeListProps {
+    nodes: VirtualizableNodes;
+    itemSize?: number;
+    heightScalar?: number;
+}
+
+const VirtualizedNodeList = ({ nodes, itemSize = 32, heightScalar = 16 }: VirtualizedNodeListProps) => {
     return (
         <FixedSizeList
-            height={Math.min(nodes.length, 16) * itemSize}
+            height={Math.min(nodes.length, heightScalar) * itemSize}
             itemCount={nodes.length}
             itemData={nodes}
             itemSize={itemSize}

@@ -2,7 +2,7 @@
 title: Create a gMSA for Use With SharpHound Enterprise
 ---
 
-<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
 Group Managed Service Accounts (gMSA) are managed domain accounts that provide automatic password management, simplified service principal name (SPN) management, and the ability to delegate the management to other objects.
 
@@ -43,7 +43,7 @@ Perform the following steps from/against a writeable Domain Controller.
     Browse to the desired location in Users and Computers and create the group.
     Alternatively, use the following following template to create the group using PowerShell:
 ```json
-    $gmsaName = "t0\_gMSA\_SHS" # Name of the gMSA
+    $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
     $pwdReadOUDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of OU to create the password read group in
 
     New-ADGroup `
@@ -64,7 +64,7 @@ Perform the following steps from/against a writeable Domain Controller.
     You can add the computer to the group in Users and Computers.
     Alternatively, use the following following template to add group membership using PowerShell:
 ```json
-    $gmsaName = "t0\_gMSA\_SHS" # Name of the gMSA
+    $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
     $shServerDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of the SharpHound Enterprise server
 
     Add-ADGroupMember `
@@ -81,7 +81,7 @@ Perform the following steps from/against a writeable Domain Controller.
 
     Use the following following template to create the gMSA and set the retrieve right using PowerShell:
 ```json
-    $gmsaName = "t0\_gMSA\_SHS" # Name of the gMSA
+    $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
     $gmsaOUDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of OU to create the gMSA in
 
     New-ADServiceAccount -Name $gmsaName `
@@ -136,7 +136,7 @@ Perform the following steps from/against a writeable Domain Controller.
 
 2.  In the elevated PowerShell, test that the SharpHound server can retrieve the gMSA password by running:
 ```json
-    $gmsaName = "t0\_gMSA\_SHS" # Name of the gMSA
+    $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
 
     Test-ADServiceAccount -Identity $gmsaName
 ```
@@ -179,7 +179,7 @@ Change the SharpHound Enterprise service to be run by the created gMSA. This can
 
 2.  Run the following command, replacing 'DOMAIN' and the gMSA name to match your environment
 ```
-    sc.exe config SHDelegator obj= "DOMAIN\\t0\_gMSA\_SHS$"
+    sc.exe config SHDelegator obj= "DOMAIN\\t0_gMSA_SHS$"
 ```
 <Frame>
   <img src="/assets/image-97.png" alt=""/>

@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 )
@@ -32,9 +32,9 @@ ConversionFunc is responsible for turning an individual json object into the equ
 
 T is any of the ingest types
 */
-type ConversionFunc[T any] func(decoded T, converted *ConvertedData)
+type ConversionFunc[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
 
-func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
+func decodeBasicData[T any](batch *TimestampedBatch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
 	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 			return err
 		} else {
 			count++
-			conversionFunc(decodeTarget, &convertedData)
+			conversionFunc(decodeTarget, &convertedData, batch.IngestTime)
 		}
 
 		if count == IngestCountThreshold {
@@ -79,7 +79,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	return errs.Combined()
 }
 
-func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
+func decodeGroupData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
@@ -101,7 +101,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 			return err
 		} else {
 			count++
-			convertGroupData(group, &convertedData)
+			convertGroupData(group, &convertedData, batch.IngestTime)
 			if count == IngestCountThreshold {
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -122,7 +122,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
+func decodeSessionData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func decodeSessionData(batch graph.Batch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
+func decodeAzureData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	decoder, err := CreateIngestDecoder(reader)
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			return err
 		} else {
 			convert := getKindConverter(data.Kind)
-			convert(data.Data, &convertedData)
+			convert(data.Data, &convertedData, batch.IngestTime)
 			count++
 			if count == IngestCountThreshold {
 				if err = IngestAzureData(batch, convertedData); err != nil {

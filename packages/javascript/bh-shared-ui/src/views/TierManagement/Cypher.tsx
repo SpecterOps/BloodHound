@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { GraphNodes } from 'js-client-library';
+import { GraphNodes, SeedTypeCypher } from 'js-client-library';
+import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { graphSchema } from '../../constants';
@@ -28,7 +29,8 @@ export const Cypher: FC<{
     preview?: boolean;
     initialInput?: string;
     setCypherSearchResults?: (nodes: GraphNodes | null) => void;
-}> = ({ preview = true, initialInput = '', setCypherSearchResults }) => {
+    setSeeds?: (seeds: SelectorSeedRequest[]) => void;
+}> = ({ preview = true, initialInput = '', setCypherSearchResults, setSeeds }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -56,8 +58,9 @@ export const Cypher: FC<{
 
     const handleCypherSearch = useCallback(() => {
         if (preview) return;
+        if (setSeeds) setSeeds([{ type: SeedTypeCypher, value: cypherQuery }]);
         if (cypherQuery) cypherUseQuery.refetch();
-    }, [cypherUseQuery, cypherQuery, preview]);
+    }, [cypherUseQuery, cypherQuery, preview, setSeeds]);
 
     const onValueChanged = useCallback(
         (value: string) => {
@@ -75,50 +78,45 @@ export const Cypher: FC<{
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
     return (
-        <section>
-            <div className='h-full mt-4 rounded-lg'>
-                <div className='flex justify-center rounded-lg bg-neutral-light-2 dark:bg-neutral-dark-2 min-h-80 min-w-[588px]'>
-                    <div className='pt-6 pb-7 w-11/12 flex flex-col justify-around'>
-                        <div className='flex justify-between items-center px-2'>
-                            <header className='text-base font-bold'>
-                                {preview ? 'Cypher Preview' : 'Cypher Search'}
-                            </header>
-                            <div className='flex gap-6'>
-                                <Button variant={'text'} className='p-0 text-sm' asChild>
-                                    <a href={exploreUrl} target='_blank' rel='noreferrer'>
-                                        View in Explore
-                                    </a>
-                                </Button>
-                                {!preview && (
-                                    <Button
-                                        variant={'text'}
-                                        className='p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline'
-                                        onClick={handleCypherSearch}>
-                                        Run
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                        <div className='mt-4'>
-                            <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
-                                <CypherEditor
-                                    className='flex flex-col border-solid border border-black border-opacity-25 rounded-lg bg-white min-h-64 overflow-auto dark:bg-[#002b36] grow-1'
-                                    ref={cypherEditorRef}
-                                    value={cypherQuery}
-                                    onValueChanged={onValueChanged}
-                                    theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
-                                    schema={schema()}
-                                    readOnly={preview}
-                                    lineWrapping
-                                    lint
-                                    placeholder='Cypher Query'
-                                    tooltipAbsolute={false}
-                                />
-                            </div>
-                        </div>
+        <Card>
+            <CardHeader>
+                <div className='flex justify-between items-center px-6 pt-3'>
+                    <CardTitle>{preview ? 'Cypher Preview' : 'Cypher Search'}</CardTitle>
+                    <div className='flex gap-6'>
+                        <Button variant={'text'} className='p-0 text-sm' asChild>
+                            <a href={exploreUrl} target='_blank' rel='noreferrer'>
+                                View in Explore
+                            </a>
+                        </Button>
+                        {!preview && (
+                            <Button
+                                variant={'text'}
+                                className='p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline'
+                                onClick={handleCypherSearch}>
+                                Run
+                            </Button>
+                        )}
                     </div>
                 </div>
-            </div>
-        </section>
+            </CardHeader>
+            <CardContent className='px-6'>
+                <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                    <CypherEditor
+                        className='flex flex-col border-solid border border-black border-opacity-25 rounded-lg bg-white min-h-64 overflow-auto dark:bg-[#002b36] grow-1'
+                        ref={cypherEditorRef}
+                        value={cypherQuery}
+                        onValueChanged={onValueChanged}
+                        theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                        schema={schema()}
+                        readOnly={preview}
+                        autofocus={false}
+                        placeholder='Cypher Query'
+                        tooltipAbsolute={false}
+                        lineWrapping
+                        lint
+                    />
+                </div>
+            </CardContent>
+        </Card>
     );
 };

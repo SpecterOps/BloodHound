@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
-import { FC } from 'react';
+//go:build serial_integration
+// +build serial_integration
 
-const Opsec: FC = () => {
-    return <Typography variant='body2'>There is no opsec associated with this edge</Typography>;
-};
+package v2_test
 
-export default Opsec;
+import (
+	"testing"
+	"time"
+
+	"github.com/specterops/bloodhound/src/api/v2/integration"
+	"github.com/specterops/bloodhound/src/model"
+	"github.com/stretchr/testify/require"
+)
+
+func TestGetDatapipeStatus(t *testing.T) {
+	testCtx := integration.NewFOSSContext(t)
+
+	testCtx.WaitForDatapipeIdle(90 * time.Second)
+
+	datapipeStatus, err := testCtx.AdminClient().GetDatapipeStatus()
+	require.Nil(t, err)
+	require.Equal(t, datapipeStatus.Status, model.DatapipeStatusIdle)
+}

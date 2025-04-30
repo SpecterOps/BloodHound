@@ -21,6 +21,7 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -42,11 +43,12 @@ func ConvertSessionObject(session Session) IngestibleSession {
 	}
 }
 
-func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
+func ConvertObjectToNode(item IngestBase, itemType graph.Kind, ingestTime time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
 	}
+	itemProps[common.LastCollected.String()] = ingestTime
 
 	if itemType == ad.Domain {
 		convertInvalidDomainProperties(itemProps)
@@ -61,11 +63,12 @@ func ConvertObjectToNode(item IngestBase, itemType graph.Kind) IngestibleNode {
 	}
 }
 
-func ConvertComputerToNode(item Computer) IngestibleNode {
+func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
 	}
+	itemProps[common.LastCollected.String()] = ingestTime
 
 	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
 
@@ -113,7 +116,7 @@ func ConvertComputerToNode(item Computer) IngestibleNode {
 	}
 }
 
-func ConvertEnterpriseCAToNode(item EnterpriseCA) IngestibleNode {
+func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) IngestibleNode {
 	itemProps := item.Properties
 	if itemProps == nil {
 		itemProps = make(map[string]any)
@@ -623,7 +626,7 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 				TargetType: ad.Domain,
 			},
 			IngestibleRel{
-				RelProps: map[string]any{"isacl": false},
+				RelProps: map[string]any{ad.IsACL.String(): false},
 				RelType:  ad.CoerceToTGT,
 			},
 		))
@@ -782,31 +785,25 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 			Label:       ad.Domain,
 		})
 
-		var dir = trust.TrustDirection
-		if dir == TrustDirectionInbound || dir == TrustDirectionBidirectional {
-			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
-				IngestibleSource{
-					Source:     domain.ObjectIdentifier,
-					SourceType: ad.Domain,
-				},
-				IngestibleTarget{
-					Target:     trust.TargetDomainSid,
-					TargetType: ad.Domain,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{
-						ad.IsACL.String():                false,
-						ad.SidFiltering.String():         trust.SidFilteringEnabled,
-						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
-						ad.TrustAttributes.String():      finalTrustAttributes,
-						ad.TrustType.String():            trust.TrustType,
-						ad.Transitive.String():           trust.IsTransitive},
-					RelType: ad.TrustedBy,
-				},
-			))
+		// Determine edge type
+		edgeType := ad.CrossForestTrust
+		if trust.TrustType == "ParentChild" || trust.TrustType == "TreeRoot" || trust.TrustType == "CrossLink" {
+			edgeType = ad.SameForestTrust
 		}
 
-		if dir == TrustDirectionOutbound || dir == TrustDirectionBidirectional {
+		var dir = trust.TrustDirection
+		if dir == TrustDirectionInbound || dir == TrustDirectionBidirectional {
+			realProps := map[string]any{
+				ad.IsACL.String():                  false,
+				ad.TrustType.String():              trust.TrustType,
+				ad.Transitive.String():             trust.IsTransitive,
+				ad.TrustAttributesInbound.String(): finalTrustAttributes,
+			}
+			// Only add TGT delegation if trustattributes collected
+			if finalTrustAttributes != nil {
+				realProps[ad.TGTDelegation.String()] = trust.TGTDelegationEnabled // collection of tgtdelegation was added with trustattributes
+			}
+
 			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
 				IngestibleSource{
 					Source:     trust.TargetDomainSid,
@@ -817,16 +814,75 @@ func ParseDomainTrusts(domain Domain) ParsedDomainTrustData {
 					TargetType: ad.Domain,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{
-						ad.IsACL.String():                false,
-						ad.SidFiltering.String():         trust.SidFilteringEnabled,
-						ad.TGTDelegationEnabled.String(): trust.TGTDelegationEnabled,
-						ad.TrustAttributes.String():      finalTrustAttributes,
-						ad.TrustType.String():            trust.TrustType,
-						ad.Transitive.String():           trust.IsTransitive},
-					RelType: ad.TrustedBy,
+					RelProps: realProps,
+					RelType:  edgeType,
 				},
 			))
+
+			if edgeType == ad.CrossForestTrust && trust.TGTDelegationEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     trust.TargetDomainSid,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     domain.ObjectIdentifier,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							ad.IsACL.String():     false,
+							ad.TrustType.String(): trust.TrustType,
+						},
+						RelType: ad.AbuseTGTDelegation,
+					},
+				))
+			}
+		}
+
+		if dir == TrustDirectionOutbound || dir == TrustDirectionBidirectional {
+			realProps := map[string]any{
+				ad.IsACL.String():                   false,
+				ad.SpoofSIDHistoryBlocked.String():  trust.SidFilteringEnabled,
+				ad.TrustType.String():               trust.TrustType,
+				ad.Transitive.String():              trust.IsTransitive,
+				ad.TrustAttributesOutbound.String(): finalTrustAttributes,
+			}
+
+			parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     domain.ObjectIdentifier,
+					SourceType: ad.Domain,
+				},
+				IngestibleTarget{
+					Target:     trust.TargetDomainSid,
+					TargetType: ad.Domain,
+				},
+				IngestibleRel{
+					RelProps: realProps,
+					RelType:  edgeType,
+				},
+			))
+
+			if edgeType == ad.CrossForestTrust && !trust.SidFilteringEnabled {
+				parsedData.TrustRelationships = append(parsedData.TrustRelationships, NewIngestibleRelationship(
+					IngestibleSource{
+						Source:     trust.TargetDomainSid,
+						SourceType: ad.Domain,
+					},
+					IngestibleTarget{
+						Target:     domain.ObjectIdentifier,
+						TargetType: ad.Domain,
+					},
+					IngestibleRel{
+						RelProps: map[string]any{
+							ad.IsACL.String():     false,
+							ad.TrustType.String(): trust.TrustType,
+						},
+						RelType: ad.SpoofSIDHistory,
+					},
+				))
+			}
 		}
 	}
 
@@ -995,7 +1051,7 @@ func ParseComputerMiscData(computer Computer) []IngestibleRelationship {
 					TargetType: ad.Domain,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{"isacl": false},
+					RelProps: map[string]any{ad.IsACL.String(): false},
 					RelType:  ad.CoerceToTGT,
 				},
 			))
@@ -1201,7 +1257,7 @@ func handleEnterpriseCAEnrollmentAgentRestrictions(enterpriseCA EnterpriseCA, re
 func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []IngestibleRelationship) []IngestibleRelationship {
 
 	// Get IngesibleNode for EnterpriceCA
-	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA)
+	baseNodeProp := ConvertObjectToNode(enterpriseCA.IngestBase, ad.EnterpriseCA, time.Now().UTC())
 
 	if enterpriseCA.CARegistryData.CASecurity.Collected {
 		caSecurityData := slicesext.Filter(enterpriseCA.CARegistryData.CASecurity.Data, func(s ACE) bool {

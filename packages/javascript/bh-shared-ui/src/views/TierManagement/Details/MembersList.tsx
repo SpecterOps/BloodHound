@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorNode } from 'js-client-library';
+import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -32,10 +32,10 @@ const Row = ({
     index,
     style,
 }: ListChildComponentProps<{
-    selected: number | null;
+    selected: string | undefined;
     title: string;
-    onClick: (id: number, data: AssetGroupTagSelectorNode) => void;
-    items: Record<number, AssetGroupTagSelectorNode>;
+    onClick: (id: string) => void;
+    items: Record<number, AssetGroupTagMemberListItem>;
 }>) => {
     const { items, onClick, selected, title } = data;
     const listItem = items[index];
@@ -47,18 +47,18 @@ const Row = ({
         <li
             key={index}
             className={cn('border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative', {
-                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.id,
+                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.node_id.toString(),
             })}
             style={style}>
-            <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
+            <SelectedHighlight selected={selected} itemId={listItem.node_id} title={title} />
             <Button
                 variant={'text'}
                 className='flex justify-start w-full'
                 onClick={() => {
-                    onClick(listItem.id, listItem);
+                    onClick(listItem.node_id.toString());
                 }}>
-                <NodeIcon nodeType={listItem.type || 'Unknown'} />
-                <span className='text-base ml-2'>{listItem.properties.name}</span>
+                <NodeIcon nodeType={listItem.primary_kind} />
+                <span className='text-base ml-2'>{listItem.name}</span>
             </Button>
         </li>
     );
@@ -71,12 +71,14 @@ const InnerElement = ({ style, ...rest }: any) => (
         {...rest}></ul>
 );
 
-const getFetchCallback = (selectedTier: number, selectedSelector: number | null) => {
-    if (selectedSelector !== null) {
+const getFetchCallback = (selectedTag: string | undefined, selectedSelector: string | undefined) => {
+    if (!selectedTag) return;
+
+    if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupSelectorMembers(selectedTier, selectedSelector, skip, limit).then((res) => {
+            return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit).then((res) => {
                 const response = {
-                    data: res.data.data.members,
+                    data: res.data.data['members'],
                     skip: res.data.skip,
                     limit: res.data.limit,
                     total: res.data.count,
@@ -86,9 +88,9 @@ const getFetchCallback = (selectedTier: number, selectedSelector: number | null)
         };
     } else {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupLabelMembers(selectedTier, skip, limit).then((res) => {
+            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit).then((res) => {
                 const response = {
-                    data: res.data.data.members,
+                    data: res.data.data['members'],
                     skip: res.data.skip,
                     limit: res.data.limit,
                     total: res.data.count,
@@ -99,11 +101,18 @@ const getFetchCallback = (selectedTier: number, selectedSelector: number | null)
     }
 };
 
+const getListHeight = (windoHeight: number) => {
+    if (windoHeight > 1080) return 762;
+    if (1080 >= windoHeight && windoHeight > 900) return 642;
+    if (900 >= windoHeight) return 438;
+    return 438;
+};
+
 interface MembersListProps {
-    selectedTag: number;
-    selectedSelector: number | null;
-    selected: number | null;
-    onClick: (id: number, data: AssetGroupTagSelectorNode) => void;
+    selectedTag: string | undefined;
+    selectedSelector: string | undefined;
+    selected: string | undefined;
+    onClick: (id: string) => void;
     itemCount?: number;
 }
 
@@ -124,14 +133,26 @@ export const MembersList: React.FC<MembersListProps> = ({
     onClick,
     itemCount = 0,
 }) => {
-    const [sortOrder, setSortOrder] = useState<SortOrder>();
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
-    const [items, setItems] = useState<Record<number, AssetGroupTagSelectorNode>>({});
+    const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
-    const previousSelector = usePreviousValue<number | null>(selectedSelector);
-    const previousTier = usePreviousValue<number>(selectedTag);
+    const previousSelector = usePreviousValue<string | undefined>(selectedSelector);
+    const previousTier = usePreviousValue<string | undefined>(selectedTag);
 
     const itemData = { onClick, selected, items, title: 'Members' };
+
+    const height = useRef(getListHeight(window.innerHeight));
+
+    useEffect(() => {
+        const updateListHeight = () => {
+            height.current = getListHeight(window.innerHeight);
+        };
+
+        window.addEventListener('resize', updateListHeight);
+
+        return () => window.removeEventListener('resize', updateListHeight);
+    }, []);
 
     const isItemLoaded = (index: number) => {
         return !!items[index];
@@ -147,19 +168,20 @@ export const MembersList: React.FC<MembersListProps> = ({
 
             const fetchData = getFetchCallback(selectedTag, selectedSelector);
 
-            return fetchData({ skip: startIndex, limit: limit })
-                .then((data) => {
-                    const itemMap: any = {};
+            if (fetchData)
+                return fetchData({ skip: startIndex, limit: limit })
+                    .then((data) => {
+                        const itemMap: any = {};
 
-                    for (let i = 0; i < limit; i++) {
-                        itemMap[i + startIndex] = data.data[i];
-                    }
+                        for (let i = 0; i < limit; i++) {
+                            itemMap[i + startIndex] = data.data[i];
+                        }
 
-                    setItems(Object.assign({}, items, itemMap));
-                })
-                .finally(() => {
-                    setIsFetching(false);
-                });
+                        setItems(Object.assign({}, items, itemMap));
+                    })
+                    .finally(() => {
+                        setIsFetching(false);
+                    });
         },
         [items, isFetching, selectedSelector, selectedTag]
     );
@@ -199,13 +221,13 @@ export const MembersList: React.FC<MembersListProps> = ({
                 loadMoreItems={loadMoreItems}>
                 {({ onItemsRendered, ref }) => (
                     <FixedSizeList
-                        height={522}
+                        height={height.current}
                         itemCount={itemCount}
                         itemData={itemData}
                         itemSize={ITEM_SIZE}
+                        ref={ref}
                         onItemsRendered={onItemsRendered}
                         innerElementType={InnerElement}
-                        ref={ref}
                         width={'100%'}>
                         {Row}
                     </FixedSizeList>

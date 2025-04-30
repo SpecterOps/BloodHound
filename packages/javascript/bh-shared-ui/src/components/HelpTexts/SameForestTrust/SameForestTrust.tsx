@@ -14,22 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
+import Abuse from './Abuse';
+import General from './General';
+import References from './References';
 
-export const Create: FC = () => {
-    const { state } = useLocation();
-
-    return (
-        <div>
-            <h1>Create</h1>
-            <h2>Type: {state.type}</h2>
-            {state.within && (
-                <>
-                    <br />
-                    Within Tier ID: {state.within}
-                </>
-            )}
-        </div>
-    );
+const SameForestTrust = {
+    general: General,
+    abuse: Abuse,
+    references: References,
 };
+
+export default SameForestTrust;

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Skeleton } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
 import { CSSProperties, FC } from 'react';
 
 export const ItemSkeleton = (title: string, key: number, style?: CSSProperties) => {
@@ -31,11 +32,12 @@ export const ItemSkeleton = (title: string, key: number, style?: CSSProperties) 
 
 export const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
 
-const isActive = (selected: number | null, itemId: number) => {
-    return selected === itemId;
+const isActive = (selected: string | undefined, itemId: string | number) => {
+    if (typeof itemId === 'number') return selected === itemId.toString();
+    else return selected === itemId;
 };
 
-export const SelectedHighlight: FC<{ selected: number | null; itemId: number; title: string }> = ({
+export const SelectedHighlight: FC<{ selected: string | undefined; itemId: string | number; title: string }> = ({
     selected,
     itemId,
     title,
@@ -45,4 +47,18 @@ export const SelectedHighlight: FC<{ selected: number | null; itemId: number; ti
             data-testid={`tier-management_details_${title.toLowerCase()}-list_active-${title.toLowerCase()}-item-${selected}`}
             className='h-full bg-primary pr-1 absolute'></div>
     ) : null;
+};
+
+export const isTag = (data: any): data is AssetGroupTag => {
+    return 'kind_id' in data;
+};
+
+export const isSelector = (data: any): data is AssetGroupTagSelector => {
+    return 'seeds' in data;
+};
+
+export const getSelectorSeedType = (selector: AssetGroupTagSelector): SeedTypes => {
+    const firstSeed = selector.seeds[0];
+
+    return firstSeed.type;
 };
