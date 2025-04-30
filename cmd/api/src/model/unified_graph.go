@@ -17,7 +17,6 @@
 package model
 
 import (
-	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -65,7 +64,6 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 	var (
 		objectId   = getTypedPropertyOrDefault(node.Properties, common.ObjectID.String(), "")
 		label      = getTypedPropertyOrDefault(node.Properties, common.Name.String(), objectId)
-		systemTags = getTypedPropertyOrDefault(node.Properties, common.SystemTags.String(), "")
 		lastSeen   = getTypedPropertyOrDefault(node.Properties, common.LastSeen.String(), time.Now())
 		properties map[string]any
 	)
@@ -79,7 +77,7 @@ func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 		Kind:          analysis.GetNodeKind(node).String(),
 		ObjectId:      objectId,
 		IsTierZero:    tiering.IsTierZero(node),
-		IsOwnedObject: strings.Contains(systemTags, OwnedAssetGroupTag),
+		IsOwnedObject: tiering.IsOwned(node),
 		LastSeen:      lastSeen,
 		Properties:    properties,
 	}
