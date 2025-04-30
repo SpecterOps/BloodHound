@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Skeleton } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorMember } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
 import { CSSProperties, FC } from 'react';
 
 export const ItemSkeleton = (title: string, key: number, style?: CSSProperties) => {
@@ -50,14 +50,15 @@ export const SelectedHighlight: FC<{ selected: string | undefined; itemId: strin
 };
 
 export const isTag = (data: any): data is AssetGroupTag => {
-    return 'asset_group_tag_id' in data;
+    return 'kind_id' in data;
 };
 
 export const isSelector = (data: any): data is AssetGroupTagSelector => {
     return 'seeds' in data;
 };
 
-export const isMember = (data: any): data is AssetGroupTagSelectorMember => {
-    const memberData = data || {};
-    return 'node_id' in memberData;
+export const getSelectorSeedType = (selector: AssetGroupTagSelector): SeedTypes => {
+    const firstSeed = selector.seeds[0];
+
+    return firstSeed.type;
 };

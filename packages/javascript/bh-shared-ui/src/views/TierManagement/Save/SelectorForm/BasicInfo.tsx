@@ -55,7 +55,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         queryKey: ['tier-management', 'tags', tagId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTag(tagId);
-            return response.data.data;
+            return response.data.data['tag'];
         },
         enabled: tagId !== '',
     });
@@ -64,16 +64,16 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data;
+            return response.data.data['selector'];
         },
         enabled: selectorId !== '',
     });
 
-    const [disabled, setDisabled] = useState(selectorQuery.data?.selector.disabled_at === null);
+    const [disabled, setDisabled] = useState(selectorQuery.data?.disabled_at === null);
 
     // Updates the select option if editing an existing selector to match the existing selectors value
     useEffect(() => {
-        const type = selectorQuery.data?.selector.seeds[0].type;
+        const type = selectorQuery.data?.seeds[0].type;
         if (type) {
             setSelectorType(type);
         }
@@ -86,7 +86,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 max-h-[36rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
             <CardContent>
-                <div className={cn('mb-4', { hidden: !selectorQuery.data?.selector.allow_disable })}>
+                <div className={cn('mb-4', { hidden: !selectorQuery.data?.allow_disable })}>
                     <Label htmlFor='disabled_at' className='text-base font-bold'>
                         Selector Status
                     </Label>
@@ -109,7 +109,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                     </div>
                 </div>
                 <p className='font-bold'>
-                    Tag: <span className='font-normal'>{tagQuery.data?.tag.name}</span>
+                    Tag: <span className='font-normal'>{tagQuery.data?.name}</span>
                 </p>
                 <div className='flex flex-col gap-6 mt-6'>
                     <div className='flex flex-col gap-6'>
@@ -119,7 +119,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                             </Label>
                             <Input
                                 id='name'
-                                {...register('name', { required: true, value: selectorQuery.data?.selector.name })}
+                                {...register('name', { required: true, value: selectorQuery.data?.name })}
                                 className={
                                     'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
                                 }
@@ -134,7 +134,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                             </Label>
                             <textarea
                                 id='description'
-                                {...register('description', { value: selectorQuery.data?.selector.description })}
+                                {...register('description', { value: selectorQuery.data?.description })}
                                 rows={3}
                                 className={
                                     'rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'

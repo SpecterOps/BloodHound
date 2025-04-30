@@ -85,7 +85,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data;
+            return response.data.data['selector'];
         },
         enabled: selectorId !== '',
     });
@@ -130,7 +130,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                                 preview={false}
                                 setCypherSearchResults={setResults}
                                 setSeeds={setSeeds}
-                                initialInput={selectorQuery.data?.selector.seeds[0].value}
+                                initialInput={selectorQuery.data?.seeds[0].value}
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
@@ -171,7 +171,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
             </Card>
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
-                itemName={selectorQuery.data?.selector.name || 'Selector'}
+                itemName={selectorQuery.data?.name || 'Selector'}
                 itemType='selector'
                 onClose={handleDeleteSelector}
             />

@@ -17,12 +17,14 @@
 import { faker } from '@faker-js/faker';
 import {
     AssetGroupTag,
-    AssetGroupTagCertifiedValues,
     AssetGroupTagMemberInfo,
+    AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
-    AssetGroupTagSelectorMember,
     AssetGroupTagSelectorSeed,
+    AssetGroupTagSelectorsListItem,
     AssetGroupTagTypes,
+    AssetGroupTagsListItem,
+    NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
 
@@ -33,7 +35,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         kind_id: faker.datatype.number(),
         type: faker.datatype.number({ min: 1, max: 2 }) as AssetGroupTagTypes,
         position: faker.datatype.number({ min: 0, max: 10 }),
-        description: faker.random.words(),
+        description: faker.random.words(1000),
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
         updated_at: faker.date.past().toISOString(),
@@ -41,7 +43,16 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         deleted_at: faker.date.past().toISOString(),
         deleted_by: faker.internet.email(),
         requireCertify: faker.datatype.boolean(),
-        count: faker.datatype.number(),
+    };
+};
+
+export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTagsListItem => {
+    return {
+        ...createAssetGroupTag(tagId),
+        counts: {
+            selectors: faker.datatype.number(),
+            members: faker.datatype.number(),
+        },
     };
 };
 
@@ -49,7 +60,7 @@ export const createAssetGroupTags = (count: number = 1) => {
     const data: AssetGroupTag[] = [];
 
     for (let i = 1; i <= count; i++) {
-        const tag = createAssetGroupTag(i);
+        const tag = createAssetGroupTagWithCounts(i);
         data.push(tag);
     }
 
@@ -71,8 +82,16 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
         updated_by: faker.internet.email(),
         disabled_at: faker.date.past().toISOString(),
         disabled_by: faker.internet.email(),
-        count: faker.datatype.number(),
         seeds: createSelectorSeeds(10, selectorId),
+    };
+
+    return data;
+};
+
+export const createSelectorWithCounts = (tagId: number = 0, selectorId: number = 0) => {
+    const data: AssetGroupTagSelectorsListItem = {
+        ...createSelector(tagId, selectorId),
+        counts: { members: faker.datatype.number() },
     };
 
     return data;
@@ -82,7 +101,7 @@ export const createSelectors = (count: number = 10, tagId: number = 0) => {
     const data: AssetGroupTagSelector[] = [];
 
     for (let i = 0; i < count; i++) {
-        data.push(createSelector(tagId, i));
+        data.push(createSelectorWithCounts(tagId, i));
     }
 
     return data;
@@ -110,7 +129,7 @@ export const createSelectorNodes = (
     limit: number,
     count: number
 ) => {
-    const data: AssetGroupTagSelectorMember[] = [];
+    const data: AssetGroupTagMemberListItem[] = [];
 
     for (let i = skip; i < skip + limit; i++) {
         if (i === count) break;
@@ -120,12 +139,11 @@ export const createSelectorNodes = (
             : `tier-${assetGroupId - 1}-selector-${selectorId}-object-${i}`;
 
         data.push({
-            selector_id: selectorId || 0,
-            node_id: i.toString(),
-            properties: { ...JSON.parse(faker.datatype.json()), name, objectid: i },
-            certified: faker.datatype.number({ min: -1, max: 2 }) as AssetGroupTagCertifiedValues,
-            certified_by: faker.internet.email(),
-            type: 'User',
+            node_id: i,
+            primary_kind: 'User',
+            object_id: faker.datatype.uuid(),
+            name: name,
+            source: NodeSourceChild,
         });
     }
 
@@ -134,11 +152,12 @@ export const createSelectorNodes = (
 
 export const createAssetGroupMemberInfo = (tagId: string, memberId: string) => {
     const data: AssetGroupTagMemberInfo = {
-        node_id: memberId,
-        certified: 1,
-        certified_by: 'user',
+        node_id: parseInt(memberId),
         name: 'member',
+        primary_kind: 'User',
+        object_id: faker.datatype.uuid(),
         selectors: createSelectors(10, parseInt(tagId)),
+        properties: JSON.parse(faker.datatype.json()),
     };
 
     return data;

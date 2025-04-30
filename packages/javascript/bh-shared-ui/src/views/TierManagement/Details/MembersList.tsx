@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorMember } from 'js-client-library';
+import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -34,8 +34,8 @@ const Row = ({
 }: ListChildComponentProps<{
     selected: string | undefined;
     title: string;
-    onClick: (id: string, data: AssetGroupTagSelectorMember) => void;
-    items: Record<number, AssetGroupTagSelectorMember>;
+    onClick: (id: string) => void;
+    items: Record<number, AssetGroupTagMemberListItem>;
 }>) => {
     const { items, onClick, selected, title } = data;
     const listItem = items[index];
@@ -47,7 +47,7 @@ const Row = ({
         <li
             key={index}
             className={cn('border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative', {
-                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.node_id,
+                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.node_id.toString(),
             })}
             style={style}>
             <SelectedHighlight selected={selected} itemId={listItem.node_id} title={title} />
@@ -55,10 +55,10 @@ const Row = ({
                 variant={'text'}
                 className='flex justify-start w-full'
                 onClick={() => {
-                    onClick(listItem.node_id, listItem);
+                    onClick(listItem.node_id.toString());
                 }}>
-                <NodeIcon nodeType={listItem.type} />
-                <span className='text-base ml-2'>{listItem.properties.name}</span>
+                <NodeIcon nodeType={listItem.primary_kind} />
+                <span className='text-base ml-2'>{listItem.name}</span>
             </Button>
         </li>
     );
@@ -78,7 +78,7 @@ const getFetchCallback = (selectedTag: string | undefined, selectedSelector: str
         return ({ skip, limit }: { skip: number; limit: number }) => {
             return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit).then((res) => {
                 const response = {
-                    data: res.data.data.members,
+                    data: res.data.data['members'],
                     skip: res.data.skip,
                     limit: res.data.limit,
                     total: res.data.count,
@@ -90,7 +90,7 @@ const getFetchCallback = (selectedTag: string | undefined, selectedSelector: str
         return ({ skip, limit }: { skip: number; limit: number }) => {
             return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit).then((res) => {
                 const response = {
-                    data: res.data.data.members,
+                    data: res.data.data['members'],
                     skip: res.data.skip,
                     limit: res.data.limit,
                     total: res.data.count,
@@ -112,7 +112,7 @@ interface MembersListProps {
     selectedTag: string | undefined;
     selectedSelector: string | undefined;
     selected: string | undefined;
-    onClick: (id: string, selectedMember: AssetGroupTagSelectorMember) => void;
+    onClick: (id: string) => void;
     itemCount?: number;
 }
 
@@ -135,7 +135,7 @@ export const MembersList: React.FC<MembersListProps> = ({
 }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
-    const [items, setItems] = useState<Record<number, AssetGroupTagSelectorMember>>({});
+    const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
     const previousSelector = usePreviousValue<string | undefined>(selectedSelector);
     const previousTier = usePreviousValue<string | undefined>(selectedTag);

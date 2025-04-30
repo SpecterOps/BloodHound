@@ -29,7 +29,7 @@ export type VirtualizedNodeListItem = {
 };
 
 const isGraphNode = (node: any): node is GraphNode => {
-    return node.isTierZero !== undefined;
+    return node.label !== undefined;
 };
 
 const normalizeItem = (item: VirtualizedNodeListItem | GraphNode): VirtualizedNodeListItem => {

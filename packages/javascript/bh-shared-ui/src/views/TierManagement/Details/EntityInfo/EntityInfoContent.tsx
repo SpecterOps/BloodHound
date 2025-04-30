@@ -21,7 +21,7 @@ import EntityObjectInformation from './EntityObjectInformation';
 import SelectorList from './SelectorList';
 
 export interface EntityInfoContentProps {
-    id: string;
+    id: number;
     nodeType: string;
     properties: Record<string, any>;
 }

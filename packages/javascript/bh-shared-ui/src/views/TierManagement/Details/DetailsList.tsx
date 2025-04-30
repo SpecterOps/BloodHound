@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagCounts, AssetGroupTagSelectorsCounts } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -22,19 +23,49 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, itemSkeletons } from './utils';
 
-type DetailsListItem = {
+type TagsListItem = {
     name: string;
     id: number;
-    count: number;
+    counts?: AssetGroupTagCounts;
 };
 
-type ListQuery = UseQueryResult<DetailsListItem[], unknown>;
+type SelectorsListItem = {
+    name: string;
+    id: number;
+    counts?: AssetGroupTagSelectorsCounts;
+};
+
+type DetailsList = TagsListItem[] | SelectorsListItem[];
+
+type ListQuery = UseQueryResult<DetailsList, unknown>;
 
 type DetailsListProps = {
     title: 'Selectors' | 'Tiers' | 'Labels';
     listQuery: ListQuery;
     selected: string | undefined;
     onSelect: (id: number) => void;
+};
+
+const isTagListItem = (listItem: TagsListItem | SelectorsListItem): listItem is TagsListItem => {
+    if (listItem.counts === undefined) return false;
+    return 'selectors' in listItem.counts;
+};
+
+const isSelectorsListItem = (listItem: TagsListItem | SelectorsListItem): listItem is SelectorsListItem => {
+    if (listItem.counts === undefined) return false;
+    return !('selectors' in listItem.counts);
+};
+
+const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.ReactNode => {
+    if (listItem.counts === undefined) {
+        return null;
+    } else if (isTagListItem(listItem)) {
+        return <span className='text-base'>{listItem.counts.selectors.toLocaleString()}</span>;
+    } else if (isSelectorsListItem(listItem)) {
+        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
+    } else {
+        return null;
+    }
 };
 
 /**
@@ -116,7 +147,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <span className='text-base'>{listItem.name}</span>
-                                            <span className='text-base'>{listItem.count.toLocaleString()}</span>
+                                            {getCountElement(listItem)}
                                         </Button>
                                     </li>
                                 );

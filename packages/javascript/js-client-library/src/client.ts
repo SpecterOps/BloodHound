@@ -45,13 +45,13 @@ import {
 import {
     ActiveDirectoryDataQualityResponse,
     AssetGroupMemberCountsResponse,
-    AssetGroupMemberInfoResponse,
-    AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
-    AssetGroupSelectorResponse,
-    AssetGroupSelectorsResponse,
+    AssetGroupTagMemberInfoResponse,
+    AssetGroupTagMembersResponse,
     AssetGroupTagResponse,
+    AssetGroupTagSelectorResponse,
+    AssetGroupTagSelectorsResponse,
     AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
@@ -166,16 +166,16 @@ class BHEAPIClient {
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 
     getAssetGroupTagMemberInfo = (tagId: number | string, memberId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberInfoResponse>(
+        this.baseClient.get<AssetGroupTagMemberInfoResponse>(
             `/api/v2/asset-group-tags/${tagId}/members/${memberId}`,
             options
         );
 
     getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
 
     getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
-        this.baseClient.get<AssetGroupSelectorResponse>(
+        this.baseClient.get<AssetGroupTagSelectorResponse>(
             `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
             options
         );
@@ -202,7 +202,7 @@ class BHEAPIClient {
         limit: number,
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupMemberResponse>(
+        this.baseClient.get<AssetGroupTagMembersResponse>(
             `/api/v2/asset-group-tags/${assetGroupTagId}/members`,
             Object.assign(
                 {
@@ -222,7 +222,7 @@ class BHEAPIClient {
         limit: number,
         options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupMemberResponse>(
+        this.baseClient.get<AssetGroupTagMembersResponse>(
             `/api/v2/asset-group-tags/${assetGroupId}/selectors/${selectorId}/members`,
             Object.assign(
                 {

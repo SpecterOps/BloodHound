@@ -45,7 +45,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
         const { total_count, counts } = objectsCountQuery.data;
 
         return (
-            <Card className='flex flex-col h-full px-6 pt-6 select-none overflow-y-auto max-w-[32rem]'>
+            <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
                 <div className='flex justify-between'>
                     <p>Total Count</p>
                     <Badge label={total_count.toLocaleString()} />

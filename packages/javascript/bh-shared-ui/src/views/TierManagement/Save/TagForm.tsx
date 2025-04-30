@@ -30,7 +30,7 @@ import { FC } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { apiClient } from '../../../utils';
+import { apiClient, cn } from '../../../utils';
 
 type TagFormInputs = {
     name: string;
@@ -46,6 +46,8 @@ export const TagForm: FC = () => {
         handleSubmit,
         formState: { errors },
     } = useForm<TagFormInputs>();
+    // TODO: REMOVE THIS ONCE THIS FORM HAS ENDPOINTS THAT IT CAN POST TO
+    const inputsDisabled = true;
 
     const navigate = useNavigate();
 
@@ -60,7 +62,7 @@ export const TagForm: FC = () => {
         queryKey: ['tier-management', 'tags', tagId],
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTag(tagId);
-            return response.data.data;
+            return response.data.data['tag'];
         },
         enabled: tagId !== '',
     });
@@ -83,8 +85,9 @@ export const TagForm: FC = () => {
                             <Label htmlFor='name'>Name</Label>
                             <Input
                                 id='name'
+                                disabled={inputsDisabled}
                                 type='text'
-                                {...register('name', { required: true, value: tagQuery.data?.tag.name })}
+                                {...register('name', { required: true, value: tagQuery.data?.name })}
                                 className={
                                     'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
                                 }
@@ -97,12 +100,14 @@ export const TagForm: FC = () => {
                             <Label htmlFor='description'>Description</Label>
                             <textarea
                                 id='description'
-                                {...register('description', { value: tagQuery.data?.tag.description })}
+                                disabled
+                                {...register('description', { value: tagQuery.data?.description })}
                                 placeholder='Description Input'
                                 rows={3}
-                                className={
-                                    'rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
-                                }
+                                className={cn(
+                                    'rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2',
+                                    { 'cursor-not-allowed': inputsDisabled }
+                                )}
                             />
                         </div>
                         <div className='hidden'>
@@ -110,7 +115,7 @@ export const TagForm: FC = () => {
                             <Switch
                                 id='certificationRequired'
                                 {...register('certificationRequired', {
-                                    value: tagQuery.data?.tag.requireCertify || true,
+                                    value: tagQuery.data?.requireCertify || true,
                                 })}
                                 label='Enable this to mandate certification for all objects within this tier'
                                 defaultChecked></Switch>

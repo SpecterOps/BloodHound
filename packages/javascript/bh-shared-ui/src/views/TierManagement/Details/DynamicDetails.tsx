@@ -15,113 +15,85 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Card } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorMember } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagSelector, SeedTypesMap } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
-import { useParams } from 'react-router-dom';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher';
-import WrappedEntityInfoPanel from './EntityInfo/EntityInfoPanel';
-import ObjectCountPanel from './ObjectCountPanel';
-import { isMember, isSelector, isTag } from './utils';
-
-type SelectedDetailsProps = {
-    selectedTag: AssetGroupTag | undefined;
-    selectedSelector: AssetGroupTagSelector | undefined;
-    selectedMember: AssetGroupTagSelectorMember | null;
-    cypher?: boolean;
-};
-
-export const SelectedDetails: FC<SelectedDetailsProps> = ({
-    selectedTag,
-    selectedSelector,
-    selectedMember,
-    cypher,
-}) => {
-    const { selectorId, memberId, tagId } = useParams();
-
-    if (memberId !== undefined) {
-        if (isMember(selectedMember)) {
-            return <WrappedEntityInfoPanel selectedNode={selectedMember} />;
-        }
-    }
-
-    if (selectorId !== undefined) {
-        if (cypher)
-            return (
-                <>
-                    <DynamicDetails data={selectedSelector} isCypher={cypher} />
-                    <Cypher />
-                </>
-            );
-        else return <DynamicDetails data={selectedSelector} />;
-    }
-
-    if (tagId !== undefined) {
-        return (
-            <>
-                <DynamicDetails data={selectedTag} />
-                <ObjectCountPanel tagId={tagId} />
-            </>
-        );
-    }
-
-    return null;
-};
+import { getSelectorSeedType, isSelector, isTag } from './utils';
 
 type DynamicDetailsProps = {
-    data: AssetGroupTagSelector | AssetGroupTag | undefined;
-    isCypher?: boolean;
+    data: AssetGroupTag | AssetGroupTagSelector;
 };
 
-const DynamicDetails: FC<DynamicDetailsProps> = ({ data, isCypher }) => {
-    if (!data) {
-        return null;
-    }
+const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
+    return (
+        <div className='flex flex-wrap gap-x-2'>
+            <span className='font-bold'>{label}:</span>
+            <span className='truncate text-ellipsis' title={value}>
+                {value}
+            </span>
+        </div>
+    );
+};
 
+const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
     return (
-        <Card className='h-64 mb-8 px-6 pt-6 max-w-[32rem] select-none overflow-y-auto'>
-            <div className='text-xl font-bold'>{data ? data.name : 'Nothing Data'}</div>
-            <div className='flex flex-wrap gap-x-2'>
-                {isTag(data) && data.position !== null && (
-                    <>
-                        <p className='font-bold'>Tier:</p> <p>{data.position}</p>
-                    </>
-                )}
-            </div>
-            <div className='flex flex-wrap gap-x-2'>
-                <p className='font-bold'>Description:</p> <p>{data.description}</p>
-            </div>
-            <div className='flex flex-wrap gap-x-2'>
-                <p className='font-bold'>Created by:</p> <p>{data.created_by}</p>
-            </div>
-            <div className='flex flex-wrap gap-x-2'>
-                <p className='font-bold'>Last Updated:</p> <p>{lastUpdated}</p>
-            </div>
-            {isTag(data) && (
-                <div className='flex flex-wrap gap-x-2'>
-                    <p className='font-bold'>Certification Enabled:</p> <p>{data.requireCertify}</p>
+        <Card className='px-6 py-6 max-w-[32rem]'>
+            <div className='text-xl font-bold'>{data.name}</div>
+            {data.position !== null && (
+                <div className='mt-4'>
+                    <DetailField label='Tier' value={data.position.toString()} />
                 </div>
             )}
-            {isSelector(data) && (
-                <>
-                    <div className='flex flex-wrap gap-x-2'>
-                        <p className='font-bold'>Type:</p> <p>{isCypher ? 'Cypher' : 'Object'}</p>
-                    </div>
-                    <div className='flex flex-wrap gap-x-2'>
-                        <p className='font-bold'>Automatic Certification:</p>{' '}
-                        <p>{data.auto_certify ? 'Enabled' : 'Disabled'}</p>
-                    </div>
-                    <div className='flex flex-wrap gap-x-2'>
-                        <p className='font-bold'>Selector Enabled:</p>{' '}
-                        <p>{data.disabled_at ? 'Enabled' : 'Disabled'}</p>
-                    </div>
-                </>
-            )}
+            <div className='mt-4'>
+                <DetailField label='Description' value={data.description} />
+            </div>
+            <div className='mt-4'>
+                <DetailField label='Created by' value={data.created_by} />
+                <DetailField label='Last Updated' value={lastUpdated} />
+            </div>
+            <div className='mt-4'>
+                <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
+            </div>
         </Card>
     );
+};
+
+const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
+    const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
+    const seedType = getSelectorSeedType(data);
+
+    return (
+        <Card className='px-6 py-6 max-w-[32rem]'>
+            <div className='text-xl font-bold'>{data.name}</div>
+            <div className='mt-4'>
+                <DetailField label='Description' value={data.description} />
+            </div>
+            <div className='mt-4'>
+                <DetailField label='Created by' value={data.created_by} />
+                <DetailField label='Last Updated' value={lastUpdated} />
+                <DetailField label='Type' value={SeedTypesMap[seedType]} />
+            </div>
+            <div className='mt-4'>
+                <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
+            </div>
+            <div className='mt-4'>
+                <DetailField label='Selector Status' value={data.disabled_at ? 'Enabled' : 'Disabled'} />
+            </div>
+        </Card>
+    );
+};
+
+const DynamicDetails: FC<DynamicDetailsProps> = ({ data }) => {
+    if (isTag(data)) {
+        return <TagDetails data={data} />;
+    } else if (isSelector(data)) {
+        return <SelectorDetails data={data} />;
+    } else {
+        return null;
+    }
 };
 
 export default DynamicDetails;

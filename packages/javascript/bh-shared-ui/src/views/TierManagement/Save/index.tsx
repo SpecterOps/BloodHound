@@ -37,7 +37,7 @@ const SaveView: FC = () => {
             <Breadcrumb className='mb-2'>
                 <BreadcrumbList>
                     <BreadcrumbItem>
-                        <BreadcrumbLink>
+                        <BreadcrumbLink asChild>
                             <Link to={`/tier-management/details`}>Tiers</Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>

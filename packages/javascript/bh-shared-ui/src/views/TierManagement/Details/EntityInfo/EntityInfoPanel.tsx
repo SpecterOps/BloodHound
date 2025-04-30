@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, Typography } from '@mui/material';
-import { AssetGroupTagSelectorMember } from 'js-client-library';
+import { AssetGroupTagMemberInfo } from 'js-client-library';
 import React, { useEffect, useState } from 'react';
 import { usePreviousValue } from '../../../../hooks';
 import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../../utils';
@@ -26,7 +26,7 @@ import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
-    selectedNode: AssetGroupTagSelectorMember | null;
+    selectedNode: AssetGroupTagMemberInfo | null;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
@@ -46,7 +46,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
             <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
                 <Header
                     name={selectedNode?.properties?.name || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.type}
+                    nodeType={selectedNode?.primary_kind}
                     expanded={expanded}
                     onToggleExpanded={(expanded) => {
                         setExpanded(expanded);
@@ -62,7 +62,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
                 {selectedNode ? (
                     <EntityInfoContent
                         id={selectedNode.node_id}
-                        nodeType={selectedNode.type}
+                        nodeType={selectedNode.primary_kind}
                         properties={selectedNode.properties}
                     />
                 ) : (

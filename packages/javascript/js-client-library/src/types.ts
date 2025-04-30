@@ -68,6 +68,11 @@ export const AssetGroupTagTypesMap = {
     3: 'owned',
 } as const;
 
+export interface AssetGroupTagCounts {
+    selectors: number;
+    members: number;
+}
+
 export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
@@ -76,7 +81,6 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     position: number | null;
     requireCertify: boolean | null;
     description: string;
-    count: number;
 }
 
 export const SeedTypeObjectId = 1 as const;
@@ -89,6 +93,9 @@ export const SeedTypesMap = {
     [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export interface AssetGroupTagSelectorsCounts {
+    members: number;
+}
 export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     id: number;
     asset_group_tag_id: number | null;
@@ -97,7 +104,6 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     is_default: boolean;
     allow_disable: boolean;
     auto_certify: boolean;
-    count: number;
     seeds: AssetGroupTagSelectorSeed[];
 }
 
@@ -116,21 +122,16 @@ export const AssetGroupTagCertifiedMap = {
 
 export type AssetGroupTagCertifiedValues = keyof typeof AssetGroupTagCertifiedMap;
 
-export interface AssetGroupTagSelectorMember {
-    selector_id: number;
-    node_id: string; // uint64 graphID
-    certified: AssetGroupTagCertifiedValues;
-    certified_by: string | System | null;
-    properties: Record<string, any>;
-    type: string;
-}
+export const NodeSourceSeed = 1 as const;
+export const NodeSourceChild = 2 as const;
+export const NodeSourceParent = 3 as const;
 
-export interface AssetGroupTagMemberInfo {
-    node_id: string; // uint64 graphID
-    certified: AssetGroupTagCertifiedValues;
-    certified_by: string | System | null;
+export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
+export interface AssetGroupTagNode {
+    node_id: number; // uint64 graphID
+    primary_kind: string;
+    object_id: string;
     name: string;
-    selectors: AssetGroupTagSelector[];
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {

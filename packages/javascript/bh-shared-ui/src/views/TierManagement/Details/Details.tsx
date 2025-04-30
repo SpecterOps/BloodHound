@@ -15,16 +15,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorMember } from 'js-client-library';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { DetailsList } from './DetailsList';
-import { SelectedDetails } from './DynamicDetails';
 import { MembersList } from './MembersList';
+import { SelectedDetails } from './SelectedDetails';
 
 export const getEditPath = (tagId: string | undefined, selectorId: string | undefined) => {
     const editPath = '/tier-management/edit';
@@ -53,13 +52,11 @@ export const getEditButtonState = (
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tagId = '1', selectorId, memberId } = useParams();
-    const [selectedMember, setSelectedMember] = useState<AssetGroupTagSelectorMember | null>(null);
-    const [showCypher, setShowCypher] = useState(false);
 
     const tagsQuery = useQuery({
         queryKey: ['asset-group-tags'],
         queryFn: async () => {
-            return apiClient.getAssetGroupTags().then((res) => {
+            return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
                 return res.data.data['tags'];
             });
         },
@@ -69,7 +66,7 @@ const Details: FC = () => {
         queryKey: ['asset-group-selectors', tagId],
         queryFn: async () => {
             if (!tagId) return [];
-            return apiClient.getAssetGroupTagSelectors(tagId).then((res) => {
+            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
                 return res.data.data['selectors'];
             });
         },
@@ -135,7 +132,6 @@ const Details: FC = () => {
                             listQuery={tagsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                setShowCypher(false);
                                 navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${id}`);
                             }}
                         />
@@ -146,13 +142,6 @@ const Details: FC = () => {
                             listQuery={selectorsQuery}
                             selected={selectorId}
                             onSelect={(id) => {
-                                const selected = selectorsQuery.data?.find((item) => {
-                                    return item.id === id;
-                                });
-
-                                if (selected?.seeds?.[0].type === 1) setShowCypher(true);
-                                else setShowCypher(false);
-
                                 navigate(
                                     `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${id}`
                                 );
@@ -162,9 +151,7 @@ const Details: FC = () => {
                     <div>
                         <MembersList
                             itemCount={objectsQuery.data}
-                            onClick={(id, selectedMember) => {
-                                setShowCypher(false);
-                                setSelectedMember(selectedMember);
+                            onClick={(id) => {
                                 navigate(
                                     `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${selectorId}/member/${id}`
                                 );
@@ -175,15 +162,8 @@ const Details: FC = () => {
                         />
                     </div>
                 </div>
-                <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails
-                        selectedTag={tagsQuery.data?.find((tag) => tag.id.toString() === tagId)}
-                        selectedSelector={selectorsQuery.data?.find(
-                            (selector) => selector.id.toString() === selectorId
-                        )}
-                        selectedMember={selectedMember}
-                        cypher={showCypher}
-                    />
+                <div className='basis-1/3'>
+                    <SelectedDetails />
                 </div>
             </div>
         </div>

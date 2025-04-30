@@ -33,7 +33,7 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
-    const selectorsQuery = useQuery(['asset-group-member-info'], () => {
+    const memberInfoQuery = useQuery(['asset-group-member-info'], () => {
         return apiClient.getAssetGroupTagMemberInfo(tagId, memberId).then((res) => {
             return res.data.data['member'];
         });
@@ -60,12 +60,12 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
         [tagId, navigate]
     );
 
-    if (selectorsQuery.isLoading) {
+    if (memberInfoQuery.isLoading) {
         return itemSkeletons.map((skeleton, index) => {
             return skeleton('object-selector', index);
         });
     }
-    if (selectorsQuery.isError) {
+    if (memberInfoQuery.isError) {
         return (
             <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                 <span className='text-base'>There was an error fetching this data</span>
@@ -73,10 +73,10 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
         );
     }
 
-    if (selectorsQuery.isSuccess) {
+    if (memberInfoQuery.isSuccess) {
         return (
-            <EntityInfoCollapsibleSection label='Selectors' count={selectorsQuery.data.selectors?.length}>
-                {selectorsQuery.data.selectors?.map((selector, index) => {
+            <EntityInfoCollapsibleSection label='Selectors' count={memberInfoQuery.data.selectors?.length}>
+                {memberInfoQuery.data.selectors?.map((selector, index) => {
                     return (
                         <div
                             className={cn('flex items-center gap-2 p-2', {
