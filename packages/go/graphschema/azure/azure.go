@@ -385,19 +385,19 @@ func (s Property) Name() string {
 	case RoleDefinitionId:
 		return "Role Definition Id"
 	case EndUserAssignmentRequiresApproval:
-		return "EndUser Assignment Requires Approval"
+		return "End User Assignment Requires Approval"
 	case EndUserAssignmentRequiresCAPAuthenticationContext:
-		return "EndUser Assignment Requires CAP AuthenticationContext"
+		return "End User Assignment Requires CAP AuthenticationContext"
 	case EndUserAssignmentUserApprovers:
-		return "EndUser Assignment User Approvers"
+		return "End User Assignment User Approvers"
 	case EndUserAssignmentGroupApprovers:
-		return "EndUser Assignment Group Approvers"
+		return "End User Assignment Group Approvers"
 	case EndUserAssignmentRequiresMFA:
-		return "EndUser Assignment Requires MFA"
+		return "End User Assignment Requires MFA"
 	case EndUserAssignmentRequiresJustification:
-		return "EndUser Assignment Requires Justification"
+		return "End User Assignment Requires Justification"
 	case EndUserAssignmentRequiresTicketInformation:
-		return "EndUser Assignment Requires Ticket Information"
+		return "End User Assignment Requires Ticket Information"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}

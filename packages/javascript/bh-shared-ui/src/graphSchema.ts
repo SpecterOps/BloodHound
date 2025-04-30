@@ -1121,19 +1121,19 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.RoleDefinitionId:
             return 'Role Definition Id';
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
-            return 'EndUser Assignment Requires Approval';
+            return 'End User Assignment Requires Approval';
         case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'EndUser Assignment Requires CAP AuthenticationContext';
+            return 'End User Assignment Requires CAP AuthenticationContext';
         case AzureKindProperties.EndUserAssignmentUserApprovers:
-            return 'EndUser Assignment User Approvers';
+            return 'End User Assignment User Approvers';
         case AzureKindProperties.EndUserAssignmentGroupApprovers:
-            return 'EndUser Assignment Group Approvers';
+            return 'End User Assignment Group Approvers';
         case AzureKindProperties.EndUserAssignmentRequiresMFA:
-            return 'EndUser Assignment Requires MFA';
+            return 'End User Assignment Requires MFA';
         case AzureKindProperties.EndUserAssignmentRequiresJustification:
-            return 'EndUser Assignment Requires Justification';
+            return 'End User Assignment Requires Justification';
         case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
-            return 'EndUser Assignment Requires Ticket Information';
+            return 'End User Assignment Requires Ticket Information';
         default:
             return undefined;
     }

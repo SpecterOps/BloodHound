@@ -264,49 +264,49 @@ RoleDefinitionId: types.#StringEnum & {
 EndUserAssignmentRequiresApproval: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresApproval"
 	schema:         "azure"
-	name:           "EndUser Assignment Requires Approval"
+	name:           "End User Assignment Requires Approval"
 	representation: "enduserassignmentrequiresapproval"
 }
 
 EndUserAssignmentRequiresCAPAuthenticationContext: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresCAPAuthenticationContext"
 	schema:         "azure"
-	name:           "EndUser Assignment Requires CAP AuthenticationContext"
+	name:           "End User Assignment Requires CAP AuthenticationContext"
 	representation: "enduserassignmentrequirescapauthenticationcontext"
 }
 
 EndUserAssignmentUserApprovers: types.#StringEnum & {
 	symbol:         "EndUserAssignmentUserApprovers"
 	schema:         "azure"
-	name:           "EndUser Assignment User Approvers"
+	name:           "End User Assignment User Approvers"
 	representation: "enduserassignmentuserapprovers"
 }
 
 EndUserAssignmentGroupApprovers: types.#StringEnum & {
 	symbol:         "EndUserAssignmentGroupApprovers"
 	schema:         "azure"
-	name:           "EndUser Assignment Group Approvers"
+	name:           "End User Assignment Group Approvers"
 	representation: "enduserassignmentgroupapprovers"
 }
 
 EndUserAssignmentRequiresMFA: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresMFA"
 	schema:         "azure"
-	name:           "EndUser Assignment Requires MFA"
+	name:           "End User Assignment Requires MFA"
 	representation: "enduserassignmentrequiresmfa"
 }
 
 EndUserAssignmentRequiresJustification: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresJustification"
 	schema:         "azure"
-	name:           "EndUser Assignment Requires Justification"
+	name:           "End User Assignment Requires Justification"
 	representation: "enduserassignmentrequiresjustification"
 }
 
 EndUserAssignmentRequiresTicketInformation: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresTicketInformation"
 	schema:         "azure"
-	name:           "EndUser Assignment Requires Ticket Information"
+	name:           "End User Assignment Requires Ticket Information"
 	representation: "enduserassignmentrequiresticketinformation"
 }
 
