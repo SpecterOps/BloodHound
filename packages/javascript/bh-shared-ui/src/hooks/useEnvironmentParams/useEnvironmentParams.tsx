@@ -50,9 +50,6 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
     return {
         environmentId: searchParams.get('environmentId'),
         environmentAggregation: parseEnvironmentAggregation(searchParams.get('environmentAggregation')),
-        // react doesnt like this because it doesnt know the params needed for the function factory return function.
-        // but the params needed are not needed in the deps array
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setEnvironmentParams: useCallback(
             (updatedParams: Partial<EnvironmentQueryParams>, navigateOpts?: NavigateOptions) =>
                 setParamsFactory(
