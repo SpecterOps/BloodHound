@@ -30,22 +30,27 @@ const ConfirmationDialog: React.FC<{
     open: boolean;
     title: string;
     text: string | JSX.Element;
-    onClose: (response: boolean) => void;
+    onClose: () => void;
+    onConfirm: () => void;
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, title, text, onClose, isLoading, error, challengeTxt = '' }) => {
+}> = ({ open, title, text, onClose, isLoading, error, challengeTxt = '', onConfirm }) => {
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
-    const handleClose = useCallback(
-        (response: boolean) => () => {
-            onClose(response);
-            setTimeout(() => {
-                setChallengeTxtReply('');
-            }, 1000);
-        },
-        [onClose]
-    );
+    const handleClose = useCallback(() => {
+        onClose();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onClose]);
+
+    const handleConfirm = useCallback(() => {
+        onConfirm();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, []);
 
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
@@ -71,13 +76,13 @@ const ConfirmationDialog: React.FC<{
                         {error && <p className='content-center text-[color:#d32f2f] text-xs mt-[3px]'>{error}</p>}
                         <Button
                             variant='tertiary'
-                            onClick={handleClose(false)}
+                            onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleClose(true)}
+                            onClick={handleConfirm}
                             disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
                             Confirm

@@ -355,10 +355,11 @@ const DatabaseManagement: FC = () => {
 
             <DeleteConfirmationDialog
                 open={state.openDialog}
-                onClose={(response) => {
-                    if (response) {
-                        handleMutation();
-                    }
+                onClose={() => {
+                    dispatch({ type: 'close_dialog' });
+                }}
+                onConfirm={() => {
+                    handleMutation();
                     dispatch({ type: 'close_dialog' });
                 }}
                 itemName='the current environment'

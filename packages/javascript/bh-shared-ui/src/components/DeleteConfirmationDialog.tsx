@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
+import { Stack, Typography } from '@mui/material';
 import React from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -21,23 +21,26 @@ const DeleteConfirmationDialog: React.FC<{
     open: boolean;
     itemName: string;
     itemType: string;
-    onClose: (response: boolean) => void;
+    onClose: () => void;
+    onConfirm: () => void;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, itemName, onClose, isLoading, error, itemType }) => {
+}> = ({ open, itemName, onClose, isLoading, error, itemType, onConfirm }) => {
     return (
         <ConfirmationDialog
             open={open}
             title={`Delete ${itemName}?`}
             text={
-                <>
-                    Continuing onwards will delete {itemName} and all associated configurations and findings.
-                    <br />
-                    <span className='font-bold'>Warning: This change is irreversible.</span>
-                </>
+                <Stack gap={1}>
+                    <Typography>
+                        Continuing onwards will delete {itemName} and all associated configurations and findings.
+                    </Typography>
+                    <Typography className='font-bold error text-red'>Warning: This change is irreversible.</Typography>
+                </Stack>
             }
             challengeTxt={`Delete this ${itemType}`}
             onClose={onClose}
+            onConfirm={onConfirm}
             error={error}
             isLoading={isLoading}
         />
