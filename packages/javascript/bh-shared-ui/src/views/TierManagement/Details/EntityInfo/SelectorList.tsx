@@ -15,23 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { AppIcon } from '../../../../components/AppIcon';
+import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../../routes';
 import { apiClient, cn } from '../../../../utils';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 type SelectorListProps = {
-    selectedTag: number;
-    selectedObject: number;
+    tagId: string;
+    memberId: string;
 };
 
-const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject }) => {
+const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
+    const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
-    const selectorsQuery = useQuery(['asset-group-member-info'], () => {
-        return apiClient.getAssetGroupLabelMemberInfo(selectedTag, selectedObject).then((res) => {
+    const memberInfoQuery = useQuery(['asset-group-member-info'], () => {
+        return apiClient.getAssetGroupTagMemberInfo(tagId, memberId).then((res) => {
             return res.data.data['member'];
         });
     });
@@ -43,15 +46,26 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
         }));
     };
 
-    const handleViewClick = () => {};
-    const handleEditClick = () => {};
+    const handleViewClick = useCallback(
+        (id: number) => {
+            navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${id}`);
+        },
+        [tagId, navigate]
+    );
 
-    if (selectorsQuery.isLoading) {
+    const handleEditClick = useCallback(
+        (id: number) => {
+            navigate(`/tier-management/edit/tag/${tagId}/selector/${id}`);
+        },
+        [tagId, navigate]
+    );
+
+    if (memberInfoQuery.isLoading) {
         return itemSkeletons.map((skeleton, index) => {
             return skeleton('object-selector', index);
         });
     }
-    if (selectorsQuery.isError) {
+    if (memberInfoQuery.isError) {
         return (
             <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                 <span className='text-base'>There was an error fetching this data</span>
@@ -59,10 +73,10 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
         );
     }
 
-    if (selectorsQuery.isSuccess) {
+    if (memberInfoQuery.isSuccess) {
         return (
-            <EntityInfoCollapsibleSection label='Selectors' count={selectorsQuery.data.selectors?.length}>
-                {selectorsQuery.data.selectors?.map((selector, index) => {
+            <EntityInfoCollapsibleSection label='Selectors' count={memberInfoQuery.data.selectors?.length}>
+                {memberInfoQuery.data.selectors?.map((selector, index) => {
                     return (
                         <div
                             className={cn('flex items-center gap-2 p-2', {
@@ -81,12 +95,16 @@ const SelectorList: React.FC<SelectorListProps> = ({ selectedTag, selectedObject
                                     onEscapeKeyDown={() => setMenuOpen({})}>
                                     <div
                                         className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
-                                        onClick={handleViewClick}>
+                                        onClick={() => {
+                                            handleViewClick(selector.id);
+                                        }}>
                                         View
                                     </div>
                                     <div
                                         className='cursor-pointer p-2 hover:bg-neutral-light-4 hover:dark:bg-neutral-dark-4'
-                                        onClick={handleEditClick}>
+                                        onClick={() => {
+                                            handleEditClick(selector.id);
+                                        }}>
                                         Edit
                                     </div>
                                 </PopoverContent>

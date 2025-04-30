@@ -16,14 +16,43 @@
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
+    ClearDatabaseRequest,
+    CreateAssetGroupRequest,
+    CreateAzureHoundClientRequest,
+    CreateAzureHoundEventRequest,
+    CreateOIDCProviderRequest,
+    CreateScheduledJobRequest,
+    CreateSelectorRequest,
+    CreateSharpHoundClientRequest,
+    CreateSharpHoundEventRequest,
+    CreateUserQueryRequest,
+    CreateUserRequest,
+    LoginRequest,
+    PostureRequest,
+    PutUserAuthSecretRequest,
+    RequestOptions,
+    UpdateAssetGroupRequest,
+    UpdateAssetGroupSelectorRequest,
+    UpdateAzureHoundClientRequest,
+    UpdateAzureHoundEventRequest,
+    UpdateConfigurationRequest,
+    UpdateOIDCProviderRequest,
+    UpdateSelectorRequest,
+    UpdateSharpHoundClientRequest,
+    UpdateSharpHoundEventRequest,
+    UpdateUserRequest,
+} from './requests';
+import {
     ActiveDirectoryDataQualityResponse,
-    AssetGroupLabelResponse,
     AssetGroupMemberCountsResponse,
-    AssetGroupMemberInfoResponse,
-    AssetGroupMemberResponse,
     AssetGroupMembersResponse,
     AssetGroupResponse,
-    AssetGroupSelectorResponse,
+    AssetGroupTagMemberInfoResponse,
+    AssetGroupTagMembersResponse,
+    AssetGroupTagResponse,
+    AssetGroupTagSelectorResponse,
+    AssetGroupTagSelectorsResponse,
+    AssetGroupTagsResponse,
     AzureDataQualityResponse,
     BasicResponse,
     CreateAuthTokenResponse,
@@ -52,22 +81,22 @@ import * as types from './types';
 class BHEAPIClient {
     baseClient: AxiosInstance;
 
-    constructor(config: types.RequestOptions) {
+    constructor(config: RequestOptions) {
         this.baseClient = axios.create(config);
     }
 
     /* health */
-    health = (options?: types.RequestOptions) => this.baseClient.get('/health', options);
+    health = (options?: RequestOptions) => this.baseClient.get('/health', options);
 
     /* version */
-    version = (options?: types.RequestOptions) => this.baseClient.get('/api/version', options);
+    version = (options?: RequestOptions) => this.baseClient.get('/api/version', options);
 
     /* datapipe status */
-    getDatapipeStatus = (options?: types.RequestOptions) =>
+    getDatapipeStatus = (options?: RequestOptions) =>
         this.baseClient.get<DatapipeStatusResponse>('/api/v2/datapipe/status', options);
 
     /* search */
-    searchHandler = (keyword: string, type?: string, options?: types.RequestOptions) => {
+    searchHandler = (keyword: string, type?: string, options?: RequestOptions) => {
         return this.baseClient.get(
             '/api/v2/search',
             Object.assign(
@@ -85,7 +114,7 @@ class BHEAPIClient {
         );
     };
 
-    cypherSearch = (query: string, options?: types.RequestOptions, includeProperties?: boolean) => {
+    cypherSearch = (query: string, options?: RequestOptions, includeProperties?: boolean) => {
         return this.baseClient.post<GraphResponse>(
             '/api/v2/graphs/cypher',
             { query, include_properties: includeProperties },
@@ -93,7 +122,7 @@ class BHEAPIClient {
         );
     };
 
-    getUserSavedQueries = (options?: types.RequestOptions) => {
+    getUserSavedQueries = (options?: RequestOptions) => {
         return this.baseClient.get<PaginatedResponse<SavedQuery[]>>(
             '/api/v2/saved-queries',
             Object.assign(
@@ -107,47 +136,74 @@ class BHEAPIClient {
         );
     };
 
-    createUserQuery = (payload: types.CreateUserQueryRequest, options?: types.RequestOptions) => {
+    createUserQuery = (payload: CreateUserQueryRequest, options?: RequestOptions) => {
         return this.baseClient.post<BasicResponse<SavedQuery>>('/api/v2/saved-queries', payload, options);
     };
 
-    deleteUserQuery = (queryId: number, options?: types.RequestOptions) => {
+    deleteUserQuery = (queryId: number, options?: RequestOptions) => {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
-    getKinds = (options?: types.RequestOptions) =>
+    getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 
-    clearDatabase = (payload: types.ClearDatabaseRequest, options?: types.RequestOptions) => {
+    clearDatabase = (payload: ClearDatabaseRequest, options?: RequestOptions) => {
         return this.baseClient.post('/api/v2/clear-database', payload, options);
     };
 
-    getAvailableEnvironments = (options?: types.RequestOptions) =>
+    getAvailableEnvironments = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<Environment[]>>('/api/v2/available-domains', options);
 
     /* audit */
-    getAuditLogs = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/audit', options);
+    getAuditLogs = (options?: RequestOptions) => this.baseClient.get('/api/v2/audit', options);
 
     /* asset groups */
 
-    getAssetGroupLabels = (options?: types.RequestOptions) =>
-        this.baseClient.get<AssetGroupLabelResponse>(`/api/v2/asset-group-labels`, options);
+    getAssetGroupTags = (options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagsResponse>(`/api/v2/asset-group-tags`, options);
 
-    getAssetGroupSelectors = (assetGroupId: number, options?: types.RequestOptions) =>
-        this.baseClient.get<AssetGroupSelectorResponse>(
-            `/api/v2/asset-group-labels/${assetGroupId}/selectors`,
+    getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
+
+    getAssetGroupTagMemberInfo = (tagId: number | string, memberId: number | string, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagMemberInfoResponse>(
+            `/api/v2/asset-group-tags/${tagId}/members/${memberId}`,
             options
         );
 
-    getAssetGroupLabelMemberInfo = (assetGroupId: number, memberId: number, options?: types.RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberInfoResponse>(
-            `/api/v2/asset-group-labels/${assetGroupId}/members/${memberId}`,
+    getAssetGroupTagSelectors = (tagId: number | string, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagSelectorsResponse>(`/api/v2/asset-group-tags/${tagId}/selectors`, options);
+
+    getAssetGroupTagSelector = (tagId: number | string, selectorId: number | string, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupTagSelectorResponse>(
+            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`,
             options
         );
 
-    getAssetGroupLabelMembers = (assetGroupId: number, skip: number, limit: number, options?: types.RequestOptions) =>
-        this.baseClient.get<AssetGroupMemberResponse>(
-            `/api/v2/asset-group-labels/${assetGroupId}/members`,
+    createAssetGroupTagSelector = (
+        tagId: number | string,
+        updatedValues: CreateSelectorRequest,
+        options?: RequestOptions
+    ) => this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, updatedValues, options);
+
+    updateAssetGroupTagSelector = (
+        tagId: number | string,
+        selectorId: number | string,
+        updatedValues: UpdateSelectorRequest,
+        options?: RequestOptions
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, updatedValues, options);
+
+    deleteAssetGroupTagSelector = (tagId: string | number, selectorId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}`, options);
+
+    getAssetGroupTagMembers = (
+        assetGroupTagId: number | string,
+        skip: number | string,
+        limit: number,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.get<AssetGroupTagMembersResponse>(
+            `/api/v2/asset-group-tags/${assetGroupTagId}/members`,
             Object.assign(
                 {
                     params: {
@@ -160,14 +216,14 @@ class BHEAPIClient {
         );
 
     getAssetGroupSelectorMembers = (
-        assetGroupId: number,
-        selectorId: number,
+        assetGroupId: number | string,
+        selectorId: number | string,
         skip: number,
         limit: number,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
-        this.baseClient.get<AssetGroupMemberResponse>(
-            `/api/v2/asset-group-labels/${assetGroupId}/selectors/${selectorId}/members`,
+        this.baseClient.get<AssetGroupTagMembersResponse>(
+            `/api/v2/asset-group-tags/${assetGroupId}/selectors/${selectorId}/members`,
             Object.assign(
                 {
                     params: {
@@ -179,40 +235,39 @@ class BHEAPIClient {
             )
         );
 
+    getAssetGroupTagMembersCount = (tagId: string, options?: RequestOptions) =>
+        this.baseClient.get<AssetGroupMemberCountsResponse>(
+            `/api/v2/asset-group-tags/${tagId}/members/counts`,
+            options
+        );
+
     /* */
 
-    createAssetGroup = (assetGroup: types.CreateAssetGroupRequest, options?: types.RequestOptions) =>
+    createAssetGroup = (assetGroup: CreateAssetGroupRequest, options?: RequestOptions) =>
         this.baseClient.post('/api/v2/asset-groups', assetGroup, options);
 
-    getAssetGroup = (assetGroupId: string, options?: types.RequestOptions) =>
+    getAssetGroup = (assetGroupId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}`, options);
 
-    deleteAssetGroup = (assetGroupId: string, options?: types.RequestOptions) =>
+    deleteAssetGroup = (assetGroupId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}`, options);
 
-    updateAssetGroup = (
-        assetGroupId: string,
-        assetGroup: types.UpdateAssetGroupRequest,
-        options?: types.RequestOptions
-    ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}`, assetGroup, options);
+    updateAssetGroup = (assetGroupId: string, assetGroup: UpdateAssetGroupRequest, options?: RequestOptions) =>
+        this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}`, assetGroup, options);
 
     updateAssetGroupSelector = (
         assetGroupId: number,
-        selectorChangeset: types.UpdateAssetGroupSelectorRequest[],
-        options?: types.RequestOptions
+        selectorChangeset: UpdateAssetGroupSelectorRequest[],
+        options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/asset-groups/${assetGroupId}/selectors`, selectorChangeset, options);
 
-    deleteAssetGroupSelector = (assetGroupId: string, selectorId: string, options?: types.RequestOptions) =>
+    deleteAssetGroupSelector = (assetGroupId: string, selectorId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/asset-groups/${assetGroupId}/selectors/${selectorId}`, options);
 
-    listAssetGroupCollections = (assetGroupId: string, options?: types.RequestOptions) =>
+    listAssetGroupCollections = (assetGroupId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/asset-groups/${assetGroupId}/collections`, options);
 
-    listAssetGroupMembers = (
-        assetGroupId: number,
-        params?: types.AssetGroupMemberParams,
-        options?: types.RequestOptions
-    ) =>
+    listAssetGroupMembers = (assetGroupId: number, params?: types.AssetGroupMemberParams, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupMembersResponse>(
             `/api/v2/asset-groups/${assetGroupId}/members`,
             Object.assign({ params }, options)
@@ -221,28 +276,28 @@ class BHEAPIClient {
     getAssetGroupMembersCount = (
         assetGroupId: string,
         params?: Pick<types.AssetGroupMemberParams, 'environment_id' | 'environment_kind'>,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupMemberCountsResponse>(
             `/api/v2/asset-groups/${assetGroupId}/members/counts`,
             Object.assign({ params }, options)
         );
 
-    listAssetGroups = (options?: types.RequestOptions) =>
+    listAssetGroups = (options?: RequestOptions) =>
         this.baseClient.get<AssetGroupResponse>('/api/v2/asset-groups', options);
 
     /* analysis */
 
-    getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: types.RequestOptions) =>
+    getComboTreeGraph = (domainId: string, nodeId: string | null = null, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/meta-trees/${domainId}`,
             Object.assign({ params: nodeId && { node_id: nodeId } }, options)
         );
 
-    getLatestTierZeroComboNode = (domainId: string, options?: types.RequestOptions) =>
+    getLatestTierZeroComboNode = (domainId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/meta-nodes/${domainId}`, options);
 
-    getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: types.RequestOptions) => {
+    getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: RequestOptions) => {
         return this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
             `/api/v2/asset-groups/${assetGroupId}/combo-node`,
             Object.assign(
@@ -262,7 +317,7 @@ class BHEAPIClient {
         end?: Date,
         limit?: number,
         sort_by?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         return this.baseClient.get<ActiveDirectoryDataQualityResponse>(
             `/api/v2/ad-domains/${domainId}/data-quality-stats`,
@@ -286,7 +341,7 @@ class BHEAPIClient {
         end?: Date,
         limit?: number,
         sort_by?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         return this.baseClient.get<AzureDataQualityResponse>(
             `/api/v2/azure-tenants/${tenantId}/data-quality-stats`,
@@ -310,7 +365,7 @@ class BHEAPIClient {
         end?: Date,
         limit?: number,
         sort_by?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         return this.baseClient.get(
             `/api/v2/platform/${platformtype}/data-quality-stats`,
@@ -328,8 +383,8 @@ class BHEAPIClient {
         );
     };
 
-    getPostureStats = (from: Date, to: Date, domainSID?: string, sortBy?: string, options?: types.RequestOptions) => {
-        const params: types.PostureRequest = {
+    getPostureStats = (from: Date, to: Date, domainSID?: string, sortBy?: string, options?: RequestOptions) => {
+        const params: PostureRequest = {
             from: from.toISOString(),
             to: to.toISOString(),
         };
@@ -348,7 +403,7 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: types.RequestOptions) => {
+    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: RequestOptions) => {
         return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
             params: { environments, start: start?.toISOString(), end: end?.toISOString() },
             paramsSerializer: { indexes: null },
@@ -361,7 +416,7 @@ class BHEAPIClient {
         dataType: string,
         start?: Date,
         end?: Date,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             params: { environments, start: start?.toISOString(), end: end?.toISOString() },
@@ -371,9 +426,9 @@ class BHEAPIClient {
     };
 
     /* ingest */
-    ingestData = (options?: types.RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
+    ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
-    getPathfindingResult = (startNode: string, endNode: string, options?: types.RequestOptions) =>
+    getPathfindingResult = (startNode: string, endNode: string, options?: RequestOptions) =>
         this.baseClient.get(
             '/api/v2/pathfinding',
             Object.assign(
@@ -387,7 +442,7 @@ class BHEAPIClient {
             )
         );
 
-    getSearchResult = (query: string, searchType: string, options?: types.RequestOptions) =>
+    getSearchResult = (query: string, searchType: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
             '/api/v2/graph-search',
             Object.assign(
@@ -407,7 +462,7 @@ class BHEAPIClient {
         limit: number = 10,
         hydrateDomains?: boolean,
         hydrateOUs?: boolean,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             '/api/v2/clients',
@@ -424,27 +479,25 @@ class BHEAPIClient {
             )
         );
 
-    createClient = (
-        client: types.CreateSharpHoundClientRequest | types.CreateAzureHoundClientRequest,
-        options?: types.RequestOptions
-    ) => this.baseClient.post('/api/v2/clients', client, options);
+    createClient = (client: CreateSharpHoundClientRequest | CreateAzureHoundClientRequest, options?: RequestOptions) =>
+        this.baseClient.post('/api/v2/clients', client, options);
 
-    getClient = (clientId: string, options?: types.RequestOptions) =>
+    getClient = (clientId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/clients/${clientId}`, options);
 
     updateClient = (
         clientId: string,
-        client: types.UpdateSharpHoundClientRequest | types.UpdateAzureHoundClientRequest,
-        options?: types.RequestOptions
+        client: UpdateSharpHoundClientRequest | UpdateAzureHoundClientRequest,
+        options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/clients/${clientId}`, client, options);
 
-    regenerateClientToken = (clientId: string, options?: types.RequestOptions) =>
+    regenerateClientToken = (clientId: string, options?: RequestOptions) =>
         this.baseClient.put(`/api/v2/clients/${clientId}/token`, options);
 
-    deleteClient = (clientId: string, options?: types.RequestOptions) =>
+    deleteClient = (clientId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/clients/${clientId}`, options);
 
-    getClientCompletedJobs = (clientId: string, skip: number, limit: number, options?: types.RequestOptions) =>
+    getClientCompletedJobs = (clientId: string, skip: number, limit: number, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/clients/${clientId}/completed-jobs`,
             Object.assign(
@@ -458,18 +511,15 @@ class BHEAPIClient {
             )
         );
 
-    createScheduledJob = (
-        clientId: string,
-        scheduledJob: types.CreateScheduledJobRequest,
-        options?: types.RequestOptions
-    ) => this.baseClient.post(`/api/v2/clients/${clientId}/jobs`, scheduledJob, options);
+    createScheduledJob = (clientId: string, scheduledJob: CreateScheduledJobRequest, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/clients/${clientId}/jobs`, scheduledJob, options);
 
     getFinishedJobs = (
         skip: number,
         limit: number,
         hydrateDomains?: boolean,
         hydrateOUs?: boolean,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/jobs/finished`,
@@ -487,7 +537,7 @@ class BHEAPIClient {
         );
 
     /* events */
-    getEvents = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: types.RequestOptions) =>
+    getEvents = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             '/api/v2/events',
             Object.assign(
@@ -501,13 +551,9 @@ class BHEAPIClient {
             )
         );
 
-    getEvent = (eventId: string, options?: types.RequestOptions) =>
-        this.baseClient.get(`/api/v2/events/${eventId}`, options);
+    getEvent = (eventId: string, options?: RequestOptions) => this.baseClient.get(`/api/v2/events/${eventId}`, options);
 
-    createEvent = (
-        event: types.CreateSharpHoundEventRequest | types.CreateAzureHoundEventRequest,
-        options?: types.RequestOptions
-    ) =>
+    createEvent = (event: CreateSharpHoundEventRequest | CreateAzureHoundEventRequest, options?: RequestOptions) =>
         this.baseClient.post('/api/v2/events', event, {
             params: {
                 hydrate_ous: false,
@@ -518,11 +564,11 @@ class BHEAPIClient {
 
     updateEvent = (
         eventId: string,
-        event: types.UpdateSharpHoundEventRequest | types.UpdateAzureHoundEventRequest,
-        options?: types.RequestOptions
+        event: UpdateSharpHoundEventRequest | UpdateAzureHoundEventRequest,
+        options?: RequestOptions
     ) => this.baseClient.put(`/api/v2/events/${eventId}`, event, options);
 
-    deleteEvent = (eventId: string, options?: types.RequestOptions) =>
+    deleteEvent = (eventId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/events/${eventId}`, options);
 
     /* file ingest */
@@ -554,7 +600,7 @@ class BHEAPIClient {
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
 
     /* jobs */
-    getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: types.RequestOptions) =>
+    getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             '/api/v2/jobs',
             Object.assign(
@@ -568,12 +614,12 @@ class BHEAPIClient {
             )
         );
 
-    getJob = (jobId: string, options?: types.RequestOptions) => this.baseClient.get(`/api/v2/jobs/${jobId}`, options);
+    getJob = (jobId: string, options?: RequestOptions) => this.baseClient.get(`/api/v2/jobs/${jobId}`, options);
 
-    cancelScheduledJob = (jobId: string, options?: types.RequestOptions) =>
+    cancelScheduledJob = (jobId: string, options?: RequestOptions) =>
         this.baseClient.put(`/api/v2/jobs/${jobId}/cancel`, undefined, options);
 
-    getJobLogFile = (jobId: string, options?: types.RequestOptions) =>
+    getJobLogFile = (jobId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/jobs/${jobId}/log`, options);
 
     getRiskDetails = <T = any>(
@@ -583,7 +629,7 @@ class BHEAPIClient {
         limit: number,
         filterAccepted?: boolean,
         sortBy?: string | string[],
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         const params = new URLSearchParams();
         params.append('finding', finding);
@@ -618,7 +664,7 @@ class BHEAPIClient {
         from?: Date,
         to?: Date,
         sortBy?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get<T>(
             `/api/v2/domains/${domainId}/sparkline`,
@@ -640,7 +686,7 @@ class BHEAPIClient {
         riskType: string,
         accepted: boolean,
         acceptUntil?: Date,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.put(
             `/api/v2/attack-paths/${attackPathId}/acceptance`,
@@ -652,9 +698,9 @@ class BHEAPIClient {
             options
         );
 
-    genRisks = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
+    genRisks = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
 
-    getAvailableRiskTypes = (domainId: string, sortBy?: string, options?: types.RequestOptions) =>
+    getAvailableRiskTypes = (domainId: string, sortBy?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${domainId}/available-types`,
             Object.assign(
@@ -667,7 +713,7 @@ class BHEAPIClient {
             )
         );
 
-    exportRiskFindings = (domainId: string, findingType: string, accepted?: boolean, options?: types.RequestOptions) =>
+    exportRiskFindings = (domainId: string, findingType: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${domainId}/attack-path-findings`,
             Object.assign(
@@ -683,16 +729,16 @@ class BHEAPIClient {
         );
 
     /* auth */
-    login = (credentials: types.LoginRequest, options?: types.RequestOptions) =>
+    login = (credentials: LoginRequest, options?: RequestOptions) =>
         this.baseClient.post<types.LoginResponse>('/api/v2/login', credentials, options);
 
-    getSelf = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/self', options);
+    getSelf = (options?: RequestOptions) => this.baseClient.get('/api/v2/self', options);
 
-    logout = (options?: types.RequestOptions) => this.baseClient.post('/api/v2/logout', options);
+    logout = (options?: RequestOptions) => this.baseClient.post('/api/v2/logout', options);
 
     createSAMLProviderFromFile = (
         data: { name: string; metadata: File } & types.SSOProviderConfiguration,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         // form data is limited to strings or blobs so we have to deconstruct the config payload
         const formData = new FormData();
@@ -707,7 +753,7 @@ class BHEAPIClient {
     updateSAMLProviderFromFile = (
         ssoProviderId: types.SSOProvider['id'],
         data: { name?: string; metadata?: File; config?: types.SSOProviderConfiguration['config'] },
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) => {
         const formData = new FormData();
         if (data.name) {
@@ -730,33 +776,31 @@ class BHEAPIClient {
         return this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, formData, options);
     };
 
-    getSAMLProviderSigningCertificate = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
+    getSAMLProviderSigningCertificate = (ssoProviderId: types.SSOProvider['id'], options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/sso-providers/${ssoProviderId}/signing-certificate`, options);
 
-    deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: types.RequestOptions) =>
+    deleteSSOProvider = (ssoProviderId: types.SSOProvider['id'], options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/sso-providers/${ssoProviderId}`, options);
 
-    createOIDCProvider = (oidcProvider: types.CreateOIDCProviderRequest) =>
+    createOIDCProvider = (oidcProvider: CreateOIDCProviderRequest) =>
         this.baseClient.post(`/api/v2/sso-providers/oidc`, oidcProvider);
 
-    updateOIDCProvider = (ssoProviderId: types.SSOProvider['id'], oidcProvider: types.UpdateOIDCProviderRequest) =>
+    updateOIDCProvider = (ssoProviderId: types.SSOProvider['id'], oidcProvider: UpdateOIDCProviderRequest) =>
         this.baseClient.patch(`/api/v2/sso-providers/${ssoProviderId}`, oidcProvider);
 
-    listSSOProviders = (options?: types.RequestOptions) =>
+    listSSOProviders = (options?: RequestOptions) =>
         this.baseClient.get<types.ListSSOProvidersResponse>(`/api/v2/sso-providers`, options);
 
-    permissionList = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/permissions', options);
+    permissionList = (options?: RequestOptions) => this.baseClient.get('/api/v2/permissions', options);
 
-    permissionGet = (permissionId: string, options?: types.RequestOptions) =>
+    permissionGet = (permissionId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/permissions/${permissionId}`, options);
 
-    getRoles = (options?: types.RequestOptions) =>
-        this.baseClient.get<types.ListRolesResponse>(`/api/v2/roles`, options);
+    getRoles = (options?: RequestOptions) => this.baseClient.get<types.ListRolesResponse>(`/api/v2/roles`, options);
 
-    getRole = (roleId: string, options?: types.RequestOptions) =>
-        this.baseClient.get(`/api/v2/roles/${roleId}`, options);
+    getRole = (roleId: string, options?: RequestOptions) => this.baseClient.get(`/api/v2/roles/${roleId}`, options);
 
-    getUserTokens = (userId: string, options?: types.RequestOptions) =>
+    getUserTokens = (userId: string, options?: RequestOptions) =>
         this.baseClient.get<ListAuthTokensResponse>(
             `/api/v2/tokens`,
             Object.assign(
@@ -769,7 +813,7 @@ class BHEAPIClient {
             )
         );
 
-    createUserToken = (userId: string, tokenName: string, options?: types.RequestOptions) =>
+    createUserToken = (userId: string, tokenName: string, options?: RequestOptions) =>
         this.baseClient.post<CreateAuthTokenResponse>(
             `/api/v2/tokens`,
             {
@@ -779,16 +823,16 @@ class BHEAPIClient {
             options
         );
 
-    deleteUserToken = (tokenId: string, options?: types.RequestOptions) =>
+    deleteUserToken = (tokenId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/tokens/${tokenId}`, options);
 
-    listUsers = (options?: types.RequestOptions) =>
+    listUsers = (options?: RequestOptions) =>
         this.baseClient.get<types.ListUsersResponse>('/api/v2/bloodhound-users', options);
 
-    getUser = (userId: string, options?: types.RequestOptions) =>
+    getUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}`, options);
 
-    createUser = (user: types.CreateUserRequest, options?: types.RequestOptions) =>
+    createUser = (user: CreateUserRequest, options?: RequestOptions) =>
         this.baseClient.post(
             '/api/v2/bloodhound-users',
             {
@@ -804,7 +848,7 @@ class BHEAPIClient {
             options
         );
 
-    updateUser = (userId: string, user: types.UpdateUserRequest, options?: types.RequestOptions) =>
+    updateUser = (userId: string, user: UpdateUserRequest, options?: RequestOptions) =>
         this.baseClient.patch(
             `/api/v2/bloodhound-users/${userId}`,
             {
@@ -819,13 +863,13 @@ class BHEAPIClient {
             options
         );
 
-    deleteUser = (userId: string, options?: types.RequestOptions) =>
+    deleteUser = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}`, options);
 
-    expireUserAuthSecret = (userId: string, options?: types.RequestOptions) =>
+    expireUserAuthSecret = (userId: string, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/bloodhound-users/${userId}/secret`, options);
 
-    putUserAuthSecret = (userId: string, payload: types.PutUserAuthSecretRequest, options?: types.RequestOptions) =>
+    putUserAuthSecret = (userId: string, payload: PutUserAuthSecretRequest, options?: RequestOptions) =>
         this.baseClient.put(
             `/api/v2/bloodhound-users/${userId}/secret`,
             {
@@ -836,10 +880,10 @@ class BHEAPIClient {
             options
         );
 
-    enrollMFA = (userId: string, data: { secret: string }, options?: types.RequestOptions) =>
+    enrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/bloodhound-users/${userId}/mfa`, data, options);
 
-    disenrollMFA = (userId: string, data: { secret: string }, options?: types.RequestOptions) =>
+    disenrollMFA = (userId: string, data: { secret: string }, options?: RequestOptions) =>
         this.baseClient.delete(
             `/api/v2/bloodhound-users/${userId}/mfa`,
             Object.assign(
@@ -851,43 +895,37 @@ class BHEAPIClient {
             )
         );
 
-    getMFAActivationStatus = (userId: string, options?: types.RequestOptions) =>
+    getMFAActivationStatus = (userId: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/bloodhound-users/${userId}/mfa-activation`, options);
 
-    activateMFA = (userId: string, data: { otp: string }, options?: types.RequestOptions) =>
+    activateMFA = (userId: string, data: { otp: string }, options?: RequestOptions) =>
         this.baseClient.post(`/api/v2/bloodhound-users/${userId}/mfa-activation`, data, options);
 
-    acceptEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/accept-eula', options);
+    acceptEULA = (options?: RequestOptions) => this.baseClient.put('/api/v2/accept-eula', options);
 
-    acceptFedRAMPEULA = (options?: types.RequestOptions) => this.baseClient.put('/api/v2/fed-eula/accept', options);
+    acceptFedRAMPEULA = (options?: RequestOptions) => this.baseClient.put('/api/v2/fed-eula/accept', options);
 
-    getFedRAMPEULAStatus = (options?: types.RequestOptions) =>
+    getFedRAMPEULAStatus = (options?: RequestOptions) =>
         this.baseClient.get<{ data: { accepted: boolean } }>('/api/v2/fed-eula/status', options);
 
-    getFedRAMPEULAText = (options?: types.RequestOptions) =>
+    getFedRAMPEULAText = (options?: RequestOptions) =>
         this.baseClient.get<{ data: string }>('/api/v2/fed-eula/text', options);
 
-    getFeatureFlags = (options?: types.RequestOptions) => this.baseClient.get('/api/v2/features', options);
+    getFeatureFlags = (options?: RequestOptions) => this.baseClient.get('/api/v2/features', options);
 
-    toggleFeatureFlag = (flagId: string | number, options?: types.RequestOptions) =>
+    toggleFeatureFlag = (flagId: string | number, options?: RequestOptions) =>
         this.baseClient.put(`/api/v2/features/${flagId}/toggle`, options);
 
-    getCollectors = (collectorType: types.CommunityCollectorType, options?: types.RequestOptions) =>
+    getCollectors = (collectorType: types.CommunityCollectorType, options?: RequestOptions) =>
         this.baseClient.get<GetCollectorsResponse>(`/api/v2/collectors/${collectorType}`, options);
 
-    getCommunityCollectors = (options?: types.RequestOptions): Promise<AxiosResponse<GetCommunityCollectorsResponse>> =>
+    getCommunityCollectors = (options?: RequestOptions): Promise<AxiosResponse<GetCommunityCollectorsResponse>> =>
         this.baseClient.get<GetCommunityCollectorsResponse>('/api/v2/kennel/manifest', options);
 
-    getEnterpriseCollectors = (
-        options?: types.RequestOptions
-    ): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
+    getEnterpriseCollectors = (options?: RequestOptions): Promise<AxiosResponse<GetEnterpriseCollectorsResponse>> =>
         this.baseClient.get<GetEnterpriseCollectorsResponse>('/api/v2/kennel/enterprise-manifest', options);
 
-    downloadCollector = (
-        collectorType: types.CommunityCollectorType,
-        version: string,
-        options?: types.RequestOptions
-    ) =>
+    downloadCollector = (collectorType: types.CommunityCollectorType, version: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}`,
             Object.assign(
@@ -901,7 +939,7 @@ class BHEAPIClient {
     downloadCollectorChecksum = (
         collectorType: types.CommunityCollectorType,
         version: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/collectors/${collectorType}/${version}/checksum`,
@@ -913,7 +951,7 @@ class BHEAPIClient {
             )
         );
 
-    downloadCollectorManifestAsset = (fileName: string, options?: types.RequestOptions) =>
+    downloadCollectorManifestAsset = (fileName: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/kennel/download/${fileName}`,
             Object.assign(
@@ -933,7 +971,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/azure/${entityType}`,
@@ -952,7 +990,7 @@ class BHEAPIClient {
             )
         );
 
-    getBaseV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getBaseV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/base/${id}`,
             Object.assign(
@@ -965,13 +1003,7 @@ class BHEAPIClient {
             )
         );
 
-    getBaseControllablesV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getBaseControllablesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/base/${id}/controllables`,
             Object.assign(
@@ -986,7 +1018,7 @@ class BHEAPIClient {
             )
         );
 
-    getBaseControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getBaseControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/base/${id}/controllers`,
             Object.assign(
@@ -1001,7 +1033,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getComputerV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}`,
             Object.assign(
@@ -1014,13 +1046,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerSessionsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/sessions`,
             Object.assign(
@@ -1035,13 +1061,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerAdminUsersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerAdminUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/admin-users`,
             Object.assign(
@@ -1056,13 +1076,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerRDPUsersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerRDPUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/rdp-users`,
             Object.assign(
@@ -1077,13 +1091,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerDCOMUsersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerDCOMUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/dcom-users`,
             Object.assign(
@@ -1098,13 +1106,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerPSRemoteUsersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerPSRemoteUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/ps-remote-users`,
             Object.assign(
@@ -1119,13 +1121,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerSQLAdminsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerSQLAdminsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/sql-admins`,
             Object.assign(
@@ -1145,7 +1141,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/group-membership`,
@@ -1161,13 +1157,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerAdminRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/admin-rights`,
             Object.assign(
@@ -1182,13 +1172,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerRDPRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerRDPRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/rdp-rights`,
             Object.assign(
@@ -1203,13 +1187,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerDCOMRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerDCOMRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/dcom-rights`,
             Object.assign(
@@ -1229,7 +1207,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/ps-remote-rights`,
@@ -1250,7 +1228,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/constrained-users`,
@@ -1271,7 +1249,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/constrained-delegation-rights`,
@@ -1287,13 +1265,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/controllers`,
             Object.assign(
@@ -1308,13 +1280,7 @@ class BHEAPIClient {
             )
         );
 
-    getComputerControllablesV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getComputerControllablesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/controllables`,
             Object.assign(
@@ -1329,7 +1295,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getDomainV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}`,
             Object.assign(
@@ -1342,7 +1308,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/users`,
             Object.assign(
@@ -1357,7 +1323,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainGroupsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainGroupsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/groups`,
             Object.assign(
@@ -1372,7 +1338,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/computers`,
             Object.assign(
@@ -1387,7 +1353,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainOUsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainOUsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/ous`,
             Object.assign(
@@ -1402,7 +1368,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/gpos`,
             Object.assign(
@@ -1417,13 +1383,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainForeignUsersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainForeignUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/foreign-users`,
             Object.assign(
@@ -1438,13 +1398,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainForeignGroupsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainForeignGroupsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/foreign-groups`,
             Object.assign(
@@ -1459,13 +1413,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainForeignAdminsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainForeignAdminsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/foreign-admins`,
             Object.assign(
@@ -1485,7 +1433,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/foreign-gpo-controllers`,
@@ -1501,13 +1449,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainInboundTrustsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainInboundTrustsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/inbound-trusts`,
             Object.assign(
@@ -1522,13 +1464,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainOutboundTrustsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainOutboundTrustsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/outbound-trusts`,
             Object.assign(
@@ -1543,13 +1479,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/controllers`,
             Object.assign(
@@ -1564,7 +1494,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainDCSyncersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getDomainDCSyncersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/dc-syncers`,
             Object.assign(
@@ -1579,13 +1509,7 @@ class BHEAPIClient {
             )
         );
 
-    getDomainLinkedGPOsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getDomainLinkedGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/domains/${id}/linked-gpos`,
             Object.assign(
@@ -1600,7 +1524,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getGPOV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}`,
             Object.assign(
@@ -1613,7 +1537,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOOUsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGPOOUsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/ous`,
             Object.assign(
@@ -1628,7 +1552,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGPOComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/computers`,
             Object.assign(
@@ -1643,7 +1567,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGPOUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/users`,
             Object.assign(
@@ -1658,7 +1582,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGPOControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/controllers`,
             Object.assign(
@@ -1673,7 +1597,7 @@ class BHEAPIClient {
             )
         );
 
-    getGPOTierZeroV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGPOTierZeroV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/gpos/${id}/tier-zero`,
             Object.assign(
@@ -1688,7 +1612,7 @@ class BHEAPIClient {
             )
         );
 
-    getOUV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getOUV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ous/${id}`,
             Object.assign(
@@ -1701,7 +1625,7 @@ class BHEAPIClient {
             )
         );
 
-    getOUGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getOUGPOsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ous/${id}/gpos`,
             Object.assign(
@@ -1716,7 +1640,7 @@ class BHEAPIClient {
             )
         );
 
-    getOUUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getOUUsersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ous/${id}/users`,
             Object.assign(
@@ -1731,7 +1655,7 @@ class BHEAPIClient {
             )
         );
 
-    getOUGroupsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getOUGroupsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ous/${id}/groups`,
             Object.assign(
@@ -1746,7 +1670,7 @@ class BHEAPIClient {
             )
         );
 
-    getOUComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getOUComputersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ous/${id}/computers`,
             Object.assign(
@@ -1761,7 +1685,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getUserV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}`,
             Object.assign(
@@ -1774,7 +1698,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/sessions`,
             Object.assign(
@@ -1789,7 +1713,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserMembershipsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserMembershipsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/memberships`,
             Object.assign(
@@ -1804,7 +1728,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/admin-rights`,
             Object.assign(
@@ -1819,7 +1743,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserRDPRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserRDPRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/rdp-rights`,
             Object.assign(
@@ -1834,7 +1758,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserDCOMRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserDCOMRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/dcom-rights`,
             Object.assign(
@@ -1849,13 +1773,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserPSRemoteRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getUserPSRemoteRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/ps-remote-rights`,
             Object.assign(
@@ -1870,13 +1788,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserSQLAdminRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getUserSQLAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/sql-admin-rights`,
             Object.assign(
@@ -1896,7 +1808,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/users/${id}/constrained-delegation-rights`,
@@ -1912,7 +1824,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getUserControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/controllers`,
             Object.assign(
@@ -1927,13 +1839,7 @@ class BHEAPIClient {
             )
         );
 
-    getUserControllablesV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getUserControllablesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/controllables`,
             Object.assign(
@@ -1948,7 +1854,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getGroupV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}`,
             Object.assign(
@@ -1961,7 +1867,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGroupSessionsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/sessions`,
             Object.assign(
@@ -1976,7 +1882,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupMembersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGroupMembersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/members`,
             Object.assign(
@@ -1991,13 +1897,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupMembershipsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getGroupMembershipsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/memberships`,
             Object.assign(
@@ -2012,13 +1912,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupAdminRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getGroupAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/admin-rights`,
             Object.assign(
@@ -2033,7 +1927,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupRDPRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGroupRDPRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/rdp-rights`,
             Object.assign(
@@ -2048,7 +1942,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupDCOMRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: types.RequestOptions) =>
+    getGroupDCOMRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/dcom-rights`,
             Object.assign(
@@ -2063,13 +1957,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupPSRemoteRightsV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getGroupPSRemoteRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/ps-remote-rights`,
             Object.assign(
@@ -2084,13 +1972,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupControllablesV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getGroupControllablesV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/controllables`,
             Object.assign(
@@ -2105,13 +1987,7 @@ class BHEAPIClient {
             )
         );
 
-    getGroupControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getGroupControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/groups/${id}/controllers`,
             Object.assign(
@@ -2126,7 +2002,7 @@ class BHEAPIClient {
             )
         );
 
-    getContainerV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getContainerV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/containers/${id}`,
             Object.assign(
@@ -2139,13 +2015,7 @@ class BHEAPIClient {
             )
         );
 
-    getContainerControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getContainerControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/containers/${id}/controllers`,
             Object.assign(
@@ -2160,7 +2030,7 @@ class BHEAPIClient {
             )
         );
 
-    getAIACAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getAIACAV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/aiacas/${id}`,
             Object.assign(
@@ -2173,13 +2043,7 @@ class BHEAPIClient {
             )
         );
 
-    getAIACAControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getAIACAControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/aiacas/${id}/controllers`,
             Object.assign(
@@ -2194,7 +2058,7 @@ class BHEAPIClient {
             )
         );
 
-    getRootCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getRootCAV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}`,
             Object.assign(
@@ -2207,13 +2071,7 @@ class BHEAPIClient {
             )
         );
 
-    getRootCAControllersV2 = (
-        id: string,
-        skip?: number,
-        limit?: number,
-        type?: string,
-        options?: types.RequestOptions
-    ) =>
+    getRootCAControllersV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/rootcas/${id}/controllers`,
             Object.assign(
@@ -2228,7 +2086,7 @@ class BHEAPIClient {
             )
         );
 
-    getEnterpriseCAV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getEnterpriseCAV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/enterprisecas/${id}`,
             Object.assign(
@@ -2246,7 +2104,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/enterprisecas/${id}/controllers`,
@@ -2262,7 +2120,7 @@ class BHEAPIClient {
             )
         );
 
-    getNTAuthStoreV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getNTAuthStoreV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/ntauthstores/${id}`,
             Object.assign(
@@ -2280,7 +2138,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/ntauthstores/${id}/controllers`,
@@ -2296,7 +2154,7 @@ class BHEAPIClient {
             )
         );
 
-    getCertTemplateV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getCertTemplateV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}`,
             Object.assign(
@@ -2314,7 +2172,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/certtemplates/${id}/controllers`,
@@ -2330,7 +2188,7 @@ class BHEAPIClient {
             )
         );
 
-    getIssuancePolicyV2 = (id: string, counts?: boolean, options?: types.RequestOptions) =>
+    getIssuancePolicyV2 = (id: string, counts?: boolean, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/issuancepolicies/${id}`,
             Object.assign(
@@ -2348,7 +2206,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/issuancepolicies/${id}/controllers`,
@@ -2369,7 +2227,7 @@ class BHEAPIClient {
         skip?: number,
         limit?: number,
         type?: string,
-        options?: types.RequestOptions
+        options?: RequestOptions
     ) =>
         this.baseClient.get(
             `/api/v2/issuancepolicies/${id}/linkedtemplates`,
@@ -2385,14 +2243,9 @@ class BHEAPIClient {
             )
         );
 
-    getMetaV2 = (id: string, options?: types.RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
+    getMetaV2 = (id: string, options?: RequestOptions) => this.baseClient.get(`/api/v2/meta/${id}`, options);
 
-    getShortestPathV2 = (
-        startNode: string,
-        endNode: string,
-        relationshipKinds?: string,
-        options?: types.RequestOptions
-    ) =>
+    getShortestPathV2 = (startNode: string, endNode: string, relationshipKinds?: string, options?: RequestOptions) =>
         this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/shortest-path',
             Object.assign(
@@ -2407,7 +2260,7 @@ class BHEAPIClient {
             )
         );
 
-    getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+    getEdgeComposition = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
         this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/edge-composition',
             Object.assign(
@@ -2422,7 +2275,7 @@ class BHEAPIClient {
             )
         );
 
-    getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: types.RequestOptions) =>
+    getRelayTargets = (sourceNode: number, targetNode: number, edgeType: string, options?: RequestOptions) =>
         this.baseClient.get<GraphResponse>(
             '/api/v2/graphs/relay-targets',
             Object.assign(
@@ -2438,14 +2291,14 @@ class BHEAPIClient {
         );
 
     /* remote assets */
-    getRemoteAsset = (assetPath: string, options?: types.RequestOptions) =>
+    getRemoteAsset = (assetPath: string, options?: RequestOptions) =>
         this.baseClient.get(`/api/v2/assets/${assetPath}`, options);
 
     /* configuration */
-    getConfiguration = (options?: types.RequestOptions) =>
+    getConfiguration = (options?: RequestOptions) =>
         this.baseClient.get<GetConfigurationResponse>('/api/v2/config', options);
 
-    updateConfiguration = (payload: types.UpdateConfigurationRequest, options?: types.RequestOptions) =>
+    updateConfiguration = (payload: UpdateConfigurationRequest, options?: RequestOptions) =>
         this.baseClient.put<UpdateConfigurationResponse>('/api/v2/config', payload, options);
 }
 
