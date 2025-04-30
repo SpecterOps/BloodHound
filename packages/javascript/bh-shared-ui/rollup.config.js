@@ -47,6 +47,7 @@ export default {
         '@mui/styles/makeStyles',
         '@mui/styles/withStyles',
         '@reduxjs/toolkit',
+        'axios',
         'clsx',
         'downshift',
         'history',
