@@ -331,6 +331,28 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
+type getSelectorResponse struct {
+	Selector model.AssetGroupTagSelector `json:"selector"`
+}
+
+func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+
+	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetTagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectorId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if selector, err := s.DB.GetAssetGroupTagSelectorBySelectorId(request.Context(), selectorId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selector.AssetGroupTagId != assetTagId {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
+	} else {
+		api.WriteBasicResponse(request.Context(), getSelectorResponse{Selector: selector}, http.StatusOK, response)
+	}
+}
+
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
@@ -370,7 +392,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			}
 		}
 
-		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selectors")()
 
 		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
