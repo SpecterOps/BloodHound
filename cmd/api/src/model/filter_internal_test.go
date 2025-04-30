@@ -97,6 +97,19 @@ func TestQueryParameterFilterParser_ParseQueryParameterFilter(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
+			name: "success - colon is included in value if predicate is omitted",
+			args: args{
+				name:  "parameter",
+				value: ":hello_world",
+			},
+			expected: expected{
+				name:     "parameter",
+				value:    ":hello_world",
+				operator: Equals,
+			},
+			wantErr: assert.NoError,
+		},
+		{
 			name: "fail - unknown operator",
 			args: args{
 				name:  "parameter",
