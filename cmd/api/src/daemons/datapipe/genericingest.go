@@ -154,7 +154,7 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 // Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
 //
 // Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, identityKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
+func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
 	if cache, err := resolveAllEndpointsByName(batch, rels); err != nil {
 		return nil, err
 	} else {
@@ -182,23 +182,28 @@ func resolveRelationships(batch graph.Batch, rels []ein.IngestibleRelationship, 
 
 			rel.RelProps[common.LastSeen.String()] = nowUTC
 
+			// this sucks
+			startKinds := []graph.Kind{rel.Source.Kind}
+			if baseKind != graph.EmptyKind {
+				startKinds = append(startKinds, baseKind)
+			}
+			endKinds := []graph.Kind{rel.Target.Kind}
+			if baseKind != graph.EmptyKind {
+				endKinds = append(endKinds, baseKind)
+			}
+
 			update := &graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: srcID,
 					common.LastSeen: nowUTC,
-				}), rel.Source.Kind),
+				}), startKinds...),
 				StartIdentityProperties: []string{common.ObjectID.String()},
 				End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: targetID,
 					common.LastSeen: nowUTC,
-				}), rel.Target.Kind),
+				}), endKinds...),
 				EndIdentityProperties: []string{common.ObjectID.String()},
 				Relationship:          graph.PrepareRelationship(graph.AsProperties(rel.RelProps), rel.RelType),
-			}
-
-			if identityKind != graph.EmptyKind {
-				update.StartIdentityKind = identityKind
-				update.EndIdentityKind = identityKind
 			}
 
 			updates = append(updates, update)

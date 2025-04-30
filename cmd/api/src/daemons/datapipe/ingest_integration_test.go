@@ -258,27 +258,30 @@ func Test_IngestRelationships(t *testing.T) {
 				require.Nil(t, err)
 
 				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
-					nodeIDs := []graph.ID{}
+					nodeIDs := map[string]graph.ID{}
 					// verify start and end nodes were created
 					_ = tx.Nodes().Filter(
 						query.Or(
 							query.Equals(query.Property(query.Node(), "objectid"), "0001"),
 							query.Equals(query.Property(query.Node(), "objectid"), "0002"),
 						)).
-						OrderBy(query.Order(query.Property(query.Node(), "objectid"), query.Ascending())).FetchIDs(
-						func(cursor graph.Cursor[graph.ID]) error {
-							for id := range cursor.Chan() {
-								nodeIDs = append(nodeIDs, id)
+						OrderBy(query.Order(query.Property(query.Node(), "objectid"), query.Ascending())).Fetch(
+						func(cursor graph.Cursor[*graph.Node]) error {
+							for node := range cursor.Chan() {
+								objectid, _ := node.Properties.Get("objectid").String()
+								nodeIDs[objectid] = node.ID
 							}
 							return nil
 						},
 					)
 
+					require.Len(t, nodeIDs, 2)
+
 					// verify rel created
 					count, err := tx.Relationships().Filter(
 						query.And(
-							query.Equals(query.StartID(), nodeIDs[0]),
-							query.Equals(query.EndID(), nodeIDs[1]),
+							query.Equals(query.StartID(), nodeIDs["0001"]),
+							query.Equals(query.EndID(), nodeIDs["0002"]),
 							query.Kind(query.Relationship(), graph.StringKind("related_to")),
 						),
 					).Count()
@@ -310,7 +313,7 @@ func Test_IngestRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					err := datapipe.IngestRelationships(batch, graph.EmptyKind, rels)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					return nil
 				})
 
@@ -390,20 +393,26 @@ func Test_ReadFileForIngest(t *testing.T) {
 	})
 
 	t.Run("failure path. a file uploaded as a zip fails validation and nothing is written to the graph", func(t *testing.T) {
-		// todo: make this databaseTestWithSetup()
-		testContext.BatchTest(func(harness integration.HarnessDetails, batch graph.Batch) {
-			err := datapipe.ReadFileForIngest(batch, invalidReader, readOptions)
-			require.NotNil(t, err)
-			var report ingest.ValidationReport
-			if errors.As(err, &report) {
-				// verify nodes[0] caused a validation error
-				require.Len(t, report.ValidationErrors, 1)
-			}
-		}, func(details integration.HarnessDetails, tx graph.Transaction) {
-			// TODO: unable to assert that there are zero nodes in the db. maybe testing initiative improvements will make this type of test possible
-			// numNodes, err := tx.Nodes().Count()
-			// require.Nil(t, err)
-			// require.Equal(t, int64(0), numNodes)
+		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error { return nil }, func(harness integration.HarnessDetails, db graph.Database) {
+			_ = db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+				err := datapipe.ReadFileForIngest(batch, invalidReader, readOptions)
+				require.NotNil(t, err)
+				var report ingest.ValidationReport
+				if errors.As(err, &report) {
+					// verify nodes[0] caused a validation error
+					require.Len(t, report.ValidationErrors, 1)
+				}
+				return nil
+			})
+
+			// assert that zero nodes exist
+			_ = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+				numNodes, err := tx.Nodes().Count()
+				require.Nil(t, err)
+				require.Equal(t, int64(0), numNodes)
+				return nil
+			})
+
 		})
 	})
 }

@@ -91,7 +91,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -117,7 +117,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -143,7 +143,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -169,7 +169,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -195,7 +195,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -360,7 +360,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
@@ -386,7 +386,7 @@ func Test_ResolveRelationships(t *testing.T) {
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
 					updates, err := resolveRelationships(batch, []ein.IngestibleRelationship{ingestibleRel}, graph.EmptyKind)
-					require.Nil(t, err)
+					require.ErrorContains(t, err, "skipping invalid relationship")
 					require.Empty(t, updates)
 
 					return nil
