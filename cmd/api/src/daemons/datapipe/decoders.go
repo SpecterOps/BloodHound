@@ -28,7 +28,7 @@ import (
 	"github.com/specterops/bloodhound/ein"
 )
 
-type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time) error
+type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
 
 // ConversionFunc is a function that transforms a decoded JSON object (of type T)
 // into its corresponding internal ingest representation, appending it to the provided ConvertedData.
@@ -54,9 +54,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conv
 			return err
 		} else {
 			count++
-			if err := conversionFunc(decodeTarget, &convertedData, batch.IngestTime); err != nil {
-				errs.Add(err)
-			}
+			conversionFunc(decodeTarget, &convertedData, batch.IngestTime)
 		}
 
 		if count == IngestCountThreshold {
@@ -138,7 +136,7 @@ func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 			return err
 		} else {
 			count++
-			_ = convertGroupData(group, &convertedData, batch.IngestTime)
+			convertGroupData(group, &convertedData, batch.IngestTime)
 			if count == IngestCountThreshold {
 				if err = IngestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
@@ -176,7 +174,7 @@ func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 			return err
 		} else {
 			count++
-			_ = convertSessionData(session, &convertedData)
+			convertSessionData(session, &convertedData)
 			if count == IngestCountThreshold {
 				if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
 					errs.Add(err)
