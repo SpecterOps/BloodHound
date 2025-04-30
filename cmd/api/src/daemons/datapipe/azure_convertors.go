@@ -38,8 +38,6 @@ const (
 	PrincipalTypeUser             = "User"
 )
 
-var AZRoleManagementPolicyAssignment = enums.Kind("AZRoleManagementPolicyAssignment")
-
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
 	switch kind {
 	case enums.KindAZApp:
@@ -144,7 +142,7 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureAutomationAccount
 	case enums.KindAZAutomationAccountRoleAssignment:
 		return convertAzureAutomationAccountRoleAssignment
-	case AZRoleManagementPolicyAssignment:
+	case enums.KindAZRoleManagementPolicyAssignment:
 		return convertAzureRoleManagementPolicyAssignment
 	default:
 		// TODO: we should probably have a hook or something to log the unknown type
