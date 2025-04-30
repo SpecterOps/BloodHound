@@ -888,6 +888,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    RoleEligible = 'RoleEligible',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -985,6 +986,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.RoleEligible:
+            return 'RoleEligible';
         default:
             return undefined;
     }

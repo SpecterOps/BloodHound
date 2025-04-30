@@ -727,6 +727,12 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
+RoleEligible: types.#Kind & {
+	symbol: "RoleEligible"
+	schema: "azure"
+	representation: "RoleEligible"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -775,6 +781,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	RoleEligible,
 ]
 
 AppRoleTransitRelationshipKinds: [

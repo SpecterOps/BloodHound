@@ -1813,6 +1813,28 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 	return node, relationships
 }
 
+func ConvertAzureRuleEligibilityScheduleInstanceToRel(instance models.RoleEligibilityScheduleInstance) []IngestibleRelationship {
+	id := strings.ToUpper(fmt.Sprintf("%s@%s", instance.RoleDefinitionId, instance.TenantId))
+
+	relationships := make([]IngestibleRelationship, 0)
+	relationships = append(relationships, NewIngestibleRelationship(
+		IngestibleSource{
+			Source:     id,
+			SourceType: azure.Role,
+		},
+		IngestibleTarget{
+			Target:     instance.PrincipalId,
+			TargetType: azure.Entity,
+		},
+		IngestibleRel{
+			RelProps: nil,
+			RelType:  azure.RoleEligible,
+		},
+	))
+
+	return relationships
+}
+
 func CanAddSecret(roleDefinitionId string) bool {
 	return roleDefinitionId == azure.ApplicationAdministratorRole || roleDefinitionId == azure.CloudApplicationAdministratorRole
 }

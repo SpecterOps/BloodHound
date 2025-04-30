@@ -21,6 +21,7 @@ package azure
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -92,6 +93,7 @@ var (
 	AZMGGrantAppRoles                    = graph.StringKind("AZMGGrantAppRoles")
 	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
 	SyncedToADUser                       = graph.StringKind("SyncedToADUser")
+	RoleEligible                         = graph.StringKind("RoleEligible")
 )
 
 type Property string
@@ -353,7 +355,7 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser}
+	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, RoleEligible}
 }
 func AppRoleTransitRelationshipKinds() []graph.Kind {
 	return []graph.Kind{AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
