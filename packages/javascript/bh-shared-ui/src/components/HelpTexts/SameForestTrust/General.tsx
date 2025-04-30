@@ -44,16 +44,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
                 domain using a <i>spoof SID history</i> attack by injecting the SID of a privileged principal from the
                 trusting domain into their authentication request. However, this attack can be prevented by SID
                 filtering.
-                <br />
-                <br />
-                SID filtering removes domain SIDs from authentication requests of foreign principals based on the trust
-                configuration. Built-in SIDs (S-1-5-32-*) are always filtered, regardless of the configuration. SID
-                filtering blocks the spoof SID history attack over same-forest trusts when the trust is configured in{' '}
-                <i>quarantine mode</i> (<code>trustAttributes</code> flag <code>QUARANTINED_DOMAIN</code> enabled),
-                which filters out SIDs that do not belong to the trusted domain. Same-forest trusts does not have
-                quarantine mode enabled by default.
-                <br />
-                <br />
+                <p className='my-4'>
+                    SID filtering removes domain SIDs from authentication requests of foreign principals based on the
+                    trust configuration. Built-in SIDs (S-1-5-32-*) are always filtered, regardless of the
+                    configuration. SID filtering blocks the spoof SID history attack over same-forest trusts when the
+                    trust is configured in <i>quarantine mode</i> (<code>trustAttributes</code> flag{' '}
+                    <code>QUARANTINED_DOMAIN</code> enabled), which filters out SIDs that do not belong to the trusted
+                    domain. Same-forest trusts does not have quarantine mode enabled by default.
+                </p>
                 SID filtering is managed from the outbound side of the trust, and the "Spoof SID History Blocked"
                 property is therefore only created if trust data from this side has been ingested.
             </Typography>
@@ -64,12 +62,11 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
                 from the trusted domain authenticates against a Kerberos resource with unconstrained delegation in the
                 trusting domain, their Kerberos TGT (Ticket Granting Ticket) is forwarded to the resource as part of
                 Kerberos authentication, but only if TGT delegation is enabled (true).
-                <br />
-                <br />
-                By default, TGT delegation is enabled for same-forest trusts. It is disabled if <i>quarantine mode</i> (
-                <code>trustAttributes</code> flag <code>QUARANTINED_DOMAIN</code>) is enabled.
-                <br />
-                <br />
+                <p className='my-4'>
+                    By default, TGT delegation is enabled for same-forest trusts. It is disabled if{' '}
+                    <i>quarantine mode</i> (<code>trustAttributes</code> flag <code>QUARANTINED_DOMAIN</code>) is
+                    enabled.
+                </p>
                 TGT delegation is controlled from the inbound side of the trust, and the property is therefore only
                 created if trust data from this side has been ingested.
             </Typography>
