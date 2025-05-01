@@ -1813,7 +1813,7 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount) (Ingestible
 	return node, relationships
 }
 
-func ConvertAzureRuleEligibilityScheduleInstanceToRel(instance models.RoleEligibilityScheduleInstance) []IngestibleRelationship {
+func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligibilityScheduleInstance) []IngestibleRelationship {
 	id := strings.ToUpper(fmt.Sprintf("%s@%s", instance.RoleDefinitionId, instance.TenantId))
 
 	relationships := make([]IngestibleRelationship, 0)
@@ -1823,12 +1823,12 @@ func ConvertAzureRuleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 			SourceType: azure.Role,
 		},
 		IngestibleTarget{
-			Target:     instance.PrincipalId,
+			Target:     strings.ToUpper(instance.PrincipalId),
 			TargetType: azure.Entity,
 		},
 		IngestibleRel{
-			RelProps: nil,
-			RelType:  azure.RoleEligible,
+			RelProps: map[string]any{},
+			RelType:  azure.AZRoleEligible,
 		},
 	))
 
