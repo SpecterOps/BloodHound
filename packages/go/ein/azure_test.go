@@ -18,13 +18,13 @@ package ein_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
@@ -38,9 +38,9 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	}
 
 	expectedRels := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
-	assert.Len(t, expectedRels, 1)
+	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
-	assert.Equal(t, expectedRel.Source, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
-	assert.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
-	assert.Equal(t, expectedRel.Target, strings.ToUpper(testData.PrincipalId))
+	require.Equal(t, expectedRel.Source, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
+	require.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
+	require.Equal(t, expectedRel.Target, strings.ToUpper(testData.PrincipalId))
 }
