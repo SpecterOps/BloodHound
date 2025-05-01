@@ -40,7 +40,7 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	expectedRels := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
 	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
-	require.Equal(t, expectedRel.Source, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
+	require.Equal(t, expectedRel.Target, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
 	require.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
-	require.Equal(t, expectedRel.Target, strings.ToUpper(testData.PrincipalId))
+	require.Equal(t, expectedRel.Source, strings.ToUpper(testData.PrincipalId))
 }
