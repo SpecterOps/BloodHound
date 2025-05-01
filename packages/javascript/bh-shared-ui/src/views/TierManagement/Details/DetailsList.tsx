@@ -44,6 +44,7 @@ type DetailsListProps = {
     listQuery: ListQuery;
     selected: string | undefined;
     onSelect: (id: number) => void;
+    filteredData?: DetailsList;
 };
 
 const isTagListItem = (listItem: TagsListItem | SelectorsListItem): listItem is TagsListItem => {
@@ -77,7 +78,7 @@ const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.Reac
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of entities for the tier management page
  */
-export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
+export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, filteredData, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     return (
@@ -117,7 +118,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
-                        listQuery.data
+                        (filteredData ?? listQuery.data)
                             ?.sort((a, b) => {
                                 switch (sortOrder) {
                                     case 'asc':
