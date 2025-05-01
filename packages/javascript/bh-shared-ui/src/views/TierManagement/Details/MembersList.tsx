@@ -47,15 +47,15 @@ const Row = ({
         <li
             key={index}
             className={cn('border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative', {
-                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.node_id.toString(),
+                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.id.toString(),
             })}
             style={style}>
-            <SelectedHighlight selected={selected} itemId={listItem.node_id} title={title} />
+            <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
             <Button
                 variant={'text'}
                 className='flex justify-start w-full'
                 onClick={() => {
-                    onClick(listItem.node_id.toString());
+                    onClick(listItem.id?.toString());
                 }}>
                 <NodeIcon nodeType={listItem.primary_kind} />
                 <span className='text-base ml-2'>{listItem.name}</span>

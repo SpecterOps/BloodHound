@@ -25,6 +25,7 @@ export const exclusionList = [
     'admin_rights_risk_percent',
     'hasspn',
     'system_tags',
+    'isTierZero',
     'user_tags',
     'neo4jImportId',
     'name',
