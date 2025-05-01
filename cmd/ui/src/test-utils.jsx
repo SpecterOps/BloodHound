@@ -23,41 +23,9 @@ import { createMemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
-import { Router, MemoryRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
-
-
-import { useState } from 'react';
-import * as reactRouterDom from 'react-router-dom';
-
-// from react-router-dom github
-function createSearchParams(init = '') {
-    return new URLSearchParams(
-        typeof init === 'string' || Array.isArray(init) || init instanceof URLSearchParams
-            ? init
-            : Object.keys(init).reduce((memo, key) => {
-                const value = init[key];
-                return memo.concat(Array.isArray(value) ? value.map((v) => [key, v]) : [[key, value]]);
-            }, [])
-    );
-}
-
-export const useSearchParamsMock = (
-    defaultInit
-) => {
-    const location = reactRouterDom.useLocation();
-    const [params, setParams] = useState(
-        new URLSearchParams(createSearchParams(defaultInit ?? location.search))
-    );
-    const setParamsMock = (nextInit) => {
-        const newSearchParams = createSearchParams(typeof nextInit === 'function' ? nextInit(params) : nextInit);
-        setParams(newSearchParams);
-    };
-
-    return [params, setParamsMock];
-};
-
 
 const theme = createTheme(darkPalette);
 const defaultTheme = {
@@ -90,8 +58,9 @@ const createDefaultStore = (state) => {
     });
 };
 
+const createProviders = ({ queryClient, route, theme, store, children }) => {
+    window.history.pushState({}, 'Test page', route);
 
-const createProviders = ({ queryClient, history, theme, store, children }) => {
     return (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
@@ -99,9 +68,9 @@ const createProviders = ({ queryClient, history, theme, store, children }) => {
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
                         <NotificationsProvider>
-                            <Router location={history.location} navigator={history}>
+                            <BrowserRouter>
                                 <SnackbarProvider>{children}</SnackbarProvider>
-                            </Router>
+                            </BrowserRouter>
                         </NotificationsProvider>
                     </ThemeProvider>
                 </StyledEngineProvider>
@@ -115,47 +84,13 @@ const customRender = (
     {
         initialState = {},
         queryClient = createDefaultQueryClient(),
-        history = createMemoryHistory(),
+        route = '/',
         theme = defaultTheme,
         store = createDefaultStore(initialState),
         ...renderOptions
     } = {}
 ) => {
-    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, store, children });
-    return render(ui, { wrapper: AllTheProviders, ...renderOptions });
-};
-
-const createProviders2 = ({ queryClient, initialEntries, theme, store, children }) => {
-    return (
-        <Provider store={store}>
-            <QueryClientProvider client={queryClient}>
-                <StyledEngineProvider injectFirst>
-                    <ThemeProvider theme={theme}>
-                        <CssBaseline />
-                        <NotificationsProvider>
-                            <MemoryRouter initialEntries={initialEntries}>
-                                <SnackbarProvider>{children}</SnackbarProvider>
-                            </MemoryRouter>
-                        </NotificationsProvider>
-                    </ThemeProvider>
-                </StyledEngineProvider>
-            </QueryClientProvider>
-        </Provider>
-    );
-};
-
-const customRender2 = (
-    ui,
-    {
-        initialState = {},
-        queryClient = createDefaultQueryClient(),
-        initialEntries = [],
-        theme = defaultTheme,
-        store = createDefaultStore(initialState),
-        ...renderOptions
-    } = {}
-) => {
-    const AllTheProviders = ({ children }) => createProviders2({ queryClient, initialEntries, theme, store, children });
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, store, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
 };
 
@@ -178,4 +113,4 @@ const customRenderHook = (
 // eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 // override render method
-export { customRender as render, customRenderHook as renderHoo, customRender2 };
+export { customRender as render, customRenderHook as renderHook };
