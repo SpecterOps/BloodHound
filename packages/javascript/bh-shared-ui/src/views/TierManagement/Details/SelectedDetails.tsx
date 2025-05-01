@@ -76,7 +76,7 @@ export const SelectedDetails: FC = () => {
         );
     }
 
-    if (tagId !== undefined && tagQuery.data !== undefined) {
+    if (tagId !== undefined && selectorId === undefined && tagQuery.data !== undefined) {
         return (
             <div className='max-h-full flex flex-col gap-8'>
                 <DynamicDetails data={tagQuery.data} />
