@@ -166,4 +166,19 @@ describe('Details', async () => {
             ).toBeInTheDocument();
         });
     });
+
+    it('allows switching between the Tiers and Labels tabs', async () => {
+        render(<Details />);
+
+        // Expect the default tab to be Tiers
+        expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
+
+        // Click the Labels tab
+        await user.click(await screen.findByRole('tab', { name: /Labels/i }));
+        expect(await screen.findByTestId('tier-management_details_labels-list')).toBeInTheDocument();
+
+        // Click back to Tiers
+        await user.click(await screen.findByRole('tab', { name: /Tiers/i }));
+        expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
+    });
 });
