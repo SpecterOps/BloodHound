@@ -4961,7 +4961,7 @@
         }
       }
     },
-    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -5072,7 +5072,7 @@
         }
       }
     },
-    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/counts": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
