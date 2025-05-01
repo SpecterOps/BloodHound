@@ -17,6 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NodeIcon, SortableHeader } from '../../../components';
@@ -71,24 +72,32 @@ const InnerElement = ({ style, ...rest }: any) => (
         {...rest}></ul>
 );
 
-const getFetchCallback = (selectedTag: string | undefined, selectedSelector: string | undefined) => {
+const getFetchCallback = (
+    selectedTag: string | undefined,
+    selectedSelector: string | undefined,
+    sortOrder: SortOrder
+) => {
     if (!selectedTag) return;
+
+    const sort_by = sortOrder === 'asc' ? 'name' : '-name';
 
     if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit).then((res) => {
-                const response = {
-                    data: res.data.data['members'],
-                    skip: res.data.skip,
-                    limit: res.data.limit,
-                    total: res.data.count,
-                };
-                return response;
-            });
+            return apiClient
+                .getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit, sort_by)
+                .then((res) => {
+                    const response = {
+                        data: res.data.data['members'],
+                        skip: res.data.skip,
+                        limit: res.data.limit,
+                        total: res.data.count,
+                    };
+                    return response;
+                });
         };
     } else {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit).then((res) => {
+            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit, sort_by).then((res) => {
                 const response = {
                     data: res.data.data['members'],
                     skip: res.data.skip,
@@ -109,8 +118,6 @@ const getListHeight = (windoHeight: number) => {
 };
 
 interface MembersListProps {
-    selectedTag: string | undefined;
-    selectedSelector: string | undefined;
     selected: string | undefined;
     onClick: (id: string) => void;
     itemCount?: number;
@@ -119,26 +126,21 @@ interface MembersListProps {
 /**
  * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
  * @param props
- * @param {selectedTier} props.selectedTag The currently selected Tier/Label. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection
- * @param {selectedSelector} props.selectedSelector The currently selected Selector. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection. Unlike a selectedTier, this param can be null if there is no Selector selected.
  * @param {selected} props.selected The currently selected Object/Member. This selection can be null.
  * @param {onClick} props.onClick The click handler for when a particular member is selected. This is primarily used for setting the selected entity in the parent component.
  * @param {itemCount} props.itemCount The total item count for the list that is to be rendered. This informs the `InfiniteLoader` component as to when the list will end since the data is being fetched in pages as opposed to all at once.
  * @returns The MembersList component for rendering in the Tier Management page.
  */
-export const MembersList: React.FC<MembersListProps> = ({
-    selectedTag,
-    selectedSelector,
-    selected,
-    onClick,
-    itemCount = 0,
-}) => {
+export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, itemCount = 0 }) => {
+    const { tagId, selectorId } = useParams();
+
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
-    const previousSelector = usePreviousValue<string | undefined>(selectedSelector);
-    const previousTier = usePreviousValue<string | undefined>(selectedTag);
+    const previousSelector = usePreviousValue<string | undefined>(selectorId);
+    const previousTier = usePreviousValue<string | undefined>(tagId);
+    const previousSortOrder = usePreviousValue<SortOrder>(sortOrder);
 
     const itemData = { onClick, selected, items, title: 'Members' };
 
@@ -164,9 +166,9 @@ export const MembersList: React.FC<MembersListProps> = ({
 
             setIsFetching(true);
 
-            const limit = stopIndex - startIndex + 1;
+            const limit = stopIndex - startIndex;
 
-            const fetchData = getFetchCallback(selectedTag, selectedSelector);
+            const fetchData = getFetchCallback(tagId, selectorId, sortOrder);
 
             if (fetchData)
                 return fetchData({ skip: startIndex, limit: limit })
@@ -183,8 +185,15 @@ export const MembersList: React.FC<MembersListProps> = ({
                         setIsFetching(false);
                     });
         },
-        [items, isFetching, selectedSelector, selectedTag]
+        [items, isFetching, selectorId, tagId, sortOrder]
     );
+
+    const resetAndLoadMore = useCallback(() => {
+        if (infiniteLoaderRef?.current?.resetloadMoreItemsCache) {
+            infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
+        }
+        loadMoreItems(0, 128);
+    }, [loadMoreItems]);
 
     // Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
     // a selector is selected or not, this useEffect is used so that the cache of the `InfiniteLoader`
@@ -192,19 +201,23 @@ export const MembersList: React.FC<MembersListProps> = ({
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (previousSelector !== selectedSelector || previousTier !== selectedTag) {
-            if (infiniteLoaderRef?.current?.resetloadMoreItemsCache)
-                infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
-            loadMoreItems(0, 128);
+        if (previousSelector !== selectorId || previousTier !== tagId || previousSortOrder !== sortOrder) {
+            resetAndLoadMore();
         }
-    }, [selectedSelector, selectedTag, loadMoreItems, previousSelector, previousTier]);
+    }, [selectorId, tagId, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>
             <SortableHeader
                 title={'Objects'}
                 onSort={() => {
-                    sortOrder === 'desc' ? setSortOrder('asc') : setSortOrder('desc');
+                    setSortOrder((prev) => {
+                        if (prev === 'asc') {
+                            return 'desc';
+                        } else {
+                            return 'asc';
+                        }
+                    });
                 }}
                 sortOrder={sortOrder}
                 classes={{
