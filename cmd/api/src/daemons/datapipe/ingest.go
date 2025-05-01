@@ -38,7 +38,7 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
+func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
 	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
 		return fmt.Errorf("error validating meta tag: %w", err)
 	} else {
@@ -46,7 +46,7 @@ func ReadFileForIngest(batch graph.Batch, reader io.ReadSeeker, ingestSchema ing
 	}
 }
 
-func IngestBasicData(batch graph.Batch, converted ConvertedData) error {
+func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
@@ -60,7 +60,7 @@ func IngestBasicData(batch graph.Batch, converted ConvertedData) error {
 	return errs.Combined()
 }
 
-func IngestGroupData(batch graph.Batch, converted ConvertedGroupData) error {
+func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) error {
 	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, ad.Entity, converted.NodeProps); err != nil {
@@ -78,7 +78,7 @@ func IngestGroupData(batch graph.Batch, converted ConvertedGroupData) error {
 	return errs.Combined()
 }
 
-func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
+func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) error {
 	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
@@ -96,7 +96,7 @@ func IngestAzureData(batch graph.Batch, converted ConvertedAzureData) error {
 	return errs.Combined()
 }
 
-func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
+func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
 	switch meta.Type {
 	case ingest.DataTypeComputer:
 		if meta.Version >= 5 {
@@ -135,9 +135,9 @@ func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata
 	return nil
 }
 
-func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowUTC time.Time) map[string]any {
+func NormalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
 	delete(properties, ReconcileProperty)
-	properties[common.LastSeen.String()] = nowUTC
+	properties[common.LastSeen.String()] = ingestTime
 	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
 
 	// Ensure that name, operatingsystem, and distinguishedname properties are upper case
@@ -168,10 +168,10 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, nowU
 	return properties
 }
 
-func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
-	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, nowUTC)
+func IngestNode(timestampedBatch *TimestampedBatch, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
+	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, timestampedBatch.IngestTime)
 
-	return batch.UpdateNodeBy(graph.NodeUpdate{
+	return timestampedBatch.Batch.UpdateNodeBy(graph.NodeUpdate{
 		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Label),
 		IdentityKind: identityKind,
 		IdentityProperties: []string{
@@ -180,14 +180,13 @@ func IngestNode(batch graph.Batch, nowUTC time.Time, identityKind graph.Kind, ne
 	})
 }
 
-func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
+func IngestNodes(batch *TimestampedBatch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
-		nowUTC = time.Now().UTC()
-		errs   = util.NewErrorCollector()
+		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
-		if err := IngestNode(batch, nowUTC, identityKind, next); err != nil {
+		if err := IngestNode(batch, identityKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
@@ -195,17 +194,17 @@ func IngestNodes(batch graph.Batch, identityKind graph.Kind, nodes []ein.Ingesti
 	return errs.Combined()
 }
 
-func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = nowUTC
+func IngestRelationship(batch *TimestampedBatch, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
+	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Source,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.SourceType),
 		StartIdentityKind: nodeIDKind,
 		StartIdentityProperties: []string{
@@ -214,7 +213,7 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.TargetType),
 		EndIdentityKind: nodeIDKind,
 		EndIdentityProperties: []string{
@@ -223,14 +222,13 @@ func IngestRelationship(batch graph.Batch, nowUTC time.Time, nodeIDKind graph.Ki
 	})
 }
 
-func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+func IngestRelationships(batch *TimestampedBatch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
-		nowUTC = time.Now().UTC()
-		errs   = util.NewErrorCollector()
+		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
-		if err := IngestRelationship(batch, nowUTC, nodeIDKind, next); err != nil {
+		if err := IngestRelationship(batch, nodeIDKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
 			errs.Add(err)
 		}
@@ -238,17 +236,17 @@ func IngestRelationships(batch graph.Batch, nodeIDKind graph.Kind, relationships
 	return errs.Combined()
 }
 
-func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = nowUTC
+func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelationship) error {
+	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
 	nextRel.Source = strings.ToUpper(nextRel.Source)
 	nextRel.Target = strings.ToUpper(nextRel.Target)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
-			common.LastSeen:      nowUTC,
+			common.LastSeen:      batch.IngestTime,
 		}), nextRel.SourceType),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -257,7 +255,7 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), nextRel.TargetType),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -266,14 +264,13 @@ func ingestDNRelationship(batch graph.Batch, nowUTC time.Time, nextRel ein.Inges
 	})
 }
 
-func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRelationship) error {
+func IngestDNRelationships(batch *TimestampedBatch, relationships []ein.IngestibleRelationship) error {
 	var (
-		nowUTC = time.Now().UTC()
-		errs   = util.NewErrorCollector()
+		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range relationships {
-		if err := ingestDNRelationship(batch, nowUTC, next); err != nil {
+		if err := ingestDNRelationship(batch, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting relationship: %v", err))
 			errs.Add(err)
 		}
@@ -281,19 +278,19 @@ func IngestDNRelationships(batch graph.Batch, relationships []ein.IngestibleRela
 	return errs.Combined()
 }
 
-func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.IngestibleSession) error {
+func ingestSession(batch *TimestampedBatch, nextSession ein.IngestibleSession) error {
 	nextSession.Target = strings.ToUpper(nextSession.Target)
 	nextSession.Source = strings.ToUpper(nextSession.Source)
 
-	return batch.UpdateRelationshipBy(graph.RelationshipUpdate{
+	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(graph.PropertyMap{
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 			ad.LogonType:    nextSession.LogonType,
 		}), ad.HasSession),
 
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Source,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), ad.Computer),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
@@ -302,7 +299,7 @@ func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.Ingestib
 
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextSession.Target,
-			common.LastSeen: nowUTC,
+			common.LastSeen: batch.IngestTime,
 		}), ad.User),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
@@ -311,14 +308,13 @@ func ingestSession(batch graph.Batch, nowUTC time.Time, nextSession ein.Ingestib
 	})
 }
 
-func IngestSessions(batch graph.Batch, sessions []ein.IngestibleSession) error {
+func IngestSessions(batch *TimestampedBatch, sessions []ein.IngestibleSession) error {
 	var (
-		nowUTC = time.Now().UTC()
-		errs   = util.NewErrorCollector()
+		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range sessions {
-		if err := ingestSession(batch, nowUTC, next); err != nil {
+		if err := ingestSession(batch, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting sessions: %v", err))
 			errs.Add(err)
 		}

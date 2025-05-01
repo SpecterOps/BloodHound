@@ -2,7 +2,7 @@
 title: AzureHound Community Edition
 ---
 
-<img noZoom src="/assets/community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/community-edition-pill-tag.svg"/>
 
 AzureHound Community Edition is a Go binary that collects data from Entra ID (formerly known as AzureAD) and AzureRM via the Microsoft Graph and Azure REST APIs. It does not use any external dependencies and will run on any operating system.
 
@@ -46,7 +46,7 @@ $body = @{
     "client_id" =     "1950a258-227b-4e31-a9cf-717495945fc2"
     "resource" =      "https://graph.microsoft.com"
 }
-$UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10\_15\_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+$UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
 $Headers=@{}
 $Headers\["User-Agent"\] = $UserAgent
 $authResponse = Invoke-RestMethod `
@@ -65,7 +65,7 @@ Now go back to your original PowerShell window and paste this:
 ```json
 $body=@{
     "client_id" =  "1950a258-227b-4e31-a9cf-717495945fc2"
-    "grant\_type" = "urn:ietf:params:oauth:grant-type:device\_code"
+    "grant_type" = "urn:ietf:params:oauth:grant-type:device_code"
     "code" =       $authResponse.device_code
 }
 $Tokens = Invoke-RestMethod `

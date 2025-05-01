@@ -16,8 +16,8 @@
 
 import React from 'react';
 import { EntityField, formatObjectInfoFields } from '../../../../utils';
+import { BasicObjectInfoFields } from '../../../Explore/BasicObjectInfoFields';
 import { FieldsContainer, ObjectInfoFields } from '../../../Explore/fragments';
-import { BasicObjectInfoFields } from './BasicObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 

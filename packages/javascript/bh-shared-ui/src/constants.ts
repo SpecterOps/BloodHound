@@ -34,6 +34,9 @@ export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';
 // These tags are values associated with the `system_tags` property of a node
 export const OWNED_OBJECT_TAG = 'owned';
 export const TIER_ZERO_TAG = 'admin_tier_0';
+// These tags are values associated with the new Tiering Management kind approach
+export const TAG_TIER_ZERO_AGT = 'Tag_Tier_Zero';
+export const TAG_OWNED_AGT = 'Tag_Owned';
 
 // These labels are used as display values
 export const TIER_ZERO_LABEL = 'Admin Tier Zero';

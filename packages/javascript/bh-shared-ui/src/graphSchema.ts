@@ -88,7 +88,10 @@ export enum ActiveDirectoryRelationshipKind {
     GetChanges = 'GetChanges',
     GetChangesAll = 'GetChangesAll',
     GetChangesInFilteredSet = 'GetChangesInFilteredSet',
-    TrustedBy = 'TrustedBy',
+    CrossForestTrust = 'CrossForestTrust',
+    SameForestTrust = 'SameForestTrust',
+    SpoofSIDHistory = 'SpoofSIDHistory',
+    AbuseTGTDelegation = 'AbuseTGTDelegation',
     AllowedToAct = 'AllowedToAct',
     AdminTo = 'AdminTo',
     CanPSRemote = 'CanPSRemote',
@@ -184,8 +187,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GetChangesAll';
         case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet:
             return 'GetChangesInFilteredSet';
-        case ActiveDirectoryRelationshipKind.TrustedBy:
-            return 'TrustedBy';
+        case ActiveDirectoryRelationshipKind.CrossForestTrust:
+            return 'CrossForestTrust';
+        case ActiveDirectoryRelationshipKind.SameForestTrust:
+            return 'SameForestTrust';
+        case ActiveDirectoryRelationshipKind.SpoofSIDHistory:
+            return 'SpoofSIDHistory';
+        case ActiveDirectoryRelationshipKind.AbuseTGTDelegation:
+            return 'AbuseTGTDelegation';
         case ActiveDirectoryRelationshipKind.AllowedToAct:
             return 'AllowedToAct';
         case ActiveDirectoryRelationshipKind.AdminTo:
@@ -367,7 +376,7 @@ export enum ActiveDirectoryKindProperties {
     PasswordNotRequired = 'passwordnotreqd',
     FunctionalLevel = 'functionallevel',
     TrustType = 'trusttype',
-    SidFiltering = 'sidfiltering',
+    SpoofSIDHistoryBlocked = 'spoofsidhistoryblocked',
     TrustedToAuth = 'trustedtoauth',
     SamAccountName = 'samaccountname',
     CertificateMappingMethodsRaw = 'certificatemappingmethodsraw',
@@ -406,7 +415,7 @@ export enum ActiveDirectoryKindProperties {
     ExpirePasswordsOnSmartCardOnlyAccounts = 'expirepasswordsonsmartcardonlyaccounts',
     MachineAccountQuota = 'machineaccountquota',
     SupportedKerberosEncryptionTypes = 'supportedencryptiontypes',
-    TGTDelegationEnabled = 'tgtdelegationenabled',
+    TGTDelegation = 'tgtdelegation',
     PasswordStoredUsingReversibleEncryption = 'encryptedtextpwdallowed',
     SmartcardRequired = 'smartcardrequired',
     UseDESKeyOnly = 'usedeskeyonly',
@@ -416,7 +425,8 @@ export enum ActiveDirectoryKindProperties {
     PasswordExpired = 'passwordexpired',
     DSHeuristics = 'dsheuristics',
     UserAccountControl = 'useraccountcontrol',
-    TrustAttributes = 'trustattributes',
+    TrustAttributesInbound = 'trustattributesinbound',
+    TrustAttributesOutbound = 'trustattributesoutbound',
     MinPwdLength = 'minpwdlength',
     PwdProperties = 'pwdproperties',
     PwdHistoryLength = 'pwdhistorylength',
@@ -453,6 +463,7 @@ export enum ActiveDirectoryKindProperties {
     UseMachineID = 'usemachineid',
     ClientAllowedNTLMServers = 'clientallowedntlmservers',
     Transitive = 'transitive',
+    GroupScope = 'groupscope',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -540,8 +551,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Functional Level';
         case ActiveDirectoryKindProperties.TrustType:
             return 'Trust Type';
-        case ActiveDirectoryKindProperties.SidFiltering:
-            return 'SID Filtering Enabled';
+        case ActiveDirectoryKindProperties.SpoofSIDHistoryBlocked:
+            return 'Spoof SID History Blocked';
         case ActiveDirectoryKindProperties.TrustedToAuth:
             return 'Trusted For Constrained Delegation';
         case ActiveDirectoryKindProperties.SamAccountName:
@@ -618,8 +629,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Machine Account Quota';
         case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
             return 'Supported Kerberos Encryption Types';
-        case ActiveDirectoryKindProperties.TGTDelegationEnabled:
-            return 'TGT Delegation Enabled';
+        case ActiveDirectoryKindProperties.TGTDelegation:
+            return 'TGT Delegation';
         case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
             return 'Password Stored Using Reversible Encryption';
         case ActiveDirectoryKindProperties.SmartcardRequired:
@@ -638,8 +649,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'DSHeuristics';
         case ActiveDirectoryKindProperties.UserAccountControl:
             return 'User Account Control';
-        case ActiveDirectoryKindProperties.TrustAttributes:
-            return 'Trust Attributes';
+        case ActiveDirectoryKindProperties.TrustAttributesInbound:
+            return 'Trust Attributes (Inbound)';
+        case ActiveDirectoryKindProperties.TrustAttributesOutbound:
+            return 'Trust Attributes (Outbound)';
         case ActiveDirectoryKindProperties.MinPwdLength:
             return 'Minimum password length';
         case ActiveDirectoryKindProperties.PwdProperties:
@@ -711,7 +724,9 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.ClientAllowedNTLMServers:
             return 'Client Allowed NTLM Servers';
         case ActiveDirectoryKindProperties.Transitive:
-            return 'Is Transitive';
+            return 'Transitive';
+        case ActiveDirectoryKindProperties.GroupScope:
+            return 'Group Scope';
         default:
             return undefined;
     }
@@ -769,7 +784,9 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.TrustedBy,
+        ActiveDirectoryRelationshipKind.SameForestTrust,
+        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
     ];
 }
 export enum AzureNodeKind {
@@ -1162,6 +1179,7 @@ export enum CommonKindProperties {
     SystemTags = 'system_tags',
     UserTags = 'user_tags',
     LastSeen = 'lastseen',
+    LastCollected = 'lastcollected',
     WhenCreated = 'whencreated',
     Enabled = 'enabled',
     PasswordLastSet = 'pwdlastset',
@@ -1191,6 +1209,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
         case CommonKindProperties.UserTags:
             return 'Node User Tags';
         case CommonKindProperties.LastSeen:
+            return 'Last Seen by BloodHound';
+        case CommonKindProperties.LastCollected:
             return 'Last Collected by BloodHound';
         case CommonKindProperties.WhenCreated:
             return 'Created';

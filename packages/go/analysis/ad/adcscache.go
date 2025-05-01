@@ -320,11 +320,11 @@ func (s *ADCSCache) GetDomains() []*graph.Node {
 }
 
 func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
-	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+	if sameForestTrustNodes, err := FetchNodesWithSameForestTrustRelationship(tx, domain); err != nil {
 		return false, err
 	} else {
-		for _, trustedByDomain := range trustedByNodes {
-			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+		for _, sameForestTrustDomain := range sameForestTrustNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
 				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasUPNCertMappingInForest: %v", err))
 				continue
 			} else {
@@ -345,11 +345,11 @@ func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 }
 
 func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
-	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+	if sameForestTrustNodes, err := FetchNodesWithSameForestTrustRelationship(tx, domain); err != nil {
 		return false, err
 	} else {
-		for _, trustedByDomain := range trustedByNodes {
-			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+		for _, sameForestTrustDomain := range sameForestTrustNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
 				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasWeakCertBindingInForest: %v", err))
 				continue
 			} else {
