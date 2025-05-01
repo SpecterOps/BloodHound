@@ -17,19 +17,24 @@
 package golang
 
 import (
+	"os"
+
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // Running checks for unused go imports and formatting .go files
-func RunGoImports(gomodules []string, env environment.Environment) error {
-	for _, gomodule := range gomodules {
-		cmd := "goimports"
-		args := []string{"-w", gomodule}
-
-		if err := cmdrunner.Run(cmd, args, gomodule, env); err != nil {
-			return err
-		}
+func RunGoImports(env environment.Environment) error {
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return err
 	}
+	cmd := "goimports"
+	args := []string{"-w", rootDir}
+
+	if err := cmdrunner.Run(cmd, args, rootDir, env); err != nil {
+		return err
+	}
+
 	return nil
 }
