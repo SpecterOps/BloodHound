@@ -21,7 +21,6 @@ import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
 import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
-import { createMemoryHistory } from 'history';
 
 const comboboxLookaheadOptions = {
     data: [
@@ -64,17 +63,15 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 const setup = async (exploreSearchTab?: string) => {
-    const history = createMemoryHistory({
-        initialEntries: exploreSearchTab ? [`/?exploreSearchTab=${exploreSearchTab}`] : ['/'],
-    });
+    const url = exploreSearchTab ? `/?exploreSearchTab=${exploreSearchTab}` : '/';
 
     const screen = await act(async () => {
-        return render(<ExploreSearch />, { history });
+        return render(<ExploreSearch />, { route: url });
     });
 
     const user = userEvent.setup();
 
-    return { screen, user, history };
+    return { screen, user };
 };
 
 // Example
@@ -125,30 +122,30 @@ describe('ExploreSearch rendering per tab', async () => {
 
 describe('ExploreSearch sets searchType on tab changing', async () => {
     it('sets exploreSearchTab param to node when the user clicks the `Search` tab', async () => {
-        const { screen, user, history } = await setup('pathfinding');
+        const { screen, user } = await setup('pathfinding');
 
         const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
         await user.click(exploreSearchTab);
 
-        expect(history.location.search).toContain('exploreSearchTab=node');
+        expect(window.location.search).toContain('exploreSearchTab=node');
     });
 
     it('sets exploreSearchTab param to pathfinding when the user clicks the `pathfinding` tab', async () => {
-        const { screen, user, history } = await setup();
+        const { screen, user } = await setup();
 
         const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
         await user.click(pathfindingTab);
 
-        expect(history.location.search).toContain('exploreSearchTab=pathfinding');
+        expect(window.location.search).toContain('exploreSearchTab=pathfinding');
     });
 
     it('sets exploreSearchTab param to cypher when the user clicks the `cypher` tab', async () => {
-        const { screen, user, history } = await setup();
+        const { screen, user } = await setup();
 
         const cypherTab = screen.getByRole('tab', { name: /cypher/i });
         await user.click(cypherTab);
 
-        expect(history.location.search).toContain('exploreSearchTab=cypher');
+        expect(window.location.search).toContain('exploreSearchTab=cypher');
     });
 
     it('initializes search tab to node search if the exploreSearchTab is not a supported tab name on first render', async () => {

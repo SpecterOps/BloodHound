@@ -14,15 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
 import { render, screen } from 'src/test-utils';
 import AuthenticatedRoute from './AuthenticatedRoute';
 
 describe('AuthenticatedRoute', () => {
     it('when session token or user are null, redirects to /login', () => {
-        const history = createMemoryHistory({ initialEntries: [ROUTE_HOME] });
-
         render(
             <AuthenticatedRoute>
                 <div>authenticated</div>
@@ -34,17 +31,15 @@ describe('AuthenticatedRoute', () => {
                         user: null,
                     },
                 },
-                history,
+                route: ROUTE_HOME,
             }
         );
 
         expect(screen.queryByText('authenticated')).not.toBeInTheDocument();
-        expect(history.location.pathname).toBe(ROUTE_LOGIN);
+        expect(window.location.pathname).toBe(ROUTE_LOGIN);
     });
 
     it('when password is expired and not on password reset page, redirects to password reset page', () => {
-        const history = createMemoryHistory({ initialEntries: [ROUTE_HOME] });
-
         render(
             <AuthenticatedRoute>
                 <div>authenticated</div>
@@ -61,17 +56,15 @@ describe('AuthenticatedRoute', () => {
                         },
                     },
                 },
-                history,
+                route: ROUTE_HOME,
             }
         );
 
         expect(screen.queryByText('authenticated')).not.toBeInTheDocument();
-        expect(history.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
+        expect(window.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
     });
 
     it('when password is expired and on password reset page, no redirect occurs', () => {
-        const history = createMemoryHistory({ initialEntries: [ROUTE_EXPIRED_PASSWORD] });
-
         render(
             <AuthenticatedRoute>
                 <div>expired password page</div>
@@ -88,17 +81,15 @@ describe('AuthenticatedRoute', () => {
                         },
                     },
                 },
-                history,
+                route: ROUTE_EXPIRED_PASSWORD,
             }
         );
 
         expect(screen.queryByText('expired password page')).toBeInTheDocument();
-        expect(history.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
+        expect(window.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
     });
 
     it('when password is not expired no redirect occurs', () => {
-        const history = createMemoryHistory({ initialEntries: [ROUTE_HOME] });
-
         render(
             <AuthenticatedRoute>
                 <div>authenticated</div>
@@ -115,11 +106,11 @@ describe('AuthenticatedRoute', () => {
                         },
                     },
                 },
-                history,
+                route: ROUTE_HOME,
             }
         );
 
         expect(screen.queryByText('authenticated')).toBeInTheDocument();
-        expect(history.location.pathname).toBe(ROUTE_HOME);
+        expect(window.location.pathname).toBe(ROUTE_HOME);
     });
 });

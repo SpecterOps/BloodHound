@@ -20,7 +20,6 @@ import { act, render } from 'src/test-utils';
 
 import userEvent from '@testing-library/user-event';
 import { AzureNodeKind, ObjectInfoPanelContext } from 'bh-shared-ui';
-import { createMemoryHistory } from 'history';
 import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
 
 const testProps: HeaderProps = {
@@ -61,20 +60,18 @@ afterAll(() => server.close());
 const setup = async () => {
     const url = `?expandedPanelSections=['test','test1']`;
 
-    const history = createMemoryHistory({ initialEntries: [url] });
-
     const screen = await act(async () => {
         return render(
             <ObjectInfoPanelContext.Provider value={mockContextValue}>
                 <EntityInfoHeader {...testProps} />
             </ObjectInfoPanelContext.Provider>,
-            { history }
+            { route: url }
         );
     });
 
     const user = userEvent.setup();
 
-    return { screen, user, history };
+    return { screen, user };
 };
 
 describe('EntityInfoHeader', async () => {
@@ -93,12 +90,12 @@ describe('EntityInfoHeader', async () => {
         expect(collapseAllButton).toBeInTheDocument();
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {
-        const { screen, history, user } = await setup();
+        const { screen, user } = await setup();
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
 
         await user.click(collapseAllButton);
 
-        expect(history.location.search).not.toContain('expandedPanelSections');
+        expect(window.location.search).not.toContain('expandedPanelSections');
         expect(mockContextValue.isObjectInfoPanelOpen).toBe(false);
     });
 });
