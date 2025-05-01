@@ -31,7 +31,7 @@ import (
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 
-// ValidateMetaTag scans a JSON stream to detect and validate the metadata tag
+// ParseAndValidatePayload scans a JSON stream to detect and validate the metadata tag
 // required for ingesting graph data. It ensures that either top-level "meta" and "data" tags
 // or a "graph" tag is present. "meta"/"data" are for existing hound collections (ad and azure).
 // The "graph" tag supports generic ingest.
@@ -40,7 +40,7 @@ var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}
 // presence and structure of a "graph" tag alongside the metadata.
 //
 // If readToEnd is set to true, the stream will read to the end of the file (needed for TeeReader)
-func ValidateMetaTag(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.Metadata, error) {
+func ParseAndValidatePayload(reader io.Reader, schema IngestSchema, shouldValidateGraph, readToEnd bool) (ingest.Metadata, error) {
 	decoder := json.NewDecoder(reader)
 	scanner := newTagScanner(decoder)
 

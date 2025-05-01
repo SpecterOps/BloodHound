@@ -66,13 +66,14 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 	)
 
 	// if filetype == ZIP, we need to validate against jsonschema because
-	// the archive bypassed validation controls at file upload time
+	// the archive bypassed validation controls at file upload time, as opposed to JSON files,
+	// which were validated at file upload time
 	if options.FileType == model.FileTypeZip {
 		shouldValidateGraph = true
 		readToEnd = true
 	}
 
-	if meta, err := ingest_service.ValidateMetaTag(reader, options.IngestSchema, shouldValidateGraph, readToEnd); err != nil {
+	if meta, err := ingest_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, readToEnd); err != nil {
 		return err
 	} else {
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
@@ -150,6 +151,7 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 	return errs.Combined()
 }
 
+// IngestWrapper dispatches the ingest process based on the metadata's type.
 func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
 	if handler, ok := ingestHandlers[meta.Type]; !ok {
 		return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
