@@ -336,7 +336,7 @@ type GetSelectorResponse struct {
 }
 
 func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selector")()
+	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selector")()
 
 	if assetTagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
@@ -392,7 +392,7 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			}
 		}
 
-		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Label Get Selectors")()
+		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selectors")()
 
 		if assetGroupTagID, err := strconv.Atoi(assetTagIdStr); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
