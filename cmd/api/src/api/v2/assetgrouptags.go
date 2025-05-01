@@ -422,11 +422,11 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 				}
 			)
 
-			for _, sel := range selectors {
-				sview := AssetGroupTagSelectorView{AssetGroupTagSelector: sel}
+			for _, selector := range selectors {
+				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
 				if paramIncludeCounts {
 					// get all the nodes which are selected
-					if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), sel.ID); err != nil {
+					if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
 						api.HandleDatabaseError(request, response, err)
 					} else {
 						nodeIds := make([]graph.ID, 0, len(selectorNodes))
@@ -441,13 +441,13 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 						)); err != nil {
 							api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
 						} else {
-							sview.Counts = &AssetGroupTagSelectorCounts{
+							selectorView.Counts = &AssetGroupTagSelectorCounts{
 								Members: count,
 							}
 						}
 					}
 				}
-				resp.Selectors = append(resp.Selectors, sview)
+				resp.Selectors = append(resp.Selectors, selectorView)
 			}
 
 			api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)

@@ -32,6 +32,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -1009,8 +1010,10 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB: mockDB,
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
 		}
 	)
 	defer mockCtrl.Finish()
@@ -1083,6 +1086,48 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
 					apitest.BodyContains(output, "Test1")
+				},
+			},
+			{
+				Name: "Success with counts",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+					apitest.AddQueryParam(input, api.QueryParameterIncludeCounts, "true")
+				},
+				Setup: func() {
+					assetGroupTag := model.AssetGroupTag{
+						KindId: 50,
+					}
+					agtSelectors := model.AssetGroupTagSelectors{
+						{ID: 1, Name: "TestSelector1", AssetGroupTagId: 1},
+					}
+					agtSelectorNodes := []model.AssetGroupSelectorNode{
+						{SelectorId: 1, NodeId: 100, Source: model.AssetGroupSelectorNodeSourceSeed},
+						{SelectorId: 1, NodeId: 101, Source: model.AssetGroupSelectorNodeSourceSeed},
+					}
+
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(assetGroupTag, nil).Times(1)
+
+					mockDB.EXPECT().
+						GetAssetGroupTagSelectorsByTagId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(agtSelectors, nil).Times(1)
+
+					mockDB.EXPECT().
+						GetSelectorNodesBySelectorIds(gomock.Any(), agtSelectors[0].ID).
+						Return(agtSelectorNodes, nil).Times(1)
+
+					mockGraphDb.EXPECT().
+						CountFilteredNodes(gomock.Any(), query.And(
+							query.KindIn(query.Node(), assetGroupTag.ToKind()),
+							query.InIDs(query.NodeID(), agtSelectorNodes[0].NodeId, agtSelectorNodes[1].NodeId),
+						)).
+						Return(int64(2), nil)
+
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, "\"counts\":{\"members\":2}")
 				},
 			},
 		})
