@@ -20,7 +20,7 @@ import ConfirmationDialog from './ConfirmationDialog';
 
 describe('ConfirmationDialog', () => {
     const user = userEvent.setup();
-    const testOnClose = vi.fn();
+    const testonCancel = vi.fn();
     const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
@@ -28,7 +28,7 @@ describe('ConfirmationDialog', () => {
             <ConfirmationDialog
                 open={true}
                 onConfirm={testOnConfirm}
-                onClose={testOnClose}
+                onCancel={testonCancel}
                 text='text-test'
                 title='title-test'
             />
@@ -46,14 +46,14 @@ describe('ConfirmationDialog', () => {
     it('should fire Cancel once with false', async () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-        expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testonCancel).toHaveBeenCalledTimes(1);
         expect(testOnConfirm).toHaveBeenCalledTimes(0);
     });
 
     it('should fire Confirm once with true', async () => {
         await user.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(testOnClose).toHaveBeenCalledTimes(0);
+        expect(testonCancel).toHaveBeenCalledTimes(0);
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
     });
 });

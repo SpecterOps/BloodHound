@@ -30,20 +30,20 @@ const ConfirmationDialog: React.FC<{
     open: boolean;
     title: string;
     text: string | JSX.Element;
-    onClose: () => void;
+    onCancel: () => void;
     onConfirm: () => void;
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, title, text, onClose, isLoading, error, challengeTxt = '', onConfirm }) => {
+}> = ({ open, title, text, onCancel, isLoading, error, challengeTxt = '', onConfirm }) => {
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
-        onClose();
+        onCancel();
         setTimeout(() => {
             setChallengeTxtReply('');
         }, 1000);
-    }, [onClose]);
+    }, [onCancel]);
 
     const handleConfirm = useCallback(() => {
         onConfirm();

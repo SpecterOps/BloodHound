@@ -20,7 +20,7 @@ import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
 describe('DeleteConfirmationDialog', () => {
     const user = userEvent.setup();
-    const testOnClose = vi.fn();
+    const testOnCancel = vi.fn();
     const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
@@ -28,7 +28,7 @@ describe('DeleteConfirmationDialog', () => {
             <DeleteConfirmationDialog
                 open={true}
                 onConfirm={testOnConfirm}
-                onClose={testOnClose}
+                onCancel={testOnCancel}
                 itemName='test-item'
                 itemType='test-type'
             />
@@ -52,7 +52,7 @@ describe('DeleteConfirmationDialog', () => {
     it('should fire Cancel once with false', async () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-        expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testOnCancel).toHaveBeenCalledTimes(1);
         expect(testOnConfirm).toHaveBeenCalledTimes(0);
     });
 
@@ -61,7 +61,7 @@ describe('DeleteConfirmationDialog', () => {
         expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(testOnClose).toHaveBeenCalledTimes(0);
+        expect(testOnCancel).toHaveBeenCalledTimes(0);
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
     });
 });

@@ -356,7 +356,7 @@ const DatabaseManagement: FC = () => {
 
             <DeleteConfirmationDialog
                 open={state.openDialog}
-                onClose={() => {
+                onCancel={() => {
                     dispatch({ type: 'close_dialog' });
                 }}
                 onConfirm={() => {

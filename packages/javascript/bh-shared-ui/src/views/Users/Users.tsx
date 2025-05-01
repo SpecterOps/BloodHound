@@ -239,7 +239,7 @@ const Users: FC = () => {
                     disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: false });
                     toggleEnableUserDialog();
                 }}
-                onClose={toggleEnableUserDialog}
+                onCancel={toggleEnableUserDialog}
             />
             <ConfirmationDialog
                 open={disableUserDialogOpen}
@@ -249,7 +249,7 @@ const Users: FC = () => {
                     disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: true });
                     toggleDisableUserDialog();
                 }}
-                onClose={toggleDisableUserDialog}
+                onCancel={toggleDisableUserDialog}
             />
             <ConfirmationDialog
                 open={deleteUserDialogOpen}
@@ -259,7 +259,7 @@ const Users: FC = () => {
                     deleteUserMutation.mutate(selectedUserId!);
                     toggleDeleteUserDialog();
                 }}
-                onClose={toggleCreateUserDialog}
+                onCancel={toggleCreateUserDialog}
             />
             <ConfirmationDialog
                 open={expireUserPasswordDialogOpen}
@@ -271,7 +271,7 @@ const Users: FC = () => {
                     expireUserPasswordMutation.mutate(selectedUserId!);
                     toggleExpireUserPasswordDialog();
                 }}
-                onClose={toggleCreateUserDialog}
+                onCancel={toggleCreateUserDialog}
             />
             <Disable2FADialog
                 open={disable2FADialogOpen}

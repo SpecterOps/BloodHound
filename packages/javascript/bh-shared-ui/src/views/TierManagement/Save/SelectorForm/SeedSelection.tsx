@@ -105,7 +105,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         setDeleteDialogOpen(false);
     }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]);
 
-    const handleClose = useCallback(() => setDeleteDialogOpen(false), []);
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) throw new Error();
@@ -171,7 +171,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                 itemName={selectorQuery.data?.name || 'Selector'}
                 itemType='selector'
                 onConfirm={handleDeleteSelector}
-                onClose={handleClose}
+                onCancel={handleCancel}
             />
         </>
     );

@@ -344,7 +344,7 @@ const SSOConfiguration: FC = () => {
                 open={dialogOpen === 'DELETE'}
                 title='Delete SSO Provider'
                 text='Are you sure you wish to delete this SSO Provider? Any users which are currently configured to use this provider for authentication will no longer be able to access this application.'
-                onClose={closeDialog}
+                onCancel={closeDialog}
                 onConfirm={onDeleteSSOProvider}
                 error={deleteSSOProviderMutation.isError ? 'An unexpected error has occurred. Please try again.' : ''}
                 isLoading={deleteSSOProviderMutation.isLoading}

@@ -21,11 +21,11 @@ const DeleteConfirmationDialog: React.FC<{
     open: boolean;
     itemName: string;
     itemType: string;
-    onClose: () => void;
+    onCancel: () => void;
     onConfirm: () => void;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, itemName, onClose, isLoading, error, itemType, onConfirm }) => {
+}> = ({ open, itemName, onCancel, isLoading, error, itemType, onConfirm }) => {
     return (
         <ConfirmationDialog
             open={open}
@@ -39,7 +39,7 @@ const DeleteConfirmationDialog: React.FC<{
                 </Stack>
             }
             challengeTxt={`Delete this ${itemType}`}
-            onClose={onClose}
+            onCancel={onCancel}
             onConfirm={onConfirm}
             error={error}
             isLoading={isLoading}
