@@ -21,46 +21,53 @@ import { apiClient } from '../../../utils';
 import { itemSkeletons } from './utils';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
-    const objectsCountQuery = useQuery(['asset-group-tags-count'], () => {
-        return apiClient.getAssetGroupTagMembersCount(tagId).then((res) => {
+    const objectsCountQuery = useQuery({
+        queryKey: ['asset-group-tags-count', tagId],
+        queryFn: async () => {
+            const res = await apiClient.getAssetGroupTagMembersCount(tagId);
             return res.data.data;
-        });
+        },
     });
 
-    if (objectsCountQuery.isLoading) {
-        return itemSkeletons.map((skeleton, index) => {
-            return skeleton('object-count', index);
-        });
+    let listItems = null;
+    switch (true) {
+        case objectsCountQuery.isLoading:
+            listItems = itemSkeletons.map((skeleton, index) => {
+                return skeleton('object-selector', index);
+            });
+            break;
+        case objectsCountQuery.isError:
+            listItems = (
+                <li className='border-neutral-light-3 dark:border-neutral-dark-3'>
+                    <span className='text-base'>There was an error fetching this data</span>
+                </li>
+            );
+            break;
+        case objectsCountQuery.isSuccess:
+            listItems = objectsCountQuery.data?.counts
+                ? Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
+                      return (
+                          <div className='flex justify-between mt-4' key={key}>
+                              <p>{key}</p>
+                              <Badge label={value.toLocaleString()} />
+                          </div>
+                      );
+                  })
+                : null;
+            break;
     }
 
-    if (objectsCountQuery.isError) {
-        return (
-            <li className='border-neutral-light-3 dark:border-neutral-dark-3'>
-                <span className='text-base'>There was an error fetching this data</span>
-            </li>
-        );
-    }
-
-    if (objectsCountQuery.isSuccess) {
-        const { total_count, counts } = objectsCountQuery.data;
-
-        return (
-            <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
+    return (
+        <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
+            {objectsCountQuery.data?.total_count ? (
                 <div className='flex justify-between'>
                     <p>Total Count</p>
-                    <Badge label={total_count.toLocaleString()} />
+                    <Badge label={objectsCountQuery.data.total_count.toLocaleString()} />
                 </div>
-                {Object.entries(counts).map(([key, value]) => {
-                    return (
-                        <div className='flex justify-between mt-4' key={key}>
-                            <p>{key}</p>
-                            <Badge label={value.toLocaleString()} />
-                        </div>
-                    );
-                })}
-            </Card>
-        );
-    }
+            ) : null}
+            {listItems}
+        </Card>
+    );
 };
 
 export default ObjectCountPanel;
