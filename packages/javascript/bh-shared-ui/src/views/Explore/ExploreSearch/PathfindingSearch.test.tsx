@@ -69,7 +69,7 @@ describe('Pathfinding: interaction', () => {
 
     const setup = async () => {
         const history = createMemoryHistory({ initialEntries: ['/'] });
-        const screen = await act(async () => render(<WrappedPathfindingSearch />, undefined, { history }));
+        const screen = await act(async () => render(<WrappedPathfindingSearch />, { history }));
         const user = userEvent.setup();
 
         return { screen, history, user };

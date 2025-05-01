@@ -14,20 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
 
-export const Edit: FC = () => {
-    const { state } = useLocation();
-
+const Opsec: FC = () => {
     return (
-        <div>
-            <h1>Edit</h1>
-            <h2>
-                Type: {state?.type}
-                <br />
-                ID: {state?.id}
-            </h2>
-        </div>
+        <Typography variant='body2'>
+            The attack can be detected by correlating Windows security events from the attacker-controlled host and the
+            target. See the reference "Hunting in Active Directory: Unconstrained Delegation & Forests Trusts" for
+            details.
+        </Typography>
     );
 };
+
+export default Opsec;

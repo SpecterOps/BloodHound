@@ -18,18 +18,65 @@
             },
             "Trusts": [
                 {
-                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782874",
-                    "TargetDomainName": "EXTERNAL.LOCAL",
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782875",
+                    "TargetDomainName": "PARENT.CHILD",
                     "IsTransitive": true,
-                    "SidFilteringEnabled": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
                     "TrustDirection": "Bidirectional",
-                    "TrustType": "Unknown"
+                    "TrustType": "ParentChild"
                 },
                 {
-                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782873",
-                    "TargetDomainName": "TEST.LOCAL",
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782876",
+                    "TargetDomainName": "TREE.ROOT",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
+                    "TrustDirection": "Bidirectional",
+                    "TrustType": "TreeRoot"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782877",
+                    "TargetDomainName": "SHORTCUT",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
+                    "TrustDirection": "Outbound",
+                    "TrustType": "Shortcut"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782878",
+                    "TargetDomainName": "FOREST",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
+                    "TrustDirection": "Outbound",
+                    "TrustType": "Forest"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782879",
+                    "TargetDomainName": "External",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
+                    "TrustDirection": "Inbound",
+                    "TrustType": "External"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782880",
+                    "TargetDomainName": "Realm",
+                    "IsTransitive": true,
+                    "SidFilteringEnabled": false,
+                    "TGTDelegationEnabled": true,
+                    "TrustDirection": "Bidirectional",
+                    "TrustType": "Realm"
+                },
+                {
+                    "TargetDomainSid": "S-1-5-21-3084884204-958224920-2707782881",
+                    "TargetDomainName": "Unknown",
                     "IsTransitive": true,
                     "SidFilteringEnabled": true,
+                    "TGTDelegationEnabled": false,
                     "TrustDirection": "Outbound",
                     "TrustType": "Unknown"
                 }

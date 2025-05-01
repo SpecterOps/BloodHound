@@ -244,8 +244,7 @@ func adcsESC10APath3Pattern() traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.TrustedBy),
-				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Relationship(), ad.SameForestTrust),
 				query.Kind(query.Start(), ad.Domain),
 			)).
 		Inbound(query.And(
@@ -271,10 +270,8 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 	    OR (m:User AND ct.subjectaltrequiredns = false AND ct.subjectaltrequiredomaindns = false)
 	  )
 	MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-	MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
-	WITH *, relationships(p3) AS r
-	WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-	AND dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
+	MATCH p3 = (d)<-[r:SameForestTrust*0..]-()<-[:DCFor]-(dc:Computer)
+	WHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
 	RETURN p1,p2,p3*/
 
 	/* Scenario B
@@ -289,10 +286,8 @@ func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *g
 		OR ct.schemaversion = 1
 	)
 	MATCH p2 = (m)-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d)
-	MATCH p3 = (d)<-[r:TrustedBy*0..]-()<-[:DCFor]-(dc:Computer)
-	WITH *, relationships(p3) AS r
-	WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-	AND dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
+	MATCH p3 = (d)<-[r:SameForestTrust*0..]-()<-[:DCFor]-(dc:Computer)
+	WHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
 
 	RETURN p1,p2,p3
 	*/

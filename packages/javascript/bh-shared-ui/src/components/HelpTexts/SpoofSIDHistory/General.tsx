@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -22,10 +22,14 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} is trusted by the domain {targetName}.
+                The cross-forest trust from {targetName} to {sourceName} has a weak SID filtering configuration (Spoof
+                SID History Blocked = False).
             </Typography>
             <Typography variant='body2'>
-                This edge is informational and does not indicate any attacks, only that a trust exists.
+                The {targetName} domain allows principals of {sourceName} access by SIDs of {targetName} in their SID
+                history. An attacker with control over the {sourceName} domain can craft access requests with
+                manipulated SID history containing SIDs of privileged principals of {targetName} to gain control over
+                the {targetName} domain.
             </Typography>
         </>
     );

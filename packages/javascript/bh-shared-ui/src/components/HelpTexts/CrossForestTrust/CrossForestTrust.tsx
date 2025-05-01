@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from '@mui/material';
-import { FC } from 'react';
+import Abuse from './Abuse';
+import General from './General';
+import References from './References';
 
-const Abuse: FC = () => {
-    return <Typography variant='body2'>There is no abuse associated with this edge.</Typography>;
+const CrossForestTrust = {
+    general: General,
+    abuse: Abuse,
+    references: References,
 };
 
-export default Abuse;
+export default CrossForestTrust;
