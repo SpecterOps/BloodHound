@@ -17,6 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NodeIcon, SortableHeader } from '../../../components';
@@ -117,8 +118,6 @@ const getListHeight = (windoHeight: number) => {
 };
 
 interface MembersListProps {
-    selectedTag: string | undefined;
-    selectedSelector: string | undefined;
     selected: string | undefined;
     onClick: (id: string) => void;
     itemCount?: number;
@@ -127,26 +126,20 @@ interface MembersListProps {
 /**
  * @description This component is used to render the Objects/Members list for a given Tier, Label, or Selector. It is specifically built with both a fixed render window and a scroll loader as it is expected that the number of entities that this list may display would be large enough that trying to load all of these DOM nodes at once would cause the page to be sluggish and result in a poor user experience.
  * @param props
- * @param {selectedTier} props.selectedTag The currently selected Tier/Label. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection
- * @param {selectedSelector} props.selectedSelector The currently selected Selector. This is used to fill in the id for the path parameter of the endpoint that is used to fetch the list of members for the given selection. Unlike a selectedTier, this param can be null if there is no Selector selected.
  * @param {selected} props.selected The currently selected Object/Member. This selection can be null.
  * @param {onClick} props.onClick The click handler for when a particular member is selected. This is primarily used for setting the selected entity in the parent component.
  * @param {itemCount} props.itemCount The total item count for the list that is to be rendered. This informs the `InfiniteLoader` component as to when the list will end since the data is being fetched in pages as opposed to all at once.
  * @returns The MembersList component for rendering in the Tier Management page.
  */
-export const MembersList: React.FC<MembersListProps> = ({
-    selectedTag,
-    selectedSelector,
-    selected,
-    onClick,
-    itemCount = 0,
-}) => {
+export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, itemCount = 0 }) => {
+    const { tagId, selectorId } = useParams();
+
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
-    const previousSelector = usePreviousValue<string | undefined>(selectedSelector);
-    const previousTier = usePreviousValue<string | undefined>(selectedTag);
+    const previousSelector = usePreviousValue<string | undefined>(selectorId);
+    const previousTier = usePreviousValue<string | undefined>(tagId);
     const previousSortOrder = usePreviousValue<SortOrder>(sortOrder);
 
     const itemData = { onClick, selected, items, title: 'Members' };
@@ -173,9 +166,9 @@ export const MembersList: React.FC<MembersListProps> = ({
 
             setIsFetching(true);
 
-            const limit = stopIndex - startIndex + 1;
+            const limit = stopIndex - startIndex;
 
-            const fetchData = getFetchCallback(selectedTag, selectedSelector, sortOrder);
+            const fetchData = getFetchCallback(tagId, selectorId, sortOrder);
 
             if (fetchData)
                 return fetchData({ skip: startIndex, limit: limit })
@@ -192,7 +185,7 @@ export const MembersList: React.FC<MembersListProps> = ({
                         setIsFetching(false);
                     });
         },
-        [items, isFetching, selectedSelector, selectedTag, sortOrder]
+        [items, isFetching, selectorId, tagId, sortOrder]
     );
 
     const resetAndLoadMore = useCallback(() => {
@@ -208,10 +201,10 @@ export const MembersList: React.FC<MembersListProps> = ({
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (previousSelector !== selectedSelector || previousTier !== selectedTag || previousSortOrder !== sortOrder) {
+        if (previousSelector !== selectorId || previousTier !== tagId || previousSortOrder !== sortOrder) {
             resetAndLoadMore();
         }
-    }, [selectedSelector, selectedTag, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder]);
+    }, [selectorId, tagId, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
@@ -25,7 +26,7 @@ import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 
-export const getEditPath = (tagId: string | undefined, selectorId: string | undefined) => {
+const getEditPath = (tagId: string | undefined, selectorId: string | undefined) => {
     const editPath = '/tier-management/edit';
 
     if (selectorId && tagId) return `/tier-management/edit/tag/${tagId}/selector/${selectorId}`;
@@ -33,6 +34,27 @@ export const getEditPath = (tagId: string | undefined, selectorId: string | unde
     if (!selectorId && tagId) return `/tier-management/edit/tag/${tagId}`;
 
     return editPath;
+};
+
+const getItemCount = (
+    tagId: string | undefined,
+    tagsQuery: UseQueryResult<AssetGroupTagsListItem[]>,
+    selectorId: string | undefined,
+    selectorsQuery: UseQueryResult<AssetGroupTagSelectorsListItem[]>
+) => {
+    if (selectorId !== undefined) {
+        const selectedSelector = selectorsQuery.data?.find((selector) => {
+            return selectorId === selector.id.toString();
+        });
+        return selectedSelector?.counts?.members || 0;
+    } else if (tagId !== undefined) {
+        const selectedTag = tagsQuery.data?.find((tag) => {
+            return tagId === tag.id.toString();
+        });
+        return selectedTag?.counts?.members || 0;
+    } else {
+        return 0;
+    }
 };
 
 export const getEditButtonState = (
@@ -68,22 +90,6 @@ const Details: FC = () => {
             if (!tagId) return [];
             return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
                 return res.data.data['selectors'];
-            });
-        },
-    });
-
-    const objectsQuery = useQuery({
-        queryKey: ['asset-group-members', tagId, selectorId],
-        queryFn: async () => {
-            if (!tagId) return 0;
-
-            if (!selectorId)
-                return apiClient.getAssetGroupTagMembers(tagId, 0, 1, 'name').then((res) => {
-                    return res.data.count;
-                });
-
-            return apiClient.getAssetGroupSelectorMembers(tagId, selectorId, 0, 1, 'name').then((res) => {
-                return res.data.count;
             });
         },
     });
@@ -164,15 +170,13 @@ const Details: FC = () => {
                     </div>
                     <div>
                         <MembersList
-                            itemCount={objectsQuery.data}
+                            itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
                             onClick={(id) => {
                                 navigate(
                                     `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             selected={memberId}
-                            selectedSelector={selectorId}
-                            selectedTag={tagId}
                         />
                     </div>
                 </div>
