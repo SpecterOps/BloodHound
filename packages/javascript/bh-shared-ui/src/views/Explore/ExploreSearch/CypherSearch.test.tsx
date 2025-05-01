@@ -17,7 +17,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render } from '../../../test-utils';
+import { render, waitForElementToBeRemoved } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
 import CypherSearch from './CypherSearch';
 
@@ -44,6 +44,13 @@ describe('CypherSearch', () => {
                     data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
                 })
             );
+        }),
+        rest.get('/api/v2/features', async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
+                })
+            );
         })
     );
 
@@ -58,6 +65,7 @@ describe('CypherSearch', () => {
 
     it('should render', async () => {
         const { screen } = await setup();
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
         expect(screen.getByText(/cypher query/i)).toBeInTheDocument();
 
         expect(screen.getByRole('link', { name: /help/i })).toBeInTheDocument();
@@ -86,6 +94,7 @@ describe('CypherSearch', () => {
 
     it('should call performSearch when a value is in the searchbox and the "Run" button is clicked', async () => {
         const { screen, user, state } = await setup();
+        await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
         const searchbox = screen.getAllByRole('textbox');
         const run = screen.getByRole('button', { name: /run/ });
 

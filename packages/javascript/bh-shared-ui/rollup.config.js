@@ -49,6 +49,7 @@ export default {
         '@reduxjs/toolkit',
         'clsx',
         'downshift',
+        'history',
         'immer',
         'immutable',
         'js-client-library',

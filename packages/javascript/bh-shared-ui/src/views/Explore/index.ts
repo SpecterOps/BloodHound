@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './BasicObjectInfoFields';
 export * from './ExploreSearch';
 export * from './InfoStyles';
 export * from './fragments';

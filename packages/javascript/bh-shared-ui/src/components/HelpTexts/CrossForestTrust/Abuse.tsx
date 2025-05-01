@@ -14,22 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { useLocation } from 'react-router-dom';
 
-export const Create: FC = () => {
-    const { state } = useLocation();
-
+const Abuse: FC = () => {
     return (
-        <div>
-            <h1>Create</h1>
-            <h2>Type: {state.type}</h2>
-            {state.within && (
-                <>
-                    <br />
-                    Within Tier ID: {state.within}
-                </>
-            )}
-        </div>
+        <>
+            <Typography variant='body2'>
+                The cross-forest trust does not enable a compromise of any of the domains by default.
+            </Typography>
+            <Typography variant='body2'>
+                BloodHound creates separate traversable edges between the domains if the configuration of the trust
+                enables abuse.
+            </Typography>
+        </>
     );
 };
+
+export default Abuse;

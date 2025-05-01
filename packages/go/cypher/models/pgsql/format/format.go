@@ -269,6 +269,11 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			exprStack = append(exprStack, *typedNextExpr)
 
 		case pgsql.BinaryExpression:
+			switch typedNextExpr.Operator {
+			case pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
+			}
+
 			// Push the operands and operator onto the stack in reverse order
 			exprStack = append(exprStack,
 				typedNextExpr.ROperand,
@@ -277,6 +282,11 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				pgsql.FormattingLiteral(" "),
 				typedNextExpr.LOperand,
 			)
+
+			switch typedNextExpr.Operator {
+			case pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				exprStack = append(exprStack, pgsql.FormattingLiteral("("))
+			}
 
 		case pgsql.TableReference:
 			if typedNextExpr.Binding.Set {

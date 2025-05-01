@@ -51,3 +51,12 @@ export type PrimaryNavItem = {
     route: string;
     testId: string;
 };
+
+export type CommonSearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        description: string;
+        cypher: string;
+    }[];
+};

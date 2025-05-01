@@ -337,10 +337,14 @@ paths:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.yaml'
   /api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
+  /api/v2/asset-group-tags/preview-selectors:
+    $ref: './paths/asset-isolation.preview-selectors.yaml'
 
   # graph
   /api/v2/graphs/kinds:

@@ -21,6 +21,7 @@ package common
 
 import (
 	"errors"
+
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 	ad "github.com/specterops/bloodhound/graphschema/ad"
 	azure "github.com/specterops/bloodhound/graphschema/azure"
@@ -59,6 +60,7 @@ const (
 	SystemTags      Property = "system_tags"
 	UserTags        Property = "user_tags"
 	LastSeen        Property = "lastseen"
+	LastCollected   Property = "lastcollected"
 	WhenCreated     Property = "whencreated"
 	Enabled         Property = "enabled"
 	PasswordLastSet Property = "pwdlastset"
@@ -69,7 +71,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID}
+	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -93,6 +95,8 @@ func ParseProperty(source string) (Property, error) {
 		return UserTags, nil
 	case "lastseen":
 		return LastSeen, nil
+	case "lastcollected":
+		return LastCollected, nil
 	case "whencreated":
 		return WhenCreated, nil
 	case "enabled":
@@ -133,6 +137,8 @@ func (s Property) String() string {
 		return string(UserTags)
 	case LastSeen:
 		return string(LastSeen)
+	case LastCollected:
+		return string(LastCollected)
 	case WhenCreated:
 		return string(WhenCreated)
 	case Enabled:
@@ -172,6 +178,8 @@ func (s Property) Name() string {
 	case UserTags:
 		return "Node User Tags"
 	case LastSeen:
+		return "Last Seen by BloodHound"
+	case LastCollected:
 		return "Last Collected by BloodHound"
 	case WhenCreated:
 		return "Created"
