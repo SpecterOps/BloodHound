@@ -74,12 +74,13 @@ describe('Details', async () => {
     it('handles object selection when a tier is already selected', async () => {
         render(<Details />);
 
-        const object5 = await screen.findByText('tier-0-object-5');
+        longWait(async () => {
+            const object5 = await screen.findByText('tier-0-object-5');
+            await user.click(object5);
+        });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = within(selectors).getAllByRole('listitem');
-
-        await user.click(object5);
 
         // After selecting an object, the edit action is not viable and thus the button is not rendered
         expect(screen.queryByRole('button', { name: /Edit/ })).toBeNull();
