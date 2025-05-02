@@ -64,6 +64,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     );
 
     const handleAddToAssetGroup = () => {
+        console.log({ selectedItemQuery: selectedItemQuery.data });
         if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
             mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
         }
