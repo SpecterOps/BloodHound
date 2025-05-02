@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagTypeTier, AssetGroupTagsListItem } from 'js-client-library';
 import { FC, useMemo, useState } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
@@ -99,12 +99,12 @@ const Details: FC = () => {
 
     const tierTags = useMemo(() => {
         if (!tagsQuery.data) return [];
-        return tagsQuery.data.filter((tag) => tag.type === 1);
+        return tagsQuery.data.filter((tag) => tag.type === AssetGroupTagTypeTier);
     }, [tagsQuery.data]);
 
     const labelTags = useMemo(() => {
         if (!tagsQuery.data) return [];
-        return tagsQuery.data.filter((tag) => tag.type === 2);
+        return tagsQuery.data.filter((tag) => tag.type !== AssetGroupTagTypeTier);
     }, [tagsQuery.data]);
 
     return (
