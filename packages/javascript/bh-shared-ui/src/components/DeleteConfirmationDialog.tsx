@@ -30,12 +30,11 @@ const DeleteConfirmationDialog: React.FC<{
             open={open}
             title={`Delete ${itemName}?`}
             text={
-                <div>
-                    <p className='mb-3'>
-                        Continuing onwards will delete {itemName} and all associated configurations and findings.
-                    </p>
-                    <p className='font-bold text-red'>Warning: This change is irreversible.</p>
-                </div>
+                <>
+                    Continuing onwards will delete {itemName} and all associated configurations and findings.
+                    <br />
+                    <span className='font-bold text-red'>Warning: This change is irreversible.</span>
+                </>
             }
             challengeTxt={`Delete this ${itemType}`}
             onCancel={onCancel}
