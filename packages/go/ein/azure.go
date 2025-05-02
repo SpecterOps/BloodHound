@@ -1871,7 +1871,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if !policyAssignment.EndUserAssignmentRequiresApproval {
-		// We cannot create the edge or nodes if the assignment requires approval
+		// We cannot create the edge or nodes if the assignment does not require approval
 		return targetAZRole, rels
 	}
 
