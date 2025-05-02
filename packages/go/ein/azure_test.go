@@ -46,7 +46,6 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	require.Equal(t, expectedRel.Source, strings.ToUpper(testData.PrincipalId))
 }
 
-
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	model := models.RoleManagementPolicyAssignment{
 		Id:                                "id-1234",
@@ -70,7 +69,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	t.Run("Create AZRole node and no relationships", func(t *testing.T) {
 		model.EndUserAssignmentRequiresApproval = false
 
-		node, rels := ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
 		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
@@ -89,7 +88,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	t.Run("Create relationships and multiple ndoes for each user and group approver", func(t *testing.T) {
 		model.EndUserAssignmentRequiresApproval = true
 
-		node, rels := ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
 		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
