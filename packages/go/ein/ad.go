@@ -233,7 +233,14 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind, isConfigurationNC bool) []IngestibleRelationship {
+func ParseObjectContainer(item IngestBase, itemType graph.Kind, baseNodeProp IngestibleNode) []IngestibleRelationship {
+	isConfigurationNC := false
+	if itemType.Is(ad.Container) {
+		if dn, ok := baseNodeProp.PropertyMap[ad.DistinguishedName.String()].(string); ok {
+			isConfigurationNC = strings.HasPrefix(dn, "CN=CONFIGURATION,DC=")
+		}
+	}
+
 	rels := make([]IngestibleRelationship, 0)
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
