@@ -5290,12 +5290,106 @@
         ],
         "parameters": [
           {
-            "name": "type",
-            "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
+            "name": "auto_certify",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "created_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "disabled_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "disabled_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "is_default",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "type",
+            "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`. Valid values are either ObjectID = 1 or Cypher = 2.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "name": "counts",
+            "description": "Whether to include counts of members for each selector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -5312,9 +5406,28 @@
                       "properties": {
                         "selectors": {
                           "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
-                          }
+                          "items": [
+                            {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "counts": {
+                                      "type": "object",
+                                      "properties": {
+                                        "members": {
+                                          "type": "integer"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
                         }
                       }
                     }
