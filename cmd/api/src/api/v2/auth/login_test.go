@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/specterops/bloodhound/src/utils/test"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -141,14 +142,23 @@ func TestLoginExpiry(t *testing.T) {
 func TestLoginResource_Logout(t *testing.T) {
 	t.Parallel()
 
-	type expected struct {
-		responseCode int
+	type request struct {
+		method string
+		url    string
+		ctx    context.Context
 	}
+
+	type response struct {
+		status  int
+		headers map[string]string
+		body    string
+	}
+
 	type testData struct {
-		name        string
-		setupMocks  func(*testing.T, *api_mocks.MockAuthenticator)
-		expected    expected
-		userContext func(*testing.T) context.Context
+		name       string
+		setupMocks func(*testing.T, *api_mocks.MockAuthenticator)
+		request    request
+		response   response
 	}
 
 	mockHost := func(t *testing.T) (*url.URL, string) {
@@ -157,34 +167,46 @@ func TestLoginResource_Logout(t *testing.T) {
 		return host, fmt.Sprintf("%s%s", host, api.UserInterfacePath)
 	}
 
+	createContext := func(t *testing.T) context.Context {
+		host, _ := mockHost(t)
+
+		userSession := model.UserSession{
+			BigSerial: model.BigSerial{
+				ID: 1,
+			},
+		}
+
+		authContext := auth.Context{
+			Session: userSession,
+		}
+
+		bhContext := &ctx.Context{
+			Host:    host,
+			AuthCtx: authContext,
+		}
+
+		return context.WithValue(context.Background(), ctx.ValueKey, bhContext)
+	}
+
+	_, redirectURL := mockHost(t)
+
 	tt := []testData{
 		{
 			name: "Success: Logout redirects to UI path",
 			setupMocks: func(t *testing.T, mockAuth *api_mocks.MockAuthenticator) {
 				mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
 			},
-			userContext: func(t *testing.T) context.Context {
-				host, _ := mockHost(t)
-
-				userSession := model.UserSession{
-					BigSerial: model.BigSerial{
-						ID: 1,
-					},
-				}
-
-				authContext := auth.Context{
-					Session: userSession,
-				}
-
-				bhContext := &ctx.Context{
-					Host:    host,
-					AuthCtx: authContext,
-				}
-
-				return context.WithValue(context.Background(), ctx.ValueKey, bhContext)
+			request: request{
+				method: http.MethodGet,
+				url:    "/api/v2/auth/logout",
+				ctx:    createContext(t),
 			},
-			expected: expected{
-				responseCode: http.StatusOK,
+			response: response{
+				status: http.StatusOK,
+				headers: map[string]string{
+					"Location": redirectURL,
+				},
+				body: "",
 			},
 		},
 	}
@@ -201,21 +223,31 @@ func TestLoginResource_Logout(t *testing.T) {
 
 			testCase.setupMocks(t, mockAuth)
 
+			router := mux.NewRouter()
 			resource := NewLoginResource(config.Configuration{}, mockAuth, mockDB)
 
-			req, err := http.NewRequest("GET", "/api/v2/auth/logout", nil)
+			router.HandleFunc("/api/v2/auth/logout", resource.Logout).Methods(testCase.request.method)
+
+			req, err := http.NewRequest(testCase.request.method, testCase.request.url, nil)
 			require.NoError(t, err)
+			req = req.WithContext(testCase.request.ctx)
 
-			reqCtx := testCase.userContext(t)
-			req = req.WithContext(reqCtx)
+			recorder := httptest.NewRecorder()
 
-			response := httptest.NewRecorder()
-			resource.Logout(response, req)
+			router.ServeHTTP(recorder, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			status, headers, body := test.ProcessResponse(t, recorder)
 
-			_, expectedRedirectURL := mockHost(t)
-			assert.Equal(t, expectedRedirectURL, response.Header().Get("Location"))
+			assert.Equal(t, testCase.response.status, status, "Status code should match expected")
+
+			for headerKey, headerValue := range testCase.response.headers {
+				assert.Equal(t, headerValue, headers.Get(headerKey),
+					fmt.Sprintf("Header '%s' should match expected value", headerKey))
+			}
+
+			if testCase.response.body != "" {
+				assert.Equal(t, testCase.response.body, body, "Response body should match expected")
+			}
 		})
 	}
 }
