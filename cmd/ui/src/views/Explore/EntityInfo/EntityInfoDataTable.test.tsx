@@ -18,11 +18,8 @@ import userEvent from '@testing-library/user-event';
 import { ActiveDirectoryNodeKind, AzureNodeKind, allSections } from 'bh-shared-ui';
 import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
-import * as reactRouterDom from 'react-router-dom';
-import { render, screen, useSearchParamsMock } from 'src/test-utils';
+import { render, screen } from 'src/test-utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
-
-vi.spyOn(reactRouterDom, 'useSearchParams').mockImplementation(useSearchParamsMock as any);
 
 const objectId = 'fake-object-id';
 const adGpoSections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
