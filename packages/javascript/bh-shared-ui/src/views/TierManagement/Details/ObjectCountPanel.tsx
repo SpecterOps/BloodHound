@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Card } from '@bloodhoundenterprise/doodleui';
+import { Badge, Card, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { apiClient } from '../../../utils';
-import { itemSkeletons } from './utils';
 
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     const objectsCountQuery = useQuery({
@@ -29,45 +28,54 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
         },
     });
 
-    let listItems = null;
-    switch (true) {
-        case objectsCountQuery.isLoading:
-            listItems = itemSkeletons.map((skeleton, index) => {
-                return skeleton('object-selector', index);
-            });
-            break;
-        case objectsCountQuery.isError:
-            listItems = (
-                <li className='border-neutral-light-3 dark:border-neutral-dark-3'>
-                    <span className='text-base'>There was an error fetching this data</span>
-                </li>
-            );
-            break;
-        case objectsCountQuery.isSuccess:
-            listItems = objectsCountQuery.data?.counts
-                ? Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
-                      return (
-                          <div className='flex justify-between mt-4' key={key}>
-                              <p>{key}</p>
-                              <Badge label={value.toLocaleString()} />
-                          </div>
-                      );
-                  })
-                : null;
-            break;
-    }
+    if (objectsCountQuery.isLoading) {
+        return (
+            <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
+                <div className='flex justify-between items-center'>
+                    <p>Total Count</p>
+                    <Skeleton className='h-8 w-16' />
+                </div>
+                <div className='*:mt-1 *:h-10'>
+                    <Skeleton />
+                    <Skeleton />
+                    <Skeleton />
+                    <Skeleton />
+                </div>
+            </Card>
+        );
+    } else if (objectsCountQuery.isError) {
+        return (
+            <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
+                <div className='flex justify-between items-center'>
+                    <p>Total Count</p>
+                    <Badge label={'0'} />
+                </div>
 
-    return (
-        <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
-            {objectsCountQuery.data?.total_count ? (
-                <div className='flex justify-between'>
+                <div className='border-neutral-light-3 dark:border-neutral-dark-3'>
+                    <span className='text-base'>There was an error fetching this data</span>
+                </div>
+            </Card>
+        );
+    } else if (objectsCountQuery.isSuccess) {
+        return (
+            <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
+                <div className='flex justify-between items-center'>
                     <p>Total Count</p>
                     <Badge label={objectsCountQuery.data.total_count.toLocaleString()} />
                 </div>
-            ) : null}
-            {listItems}
-        </Card>
-    );
+                {Object.entries(objectsCountQuery.data.counts).map(([key, value]) => {
+                    return (
+                        <div className='flex justify-between mt-4 items-center' key={key}>
+                            <p>{key}</p>
+                            <Badge label={value.toLocaleString()} />
+                        </div>
+                    );
+                })}
+            </Card>
+        );
+    }
+
+    return null;
 };
 
 export default ObjectCountPanel;
