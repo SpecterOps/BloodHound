@@ -293,24 +293,40 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 	t.Parallel()
 
-	type expected struct {
-		responseCode    int
-		locationHeader  bool
-		redirectToLogin bool
-		errorMessage    string
+	type request struct {
+		method string
+		url    string
+		ctx    context.Context
 	}
+
+	type response struct {
+		statusCode   int
+		headers      map[string]string
+		cookieNames  []string
+		errorMessage string
+	}
+
 	type testData struct {
 		name        string
 		ssoProvider model.SSOProvider
 		setupMocks  func(*testing.T, *mocks.MockDatabase)
-		expected    expected
-		setupHost   func(*testing.T) *url.URL
+		request     request
+		response    response
+		skip        bool
 	}
 
 	mockHost := func(t *testing.T) *url.URL {
 		host, err := url.Parse("https://example.com")
 		require.NoError(t, err)
 		return host
+	}
+
+	createContext := func(t *testing.T) context.Context {
+		host := mockHost(t)
+		bhContext := &ctx.Context{
+			Host: host,
+		}
+		return ctx.Set(context.Background(), bhContext)
 	}
 
 	testProvider := func(includeOIDC bool) model.SSOProvider {
@@ -340,45 +356,68 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 		return provider
 	}
 
+	errorMessage := "Your SSO connection failed due to misconfiguration, please contact your Administrator"
+
 	tt := []testData{
 		{
 			name:        "Error: No OIDC Provider - Redirect to Login",
 			ssoProvider: testProvider(false),
 			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+			request: request{
+				method: http.MethodGet,
+				url:    "/api/v2/auth/sso/oidc/login",
+				ctx:    createContext(t),
 			},
-			setupHost: mockHost,
+			response: response{
+				statusCode: http.StatusFound,
+				headers: map[string]string{
+					"Location": fmt.Sprintf("/ui/login?error=%s", url.QueryEscape(errorMessage)),
+				},
+				cookieNames:  []string{},
+				errorMessage: errorMessage,
+			},
 		},
 		{
 			name:        "Error: OIDC Provider Creation Fails - Redirect to Login",
 			ssoProvider: testProvider(true),
 			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+			request: request{
+				method: http.MethodGet,
+				url:    "/api/v2/auth/sso/oidc/login",
+				ctx:    createContext(t),
 			},
-			setupHost: mockHost,
+			response: response{
+				statusCode: http.StatusFound,
+				headers: map[string]string{
+					"Location": fmt.Sprintf("/ui/login?error=%s", url.QueryEscape(errorMessage)),
+				},
+				cookieNames:  []string{},
+				errorMessage: errorMessage,
+			},
 		},
 		{
 			name:        "Success: OIDC Login - Redirect to Provider",
 			ssoProvider: testProvider(true),
 			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				locationHeader:  true,
-				redirectToLogin: false,
+			request: request{
+				method: http.MethodGet,
+				url:    "/api/v2/auth/sso/oidc/login",
+				ctx:    createContext(t),
 			},
-			setupHost: mockHost,
+			response: response{
+				statusCode: http.StatusFound,
+				headers: map[string]string{
+					"Location": "",
+				},
+				cookieNames: []string{api.AuthPKCECookieName, api.AuthStateCookieName},
+			},
+			skip: true,
 		},
 	}
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			if testCase.name == "Success: OIDC Login - Redirect to Provider" {
+			if testCase.skip {
 				t.Skip("Skipping test that requires external OIDC provider connectivity")
 			}
 
@@ -388,61 +427,57 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			defer mockCtrl.Finish()
 
 			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
 			testCase.setupMocks(t, mockDB)
 
-			host := testCase.setupHost(t)
-
-			bhContext := &ctx.Context{
-				Host: host,
-			}
-
-			goContext := ctx.Set(context.Background(), bhContext)
-
-			req, err := http.NewRequest("GET", "/api/v2/auth/sso/oidc/login", nil)
+			req, err := http.NewRequest(testCase.request.method, testCase.request.url, nil)
 			require.NoError(t, err)
-			req = req.WithContext(goContext)
+			req = req.WithContext(testCase.request.ctx)
 
-			response := httptest.NewRecorder()
-			resources.OIDCLoginHandler(response, req, testCase.ssoProvider)
+			recorder := httptest.NewRecorder()
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources.OIDCLoginHandler(recorder, req, testCase.ssoProvider)
 
-			if testCase.expected.redirectToLogin {
-				location := response.Header().Get("Location")
-				require.NotEmpty(t, location)
+			status, headers, _ := test.ProcessResponse(t, recorder)
 
-				assert.Contains(t, location, "/ui/login")
-				assert.Contains(t, location, url.QueryEscape(testCase.expected.errorMessage))
-			}
+			assert.Equal(t, testCase.response.statusCode, status,
+				"Status code should match expected")
 
-			if testCase.expected.locationHeader {
-				location := response.Header().Get("Location")
-				require.NotEmpty(t, location)
-
-				if !testCase.expected.redirectToLogin {
-					assert.Contains(t, location, "response_type=code")
-					assert.Contains(t, location, "client_id=test-client-id")
-					assert.Contains(t, location, "state=")
-					assert.Contains(t, location, "code_challenge=")
+			for key, expectedValue := range testCase.response.headers {
+				if key == "Location" && testCase.name == "Success: OIDC Login - Redirect to Provider" {
+					assert.Contains(t, headers.Get(key), "response_type=code",
+						"Location header should contain response_type")
+					assert.Contains(t, headers.Get(key), "client_id=test-client-id",
+						"Location header should contain client_id")
+					assert.Contains(t, headers.Get(key), "state=",
+						"Location header should contain state parameter")
+					assert.Contains(t, headers.Get(key), "code_challenge=",
+						"Location header should contain code_challenge")
+				} else if expectedValue != "" {
+					assert.Contains(t, headers.Get(key), expectedValue,
+						fmt.Sprintf("Header '%s' should contain expected value", key))
 				}
 			}
 
-			if testCase.name == "Success: OIDC Login - Redirect to Provider" {
-				cookies := response.Result().Cookies()
-				var hasPKCECookie, hasStateCookie bool
+			if testCase.response.errorMessage != "" {
+				location := headers.Get("Location")
+				assert.Contains(t, location, "/ui/login",
+					"Location header should redirect to login page")
+				assert.Contains(t, location, url.QueryEscape(testCase.response.errorMessage),
+					"Location header should contain error message")
+			}
+
+			if len(testCase.response.cookieNames) > 0 {
+				cookies := recorder.Result().Cookies()
+				cookieMap := make(map[string]bool)
 
 				for _, cookie := range cookies {
-					if cookie.Name == api.AuthPKCECookieName {
-						hasPKCECookie = true
-					}
-					if cookie.Name == api.AuthStateCookieName {
-						hasStateCookie = true
-					}
+					cookieMap[cookie.Name] = true
 				}
 
-				assert.True(t, hasPKCECookie, "Should have PKCE cookie")
-				assert.True(t, hasStateCookie, "Should have State cookie")
+				for _, expectedCookie := range testCase.response.cookieNames {
+					assert.True(t, cookieMap[expectedCookie],
+						fmt.Sprintf("Response should contain cookie '%s'", expectedCookie))
+				}
 			}
 		})
 	}
