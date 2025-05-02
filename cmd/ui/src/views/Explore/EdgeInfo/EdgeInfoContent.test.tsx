@@ -207,13 +207,6 @@ describe('EdgeInfoContent', () => {
             const user = userEvent.setup();
 
             server.use(
-                rest.get('/api/v2/features', (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: [{ key: 'back_button_support', enabled: true }],
-                        })
-                    );
-                }),
                 rest.get('/api/v2/graphs/edge-composition', (req, res, ctx) => {
                     return res(
                         ctx.json({

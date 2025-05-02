@@ -13,8 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
 import { act, render } from 'src/test-utils';
 
 import userEvent from '@testing-library/user-event';
@@ -27,11 +25,6 @@ const testProps: HeaderProps = {
     onToggleExpanded: vi.fn(),
 };
 
-const backButtonSupportFF = {
-    key: 'back_button_support',
-    enabled: true,
-};
-
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
     mockContextValue.isObjectInfoPanelOpen = newValue;
 };
@@ -40,20 +33,6 @@ const mockContextValue = {
     isObjectInfoPanelOpen: true,
     setIsObjectInfoPanelOpen,
 };
-
-const server = setupServer(
-    rest.get('/api/v2/features', (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [backButtonSupportFF],
-            })
-        );
-    })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 const setup = async () => {
     const url = `?expandedPanelSections=['test','test1']`;
