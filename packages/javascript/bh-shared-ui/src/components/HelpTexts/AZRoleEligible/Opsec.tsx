@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,15 @@ import { Typography } from '@mui/material';
 import { FC } from 'react';
 
 const Opsec: FC = () => {
-    return <Typography variant='body2'>The attacker may create artifacts of abusing role activation in Entra. For example, role activations are recorded and logged by default in Audit logs for the tenant. Roles can also have specific settings configured which require MFA, justification, ticket information, or approval to activate the role. It is also possible for administrators to configure roles so a notification is sent each time the role is activated or assigned. </Typography>;
+    return (
+        <Typography variant='body2'>
+            The attacker may create artifacts of abusing role activation in Entra. For example, role activations are
+            recorded and logged by default in Audit logs for the tenant. Roles can also have specific settings
+            configured which require MFA, justification, ticket information, or approval to activate the role. It is
+            also possible for administrators to configure roles so a notification is sent each time the role is
+            activated or assigned.{' '}
+        </Typography>
+    );
 };
 
 export default Opsec;
