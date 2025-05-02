@@ -4961,7 +4961,7 @@
         }
       }
     },
-    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -5072,7 +5072,7 @@
         }
       }
     },
-    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/counts": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -5437,6 +5437,56 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelector",
+        "summary": "Get Asset Group Tag Selector",
+        "description": "Retrieves an asset group tag selector by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "selector": {
+                          "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "patch": {
         "operationId": "UpdateAssetGroupTagSelector",
         "summary": "Update Asset Group Tag Selector",
@@ -5565,7 +5615,7 @@
                   "seeds": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
                     }
                   }
                 }
@@ -16861,7 +16911,7 @@
           }
         }
       },
-      "model.asset-group-tags-selector-seed-request": {
+      "model.asset-group-tags-selector-seed": {
         "type": "object",
         "properties": {
           "type": {
@@ -16887,25 +16937,10 @@
           "seeds": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
             }
           }
         }
-      },
-      "model.asset-group-tags-selector-seed-response": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
-          },
-          {
-            "properties": {
-              "selector_id": {
-                "type": "integer"
-              }
-            }
-          }
-        ]
       },
       "model.asset-group-tags-selector-response": {
         "allOf": [
@@ -16950,7 +16985,7 @@
               "seeds": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-response"
+                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
                 }
               }
             }

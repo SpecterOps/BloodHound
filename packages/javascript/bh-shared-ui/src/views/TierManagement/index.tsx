@@ -19,7 +19,6 @@ import React, { FC, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import {
     ROUTE_TIER_MANAGEMENT_CREATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_DETAILS,
     ROUTE_TIER_MANAGEMENT_EDIT,
     ROUTE_TIER_MANAGEMENT_EDIT_SELECTOR,
     ROUTE_TIER_MANAGEMENT_EDIT_TAG,
@@ -33,7 +32,6 @@ const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 
 const childRoutes: Routable[] = [
-    { path: ROUTE_TIER_MANAGEMENT_DETAILS, component: Details, authenticationRequired: true, navigation: true },
     { path: ROUTE_TIER_MANAGEMENT_TAG_DETAILS, component: Details, authenticationRequired: true, navigation: true },
     {
         path: ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS,
