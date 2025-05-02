@@ -720,7 +720,7 @@ func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *
 	var data models.RoleManagementPolicyAssignment
 
 	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Error(fmt.Sprintf(SerialError, "AzureRoleAssignments", err))
+		slog.Error(fmt.Sprintf(SerialError, "azure role management policy assignments", err))
 	} else {
 		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data)
 		converted.NodeProps = append(converted.NodeProps, nodes...)
