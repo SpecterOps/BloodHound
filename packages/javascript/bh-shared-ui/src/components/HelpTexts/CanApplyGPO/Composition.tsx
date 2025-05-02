@@ -31,8 +31,10 @@ const Composition: FC<EdgeInfoProps> = ({ sourceDBId, targetDBId, edgeName }) =>
     return (
         <>
             <Typography variant='body2'>
-                The {edgeName} relationship represents the effective outcome of the configuration and relationships between several
-                different objects. The composition graph shows where the source principal has permission to link GPOs that will apply to the target principal. All objects involved in the creation of this relationship are listed here:
+                The {edgeName} relationship represents the effective outcome of the configuration and relationships
+                between several different objects. The composition graph shows where the source principal has permission
+                to link GPOs that will apply to the target principal. All objects involved in the creation of this
+                relationship are listed here:
             </Typography>
             <Box py={1}>
                 {isLoading ? (

@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import Abuse from './Abuse';
+import Composition from './Composition';
 import General from './General';
 import Opsec from './Opsec';
 import References from './References';
-import Composition from './Composition';
 
 const CanApplyGPO = {
     general: General,
