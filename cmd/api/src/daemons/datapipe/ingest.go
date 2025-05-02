@@ -62,7 +62,6 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 
 	var (
 		shouldValidateGraph = false
-		readToEnd           = false
 	)
 
 	// if filetype == ZIP, we need to validate against jsonschema because
@@ -70,10 +69,9 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 	// which were validated at file upload time
 	if options.FileType == model.FileTypeZip {
 		shouldValidateGraph = true
-		readToEnd = true
 	}
 
-	if meta, err := ingest_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, readToEnd); err != nil {
+	if meta, err := ingest_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
 		return err
 	} else {
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
