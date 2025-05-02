@@ -32,18 +32,18 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	t.Run("Create AZRole node and no relationships", func(t *testing.T) {
 		model.EndUserAssignmentRequiresApproval = false
 
-		nodes, rels := ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ConvertAzureRoleManagementPolicyAssignment(model)
 
-		require.Len(t, nodes, 1)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", nodes[0].ObjectID)
-		assert.Equal(t, "AZRole", nodes[0].Label.String())
-		require.Len(t, nodes[0].PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
-		assert.Equal(t, "TENANT-1234", nodes[0].PropertyMap[azure.TenantID.String()])
-		assert.Equal(t, false, nodes[0].PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-		require.Len(t, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		// Assert created node properties
+		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		assert.Equal(t, "AZRole", node.Label.String())
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
+		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
+		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
+		assert.Equal(t, false, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
+		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
+		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
 		require.Len(t, rels, 0)
 	})
@@ -51,32 +51,18 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 	t.Run("Create relationships and multiple ndoes for each user and group approver", func(t *testing.T) {
 		model.EndUserAssignmentRequiresApproval = true
 
-		nodes, rels := ConvertAzureRoleManagementPolicyAssignment(model)
+		node, rels := ConvertAzureRoleManagementPolicyAssignment(model)
 
 		// Assert created node properties
-		require.Len(t, nodes, 5)
-
-		assert.Equal(t, "ROLE-1234@TENANT-1234", nodes[0].ObjectID)
-		assert.Equal(t, "AZRole", nodes[0].Label.String())
-		require.Len(t, nodes[0].PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
-		assert.Equal(t, "TENANT-1234", nodes[0].PropertyMap[azure.TenantID.String()])
-		assert.Equal(t, true, nodes[0].PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-		require.Len(t, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, nodes[0].PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-
-		assert.Equal(t, "USER-APPROVER-1", nodes[1].ObjectID)
-		assert.Equal(t, "AZUser", nodes[1].Label.String())
-
-		assert.Equal(t, "USER-APPROVER-2", nodes[2].ObjectID)
-		assert.Equal(t, "AZUser", nodes[2].Label.String())
-
-		assert.Equal(t, "GROUP-APPROVER-1", nodes[3].ObjectID)
-		assert.Equal(t, "AZGroup", nodes[3].Label.String())
-
-		assert.Equal(t, "GROUP-APPROVER-2", nodes[4].ObjectID)
-		assert.Equal(t, "AZGroup", nodes[4].Label.String())
+		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
+		assert.Equal(t, "AZRole", node.Label.String())
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
+		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
+		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
+		assert.Equal(t, true, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
+		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
+		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
+		assert.Equal(t, []string{"USER-APPROVER-1", "USER-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
 
 		// Assert created relationships
 		require.Len(t, rels, 4)
@@ -105,5 +91,4 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target)
 		assert.Equal(t, azure.AZRoleApproval, rels[3].RelType)
 	})
-
 }

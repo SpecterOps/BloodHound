@@ -1837,9 +1837,8 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount, ingestTime 
 // If EndUserAssignmentGroupApprovers contains GUIDs: an edge will be created from each group to the created AZRole
 // If EndUserAssignmentUsersApprovers contains GUIDs: an edge will be created from each user to the created AZRole
 // If both lists are empty: an edge will be created from the tenant's PrivilegedRoleAdministratorRole to the created AZRole
-func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) ([]IngestibleNode, []IngestibleRelationship) {
+func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
-		nodes            = make([]IngestibleNode, 0)
 		rels             = make([]IngestibleRelationship, 0)
 		combinedObjectId = strings.ToUpper(strings.Join([]string{policyAssignment.RoleDefinitionId, policyAssignment.TenantId}, "@"))
 	)
@@ -1870,25 +1869,18 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 			azure.EndUserAssignmentRequiresTicketInformation.String():        policyAssignment.EndUserAssignmentRequiresTicketInformation,
 		},
 	}
-	nodes = append(nodes, targetAZRole)
 
 	if !policyAssignment.EndUserAssignmentRequiresApproval {
 		// We cannot create the edge or nodes if the assignment requires approval
-		return nodes, rels
+		return targetAZRole, rels
 	}
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
 		// Create an edge for each user with that allow approvals to the target role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
-			azUser := IngestibleNode{
-				ObjectID: approver,
-				Label:    azure.User,
-			}
-			nodes = append(nodes, azUser)
-
 			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-				Source:     strings.ToUpper(azUser.ObjectID),
-				SourceType: azUser.Label,
+				Source:     strings.ToUpper(approver),
+				SourceType: azure.User,
 			}, IngestibleTarget{
 				Target:     targetAZRole.ObjectID,
 				TargetType: targetAZRole.Label,
@@ -1902,16 +1894,9 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	if len(policyAssignment.EndUserAssignmentGroupApprovers) > 0 {
 		// Create an edge for each group with that allow approvals to the target role
 		for _, approver := range policyAssignment.EndUserAssignmentGroupApprovers {
-			azGroup := IngestibleNode{
-				ObjectID: approver,
-				Label:    azure.Group,
-			}
-
-			nodes = append(nodes, azGroup)
-
 			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-				Source:     strings.ToUpper(azGroup.ObjectID),
-				SourceType: azGroup.Label,
+				Source:     strings.ToUpper(approver),
+				SourceType: azure.Group,
 			}, IngestibleTarget{
 				Target:     targetAZRole.ObjectID,
 				TargetType: targetAZRole.Label,
@@ -1925,14 +1910,10 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
 		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role
 		combinedObjectId := strings.ToUpper(strings.Join([]string{azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId}, "@"))
-		azRole := IngestibleNode{
-			ObjectID: combinedObjectId,
-			Label:    azure.Role,
-		}
 
 		rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-			Source:     strings.ToUpper(azRole.ObjectID),
-			SourceType: azRole.Label,
+			Source:     strings.ToUpper(combinedObjectId),
+			SourceType: azure.Role,
 		}, IngestibleTarget{
 			Target:     targetAZRole.ObjectID,
 			TargetType: targetAZRole.Label,
@@ -1942,7 +1923,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		}))
 	}
 
-	return nodes, rels
+	return targetAZRole, rels
 }
 
 func CanAddSecret(roleDefinitionId string) bool {
