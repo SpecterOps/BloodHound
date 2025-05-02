@@ -425,26 +425,31 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			for _, selector := range selectors {
 				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
 				if paramIncludeCounts {
-					// get all the nodes which are selected
-					if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
-						api.HandleDatabaseError(request, response, err)
-					} else {
-						nodeIds := make([]graph.ID, 0, len(selectorNodes))
-						for _, node := range selectorNodes {
-							nodeIds = append(nodeIds, node.NodeId)
-						}
-
-						// only count nodes that are actually tagged
-						if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
-							query.KindIn(query.Node(), assetGroupTag.ToKind()),
-							query.InIDs(query.NodeID(), nodeIds...),
-						)); err != nil {
-							api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+					memberCount := int64(0)
+					// if the selector is not disabled
+					if selector.DisabledAt.Time.IsZero() {
+						// get all the nodes which are selected
+						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
+							api.HandleDatabaseError(request, response, err)
 						} else {
-							selectorView.Counts = &AssetGroupTagSelectorCounts{
-								Members: count,
+							nodeIds := make([]graph.ID, 0, len(selectorNodes))
+							for _, node := range selectorNodes {
+								nodeIds = append(nodeIds, node.NodeId)
+							}
+
+							// only count nodes that are actually tagged
+							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
+								query.KindIn(query.Node(), assetGroupTag.ToKind()),
+								query.InIDs(query.NodeID(), nodeIds...),
+							)); err != nil {
+								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+							} else {
+								memberCount = count
 							}
 						}
+					}
+					selectorView.Counts = &AssetGroupTagSelectorCounts{
+						Members: memberCount,
 					}
 				}
 				resp.Selectors = append(resp.Selectors, selectorView)
