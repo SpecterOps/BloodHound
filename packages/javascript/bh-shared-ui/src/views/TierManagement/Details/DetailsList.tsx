@@ -142,11 +142,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                         <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
                                         <Button
                                             variant={'text'}
-                                            className='flex justify-between w-full'
+                                            className='flex justify-between w-full overflow-hidden'
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
-                                            <span className='text-base'>{listItem.name}</span>
+                                            <span className='text-base truncate max-w-[190px]'>{listItem.name}</span>
                                             {getCountElement(listItem)}
                                         </Button>
                                     </li>
