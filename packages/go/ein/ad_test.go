@@ -210,6 +210,7 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 }
 
 func TestConvertComputerToNode(t *testing.T) {
+	var restrictSendingNtlmTraffic uint = 2
 	computer := ein.Computer{
 		IngestBase: ein.IngestBase{
 			Properties: map[string]any{
@@ -221,7 +222,7 @@ func TestConvertComputerToNode(t *testing.T) {
 				Collected: true,
 			},
 			Result: ein.NTLMRegistryInfo{
-				RestrictSendingNtlmTraffic: 2,
+				RestrictSendingNtlmTraffic: &restrictSendingNtlmTraffic,
 			},
 		},
 		IsWebClientRunning: ein.BoolAPIResult{
