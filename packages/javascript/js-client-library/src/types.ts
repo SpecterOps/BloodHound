@@ -128,7 +128,7 @@ export const NodeSourceParent = 3 as const;
 
 export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
 export interface AssetGroupTagNode {
-    node_id: number; // uint64 graphID
+    id: number; // uint64 graphID
     primary_kind: string;
     object_id: string;
     name: string;
