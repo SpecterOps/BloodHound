@@ -21,24 +21,25 @@ These are the traversable AD edge types in BloodHound:
 
 |                      |                           |                          |
 |----------------------|---------------------------|--------------------------|
-| ADCSESC1             | CanApplyGPO               | HasSIDHistory            |
-| ADCSESC10a           | CanPSRemote               | HasSession               |
-| ADCSESC10b           | CanRDP                    | MemberOf                 |
-| ADCSESC13            | CoerceAndRelayNTLMToADCS  | Owns                     |
-| ADCSESC3             | CoerceAndRelayNTLMToLDAP  | OwnsLimitedRights        |
-| ADCSESC4             | CoerceAndRelayNTLMToLDAPS | PropagatesACEsTo         |
-| ADCSESC6a            | CoerceAndRelayNTLMToSMB   | ReadGMSAPassword         |
-| ADCSESC6b            | CoerceToTGT               | ReadLAPSPassword         |
-| ADCSESC9a            | ContainsIdentity          | SQLAdmin                 |
-| ADCSESC9b            | DCFor                     | SyncedToEntraUser        |
-| AddAllowedToAct      | DCSync                    | SyncLAPSPassword         |
-| AddKeyCredentialLink | DumpSMSAPassword          | WriteAccountRestrictions |
-| AddMember            | ExecuteDCOM               | WriteDacl                |
-| AddSelf              | ForceChangePassword       | WriteGPLink              |
-| AdminTo              | GenericAll                | WriteOwner               |
-| AllExtendedRights    | GenericWrite              | WriteOwnerLimitedRights  |
-| AllowedToAct         | GoldenCert                | WriteSPN                 |
-| AllowedToDelegate    | GPOAppliesTo              |                          |
+| AbuseTGTDelegation   | CanApplyGPO               | HasSession               |
+| ADCSESC1             | CanPSRemote               | MemberOf                 |
+| ADCSESC10a           | CanRDP                    | Owns                     |
+| ADCSESC10b           | CoerceAndRelayNTLMToADCS  | OwnsLimitedRights        |
+| ADCSESC13            | CoerceAndRelayNTLMToLDAP  | PropagatesACEsTo         |
+| ADCSESC3             | CoerceAndRelayNTLMToLDAPS | ReadGMSAPassword         |
+| ADCSESC4             | CoerceAndRelayNTLMToSMB   | ReadLAPSPassword         |
+| ADCSESC6a            | CoerceToTGT               | SameForestTrust          |
+| ADCSESC6b            | ContainsIdentity          | SpoofSIDHistory          |
+| ADCSESC9a            | DCFor                     | SQLAdmin                 |
+| ADCSESC9b            | DCSync                    | SyncedToEntraUser        |
+| AddAllowedToAct      | DumpSMSAPassword          | SyncLAPSPassword         |
+| AddKeyCredentialLink | ExecuteDCOM               | WriteAccountRestrictions |
+| AddMember            | ForceChangePassword       | WriteDacl                |
+| AddSelf              | GenericAll                | WriteGPLink              |
+| AdminTo              | GenericWrite              | WriteOwner               |
+| AllExtendedRights    | GoldenCert                | WriteOwnerLimitedRights  |
+| AllowedToAct         | GPOAppliesTo              | WriteSPN                 |
+| AllowedToDelegate    | HasSIDHistory             |                          |
 
 These are the traversable Azure edge types in BloodHound:
 
@@ -77,17 +78,17 @@ But you will not see any GetChanges or GetChangesAll edge. However, you can use 
 
 These are the non-traversable AD edge types in BloodHound:
 
-|                          |                    |                                 |
-|--------------------------|--------------------|---------------------------------|
-| Contains                 | GPLink             | OwnsRaw                         |
-| DelegatedEnrollmentAgent | HostsCAService     | PublishedTo                     |
-| Enroll                   | IssuedSignedBy     | RemoteInteractiveLogonPrivilege |
-| EnrollOnBehalfOf         | LocalToComputer    | RootCAFor                       |
-| EnterpriseCAFor          | ManageCA           | TrustedForNTAuth                |
-| ExtendedByPolicy         | ManageCertificates | WriteOwnerRaw                   |
-| GetChanges               | MemberOfLocalGroup | WritePKIEnrollmentFlag          |
-| GetChangesAll            | NTAuthStoreFor     | WritePKINameFlag                |
-| GetChangesInFilteredSet  | OIDGroupLink       |                                 |
+|                          |                         |                                 |
+|--------------------------|-------------------------|---------------------------------|
+| Contains                 | GetChangesInFilteredSet | OIDGroupLink                    |
+| CrossForestTrust         | GPLink                  | OwnsRaw                         |
+| DelegatedEnrollmentAgent | HostsCAService          | PublishedTo                     |
+| Enroll                   | IssuedSignedBy          | RemoteInteractiveLogonPrivilege |
+| EnrollOnBehalfOf         | LocalToComputer         | RootCAFor                       |
+| EnterpriseCAFor          | ManageCA                | TrustedForNTAuth                |
+| ExtendedByPolicy         | ManageCertificates      | WriteOwnerRaw                   |
+| GetChanges               | MemberOfLocalGroup      | WritePKIEnrollmentFlag          |
+| GetChangesAll            | NTAuthStoreFor          | WritePKINameFlag                |
 
 These are the non-traversable Azure edge types in BloodHound:
 

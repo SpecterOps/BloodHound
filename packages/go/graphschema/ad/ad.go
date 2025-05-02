@@ -58,7 +58,10 @@ var (
 	GetChanges                  = graph.StringKind("GetChanges")
 	GetChangesAll               = graph.StringKind("GetChangesAll")
 	GetChangesInFilteredSet     = graph.StringKind("GetChangesInFilteredSet")
-	TrustedBy                   = graph.StringKind("TrustedBy")
+	CrossForestTrust            = graph.StringKind("CrossForestTrust")
+	SameForestTrust             = graph.StringKind("SameForestTrust")
+	SpoofSIDHistory             = graph.StringKind("SpoofSIDHistory")
+	AbuseTGTDelegation          = graph.StringKind("AbuseTGTDelegation")
 	AllowedToAct                = graph.StringKind("AllowedToAct")
 	AdminTo                     = graph.StringKind("AdminTo")
 	CanPSRemote                 = graph.StringKind("CanPSRemote")
@@ -168,7 +171,7 @@ const (
 	PasswordNotRequired                     Property = "passwordnotreqd"
 	FunctionalLevel                         Property = "functionallevel"
 	TrustType                               Property = "trusttype"
-	SidFiltering                            Property = "sidfiltering"
+	SpoofSIDHistoryBlocked                  Property = "spoofsidhistoryblocked"
 	TrustedToAuth                           Property = "trustedtoauth"
 	SamAccountName                          Property = "samaccountname"
 	CertificateMappingMethodsRaw            Property = "certificatemappingmethodsraw"
@@ -207,7 +210,7 @@ const (
 	ExpirePasswordsOnSmartCardOnlyAccounts  Property = "expirepasswordsonsmartcardonlyaccounts"
 	MachineAccountQuota                     Property = "machineaccountquota"
 	SupportedKerberosEncryptionTypes        Property = "supportedencryptiontypes"
-	TGTDelegationEnabled                    Property = "tgtdelegationenabled"
+	TGTDelegation                           Property = "tgtdelegation"
 	PasswordStoredUsingReversibleEncryption Property = "encryptedtextpwdallowed"
 	SmartcardRequired                       Property = "smartcardrequired"
 	UseDESKeyOnly                           Property = "usedeskeyonly"
@@ -217,7 +220,8 @@ const (
 	PasswordExpired                         Property = "passwordexpired"
 	DSHeuristics                            Property = "dsheuristics"
 	UserAccountControl                      Property = "useraccountcontrol"
-	TrustAttributes                         Property = "trustattributes"
+	TrustAttributesInbound                  Property = "trustattributesinbound"
+	TrustAttributesOutbound                 Property = "trustattributesoutbound"
 	MinPwdLength                            Property = "minpwdlength"
 	PwdProperties                           Property = "pwdproperties"
 	PwdHistoryLength                        Property = "pwdhistorylength"
@@ -254,10 +258,11 @@ const (
 	UseMachineID                            Property = "usemachineid"
 	ClientAllowedNTLMServers                Property = "clientallowedntlmservers"
 	Transitive                              Property = "transitive"
+	GroupScope                              Property = "groupscope"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SidFiltering, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegationEnabled, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributes, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -345,8 +350,8 @@ func ParseProperty(source string) (Property, error) {
 		return FunctionalLevel, nil
 	case "trusttype":
 		return TrustType, nil
-	case "sidfiltering":
-		return SidFiltering, nil
+	case "spoofsidhistoryblocked":
+		return SpoofSIDHistoryBlocked, nil
 	case "trustedtoauth":
 		return TrustedToAuth, nil
 	case "samaccountname":
@@ -423,8 +428,8 @@ func ParseProperty(source string) (Property, error) {
 		return MachineAccountQuota, nil
 	case "supportedencryptiontypes":
 		return SupportedKerberosEncryptionTypes, nil
-	case "tgtdelegationenabled":
-		return TGTDelegationEnabled, nil
+	case "tgtdelegation":
+		return TGTDelegation, nil
 	case "encryptedtextpwdallowed":
 		return PasswordStoredUsingReversibleEncryption, nil
 	case "smartcardrequired":
@@ -443,8 +448,10 @@ func ParseProperty(source string) (Property, error) {
 		return DSHeuristics, nil
 	case "useraccountcontrol":
 		return UserAccountControl, nil
-	case "trustattributes":
-		return TrustAttributes, nil
+	case "trustattributesinbound":
+		return TrustAttributesInbound, nil
+	case "trustattributesoutbound":
+		return TrustAttributesOutbound, nil
 	case "minpwdlength":
 		return MinPwdLength, nil
 	case "pwdproperties":
@@ -517,6 +524,8 @@ func ParseProperty(source string) (Property, error) {
 		return ClientAllowedNTLMServers, nil
 	case "transitive":
 		return Transitive, nil
+	case "groupscope":
+		return GroupScope, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -607,8 +616,8 @@ func (s Property) String() string {
 		return string(FunctionalLevel)
 	case TrustType:
 		return string(TrustType)
-	case SidFiltering:
-		return string(SidFiltering)
+	case SpoofSIDHistoryBlocked:
+		return string(SpoofSIDHistoryBlocked)
 	case TrustedToAuth:
 		return string(TrustedToAuth)
 	case SamAccountName:
@@ -685,8 +694,8 @@ func (s Property) String() string {
 		return string(MachineAccountQuota)
 	case SupportedKerberosEncryptionTypes:
 		return string(SupportedKerberosEncryptionTypes)
-	case TGTDelegationEnabled:
-		return string(TGTDelegationEnabled)
+	case TGTDelegation:
+		return string(TGTDelegation)
 	case PasswordStoredUsingReversibleEncryption:
 		return string(PasswordStoredUsingReversibleEncryption)
 	case SmartcardRequired:
@@ -705,8 +714,10 @@ func (s Property) String() string {
 		return string(DSHeuristics)
 	case UserAccountControl:
 		return string(UserAccountControl)
-	case TrustAttributes:
-		return string(TrustAttributes)
+	case TrustAttributesInbound:
+		return string(TrustAttributesInbound)
+	case TrustAttributesOutbound:
+		return string(TrustAttributesOutbound)
 	case MinPwdLength:
 		return string(MinPwdLength)
 	case PwdProperties:
@@ -779,6 +790,8 @@ func (s Property) String() string {
 		return string(ClientAllowedNTLMServers)
 	case Transitive:
 		return string(Transitive)
+	case GroupScope:
+		return string(GroupScope)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -869,8 +882,8 @@ func (s Property) Name() string {
 		return "Functional Level"
 	case TrustType:
 		return "Trust Type"
-	case SidFiltering:
-		return "SID Filtering Enabled"
+	case SpoofSIDHistoryBlocked:
+		return "Spoof SID History Blocked"
 	case TrustedToAuth:
 		return "Trusted For Constrained Delegation"
 	case SamAccountName:
@@ -947,8 +960,8 @@ func (s Property) Name() string {
 		return "Machine Account Quota"
 	case SupportedKerberosEncryptionTypes:
 		return "Supported Kerberos Encryption Types"
-	case TGTDelegationEnabled:
-		return "TGT Delegation Enabled"
+	case TGTDelegation:
+		return "TGT Delegation"
 	case PasswordStoredUsingReversibleEncryption:
 		return "Password Stored Using Reversible Encryption"
 	case SmartcardRequired:
@@ -967,8 +980,10 @@ func (s Property) Name() string {
 		return "DSHeuristics"
 	case UserAccountControl:
 		return "User Account Control"
-	case TrustAttributes:
-		return "Trust Attributes"
+	case TrustAttributesInbound:
+		return "Trust Attributes (Inbound)"
+	case TrustAttributesOutbound:
+		return "Trust Attributes (Outbound)"
 	case MinPwdLength:
 		return "Minimum password length"
 	case PwdProperties:
@@ -1040,7 +1055,9 @@ func (s Property) Name() string {
 	case ClientAllowedNTLMServers:
 		return "Client Allowed NTLM Servers"
 	case Transitive:
-		return "Is Transitive"
+		return "Transitive"
+	case GroupScope:
+		return "Group Scope"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -1057,13 +1074,13 @@ func Nodes() []graph.Kind {
 	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, CoerceToTGT, GetChanges, GetChangesAll, GetChangesInFilteredSet, TrustedBy, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonRight, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, WriteOwnerRaw, OwnsLimitedRights, OwnsRaw, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, CoerceToTGT, GetChanges, GetChangesAll, GetChangesInFilteredSet, CrossForestTrust, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonRight, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, WriteOwnerRaw, OwnsLimitedRights, OwnsRaw, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, WriteGPLink, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag, WriteOwnerLimitedRights, OwnsLimitedRights}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, DCFor, TrustedBy}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation}
 }
 func InboundRelationshipKinds() []graph.Kind {
 	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToEntraUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO}

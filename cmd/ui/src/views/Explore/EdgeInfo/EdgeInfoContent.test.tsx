@@ -181,7 +181,7 @@ describe('EdgeInfoContent', () => {
         expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Collected by BloodHound:/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
 
         //The whole app does not crash and require a refresh
         expect(

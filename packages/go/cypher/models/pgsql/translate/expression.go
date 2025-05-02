@@ -48,7 +48,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) erro
 	} else {
 		switch typedTranslatedAtom := translatedAtom.(type) {
 		case pgsql.Identifier:
-			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbol); err != nil {
 				return err
 			} else {
 				s.treeTranslator.PushOperand(pgsql.CompoundIdentifier{typedTranslatedAtom, pgsql.ColumnProperties})
@@ -60,7 +60,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) erro
 			}
 
 		case pgsql.FunctionCall:
-			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbol); err != nil {
 				return err
 			} else if componentName, typeOK := fieldIdentifierLiteral.Value.(string); !typeOK {
 				return fmt.Errorf("expected a string component name in translated literal but received type: %T", fieldIdentifierLiteral.Value)
