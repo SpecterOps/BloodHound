@@ -1886,7 +1886,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 				TargetType: targetAZRole.Label,
 			}, IngestibleRel{
 				RelProps: map[string]any{},
-				RelType:  azure.AZRoleApproval,
+				RelType:  azure.AZRoleApprover,
 			}))
 		}
 	}
@@ -1902,7 +1902,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 				TargetType: targetAZRole.Label,
 			}, IngestibleRel{
 				RelProps: map[string]any{},
-				RelType:  azure.AZRoleApproval,
+				RelType:  azure.AZRoleApprover,
 			}))
 		}
 	}
@@ -1919,7 +1919,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 			TargetType: targetAZRole.Label,
 		}, IngestibleRel{
 			RelProps: map[string]any{},
-			RelType:  azure.AZRoleApproval,
+			RelType:  azure.AZRoleApprover,
 		}))
 	}
 

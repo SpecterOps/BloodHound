@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package ein
 
 import (
@@ -71,24 +87,24 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		assert.Equal(t, azure.User, rels[0].SourceType)
 		assert.Equal(t, azure.Role, rels[0].TargetType)
 		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target)
-		assert.Equal(t, azure.AZRoleApproval, rels[0].RelType)
+		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 
 		assert.Equal(t, "USER-APPROVER-2", rels[1].Source)
 		assert.Equal(t, azure.User, rels[1].SourceType)
 		assert.Equal(t, azure.Role, rels[1].TargetType)
 		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target)
-		assert.Equal(t, azure.AZRoleApproval, rels[1].RelType)
+		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
 
 		assert.Equal(t, "GROUP-APPROVER-1", rels[2].Source)
 		assert.Equal(t, azure.Group, rels[2].SourceType)
 		assert.Equal(t, azure.Role, rels[2].TargetType)
 		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target)
-		assert.Equal(t, azure.AZRoleApproval, rels[2].RelType)
+		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
 
 		assert.Equal(t, "GROUP-APPROVER-2", rels[3].Source)
 		assert.Equal(t, azure.Group, rels[3].SourceType)
 		assert.Equal(t, azure.Role, rels[3].TargetType)
 		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target)
-		assert.Equal(t, azure.AZRoleApproval, rels[3].RelType)
+		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
 	})
 }

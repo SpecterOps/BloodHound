@@ -792,10 +792,10 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
-AZRoleApproval: types.#Kind & {
-	symbol:			"AZRoleApproval"
+AZRoleApprover: types.#Kind & {
+	symbol:			"AZRoleApprover"
 	schema:			"azure"
-	representation:	"AZRoleApproval"
+	representation:	"AZRoleApprover"
 }
 
 RelationshipKinds: [
@@ -846,7 +846,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
-	AZRoleApproval,
+	AZRoleApprover,
 ]
 
 AppRoleTransitRelationshipKinds: [
