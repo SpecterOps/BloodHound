@@ -22,22 +22,17 @@ import {
     ObjectInfoFields,
     SearchValue,
     formatObjectInfoFields,
-    searchbarActions,
     useExploreParams,
-    useFeatureFlag,
     useFetchEntityProperties,
     useObjectInfoPanelContext,
 } from 'bh-shared-ui';
 import React, { useEffect } from 'react';
 import usePreviousValue from 'src/hooks/usePreviousValue';
-import { useAppDispatch } from 'src/store';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeType, databaseId }) => {
     const { setExploreParams } = useExploreParams();
-    const { data: flag } = useFeatureFlag('back_button_support');
-    const dispatch = useAppDispatch();
     const { isObjectInfoPanelOpen, setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { entityProperties, informationAvailable, isLoading, isError } = useFetchEntityProperties({
         objectId: id,
@@ -76,11 +71,7 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(entityProperties);
 
     const handleSourceNodeSelected = (sourceNode: SearchValue) => {
-        if (flag?.enabled) {
-            setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
-        } else {
-            dispatch(searchbarActions.sourceNodeSelected(sourceNode));
-        }
+        setExploreParams({ primarySearch: sourceNode.objectid, searchType: 'node' });
     };
 
     return (
