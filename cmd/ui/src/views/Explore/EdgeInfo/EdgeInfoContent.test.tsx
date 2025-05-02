@@ -21,15 +21,6 @@ import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from 'src/test-utils';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 
-const useExploreParamsSpy = vi.spyOn(bhSharedUi, 'useExploreParams');
-const mockSetExploreParams = vi.fn();
-const testSelectedItem = 'fake_edge_id';
-useExploreParamsSpy.mockReturnValue({
-    expandedPanelSections: [],
-    selectedItem: testSelectedItem,
-    setExploreParams: mockSetExploreParams,
-} as any);
-
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
         return res(
@@ -208,8 +199,11 @@ describe('EdgeInfoContent', () => {
     });
 
     describe('EdgeInfoContent support for Deep Linking', () => {
+        const test_id = 'test_id';
         const setup = () => {
-            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeADCSESC4} />);
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeADCSESC4} />, {
+                route: `?selectedItem=${test_id}`,
+            });
             const user = userEvent.setup();
 
             server.use(
@@ -238,11 +232,10 @@ describe('EdgeInfoContent', () => {
             const compositionAccordion = screen.getByText('Composition');
             await user.click(compositionAccordion);
 
-            await waitFor(() =>
-                expect(mockSetExploreParams).toBeCalledWith(
-                    expect.objectContaining({ searchType: 'composition', relationshipQueryItemId: testSelectedItem })
-                )
-            );
+            await waitFor(() => {
+                expect(window.location.search).toContain('searchType=composition');
+            });
+            expect(window.location.search).toContain(`relationshipQueryItemId=${test_id}`);
         });
         it('calls setExploreParams with only the expandedSection label when selecting any accordion that is not composition', async () => {
             const { user, screen } = setup();
@@ -250,11 +243,9 @@ describe('EdgeInfoContent', () => {
             const generalAccordion = screen.getByText('General');
             await user.click(generalAccordion);
 
-            await waitFor(() => expect(mockSetExploreParams).toBeCalledWith({ expandedPanelSections: ['general'] }));
-            expect(mockSetExploreParams).not.toBeCalledWith({
-                searchType: null,
-                relationshipQueryItemId: testSelectedItem,
-            });
+            await waitFor(() => expect(window.location.search).toContain('expandedPanelSections=general'));
+            expect(window.location.search).not.toContain('searchType');
+            expect(window.location.search).not.toContain(`relationshipQueryItemId=${test_id}`);
         });
     });
 });

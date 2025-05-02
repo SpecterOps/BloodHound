@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { Route, Routes } from 'react-router-dom';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
 import { render, screen } from 'src/test-utils';
@@ -41,8 +40,6 @@ const TestRoutes = () => (
 
 describe('AuthenticatedRoute', () => {
     it('when session token or user are null, redirects to /login', () => {
-        const history = createMemoryHistory({ initialEntries: [ROUTE_HOME] });
-
         render(<TestRoutes />, {
             initialState: {
                 auth: {
@@ -50,7 +47,7 @@ describe('AuthenticatedRoute', () => {
                     user: null,
                 },
             },
-            history,
+            route: ROUTE_HOME,
         });
 
         expect(screen.queryByText(AUTHENTICATED_COPY)).not.toBeInTheDocument();

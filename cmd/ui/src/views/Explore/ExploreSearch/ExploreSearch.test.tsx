@@ -166,43 +166,37 @@ describe('ExploreSearch sets searchType on tab changing', async () => {
 // Clicking a new tab in these tests cause a query param update but not an actual tab change -- maybe a bad interaction
 // between createMemoryHistory and useExploreParams
 describe('ExploreSearch interaction', () => {
-    it.todo(
-        'when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab',
-        async () => {
-            const { screen, user } = await setup();
-            const searchInput = screen.getByPlaceholderText('Search Nodes');
-            const userSuppliedSearchTerm = 'admin';
-            await user.type(searchInput, userSuppliedSearchTerm);
+    it('when user performs a single node search, the selected node carries over to the `start node` input field on the pathfinding tab', async () => {
+        const { screen, user } = await setup();
+        const searchInput = screen.getByPlaceholderText('Search Nodes');
+        const userSuppliedSearchTerm = 'admin';
+        await user.type(searchInput, userSuppliedSearchTerm);
 
-            // select first option from list and check that text field input is updated
-            const firstOption = await screen.findByRole('option', { name: /admin/i });
-            await user.click(firstOption);
-            expect(searchInput).toHaveValue(userSuppliedSearchTerm);
+        // select first option from list and check that text field input is updated
+        const firstOption = await screen.findByRole('option', { name: /admin/i });
+        await user.click(firstOption);
+        expect(searchInput).toHaveValue(userSuppliedSearchTerm);
 
-            const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-            await act(async () => user.click(pathfindingTab));
+        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+        await user.click(pathfindingTab);
 
-            const startNodeInputField = screen.getByPlaceholderText(/start node/i);
-            expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
-        }
-    );
+        const startNodeInputField = screen.getByPlaceholderText(/start node/i);
+        expect(startNodeInputField).toHaveValue(userSuppliedSearchTerm);
+    });
 
-    it.todo(
-        'when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab',
-        async () => {
-            const { screen, user } = await setup();
-            const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
-            await user.click(pathfindingTab);
+    it('when user performs a pathfinding search, the selection for the start node is carried over to the `search` tab', async () => {
+        const { screen, user } = await setup();
+        const pathfindingTab = screen.getByRole('tab', { name: /pathfinding/i });
+        await user.click(pathfindingTab);
 
-            const startInput = screen.getByPlaceholderText(/start node/i);
-            await user.type(startInput, 'admin');
-            await user.click(await screen.findByRole('option', { name: /admin/i }));
+        const startInput = screen.getByPlaceholderText(/start node/i);
+        await user.type(startInput, 'admin');
+        await user.click(await screen.findByRole('option', { name: /admin/i }));
 
-            const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
-            await user.click(exploreSearchTab);
+        const exploreSearchTab = screen.getByRole('tab', { name: /search/i });
+        await user.click(exploreSearchTab);
 
-            const searchInput = screen.getByPlaceholderText('Search Nodes');
-            expect(searchInput).toHaveValue('admin');
-        }
-    );
+        const searchInput = screen.getByPlaceholderText('Search Nodes');
+        expect(searchInput).toHaveValue('admin');
+    });
 });
