@@ -233,7 +233,7 @@ func stringToInt(itemProps map[string]any, keyName string) {
 	}
 }
 
-func ParseObjectContainer(item IngestBase, itemType graph.Kind) []IngestibleRelationship {
+func ParseObjectContainer(item IngestBase, itemType graph.Kind, isConfigurationNC bool) []IngestibleRelationship {
 	rels := make([]IngestibleRelationship, 0)
 	containingPrincipal := item.ContainedBy
 	if containingPrincipal.ObjectIdentifier != "" {
@@ -252,7 +252,7 @@ func ParseObjectContainer(item IngestBase, itemType graph.Kind) []IngestibleRela
 			},
 		))
 
-		if !item.IsACLProtected {
+		if !item.IsACLProtected && !isConfigurationNC { // The Configuration NC is it's own partition and does not inherit ACEs
 			rels = append(rels, NewIngestibleRelationship(
 				IngestibleSource{
 					Source:     containingPrincipal.ObjectIdentifier,

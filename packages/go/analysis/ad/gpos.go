@@ -232,11 +232,13 @@ func GetCanApplyGPOComposition(ctx context.Context, db graph.Database, edge *gra
 		traversal.Plan{
 			Root: startNode,
 			Driver: traversal.NewPattern().
-				OutboundWithDepth(1, 1,
-					query.And(
-						query.Kind(query.Relationship(), ad.WriteGPLink, ad.GenericWrite, ad.GenericAll, ad.WriteDACL, ad.Owns, ad.WriteOwner),
-						query.KindIn(query.End(), ad.OU, ad.Domain),
-					)).
+				OutboundWithDepth(1, 1, query.And(
+					query.KindIn(query.Relationship(), ad.WriteGPLink, ad.GenericWrite, ad.GenericAll, ad.WriteDACL, ad.Owns, ad.WriteOwner),
+					query.KindIn(query.End(), ad.OU, ad.Domain),
+				)).
+				OutboundWithDepth(0, 0, query.And(
+					query.KindIn(query.Relationship(), ad.Contains),
+				)).
 				Outbound(query.And(
 					query.KindIn(query.Relationship(), ad.Contains),
 					query.Equals(query.EndID(), edge.EndID),
