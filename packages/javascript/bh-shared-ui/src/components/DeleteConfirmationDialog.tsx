@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Stack, Typography } from '@mui/material';
 import React from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -31,12 +30,12 @@ const DeleteConfirmationDialog: React.FC<{
             open={open}
             title={`Delete ${itemName}?`}
             text={
-                <Stack gap={1}>
-                    <Typography>
+                <div>
+                    <p className='mb-3'>
                         Continuing onwards will delete {itemName} and all associated configurations and findings.
-                    </Typography>
-                    <Typography className='font-bold error text-red'>Warning: This change is irreversible.</Typography>
-                </Stack>
+                    </p>
+                    <p className='font-bold text-red'>Warning: This change is irreversible.</p>
+                </div>
             }
             challengeTxt={`Delete this ${itemType}`}
             onCancel={onCancel}
