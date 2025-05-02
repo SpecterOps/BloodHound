@@ -18,7 +18,7 @@ With WriteDACL over a group, grant yourself the right to add members to the grou
 
 Add-DomainObjectAcl -TargetIdentity "Domain Admins" -Rights WriteMembers
 
-See the abuse info for AddMembers edge for more information about execution the attack from there.
+See the abuse info for [AddMembers](/resources/edges/add-members) for more information about execution the attack from there.
 
 **Users**
 
@@ -26,7 +26,7 @@ With WriteDACL over a user, grant yourself full control of the user object:
 
 Add-DomainObjectAcl -TargetIdentity harmj0y -Rights All
 
-See the abuse info for GenericAll over a user for more information about how to continue from there.
+See the abuse info for [GenericAll](/resources/edges/generic-all) over a user for more information about how to continue from there.
 
 **Computers**
 
@@ -34,15 +34,15 @@ With WriteDACL over a computer object, grant yourself full control of the comput
 
 Add-DomainObjectAcl -TargetIdentity windows1 -Rights All
 
-See the abuse info for GenericAll over a computer for more information about how to continue from there.
+See the abuse info for [GenericAll](/resources/edges/generic-all) over a computer for more information about how to continue from there.
 
 **Domains**
 
-With WriteDACL against a domain object, grant yourself the ability to DCSync:
+With WriteDACL against a domain object, grant full control of the domain:
 
-Add-DomainObjectAcl -TargetIdentity testlab.local -Rights DCSync
+Add-DomainObjectAcl -TargetIdentity testlab.local -Rights All
 
-Then perform the DCSync attack.
+See the abuse info for [GenericAll](/resources/edges/generic-all) over a domain for more information about how to continue from there.
 
 **GPOs**
 
@@ -50,7 +50,7 @@ With WriteDACL over a GPO, grant yourself full control of the GPO:
 
 Add-DomainObjectAcl -TargetIdentity TestGPO -Rights All
 
-Then edit the GPO to take over an object the GPO applies to.
+See the abuse info for [GenericAll](/resources/edges/generic-all) over a GPO for more information about how to continue from there.
 
 **OUs**
 
@@ -58,7 +58,7 @@ With WriteDACL over an OU, grant yourself full control of the OU:
 
 Add-DomainObjectAcl -TargetIdentity (OU GUID) -Rights All
 
-Then add a new ACE to the OU that inherits down to child objects to take over those child objects.
+See the abuse info for [GenericAll](/resources/edges/generic-all) over an OU for more information about how to continue from there.
 
 Opsec Considerations
 ---------------------

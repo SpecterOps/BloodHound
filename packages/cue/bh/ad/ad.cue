@@ -1736,6 +1736,7 @@ SharedRelationshipKinds: [
 	AddKeyCredentialLink,
 	SyncLAPSPassword,
 	WriteAccountRestrictions,
+	WriteGPLink,
 	GoldenCert,
 	ADCSESC1,
 	ADCSESC3,
@@ -1784,5 +1785,7 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
 ]

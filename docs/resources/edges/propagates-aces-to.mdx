@@ -1,0 +1,22 @@
+---
+title: PropagatesACEsTo
+---
+
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+The PropagatesACEsTo relationship illustrates how permissions (ACEs) configured on a container node can propagate to a child node, if ACL inheritance is enabled on the child node.
+
+## Abuse Info
+
+Control over the container node DACL enables an attacker to compromise the child node by creating ACEs, such as GenericAll, with inheritance enabled, allowing those permissions to apply to the child node.
+
+Refer to the inbound edges on the container node for more details.
+
+## Opsec Considerations
+
+There is no opsec information for this edge.
+
+## References
+
+* [Microsoft: Inheritance and Delegation of Administration](https://learn.microsoft.com/en-us/windows/win32/ad/inheritance-and-delegation-of-administration)
+* [The Hacker Recipes: Grant rights](https://www.thehacker.recipes/ad/movement/dacl/grant-rights)
