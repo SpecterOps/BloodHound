@@ -14,103 +14,107 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createMemoryHistory } from 'history';
+import { Route, Routes } from 'react-router-dom';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_HOME, ROUTE_LOGIN } from 'src/routes/constants';
 import { render, screen } from 'src/test-utils';
 import AuthenticatedRoute from './AuthenticatedRoute';
 
+const AUTHENTICATED_COPY = 'authenticated';
+const LOGIN_PAGE_COPY = 'login page';
+const EXPIRED_PASSWORD_PAGE_COPY = 'expired password page';
+
+const TestRoutes = () => (
+    <Routes>
+        <Route
+            path={ROUTE_HOME}
+            element={
+                <AuthenticatedRoute>
+                    <div>{AUTHENTICATED_COPY}</div>
+                </AuthenticatedRoute>
+            }
+        />
+        <Route path={ROUTE_LOGIN} element={<div>{LOGIN_PAGE_COPY}</div>} />
+        <Route path={ROUTE_EXPIRED_PASSWORD} element={<div>{EXPIRED_PASSWORD_PAGE_COPY}</div>} />
+    </Routes>
+);
+
 describe('AuthenticatedRoute', () => {
     it('when session token or user are null, redirects to /login', () => {
-        render(
-            <AuthenticatedRoute>
-                <div>authenticated</div>
-            </AuthenticatedRoute>,
-            {
-                initialState: {
-                    auth: {
-                        sessionToken: null,
-                        user: null,
-                    },
-                },
-                route: ROUTE_HOME,
-            }
-        );
+        const history = createMemoryHistory({ initialEntries: [ROUTE_HOME] });
 
-        expect(screen.queryByText('authenticated')).not.toBeInTheDocument();
+        render(<TestRoutes />, {
+            initialState: {
+                auth: {
+                    sessionToken: null,
+                    user: null,
+                },
+            },
+            history,
+        });
+
+        expect(screen.queryByText(AUTHENTICATED_COPY)).not.toBeInTheDocument();
+        expect(screen.queryByText(LOGIN_PAGE_COPY)).toBeInTheDocument();
         expect(window.location.pathname).toBe(ROUTE_LOGIN);
     });
-
     it('when password is expired and not on password reset page, redirects to password reset page', () => {
-        render(
-            <AuthenticatedRoute>
-                <div>authenticated</div>
-            </AuthenticatedRoute>,
-            {
-                initialState: {
-                    auth: {
-                        sessionToken: 'validToken',
-                        user: {
-                            id: 'validUserId',
-                            AuthSecret: {
-                                expires_at: '1970-01-01T00:00:00Z', // expired
-                            },
+        render(<TestRoutes />, {
+            initialState: {
+                auth: {
+                    sessionToken: 'validToken',
+                    user: {
+                        id: 'validUserId',
+                        AuthSecret: {
+                            expires_at: '1970-01-01T00:00:00Z', // expired
                         },
                     },
                 },
-                route: ROUTE_HOME,
-            }
-        );
+            },
+            route: ROUTE_HOME,
+        });
 
-        expect(screen.queryByText('authenticated')).not.toBeInTheDocument();
+        expect(screen.queryByText(AUTHENTICATED_COPY)).not.toBeInTheDocument();
+        expect(screen.queryByText(EXPIRED_PASSWORD_PAGE_COPY)).toBeInTheDocument();
         expect(window.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
     });
 
     it('when password is expired and on password reset page, no redirect occurs', () => {
-        render(
-            <AuthenticatedRoute>
-                <div>expired password page</div>
-            </AuthenticatedRoute>,
-            {
-                initialState: {
-                    auth: {
-                        sessionToken: 'validToken',
-                        user: {
-                            id: 'validUserId',
-                            AuthSecret: {
-                                expires_at: '1970-01-01T00:00:00Z', // expired
-                            },
+        render(<TestRoutes />, {
+            initialState: {
+                auth: {
+                    sessionToken: 'validToken',
+                    user: {
+                        id: 'validUserId',
+                        AuthSecret: {
+                            expires_at: '1970-01-01T00:00:00Z', // expired
                         },
                     },
                 },
-                route: ROUTE_EXPIRED_PASSWORD,
-            }
-        );
+            },
+            route: ROUTE_EXPIRED_PASSWORD,
+        });
 
-        expect(screen.queryByText('expired password page')).toBeInTheDocument();
+        expect(screen.queryByText(EXPIRED_PASSWORD_PAGE_COPY)).toBeInTheDocument();
         expect(window.location.pathname).toBe(ROUTE_EXPIRED_PASSWORD);
     });
 
     it('when password is not expired no redirect occurs', () => {
-        render(
-            <AuthenticatedRoute>
-                <div>authenticated</div>
-            </AuthenticatedRoute>,
-            {
-                initialState: {
-                    auth: {
-                        sessionToken: 'validToken',
-                        user: {
-                            id: 'validUserId',
-                            AuthSecret: {
-                                expires_at: '9999-01-01T00:00:00Z', // not expired
-                            },
+        render(<TestRoutes />, {
+            initialState: {
+                auth: {
+                    sessionToken: 'validToken',
+                    user: {
+                        id: 'validUserId',
+                        AuthSecret: {
+                            expires_at: '9999-01-01T00:00:00Z', // not expired
                         },
                     },
                 },
-                route: ROUTE_HOME,
-            }
-        );
+            },
+            route: ROUTE_HOME,
+        });
 
-        expect(screen.queryByText('authenticated')).toBeInTheDocument();
+        expect(screen.queryByText(AUTHENTICATED_COPY)).toBeInTheDocument();
         expect(window.location.pathname).toBe(ROUTE_HOME);
     });
 });
