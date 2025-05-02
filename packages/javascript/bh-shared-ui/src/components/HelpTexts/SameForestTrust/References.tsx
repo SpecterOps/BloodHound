@@ -54,14 +54,14 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://support.bloodhoundenterprise.io/hc/en-us/sections/16600927744411-Edges'>
+                href='https://bloodhound.specterops.io/resources/edges/abuse-tgt-delegation'>
                 AbuseTGTDelegation
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://support.bloodhoundenterprise.io/hc/en-us/sections/16600927744411-Edges'>
+                href='https://bloodhound.specterops.io/resources/edges/spoof-sid-history'>
                 SpoofSIDHistory
             </Link>
             <br />

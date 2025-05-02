@@ -1832,6 +1832,28 @@ func ConvertAzureAutomationAccount(account models.AutomationAccount, ingestTime 
 	return node, relationships
 }
 
+func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligibilityScheduleInstance) []IngestibleRelationship {
+	id := strings.ToUpper(fmt.Sprintf("%s@%s", instance.RoleDefinitionId, instance.TenantId))
+
+	relationships := make([]IngestibleRelationship, 0)
+	relationships = append(relationships, NewIngestibleRelationship(
+		IngestibleSource{
+			Source:     strings.ToUpper(instance.PrincipalId),
+			SourceType: azure.Entity,
+		},
+		IngestibleTarget{
+			Target:     id,
+			TargetType: azure.Role,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.AZRoleEligible,
+		},
+	))
+
+	return relationships
+}
+
 // ConvertAzureRoleManagementPolicyAssignment will create, or update the properties if it exists, an AZRole of a tenant
 // with the supplied RoleManagementPolicyAssignment properties
 // If EndUserAssignmentGroupApprovers contains GUIDs: an edge will be created from each group to the created AZRole

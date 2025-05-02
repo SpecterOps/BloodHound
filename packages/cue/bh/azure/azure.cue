@@ -470,7 +470,7 @@ LogicApp: types.#Kind & {
 }
 
 AutomationAccount: types.#Kind & {
-  symbol:         "AutomationAccount"
+  	symbol:         "AutomationAccount"
 	schema:         "azure"
 	representation: "AZAutomationAccount"
 }
@@ -792,6 +792,12 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
+AZRoleEligible: types.#Kind & {
+	symbol: "AZRoleEligible"
+	schema: "azure"
+	representation: "AZRoleEligible"
+}
+
 AZRoleApprover: types.#Kind & {
 	symbol:			"AZRoleApprover"
 	schema:			"azure"
@@ -846,6 +852,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	AZRoleEligible,
 	AZRoleApprover,
 ]
 
