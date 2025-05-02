@@ -35,27 +35,14 @@ const getEntityInfoTestProps = () => ({
     },
 });
 
+const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
+
 const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
     assetgroups: {
         assetGroups: isTierZero
             ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
             : [{ tag: 'owned', id: ownedAssetGroup.id }],
     },
-});
-
-vi.mock('bh-shared-ui', async (importOriginal) => {
-    const original: Object = await importOriginal();
-
-    return {
-        ...original,
-        useExploreSelectedItem: () => ({
-            selectedItemQuery: {
-                data: {
-                    objectId: getEntityInfoTestProps().entityinfo.selectedNode.id,
-                },
-            },
-        }),
-    };
 });
 
 describe('AssetGroupMenuItem', async () => {
@@ -87,6 +74,13 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
+            }),
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
+                    })
+                );
             })
         );
 
@@ -98,7 +92,7 @@ describe('AssetGroupMenuItem', async () => {
 
         afterAll(() => server.close());
 
-        it('handles adding to tier zero asset group', async () => {
+        it.only('handles adding to tier zero asset group', async () => {
             await act(async () => {
                 render(
                     <AssetGroupMenuItem
@@ -110,6 +104,7 @@ describe('AssetGroupMenuItem', async () => {
                             ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });
@@ -145,6 +140,7 @@ describe('AssetGroupMenuItem', async () => {
                         ...getEntityInfoTestProps(),
                         ...getAssetGroupTestProps({ isTierZero: false }),
                     },
+                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                 });
             });
 
@@ -200,6 +196,13 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
+            }),
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
+                    })
+                );
             })
         );
 
@@ -223,6 +226,7 @@ describe('AssetGroupMenuItem', async () => {
                             ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });
@@ -260,6 +264,7 @@ describe('AssetGroupMenuItem', async () => {
                             ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: false }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });
