@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/ein
+package golang
 
-go 1.23.0
+import (
+	"os"
 
-toolchain go1.23.8
-
-require (
-	github.com/bloodhoundad/azurehound/v2 v2.4.1
-	github.com/stretchr/testify v1.10.0
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/gofrs/uuid v4.4.0+incompatible // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
+// Running checks for unused go imports and formatting .go files
+func RunGoImports(env environment.Environment) error {
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	cmd := "goimports"
+	args := []string{"-w", rootDir}
+
+	if err := cmdrunner.Run(cmd, args, rootDir, env); err != nil {
+		return err
+	}
+
+	return nil
+}
