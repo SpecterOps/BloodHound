@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package generate
+package goimports
 
 import (
 	"flag"
@@ -23,34 +23,31 @@ import (
 	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/redoc"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
 const (
-	Name  = "generate"
-	Usage = "Run code generation in current workspace"
+	Name  = "goimports"
+	Usage = "Run goimports to format .go files in the current directory"
 )
 
 type command struct {
 	env environment.Environment
 }
 
-// Create new instance of command to capture given environment
+// Create a new instance of goimports command within the current environment
 func Create(env environment.Environment) *command {
 	return &command{
 		env: env,
 	}
 }
 
-// Usage of command
+// Usage of the command
 func (s *command) Usage() string {
 	return Usage
 }
 
-// Name of command
+// Name of the command
 func (s *command) Name() string {
 	return Name
 }
@@ -61,7 +58,7 @@ func (s *command) Parse(cmdIndex int) error {
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
-		fmt.Fprintf(w, "%s\n\nUsage: %s %s [OPTIONS]\n\nOptions:\n", Usage, filepath.Base(os.Args[0]), Name)
+		fmt.Fprintf(w, "%s\n\nUsage: %s %s\n", Usage, filepath.Base(os.Args[0]), Name)
 		cmd.PrintDefaults()
 	}
 
@@ -73,21 +70,10 @@ func (s *command) Parse(cmdIndex int) error {
 	return nil
 }
 
-// Run generate command
+// Run goimports command
 func (s *command) Run() error {
-	if paths, err := workspace.FindPaths(s.env); err != nil {
-		return fmt.Errorf("finding workspace root: %w", err)
-	} else if err := workspace.GenerateSchema(paths.Root, s.env); err != nil {
-		return fmt.Errorf("generating schema for workspace: %w", err)
-	} else if err := golang.WorkspaceGenerate(paths.GoModules, s.env); err != nil {
-		return fmt.Errorf("generating code for workspace: %w", err)
-	} else if err := golang.RunGoImports(s.env); err != nil {
+	if err := golang.RunGoImports(s.env); err != nil {
 		return fmt.Errorf("running goimports cmd: %w", err)
-	} else if err := yarn.Format(paths.Root, s.env); err != nil {
-		return fmt.Errorf("formatting javascript: %w", err)
-	} else if err := redoc.GenerateOpenAPIDoc(paths.Root, paths.Submodules, s.env); err != nil {
-		return fmt.Errorf("generating openapi documentation: %w", err)
-	} else {
-		return nil
 	}
+	return nil
 }
