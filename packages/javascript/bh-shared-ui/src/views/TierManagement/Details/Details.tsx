@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorsListItem, AssetGroupTagTypeTier, AssetGroupTagsListItem } from 'js-client-library';
-import { FC, useMemo, useState } from 'react';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
+import { FC, useState } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
@@ -97,16 +97,6 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
-    const tierTags = useMemo(() => {
-        if (!tagsQuery.data) return [];
-        return tagsQuery.data.filter((tag) => tag.type === AssetGroupTagTypeTier);
-    }, [tagsQuery.data]);
-
-    const labelTags = useMemo(() => {
-        if (!tagsQuery.data) return [];
-        return tagsQuery.data.filter((tag) => tag.type !== AssetGroupTagTypeTier);
-    }, [tagsQuery.data]);
-
     return (
         <div>
             <Tabs
@@ -171,7 +161,6 @@ const Details: FC = () => {
                         <DetailsList
                             title={activeTab === 'tiers' ? 'Tiers' : 'Labels'}
                             listQuery={tagsQuery}
-                            filteredData={activeTab === 'tiers' ? tierTags : labelTags}
                             selected={tagId}
                             onSelect={(id) => {
                                 navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${id}`);

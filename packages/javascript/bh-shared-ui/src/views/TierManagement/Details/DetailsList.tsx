@@ -15,7 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagCounts, AssetGroupTagSelectorsCounts } from 'js-client-library';
+import {
+    AssetGroupTag,
+    AssetGroupTagCounts,
+    AssetGroupTagSelectorsCounts,
+    AssetGroupTagTypeTier,
+} from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -23,7 +28,7 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, itemSkeletons } from './utils';
 
-type TagsListItem = {
+type TagsListItem = AssetGroupTag & {
     name: string;
     id: number;
     counts?: AssetGroupTagCounts;
@@ -44,7 +49,6 @@ type DetailsListProps = {
     listQuery: ListQuery;
     selected: string | undefined;
     onSelect: (id: number) => void;
-    filteredData?: DetailsList;
 };
 
 const isTagListItem = (listItem: TagsListItem | SelectorsListItem): listItem is TagsListItem => {
@@ -78,8 +82,22 @@ const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.Reac
  * @param {(id:number) => void} props.onSelect The click handler that should be called when an item from this list is selected. This is primarily being used to set the selected id state in the parent Details component
  * @returns The component that displays a list of entities for the tier management page
  */
-export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, filteredData, selected, onSelect }) => {
+export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+    const getFilteredList = (list: DetailsList): DetailsList => {
+        if (title === 'Tiers') {
+            return list.filter(
+                (item): item is TagsListItem => isTagListItem(item) && item.type === AssetGroupTagTypeTier
+            );
+        } else if (title === 'Labels') {
+            return list.filter(
+                (item): item is TagsListItem => isTagListItem(item) && item.type !== AssetGroupTagTypeTier
+            );
+        } else {
+            return list;
+        }
+    };
 
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
@@ -118,7 +136,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, filteredDa
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
-                        (filteredData ?? listQuery.data)
+                        getFilteredList(listQuery.data)
                             ?.sort((a, b) => {
                                 switch (sortOrder) {
                                     case 'asc':
