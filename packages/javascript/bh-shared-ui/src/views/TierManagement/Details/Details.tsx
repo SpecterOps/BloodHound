@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
@@ -74,6 +74,7 @@ export const getEditButtonState = (
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tagId = '1', selectorId, memberId } = useParams();
+    const [activeTab, setActiveTab] = useState<'tiers' | 'labels'>('tiers');
 
     const tagsQuery = useQuery({
         queryKey: ['asset-group-tags'],
@@ -98,6 +99,16 @@ const Details: FC = () => {
 
     return (
         <div>
+            <Tabs
+                defaultValue='tiers'
+                className='w-full'
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as 'tiers' | 'labels')}>
+                <TabsList className='w-full flex justify-start'>
+                    <TabsTrigger value='tiers'>Tiers</TabsTrigger>
+                    <TabsTrigger value='labels'>Labels</TabsTrigger>
+                </TabsList>
+            </Tabs>
             <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
@@ -148,7 +159,7 @@ const Details: FC = () => {
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 h-full *:grow-0 *:basis-1/3'>
                     <div>
                         <DetailsList
-                            title='Tiers'
+                            title={activeTab === 'tiers' ? 'Tiers' : 'Labels'}
                             listQuery={tagsQuery}
                             selected={tagId}
                             onSelect={(id) => {
