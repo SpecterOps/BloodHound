@@ -22,28 +22,43 @@ import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 
-describe('AssetGroupMenuItem', async () => {
-    const tierZeroAssetGroup = { id: 1, name: 'high value' };
-    const ownedAssetGroup = { id: 2, name: 'owned' };
+const tierZeroAssetGroup = { id: 1, name: 'high value' };
+const ownedAssetGroup = { id: 2, name: 'owned' };
 
-    const getEntityInfoTestProps = () => ({
-        entityinfo: {
-            selectedNode: {
-                name: 'foo',
-                id: '1234',
-                type: 'User',
+const getEntityInfoTestProps = () => ({
+    entityinfo: {
+        selectedNode: {
+            name: 'foo',
+            id: '1234',
+            type: 'User',
+        },
+    },
+});
+
+const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
+    assetgroups: {
+        assetGroups: isTierZero
+            ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
+            : [{ tag: 'owned', id: ownedAssetGroup.id }],
+    },
+});
+
+vi.mock('bh-shared-ui', async (importOriginal) => {
+    const original: Object = await importOriginal();
+
+    return {
+        ...original,
+        useExploreSelectedItem: () => ({
+            selectedItemQuery: {
+                data: {
+                    objectId: getEntityInfoTestProps().entityinfo.selectedNode.id,
+                },
             },
-        },
-    });
+        }),
+    };
+});
 
-    const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
-        assetgroups: {
-            assetGroups: isTierZero
-                ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
-                : [{ tag: 'owned', id: ownedAssetGroup.id }],
-        },
-    });
-
+describe('AssetGroupMenuItem', async () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
