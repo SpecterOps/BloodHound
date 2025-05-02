@@ -5406,28 +5406,26 @@
                       "properties": {
                         "selectors": {
                           "type": "array",
-                          "items": [
-                            {
-                              "allOf": [
-                                {
-                                  "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
-                                },
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "counts": {
-                                      "type": "object",
-                                      "properties": {
-                                        "members": {
-                                          "type": "integer"
-                                        }
+                          "items": {
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "counts": {
+                                    "type": "object",
+                                    "properties": {
+                                      "members": {
+                                        "type": "integer"
                                       }
                                     }
                                   }
                                 }
-                              ]
-                            }
-                          ]
+                              }
+                            ]
+                          }
                         }
                       }
                     }
