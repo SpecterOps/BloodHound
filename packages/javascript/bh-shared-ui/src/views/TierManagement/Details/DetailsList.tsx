@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagCounts, AssetGroupTagSelectorsCounts } from 'js-client-library';
+import { Badge, Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -23,40 +23,21 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, itemSkeletons } from './utils';
 
-type TagsListItem = {
-    name: string;
-    id: number;
-    counts?: AssetGroupTagCounts;
-};
-
-type SelectorsListItem = {
-    name: string;
-    id: number;
-    counts?: AssetGroupTagSelectorsCounts;
-};
-
-type DetailsList = TagsListItem[] | SelectorsListItem[];
-
-type ListQuery = UseQueryResult<DetailsList, unknown>;
-
-type DetailsListProps = {
-    title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: ListQuery;
-    selected: string | undefined;
-    onSelect: (id: number) => void;
-};
-
-const isTagListItem = (listItem: TagsListItem | SelectorsListItem): listItem is TagsListItem => {
+const isTagListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagsListItem => {
     if (listItem.counts === undefined) return false;
     return 'selectors' in listItem.counts;
 };
 
-const isSelectorsListItem = (listItem: TagsListItem | SelectorsListItem): listItem is SelectorsListItem => {
+const isSelectorsListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagSelectorsListItem => {
     if (listItem.counts === undefined) return false;
     return !('selectors' in listItem.counts);
 };
 
-const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.ReactNode => {
+const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem): React.ReactNode => {
     if (listItem.counts === undefined) {
         return null;
     } else if (isTagListItem(listItem)) {
@@ -68,6 +49,12 @@ const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.Reac
     }
 };
 
+type DetailsListProps = {
+    title: 'Selectors' | 'Tiers' | 'Labels';
+    listQuery: UseQueryResult<AssetGroupTagsListItem[]> | UseQueryResult<AssetGroupTagSelectorsListItem[]>;
+    selected: string | undefined;
+    onSelect: (id: number) => void;
+};
 /**
  * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
@@ -79,7 +66,6 @@ const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.Reac
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
             {title !== 'Tiers' ? (
@@ -129,6 +115,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                console.log('🚀 ~ .map ~ listItem:', listItem);
                                 return (
                                     <li
                                         key={listItem.id}
@@ -146,11 +133,21 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
-                                            <span
-                                                className='text-base truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]'
-                                                title={listItem.name}>
-                                                {listItem.name}
-                                            </span>
+                                            <div className='flex items-center'>
+                                                <div
+                                                    className='text-base truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]'
+                                                    title={listItem.name}>
+                                                    {listItem.name}
+                                                </div>
+                                                {isSelectorsListItem(listItem) && listItem.disabled_at && (
+                                                    <div className='ml-2 italic'>
+                                                        <Badge
+                                                            label='Disabled'
+                                                            className={'bg-neutral-light-5 dark:bg-neutral-dark-5'}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
                                             {getCountElement(listItem)}
                                         </Button>
                                     </li>
