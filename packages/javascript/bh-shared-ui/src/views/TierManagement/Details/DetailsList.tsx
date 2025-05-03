@@ -146,7 +146,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
-                                            <span className='text-base truncate max-w-[190px]'>{listItem.name}</span>
+                                            <span
+                                                className='text-base truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]'
+                                                title={listItem.name}>
+                                                {listItem.name}
+                                            </span>
                                             {getCountElement(listItem)}
                                         </Button>
                                     </li>
