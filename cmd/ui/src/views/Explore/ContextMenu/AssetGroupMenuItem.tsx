@@ -107,7 +107,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                     Add to {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (
-                    <ConfirmationDialog
+                    <ConfirmNodeChangesDialog
                         handleCancel={handleCloseConfirmation}
                         handleApply={handleAddToAssetGroup}
                         open={open}
@@ -126,7 +126,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                     Remove from {assetGroupName}
                 </MenuItem>
                 {isMenuItemForTierZero ? (
-                    <ConfirmationDialog
+                    <ConfirmNodeChangesDialog
                         handleCancel={() => setOpen(false)}
                         handleApply={handleRemoveFromAssetGroup}
                         open={open}
@@ -138,7 +138,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     }
 };
 
-const ConfirmationDialog: FC<{
+const ConfirmNodeChangesDialog: FC<{
     open: boolean;
     handleCancel: () => void;
     handleApply: () => void;

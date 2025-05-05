@@ -235,34 +235,31 @@ const Users: FC = () => {
                 open={enableUserDialogOpen}
                 text={'Are you sure you want to enable this user?'}
                 title={'Enable User'}
-                onClose={(response) => {
-                    if (response) {
-                        disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: false });
-                    }
+                onConfirm={() => {
+                    disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: false });
                     toggleEnableUserDialog();
                 }}
+                onCancel={toggleEnableUserDialog}
             />
             <ConfirmationDialog
                 open={disableUserDialogOpen}
                 text={'Are you sure you want to disable this user?'}
                 title={'Disable User'}
-                onClose={(response) => {
-                    if (response) {
-                        disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: true });
-                    }
+                onConfirm={() => {
+                    disableEnableUserMutation.mutate({ userId: selectedUserId!, disable: true });
                     toggleDisableUserDialog();
                 }}
+                onCancel={toggleDisableUserDialog}
             />
             <ConfirmationDialog
                 open={deleteUserDialogOpen}
                 text={'Are you sure you want to delete this user?'}
                 title={'Delete User'}
-                onClose={(response) => {
-                    if (response) {
-                        deleteUserMutation.mutate(selectedUserId!);
-                    }
+                onConfirm={() => {
+                    deleteUserMutation.mutate(selectedUserId!);
                     toggleDeleteUserDialog();
                 }}
+                onCancel={toggleCreateUserDialog}
             />
             <ConfirmationDialog
                 open={expireUserPasswordDialogOpen}
@@ -270,12 +267,11 @@ const Users: FC = () => {
                     "Are you sure you want to expire this user's password? This user will be prompted to change their password on next login."
                 }
                 title={'Force Password Reset'}
-                onClose={(response) => {
-                    if (response) {
-                        expireUserPasswordMutation.mutate(selectedUserId!);
-                    }
+                onConfirm={() => {
+                    expireUserPasswordMutation.mutate(selectedUserId!);
                     toggleExpireUserPasswordDialog();
                 }}
+                onCancel={toggleCreateUserDialog}
             />
             <Disable2FADialog
                 open={disable2FADialogOpen}

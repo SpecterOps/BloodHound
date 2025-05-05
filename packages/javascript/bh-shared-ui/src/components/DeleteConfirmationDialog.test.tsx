@@ -20,11 +20,18 @@ import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 
 describe('DeleteConfirmationDialog', () => {
     const user = userEvent.setup();
-    const testOnClose = vi.fn();
+    const testOnCancel = vi.fn();
+    const testOnConfirm = vi.fn();
 
     beforeEach(async () => {
         render(
-            <DeleteConfirmationDialog open={true} onClose={testOnClose} itemName='test-item' itemType='test-type' />
+            <DeleteConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onCancel={testOnCancel}
+                itemName='test-item'
+                itemType='test-type'
+            />
         );
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
     });
@@ -45,8 +52,8 @@ describe('DeleteConfirmationDialog', () => {
     it('should fire Cancel once with false', async () => {
         await user.click(screen.getByRole('button', { name: /cancel/i }));
 
-        expect(testOnClose).toHaveBeenCalledWith(false);
-        expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testOnCancel).toHaveBeenCalledTimes(1);
+        expect(testOnConfirm).toHaveBeenCalledTimes(0);
     });
 
     it('should fire Confirm once with true after typing challenge text', async () => {
@@ -54,7 +61,7 @@ describe('DeleteConfirmationDialog', () => {
         expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
         await user.click(screen.getByRole('button', { name: /confirm/i }));
 
-        expect(testOnClose).toHaveBeenCalledWith(true);
-        expect(testOnClose).toHaveBeenCalledTimes(1);
+        expect(testOnCancel).toHaveBeenCalledTimes(0);
+        expect(testOnConfirm).toHaveBeenCalledTimes(1);
     });
 });
