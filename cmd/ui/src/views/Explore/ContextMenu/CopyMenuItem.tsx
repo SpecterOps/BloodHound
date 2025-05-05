@@ -33,7 +33,7 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
     },
 }));
 
-const CopyMenuItemV2 = () => {
+const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
 
     const { selectedItemQuery } = useExploreSelectedItem();
@@ -79,4 +79,4 @@ const CopyMenuItemV2 = () => {
     );
 };
 
-export default CopyMenuItemV2;
+export default CopyMenuItem;

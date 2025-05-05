@@ -22,7 +22,7 @@ import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
-import ContextMenuV2 from './ContextMenu';
+import ContextMenu from './ContextMenu';
 
 const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
 const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
@@ -95,7 +95,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
     } as any);
 
     const screen = await act(async () => {
-        render(<ContextMenuV2 contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
             initialState,
         });
     });
@@ -104,7 +104,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
     return { screen, user, mockSetExploreParams };
 };
 
-describe('ContextMenuV2', async () => {
+describe('ContextMenu', async () => {
     it('renders asset group edit options with graph write permissions', async () => {
         await setup([Permission.GRAPH_DB_WRITE]);
 

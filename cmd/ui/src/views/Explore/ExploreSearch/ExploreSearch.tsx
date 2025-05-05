@@ -63,7 +63,7 @@ const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
     return 'node';
 };
 
-const ExploreSearchV2: React.FC = () => {
+const ExploreSearch: React.FC = () => {
     /* Hooks */
     const classes = useStyles();
 
@@ -247,4 +247,4 @@ const TabPanels = ({ tabs, activeTab }: TabPanelsProps) => {
     );
 };
 
-export default ExploreSearchV2;
+export default ExploreSearch;
