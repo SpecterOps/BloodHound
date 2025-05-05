@@ -115,6 +115,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                console.log('🚀 ~ .map ~ listItem:', listItem);
                                 return (
                                     <li
                                         key={listItem.id}
@@ -128,12 +129,16 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                         <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
                                         <Button
                                             variant={'text'}
-                                            className='flex justify-between w-full'
+                                            className='flex justify-between w-full overflow-hidden'
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                <div className='text-base'>{listItem.name}</div>
+                                                <div
+                                                    className='text-base truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]'
+                                                    title={listItem.name}>
+                                                    {listItem.name}
+                                                </div>
                                                 {isSelectorsListItem(listItem) && listItem.disabled_at && (
                                                     <div className='ml-2 italic'>
                                                         <Badge
