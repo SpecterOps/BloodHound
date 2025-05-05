@@ -31,7 +31,11 @@ Alternatively, Full control of a computer object can be used to perform a Resour
 
 ### With GenericAll Over a GPO
 
-With full control of a GPO, you may make modifications to that GPO which will then apply to the users and computers affected by the GPO. Select the target object you wish to push an evil policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such as a new immediate scheduled task. Then wait at least 2 hours for the group policy client to pick up and execute the new evil policy. See the references tab for a more detailed write up on this abuse
+With full control of a GPO, you may make modifications to that GPO which will then apply to the users and computers affected by the GPO. Select the target object you wish to push an evil policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such as a new immediate scheduled task. Then wait at least 2 hours for the group policy client to pick up and execute the new evil policy.
+
+Refer to [A Red Teamer's Guide to GPOs and OUs](https://wald0.com/?p=179) for details about the abuse technique, and check out the following tools for practical exploitation:
+* Windows: [GitHub: SharpGPOAbuse](https://github.com/FSecureLABS/SharpGPOAbuse)
+* Linux: [GitHub: pyGPOAbuse](https://github.com/Hackndo/pyGPOAbuse)
 
 ### With GenericAll Over an OU
 
@@ -76,9 +80,11 @@ $dsEntry.PsBase.Options.SecurityMasks = 'Dacl'
 $dsEntry.PsBase.ObjectSecurity.AddAccessRule($ACE)
 $dsEntry.PsBase.CommitChanges()
 ```
-#### Objects for which ACL inheritance is disabled
+#### Target User or Computer Protected by Disabled ACL Inheritance
 
-Generic/Targeted Descendent Object Takeover only works if the target object has ACL inheritance enabled. Alternatively, you can compromise target objects by abusing write access to the gpLink attribute of the OU. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
+Users and computers with ACL inheritance disabled (directly or through a parent OU) are not vulnerable to the previously described ACL-based attacks. However, they can still be compromised through a GPO-based attack.
+
+See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
 
 ### With GenericAll Over a Domain Object
 
@@ -92,9 +98,11 @@ With full control of a domain node, you may add a new ACE on the domain that wil
 
 See the the sections "Generic Descendent Object Takeover" and "Targeted Descendent Object Takeover" under With GenericAll Over an OU.
 
-#### Objects for which ACL inheritance is disabled
+#### Target User or Computer Protected by Disabled ACL Inheritance
 
-Generic/Targeted Descendent Object Takeover only works if the target object has ACL inheritance enabled. Alternatively, you can compromise target objects by abusing write access to the gpLink attribute of the domain. See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
+Users and computers with ACL inheritance disabled (directly or through a parent OU) are not vulnerable to the previously described ACL-based attacks. However, they can still be compromised through a GPO-based attack.
+
+See the [WriteGPLink](/resources/edges/write-gp-link) edge documentation for details.
 
 ### With GenericAll Over a CertTemplate
 

@@ -4,19 +4,27 @@ title: GPLink
 
 <img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
+The GPLink relationship connects a Group Policy Object (GPO) to an AD domain or organizational unit (OU) it is linked to.
 
-A linked GPO applies its settings to objects in the linked container.
+The GPO's settings apply to AD accounts (users and computers) within that domain or OU.
+
+The Enforced property on the edge indicates whether the GPO link is enforced, meaning it still applies if an OU has blocked GPO inheritance.
 
 ## Abuse Info
 
-This edge helps you understand which object a GPO applies to, and so the actual abuse is actually being performed against the GPO this edge originates from. For more info about that abuse, see the GenericAll edge section for when you have full control over a GPO.
+Control over the GPO can be abuse to compromise the AD accounts the GPO applies to by modifying the GPO policy settings.
+
+Refer to [A Red Teamer's Guide to GPOs and OUs](https://wald0.com/?p=179) for details about the abuse technique, and check out the following tools for practical exploitation:
+* Windows: [GitHub: SharpGPOAbuse](https://github.com/FSecureLABS/SharpGPOAbuse)
+* Linux: [GitHub: pyGPOAbuse](https://github.com/Hackndo/pyGPOAbuse)
 
 ## Opsec Considerations
 
-See the GenericAll edge section for opsec considerations
+There is no opsec information for this edge.
 
 ## References
 
-* [https://wald0.com/?p=179](https://wald0.com/?p=179)
-
+* [A Red Teamer's Guide to GPOs and OUs](https://wald0.com/?p=179)
+* [GitHub: SharpGPOAbuse](https://github.com/FSecureLABS/SharpGPOAbuse)
+* [GitHub: pyGPOAbuse](https://github.com/Hackndo/pyGPOAbuse)
 

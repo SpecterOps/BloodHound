@@ -1,0 +1,27 @@
+---
+title: GPOAppliesTo
+---
+
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+
+The GPOAppliesTo relationship connects a Group Policy Object (GPO) to an AD account (user or computer) that the GPO settings affect.
+
+This relationship is created when the GPO is linked to the domain or an organizational unit (OU) containing the account. Click on the Composition accordion item to see where the GPO is linked.
+
+BloodHound will not generate this edge if GPO inheritance is blocked and prevents the GPO from applying. However, it does not consider WMI or security filtering, since an attacker with control over the GPO can modify those filters to apply the policy. 
+
+## Abuse Info
+
+Control over the GPO can be abuse to compromise the AD account by modifying the GPO policy settings.
+
+Refer to the inbound edges on the GPO node for more details.
+
+## Opsec Considerations
+
+There is no opsec information for this edge.
+
+## References
+
+* [A Red Teamer's Guide to GPOs and OUs](https://wald0.com/?p=179)
+* [GitHub: SharpGPOAbuse](https://github.com/FSecureLABS/SharpGPOAbuse)
+* [GitHub: pyGPOAbuse](https://github.com/Hackndo/pyGPOAbuse)

@@ -93,6 +93,7 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				nodeMap[node.ID] = dbNode.ID
 			}
 		}
+
 		for _, edge := range g.Relationships {
 			if startId, ok := nodeMap[edge.FromID]; !ok {
 				return fmt.Errorf("could not find start node %s", edge.FromID)
@@ -131,15 +132,26 @@ func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
+		kLowercase := strings.ToLower(k)
+
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
 				return nil, fmt.Errorf("could not process time function `%s`: %w", v, err)
 			} else {
-				out.Set(k, ts)
+				out.Set(kLowercase, ts)
+			}
+		case strings.HasPrefix(v, "BOOL:"):
+			_, val, found := strings.Cut(v, "BOOL:")
+			if !found {
+				return nil, fmt.Errorf("could not process bool value `%s`", v)
+			} else if boolVal, err := strconv.ParseBool(val); err != nil {
+				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
+			} else {
+				out.Set(kLowercase, boolVal)
 			}
 		default:
-			out.Set(k, v)
+			out.Set(kLowercase, v)
 		}
 	}
 	return out, nil

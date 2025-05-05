@@ -9,29 +9,29 @@ The WriteGPLink edge indicates that the principal has the permissions to modify 
 
 The ability to alter the gPLink attribute may allow an attacker to apply a malicious Group Policy Object (GPO) to all child user and computer objects (including the ones located in nested OUs). This can be exploited to make said child objects execute arbitrary commands through an immediate scheduled task, thus compromising them.
 
-Successful exploitation will require the possibility to add non-existing DNS records to the domain and to create machine accounts. Alternatively, an already compromised domain-joined machine may be used to perform the attack. Note that the attack vector implementation is not trivial and will require some setup.
-
-Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child users and computers apply the malicious GPO and execute arbitrary commands.
-
 Abuse Info
 ----------
 
-### Windows abuse
+An attacker with permission to modify the gPLink attribute can link GPOs to the object, affecting all contained users and computers. The GPO can weaponize by injecting a malicious configuration, such as a scheduled task executing a malicious script.
 
-From a domain-joined compromised Windows machine, the WriteGPLink permission may be abused through Powermad, PowerView and native Windows functionalities. For a detailed outline of exploit requirements and implementation, you can refer to this article: [OU having a laugh?](https://labs.withsecure.com/publications/ou-having-a-laugh)
+The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering can be used to limit the impact to specific accounts, which is important in environments with many users or computers under the affected scope.
 
-Be mindful of the number of users and computers that are in the given domain as they all will attempt to fetch and apply the malicious GPO.
+Refer to [A Red Teamer's Guide to GPOs and OUs](https://wald0.com/?p=179) for details about the abuse technique, and check out the following tools for practical exploitation:
+* Windows: [GitHub: SharpGPOAbuse](https://github.com/FSecureLABS/SharpGPOAbuse)
+* Linux: [GitHub: pyGPOAbuse](https://github.com/Hackndo/pyGPOAbuse)
 
-### Linux abuse
+### Without control over a GPO
 
-From a Linux machine, the WriteGPLink permission may be abused using the [OUned.py](https://github.com/synacktiv/OUned) exploitation tool. For a detailed outline of exploit requirements and implementation, you can refer to [the article associated to the OUned.py tool](https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory).
+An attacker can still execute the attack without control over a GPO by setting up a fake LDAP server to host a GPO. This approach requires the ability to add non-existent DNS records and create machine accounts, or access to a compromised domain-joined machine. However, this method is complex and requires significant setup.
 
-Be mindful of the number of users and computers that are in the given domain as they all will attempt to fetch and apply the malicious GPO.
+From a domain-joined compromised Windows machine, the write access to the gPLink attribute may be abused through Powermad, PowerView and native Windows functionalities. For a detailed outline of exploit requirements and implementation, you can refer to this article: [OU having a laugh?](https://labs.withsecure.com/publications/ou-having-a-laugh)
+
+From a Linux machine, the write access to the gPLink attribute may be abused using the [OUned.py](https://github.com/synacktiv/OUned) exploitation tool. For a detailed outline of exploit requirements and implementation, you can refer to [the article associated to the OUned.py tool](https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory).
 
 Opsec Considerations
 --------------------
 
-The present attack vector relies on the execution of a malicious Group Policy Object. In case some objects in the target Organizational Unit are unable to apply said Group Policy Object (for instance, because these objects cannot reach the attacker's machine in the internal network), events related to failed GPO application will be created. Furthermore, the execution of this attack will result in the modification of the gPLink property of the target Organizational Unit. The property should be reset to its original value after attack execution to avoid detection and ensure the OU child items can apply their legitimate Group Policy Objects again.
+There is no opsec information for this edge.
 
 References
 ----------
