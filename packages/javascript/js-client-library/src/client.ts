@@ -200,6 +200,7 @@ class BHEAPIClient {
         assetGroupTagId: number | string,
         skip: number | string,
         limit: number,
+        sort_by: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
@@ -209,6 +210,7 @@ class BHEAPIClient {
                     params: {
                         skip,
                         limit,
+                        sort_by,
                     },
                 },
                 options
@@ -220,6 +222,7 @@ class BHEAPIClient {
         selectorId: number | string,
         skip: number,
         limit: number,
+        sort_by: string,
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
@@ -229,6 +232,7 @@ class BHEAPIClient {
                     params: {
                         skip,
                         limit,
+                        sort_by,
                     },
                 },
                 options
