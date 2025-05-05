@@ -199,7 +199,7 @@ describe('EdgeInfoContent', () => {
     });
 
     describe('EdgeInfoContent support for Deep Linking', () => {
-        const test_id = 'test_id';
+        const test_id = selectedEdgeADCSESC4.id;
         const setup = () => {
             const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeADCSESC4} />, {
                 route: `?selectedItem=${test_id}`,
