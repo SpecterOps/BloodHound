@@ -171,6 +171,10 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 				if domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 					continue
+				} else if restrictOutboundNTLM, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+					continue
+				} else if !restrictOutboundNTLM {
+					continue
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
 				} else {
@@ -409,9 +413,10 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 							continue
 						} else {
 							// Find all enrollers with enrollment rights on the cert template and the enterprise CA (no shortcutting)
+							// BED-5838 : For computer entities, only process edges for those with RestrictOutboundNTLM enabled
 							var (
-								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(certTemplateEnrollers, ntlmCache.GroupExpansions)
-								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(ecaEnrollers, ntlmCache.GroupExpansions)
+								templateBitmap                = expandNodeSliceToBitmapWithoutGroups(filterByRestrictOutboundNtlmEnabled(certTemplateEnrollers), ntlmCache.GroupExpansions)
+								ecaBitmap                     = expandNodeSliceToBitmapWithoutGroups(filterByRestrictOutboundNtlmEnabled(ecaEnrollers), ntlmCache.GroupExpansions)
 								enrollersBitmap               = cardinality.NewBitmap64()
 								specialGroupHasECAEnroll      = adcsCache.GetEnterpriseCAHasSpecialEnrollers(enterpriseCA.ID)
 								specialGroupHasTemplateEnroll = adcsCache.GetCertTemplateHasSpecialEnrollers(certTemplate.ID)
@@ -455,6 +460,24 @@ func PostCoerceAndRelayNTLMToADCS(adcsCache ADCSCache, operation analysis.StatTr
 	}
 
 	return nil
+}
+
+func filterByRestrictOutboundNtlmEnabled(nodes []*graph.Node) []*graph.Node {
+	var filtered []*graph.Node
+
+	for _, node := range nodes {
+		if node.Kinds.ContainsOneOf(ad.Computer) {
+			if restrictOutboundNTLM, err := node.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+				continue
+			} else if restrictOutboundNTLM {
+				filtered = append(filtered, node)
+			}
+		} else {
+			filtered = append(filtered, node)
+		}
+	}
+
+	return filtered
 }
 
 func isEnterpriseCAValidForADCS(eca *graph.Node) (bool, error) {
