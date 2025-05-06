@@ -35,7 +35,7 @@ const getEntityInfoTestProps = () => ({
     },
 });
 
-const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
+const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}&searchType=node&primarySearch=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
 
 const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
     assetgroups: {
@@ -81,6 +81,9 @@ describe('AssetGroupMenuItem', async () => {
                         data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
                     })
                 );
+            }),
+            rest.get('/api/v2/graph-search', (req, res, ctx) => {
+                return res(ctx.json({}));
             })
         );
 
@@ -92,7 +95,7 @@ describe('AssetGroupMenuItem', async () => {
 
         afterAll(() => server.close());
 
-        it.only('handles adding to tier zero asset group', async () => {
+        it('handles adding to tier zero asset group', async () => {
             await act(async () => {
                 render(
                     <AssetGroupMenuItem
@@ -203,6 +206,9 @@ describe('AssetGroupMenuItem', async () => {
                         data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
                     })
                 );
+            }),
+            rest.get('/api/v2/graph-search', (req, res, ctx) => {
+                return res(ctx.json({}));
             })
         );
 
