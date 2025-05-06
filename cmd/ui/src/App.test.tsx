@@ -23,7 +23,7 @@ import { act, render, screen } from 'src/test-utils';
 import { AppState } from './store';
 
 const server = setupServer(
-    rest.get('/api/v2/saml/sso', (req, res, ctx) => {
+    rest.get('/api/v2/sso-providers', (req, res, ctx) => {
         return res(
             ctx.json({
                 endpoints: [],

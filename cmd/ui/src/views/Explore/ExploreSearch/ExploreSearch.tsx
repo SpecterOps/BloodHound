@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -19,24 +19,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
-    CYPHER_SEARCH,
     CypherSearch,
+    ExploreQueryParams,
+    ExploreSearchTab,
     Icon,
+    MappedStringLiteral,
     NodeSearch,
-    PATHFINDING_SEARCH,
-    PRIMARY_SEARCH,
     PathfindingSearch,
     cn,
-    searchbarActions,
+    encodeCypherQuery,
+    useCypherSearch,
+    useExploreParams,
+    useNodeSearch,
+    usePathfindingFilters,
+    usePathfindingSearch,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import {
-    useCypherSearchSwitch,
-    useNodeSearchSwitch,
-    usePathfindingFilterSwitch,
-    usePathfindingSearchSwitch,
-} from './switches';
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -54,18 +52,18 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const tabNameMap = {
-    primary: 0,
-    secondary: 1,
+const tabMap = {
+    node: 0,
+    pathfinding: 1,
     cypher: 2,
-    tierZero: 3,
+} satisfies MappedStringLiteral<ExploreSearchTab, number>;
+
+const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
+    if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
+    return 'node';
 };
 
-interface ExploreSearchProps {
-    onTabChange?: (tab: string) => void;
-}
-
-const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
+const ExploreSearch: React.FC = () => {
     /* Hooks */
     const classes = useStyles();
 
@@ -73,41 +71,86 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
 
     const matches = useMediaQuery(theme.breakpoints.down('md'));
 
-    const dispatch = useAppDispatch();
+    const { exploreSearchTab, setExploreParams } = useExploreParams();
 
-    const tabKey = useAppSelector((state) => state.search.activeTab);
+    const nodeSearchState = useNodeSearch();
+    const pathfindingSearchState = usePathfindingSearch();
+    const cypherSearchState = useCypherSearch();
+    // We can move this back down into the filter modal once we remove the redux implementation
+    const pathfindingFilterState = usePathfindingFilters();
 
-    const activeTab = tabNameMap[tabKey];
+    const activeTab = getTab(exploreSearchTab);
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
-    const nodeSearchState = useNodeSearchSwitch();
-    const pathfindingSearchState = usePathfindingSearchSwitch();
-    const pathfindingFilterState = usePathfindingFilterSwitch();
-    const cypherSearchState = useCypherSearchSwitch();
-
     /* Event Handlers */
     const handleTabChange = (newTabIndex: number) => {
-        switch (newTabIndex) {
-            case 0:
-                onTabChange('search');
-                dispatch(searchbarActions.primarySearch());
-                return dispatch(searchbarActions.tabChanged(PRIMARY_SEARCH));
-            case 1:
-                onTabChange('pathfinding');
-                dispatch(searchbarActions.pathfindingSearch());
-                return dispatch(searchbarActions.tabChanged(PATHFINDING_SEARCH));
-            case 2:
-                onTabChange('cypher');
-                dispatch(searchbarActions.cypherSearch());
-                return dispatch(searchbarActions.tabChanged(CYPHER_SEARCH));
+        const tabs = ['node', 'pathfinding', 'cypher'] as ExploreSearchTab[];
+        const nextTab = tabs[newTabIndex];
+
+        const teardownParams = teardownActiveTab(activeTab);
+        const setupParams = setupNextTab(nextTab);
+
+        setExploreParams({ ...teardownParams, ...setupParams });
+    };
+
+    // Clean up query params from previous tab, removing query params when the field has been edited since the last search
+    const teardownActiveTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (!nodeSearchState.selectedItem) {
+                params.primarySearch = null;
+                pathfindingSearchState.handleSourceNodeEdited(nodeSearchState.searchTerm);
+            }
         }
+        if (tab === 'pathfinding') {
+            if (!pathfindingSearchState.sourceSelectedItem) {
+                params.primarySearch = null;
+                nodeSearchState.editSourceNode(pathfindingSearchState.sourceSearchTerm);
+            }
+            if (!pathfindingSearchState.destinationSelectedItem) {
+                params.secondarySearch = null;
+            }
+        }
+        if (tab === 'cypher') {
+            if (!cypherSearchState.cypherQuery) {
+                params.cypherSearch = null;
+            }
+        }
+        return params;
+    };
+
+    // Set up up query params for the incoming tab. should only update the query type if the query can be performed
+    const setupNextTab = (tab: ExploreSearchTab): Partial<ExploreQueryParams> => {
+        const params: Partial<ExploreQueryParams> = {};
+
+        if (tab === 'node') {
+            if (nodeSearchState.selectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'node';
+        }
+        if (tab === 'pathfinding') {
+            if (pathfindingSearchState.sourceSelectedItem && pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'pathfinding';
+            } else if (pathfindingSearchState.sourceSelectedItem || pathfindingSearchState.destinationSelectedItem) {
+                params.searchType = 'node';
+            }
+            params.exploreSearchTab = 'pathfinding';
+        }
+        if (tab === 'cypher') {
+            params.searchType = 'cypher';
+            params.cypherSearch = encodeCypherQuery(cypherSearchState.cypherQuery);
+            params.exploreSearchTab = 'cypher';
+        }
+        return params;
     };
 
     return (
         <div
             className={cn('h-full min-h-0 w-[410px] flex gap-4 flex-col rounded-lg shadow-[1px solid white]', {
-                'w-[600px]': activeTab === tabNameMap.cypher && showSearchWidget,
+                'w-[600px]': activeTab === 'cypher' && showSearchWidget,
             })}>
             <div className='h-10 w-full flex gap-1 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'>
                 <Icon
@@ -119,7 +162,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                 </Icon>
                 <Tabs
                     variant='fullWidth'
-                    value={activeTab}
+                    value={tabMap[activeTab]}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     className='h-10 min-h-10 w-full'
@@ -146,7 +189,7 @@ const ExploreSearch = ({ onTabChange = () => {} }: ExploreSearchProps) => {
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */
                     ]}
-                    activeTab={activeTab}
+                    activeTab={tabMap[activeTab]}
                 />
             </div>
         </div>

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,20 +16,19 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, searchbarActions, usePermissions } from 'bh-shared-ui';
+import { Permission, isNode, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
-const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; handleClose: () => void }> = ({
-    contextMenu,
-    handleClose,
-}) => {
-    const dispatch = useAppDispatch();
-
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+const ContextMenu: FC<{
+    contextMenu: { mouseX: number; mouseY: number } | null;
+    handleClose: () => void;
+}> = ({ contextMenu, handleClose }) => {
+    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
+    const { selectedItemQuery } = useExploreSelectedItem();
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
@@ -37,31 +36,26 @@ const ContextMenu: FC<{ contextMenu: { mouseX: number; mouseY: number } | null; 
     const { checkPermission } = usePermissions();
 
     const handleSetStartingNode = () => {
-        if (selectedNode) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.sourceNodeSelected(
-                    {
-                        name: selectedNode.name,
-                        objectid: selectedNode.id,
-                        type: selectedNode.type,
-                    },
-                    true
-                )
-            );
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            const searchType = secondarySearch ? 'pathfinding' : 'node';
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                primarySearch: selectedItemData?.objectId as string,
+            });
         }
     };
 
     const handleSetEndingNode = () => {
-        if (selectedNode) {
-            dispatch(searchbarActions.tabChanged('secondary'));
-            dispatch(
-                searchbarActions.destinationNodeSelected({
-                    name: selectedNode.name,
-                    objectid: selectedNode.id,
-                    type: selectedNode.type,
-                })
-            );
+        const searchType = primarySearch ? 'pathfinding' : 'node';
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                secondarySearch: selectedItemData?.objectId as string,
+            });
         }
     };
 

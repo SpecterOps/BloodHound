@@ -23,7 +23,7 @@ import { createMemoryHistory } from 'history';
 import { SnackbarProvider } from 'notistack';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
-import { Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import createSagaMiddleware from 'redux-saga';
 import { rootReducer } from 'src/store';
 
@@ -58,7 +58,9 @@ const createDefaultStore = (state) => {
     });
 };
 
-const createProviders = ({ queryClient, history, theme, store, children }) => {
+const createProviders = ({ queryClient, route, theme, store, children }) => {
+    window.history.pushState({}, 'Test page', route);
+
     return (
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
@@ -66,9 +68,9 @@ const createProviders = ({ queryClient, history, theme, store, children }) => {
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
                         <NotificationsProvider>
-                            <Router location={history.location} navigator={history}>
+                            <BrowserRouter>
                                 <SnackbarProvider>{children}</SnackbarProvider>
-                            </Router>
+                            </BrowserRouter>
                         </NotificationsProvider>
                     </ThemeProvider>
                 </StyledEngineProvider>
@@ -82,13 +84,13 @@ const customRender = (
     {
         initialState = {},
         queryClient = createDefaultQueryClient(),
-        history = createMemoryHistory(),
+        route = '/',
         theme = defaultTheme,
         store = createDefaultStore(initialState),
         ...renderOptions
     } = {}
 ) => {
-    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, store, children });
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, store, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
 };
 
