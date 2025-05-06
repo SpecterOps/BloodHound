@@ -165,10 +165,10 @@ func (s *edgeComposite) FromMap(compositeMap map[string]any) error {
 }
 
 func (s *edgeComposite) ToRelationship(ctx context.Context, kindMapper KindMapper, relationship *graph.Relationship) error {
-	if kinds, err := kindMapper.MapKindIDs(ctx, s.KindID); err != nil {
+	if kind, err := kindMapper.MapKindID(ctx, s.KindID); err != nil {
 		return err
 	} else {
-		relationship.Kind = kinds[0]
+		relationship.Kind = kind
 	}
 
 	relationship.ID = graph.ID(s.ID)
@@ -208,7 +208,7 @@ func (s *nodeComposite) FromMap(compositeMap map[string]any) error {
 }
 
 func (s *nodeComposite) ToNode(ctx context.Context, kindMapper KindMapper, node *graph.Node) error {
-	if kinds, err := kindMapper.MapKindIDs(ctx, s.KindIDs...); err != nil {
+	if kinds, err := kindMapper.MapKindIDs(ctx, s.KindIDs); err != nil {
 		return err
 	} else {
 		node.Kinds = kinds

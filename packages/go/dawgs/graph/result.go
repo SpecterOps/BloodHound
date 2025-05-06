@@ -69,7 +69,7 @@ type Cursor[T any] interface {
 	Chan() chan T
 }
 
-type ResultMarshaller[T any] func(scanner Scanner) (T, error)
+type ResultMarshaller[T any] func(scanner Result) (T, error)
 
 type ResultIterator[T any] struct {
 	ctx        context.Context

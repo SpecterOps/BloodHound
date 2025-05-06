@@ -18,38 +18,53 @@
 
 package graph
 
-type ValueMapper interface {
-	Remaining() []any
-	HasNext() bool
-	Next() (any, bool)
-	MapNext(target any) error
-	TryMapNext(target any) bool
-	Scan(targets ...any) error
-}
-
-type Scanner interface {
-	Next() bool
-	Mapper() (ValueMapper, error)
-	Scan(targets ...any) error
-}
+import "fmt"
 
 type Result interface {
-	Scanner
+	Next() bool
+	Values() []any
+	Mapper() ValueMapper
 
+	// Scan takes a list of target any and attempts to map the next row from the result to the targets. This function
+	// is semantically equivalent to calling graph.ScanNextResult(...)
+	//
+	// This is Deprecated. Call the graph.ScanNextResult(...) function.
+	Scan(targets ...any) error
 	Error() error
 	Close()
+}
+
+func ScanNextResult(result Result, targets ...any) error {
+	var (
+		nextTargetIdx = 0
+		mapper        = result.Mapper()
+	)
+
+	for _, nextValue := range result.Values() {
+		if !mapper.TryMap(nextValue, targets[nextTargetIdx]) {
+			return fmt.Errorf("unable to marshal next value %T into target %T", nextValue, targets[nextTargetIdx])
+		}
+
+		nextTargetIdx++
+	}
+
+	return nil
 }
 
 type ErrorResult struct {
 	err error
 }
 
+func (s ErrorResult) Values() []any {
+	return nil
+}
+
 func (s ErrorResult) Next() bool {
 	return false
 }
 
-func (s ErrorResult) Mapper() (ValueMapper, error) {
-	return nil, s.err
+func (s ErrorResult) Mapper() ValueMapper {
+	return ValueMapper{}
 }
 
 func (s ErrorResult) Scan(targets ...any) error {

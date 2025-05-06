@@ -45,7 +45,7 @@ func (s *InMemoryKindMapper) MapKindID(ctx context.Context, kindID int16) (graph
 	return nil, fmt.Errorf("kind not found for id %d", kindID)
 }
 
-func (s *InMemoryKindMapper) MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error) {
+func (s *InMemoryKindMapper) MapKindIDs(ctx context.Context, kindIDs []int16) (graph.Kinds, error) {
 	kinds := make(graph.Kinds, len(kindIDs))
 
 	for idx, kindID := range kindIDs {
