@@ -28,7 +28,6 @@ type IngestTaskParams struct {
 	FileType  model.FileType
 	RequestID string
 	JobID     int64
-	IsGeneric bool
 }
 
 func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParams) (model.IngestTask, error) {
@@ -37,7 +36,6 @@ func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParam
 		RequestGUID: params.RequestID,
 		TaskID:      null.Int64From(params.JobID),
 		FileType:    params.FileType,
-		IsGeneric:   params.IsGeneric,
 	}
 
 	return db.CreateIngestTask(ctx, newIngestTask)

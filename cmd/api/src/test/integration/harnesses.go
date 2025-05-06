@@ -9752,6 +9752,100 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
+type IngestRelationships struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+
+	ExistingRel *graph.Relationship
+}
+
+func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "COMPUTER A",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "COMPUTER B",
+	}), graph.StringKind("Computer"))
+
+	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
+}
+
+type GenericIngest struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+	// Nodes 3 and 4 have the same name to support cases that need to branch on ambiguous resolution
+	Node3 *graph.Node
+	Node4 *graph.Node
+	// Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
+	Node5 *graph.Node
+	Node6 *graph.Node
+
+	// nodes 7 and 8 only have one kind
+	Node7 *graph.Node
+	Node8 *graph.Node
+
+	Node9  *graph.Node
+	Node10 *graph.Node
+}
+
+func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryComputer("NAME A", domainsid)
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("NAME B", domainsid)
+
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node4 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+
+	s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
+	s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
+
+	s.Node7 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("KindA"))
+	s.Node8 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "BOBBY",
+	}), graph.StringKind("KindB"))
+
+	s.Node9 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0001",
+		common.Name:     "SERVER-01",
+	}), graph.StringKind("Device"))
+	s.Node10 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0002",
+		common.Name:     "DC-01",
+	}), graph.StringKind("DomainController"))
+}
+
+type ResolveEndpointsByName struct {
+	Node1 *graph.Node
+	// nodes 2 and 3 have the same name + kind, to support cases that need to branch on ambiguous resolution
+	Node2 *graph.Node
+	Node3 *graph.Node
+
+	Node4 *graph.Node
+}
+
+func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryUser("ALICE", domainsid)
+
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+
+	s.Node4 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("GenericDevice"))
+
+}
+
 type Version730_Migration_Harness struct {
 	Computer1 *graph.Node
 	Computer2 *graph.Node
@@ -9877,5 +9971,8 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
+	GenericIngest                                   GenericIngest
+	ResolveEndpointsByName                          ResolveEndpointsByName
+	IngestRelationships                             IngestRelationships
 	Version730_Migration                            Version730_Migration_Harness
 }

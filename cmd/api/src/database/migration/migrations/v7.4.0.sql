@@ -168,3 +168,7 @@ SELECT
 	2,
 	d.cypher
 FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
+
+-- is_generic column not actually needed.
+ALTER TABLE ingest_tasks
+DROP COLUMN IF EXISTS is_generic;
