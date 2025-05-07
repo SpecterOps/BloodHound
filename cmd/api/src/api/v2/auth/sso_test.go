@@ -19,8 +19,14 @@ package auth_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/specterops/bloodhound/src/database/mocks"
 
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
@@ -295,4 +301,158 @@ func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
 		require.Len(t, roles, 1)
 		require.Equal(t, roles[0].ID, roleProvisionEnabledConfig.DefaultRoleId)
 	})
+}
+
+func TestManagementResource_SSOLoginHandler(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		responseCode int
+	}
+	type testData struct {
+		name            string
+		ssoProviderSlug string
+		setupMocks      func(*testing.T, *mocks.MockDatabase)
+		expected        expected
+	}
+
+	tt := []testData{
+		{
+			name:            "Error: SSO Provider not found - Not Found",
+			ssoProviderSlug: "non-existent-provider",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
+			},
+			expected: expected{
+				responseCode: http.StatusNotFound,
+			},
+		},
+		{
+			name:            "Error: Database error - Internal Server Error",
+			ssoProviderSlug: "provider-db-error",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name:            "Error: Unsupported provider type - Not Implemented",
+			ssoProviderSlug: "unsupported-provider",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
+					Type: 999,
+					Name: "Unsupported Provider",
+					Slug: "unsupported-provider",
+				}, nil)
+			},
+			expected: expected{
+				responseCode: http.StatusNotImplemented,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+
+			testCase.setupMocks(t, mockDB)
+
+			req, err := http.NewRequest("GET", "/api/v2/auth/sso/"+testCase.ssoProviderSlug, nil)
+			require.NoError(t, err)
+
+			vars := map[string]string{
+				api.URIPathVariableSSOProviderSlug: testCase.ssoProviderSlug,
+			}
+			req = mux.SetURLVars(req, vars)
+
+			response := httptest.NewRecorder()
+			resources.SSOLoginHandler(response, req)
+
+			assert.Equal(t, testCase.expected.responseCode, response.Code)
+		})
+	}
+}
+
+func TestManagementResource_SSOCallbackHandler(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		responseCode int
+	}
+	type testData struct {
+		name            string
+		ssoProviderSlug string
+		setupMocks      func(*testing.T, *mocks.MockDatabase)
+		expected        expected
+	}
+
+	tt := []testData{
+		{
+			name:            "Error: SSO Provider not found - Not Found",
+			ssoProviderSlug: "non-existent-provider",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
+			},
+			expected: expected{
+				responseCode: http.StatusNotFound,
+			},
+		},
+		{
+			name:            "Error: Database error - Internal Server Error",
+			ssoProviderSlug: "provider-db-error",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode: http.StatusInternalServerError,
+			},
+		},
+		{
+			name:            "Error: Unsupported provider type - Not Implemented",
+			ssoProviderSlug: "unsupported-provider",
+			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
+					Type: 999,
+					Name: "Unsupported Provider",
+					Slug: "unsupported-provider",
+				}, nil)
+			},
+			expected: expected{
+				responseCode: http.StatusNotImplemented,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+
+			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+
+			testCase.setupMocks(t, mockDB)
+
+			req, err := http.NewRequest("POST", "/api/v2/auth/sso/"+testCase.ssoProviderSlug+"/callback", nil)
+			require.NoError(t, err)
+
+			vars := map[string]string{
+				api.URIPathVariableSSOProviderSlug: testCase.ssoProviderSlug,
+			}
+			req = mux.SetURLVars(req, vars)
+
+			response := httptest.NewRecorder()
+			resources.SSOCallbackHandler(response, req)
+
+			assert.Equal(t, testCase.expected.responseCode, response.Code)
+		})
+	}
 }
