@@ -14,13 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faQuestion, IconName } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
+import { lazy } from 'react';
 import { EntityKinds } from '../..';
-import { NODE_ICON } from '../../utils/icons';
+import { CUSTOM_ICONS, NODE_ICON } from '../../utils/icons';
+
+const LazyIcon = lazy(() => import('../CustomIcon'));
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;
@@ -49,13 +52,23 @@ const useStyles = makeStyles<Theme, NodeIconProps, string>({
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
     const classes = useStyles({ nodeType });
+    let iconElement: JSX.Element = <FontAwesomeIcon icon={faQuestion} transform='shrink-2' />;
+
+    if (nodeType in CUSTOM_ICONS) {
+        try {
+            let iconName = CUSTOM_ICONS[nodeType] as IconName;
+            iconElement = <LazyIcon icon={iconName} transform='shrink-2' />;
+        } catch (e) {
+            console.log(e);
+        }
+    } else if (nodeType in NODE_ICON) {
+        iconElement = <FontAwesomeIcon icon={NODE_ICON[nodeType].icon} transform='shrink-2' />;
+    }
 
     return (
         <Tooltip title={nodeType || ''} describeChild={true}>
             <Box className={classes.root}>
-                <Box className={classes.container}>
-                    <FontAwesomeIcon icon={NODE_ICON[nodeType]?.icon || faQuestion} transform='shrink-2' />
-                </Box>
+                <Box className={classes.container}>{iconElement}</Box>
             </Box>
         </Tooltip>
     );
