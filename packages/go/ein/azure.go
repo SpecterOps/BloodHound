@@ -479,6 +479,40 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 	return relationships
 }
 
+func ConvertAzureInteractionToRels(data models.UsersInteractions) []IngestibleRelationship {
+	relationships := make([]IngestibleRelationship, 0)
+
+	for _, raw := range data.Users {
+		var (
+			user azure2.DirectoryObject
+		)
+		if err := json.Unmarshal(raw.User, &user); err != nil {
+			slog.Error(fmt.Sprintf(SerialError, "azure user interaction", err))
+		} else if userType, err := ExtractTypeFromDirectoryObject(user); errors.Is(err, ErrInvalidType) {
+			slog.Warn(fmt.Sprintf(ExtractError, err))
+		} else if err != nil {
+			slog.Error(fmt.Sprintf(ExtractError, err))
+		} else {
+			relationships = append(relationships, NewIngestibleRelationship(
+				IngestibleSource{
+					Source:     strings.ToUpper(user.Id),
+					SourceType: userType,
+				},
+				IngestibleTarget{
+					TargetType: azure.User,
+					Target:     strings.ToUpper(data.UserId),
+				},
+				IngestibleRel{
+					RelProps: map[string]any{},
+					RelType:  azure.WorkWith,
+				},
+			))
+		}
+	}
+
+	return relationships
+}
+
 func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0)
 

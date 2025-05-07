@@ -888,6 +888,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    WorkWith = 'AZUserInteraction',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -985,6 +986,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.WorkWith: 
+            return 'WorkWith';
         default:
             return undefined;
     }
@@ -1134,6 +1137,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.WorkWith,
         AzureRelationshipKind.Contains,
     ];
 }

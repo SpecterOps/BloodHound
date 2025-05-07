@@ -66,6 +66,10 @@ func FilterGroupMembership() graph.Criteria {
 	return query.Kind(query.Relationship(), azure.MemberOf)
 }
 
+func FilterWorkWithRelationships() graph.Criteria {
+	return query.Kind(query.Relationship(), azure.WorkWith)
+}
+
 func FilterGroupMembers() graph.Criteria {
 	return query.And(
 		query.Kind(query.Relationship(), azure.MemberOf),

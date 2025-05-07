@@ -76,5 +76,11 @@ func PopulateUserEntityDetailsCounts(tx graph.Transaction, node *graph.Node, det
 		details.OutboundObjectControl = outboundObjectControl.Len()
 	}
 
+	if workWith, err := FetchEntityWorkWithPaths(tx, node); err != nil {
+		return details, err
+	} else {
+		details.WorkWith = workWith.Len()
+	}
+
 	return details, nil
 }

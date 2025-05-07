@@ -727,6 +727,12 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
+WorkWith: types.#Kind & {
+	symbol:			"WorkWith"
+	schema:			"azure"
+	representation:	"AZUserInteraction"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -775,6 +781,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	WorkWith,
 ]
 
 AppRoleTransitRelationshipKinds: [
@@ -875,6 +882,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	WorkWith,
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])

@@ -30,6 +30,7 @@ const (
 	RelatedEntityTypeActiveAssignments                  RelatedEntityType = "active-assignments"
 	RelatedEntityTypePIMAssignments                     RelatedEntityType = "pim-assignments"
 	RelatedEntityTypeGroupMembership                    RelatedEntityType = "group-membership"
+	RelatedEntityTypeWorkWith                           RelatedEntityType = "work-with"
 	RelatedEntityTypeVaultAllReaders                    RelatedEntityType = "all-readers"
 	RelatedEntityTypeVaultCertReaders                   RelatedEntityType = "certificate-readers"
 	RelatedEntityTypeVaultSecretReaders                 RelatedEntityType = "secret-readers"
@@ -104,6 +105,7 @@ type UserDetails struct {
 	ExecutionPrivileges   int `json:"execution_privileges"`
 	OutboundObjectControl int `json:"outbound_object_control"`
 	InboundObjectControl  int `json:"inbound_object_control"`
+	WorkWith              int `json:"work_with"`
 }
 
 type GroupDetails struct {

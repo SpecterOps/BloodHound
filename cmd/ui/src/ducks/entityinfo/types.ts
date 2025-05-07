@@ -405,6 +405,7 @@ export interface AZUserInfo extends AZEntityInfo {
     inbound_object_control: number;
     group_membership: number;
     roles: number;
+    work_with: number;
 }
 
 export interface AZVMInfo extends AZEntityInfo {

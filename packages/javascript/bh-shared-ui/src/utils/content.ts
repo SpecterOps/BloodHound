@@ -621,6 +621,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'azuser-inbound_object_control',
         },
+        {
+            id,
+            label: 'WorkWith',
+            queryType: 'azuser-workwith',
+        }
     ],
     [AzureNodeKind.VM]: (id: string) => [
         {
@@ -1535,6 +1540,10 @@ export const entityRelationshipEndpoints = {
     'azuser-inbound_object_control': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('users', id, 'inbound-control', counts, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'azuser-workwith': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('users', id, 'work-with', counts, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'azvm-local_admins': ({ id, counts, skip, limit, type }) =>
         apiClient
