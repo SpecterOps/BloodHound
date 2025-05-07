@@ -16,7 +16,7 @@
 
 import { Environment } from 'js-client-library';
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { MappedStringLiteral } from '../../types';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
@@ -41,7 +41,7 @@ export const parseEnvironmentAggregation = (paramValue: string | null): Environm
 };
 
 interface UseEnvironmentParamsReturn extends EnvironmentQueryParams {
-    setEnvironmentParams: (params: Partial<EnvironmentQueryParams>) => void;
+    setEnvironmentParams: (params: Partial<EnvironmentQueryParams>, navigateOpts?: NavigateOptions) => void;
 }
 
 export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
@@ -50,11 +50,13 @@ export const useEnvironmentParams = (): UseEnvironmentParamsReturn => {
     return {
         environmentId: searchParams.get('environmentId'),
         environmentAggregation: parseEnvironmentAggregation(searchParams.get('environmentAggregation')),
-        // react doesnt like this because it doesnt know the params needed for the function factory return function.
-        // but the params needed are not needed in the deps array
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setEnvironmentParams: useCallback(
-            setParamsFactory(setSearchParams, ['environmentId', 'environmentAggregation']),
+            (updatedParams: Partial<EnvironmentQueryParams>, navigateOpts?: NavigateOptions) =>
+                setParamsFactory(
+                    setSearchParams,
+                    ['environmentId', 'environmentAggregation'],
+                    navigateOpts
+                )(updatedParams),
             [setSearchParams]
         ),
     };

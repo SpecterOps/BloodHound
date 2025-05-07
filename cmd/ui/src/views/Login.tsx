@@ -73,7 +73,7 @@ const Login: React.FC = () => {
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} />;
+    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (

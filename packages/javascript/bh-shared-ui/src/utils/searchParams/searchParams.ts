@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createSearchParams, Path, To, useSearchParams } from 'react-router-dom';
+import { createSearchParams, NavigateOptions, Path, To, useSearchParams } from 'react-router-dom';
 import { EnvironmentQueryParams } from '../../hooks/useEnvironmentParams';
 import { ExploreQueryParams } from '../../hooks/useExploreParams';
 
@@ -66,7 +66,11 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
  * @param availableParams all params that can be controlled
  * @returns
  */
-export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availableParams: Array<keyof T>) => {
+export const setParamsFactory = <T>(
+    setSearchParams: SetURLSearchParams,
+    availableParams: Array<keyof T>,
+    navigateOpts?: NavigateOptions
+) => {
     return (updatedParams: Partial<T>) => {
         setSearchParams((params) => {
             const setParam = setSingleParamFactory(updatedParams, params);
@@ -74,7 +78,7 @@ export const setParamsFactory = <T>(setSearchParams: SetURLSearchParams, availab
             availableParams.forEach((param) => setParam(param));
 
             return params;
-        });
+        }, navigateOpts);
     };
 };
 
