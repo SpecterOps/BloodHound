@@ -254,6 +254,63 @@ TenantID: types.#StringEnum & {
 	representation: "tenantid"
 }
 
+RoleDefinitionId: types.#StringEnum & {
+	symbol:         "RoleDefinitionId"
+	schema:         "azure"
+	name:           "Role Definition Id"
+	representation: "roledefinitionid"
+}
+
+EndUserAssignmentRequiresApproval: types.#StringEnum & {
+	symbol:         "EndUserAssignmentRequiresApproval"
+	schema:         "azure"
+	name:           "End User Assignment Requires Approval"
+	representation: "enduserassignmentrequiresapproval"
+}
+
+EndUserAssignmentRequiresCAPAuthenticationContext: types.#StringEnum & {
+	symbol:         "EndUserAssignmentRequiresCAPAuthenticationContext"
+	schema:         "azure"
+	name:           "End User Assignment Requires CAP AuthenticationContext"
+	representation: "enduserassignmentrequirescapauthenticationcontext"
+}
+
+EndUserAssignmentUserApprovers: types.#StringEnum & {
+	symbol:         "EndUserAssignmentUserApprovers"
+	schema:         "azure"
+	name:           "End User Assignment User Approvers"
+	representation: "enduserassignmentuserapprovers"
+}
+
+EndUserAssignmentGroupApprovers: types.#StringEnum & {
+	symbol:         "EndUserAssignmentGroupApprovers"
+	schema:         "azure"
+	name:           "End User Assignment Group Approvers"
+	representation: "enduserassignmentgroupapprovers"
+}
+
+EndUserAssignmentRequiresMFA: types.#StringEnum & {
+	symbol:         "EndUserAssignmentRequiresMFA"
+	schema:         "azure"
+	name:           "End User Assignment Requires MFA"
+	representation: "enduserassignmentrequiresmfa"
+}
+
+EndUserAssignmentRequiresJustification: types.#StringEnum & {
+	symbol:         "EndUserAssignmentRequiresJustification"
+	schema:         "azure"
+	name:           "End User Assignment Requires Justification"
+	representation: "enduserassignmentrequiresjustification"
+}
+
+EndUserAssignmentRequiresTicketInformation: types.#StringEnum & {
+	symbol:         "EndUserAssignmentRequiresTicketInformation"
+	schema:         "azure"
+	name:           "End User Assignment Requires Ticket Information"
+	representation: "enduserassignmentrequiresticketinformation"
+}
+
+
 Properties: [
 	AppOwnerOrganizationID,
 	AppDescription,
@@ -287,6 +344,14 @@ Properties: [
 	PublisherDomain,
 	SignInAudience,
 	RoleTemplateID,
+	RoleDefinitionId,
+	EndUserAssignmentRequiresApproval,
+	EndUserAssignmentRequiresCAPAuthenticationContext,
+	EndUserAssignmentUserApprovers,
+	EndUserAssignmentGroupApprovers,
+	EndUserAssignmentRequiresMFA,
+	EndUserAssignmentRequiresJustification,
+	EndUserAssignmentRequiresTicketInformation
 ]
 
 // Kinds
@@ -733,6 +798,12 @@ AZRoleEligible: types.#Kind & {
 	representation: "AZRoleEligible"
 }
 
+AZRoleApprover: types.#Kind & {
+	symbol:			"AZRoleApprover"
+	schema:			"azure"
+	representation:	"AZRoleApprover"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -782,6 +853,7 @@ RelationshipKinds: [
 	AZMGGrantRole,
 	SyncedToADUser,
 	AZRoleEligible,
+	AZRoleApprover,
 ]
 
 AppRoleTransitRelationshipKinds: [
