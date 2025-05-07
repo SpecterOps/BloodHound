@@ -45,7 +45,7 @@ export const getInitialPathFilters = (): EdgeCheckboxType[] => {
                     category: category.categoryName,
                     subcategory: subcategory.name,
                     edgeType,
-                    checked: true,
+                    checked: (subcategory.name != "Social Engineering")? true : false,
                 });
             });
         });

@@ -320,7 +320,7 @@ func OutboundControlDescentFilter(_ *ops.TraversalContext, segment *graph.PathSe
 }
 
 func OutboundControlPathFilter(_ *ops.TraversalContext, segment *graph.PathSegment) bool {
-	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains)
+	return !segment.Edge.Kind.Is(azure.MemberOf, azure.Contains, azure.WorkWith)
 }
 
 func FetchOutboundEntityObjectControlPaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
@@ -421,6 +421,30 @@ func FetchEntityGroupMembership(tx graph.Transaction, node *graph.Node, skip, li
 		Skip:        skip,
 		Limit:       limit,
 		BranchQuery: FilterGroupMembership,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Depth() <= 1
+		},
+	})
+}
+
+func FetchEntityWorkWithPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		BranchQuery: FilterWorkWithRelationships,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			return segment.Depth() <= 1
+		},
+	})
+}
+
+func FetchEntityWorkWith(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionOutbound,
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterWorkWithRelationships,
 		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
 			return segment.Depth() <= 1
 		},

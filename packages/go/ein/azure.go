@@ -495,12 +495,12 @@ func ConvertAzureInteractionToRels(data models.UsersInteractions) []IngestibleRe
 		} else {
 			relationships = append(relationships, NewIngestibleRelationship(
 				IngestibleSource{
-					Source:     strings.ToUpper(user.Id),
-					SourceType: userType,
+					Source:     strings.ToUpper(data.UserId),
+					SourceType: azure.User,
 				},
 				IngestibleTarget{
-					TargetType: azure.User,
-					Target:     strings.ToUpper(data.UserId),
+					TargetType: userType,
+					Target:     strings.ToUpper(user.Id),
 				},
 				IngestibleRel{
 					RelProps: map[string]any{},
