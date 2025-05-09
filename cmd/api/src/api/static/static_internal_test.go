@@ -17,6 +17,7 @@
 package static
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -37,6 +38,7 @@ func TestBHCEStaticHandler(t *testing.T) {
 		assetsTestMockFile  = fs.NewMockFile(mockController)
 		assetsIndexMockFile = fs.NewMockFile(mockController)
 		mockFS              = fs.NewMockFS(mockController)
+		mockFileInfo        = fs.NewMockFileInfo(mockController)
 		mockAssetCfg        = AssetConfig{
 			FS:         mockFS,
 			BasePath:   assetBasePath,
@@ -46,7 +48,11 @@ func TestBHCEStaticHandler(t *testing.T) {
 		handler = MakeAssetHandler(mockAssetCfg)
 	)
 
-	t.Run("Test case for an asset that exists", func(t *testing.T) {
+	t.Run("success - asset exists", func(t *testing.T) {
+
+		mockFS.EXPECT().Open(gomock.Eq("assets/test.html")).Return(assetsTestMockFile, nil)
+		assetsTestMockFile.EXPECT().Stat().Return(mockFileInfo, nil)
+		mockFileInfo.EXPECT().Name().Return("test.html")
 		assetsTestMockFile.EXPECT().Read(gomock.AssignableToTypeOf([]byte{})).DoAndReturn(func(target []byte) (int, error) {
 			for idx, b := range []byte(expectedOutput) {
 				target[idx] = b
@@ -54,7 +60,6 @@ func TestBHCEStaticHandler(t *testing.T) {
 
 			return len(expectedOutput), io.EOF
 		})
-		mockFS.EXPECT().Open(gomock.Eq("assets/test")).Return(assetsTestMockFile, nil)
 		assetsTestMockFile.EXPECT().Close()
 
 		if req, err := http.NewRequest("GET", "", nil); err != nil {
@@ -62,52 +67,74 @@ func TestBHCEStaticHandler(t *testing.T) {
 		} else {
 			response := httptest.NewRecorder()
 
-			req.RequestURI = "/ui/test"
+			req.RequestURI = "/test.html"
 
 			handler.ServeHTTP(response, req)
 			require.Equal(t, http.StatusOK, response.Code)
-			require.Equal(t, response.Body.String(), expectedOutput)
+			require.Equal(t, expectedOutput, response.Body.String())
+			require.Equal(t, "text/html; charset=utf-8", response.Header().Get("Content-Type"))
 		}
 	})
 
-	t.Run("Mocks for index fallback in asset does not exist cases", func(t *testing.T) {
+	t.Run("success - fallback to index on asset that does not exist", func(t *testing.T) {
+		// Test case for an asset that does not exist
+		mockFS.EXPECT().Open(gomock.Eq("assets/missing.pdf")).Return(nil, os.ErrNotExist)
+		mockFS.EXPECT().Open(gomock.Eq("assets/index.html")).Return(assetsIndexMockFile, nil).Times(1)
+		assetsIndexMockFile.EXPECT().Stat().Return(mockFileInfo, nil)
+		mockFileInfo.EXPECT().Name().Return("test.html")
 		assetsIndexMockFile.EXPECT().Read(gomock.AssignableToTypeOf([]byte{})).DoAndReturn(func(target []byte) (int, error) {
 			for idx, b := range []byte(expectedOutput) {
 				target[idx] = b
 			}
 
 			return len(expectedOutput), io.EOF
-		}).Times(2)
-		mockFS.EXPECT().Open(gomock.Eq("assets/index.html")).Return(assetsIndexMockFile, nil).Times(2)
-		assetsIndexMockFile.EXPECT().Close().Times(2)
-
-		// Test case for an asset that does not exist
-		mockFS.EXPECT().Open(gomock.Eq("assets/missing")).Return(nil, os.ErrNotExist)
+		}).Times(1)
+		assetsIndexMockFile.EXPECT().Close().Times(1)
 
 		if req, err := http.NewRequest("GET", "", nil); err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		} else {
 			response := httptest.NewRecorder()
 
-			req.RequestURI = "/ui/missing"
+			req.RequestURI = "/ui/missing.pdf"
 
 			handler.ServeHTTP(response, req)
 			require.Equal(t, http.StatusOK, response.Code)
-			require.Equal(t, response.Body.String(), expectedOutput)
+			require.Equal(t, expectedOutput, response.Body.String())
+			require.Equal(t, "text/html; charset=utf-8", response.Header().Get("Content-Type"))
 		}
 	})
 
-	t.Run("Test case for an asset that does not exist", func(t *testing.T) {
+	t.Run("fail - error loading index.html", func(t *testing.T) {
+		mockFS.EXPECT().Open(gomock.Eq("assets/missing.pdf")).Return(nil, os.ErrNotExist)
+		mockFS.EXPECT().Open(gomock.Eq("assets/index.html")).Return(nil, os.ErrNotExist)
+
 		if req, err := http.NewRequest("GET", "", nil); err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		} else {
 			response := httptest.NewRecorder()
 
-			req.RequestURI = "/ui/"
+			req.RequestURI = "missing.pdf"
 
 			handler.ServeHTTP(response, req)
-			require.Equal(t, http.StatusOK, response.Code)
-			require.Equal(t, response.Body.String(), expectedOutput)
+			require.Equal(t, http.StatusNotFound, response.Code)
+			require.Contains(t, response.Body.String(), "resource not found")
+		}
+	})
+	t.Run("fail - error retrieving file stats", func(t *testing.T) {
+		mockFS.EXPECT().Open(gomock.Eq("assets/index.html")).Return(assetsIndexMockFile, nil)
+		assetsIndexMockFile.EXPECT().Stat().Return(nil, fmt.Errorf("error retrieving file stats"))
+
+		if req, err := http.NewRequest("GET", "", nil); err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		} else {
+			response := httptest.NewRecorder()
+
+			req.RequestURI = "index.html"
+
+			handler.ServeHTTP(response, req)
+			require.Equal(t, http.StatusInternalServerError, response.Code)
+			require.Contains(t, response.Body.String(), api.ErrorResponseDetailsInternalServerError)
 		}
 	})
 }

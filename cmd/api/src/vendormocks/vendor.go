@@ -16,4 +16,4 @@
 
 package vendormocks
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./io/fs/mock.go -package=fs io/fs FS,File
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./io/fs/mock.go -package=fs io/fs FS,File,FileInfo
