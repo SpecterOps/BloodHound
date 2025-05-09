@@ -72,13 +72,13 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 
 	if fin, err := fetchAsset(cfg, assetPath); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if f, err := fin.Stat(); err != nil || f == nil {
+	} else if fileInfo, err := fin.Stat(); err != nil || fileInfo == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		defer fin.Close()
 
 		var (
-			assetExtension = filepath.Ext(f.Name())
+			assetExtension = filepath.Ext(fileInfo.Name())
 			contentType    = mime.TypeByExtension(assetExtension)
 		)
 
