@@ -1,0 +1,17 @@
+.dark .cm-editor {
+  background-color: transparent;
+}
+
+.dark .cm-editor .cm-gutters {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.light .cm-editor {
+  background-color: transparent;
+}
+
+.light .cm-editor .cm-gutters {
+  border-color: transparent;
+  background-color: transparent;
+}

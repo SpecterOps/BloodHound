@@ -16,6 +16,7 @@
 
 import { SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { CreateSelectorRequest, RequestOptions, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import { DateTime } from 'luxon';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
@@ -86,6 +87,10 @@ const SelectorForm: FC = () => {
             try {
                 if (!tagId || !selectorId)
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
+
+                if (updatedValues.disabled_at !== null) {
+                    updatedValues.disabled_at = DateTime.now().toISO();
+                }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
 

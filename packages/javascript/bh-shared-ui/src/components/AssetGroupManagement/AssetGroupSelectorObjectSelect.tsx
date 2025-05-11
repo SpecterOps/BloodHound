@@ -27,28 +27,55 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SeedTypeObjectId } from 'js-client-library';
+import { AssetGroupTagNode, SeedTypeObjectId } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
 import { SearchValue } from '../../store';
+import { apiClient, cn } from '../../utils';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
-const mapSeeds = (seeds: SelectorSeedRequest[]): AssetGroupSelectedNodes => {
-    return seeds.map((seed) => {
-        return { objectid: seed.value };
-    });
-};
-
 const AssetGroupSelectorObjectSelect: FC<{
     setSeeds: (seeds: SelectorSeedRequest[]) => void;
-    seeds?: SelectorSeedRequest[];
-}> = ({ setSeeds, seeds = [] }) => {
+    setSeedPreviewResults: (nodes: AssetGroupTagNode[] | null) => void;
+    seeds?: AssetGroupSelectedNodes;
+}> = ({ setSeeds, setSeedPreviewResults, seeds = [] }) => {
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(mapSeeds(seeds));
+    const [stalePreview, setStalePreview] = useState(false);
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(seeds);
+
+    const previewQuery = useQuery({
+        queryKey: ['tier-management', 'preview-selectors', SeedTypeObjectId],
+        queryFn: ({ signal }) => {
+            const seeds = selectedNodes.map((seed) => {
+                return {
+                    type: SeedTypeObjectId,
+                    value: seed.objectid,
+                };
+            });
+
+            return apiClient
+                .assetGroupTagsPreviewSelectors({ seeds: [...seeds] }, { signal })
+                .then((res) => res.data.data['members']);
+        },
+
+        retry: false,
+    });
+
+    const handleRun = useCallback(() => {
+        previewQuery.refetch();
+        setStalePreview(false);
+    }, [previewQuery]);
+
+    useEffect(() => {
+        const result = previewQuery.data ? previewQuery.data : null;
+
+        setSeedPreviewResults(result);
+    }, [previewQuery.data, setSeedPreviewResults]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -73,6 +100,7 @@ const AssetGroupSelectorObjectSelect: FC<{
             });
 
             setSearchTerm('');
+            setStalePreview(true);
         },
         [setSeeds]
     );
@@ -92,6 +120,7 @@ const AssetGroupSelectorObjectSelect: FC<{
 
                 return filteredNodes;
             });
+            setStalePreview(true);
         },
         [setSeeds]
     );
@@ -100,7 +129,20 @@ const AssetGroupSelectorObjectSelect: FC<{
         <div>
             <Card className='rounded-lg'>
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
-                    Object Selector
+                    <div className='flex justify-between'>
+                        <span>Object Selector</span>
+                        <Button
+                            variant='text'
+                            className={cn(
+                                'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
+                                {
+                                    'animate-pulse': stalePreview,
+                                }
+                            )}
+                            onClick={handleRun}>
+                            Run
+                        </Button>
+                    </div>
                     <CardDescription className='pt-3 font-normal'>
                         Use the input field to add objects to the list
                     </CardDescription>

@@ -104,7 +104,7 @@ describe('Cypher Search component for Tier Management', () => {
             <Cypher
                 preview={false}
                 initialInput='match(n) return n limit 5'
-                setCypherSearchResults={setResultsCallback}
+                setSeedPreviewResults={setResultsCallback}
             />
         );
 

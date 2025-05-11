@@ -18,13 +18,17 @@ import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodho
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createBrowserHistory } from 'history';
-import { GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, AssetGroupTagSelector, GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
+import {
+    AssetGroupSelectedNodes,
+    AssetGroupSelectorObjectSelect,
+    DeleteConfirmationDialog,
+} from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
@@ -44,11 +48,38 @@ const useDeleteSelector = (tagId: string | number | undefined) => {
     });
 };
 
+const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
+    if (nodes === undefined) return [];
+    return Object.values(nodes).map((node) => {
+        return { objectid: node.objectId, name: node.label, type: node.kind };
+    });
+};
+
 const getListScalar = (windoHeight: number) => {
     if (windoHeight > 1080) return 18;
     if (1080 >= windoHeight && windoHeight > 900) return 14;
     if (900 >= windoHeight) return 10;
     return 8;
+};
+
+const DeleteSelectorButton: FC<{
+    selectorId: string;
+    selectorData: AssetGroupTagSelector | undefined;
+    onClick: () => void;
+}> = ({ selectorId, selectorData, onClick }) => {
+    if (selectorId === '') return null;
+
+    if (selectorData === undefined) return null;
+
+    if (selectorData.is_default) return null;
+
+    return (
+        <Button variant={'text'} onClick={onClick}>
+            <span>
+                <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
+            </span>
+        </Button>
+    );
 };
 
 const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({
@@ -57,7 +88,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
 }) => {
     const { tagId = '', selectorId = '' } = useParams();
 
-    const [results, setResults] = useState<GraphNodes | null>(null);
+    const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -86,6 +117,20 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         queryFn: async () => {
             const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
             return response.data.data['selector'];
+        },
+        enabled: selectorId !== '',
+    });
+
+    const seedsQuery = useQuery({
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
+        queryFn: async () => {
+            const seedsList = selectorQuery.data?.seeds.map((seed) => {
+                return `"${seed.value}"`;
+            });
+
+            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+            const response = await apiClient.cypherSearch(query);
+            return response.data.data;
         },
         enabled: selectorId !== '',
     });
@@ -124,27 +169,27 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         })}>
                         <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
-                            <AssetGroupSelectorObjectSelect setSeeds={setSeeds} />
+                            <AssetGroupSelectorObjectSelect
+                                setSeeds={setSeeds}
+                                setSeedPreviewResults={setResults}
+                                seeds={mapSeeds(seedsQuery.data?.nodes)}
+                            />
                         ) : (
                             <Cypher
                                 preview={false}
-                                setCypherSearchResults={setResults}
+                                setSeedPreviewResults={setResults}
                                 setSeeds={setSeeds}
                                 initialInput={selectorQuery.data?.seeds[0].value}
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
-                            {selectorId !== '' && (
-                                <Button
-                                    variant={'text'}
-                                    onClick={() => {
-                                        setDeleteDialogOpen(true);
-                                    }}>
-                                    <span>
-                                        <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
-                                    </span>
-                                </Button>
-                            )}
+                            <DeleteSelectorButton
+                                selectorId={selectorId}
+                                selectorData={selectorQuery.data}
+                                onClick={() => {
+                                    setDeleteDialogOpen(true);
+                                }}
+                            />
                             <Button variant={'secondary'} onClick={history.back}>
                                 Cancel
                             </Button>
@@ -163,7 +208,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         <span className='ml-8'>Object Name</span>
                     </div>
                     <VirtualizedNodeList
-                        nodes={results ? Object.values(results) : []}
+                        nodes={results ? results : []}
                         itemSize={46}
                         heightScalar={heightScalar.current}
                     />

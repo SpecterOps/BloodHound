@@ -17,28 +17,32 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { GraphNodes, SeedTypeCypher } from 'js-client-library';
+import { AssetGroupTagNode, SeedTypeCypher } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
+import 'src/styles/cypher.css';
 import { graphSchema } from '../../constants';
 import { encodeCypherQuery } from '../../hooks';
-import { apiClient } from '../../utils';
+import { apiClient, cn } from '../../utils';
 
 export const Cypher: FC<{
     preview?: boolean;
     initialInput?: string;
-    setCypherSearchResults?: (nodes: GraphNodes | null) => void;
+    setSeedPreviewResults?: (nodes: AssetGroupTagNode[] | null) => void;
     setSeeds?: (seeds: SelectorSeedRequest[]) => void;
-}> = ({ preview = true, initialInput = '', setCypherSearchResults, setSeeds }) => {
+}> = ({ preview = true, initialInput = '', setSeedPreviewResults, setSeeds }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
+    const [stalePreview, setStalePreview] = useState(false);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const cypherUseQuery = useQuery({
-        queryKey: ['tier-management', 'cypher'],
-        queryFn: ({ signal }) => apiClient.cypherSearch(cypherQuery, { signal }).then((res) => res.data.data),
+    const previewQuery = useQuery({
+        queryKey: ['tier-management', 'preview-selectors', SeedTypeCypher, cypherQuery],
+        queryFn: ({ signal }) =>
+            apiClient
+                .assetGroupTagsPreviewSelectors({ seeds: [{ type: SeedTypeCypher, value: cypherQuery }] }, { signal })
+                .then((res) => res.data.data['members']),
         retry: false,
-        enabled: false,
     });
 
     const kindsQuery = useQuery({
@@ -47,25 +51,35 @@ export const Cypher: FC<{
     });
 
     useEffect(() => {
-        if (!setCypherSearchResults) return;
+        if (!setSeedPreviewResults) {
+            return;
+        }
 
-        const result = cypherUseQuery.data ? cypherUseQuery.data.nodes : null;
+        const result = previewQuery.data ? previewQuery.data : null;
 
-        setCypherSearchResults(result);
-    }, [cypherUseQuery.data, setCypherSearchResults]);
+        setSeedPreviewResults(result);
+    }, [previewQuery.data, setSeedPreviewResults]);
 
     const schema = useCallback(() => graphSchema(kindsQuery.data), [kindsQuery.data]);
 
     const handleCypherSearch = useCallback(() => {
-        if (preview) return;
-        if (setSeeds) setSeeds([{ type: SeedTypeCypher, value: cypherQuery }]);
-        if (cypherQuery) cypherUseQuery.refetch();
-    }, [cypherUseQuery, cypherQuery, preview, setSeeds]);
+        if (preview) {
+            return;
+        }
+        if (setSeeds) {
+            setSeeds([{ type: SeedTypeCypher, value: cypherQuery }]);
+        }
+        if (cypherQuery) {
+            previewQuery.refetch();
+            setStalePreview(false);
+        }
+    }, [previewQuery, cypherQuery, preview, setSeeds]);
 
     const onValueChanged = useCallback(
         (value: string) => {
             if (preview) return;
             setCypherQuery(value);
+            setStalePreview(true);
         },
         [preview, setCypherQuery]
     );
@@ -91,7 +105,12 @@ export const Cypher: FC<{
                         {!preview && (
                             <Button
                                 variant={'text'}
-                                className='p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline'
+                                className={cn(
+                                    'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
+                                    {
+                                        'animate-pulse': stalePreview,
+                                    }
+                                )}
                                 onClick={handleCypherSearch}>
                                 Run
                             </Button>
@@ -102,7 +121,10 @@ export const Cypher: FC<{
             <CardContent className='px-6'>
                 <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
                     <CypherEditor
-                        className='flex flex-col border-solid border border-black border-opacity-25 rounded-lg bg-white min-h-64 overflow-auto dark:bg-[#002b36] grow-1'
+                        className={cn(
+                            'flex flex-col border-solid border border-neutral-light-5 dark:border-neutral-dark-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
+                            { 'bg-transparent dark:bg-transparent': preview }
+                        )}
                         ref={cypherEditorRef}
                         value={cypherQuery}
                         onValueChanged={onValueChanged}

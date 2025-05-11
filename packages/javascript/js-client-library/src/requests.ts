@@ -27,6 +27,8 @@ export interface LoginRequest {
     otp?: string;
 }
 
+export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
+
 // This type makes it so that `selector_id` is optional in the selector seed request shape.
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;

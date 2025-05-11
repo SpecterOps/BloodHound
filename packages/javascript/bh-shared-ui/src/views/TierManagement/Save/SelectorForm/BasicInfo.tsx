@@ -35,8 +35,7 @@ import { FC, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { AppIcon } from '../../../../components';
-import { apiClient, cn } from '../../../../utils';
+import { apiClient } from '../../../../utils';
 import { SelectorFormInputs } from './types';
 
 const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: SeedTypes }> = ({
@@ -69,7 +68,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         enabled: selectorId !== '',
     });
 
-    const [disabled, setDisabled] = useState(selectorQuery.data?.disabled_at === null);
+    const [enabled, setEnabled] = useState(selectorQuery.data?.disabled_by === null ? true : false);
 
     // Updates the select option if editing an existing selector to match the existing selectors value
     useEffect(() => {
@@ -83,29 +82,29 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
     if (tagQuery.isError || selectorQuery.isError) throw new Error();
 
     return (
-        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 max-h-[36rem]'}>
+        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
             <CardContent>
-                <div className={cn('mb-4', { hidden: !selectorQuery.data?.allow_disable })}>
+                <div className='mb-4'>
                     <Label htmlFor='disabled_at' className='text-base font-bold'>
                         Selector Status
                     </Label>
                     <div className='flex gap-2 items-center mt-2'>
                         <Switch
                             id='disabled_at'
-                            defaultChecked={!disabled}
+                            checked={enabled}
+                            disabled={selectorQuery.data && !selectorQuery.data.allow_disable}
                             {...register('disabled_at')}
                             onCheckedChange={(checked: boolean) => {
+                                setEnabled((prev) => !prev);
                                 if (checked) {
-                                    setValue('disabled_at', DateTime.now().toISO());
-                                    setDisabled(true);
-                                } else {
                                     setValue('disabled_at', null);
-                                    setDisabled(false);
+                                } else {
+                                    setValue('disabled_at', DateTime.now().toISO());
                                 }
                             }}
                         />
-                        <p className='flex items-center ml-2'>{disabled ? 'Enabled' : 'Disabled'}</p>
+                        <p className='flex items-center ml-2'>{enabled ? 'Enabled' : 'Disabled'}</p>
                     </div>
                 </div>
                 <p className='font-bold'>
@@ -137,7 +136,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                 {...register('description', { value: selectorQuery.data?.description })}
                                 rows={3}
                                 className={
-                                    'rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
+                                    'resize-none rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
                                 }
                                 placeholder='Description Input'
                             />
@@ -168,25 +167,6 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                     </SelectContent>
                                 </SelectPortal>
                             </Select>
-                        </div>
-                        <div className='hidden'>
-                            <Label htmlFor='autoCertify' className='text-base font-bold'>
-                                Automatic Certification
-                            </Label>
-                            <div className='flex gap-2 items-center mt-2'>
-                                <Switch
-                                    id='autoCertify'
-                                    defaultChecked
-                                    {...register('autoCertify')}
-                                    onCheckedChange={(checked: boolean) => {
-                                        setValue('autoCertify', checked);
-                                    }}
-                                />
-                                <p className='flex items-center ml-2'>
-                                    Selector automatically applies certification for objects tagged
-                                    <AppIcon.Info className='mt-[2px] ml-2' />
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
