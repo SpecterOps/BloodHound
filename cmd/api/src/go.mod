@@ -21,7 +21,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/bloodhoundad/azurehound/v2 v2.0.1
+	github.com/bloodhoundad/azurehound/v2 v2.4.1
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/crewjam/saml v0.4.14

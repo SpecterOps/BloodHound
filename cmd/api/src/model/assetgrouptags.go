@@ -156,7 +156,7 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 type SelectorSeeds []SelectorSeed
 
 type SelectorSeed struct {
-	SelectorId int          `json:"selector_id"`
+	SelectorId int          `json:"-"`
 	Type       SelectorType `json:"type"`
 	Value      string       `json:"value"`
 }
