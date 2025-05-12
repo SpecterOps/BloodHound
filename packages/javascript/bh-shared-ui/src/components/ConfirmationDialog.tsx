@@ -64,7 +64,7 @@ const ConfirmationDialog: React.FC<{
                  *   Therefore, the second, more urgent modal, is hidden behind the primary modal.
                  *   For now, overriding the styles on the confirmation modal and assuming it
                  *   should have priority over all other modals seems like a reasonable solution.
-                 *   When we remove all MUI dialogs down the road, we may want a prettier
+                 *   When we remove all MUI dialogs down the road, we may want a prettier solution.
                  */}
                 <DialogOverlay className='z-[1300]' />
                 <DialogContent className='z-[1400]'>
