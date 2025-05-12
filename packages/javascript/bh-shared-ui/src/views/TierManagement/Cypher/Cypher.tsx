@@ -21,10 +21,10 @@ import { AssetGroupTagNode, SeedTypeCypher } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
-import 'src/styles/cypher.css';
-import { graphSchema } from '../../constants';
-import { encodeCypherQuery } from '../../hooks';
-import { apiClient, cn } from '../../utils';
+import { graphSchema } from '../../../constants';
+import { encodeCypherQuery } from '../../../hooks';
+import { apiClient, cn } from '../../../utils';
+import './cypher.css';
 
 export const Cypher: FC<{
     preview?: boolean;

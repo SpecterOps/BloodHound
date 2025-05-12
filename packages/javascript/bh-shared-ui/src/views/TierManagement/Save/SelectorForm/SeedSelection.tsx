@@ -32,7 +32,7 @@ import {
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
-import { Cypher } from '../../Cypher';
+import { Cypher } from '../../Cypher/Cypher';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 

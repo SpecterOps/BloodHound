@@ -15,28 +15,44 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
+import { SeedTypeObjectId } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../test-utils';
 import AssetGroupSelectorObjectSelect from './AssetGroupSelectorObjectSelect';
 
+const testNodes = [
+    {
+        name: 'foo',
+        objectid: '2',
+        type: 'User',
+    },
+];
 const testSearchResults = {
-    data: [
-        {
-            name: 'foo',
-            objectid: '2',
-            type: 'User',
-        },
-    ],
+    data: testNodes,
 };
+
+const server = setupServer(
+    rest.get(`/api/v2/search`, (_, res, ctx) => {
+        return res(ctx.json(testSearchResults));
+    }),
+    rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+        return res(ctx.json({ data: { members: testNodes } }));
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('AssetGroupSelectorObjectSelect', () => {
     const user = userEvent.setup();
-    const seeds: SelectorSeedRequest[] = [
+    const seeds = [
         {
-            type: SeedTypeObjectId,
+            type: 'Computer',
             value: '1',
+            name: 'bruce',
+            objectid: '1',
         },
     ];
 
@@ -44,7 +60,9 @@ describe('AssetGroupSelectorObjectSelect', () => {
 
     beforeEach(async () => {
         await act(async () => {
-            render(<AssetGroupSelectorObjectSelect setSeeds={setSeeds} seeds={seeds} />);
+            render(
+                <AssetGroupSelectorObjectSelect setSeeds={setSeeds} seeds={seeds} setSeedPreviewResults={vi.fn()} />
+            );
         });
     });
 
@@ -63,14 +81,6 @@ describe('AssetGroupSelectorObjectSelect', () => {
     });
 
     it('invokes setSeeds when a new seed is selected', async () => {
-        const server = setupServer(
-            rest.get(`/api/v2/search`, (_, res, ctx) => {
-                return res(ctx.json(testSearchResults));
-            })
-        );
-
-        server.listen();
-
         await screen.findByTestId('explore_search_input-search');
 
         const input = screen.getByLabelText('Search Objects To Add');
@@ -86,7 +96,5 @@ describe('AssetGroupSelectorObjectSelect', () => {
         waitFor(() => {
             expect(setSeeds).toHaveBeenCalledWith([...seeds, { type: SeedTypeObjectId, value: '2' }]);
         });
-
-        server.close();
     });
 });
