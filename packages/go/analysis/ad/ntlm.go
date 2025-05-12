@@ -173,17 +173,15 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					continue
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
+				} else if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+					// Any computers that are restricted/protected are not valid targets for the next relays
+					continue
 				} else {
 					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserGroupID)
 					}); err != nil {
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToSMB, err))
 						// Additional analysis may occur if one of our analysis errors
-						continue
-					}
-
-					// Any computers that are restricted/protected are not valid targets for the next relays
-					if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
 						continue
 					}
 
