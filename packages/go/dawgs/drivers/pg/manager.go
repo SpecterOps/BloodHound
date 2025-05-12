@@ -40,6 +40,8 @@ type KindMapper interface {
 
 func KindMapperFromGraphDatabase(graphDB graph.Database) (KindMapper, error) {
 	switch typedGraphDB := graphDB.(type) {
+	case *graph.DatabaseSwitch:
+		return KindMapperFromGraphDatabase(typedGraphDB.InnerDB())
 	case *Driver:
 		return typedGraphDB.SchemaManager, nil
 	default:

@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/changestream"
 	"log/slog"
 	"time"
 
@@ -42,6 +44,7 @@ type Daemon struct {
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
+	cs                  *changestream.Daemon
 	cfg                 config.Configuration
 	tickInterval        time.Duration
 	ctx                 context.Context
@@ -54,7 +57,7 @@ func (s *Daemon) Name() string {
 }
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
-	return &Daemon{
+	inst := &Daemon{
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,
@@ -64,6 +67,16 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		tickInterval:        tickInterval,
 		ingestSchema:        ingestSchema,
 	}
+
+	if kindMapper, err := pg.KindMapperFromGraphDatabase(connections.Graph); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error getting kind mapper for change stream: %v", err))
+	} else if changeStream, err := changestream.NewDaemon(ctx, connections.RDMS, cfg.Database.PostgreSQLConnectionString(), kindMapper); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error setting up change stream: %v", err))
+	} else {
+		inst.cs = changeStream
+	}
+
+	return inst
 }
 
 func (s *Daemon) analyze() {
@@ -137,6 +150,12 @@ func (s *Daemon) Start(ctx context.Context) {
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
 		pruningTicker     = time.NewTicker(pruningInterval)
 	)
+
+	if s.cs != nil {
+		if err := s.cs.RunLoop(ctx); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Error starting change stream: %v", err))
+		}
+	}
 
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()

@@ -57,6 +57,10 @@ type DatabaseSwitch struct {
 	batchWriteSize int
 }
 
+func (s *DatabaseSwitch) InnerDB() Database {
+	return s.currentDB
+}
+
 func NewDatabaseSwitch(ctx context.Context, initialDB Database) *DatabaseSwitch {
 	return &DatabaseSwitch{
 		activeContexts: map[any]func(){},

@@ -32,11 +32,17 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-type Int2ArrayEncoder struct {
+type NestedArrayEncoder struct {
 	buffer *bytes.Buffer
 }
 
-func (s *Int2ArrayEncoder) Encode(values []int16) string {
+func NewInt2ArrayEncoder() NestedArrayEncoder {
+	return NestedArrayEncoder{
+		buffer: bytes.NewBuffer(nil),
+	}
+}
+
+func (s *NestedArrayEncoder) EncodeInt16(values []int16) string {
 	s.buffer.Reset()
 	s.buffer.WriteRune('{')
 
@@ -46,6 +52,22 @@ func (s *Int2ArrayEncoder) Encode(values []int16) string {
 		}
 
 		s.buffer.WriteString(strconv.Itoa(int(value)))
+	}
+
+	s.buffer.WriteRune('}')
+	return s.buffer.String()
+}
+
+func (s *NestedArrayEncoder) EncodeText(values []string) string {
+	s.buffer.Reset()
+	s.buffer.WriteRune('{')
+
+	for idx, value := range values {
+		if idx > 0 {
+			s.buffer.WriteRune(',')
+		}
+
+		s.buffer.WriteString(value)
 	}
 
 	s.buffer.WriteRune('}')
@@ -62,8 +84,8 @@ type batch struct {
 	nodeUpdateByBuffer         []graph.NodeUpdate
 	relationshipCreateBuffer   []*graph.Relationship
 	relationshipUpdateByBuffer []graph.RelationshipUpdate
-	batchWriteSize             int
-	kindIDEncoder              Int2ArrayEncoder
+	batchWriteSize int
+	kindIDEncoder  NestedArrayEncoder
 }
 
 func newBatch(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaManager, cfg *Config) (*batch, error) {
@@ -75,9 +97,7 @@ func newBatch(ctx context.Context, conn *pgxpool.Conn, schemaManager *SchemaMana
 			schemaManager:    schemaManager,
 			innerTransaction: tx,
 			batchWriteSize:   cfg.BatchWriteSize,
-			kindIDEncoder: Int2ArrayEncoder{
-				buffer: &bytes.Buffer{},
-			},
+			kindIDEncoder:    NewInt2ArrayEncoder(),
 		}, nil
 	}
 }
@@ -153,10 +173,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 		numCreates    = len(s.nodeCreateBuffer)
 		nodeIDs       = make([]uint64, numCreates)
 		kindIDSlices  = make([]string, numCreates)
-		kindIDEncoder = Int2ArrayEncoder{
-			buffer: &bytes.Buffer{},
-		}
-		properties = make([]pgtype.JSONB, numCreates)
+		properties    = make([]pgtype.JSONB, numCreates)
 	)
 
 	for idx, nextNode := range s.nodeCreateBuffer {
@@ -165,7 +182,7 @@ func (s *batch) flushNodeCreateBufferWithIDs() error {
 		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
 			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
-			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
+			kindIDSlices[idx] = s.kindIDEncoder.EncodeInt16(mappedKindIDs)
 		}
 
 		if propertiesJSONB, err := pgsql.PropertiesToJSONB(nextNode.Properties); err != nil {
@@ -189,7 +206,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 	var (
 		numCreates    = len(s.nodeCreateBuffer)
 		kindIDSlices  = make([]string, numCreates)
-		kindIDEncoder = Int2ArrayEncoder{
+		kindIDEncoder = NestedArrayEncoder{
 			buffer: &bytes.Buffer{},
 		}
 		properties = make([]pgtype.JSONB, numCreates)
@@ -199,7 +216,7 @@ func (s *batch) flushNodeCreateBufferWithoutIDs() error {
 		if mappedKindIDs, err := s.schemaManager.AssertKinds(s.ctx, nextNode.Kinds); err != nil {
 			return fmt.Errorf("unable to map kinds %w", err)
 		} else {
-			kindIDSlices[idx] = kindIDEncoder.Encode(mappedKindIDs)
+			kindIDSlices[idx] = kindIDEncoder.EncodeInt16(mappedKindIDs)
 		}
 
 		if propertiesJSONB, err := pgsql.PropertiesToJSONB(nextNode.Properties); err != nil {
@@ -284,13 +301,13 @@ func (s *NodeUpsertParameters) Format(graphTarget model.Graph) []any {
 	}
 }
 
-func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdate, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdate, schemaManager *SchemaManager, kindIDEncoder NestedArrayEncoder) error {
 	s.IDFutures = append(s.IDFutures, update.IDFuture)
 
 	if mappedKindIDs, err := schemaManager.AssertKinds(ctx, update.Node.Kinds); err != nil {
 		return fmt.Errorf("unable to map kinds %w", err)
 	} else {
-		s.KindIDSlices = append(s.KindIDSlices, kindIDEncoder.Encode(mappedKindIDs))
+		s.KindIDSlices = append(s.KindIDSlices, kindIDEncoder.EncodeInt16(mappedKindIDs))
 	}
 
 	if propertiesJSONB, err := pgsql.PropertiesToJSONB(update.Node.Properties); err != nil {
@@ -302,7 +319,7 @@ func (s *NodeUpsertParameters) Append(ctx context.Context, update *sql.NodeUpdat
 	return nil
 }
 
-func (s *NodeUpsertParameters) AppendAll(ctx context.Context, updates *sql.NodeUpdateBatch, schemaManager *SchemaManager, kindIDEncoder Int2ArrayEncoder) error {
+func (s *NodeUpsertParameters) AppendAll(ctx context.Context, updates *sql.NodeUpdateBatch, schemaManager *SchemaManager, kindIDEncoder NestedArrayEncoder) error {
 	for _, nextUpdate := range updates.Updates {
 		if err := s.Append(ctx, nextUpdate, schemaManager, kindIDEncoder); err != nil {
 			return err

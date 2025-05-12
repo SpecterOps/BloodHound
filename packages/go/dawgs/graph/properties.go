@@ -17,7 +17,10 @@
 package graph
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/cespare/xxhash"
+	"sort"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -244,6 +247,42 @@ type Properties struct {
 	Map      map[string]any      `json:"map"`
 	Deleted  map[string]struct{} `json:"deleted"`
 	Modified map[string]struct{} `json:"modified"`
+}
+
+func (s *Properties) Keys(ignoredKeys map[string]struct{}) []string {
+	keys := make([]string, 0, len(s.Map))
+
+	for key := range s.Map {
+		if _, isIgnored := ignoredKeys[key]; !isIgnored {
+			keys = append(keys, key)
+		}
+	}
+
+	sort.Strings(keys)
+	return keys
+}
+
+func (s *Properties) Hash(ignoredKeys map[string]struct{}) ([]byte, error) {
+	var (
+		digest = xxhash.New()
+	)
+
+
+	for _, key := range s.Keys(ignoredKeys) {
+		if _, err := digest.Write([]byte(key)); err != nil {
+			return nil, err
+		}
+
+		value := s.Map[key]
+
+		if valueContent, err := json.Marshal(value); err != nil {
+			return nil, err
+		} else if _, err := digest.Write(valueContent); err != nil {
+			return nil, err
+		}
+	}
+
+	return digest.Sum(nil), nil
 }
 
 func (s *Properties) Merge(other *Properties) {
