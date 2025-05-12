@@ -25,10 +25,13 @@ import (
 func getNodeDisplayProperties(target *graph.Node) map[string]any {
 	properties := target.Properties.Map
 
-	// Set the node level. This is legacy behavior that should be eventually refactored. The UI should be able to
-	// consume the system_tags and user_tags properties directly.
+	// Set the node level. This is legacy behavior that should be eventually refactored.
 	if tiering.IsTierZero(target) {
 		properties["level"] = 0
+		// Set tier zero state to control glyph
+		properties["isTierZero"] = true
+	} else {
+		properties["isTierZero"] = false
 	}
 
 	// Set the legacy node type

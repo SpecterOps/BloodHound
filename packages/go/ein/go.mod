@@ -21,7 +21,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/bloodhoundad/azurehound/v2 v2.0.1
+	github.com/bloodhoundad/azurehound/v2 v2.4.1
 	github.com/stretchr/testify v1.10.0
 )
 

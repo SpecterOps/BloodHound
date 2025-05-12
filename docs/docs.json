@@ -233,6 +233,7 @@
                 "pages": [
                   "resources/edges/overview",
                   "resources/edges/traversable-edges",
+                  "resources/edges/abuse-tgt-delegation",
                   "resources/edges/adcs-esc1",
                   "resources/edges/adcs-esc10a",
                   "resources/edges/adcs-esc10b",
@@ -299,6 +300,7 @@
                   "resources/edges/can-rdp",
                   "resources/edges/coerce-to-tgt",
                   "resources/edges/contains",
+                  "resources/edges/cross-forest-trust",
                   "resources/edges/dc-for",
                   "resources/edges/dc-sync",
                   "resources/edges/delegated-enrollment-agent",
@@ -333,11 +335,12 @@
                   "resources/edges/read-laps-password",
                   "resources/edges/remote-interactive-logon-right",
                   "resources/edges/root-ca-for",
+                  "resources/edges/same-forest-trust",
+                  "resources/edges/spoof-sid-history",
                   "resources/edges/sql-admin",
                   "resources/edges/sync-laps-password",
                   "resources/edges/synced-to-ad-user",
                   "resources/edges/synced-to-entra-user",
-                  "resources/edges/trusted-by",
                   "resources/edges/trusted-for-nt-auth",
                   "resources/edges/write-account-restrictions",
                   "resources/edges/write-dacl",
@@ -370,6 +373,9 @@
                   "resources/release-notes/v7-3-0",
                   "resources/release-notes/v7-2-1",
                   "resources/release-notes/v7-2-0",
+                  "resources/release-notes/v7-1-0",
+                  "resources/release-notes/v7-0-0",
+                  "resources/release-notes/v6-4-0",
                   {
                     "group": "Archive",
                     "pages": [
@@ -874,13 +880,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "https://support.bloodhoundenterprise.io/hc/en-us/requests/new?utm_campaign=&utm_medium=&utm_source=&utm_term=&utm_content=&Latest_Campaign="
+        "href": "https://support.bloodhoundenterprise.io/hc/en-us/requests/new"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Contact Us",
-      "href": "https://specterops.io/contact/?_gl=1*1lu38w6*_up*MQ..*_ga*NTYxMzY4OTkxLjE3MzMzMDkyNTk.*_ga_53SGLN9EBJ*MTczMzMwOTI1Ny4xLjAuMTczMzMwOTI1Ny4wLjAuMA.."
+      "href": "https://specterops.io/contact/"
     }
   },
   "footer": {
@@ -889,7 +895,7 @@
       "website": "https://infosec.exchange/@SpecterOps",
       "github": "https://github.com/SpecterOps/BloodHound",
       "linkedin": "https://www.linkedin.com/company/specterops",
-      "slack": "https://join.slack.com/t/bloodhoundhq/shared_invite/zt-1tgq6ojd2-ixpx5nz9Wjtbhc3i8AVAWw",
+      "slack": "https://ghst.ly/BHSlack",
       "instagram": "https://www.instagram.com/specterops.io/",
       "youtube": "https://www.youtube.com/channel/UCWMKKqCCQkUjU8dIyiL1yhQ"
     }

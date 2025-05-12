@@ -32,7 +32,7 @@ const server = setupServer(
     rest.get('/api/v2/features', (req, res, ctx) => {
         return res(
             ctx.json({
-                data: [],
+                data: [{ id: 1, key: 'tier_management_engine', enabled: true }],
             })
         );
     }),

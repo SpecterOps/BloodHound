@@ -25,6 +25,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -34,6 +35,18 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/ingest"
 )
+
+type TimestampedBatch struct {
+	Batch      graph.Batch
+	IngestTime time.Time
+}
+
+func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+	return &TimestampedBatch{
+		Batch:      batch,
+		IngestTime: ingestTime,
+	}
+}
 
 func HasIngestJobsWaitingForAnalysis(ctx context.Context, db database.Database) (bool, error) {
 	if ingestJobsUnderAnalysis, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusAnalyzing); err != nil {
@@ -196,7 +209,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType) (int, int, error) {
+func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType model.FileType, ingestTime time.Time) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
@@ -209,12 +222,13 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 		failed = 0
 
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(batch, file, s.ingestSchema, adcsEnabled); err != nil {
+				} else if err := ReadFileForIngest(timestampedBatch, file, s.ingestSchema, adcsEnabled); err != nil {
 					failed++
 					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}
@@ -235,6 +249,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, path string, fileType mo
 
 // processIngestTasks covers the generic ingest case for ingested data.
 func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
+	nowUTC := time.Now().UTC()
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 		return
@@ -253,7 +268,7 @@ func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.Inges
 			return
 		}
 
-		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType)
+		total, failed, err := s.processIngestFile(ctx, ingestTask.FileName, ingestTask.FileType, nowUTC)
 		if errors.Is(err, fs.ErrNotExist) {
 			slog.WarnContext(ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
 		} else if err != nil {
