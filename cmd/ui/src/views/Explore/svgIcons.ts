@@ -32,6 +32,8 @@ const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): 
     });
 };
 
+console.log("HELLO!")
+
 const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string, color: string): string => {
     const modifiedIcon = icon(iconDefinition, {
         styles: { 'transform-origin': 'center', scale, color },

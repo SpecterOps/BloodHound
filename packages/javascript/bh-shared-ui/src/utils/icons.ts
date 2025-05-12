@@ -47,8 +47,12 @@ import {
     faUser,
     faUsers,
     faWindowRestore,
+    fas,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+import { icon, library } from '@fortawesome/fontawesome-svg-core';
+
+library.add(fas)
 
 export type IconInfo = {
     icon: IconDefinition;
@@ -268,14 +272,33 @@ export const GLYPHS: GlyphDictionary = {
     },
 };
 
-export const UNKNOWN_ICON: IconInfo = {
+const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
 
-export type CustomIconDictionary = { [index: string]: string};
+type CustomIconDictionary = { [index: string]: IconInfo};
 
-export const CUSTOM_ICONS: CustomIconDictionary = {
-    ['custom-computer']: 'coffee',
-    ['custom-server']: 'user',
+const CUSTOM_ICONS: CustomIconDictionary = {};
+
+export const GetIconInfo = (iconName: string, appendUrl: boolean): IconInfo => {
+    if (iconName in NODE_ICON) {
+        return NODE_ICON[iconName]
+    }
+
+    if (iconName in CUSTOM_ICONS) {
+        return CUSTOM_ICONS[iconName]
+    }
+
+    return UNKNOWN_ICON;
+}
+
+const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string, color: string): string => {
+    const modifiedIcon = icon(iconDefinition, {
+        styles: { 'transform-origin': 'center', scale, color },
+    });
+
+    const svgString = modifiedIcon.html[0].replace(/<svg/, '<svg width="200" height="200"');
+    const svg = new Blob([svgString], { type: 'image/svg+xml' });
+    return URL.createObjectURL(svg);
 };
