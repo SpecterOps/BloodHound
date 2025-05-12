@@ -40,7 +40,6 @@ const ConfirmationDialog: React.FC<{
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
-        debugger;
         onCancel();
         setTimeout(() => {
             setChallengeTxtReply('');
