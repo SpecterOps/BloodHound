@@ -41,7 +41,9 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     return (
         <div className='max-h-full flex flex-col gap-8'>
             <Card className='px-6 py-6 max-w-[32rem]'>
-                <div className='text-xl font-bold'>{data.name}</div>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
+                </div>
                 {data.position !== null && (
                     <div className='mt-4'>
                         <DetailField label='Tier' value={data.position.toString()} />
@@ -54,7 +56,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Created by' value={data.created_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
-                <div className='mt-4'>
+                <div className='mt-4' hidden>
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
@@ -70,7 +72,9 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     return (
         <div className='max-h-full flex flex-col gap-8'>
             <Card className='px-6 py-6 max-w-[32rem]'>
-                <div className='text-xl font-bold'>{data.name}</div>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
+                </div>
                 <div className='mt-4'>
                     <DetailField label='Description' value={data.description} />
                 </div>
@@ -79,11 +83,11 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Last Updated' value={lastUpdated} />
                     <DetailField label='Type' value={SeedTypesMap[seedType]} />
                 </div>
-                <div className='mt-4'>
+                <div className='mt-4' hidden>
                     <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Selector Status' value={data.disabled_at ? 'Enabled' : 'Disabled'} />
+                    <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {getSelectorSeedType(data) === SeedTypeCypher && <Cypher preview initialInput={data.seeds[0].value} />}

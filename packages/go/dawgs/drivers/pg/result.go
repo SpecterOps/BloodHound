@@ -26,88 +26,34 @@ import (
 type queryResult struct {
 	ctx        context.Context
 	rows       pgx.Rows
+	values     []any
 	kindMapper KindMapper
 }
 
-func (s *queryResult) Next() bool {
-	return s.rows.Next()
+func (s *queryResult) Values() []any {
+	return s.values
 }
 
-func (s *queryResult) Mapper() (graph.ValueMapper, error) {
-	if values, err := s.rows.Values(); err != nil {
-		return nil, err
-	} else {
-		return NewValueMapper(s.ctx, values, s.kindMapper), nil
+func (s *queryResult) Next() bool {
+	if s.rows.Next() {
+		// This error check exists just as a guard for a successful return of this function. The expectation is that
+		// the pgx type will have error information attached to it which is reflected by the Error receiver function
+		// of this type
+		if values, err := s.rows.Values(); err == nil {
+			s.values = values
+			return true
+		}
 	}
+
+	return false
+}
+
+func (s *queryResult) Mapper() graph.ValueMapper {
+	return NewValueMapper(s.ctx, s.kindMapper)
 }
 
 func (s *queryResult) Scan(targets ...any) error {
-	pgTargets := make([]any, 0, len(targets))
-
-	for _, target := range targets {
-		switch target.(type) {
-		case *graph.Path:
-			pgTargets = append(pgTargets, &pathComposite{})
-
-		case *graph.Relationship:
-			pgTargets = append(pgTargets, &edgeComposite{})
-
-		case *graph.Node:
-			pgTargets = append(pgTargets, &nodeComposite{})
-
-		case *graph.Kind:
-			pgTargets = append(pgTargets, new(int16))
-
-		case *graph.Kinds:
-			pgTargets = append(pgTargets, &[]int16{})
-
-		default:
-			pgTargets = append(pgTargets, target)
-		}
-	}
-
-	if err := s.rows.Scan(pgTargets...); err != nil {
-		return err
-	}
-
-	for idx, pgTarget := range pgTargets {
-		switch typedPGTarget := pgTarget.(type) {
-		case *pathComposite:
-			if err := typedPGTarget.ToPath(s.ctx, s.kindMapper, targets[idx].(*graph.Path)); err != nil {
-				return err
-			}
-
-		case *edgeComposite:
-			if err := typedPGTarget.ToRelationship(s.ctx, s.kindMapper, targets[idx].(*graph.Relationship)); err != nil {
-				return err
-			}
-
-		case *nodeComposite:
-			if err := typedPGTarget.ToNode(s.ctx, s.kindMapper, targets[idx].(*graph.Node)); err != nil {
-				return err
-			}
-
-		case *int16:
-			if kindPtr, isKindType := targets[idx].(*graph.Kind); isKindType {
-				if kind, err := s.kindMapper.MapKindID(s.ctx, *typedPGTarget); err != nil {
-					return err
-				} else {
-					*kindPtr = kind
-				}
-			}
-
-		case *[]int16:
-			if kindsPtr, isKindsType := targets[idx].(*graph.Kinds); isKindsType {
-				if kinds, err := s.kindMapper.MapKindIDs(s.ctx, *typedPGTarget...); err != nil {
-					return err
-				} else {
-					*kindsPtr = kinds
-				}
-			}
-		}
-	}
-
-	return nil
+	return graph.ScanNextResult(s, targets...)
 }
 
 func (s *queryResult) Error() error {

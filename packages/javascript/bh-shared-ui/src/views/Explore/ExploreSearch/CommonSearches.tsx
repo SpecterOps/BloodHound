@@ -19,7 +19,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
-import { FeatureFlag } from '../../../components';
+import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
 import { CommonSearchType } from '../../../types';
 
