@@ -17,83 +17,73 @@
 package neo4j
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-func AsTime(value any) (time.Time, error) {
+func AsTime(value any) (time.Time, bool) {
 	switch typedValue := value.(type) {
 	case dbtype.Time:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.LocalTime:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.Date:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	case dbtype.LocalDateTime:
-		return typedValue.Time(), nil
+		return typedValue.Time(), true
 
 	default:
 		return graph.AsTime(value)
 	}
 }
 
-func mapValue(rawValue, target any) (bool, error) {
+func mapValue(rawValue, target any) bool {
 	switch typedTarget := target.(type) {
 	case *time.Time:
-		if value, err := AsTime(rawValue); err != nil {
-			return false, err
-		} else {
+		if value, typeOK := AsTime(rawValue); typeOK {
 			*typedTarget = value
+			return true
 		}
 
 	case *dbtype.Relationship:
-		if value, typeOK := rawValue.(dbtype.Relationship); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to *dbtype.Relationship", rawValue)
-		} else {
+		if value, typeOK := rawValue.(dbtype.Relationship); typeOK {
 			*typedTarget = value
+			return true
 		}
 
 	case *graph.Relationship:
-		if value, typeOK := rawValue.(dbtype.Relationship); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to *dbtype.Relationship", rawValue)
-		} else {
+		if value, typeOK := rawValue.(dbtype.Relationship); typeOK {
 			*typedTarget = *newRelationship(value)
+			return true
 		}
 
 	case *dbtype.Node:
-		if value, typeOK := rawValue.(dbtype.Node); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to *dbtype.Node", rawValue)
-		} else {
+		if value, typeOK := rawValue.(dbtype.Node); typeOK {
 			*typedTarget = value
+			return true
 		}
 
 	case *graph.Node:
-		if value, typeOK := rawValue.(dbtype.Node); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to *dbtype.Node", rawValue)
-		} else {
+		if value, typeOK := rawValue.(dbtype.Node); typeOK {
 			*typedTarget = *newNode(value)
+			return true
 		}
 
 	case *graph.Path:
-		if value, typeOK := rawValue.(dbtype.Path); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to *dbtype.Path", rawValue)
-		} else {
+		if value, typeOK := rawValue.(dbtype.Path); typeOK {
 			*typedTarget = newPath(value)
+			return true
 		}
-
-	default:
-		return false, nil
 	}
 
-	return true, nil
+	return false
 }
 
-func NewValueMapper(values []any) graph.ValueMapper {
-	return graph.NewValueMapper(values, mapValue)
+func NewValueMapper() graph.ValueMapper {
+	return graph.NewValueMapper(mapValue)
 }
