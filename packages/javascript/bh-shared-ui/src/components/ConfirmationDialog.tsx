@@ -20,6 +20,7 @@ import {
     DialogActions,
     DialogContent,
     DialogDescription,
+    DialogOverlay,
     DialogPortal,
     DialogTitle,
     Input,
@@ -39,6 +40,7 @@ const ConfirmationDialog: React.FC<{
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
     const handleClose = useCallback(() => {
+        debugger;
         onCancel();
         setTimeout(() => {
             setChallengeTxtReply('');
@@ -55,7 +57,18 @@ const ConfirmationDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                <DialogContent>
+                {/*
+                 *   Sometimes we have a confirmation modal launching over a primary modal
+                 *   (As in UpdateAzurehoundClientDialog -> delete schedule)
+                 *   However, the outer modal is MUI, whose z-index is 1300,
+                 *   While the second ConfirmationModal is Doodle, which uses tailwind z-50.
+                 *   Therefore, the second, more urgent modal, is hidden behind the primary modal.
+                 *   For now, overriding the styles on the confirmation modal and assuming it
+                 *   should have priority over all other modals seems like a reasonable solution.
+                 *   When we remove all MUI dialogs down the road, we may want a prettier
+                 */}
+                <DialogOverlay className='z-[1300]' />
+                <DialogContent className='z-[1400]'>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
