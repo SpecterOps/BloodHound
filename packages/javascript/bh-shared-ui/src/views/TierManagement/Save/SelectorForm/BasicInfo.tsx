@@ -29,7 +29,7 @@ import {
     Skeleton,
     Switch,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
+import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -37,6 +37,13 @@ import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../../../../utils';
 import { SelectorFormInputs } from './types';
+
+const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
+    if (id === '') return true;
+    if (data === undefined) return true;
+    if (data.disabled_by !== null) return false;
+    return true;
+};
 
 const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: SeedTypes }> = ({
     setSelectorType,
@@ -68,7 +75,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         enabled: selectorId !== '',
     });
 
-    const [enabled, setEnabled] = useState(selectorQuery.data?.disabled_by === null ? true : false);
+    const [enabled, setEnabled] = useState(selectorStatus(selectorId, selectorQuery.data));
 
     // Updates the select option if editing an existing selector to match the existing selectors value
     useEffect(() => {
@@ -93,7 +100,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                         <Switch
                             id='disabled_at'
                             checked={enabled}
-                            disabled={selectorQuery.data && !selectorQuery.data.allow_disable}
+                            disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
                             {...register('disabled_at')}
                             onCheckedChange={(checked: boolean) => {
                                 setEnabled((prev) => !prev);

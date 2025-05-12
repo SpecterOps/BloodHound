@@ -15,10 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createBrowserHistory } from 'history';
-import { AssetGroupTagNode, AssetGroupTagSelector, GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
@@ -33,6 +31,7 @@ import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
+import DeleteSelectorButton from './DeleteSelectorButton';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -60,26 +59,6 @@ const getListScalar = (windoHeight: number) => {
     if (1080 >= windoHeight && windoHeight > 900) return 14;
     if (900 >= windoHeight) return 10;
     return 8;
-};
-
-const DeleteSelectorButton: FC<{
-    selectorId: string;
-    selectorData: AssetGroupTagSelector | undefined;
-    onClick: () => void;
-}> = ({ selectorId, selectorData, onClick }) => {
-    if (selectorId === '') return null;
-
-    if (selectorData === undefined) return null;
-
-    if (selectorData.is_default) return null;
-
-    return (
-        <Button variant={'text'} onClick={onClick}>
-            <span>
-                <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
-            </span>
-        </Button>
-    );
 };
 
 const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({

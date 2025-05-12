@@ -107,6 +107,10 @@ const SelectorForm: FC = () => {
             try {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
+                if (values.disabled_at !== null) {
+                    values.disabled_at = DateTime.now().toISO();
+                }
+
                 await createSelectorMutation.mutateAsync({ tagId, values });
 
                 navigate(`/tier-management/details/tags/${tagId}`);

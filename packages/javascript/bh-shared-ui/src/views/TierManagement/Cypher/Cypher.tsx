@@ -21,6 +21,7 @@ import { AssetGroupTagNode, SeedTypeCypher } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
@@ -32,6 +33,7 @@ export const Cypher: FC<{
     setSeedPreviewResults?: (nodes: AssetGroupTagNode[] | null) => void;
     setSeeds?: (seeds: SelectorSeedRequest[]) => void;
 }> = ({ preview = true, initialInput = '', setSeedPreviewResults, setSeeds }) => {
+    const { selectorId } = useParams();
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [stalePreview, setStalePreview] = useState(false);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
@@ -43,6 +45,7 @@ export const Cypher: FC<{
                 .assetGroupTagsPreviewSelectors({ seeds: [{ type: SeedTypeCypher, value: cypherQuery }] }, { signal })
                 .then((res) => res.data.data['members']),
         retry: false,
+        enabled: selectorId !== undefined,
     });
 
     const kindsQuery = useQuery({
