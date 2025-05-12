@@ -115,7 +115,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
-                                console.log('🚀 ~ .map ~ listItem:', listItem);
                                 return (
                                     <li
                                         key={listItem.id}
