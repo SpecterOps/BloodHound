@@ -50,7 +50,7 @@ import {
     fas,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
-import { icon, library } from '@fortawesome/fontawesome-svg-core';
+import { library } from '@fortawesome/fontawesome-svg-core';
 
 library.add(fas)
 
@@ -272,33 +272,21 @@ export const GLYPHS: GlyphDictionary = {
     },
 };
 
-const UNKNOWN_ICON: IconInfo = {
+export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
 
-type CustomIconDictionary = { [index: string]: IconInfo};
+export const CUSTOM_ICONS: IconDictionary = {};
 
-const CUSTOM_ICONS: CustomIconDictionary = {};
-
-export const GetIconInfo = (iconName: string, appendUrl: boolean): IconInfo => {
-    if (iconName in NODE_ICON) {
-        return NODE_ICON[iconName]
-    }
-
+export const GetIconInfo = (iconName: string): IconInfo => {
     if (iconName in CUSTOM_ICONS) {
         return CUSTOM_ICONS[iconName]
     }
 
+    if (iconName in NODE_ICON) {
+        return NODE_ICON[iconName]
+    }
+    
     return UNKNOWN_ICON;
 }
-
-const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string, color: string): string => {
-    const modifiedIcon = icon(iconDefinition, {
-        styles: { 'transform-origin': 'center', scale, color },
-    });
-
-    const svgString = modifiedIcon.html[0].replace(/<svg/, '<svg width="200" height="200"');
-    const svg = new Blob([svgString], { type: 'image/svg+xml' });
-    return URL.createObjectURL(svg);
-};

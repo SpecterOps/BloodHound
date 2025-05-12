@@ -23,7 +23,7 @@ import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
-import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { GLYPHS, GetIconInfo } from './svgIcons';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -90,7 +90,7 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
             ...themedOptions.labels,
         };
 
-        const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
+        const icon = GetIconInfo(node.kind);
         nodeParams.color = icon.color;
         nodeParams.image = icon.url || '';
         nodeParams.glyphs = [];

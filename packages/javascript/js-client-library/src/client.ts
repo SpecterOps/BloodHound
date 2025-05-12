@@ -605,7 +605,7 @@ class BHEAPIClient {
         this.baseClient.post<EndFileIngestResponse>(`/api/v2/file-upload/${ingestId}/end`);
 
     /* custom node kinds */
-    getCustomNodeKinds = (options?: types.RequestOptions) => this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/customnodes', options)
+    getCustomNodeKinds = (options?: RequestOptions) => this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/customnode', options)
 
     /* jobs */
     getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>

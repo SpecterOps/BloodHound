@@ -14,29 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faQuestion, IconName } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { lazy } from 'react';
 import { EntityKinds } from '../..';
-import { CUSTOM_ICONS, NODE_ICON } from '../../utils/icons';
-
-const LazyIcon = lazy(() => import('../CustomIcon'));
+import { GetIconInfo, IconInfo } from '../../utils/icons';
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;
 }
 
-const useStyles = makeStyles<Theme, NodeIconProps, string>({
+interface IconInfoProp {
+    icon: IconInfo;
+}
+
+const useStyles = makeStyles<Theme, IconInfoProp, string>({
     root: {
         display: 'inline-block',
         marginRight: '4px',
         position: 'relative',
     },
     container: {
-        backgroundColor: (props) => NODE_ICON[props.nodeType]?.color || '#FFFFFF',
+        backgroundColor: (props) => props.icon?.color || '#FFFFFF',
         border: '1px solid #000000',
         padding: '2px',
         borderRadius: '50%',
@@ -51,24 +51,15 @@ const useStyles = makeStyles<Theme, NodeIconProps, string>({
 });
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
-    const classes = useStyles({ nodeType });
-    let iconElement: JSX.Element = <FontAwesomeIcon icon={faQuestion} transform='shrink-2' />;
-
-    if (nodeType in CUSTOM_ICONS) {
-        try {
-            let iconName = CUSTOM_ICONS[nodeType] as IconName;
-            iconElement = <LazyIcon icon={iconName} transform='shrink-2' />;
-        } catch (e) {
-            console.log(e);
-        }
-    } else if (nodeType in NODE_ICON) {
-        iconElement = <FontAwesomeIcon icon={NODE_ICON[nodeType].icon} transform='shrink-2' />;
-    }
+    const icon = GetIconInfo(nodeType);
+    const classes = useStyles({ icon });
 
     return (
         <Tooltip title={nodeType || ''} describeChild={true}>
             <Box className={classes.root}>
-                <Box className={classes.container}>{iconElement}</Box>
+                <Box className={classes.container}>
+                    <FontAwesomeIcon icon={icon.icon} transform='shrink-2' />
+                </Box>
             </Box>
         </Tooltip>
     );
