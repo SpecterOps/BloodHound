@@ -32,39 +32,39 @@ export enum ActiveDirectoryNodeKind {
     CertTemplate = 'CertTemplate',
     IssuancePolicy = 'IssuancePolicy',
 }
-export function ActiveDirectoryNodeKindToDisplay (value: ActiveDirectoryNodeKind): string | undefined {
+export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
-        case ActiveDirectoryNodeKind.Entity: 
+        case ActiveDirectoryNodeKind.Entity:
             return 'Entity';
-        case ActiveDirectoryNodeKind.User: 
+        case ActiveDirectoryNodeKind.User:
             return 'User';
-        case ActiveDirectoryNodeKind.Computer: 
+        case ActiveDirectoryNodeKind.Computer:
             return 'Computer';
-        case ActiveDirectoryNodeKind.Group: 
+        case ActiveDirectoryNodeKind.Group:
             return 'Group';
-        case ActiveDirectoryNodeKind.GPO: 
+        case ActiveDirectoryNodeKind.GPO:
             return 'GPO';
-        case ActiveDirectoryNodeKind.OU: 
+        case ActiveDirectoryNodeKind.OU:
             return 'OU';
-        case ActiveDirectoryNodeKind.Container: 
+        case ActiveDirectoryNodeKind.Container:
             return 'Container';
-        case ActiveDirectoryNodeKind.Domain: 
+        case ActiveDirectoryNodeKind.Domain:
             return 'Domain';
-        case ActiveDirectoryNodeKind.LocalGroup: 
+        case ActiveDirectoryNodeKind.LocalGroup:
             return 'LocalGroup';
-        case ActiveDirectoryNodeKind.LocalUser: 
+        case ActiveDirectoryNodeKind.LocalUser:
             return 'LocalUser';
-        case ActiveDirectoryNodeKind.AIACA: 
+        case ActiveDirectoryNodeKind.AIACA:
             return 'AIACA';
-        case ActiveDirectoryNodeKind.RootCA: 
+        case ActiveDirectoryNodeKind.RootCA:
             return 'RootCA';
-        case ActiveDirectoryNodeKind.EnterpriseCA: 
+        case ActiveDirectoryNodeKind.EnterpriseCA:
             return 'EnterpriseCA';
-        case ActiveDirectoryNodeKind.NTAuthStore: 
+        case ActiveDirectoryNodeKind.NTAuthStore:
             return 'NTAuthStore';
-        case ActiveDirectoryNodeKind.CertTemplate: 
+        case ActiveDirectoryNodeKind.CertTemplate:
             return 'CertTemplate';
-        case ActiveDirectoryNodeKind.IssuancePolicy: 
+        case ActiveDirectoryNodeKind.IssuancePolicy:
             return 'IssuancePolicy';
         default:
             return undefined;
@@ -148,165 +148,165 @@ export enum ActiveDirectoryRelationshipKind {
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
 }
-export function ActiveDirectoryRelationshipKindToDisplay (value: ActiveDirectoryRelationshipKind): string | undefined {
+export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
-        case ActiveDirectoryRelationshipKind.Owns: 
+        case ActiveDirectoryRelationshipKind.Owns:
             return 'Owns';
-        case ActiveDirectoryRelationshipKind.GenericAll: 
+        case ActiveDirectoryRelationshipKind.GenericAll:
             return 'GenericAll';
-        case ActiveDirectoryRelationshipKind.GenericWrite: 
+        case ActiveDirectoryRelationshipKind.GenericWrite:
             return 'GenericWrite';
-        case ActiveDirectoryRelationshipKind.WriteOwner: 
+        case ActiveDirectoryRelationshipKind.WriteOwner:
             return 'WriteOwner';
-        case ActiveDirectoryRelationshipKind.WriteDACL: 
+        case ActiveDirectoryRelationshipKind.WriteDACL:
             return 'WriteDACL';
-        case ActiveDirectoryRelationshipKind.MemberOf: 
+        case ActiveDirectoryRelationshipKind.MemberOf:
             return 'MemberOf';
-        case ActiveDirectoryRelationshipKind.ForceChangePassword: 
+        case ActiveDirectoryRelationshipKind.ForceChangePassword:
             return 'ForceChangePassword';
-        case ActiveDirectoryRelationshipKind.AllExtendedRights: 
+        case ActiveDirectoryRelationshipKind.AllExtendedRights:
             return 'AllExtendedRights';
-        case ActiveDirectoryRelationshipKind.AddMember: 
+        case ActiveDirectoryRelationshipKind.AddMember:
             return 'AddMember';
-        case ActiveDirectoryRelationshipKind.HasSession: 
+        case ActiveDirectoryRelationshipKind.HasSession:
             return 'HasSession';
-        case ActiveDirectoryRelationshipKind.Contains: 
+        case ActiveDirectoryRelationshipKind.Contains:
             return 'Contains';
-        case ActiveDirectoryRelationshipKind.GPLink: 
+        case ActiveDirectoryRelationshipKind.GPLink:
             return 'GPLink';
-        case ActiveDirectoryRelationshipKind.AllowedToDelegate: 
+        case ActiveDirectoryRelationshipKind.AllowedToDelegate:
             return 'AllowedToDelegate';
-        case ActiveDirectoryRelationshipKind.CoerceToTGT: 
+        case ActiveDirectoryRelationshipKind.CoerceToTGT:
             return 'CoerceToTGT';
-        case ActiveDirectoryRelationshipKind.GetChanges: 
+        case ActiveDirectoryRelationshipKind.GetChanges:
             return 'GetChanges';
-        case ActiveDirectoryRelationshipKind.GetChangesAll: 
+        case ActiveDirectoryRelationshipKind.GetChangesAll:
             return 'GetChangesAll';
-        case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet: 
+        case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet:
             return 'GetChangesInFilteredSet';
-        case ActiveDirectoryRelationshipKind.TrustedBy: 
+        case ActiveDirectoryRelationshipKind.TrustedBy:
             return 'TrustedBy';
-        case ActiveDirectoryRelationshipKind.AllowedToAct: 
+        case ActiveDirectoryRelationshipKind.AllowedToAct:
             return 'AllowedToAct';
-        case ActiveDirectoryRelationshipKind.AdminTo: 
+        case ActiveDirectoryRelationshipKind.AdminTo:
             return 'AdminTo';
-        case ActiveDirectoryRelationshipKind.CanPSRemote: 
+        case ActiveDirectoryRelationshipKind.CanPSRemote:
             return 'CanPSRemote';
-        case ActiveDirectoryRelationshipKind.CanRDP: 
+        case ActiveDirectoryRelationshipKind.CanRDP:
             return 'CanRDP';
-        case ActiveDirectoryRelationshipKind.ExecuteDCOM: 
+        case ActiveDirectoryRelationshipKind.ExecuteDCOM:
             return 'ExecuteDCOM';
-        case ActiveDirectoryRelationshipKind.HasSIDHistory: 
+        case ActiveDirectoryRelationshipKind.HasSIDHistory:
             return 'HasSIDHistory';
-        case ActiveDirectoryRelationshipKind.AddSelf: 
+        case ActiveDirectoryRelationshipKind.AddSelf:
             return 'AddSelf';
-        case ActiveDirectoryRelationshipKind.DCSync: 
+        case ActiveDirectoryRelationshipKind.DCSync:
             return 'DCSync';
-        case ActiveDirectoryRelationshipKind.ReadLAPSPassword: 
+        case ActiveDirectoryRelationshipKind.ReadLAPSPassword:
             return 'ReadLAPSPassword';
-        case ActiveDirectoryRelationshipKind.ReadGMSAPassword: 
+        case ActiveDirectoryRelationshipKind.ReadGMSAPassword:
             return 'ReadGMSAPassword';
-        case ActiveDirectoryRelationshipKind.DumpSMSAPassword: 
+        case ActiveDirectoryRelationshipKind.DumpSMSAPassword:
             return 'DumpSMSAPassword';
-        case ActiveDirectoryRelationshipKind.SQLAdmin: 
+        case ActiveDirectoryRelationshipKind.SQLAdmin:
             return 'SQLAdmin';
-        case ActiveDirectoryRelationshipKind.AddAllowedToAct: 
+        case ActiveDirectoryRelationshipKind.AddAllowedToAct:
             return 'AddAllowedToAct';
-        case ActiveDirectoryRelationshipKind.WriteSPN: 
+        case ActiveDirectoryRelationshipKind.WriteSPN:
             return 'WriteSPN';
-        case ActiveDirectoryRelationshipKind.AddKeyCredentialLink: 
+        case ActiveDirectoryRelationshipKind.AddKeyCredentialLink:
             return 'AddKeyCredentialLink';
-        case ActiveDirectoryRelationshipKind.LocalToComputer: 
+        case ActiveDirectoryRelationshipKind.LocalToComputer:
             return 'LocalToComputer';
-        case ActiveDirectoryRelationshipKind.MemberOfLocalGroup: 
+        case ActiveDirectoryRelationshipKind.MemberOfLocalGroup:
             return 'MemberOfLocalGroup';
-        case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight: 
+        case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight:
             return 'RemoteInteractiveLogonRight';
-        case ActiveDirectoryRelationshipKind.SyncLAPSPassword: 
+        case ActiveDirectoryRelationshipKind.SyncLAPSPassword:
             return 'SyncLAPSPassword';
-        case ActiveDirectoryRelationshipKind.WriteAccountRestrictions: 
+        case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
             return 'WriteAccountRestrictions';
-        case ActiveDirectoryRelationshipKind.WriteGPLink: 
+        case ActiveDirectoryRelationshipKind.WriteGPLink:
             return 'WriteGPLink';
-        case ActiveDirectoryRelationshipKind.RootCAFor: 
+        case ActiveDirectoryRelationshipKind.RootCAFor:
             return 'RootCAFor';
-        case ActiveDirectoryRelationshipKind.DCFor: 
+        case ActiveDirectoryRelationshipKind.DCFor:
             return 'DCFor';
-        case ActiveDirectoryRelationshipKind.PublishedTo: 
+        case ActiveDirectoryRelationshipKind.PublishedTo:
             return 'PublishedTo';
-        case ActiveDirectoryRelationshipKind.ManageCertificates: 
+        case ActiveDirectoryRelationshipKind.ManageCertificates:
             return 'ManageCertificates';
-        case ActiveDirectoryRelationshipKind.ManageCA: 
+        case ActiveDirectoryRelationshipKind.ManageCA:
             return 'ManageCA';
-        case ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent: 
+        case ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent:
             return 'DelegatedEnrollmentAgent';
-        case ActiveDirectoryRelationshipKind.Enroll: 
+        case ActiveDirectoryRelationshipKind.Enroll:
             return 'Enroll';
-        case ActiveDirectoryRelationshipKind.HostsCAService: 
+        case ActiveDirectoryRelationshipKind.HostsCAService:
             return 'HostsCAService';
-        case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag: 
+        case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag:
             return 'WritePKIEnrollmentFlag';
-        case ActiveDirectoryRelationshipKind.WritePKINameFlag: 
+        case ActiveDirectoryRelationshipKind.WritePKINameFlag:
             return 'WritePKINameFlag';
-        case ActiveDirectoryRelationshipKind.NTAuthStoreFor: 
+        case ActiveDirectoryRelationshipKind.NTAuthStoreFor:
             return 'NTAuthStoreFor';
-        case ActiveDirectoryRelationshipKind.TrustedForNTAuth: 
+        case ActiveDirectoryRelationshipKind.TrustedForNTAuth:
             return 'TrustedForNTAuth';
-        case ActiveDirectoryRelationshipKind.EnterpriseCAFor: 
+        case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
             return 'EnterpriseCAFor';
-        case ActiveDirectoryRelationshipKind.IssuedSignedBy: 
+        case ActiveDirectoryRelationshipKind.IssuedSignedBy:
             return 'IssuedSignedBy';
-        case ActiveDirectoryRelationshipKind.GoldenCert: 
+        case ActiveDirectoryRelationshipKind.GoldenCert:
             return 'GoldenCert';
-        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf: 
+        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
             return 'EnrollOnBehalfOf';
-        case ActiveDirectoryRelationshipKind.OIDGroupLink: 
+        case ActiveDirectoryRelationshipKind.OIDGroupLink:
             return 'OIDGroupLink';
-        case ActiveDirectoryRelationshipKind.ExtendedByPolicy: 
+        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
             return 'ExtendedByPolicy';
-        case ActiveDirectoryRelationshipKind.ADCSESC1: 
+        case ActiveDirectoryRelationshipKind.ADCSESC1:
             return 'ADCSESC1';
-        case ActiveDirectoryRelationshipKind.ADCSESC3: 
+        case ActiveDirectoryRelationshipKind.ADCSESC3:
             return 'ADCSESC3';
-        case ActiveDirectoryRelationshipKind.ADCSESC4: 
+        case ActiveDirectoryRelationshipKind.ADCSESC4:
             return 'ADCSESC4';
-        case ActiveDirectoryRelationshipKind.ADCSESC6a: 
+        case ActiveDirectoryRelationshipKind.ADCSESC6a:
             return 'ADCSESC6a';
-        case ActiveDirectoryRelationshipKind.ADCSESC6b: 
+        case ActiveDirectoryRelationshipKind.ADCSESC6b:
             return 'ADCSESC6b';
-        case ActiveDirectoryRelationshipKind.ADCSESC9a: 
+        case ActiveDirectoryRelationshipKind.ADCSESC9a:
             return 'ADCSESC9a';
-        case ActiveDirectoryRelationshipKind.ADCSESC9b: 
+        case ActiveDirectoryRelationshipKind.ADCSESC9b:
             return 'ADCSESC9b';
-        case ActiveDirectoryRelationshipKind.ADCSESC10a: 
+        case ActiveDirectoryRelationshipKind.ADCSESC10a:
             return 'ADCSESC10a';
-        case ActiveDirectoryRelationshipKind.ADCSESC10b: 
+        case ActiveDirectoryRelationshipKind.ADCSESC10b:
             return 'ADCSESC10b';
-        case ActiveDirectoryRelationshipKind.ADCSESC13: 
+        case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
-        case ActiveDirectoryRelationshipKind.SyncedToEntraUser: 
+        case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB: 
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS: 
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
-        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights: 
+        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
             return 'WriteOwnerLimitedRights';
-        case ActiveDirectoryRelationshipKind.WriteOwnerRaw: 
+        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
             return 'WriteOwnerRaw';
-        case ActiveDirectoryRelationshipKind.OwnsLimitedRights: 
+        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
             return 'OwnsLimitedRights';
-        case ActiveDirectoryRelationshipKind.OwnsRaw: 
+        case ActiveDirectoryRelationshipKind.OwnsRaw:
             return 'OwnsRaw';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP: 
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
             return 'CoerceAndRelayNTLMToLDAP';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS: 
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
         default:
             return undefined;
     }
 }
-export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind
+export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
 export const EdgeCompositionRelationships = [
     'GoldenCert',
     'ADCSESC1',
@@ -322,7 +322,7 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPS'
+    'CoerceAndRelayNTLMToLDAPS',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -445,249 +445,249 @@ export enum ActiveDirectoryKindProperties {
     HTTPSEnrollmentEndpoints = 'httpsenrollmentendpoints',
     HasVulnerableEndpoint = 'hasvulnerableendpoint',
 }
-export function ActiveDirectoryKindPropertiesToDisplay (value: ActiveDirectoryKindProperties): string | undefined {
+export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
-        case ActiveDirectoryKindProperties.AdminCount: 
+        case ActiveDirectoryKindProperties.AdminCount:
             return 'Admin Count';
-        case ActiveDirectoryKindProperties.CASecurityCollected: 
+        case ActiveDirectoryKindProperties.CASecurityCollected:
             return 'CA Security Collected';
-        case ActiveDirectoryKindProperties.CAName: 
+        case ActiveDirectoryKindProperties.CAName:
             return 'CA Name';
-        case ActiveDirectoryKindProperties.CertChain: 
+        case ActiveDirectoryKindProperties.CertChain:
             return 'Certificate Chain';
-        case ActiveDirectoryKindProperties.CertName: 
+        case ActiveDirectoryKindProperties.CertName:
             return 'Certificate Name';
-        case ActiveDirectoryKindProperties.CertThumbprint: 
+        case ActiveDirectoryKindProperties.CertThumbprint:
             return 'Certificate Thumbprint';
-        case ActiveDirectoryKindProperties.CertThumbprints: 
+        case ActiveDirectoryKindProperties.CertThumbprints:
             return 'Certificate Thumbprints';
-        case ActiveDirectoryKindProperties.HasEnrollmentAgentRestrictions: 
+        case ActiveDirectoryKindProperties.HasEnrollmentAgentRestrictions:
             return 'Has Enrollment Agent Restrictions';
-        case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected: 
+        case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected:
             return 'Enrollment Agent Restrictions Collected';
-        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabled: 
+        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabled:
             return 'Is User Specifies San Enabled';
-        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected: 
+        case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
             return 'Is User Specifies San Enabled Collected';
-        case ActiveDirectoryKindProperties.RoleSeparationEnabled: 
+        case ActiveDirectoryKindProperties.RoleSeparationEnabled:
             return 'Role Separation Enabled';
-        case ActiveDirectoryKindProperties.RoleSeparationEnabledCollected: 
+        case ActiveDirectoryKindProperties.RoleSeparationEnabledCollected:
             return 'Role Separation Enabled Collected';
-        case ActiveDirectoryKindProperties.HasBasicConstraints: 
+        case ActiveDirectoryKindProperties.HasBasicConstraints:
             return 'Has Basic Constraints';
-        case ActiveDirectoryKindProperties.BasicConstraintPathLength: 
+        case ActiveDirectoryKindProperties.BasicConstraintPathLength:
             return 'Basic Constraint Path Length';
-        case ActiveDirectoryKindProperties.UnresolvedPublishedTemplates: 
+        case ActiveDirectoryKindProperties.UnresolvedPublishedTemplates:
             return 'Unresolved Published Certificate Templates';
-        case ActiveDirectoryKindProperties.DNSHostname: 
+        case ActiveDirectoryKindProperties.DNSHostname:
             return 'DNS Hostname';
-        case ActiveDirectoryKindProperties.CrossCertificatePair: 
+        case ActiveDirectoryKindProperties.CrossCertificatePair:
             return 'Cross Certificate Pair';
-        case ActiveDirectoryKindProperties.DistinguishedName: 
+        case ActiveDirectoryKindProperties.DistinguishedName:
             return 'Distinguished Name';
-        case ActiveDirectoryKindProperties.DomainFQDN: 
+        case ActiveDirectoryKindProperties.DomainFQDN:
             return 'Domain FQDN';
-        case ActiveDirectoryKindProperties.DomainSID: 
+        case ActiveDirectoryKindProperties.DomainSID:
             return 'Domain SID';
-        case ActiveDirectoryKindProperties.Sensitive: 
+        case ActiveDirectoryKindProperties.Sensitive:
             return 'Marked Sensitive';
-        case ActiveDirectoryKindProperties.BlocksInheritance: 
+        case ActiveDirectoryKindProperties.BlocksInheritance:
             return 'Blocks GPO Inheritance';
-        case ActiveDirectoryKindProperties.IsACL: 
+        case ActiveDirectoryKindProperties.IsACL:
             return 'Is ACL';
-        case ActiveDirectoryKindProperties.IsACLProtected: 
+        case ActiveDirectoryKindProperties.IsACLProtected:
             return 'ACL Inheritance Denied';
-        case ActiveDirectoryKindProperties.IsDeleted: 
+        case ActiveDirectoryKindProperties.IsDeleted:
             return 'Is Deleted';
-        case ActiveDirectoryKindProperties.Enforced: 
+        case ActiveDirectoryKindProperties.Enforced:
             return 'Enforced';
-        case ActiveDirectoryKindProperties.Department: 
+        case ActiveDirectoryKindProperties.Department:
             return 'Department';
-        case ActiveDirectoryKindProperties.HasCrossCertificatePair: 
+        case ActiveDirectoryKindProperties.HasCrossCertificatePair:
             return 'Has Cross Certificate Pair';
-        case ActiveDirectoryKindProperties.HasSPN: 
+        case ActiveDirectoryKindProperties.HasSPN:
             return 'Has SPN';
-        case ActiveDirectoryKindProperties.UnconstrainedDelegation: 
+        case ActiveDirectoryKindProperties.UnconstrainedDelegation:
             return 'Allows Unconstrained Delegation';
-        case ActiveDirectoryKindProperties.LastLogon: 
+        case ActiveDirectoryKindProperties.LastLogon:
             return 'Last Logon';
-        case ActiveDirectoryKindProperties.LastLogonTimestamp: 
+        case ActiveDirectoryKindProperties.LastLogonTimestamp:
             return 'Last Logon (Replicated)';
-        case ActiveDirectoryKindProperties.IsPrimaryGroup: 
+        case ActiveDirectoryKindProperties.IsPrimaryGroup:
             return 'Is Primary Group';
-        case ActiveDirectoryKindProperties.HasLAPS: 
+        case ActiveDirectoryKindProperties.HasLAPS:
             return 'LAPS Enabled';
-        case ActiveDirectoryKindProperties.DontRequirePreAuth: 
+        case ActiveDirectoryKindProperties.DontRequirePreAuth:
             return 'Do Not Require Pre-Authentication';
-        case ActiveDirectoryKindProperties.LogonType: 
+        case ActiveDirectoryKindProperties.LogonType:
             return 'Logon Type';
-        case ActiveDirectoryKindProperties.HasURA: 
+        case ActiveDirectoryKindProperties.HasURA:
             return 'Has User Rights Assignment Collection';
-        case ActiveDirectoryKindProperties.PasswordNeverExpires: 
+        case ActiveDirectoryKindProperties.PasswordNeverExpires:
             return 'Password Never Expires';
-        case ActiveDirectoryKindProperties.PasswordNotRequired: 
+        case ActiveDirectoryKindProperties.PasswordNotRequired:
             return 'Password Not Required';
-        case ActiveDirectoryKindProperties.FunctionalLevel: 
+        case ActiveDirectoryKindProperties.FunctionalLevel:
             return 'Functional Level';
-        case ActiveDirectoryKindProperties.TrustType: 
+        case ActiveDirectoryKindProperties.TrustType:
             return 'Trust Type';
-        case ActiveDirectoryKindProperties.SidFiltering: 
+        case ActiveDirectoryKindProperties.SidFiltering:
             return 'SID Filtering Enabled';
-        case ActiveDirectoryKindProperties.TrustedToAuth: 
+        case ActiveDirectoryKindProperties.TrustedToAuth:
             return 'Trusted For Constrained Delegation';
-        case ActiveDirectoryKindProperties.SamAccountName: 
+        case ActiveDirectoryKindProperties.SamAccountName:
             return 'SAM Account Name';
-        case ActiveDirectoryKindProperties.CertificateMappingMethodsRaw: 
+        case ActiveDirectoryKindProperties.CertificateMappingMethodsRaw:
             return 'Certificate Mapping Methods (Raw)';
-        case ActiveDirectoryKindProperties.CertificateMappingMethods: 
+        case ActiveDirectoryKindProperties.CertificateMappingMethods:
             return 'Certificate Mapping Methods';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementRaw: 
+        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcementRaw:
             return 'Strong Certificate Binding Enforcement (Raw)';
-        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement: 
+        case ActiveDirectoryKindProperties.StrongCertificateBindingEnforcement:
             return 'Strong Certificate Binding Enforcement';
-        case ActiveDirectoryKindProperties.EKUs: 
+        case ActiveDirectoryKindProperties.EKUs:
             return 'Enhanced Key Usage';
-        case ActiveDirectoryKindProperties.SubjectAltRequireUPN: 
+        case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
             return 'Subject Alternative Name Require UPN';
-        case ActiveDirectoryKindProperties.SubjectAltRequireDNS: 
+        case ActiveDirectoryKindProperties.SubjectAltRequireDNS:
             return 'Subject Alternative Name Require DNS';
-        case ActiveDirectoryKindProperties.SubjectAltRequireDomainDNS: 
+        case ActiveDirectoryKindProperties.SubjectAltRequireDomainDNS:
             return 'Subject Alternative Name Require Domain DNS';
-        case ActiveDirectoryKindProperties.SubjectAltRequireEmail: 
+        case ActiveDirectoryKindProperties.SubjectAltRequireEmail:
             return 'Subject Alternative Name Require Email';
-        case ActiveDirectoryKindProperties.SubjectAltRequireSPN: 
+        case ActiveDirectoryKindProperties.SubjectAltRequireSPN:
             return 'Subject Alternative Name Require SPN';
-        case ActiveDirectoryKindProperties.SubjectRequireEmail: 
+        case ActiveDirectoryKindProperties.SubjectRequireEmail:
             return 'Subject Require Email';
-        case ActiveDirectoryKindProperties.AuthorizedSignatures: 
+        case ActiveDirectoryKindProperties.AuthorizedSignatures:
             return 'Authorized Signatures Required';
-        case ActiveDirectoryKindProperties.ApplicationPolicies: 
+        case ActiveDirectoryKindProperties.ApplicationPolicies:
             return 'Application Policies Required';
-        case ActiveDirectoryKindProperties.IssuancePolicies: 
+        case ActiveDirectoryKindProperties.IssuancePolicies:
             return 'Issuance Policies Required';
-        case ActiveDirectoryKindProperties.SchemaVersion: 
+        case ActiveDirectoryKindProperties.SchemaVersion:
             return 'Schema Version';
-        case ActiveDirectoryKindProperties.RequiresManagerApproval: 
+        case ActiveDirectoryKindProperties.RequiresManagerApproval:
             return 'Requires Manager Approval';
-        case ActiveDirectoryKindProperties.AuthenticationEnabled: 
+        case ActiveDirectoryKindProperties.AuthenticationEnabled:
             return 'Authentication Enabled';
-        case ActiveDirectoryKindProperties.SchannelAuthenticationEnabled: 
+        case ActiveDirectoryKindProperties.SchannelAuthenticationEnabled:
             return 'Schannel Authentication Enabled';
-        case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject: 
+        case ActiveDirectoryKindProperties.EnrolleeSuppliesSubject:
             return 'Enrollee Supplies Subject';
-        case ActiveDirectoryKindProperties.CertificateApplicationPolicy: 
+        case ActiveDirectoryKindProperties.CertificateApplicationPolicy:
             return 'Application Policy Extensions';
-        case ActiveDirectoryKindProperties.CertificateNameFlag: 
+        case ActiveDirectoryKindProperties.CertificateNameFlag:
             return 'Certificate Name Flags';
-        case ActiveDirectoryKindProperties.EffectiveEKUs: 
+        case ActiveDirectoryKindProperties.EffectiveEKUs:
             return 'Effective EKUs';
-        case ActiveDirectoryKindProperties.EnrollmentFlag: 
+        case ActiveDirectoryKindProperties.EnrollmentFlag:
             return 'Enrollment Flags';
-        case ActiveDirectoryKindProperties.Flags: 
+        case ActiveDirectoryKindProperties.Flags:
             return 'Flags';
-        case ActiveDirectoryKindProperties.NoSecurityExtension: 
+        case ActiveDirectoryKindProperties.NoSecurityExtension:
             return 'No Security Extension';
-        case ActiveDirectoryKindProperties.RenewalPeriod: 
+        case ActiveDirectoryKindProperties.RenewalPeriod:
             return 'Renewal Period';
-        case ActiveDirectoryKindProperties.ValidityPeriod: 
+        case ActiveDirectoryKindProperties.ValidityPeriod:
             return 'Validity Period';
-        case ActiveDirectoryKindProperties.OID: 
+        case ActiveDirectoryKindProperties.OID:
             return 'OID';
-        case ActiveDirectoryKindProperties.HomeDirectory: 
+        case ActiveDirectoryKindProperties.HomeDirectory:
             return 'Home Directory';
-        case ActiveDirectoryKindProperties.CertificatePolicy: 
+        case ActiveDirectoryKindProperties.CertificatePolicy:
             return 'Issuance Policy Extensions';
-        case ActiveDirectoryKindProperties.CertTemplateOID: 
+        case ActiveDirectoryKindProperties.CertTemplateOID:
             return 'Certificate Template OID';
-        case ActiveDirectoryKindProperties.GroupLinkID: 
+        case ActiveDirectoryKindProperties.GroupLinkID:
             return 'Group Link ID';
-        case ActiveDirectoryKindProperties.ObjectGUID: 
+        case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
-        case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts: 
+        case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
             return 'Expire Passwords on Smart Card only Accounts';
-        case ActiveDirectoryKindProperties.MachineAccountQuota: 
+        case ActiveDirectoryKindProperties.MachineAccountQuota:
             return 'Machine Account Quota';
-        case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes: 
+        case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
             return 'Supported Kerberos Encryption Types';
-        case ActiveDirectoryKindProperties.TGTDelegationEnabled: 
+        case ActiveDirectoryKindProperties.TGTDelegationEnabled:
             return 'TGT Delegation Enabled';
-        case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption: 
+        case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
             return 'Password Stored Using Reversible Encryption';
-        case ActiveDirectoryKindProperties.SmartcardRequired: 
+        case ActiveDirectoryKindProperties.SmartcardRequired:
             return 'Smartcard Required';
-        case ActiveDirectoryKindProperties.UseDESKeyOnly: 
+        case ActiveDirectoryKindProperties.UseDESKeyOnly:
             return 'Use DES Key Only';
-        case ActiveDirectoryKindProperties.LogonScriptEnabled: 
+        case ActiveDirectoryKindProperties.LogonScriptEnabled:
             return 'Logon Script Enabled';
-        case ActiveDirectoryKindProperties.LockedOut: 
+        case ActiveDirectoryKindProperties.LockedOut:
             return 'Locked Out';
-        case ActiveDirectoryKindProperties.UserCannotChangePassword: 
+        case ActiveDirectoryKindProperties.UserCannotChangePassword:
             return 'User Cannot Change Password';
-        case ActiveDirectoryKindProperties.PasswordExpired: 
+        case ActiveDirectoryKindProperties.PasswordExpired:
             return 'Password Expired';
-        case ActiveDirectoryKindProperties.DSHeuristics: 
+        case ActiveDirectoryKindProperties.DSHeuristics:
             return 'DSHeuristics';
-        case ActiveDirectoryKindProperties.UserAccountControl: 
+        case ActiveDirectoryKindProperties.UserAccountControl:
             return 'User Account Control';
-        case ActiveDirectoryKindProperties.TrustAttributes: 
+        case ActiveDirectoryKindProperties.TrustAttributes:
             return 'Trust Attributes';
-        case ActiveDirectoryKindProperties.MinPwdLength: 
+        case ActiveDirectoryKindProperties.MinPwdLength:
             return 'Minimum password length';
-        case ActiveDirectoryKindProperties.PwdProperties: 
+        case ActiveDirectoryKindProperties.PwdProperties:
             return 'Password Properties';
-        case ActiveDirectoryKindProperties.PwdHistoryLength: 
+        case ActiveDirectoryKindProperties.PwdHistoryLength:
             return 'Password History Length';
-        case ActiveDirectoryKindProperties.LockoutThreshold: 
+        case ActiveDirectoryKindProperties.LockoutThreshold:
             return 'Lockout Threshold';
-        case ActiveDirectoryKindProperties.MinPwdAge: 
+        case ActiveDirectoryKindProperties.MinPwdAge:
             return 'Minimum Password Age';
-        case ActiveDirectoryKindProperties.MaxPwdAge: 
+        case ActiveDirectoryKindProperties.MaxPwdAge:
             return 'Maximum Password Age';
-        case ActiveDirectoryKindProperties.LockoutDuration: 
+        case ActiveDirectoryKindProperties.LockoutDuration:
             return 'Lockout Duration';
-        case ActiveDirectoryKindProperties.LockoutObservationWindow: 
+        case ActiveDirectoryKindProperties.LockoutObservationWindow:
             return 'Lockout Observation Window';
-        case ActiveDirectoryKindProperties.OwnerSid: 
+        case ActiveDirectoryKindProperties.OwnerSid:
             return 'Owner SID';
-        case ActiveDirectoryKindProperties.SMBSigning: 
+        case ActiveDirectoryKindProperties.SMBSigning:
             return 'SMB Signing';
-        case ActiveDirectoryKindProperties.WebClientRunning: 
+        case ActiveDirectoryKindProperties.WebClientRunning:
             return 'WebClient Running';
-        case ActiveDirectoryKindProperties.RestrictOutboundNTLM: 
+        case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
-        case ActiveDirectoryKindProperties.GMSA: 
+        case ActiveDirectoryKindProperties.GMSA:
             return 'GMSA';
-        case ActiveDirectoryKindProperties.MSA: 
+        case ActiveDirectoryKindProperties.MSA:
             return 'MSA';
-        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights: 
+        case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
             return 'Does Any ACE Grant Owner Rights';
-        case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights: 
+        case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
             return 'Does Any Inherited ACE Grant Owner Rights';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP: 
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS: 
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
             return 'ADCS Web Enrollment HTTPS';
-        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA: 
+        case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
             return 'ADCS Web Enrollment HTTPS EPA';
-        case ActiveDirectoryKindProperties.LDAPSigning: 
+        case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
-        case ActiveDirectoryKindProperties.LDAPAvailable: 
+        case ActiveDirectoryKindProperties.LDAPAvailable:
             return 'LDAP Available';
-        case ActiveDirectoryKindProperties.LDAPSAvailable: 
+        case ActiveDirectoryKindProperties.LDAPSAvailable:
             return 'LDAPS Available';
-        case ActiveDirectoryKindProperties.LDAPSEPA: 
+        case ActiveDirectoryKindProperties.LDAPSEPA:
             return 'LDAPS EPA';
-        case ActiveDirectoryKindProperties.IsDC: 
+        case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
-        case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints: 
+        case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
             return 'HTTP Enrollment Endpoints';
-        case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints: 
+        case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
             return 'HTTPS Enrollment Endpoints';
-        case ActiveDirectoryKindProperties.HasVulnerableEndpoint: 
+        case ActiveDirectoryKindProperties.HasVulnerableEndpoint:
             return 'Has Vulnerable Endpoint';
         default:
             return undefined;
-}
+    }
 }
 export function ActiveDirectoryPathfindingEdges (): ActiveDirectoryRelationshipKind[] {
     return [
@@ -742,7 +742,8 @@ export function ActiveDirectoryPathfindingEdges (): ActiveDirectoryRelationshipK
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.TrustedBy]
+        ActiveDirectoryRelationshipKind.TrustedBy
+    ];
 }
 export enum AzureNodeKind {
     Entity = 'AZBase',
@@ -767,49 +768,49 @@ export enum AzureNodeKind {
     LogicApp = 'AZLogicApp',
     AutomationAccount = 'AZAutomationAccount',
 }
-export function AzureNodeKindToDisplay (value: AzureNodeKind): string | undefined {
+export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined {
     switch (value) {
-        case AzureNodeKind.Entity: 
+        case AzureNodeKind.Entity:
             return 'Entity';
-        case AzureNodeKind.VMScaleSet: 
+        case AzureNodeKind.VMScaleSet:
             return 'VMScaleSet';
-        case AzureNodeKind.App: 
+        case AzureNodeKind.App:
             return 'App';
-        case AzureNodeKind.Role: 
+        case AzureNodeKind.Role:
             return 'Role';
-        case AzureNodeKind.Device: 
+        case AzureNodeKind.Device:
             return 'Device';
-        case AzureNodeKind.FunctionApp: 
+        case AzureNodeKind.FunctionApp:
             return 'FunctionApp';
-        case AzureNodeKind.Group: 
+        case AzureNodeKind.Group:
             return 'Group';
-        case AzureNodeKind.Group365: 
+        case AzureNodeKind.Group365:
             return 'Group365';
-        case AzureNodeKind.KeyVault: 
+        case AzureNodeKind.KeyVault:
             return 'KeyVault';
-        case AzureNodeKind.ManagementGroup: 
+        case AzureNodeKind.ManagementGroup:
             return 'ManagementGroup';
-        case AzureNodeKind.ResourceGroup: 
+        case AzureNodeKind.ResourceGroup:
             return 'ResourceGroup';
-        case AzureNodeKind.ServicePrincipal: 
+        case AzureNodeKind.ServicePrincipal:
             return 'ServicePrincipal';
-        case AzureNodeKind.Subscription: 
+        case AzureNodeKind.Subscription:
             return 'Subscription';
-        case AzureNodeKind.Tenant: 
+        case AzureNodeKind.Tenant:
             return 'Tenant';
-        case AzureNodeKind.User: 
+        case AzureNodeKind.User:
             return 'User';
-        case AzureNodeKind.VM: 
+        case AzureNodeKind.VM:
             return 'VM';
-        case AzureNodeKind.ManagedCluster: 
+        case AzureNodeKind.ManagedCluster:
             return 'ManagedCluster';
-        case AzureNodeKind.ContainerRegistry: 
+        case AzureNodeKind.ContainerRegistry:
             return 'ContainerRegistry';
-        case AzureNodeKind.WebApp: 
+        case AzureNodeKind.WebApp:
             return 'WebApp';
-        case AzureNodeKind.LogicApp: 
+        case AzureNodeKind.LogicApp:
             return 'LogicApp';
-        case AzureNodeKind.AutomationAccount: 
+        case AzureNodeKind.AutomationAccount:
             return 'AutomationAccount';
         default:
             return undefined;
@@ -864,105 +865,105 @@ export enum AzureRelationshipKind {
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
 }
-export function AzureRelationshipKindToDisplay (value: AzureRelationshipKind): string | undefined {
+export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
-        case AzureRelationshipKind.AvereContributor: 
+        case AzureRelationshipKind.AvereContributor:
             return 'AvereContributor';
-        case AzureRelationshipKind.Contains: 
+        case AzureRelationshipKind.Contains:
             return 'Contains';
-        case AzureRelationshipKind.Contributor: 
+        case AzureRelationshipKind.Contributor:
             return 'Contributor';
-        case AzureRelationshipKind.GetCertificates: 
+        case AzureRelationshipKind.GetCertificates:
             return 'GetCertificates';
-        case AzureRelationshipKind.GetKeys: 
+        case AzureRelationshipKind.GetKeys:
             return 'GetKeys';
-        case AzureRelationshipKind.GetSecrets: 
+        case AzureRelationshipKind.GetSecrets:
             return 'GetSecrets';
-        case AzureRelationshipKind.HasRole: 
+        case AzureRelationshipKind.HasRole:
             return 'HasRole';
-        case AzureRelationshipKind.MemberOf: 
+        case AzureRelationshipKind.MemberOf:
             return 'MemberOf';
-        case AzureRelationshipKind.Owner: 
+        case AzureRelationshipKind.Owner:
             return 'Owner';
-        case AzureRelationshipKind.RunsAs: 
+        case AzureRelationshipKind.RunsAs:
             return 'RunsAs';
-        case AzureRelationshipKind.VMContributor: 
+        case AzureRelationshipKind.VMContributor:
             return 'VMContributor';
-        case AzureRelationshipKind.AutomationContributor: 
+        case AzureRelationshipKind.AutomationContributor:
             return 'AutomationContributor';
-        case AzureRelationshipKind.KeyVaultContributor: 
+        case AzureRelationshipKind.KeyVaultContributor:
             return 'KeyVaultContributor';
-        case AzureRelationshipKind.VMAdminLogin: 
+        case AzureRelationshipKind.VMAdminLogin:
             return 'VMAdminLogin';
-        case AzureRelationshipKind.AddMembers: 
+        case AzureRelationshipKind.AddMembers:
             return 'AddMembers';
-        case AzureRelationshipKind.AddSecret: 
+        case AzureRelationshipKind.AddSecret:
             return 'AddSecret';
-        case AzureRelationshipKind.ExecuteCommand: 
+        case AzureRelationshipKind.ExecuteCommand:
             return 'ExecuteCommand';
-        case AzureRelationshipKind.GlobalAdmin: 
+        case AzureRelationshipKind.GlobalAdmin:
             return 'GlobalAdmin';
-        case AzureRelationshipKind.PrivilegedAuthAdmin: 
+        case AzureRelationshipKind.PrivilegedAuthAdmin:
             return 'PrivilegedAuthAdmin';
-        case AzureRelationshipKind.Grant: 
+        case AzureRelationshipKind.Grant:
             return 'Grant';
-        case AzureRelationshipKind.GrantSelf: 
+        case AzureRelationshipKind.GrantSelf:
             return 'GrantSelf';
-        case AzureRelationshipKind.PrivilegedRoleAdmin: 
+        case AzureRelationshipKind.PrivilegedRoleAdmin:
             return 'PrivilegedRoleAdmin';
-        case AzureRelationshipKind.ResetPassword: 
+        case AzureRelationshipKind.ResetPassword:
             return 'ResetPassword';
-        case AzureRelationshipKind.UserAccessAdministrator: 
+        case AzureRelationshipKind.UserAccessAdministrator:
             return 'UserAccessAdministrator';
-        case AzureRelationshipKind.Owns: 
+        case AzureRelationshipKind.Owns:
             return 'Owns';
-        case AzureRelationshipKind.ScopedTo: 
+        case AzureRelationshipKind.ScopedTo:
             return 'ScopedTo';
-        case AzureRelationshipKind.CloudAppAdmin: 
+        case AzureRelationshipKind.CloudAppAdmin:
             return 'CloudAppAdmin';
-        case AzureRelationshipKind.AppAdmin: 
+        case AzureRelationshipKind.AppAdmin:
             return 'AppAdmin';
-        case AzureRelationshipKind.AddOwner: 
+        case AzureRelationshipKind.AddOwner:
             return 'AddOwner';
-        case AzureRelationshipKind.ManagedIdentity: 
+        case AzureRelationshipKind.ManagedIdentity:
             return 'ManagedIdentity';
-        case AzureRelationshipKind.ApplicationReadWriteAll: 
+        case AzureRelationshipKind.ApplicationReadWriteAll:
             return 'ApplicationReadWriteAll';
-        case AzureRelationshipKind.AppRoleAssignmentReadWriteAll: 
+        case AzureRelationshipKind.AppRoleAssignmentReadWriteAll:
             return 'AppRoleAssignmentReadWriteAll';
-        case AzureRelationshipKind.DirectoryReadWriteAll: 
+        case AzureRelationshipKind.DirectoryReadWriteAll:
             return 'DirectoryReadWriteAll';
-        case AzureRelationshipKind.GroupReadWriteAll: 
+        case AzureRelationshipKind.GroupReadWriteAll:
             return 'GroupReadWriteAll';
-        case AzureRelationshipKind.GroupMemberReadWriteAll: 
+        case AzureRelationshipKind.GroupMemberReadWriteAll:
             return 'GroupMemberReadWriteAll';
-        case AzureRelationshipKind.RoleManagementReadWriteDirectory: 
+        case AzureRelationshipKind.RoleManagementReadWriteDirectory:
             return 'RoleManagementReadWriteDirectory';
-        case AzureRelationshipKind.ServicePrincipalEndpointReadWriteAll: 
+        case AzureRelationshipKind.ServicePrincipalEndpointReadWriteAll:
             return 'ServicePrincipalEndpointReadWriteAll';
-        case AzureRelationshipKind.AKSContributor: 
+        case AzureRelationshipKind.AKSContributor:
             return 'AKSContributor';
-        case AzureRelationshipKind.NodeResourceGroup: 
+        case AzureRelationshipKind.NodeResourceGroup:
             return 'NodeResourceGroup';
-        case AzureRelationshipKind.WebsiteContributor: 
+        case AzureRelationshipKind.WebsiteContributor:
             return 'WebsiteContributor';
-        case AzureRelationshipKind.LogicAppContributor: 
+        case AzureRelationshipKind.LogicAppContributor:
             return 'LogicAppContributor';
-        case AzureRelationshipKind.AZMGAddMember: 
+        case AzureRelationshipKind.AZMGAddMember:
             return 'AZMGAddMember';
-        case AzureRelationshipKind.AZMGAddOwner: 
+        case AzureRelationshipKind.AZMGAddOwner:
             return 'AZMGAddOwner';
-        case AzureRelationshipKind.AZMGAddSecret: 
+        case AzureRelationshipKind.AZMGAddSecret:
             return 'AZMGAddSecret';
-        case AzureRelationshipKind.AZMGGrantAppRoles: 
+        case AzureRelationshipKind.AZMGGrantAppRoles:
             return 'AZMGGrantAppRoles';
-        case AzureRelationshipKind.AZMGGrantRole: 
+        case AzureRelationshipKind.AZMGGrantRole:
             return 'AZMGGrantRole';
-        case AzureRelationshipKind.SyncedToADUser: 
+        case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
         default:
             return undefined;
-}
+    }
 }
 export type AzureKind = AzureNodeKind | AzureRelationshipKind
 export enum AzureKindProperties {
@@ -1001,81 +1002,81 @@ export enum AzureKindProperties {
     Visibility = 'visibility',
     Mail = 'mail',
 }
-export function AzureKindPropertiesToDisplay (value: AzureKindProperties): string | undefined {
+export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
-        case AzureKindProperties.AppOwnerOrganizationID: 
+        case AzureKindProperties.AppOwnerOrganizationID:
             return 'App Owner Organization ID';
-        case AzureKindProperties.AppDescription: 
+        case AzureKindProperties.AppDescription:
             return 'App Description';
-        case AzureKindProperties.AppDisplayName: 
+        case AzureKindProperties.AppDisplayName:
             return 'App Display Name';
-        case AzureKindProperties.ServicePrincipalType: 
+        case AzureKindProperties.ServicePrincipalType:
             return 'Service Principal Type';
-        case AzureKindProperties.UserType: 
+        case AzureKindProperties.UserType:
             return 'User Type';
-        case AzureKindProperties.TenantID: 
+        case AzureKindProperties.TenantID:
             return 'Tenant ID';
-        case AzureKindProperties.ServicePrincipalID: 
+        case AzureKindProperties.ServicePrincipalID:
             return 'Service Principal ID';
-        case AzureKindProperties.ServicePrincipalNames: 
+        case AzureKindProperties.ServicePrincipalNames:
             return 'Service Principal Names';
-        case AzureKindProperties.OperatingSystemVersion: 
+        case AzureKindProperties.OperatingSystemVersion:
             return 'Operating System Version';
-        case AzureKindProperties.TrustType: 
+        case AzureKindProperties.TrustType:
             return 'Trust Type';
-        case AzureKindProperties.IsBuiltIn: 
+        case AzureKindProperties.IsBuiltIn:
             return 'Is Built In';
-        case AzureKindProperties.AppID: 
+        case AzureKindProperties.AppID:
             return 'App ID';
-        case AzureKindProperties.AppRoleID: 
+        case AzureKindProperties.AppRoleID:
             return 'App Role ID';
-        case AzureKindProperties.DeviceID: 
+        case AzureKindProperties.DeviceID:
             return 'Device ID';
-        case AzureKindProperties.NodeResourceGroupID: 
+        case AzureKindProperties.NodeResourceGroupID:
             return 'Node Resource Group ID';
-        case AzureKindProperties.OnPremID: 
+        case AzureKindProperties.OnPremID:
             return 'On Prem ID';
-        case AzureKindProperties.OnPremSyncEnabled: 
+        case AzureKindProperties.OnPremSyncEnabled:
             return 'On Prem Sync Enabled';
-        case AzureKindProperties.SecurityEnabled: 
+        case AzureKindProperties.SecurityEnabled:
             return 'Security Enabled';
-        case AzureKindProperties.SecurityIdentifier: 
+        case AzureKindProperties.SecurityIdentifier:
             return 'Security Identifier';
-        case AzureKindProperties.EnableRBACAuthorization: 
+        case AzureKindProperties.EnableRBACAuthorization:
             return 'RBAC Authorization Enabled';
-        case AzureKindProperties.Scope: 
+        case AzureKindProperties.Scope:
             return 'Scope';
-        case AzureKindProperties.Offer: 
+        case AzureKindProperties.Offer:
             return 'Offer';
-        case AzureKindProperties.MFAEnabled: 
+        case AzureKindProperties.MFAEnabled:
             return 'MFA Enabled';
-        case AzureKindProperties.License: 
+        case AzureKindProperties.License:
             return 'License';
-        case AzureKindProperties.Licenses: 
+        case AzureKindProperties.Licenses:
             return 'Licenses';
-        case AzureKindProperties.LoginURL: 
+        case AzureKindProperties.LoginURL:
             return 'Login URL';
-        case AzureKindProperties.MFAEnforced: 
+        case AzureKindProperties.MFAEnforced:
             return 'MFA Enforced';
-        case AzureKindProperties.UserPrincipalName: 
+        case AzureKindProperties.UserPrincipalName:
             return 'User Principal Name';
-        case AzureKindProperties.IsAssignableToRole: 
+        case AzureKindProperties.IsAssignableToRole:
             return 'Is Role Assignable';
-        case AzureKindProperties.PublisherDomain: 
+        case AzureKindProperties.PublisherDomain:
             return 'Publisher Domain';
-        case AzureKindProperties.SignInAudience: 
+        case AzureKindProperties.SignInAudience:
             return 'Sign In Audience';
-        case AzureKindProperties.RoleTemplateID: 
+        case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
-        case AzureKindProperties.Visibility: 
+        case AzureKindProperties.Visibility:
             return 'Visibility';
-        case AzureKindProperties.Mail: 
+        case AzureKindProperties.Mail:
             return 'M365 Group Mail';
         default:
             return undefined;
     }
 }
-export function AzurePathfindingEdges (): AzureRelationshipKind[] {
+export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
         AzureRelationshipKind.Contributor,
@@ -1115,15 +1116,15 @@ export function AzurePathfindingEdges (): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
-        AzureRelationshipKind.Contains
+        AzureRelationshipKind.Contains,
     ];
 }
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
 }
-export function CommonNodeKindToDisplay (value: CommonNodeKind): string | undefined {
+export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefined {
     switch (value) {
-        case CommonNodeKind.MigrationData: 
+        case CommonNodeKind.MigrationData:
             return 'MigrationData';
     default:
             return undefined;
@@ -1148,41 +1149,41 @@ export enum CommonKindProperties {
     IsInherited = 'isinherited',
     CompositionID = 'compositionid',
 }
-export function CommonKindPropertiesToDisplay (value: CommonKindProperties): string | undefined {
+export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
-        case CommonKindProperties.ObjectID: 
+        case CommonKindProperties.ObjectID:
             return 'Object ID';
-        case CommonKindProperties.Name: 
+        case CommonKindProperties.Name:
             return 'Name';
-        case CommonKindProperties.DisplayName: 
+        case CommonKindProperties.DisplayName:
             return 'Display Name';
-        case CommonKindProperties.Description: 
+        case CommonKindProperties.Description:
             return 'Description';
-        case CommonKindProperties.OwnerObjectID: 
+        case CommonKindProperties.OwnerObjectID:
             return 'Owner Object ID';
-        case CommonKindProperties.Collected: 
+        case CommonKindProperties.Collected:
             return 'Collected';
-        case CommonKindProperties.OperatingSystem: 
+        case CommonKindProperties.OperatingSystem:
             return 'Operating System';
-        case CommonKindProperties.SystemTags: 
+        case CommonKindProperties.SystemTags:
             return 'Node System Tags';
-        case CommonKindProperties.UserTags: 
+        case CommonKindProperties.UserTags:
             return 'Node User Tags';
-        case CommonKindProperties.LastSeen: 
+        case CommonKindProperties.LastSeen:
             return 'Last Collected by BloodHound';
-        case CommonKindProperties.WhenCreated: 
+        case CommonKindProperties.WhenCreated:
             return 'Created';
-        case CommonKindProperties.Enabled: 
+        case CommonKindProperties.Enabled:
             return 'Enabled';
-        case CommonKindProperties.PasswordLastSet: 
+        case CommonKindProperties.PasswordLastSet:
             return 'Password Last Set';
-        case CommonKindProperties.Title: 
+        case CommonKindProperties.Title:
             return 'Title';
-        case CommonKindProperties.Email: 
+        case CommonKindProperties.Email:
             return 'Email';
-        case CommonKindProperties.IsInherited: 
+        case CommonKindProperties.IsInherited:
             return 'Is Inherited';
-        case CommonKindProperties.CompositionID: 
+        case CommonKindProperties.CompositionID:
             return 'Composition ID';
         default:
             return undefined;
