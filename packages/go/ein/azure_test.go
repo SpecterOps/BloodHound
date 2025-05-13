@@ -21,8 +21,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/azure"
