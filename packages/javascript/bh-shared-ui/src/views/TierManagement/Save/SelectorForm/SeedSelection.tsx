@@ -16,17 +16,13 @@
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { createBrowserHistory } from 'history';
-import { AssetGroupTagNode, GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-    AssetGroupSelectedNodes,
-    AssetGroupSelectorObjectSelect,
-    DeleteConfirmationDialog,
-} from '../../../../components';
+import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
@@ -44,13 +40,6 @@ const useDeleteSelector = (tagId: string | number | undefined) => {
         onSettled: () => {
             queryClient.invalidateQueries(['tier-management', 'tags', tagId, 'selectors']);
         },
-    });
-};
-
-const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
-    if (nodes === undefined) return [];
-    return Object.values(nodes).map((node) => {
-        return { objectid: node.objectId, name: node.label, type: node.kind };
     });
 };
 
@@ -101,20 +90,6 @@ const SeedSelection: FC<{
         enabled: selectorId !== '',
     });
 
-    const seedsQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds', ...seeds],
-        queryFn: async () => {
-            const seedsList = selectorQuery.data?.seeds.map((seed) => {
-                return `"${seed.value}"`;
-            });
-
-            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
-            const response = await apiClient.cypherSearch(query);
-            return response.data.data;
-        },
-        enabled: selectorId !== '',
-    });
-
     const handleDeleteSelector = useCallback(
         async (response: boolean) => {
             if (response === false) {
@@ -136,7 +111,7 @@ const SeedSelection: FC<{
     );
 
     if (selectorQuery.isLoading) return <Skeleton />;
-    if (selectorQuery.isError) throw new Error();
+    if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
 
     return (
         <>
@@ -152,7 +127,7 @@ const SeedSelection: FC<{
                             <AssetGroupSelectorObjectSelect
                                 setSeeds={setSeeds}
                                 setSeedPreviewResults={setResults}
-                                seeds={mapSeeds(seedsQuery.data?.nodes)}
+                                seeds={selectorQuery.data?.seeds || []}
                             />
                         ) : (
                             <Cypher

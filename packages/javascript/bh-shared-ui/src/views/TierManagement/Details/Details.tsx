@@ -76,7 +76,7 @@ const Details: FC = () => {
     const { tagId = '1', selectorId, memberId } = useParams();
 
     const tagsQuery = useQuery({
-        queryKey: ['asset-group-tags'],
+        queryKey: ['tier-management', 'tags'],
         queryFn: async () => {
             return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
                 return res.data.data['tags'];
@@ -85,7 +85,7 @@ const Details: FC = () => {
     });
 
     const selectorsQuery = useQuery({
-        queryKey: ['asset-group-selectors', tagId],
+        queryKey: ['tier-management', 'tags', tagId, 'selectors'],
         queryFn: async () => {
             if (!tagId) return [];
             return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {

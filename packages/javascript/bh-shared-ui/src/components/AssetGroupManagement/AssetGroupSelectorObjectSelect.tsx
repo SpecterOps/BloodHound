@@ -20,6 +20,7 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
+    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -27,10 +28,11 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagNode, SeedTypeObjectId } from 'js-client-library';
+import { AssetGroupTagNode, AssetGroupTagSelectorSeed, GraphNodes, SeedTypeObjectId } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { SearchValue } from '../../store';
 import { apiClient, cn } from '../../utils';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
@@ -39,14 +41,22 @@ import NodeIcon from '../NodeIcon';
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
+const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
+    if (nodes === undefined) return [];
+    return Object.values(nodes).map((node) => {
+        return { objectid: node.objectId, name: node.label, type: node.kind };
+    });
+};
+
 const AssetGroupSelectorObjectSelect: FC<{
     setSeeds: (seeds: SelectorSeedRequest[]) => void;
     setSeedPreviewResults: (nodes: AssetGroupTagNode[] | null) => void;
-    seeds?: AssetGroupSelectedNodes;
+    seeds?: AssetGroupTagSelectorSeed[];
 }> = ({ setSeeds, setSeedPreviewResults, seeds = [] }) => {
+    const { tagId = '', selectorId = '' } = useParams();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [stalePreview, setStalePreview] = useState(false);
-    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(seeds);
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
 
     const previewQuery = useQuery({
         queryKey: ['tier-management', 'preview-selectors', SeedTypeObjectId],
@@ -64,8 +74,22 @@ const AssetGroupSelectorObjectSelect: FC<{
                 .assetGroupTagsPreviewSelectors({ seeds: [...seeds] }, { signal })
                 .then((res) => res.data.data['members']);
         },
-
         retry: false,
+    });
+
+    const seedsQuery = useQuery({
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
+        queryFn: async () => {
+            const seedsList = seeds.map((seed) => {
+                return `"${seed.value}"`;
+            });
+
+            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+            const response = await apiClient.cypherSearch(query);
+            setSelectedNodes(mapSeeds(response.data.data.nodes));
+            return response.data.data;
+        },
+        enabled: seeds.length !== 0,
     });
 
     const handleRun = useCallback(() => {
@@ -78,6 +102,10 @@ const AssetGroupSelectorObjectSelect: FC<{
 
         setSeedPreviewResults(result);
     }, [previewQuery.data, setSeedPreviewResults]);
+
+    useEffect(() => {
+        previewQuery.refetch();
+    }, [seedsQuery.data]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -126,6 +154,8 @@ const AssetGroupSelectorObjectSelect: FC<{
         },
         [setSeeds]
     );
+
+    if (seedsQuery.isLoading) return <Skeleton />;
 
     return (
         <div>
