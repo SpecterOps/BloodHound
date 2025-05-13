@@ -1154,6 +1154,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.Contains,
     ];
 }

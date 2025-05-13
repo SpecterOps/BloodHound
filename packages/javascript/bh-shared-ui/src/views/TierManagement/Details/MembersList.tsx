@@ -162,7 +162,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
 
     const loadMoreItems = useCallback(
         async (startIndex: number, stopIndex: number) => {
-            if (isFetching) return;
+            if (isFetching || itemCount === 0) return;
 
             setIsFetching(true);
 
@@ -185,7 +185,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
                         setIsFetching(false);
                     });
         },
-        [items, isFetching, selectorId, tagId, sortOrder]
+        [items, isFetching, selectorId, tagId, sortOrder, itemCount]
     );
 
     const resetAndLoadMore = useCallback(() => {
@@ -201,10 +201,13 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (previousSelector !== selectorId || previousTier !== tagId || previousSortOrder !== sortOrder) {
+        if (
+            itemCount !== 0 &&
+            (previousSelector !== selectorId || previousTier !== tagId || previousSortOrder !== sortOrder)
+        ) {
             resetAndLoadMore();
         }
-    }, [selectorId, tagId, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder]);
+    }, [selectorId, tagId, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder, itemCount]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>
