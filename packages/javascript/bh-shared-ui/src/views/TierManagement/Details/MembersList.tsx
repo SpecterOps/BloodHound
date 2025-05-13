@@ -55,11 +55,12 @@ const Row = ({
             <Button
                 variant={'text'}
                 className='flex justify-start w-full'
+                title={`Type: ${listItem.primary_kind}; Name: ${listItem.name}`}
                 onClick={() => {
                     onClick(listItem.id?.toString());
                 }}>
                 <NodeIcon nodeType={listItem.primary_kind} />
-                <span className='text-base ml-2'>{listItem.name}</span>
+                <span className='text-base ml-2 truncate'>{listItem.name}</span>
             </Button>
         </li>
     );
@@ -166,7 +167,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
 
             setIsFetching(true);
 
-            const limit = stopIndex - startIndex;
+            const limit = stopIndex - startIndex + 1;
 
             const fetchData = getFetchCallback(tagId, selectorId, sortOrder);
 

@@ -61,13 +61,14 @@ const getListScalar = (windoHeight: number) => {
     return 8;
 };
 
-const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({
-    selectorType,
-    onSubmit,
-}) => {
+const SeedSelection: FC<{
+    selectorType: SeedTypes;
+    onSubmit: SubmitHandler<SelectorFormInputs>;
+    results: AssetGroupTagNode[] | null;
+    setResults: (results: AssetGroupTagNode[] | null) => void;
+}> = ({ selectorType, onSubmit, results, setResults }) => {
     const { tagId = '', selectorId = '' } = useParams();
 
-    const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -101,7 +102,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
     });
 
     const seedsQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds', ...seeds],
         queryFn: async () => {
             const seedsList = selectorQuery.data?.seeds.map((seed) => {
                 return `"${seed.value}"`;

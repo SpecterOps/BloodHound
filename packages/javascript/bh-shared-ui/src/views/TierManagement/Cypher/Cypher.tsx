@@ -120,6 +120,14 @@ export const Cypher: FC<{
                         )}
                     </div>
                 </div>
+                {!preview && (
+                    <p className='italic px-6 mt-2 text-sm'>
+                        Note: The sample results from running this cypher search may include additional entities that
+                        are not directly associated with the cypher query due to default selector expansion. In
+                        contrast, 'View in Explore' will show only the entities that are directly associated with the
+                        cypher query.
+                    </p>
+                )}
             </CardHeader>
             <CardContent className='px-6'>
                 <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>

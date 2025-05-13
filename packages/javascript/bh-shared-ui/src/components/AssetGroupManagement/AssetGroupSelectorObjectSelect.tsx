@@ -31,7 +31,6 @@ import { AssetGroupTagNode, SeedTypeObjectId } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { SearchValue } from '../../store';
 import { apiClient, cn } from '../../utils';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
@@ -45,7 +44,6 @@ const AssetGroupSelectorObjectSelect: FC<{
     setSeedPreviewResults: (nodes: AssetGroupTagNode[] | null) => void;
     seeds?: AssetGroupSelectedNodes;
 }> = ({ setSeeds, setSeedPreviewResults, seeds = [] }) => {
-    const { selectorId } = useParams();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [stalePreview, setStalePreview] = useState(false);
     const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(seeds);
@@ -53,6 +51,8 @@ const AssetGroupSelectorObjectSelect: FC<{
     const previewQuery = useQuery({
         queryKey: ['tier-management', 'preview-selectors', SeedTypeObjectId],
         queryFn: ({ signal }) => {
+            if (selectedNodes.length === 0) return [];
+
             const seeds = selectedNodes.map((seed) => {
                 return {
                     type: SeedTypeObjectId,
@@ -66,7 +66,6 @@ const AssetGroupSelectorObjectSelect: FC<{
         },
 
         retry: false,
-        enabled: selectorId !== undefined,
     });
 
     const handleRun = useCallback(() => {

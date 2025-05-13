@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { CreateSelectorRequest, RequestOptions, UpdateSelectorRequest } from 'js-client-library/dist/requests';
-import { DateTime } from 'luxon';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
@@ -66,6 +65,8 @@ const SelectorForm: FC = () => {
     const { tagId, selectorId } = useParams();
 
     const [selectorType, setSelectorType] = useState<SeedTypes>(SeedTypeObjectId);
+    const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
+
     const formMethods = useForm<SelectorFormInputs>();
 
     const patchSelectorMutation = usePatchSelector(tagId);
@@ -80,6 +81,7 @@ const SelectorForm: FC = () => {
         } else {
             handleCreateSelector(data);
         }
+        setResults([]);
     };
 
     const handlePatchSelector = useCallback(
@@ -88,8 +90,8 @@ const SelectorForm: FC = () => {
                 if (!tagId || !selectorId)
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
-                if (updatedValues.disabled_at !== null) {
-                    updatedValues.disabled_at = DateTime.now().toISO();
+                if (updatedValues.disabled_at === 'on') {
+                    updatedValues.disabled_at = null;
                 }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
@@ -107,8 +109,8 @@ const SelectorForm: FC = () => {
             try {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
-                if (values.disabled_at !== null) {
-                    values.disabled_at = DateTime.now().toISO();
+                if (values.disabled_at === 'on') {
+                    values.disabled_at = null;
                 }
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
@@ -127,7 +129,12 @@ const SelectorForm: FC = () => {
                 onSubmit={formMethods.handleSubmit(onSubmit)}
                 className='flex gap-6 mt-6 w-full justify-between pointer-events-auto'>
                 <BasicInfo setSelectorType={setSelectorType} selectorType={selectorType} />
-                <SeedSelection selectorType={selectorType} onSubmit={onSubmit} />
+                <SeedSelection
+                    selectorType={selectorType}
+                    results={results}
+                    setResults={setResults}
+                    onSubmit={onSubmit}
+                />
             </form>
         </FormProvider>
     );
