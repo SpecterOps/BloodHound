@@ -127,7 +127,7 @@ describe('DatabaseManagement', () => {
         await user.click(button);
 
         const dialog = screen.getByRole('dialog', {
-            name: /Delete the current environment\?/i,
+            name: /Delete data from the current environment\?/i,
         });
         expect(dialog).toBeInTheDocument();
 
@@ -150,7 +150,7 @@ describe('DatabaseManagement', () => {
         await user.click(proceedButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Delete this environment');
+        await user.type(textField, 'Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);

@@ -363,8 +363,8 @@ const DatabaseManagement: FC = () => {
                     dispatch({ type: 'close_dialog' });
                     handleMutation();
                 }}
-                itemName='the current environment'
-                itemType='environment'
+                itemName='data from the current environment'
+                itemType='environment data'
             />
         </PageWithTitle>
     );
