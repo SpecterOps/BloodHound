@@ -92,6 +92,8 @@ const (
 	AuditLogActionDeleteCustomNodeKind AuditLogAction = "DeleteCustomNodeKind"
 
 	AuditLogActionToggleEarlyAccessFeature AuditLogAction = "ToggleEarlyAccessFeature"
+
+	AuditLogActionCreateCollectorClient AuditLogAction = "CreateCollectorClient"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
