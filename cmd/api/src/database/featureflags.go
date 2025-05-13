@@ -19,7 +19,9 @@ package database
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"gorm.io/gorm"
 )
 
 func (s *BloodhoundDB) GetFlag(ctx context.Context, id int32) (appcfg.FeatureFlag, error) {
@@ -38,5 +40,14 @@ func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, e
 }
 
 func (s *BloodhoundDB) SetFlag(ctx context.Context, flag appcfg.FeatureFlag) error {
-	return CheckError(s.db.WithContext(ctx).Save(&flag))
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionToggleEarlyAccessFeature,
+			Model:  flag,
+		}
+	)
+
+	return s.MaybeAuditableTransaction(ctx, !flag.UserUpdatable, auditEntry, func(tx *gorm.DB) error {
+		return CheckError(tx.Save(&flag))
+	})
 }
