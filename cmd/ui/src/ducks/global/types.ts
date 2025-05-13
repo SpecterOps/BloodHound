@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Notification } from 'bh-shared-ui';
+import { IconDictionary, Notification } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { SnackbarKey } from 'notistack';
 
@@ -27,15 +27,19 @@ const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
+const GLOBAL_FETCH_CUSTOM_NODE_INFORMATION = 'app/global/GLOBALFETCHCUSTOMNODEINFORMATION';
+const GLOBAL_SET_CUSTOM_NODE_INFORMATION = 'app/global/GLOBALSETCUSTOMNODEINFORMATION';
 
 export {
     GLOBAL_ADD_SNACKBAR,
     GLOBAL_CLOSE_SNACKBAR,
     GLOBAL_FETCH_ASSET_GROUPS,
+    GLOBAL_FETCH_CUSTOM_NODE_INFORMATION,
     GLOBAL_REMOVE_SNACKBAR,
     GLOBAL_SET_ASSET_GROUPS,
     GLOBAL_SET_ASSET_GROUP_EDIT,
     GLOBAL_SET_ASSET_GROUP_INDEX,
+    GLOBAL_SET_CUSTOM_NODE_INFORMATION,
     GLOBAL_SET_DARK_MODE,
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
@@ -114,3 +118,14 @@ export interface SetExpandedAction {
 }
 
 export type GlobalAccordionsActionTypes = SetExpandedAction;
+
+export interface FetchCustomNodeInformationAction {
+    type: typeof GLOBAL_FETCH_CUSTOM_NODE_INFORMATION;
+}
+
+export interface SetCustomNodeInformationAction {
+    type: typeof GLOBAL_SET_CUSTOM_NODE_INFORMATION;
+    customIcons: IconDictionary;
+}
+
+export type GlobalCustomNodeActionTypes = FetchCustomNodeInformationAction | SetCustomNodeInformationAction;

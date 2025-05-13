@@ -18,8 +18,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { EntityKinds } from '../..';
-import { IconInfo, UNKNOWN_ICON } from '../../utils/icons';
+import { EntityKinds, IconDictionary, IconInfo, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
+import { useAppSelector } from 'src/store';
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;
@@ -51,7 +51,9 @@ const useStyles = makeStyles<Theme, IconInfoProp, string>({
 });
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
-    const icon = GetIconInfo(nodeType);
+    const customIcons = useAppSelector((state) => state.global.customNodeInformation.customIcons);
+    const icon = GetIconInfo(nodeType, customIcons);
+
     const classes = useStyles({ icon });
 
     return (
@@ -65,9 +67,15 @@ const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
     );
 };
 
-// TODO: DELETE THIS COMPONENT AND MOVE UP TO BHE
-export const GetIconInfo = (iconName: string): IconInfo => {
-    console.log(iconName);
+export const GetIconInfo = (iconName: string, customIcons: IconDictionary): IconInfo => {
+    if (iconName in customIcons) {
+        return customIcons[iconName];
+    }
+
+    if (iconName in NODE_ICON) {
+        return NODE_ICON[iconName];
+    }
+
     return UNKNOWN_ICON;
 };
 

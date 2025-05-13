@@ -23,7 +23,7 @@ import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute';
 import { ListAssetGroups } from 'src/ducks/assetgroups/actionCreators';
 import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
-import { fetchAssetGroups } from 'src/ducks/global/actions';
+import { fetchAssetGroups, fetchCustomNodeInformation } from 'src/ducks/global/actions';
 import { ROUTES, TIER_MANAGEMENT_ROUTE } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
@@ -50,6 +50,7 @@ const Content: React.FC = () => {
         if (isFullyAuthenticated) {
             dispatch(fetchAssetGroups());
             dispatch(ListAssetGroups());
+            dispatch(fetchCustomNodeInformation());
         }
     }, [authState, isFullyAuthenticated, dispatch]);
 

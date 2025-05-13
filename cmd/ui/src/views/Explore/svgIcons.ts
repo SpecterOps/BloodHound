@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { findIconDefinition, icon } from '@fortawesome/fontawesome-svg-core';
-import { IconDefinition, IconName } from '@fortawesome/free-solid-svg-icons';
-import { GLYPHS, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON, CUSTOM_ICONS, GetIconInfo, apiClient } from 'bh-shared-ui';
+import { icon } from '@fortawesome/fontawesome-svg-core';
+import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { GLYPHS, GetIconInfo, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
 
-const NODE_SCALE = '0.6';
+export const NODE_SCALE = '0.6';
 const GLYPH_SCALE = '0.5';
-const DEFAULT_ICON_COLOR = '#000000';
+export const DEFAULT_ICON_COLOR = '#000000';
 
 // Adds object URLs to all icon and glyph definitions so that our fontawesome icons can be used by sigmajs node programs
-const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): void => {
+export const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): void => {
     Object.entries(icons).forEach(([type, value]) => {
         if (value.url) return;
 
@@ -42,33 +42,9 @@ const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string
     return URL.createObjectURL(svg);
 };
 
-apiClient.getCustomNodeKinds().then(r => {
-    r.data.data.forEach((nodeKind, _i, _arr) => {
-        try {
-            const iconName = nodeKind.config.icon.name as IconName;
-
-            const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: iconName });
-            if (iconDefinition == undefined) {
-                return
-            }
-
-            CUSTOM_ICONS[nodeKind.kindName] = {
-                icon: iconDefinition,
-                color: DEFAULT_ICON_COLOR,
-            }
-        } catch (e) {
-            console.log(e)
-        }
-    })
-}).catch(e => {
-    console.log(e);
-}).finally(() => {
-    appendSvgUrls(CUSTOM_ICONS, NODE_SCALE);
-})
-
 // Append URLs for nodes, glyphs, and any additional utility icons
 appendSvgUrls(NODE_ICON, NODE_SCALE);
 appendSvgUrls(GLYPHS, GLYPH_SCALE);
 UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, NODE_SCALE, DEFAULT_ICON_COLOR);
 
-export { GLYPHS, NODE_ICON, UNKNOWN_ICON, GetIconInfo };
+export { GLYPHS, GetIconInfo, NODE_ICON, UNKNOWN_ICON };

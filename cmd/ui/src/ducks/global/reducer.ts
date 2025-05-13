@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers } from '@reduxjs/toolkit';
+import { IconDictionary } from 'bh-shared-ui';
 import { castDraft, produce } from 'immer';
 import assign from 'lodash/assign';
 import * as types from './types';
@@ -76,8 +77,24 @@ const globalAccordionsReducer = (state = initialAccordionsState, action: types.G
     });
 };
 
+const initialCustomNodeInformationState: { customIcons: IconDictionary } = {
+    customIcons: {},
+};
+
+const globalCustomNodeInformationReducer = (
+    state = initialCustomNodeInformationState,
+    action: types.GlobalCustomNodeActionTypes
+) => {
+    return produce(state, (draft) => {
+        if (action.type === types.GLOBAL_SET_CUSTOM_NODE_INFORMATION) {
+            draft.customIcons = action.customIcons;
+        }
+    });
+};
+
 export default combineReducers({
     view: globalViewReducer,
     options: globalOptionsReducer,
     accordions: globalAccordionsReducer,
+    customNodeInformation: globalCustomNodeInformationReducer,
 });

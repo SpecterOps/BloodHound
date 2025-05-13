@@ -84,6 +84,8 @@ const GraphView: FC = () => {
 
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
+    const customIcons = useAppSelector((state) => state.global.customNodeInformation.customIcons);
+
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
@@ -96,12 +98,12 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode);
+        initGraph(graph, items, theme, darkMode, customIcons);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme, darkMode]);
+    }, [graphState.chartProps.items, theme, darkMode, customIcons]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
