@@ -83,14 +83,16 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
-					var domainSid string
-					var ldapSigningForDomain LDAPSigningCache
 
 					if domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 						continue
 					} else if _, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 						continue
-					} else if ldapSigningForDomain, ok = ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
+					} else if ldapSigningForDomain, ok := ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
+						continue
+					} else if protectedUsersForDomain, ok := ntlmCache.GetProtectedUsersForDomain(domainSid); ok && protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
+						// Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
+						// If protected users doesn't exist, we intentionally fail open here as it is valid for older domains to not have this group
 						continue
 					} else if toggleDefaultRestrictNTLMBehavior {
 						if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
@@ -106,12 +108,6 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 						if restrictOutboundNtlm {
 							continue
 						}
-					}
-
-					if protectedUsersForDomain, ok := ntlmCache.GetProtectedUsersForDomain(domainSid); ok && protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
-						// Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
-						// If protected users doesn't exist, we intentionally fail open here as it is valid for older domains to not have this group
-						continue
 					}
 
 					allUnprotectedComputerCache.Add(innerComputer.ID.Uint64())
