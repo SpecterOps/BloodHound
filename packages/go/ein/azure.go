@@ -1862,7 +1862,7 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
 		rels             = make([]IngestibleRelationship, 0)
-		combinedObjectId = strings.ToUpper(strings.Join([]string{policyAssignment.RoleDefinitionId, policyAssignment.TenantId}, "@"))
+		combinedObjectId = strings.ToUpper(fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId))
 	)
 
 	// Format the incoming user and group ids to uppercase string before creating our nodes
@@ -1893,12 +1893,12 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if !policyAssignment.EndUserAssignmentRequiresApproval {
-		// We cannot create the edge or nodes if the assignment does not require approval
+		// We cannot create the edges if the assignment does not require approval
 		return targetAZRole, rels
 	}
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
-		// Create an edge for each user with that allow approvals to the target role
+		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
 			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
 				Source:     strings.ToUpper(approver),
@@ -1914,7 +1914,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if len(policyAssignment.EndUserAssignmentGroupApprovers) > 0 {
-		// Create an edge for each group with that allow approvals to the target role
+		// Create an AZRoleApprover edge from each group that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentGroupApprovers {
 			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
 				Source:     strings.ToUpper(approver),
