@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/specterops/bloodhound/src/model"
@@ -110,8 +109,6 @@ func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string
 			Model:  &customNodeKind,
 		}
 	)
-
-	slog.Info("kindName", "kindName", kindName)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		if err := tx.Raw(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ? RETURNING id, config;", customNodeKindTable), kindName).

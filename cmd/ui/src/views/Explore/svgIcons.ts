@@ -43,7 +43,7 @@ const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string
 };
 
 apiClient.getCustomNodeKinds().then(r => {
-    r.data.data.forEach((nodeKind, i, arr) => {
+    r.data.data.forEach((nodeKind, _i, _arr) => {
         try {
             const iconName = nodeKind.config.icon.name as IconName;
 
