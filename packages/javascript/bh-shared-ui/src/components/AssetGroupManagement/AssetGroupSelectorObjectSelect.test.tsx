@@ -38,6 +38,9 @@ const server = setupServer(
     }),
     rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
         return res(ctx.json({ data: { members: testNodes } }));
+    }),
+    rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
+        return res(ctx.json({ data: { nodes: testNodes } }));
     })
 );
 
@@ -49,10 +52,9 @@ describe('AssetGroupSelectorObjectSelect', () => {
     const user = userEvent.setup();
     const seeds = [
         {
-            type: 'Computer',
             value: '1',
-            name: 'bruce',
-            objectid: '1',
+            type: SeedTypeObjectId,
+            selector_id: 1,
         },
     ];
 

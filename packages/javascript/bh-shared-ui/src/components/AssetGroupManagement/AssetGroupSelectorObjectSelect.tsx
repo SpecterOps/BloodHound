@@ -194,8 +194,8 @@ const AssetGroupSelectorObjectSelect: FC<{
                     </div>
                     <Table className='mt-5 w-full table-fixed'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
-                            {selectedNodes.map((node) => (
-                                <TableRow key={node.objectid} className='border-y p-0 *:p-0 *:h-12'>
+                            {selectedNodes.map((node, index) => (
+                                <TableRow key={node.objectid + index} className='border-y p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
                                         <Button
                                             variant={'text'}
