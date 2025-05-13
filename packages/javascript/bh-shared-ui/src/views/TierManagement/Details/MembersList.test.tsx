@@ -46,7 +46,7 @@ describe('MembersList', () => {
                 <Route path={'/'} element={<MembersList selected='1' onClick={vi.fn()} />} />;
                 <Route
                     path={'/tier-management/details/tag/:tagId/selector/:selectorId'}
-                    element={<MembersList selected='1' onClick={vi.fn()} />}
+                    element={<MembersList selected='1' onClick={vi.fn()} itemCount={1} />}
                 />
             </Routes>,
             { history }

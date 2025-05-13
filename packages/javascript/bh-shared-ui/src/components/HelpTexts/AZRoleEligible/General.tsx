@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package vendormocks
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./io/fs/mock.go -package=fs io/fs FS,File,FileInfo
+const General: FC = () => {
+    return (
+        <Typography variant='body2'>
+            The Entra user or group is eligible for a role assignment. If the user is compromised, an attacker could
+            activate the role, or use a current activation to escalate privileges in the tenant.
+        </Typography>
+    );
+};
+
+export default General;

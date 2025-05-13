@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package vendormocks
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../LICENSE.header -destination=./io/fs/mock.go -package=fs io/fs FS,File,FileInfo
+const AZRoleEligible = {
+    general: General,
+    opsec: Opsec,
+    references: References,
+};
+
+export default AZRoleEligible;
