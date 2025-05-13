@@ -1022,6 +1022,7 @@ export enum AzureKindProperties {
     LoginURL = 'loginurl',
     MFAEnforced = 'mfaenforced',
     UserPrincipalName = 'userprincipalname',
+    UserDepartment = 'userdepartment',
     IsAssignableToRole = 'isassignabletorole',
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
@@ -1085,6 +1086,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'MFA Enforced';
         case AzureKindProperties.UserPrincipalName:
             return 'User Principal Name';
+        case AzureKindProperties.UserDepartment:
+            return 'User Department';
         case AzureKindProperties.IsAssignableToRole:
             return 'Is Role Assignable';
         case AzureKindProperties.PublisherDomain:

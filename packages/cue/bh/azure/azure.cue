@@ -156,6 +156,13 @@ UserPrincipalName: types.#StringEnum & {
 	representation: "userprincipalname"
 }
 
+UserDepartment: types.#StringEnum & {
+	symbol:         "UserDepartment"
+	schema:         "azure"
+	name:           "User Department"
+	representation: "userdepartment"
+}
+
 IsAssignableToRole: types.#StringEnum & {
 	symbol:         "IsAssignableToRole"
 	schema:         "azure"
@@ -283,6 +290,7 @@ Properties: [
 	LoginURL,
 	MFAEnforced,
 	UserPrincipalName,
+	UserDepartment,
 	IsAssignableToRole,
 	PublisherDomain,
 	SignInAudience,

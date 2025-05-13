@@ -479,8 +479,9 @@ func ConvertAzureGroupMembersToRels(data models.GroupMembers) []IngestibleRelati
 	return relationships
 }
 
-func ConvertAzureInteractionToRels(data models.UsersInteractions) []IngestibleRelationship {
+func ConvertAzureInteractionToRels(data models.UsersInteractions) ([]IngestibleRelationship, []IngestibleNode) {
 	relationships := make([]IngestibleRelationship, 0)
+	updateNodes := make([]IngestibleNode, 0)
 
 	for _, raw := range data.Users {
 		var (
@@ -507,10 +508,22 @@ func ConvertAzureInteractionToRels(data models.UsersInteractions) []IngestibleRe
 					RelType:  azure.WorkWith,
 				},
 			))
+			var userMap map[string]any
+			var department any
+			if err := json.Unmarshal(raw.User, &userMap); err == nil {
+				department = userMap["department"]
+			}
+			updateNodes = append(updateNodes, IngestibleNode{
+				ObjectID: strings.ToUpper(user.Id),
+				PropertyMap: map[string]any{
+					azure.UserDepartment.String(): department,
+				},
+				Label: azure.User,
+			})
 		}
 	}
 
-	return relationships
+	return relationships, updateNodes
 }
 
 func ConvertAzureGroupOwnerToRels(data models.GroupOwners) []IngestibleRelationship {

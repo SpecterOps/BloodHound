@@ -127,6 +127,7 @@ const (
 	LoginURL                Property = "loginurl"
 	MFAEnforced             Property = "mfaenforced"
 	UserPrincipalName       Property = "userprincipalname"
+	UserDepartment          Property = "userdepartment"
 	IsAssignableToRole      Property = "isassignabletorole"
 	PublisherDomain         Property = "publisherdomain"
 	SignInAudience          Property = "signinaudience"
@@ -134,7 +135,7 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, UserDepartment, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -194,6 +195,8 @@ func ParseProperty(source string) (Property, error) {
 		return MFAEnforced, nil
 	case "userprincipalname":
 		return UserPrincipalName, nil
+	case "userdepartment":
+		return UserDepartment, nil
 	case "isassignabletorole":
 		return IsAssignableToRole, nil
 	case "publisherdomain":
@@ -264,6 +267,8 @@ func (s Property) String() string {
 		return string(MFAEnforced)
 	case UserPrincipalName:
 		return string(UserPrincipalName)
+	case UserDepartment:
+		return string(UserDepartment)
 	case IsAssignableToRole:
 		return string(IsAssignableToRole)
 	case PublisherDomain:
@@ -334,6 +339,8 @@ func (s Property) Name() string {
 		return "MFA Enforced"
 	case UserPrincipalName:
 		return "User Principal Name"
+	case UserDepartment:
+		return "User Department"
 	case IsAssignableToRole:
 		return "Is Role Assignable"
 	case PublisherDomain:

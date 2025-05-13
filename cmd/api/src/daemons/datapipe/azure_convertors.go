@@ -304,7 +304,9 @@ func convertAzureUserInteractions(raw json.RawMessage, converted *ConvertedAzure
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(fmt.Sprintf(SerialError, "azure users interactions", err))
 	} else {
-		converted.RelProps = append(converted.RelProps, ein.ConvertAzureInteractionToRels(data)...)
+		rel, node := ein.ConvertAzureInteractionToRels(data)
+		converted.RelProps = append(converted.RelProps, rel...)
+		converted.NodeProps = append(converted.NodeProps, node...)
 	}
 }
 
