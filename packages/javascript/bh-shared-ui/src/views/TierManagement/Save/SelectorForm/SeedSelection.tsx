@@ -82,25 +82,22 @@ const SeedSelection: FC<{
         return () => window.removeEventListener('resize', updateHeightScalar);
     }, []);
 
-    const handleDeleteSelector = useCallback(
-        async (response: boolean) => {
-            if (response === false) {
-                setDeleteDialogOpen(false);
-            } else {
-                try {
-                    if (!tagId || !selectorId)
-                        throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
+    const handleDeleteSelector = useCallback(async () => {
+        try {
+            if (!tagId || !selectorId)
+                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
 
-                    await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-                    navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
-                } catch (error) {
-                    handleError(error, 'deleting', addNotification);
-                }
-            }
-        },
-        [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]
-    );
+            navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+        } catch (error) {
+            handleError(error, 'deleting', addNotification);
+        }
+
+        setDeleteDialogOpen(false);
+    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
@@ -167,7 +164,8 @@ const SeedSelection: FC<{
                 open={deleteDialogOpen}
                 itemName={selectorQuery.data?.name || 'Selector'}
                 itemType='selector'
-                onClose={handleDeleteSelector}
+                onConfirm={handleDeleteSelector}
+                onCancel={handleCancel}
             />
         </>
     );
