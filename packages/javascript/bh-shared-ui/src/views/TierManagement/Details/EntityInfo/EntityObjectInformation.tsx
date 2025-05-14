@@ -23,7 +23,9 @@ import { EntityInfoContentProps } from './EntityInfoContent';
 
 const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ properties }) => {
     const formattedObjectFields: EntityField[] = formatObjectInfoFields(properties);
-    const nodeProperties = { ...properties, objectid: properties.objectid || '' };
+    const nodeType = properties.nodeType || '';
+    const objectid = properties.objectid || '';
+    const nodeProperties = { ...properties, nodeType, objectid };
 
     return (
         <EntityInfoCollapsibleSection label='Object Information'>
