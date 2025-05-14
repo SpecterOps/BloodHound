@@ -15,10 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createBrowserHistory } from 'history';
-import { GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
@@ -28,8 +26,9 @@ import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
-import { Cypher } from '../../Cypher';
+import { Cypher } from '../../Cypher/Cypher';
 import { getTagUrlValue } from '../../utils';
+import DeleteSelectorButton from './DeleteSelectorButton';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -52,14 +51,15 @@ const getListScalar = (windoHeight: number) => {
     return 8;
 };
 
-const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({
-    selectorType,
-    onSubmit,
-}) => {
+const SeedSelection: FC<{
+    selectorType: SeedTypes;
+    onSubmit: SubmitHandler<SelectorFormInputs>;
+    results: AssetGroupTagNode[] | null;
+    setResults: (results: AssetGroupTagNode[] | null) => void;
+}> = ({ selectorType, onSubmit, results, setResults }) => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
-    const [results, setResults] = useState<GraphNodes | null>(null);
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -113,7 +113,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
     );
 
     if (selectorQuery.isLoading) return <Skeleton />;
-    if (selectorQuery.isError) throw new Error();
+    if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
 
     return (
         <>
@@ -126,27 +126,27 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         })}>
                         <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
-                            <AssetGroupSelectorObjectSelect setSeeds={setSeeds} />
+                            <AssetGroupSelectorObjectSelect
+                                setSeeds={setSeeds}
+                                setSeedPreviewResults={setResults}
+                                seeds={selectorQuery.data?.seeds || []}
+                            />
                         ) : (
                             <Cypher
                                 preview={false}
-                                setCypherSearchResults={setResults}
+                                setSeedPreviewResults={setResults}
                                 setSeeds={setSeeds}
                                 initialInput={selectorQuery.data?.seeds[0].value}
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
-                            {selectorId !== '' && (
-                                <Button
-                                    variant={'text'}
-                                    onClick={() => {
-                                        setDeleteDialogOpen(true);
-                                    }}>
-                                    <span>
-                                        <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
-                                    </span>
-                                </Button>
-                            )}
+                            <DeleteSelectorButton
+                                selectorId={selectorId}
+                                selectorData={selectorQuery.data}
+                                onClick={() => {
+                                    setDeleteDialogOpen(true);
+                                }}
+                            />
                             <Button variant={'secondary'} onClick={history.back}>
                                 Cancel
                             </Button>
@@ -165,7 +165,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         <span className='ml-8'>Object Name</span>
                     </div>
                     <VirtualizedNodeList
-                        nodes={results ? Object.values(results) : []}
+                        nodes={results ? results : []}
                         itemSize={46}
                         heightScalar={heightScalar.current}
                     />

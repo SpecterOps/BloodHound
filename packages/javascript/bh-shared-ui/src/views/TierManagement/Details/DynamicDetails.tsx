@@ -20,7 +20,7 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher';
+import { Cypher } from '../Cypher/Cypher';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 
