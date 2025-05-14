@@ -20,7 +20,7 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher';
+import { Cypher } from '../Cypher/Cypher';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 
@@ -41,7 +41,9 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     return (
         <div className='max-h-full flex flex-col gap-8'>
             <Card className='px-6 py-6 max-w-[32rem]'>
-                <div className='text-xl font-bold'>{data.name}</div>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
+                </div>
                 {data.position !== null && (
                     <div className='mt-4'>
                         <DetailField label='Tier' value={data.position.toString()} />
@@ -70,7 +72,9 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     return (
         <div className='max-h-full flex flex-col gap-8'>
             <Card className='px-6 py-6 max-w-[32rem]'>
-                <div className='text-xl font-bold'>{data.name}</div>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
+                </div>
                 <div className='mt-4'>
                     <DetailField label='Description' value={data.description} />
                 </div>

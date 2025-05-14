@@ -55,11 +55,12 @@ const Row = ({
             <Button
                 variant={'text'}
                 className='flex justify-start w-full'
+                title={`Type: ${listItem.primary_kind}; Name: ${listItem.name}`}
                 onClick={() => {
                     onClick(listItem.id?.toString());
                 }}>
                 <NodeIcon nodeType={listItem.primary_kind} />
-                <span className='text-base dark:text-white ml-2'>{listItem.name}</span>
+                <span className='text-base dark:text-white ml-2 truncate'>{listItem.name}</span>
             </Button>
         </li>
     );
@@ -132,7 +133,8 @@ interface MembersListProps {
  * @returns The MembersList component for rendering in the Tier Management page.
  */
 export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, itemCount = 0 }) => {
-    const { tagId, selectorId } = useParams();
+    const { tierId, labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
@@ -166,7 +168,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
 
             setIsFetching(true);
 
-            const limit = stopIndex - startIndex;
+            const limit = stopIndex - startIndex + 1;
 
             const fetchData = getFetchCallback(tagId, selectorId, sortOrder);
 

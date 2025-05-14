@@ -17,7 +17,7 @@
 import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
+import { NormalizedNodeItem } from '../../components/VirtualizedNodeList';
 import { renderHook, waitFor } from '../../test-utils';
 import { EdgeInfoItems, EdgeInfoItemsProps, useEdgeInfoItems } from './useEdgeInfoItems';
 
@@ -78,7 +78,7 @@ const testHookParams: EdgeInfoItemsProps = {
 
 const handleNodeClick = () => {};
 
-const testDataNodeArray: VirtualizedNodeListItem = {
+const testDataNodeArray: NormalizedNodeItem = {
     name: 'DUMPSTER.FIRE',
     objectId: 'S-1-5-21-2697957641-2271029196-387917394',
     graphId: '19699711',

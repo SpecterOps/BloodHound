@@ -882,6 +882,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	AZRoleEligible,
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])

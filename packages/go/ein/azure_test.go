@@ -18,9 +18,10 @@ package ein_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/bloodhoundad/azurehound/v2/models"
 	"github.com/specterops/bloodhound/ein"

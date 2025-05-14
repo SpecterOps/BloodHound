@@ -38,24 +38,24 @@ describe('MembersList', () => {
         const user = userEvent.setup();
 
         const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/tag/1/selector/1'],
+            initialEntries: ['/tier-management/details/tier/1/selector/1'],
         });
 
         render(
             <Routes>
                 <Route path={'/'} element={<MembersList selected='1' onClick={vi.fn()} />} />;
                 <Route
-                    path={'/tier-management/details/tag/:tagId/selector/:selectorId'}
+                    path={'/tier-management/details/tier/:tierId/selector/:selectorId'}
                     element={<MembersList selected='1' onClick={vi.fn()} itemCount={1} />}
                 />
             </Routes>,
             { history }
         );
 
-        expect(membersListSpy).toBeCalledWith('1', '1', 0, 128, 'name');
+        expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, 'name');
 
         await user.click(screen.getByText('Objects', { exact: false }));
 
-        expect(membersListSpy).toBeCalledWith('1', '1', 0, 128, '-name');
+        expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, '-name');
     });
 });

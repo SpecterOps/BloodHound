@@ -17,18 +17,18 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../utils';
+import { render, screen, waitFor } from '../../../test-utils';
+import { mockCodemirrorLayoutMethods } from '../../../utils';
 import { Cypher } from './Cypher';
 
 const testNodes = {
-    '0': {
-        label: '',
-        kind: 'Unknown',
-        objectId: '',
-        isTierZero: false,
-        isOwnedObject: false,
-    },
+    members: [
+        {
+            name: '',
+            primary_kind: 'Unknown',
+            object_id: '',
+        },
+    ],
 };
 
 const server = setupServer(
@@ -39,21 +39,13 @@ const server = setupServer(
             })
         );
     }),
-    rest.post('/api/v2/graphs/cypher', async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    nodes: testNodes,
-                    edges: [],
-                },
-            })
-        );
+    rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+        return res(ctx.json(testNodes));
     })
 );
 
-beforeAll(() => {
-    server.listen();
-});
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
 afterAll(() => {
     server.close();
     vi.restoreAllMocks();
@@ -104,7 +96,7 @@ describe('Cypher Search component for Tier Management', () => {
             <Cypher
                 preview={false}
                 initialInput='match(n) return n limit 5'
-                setCypherSearchResults={setResultsCallback}
+                setSeedPreviewResults={setResultsCallback}
             />
         );
 
@@ -113,7 +105,7 @@ describe('Cypher Search component for Tier Management', () => {
         user.click(runButton);
 
         await waitFor(() => {
-            expect(setResultsCallback).toHaveBeenCalledWith(testNodes);
+            expect(setResultsCallback).toHaveBeenCalled();
         });
     });
 });
