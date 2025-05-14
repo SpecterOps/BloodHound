@@ -59,7 +59,7 @@ const Row = ({
                     onClick(listItem.id?.toString());
                 }}>
                 <NodeIcon nodeType={listItem.primary_kind} />
-                <span className='text-base ml-2'>{listItem.name}</span>
+                <span className='text-base dark:text-white ml-2'>{listItem.name}</span>
             </Button>
         </li>
     );

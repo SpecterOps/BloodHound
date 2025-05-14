@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Badge, Button } from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
@@ -41,9 +41,9 @@ const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelecto
     if (listItem.counts === undefined) {
         return null;
     } else if (isTagListItem(listItem)) {
-        return <span className='text-base'>{listItem.counts.selectors.toLocaleString()}</span>;
+        return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
     } else if (isSelectorsListItem(listItem)) {
-        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
+        return <span className='text-base ml-4'>{listItem.counts.members.toLocaleString()}</span>;
     } else {
         return null;
     }
@@ -115,7 +115,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
-                                console.log('🚀 ~ .map ~ listItem:', listItem);
                                 return (
                                     <li
                                         key={listItem.id}
@@ -135,18 +134,14 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             }}>
                                             <div className='flex items-center'>
                                                 <div
-                                                    className='text-base truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]'
-                                                    title={listItem.name}>
+                                                    className={`text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px] ${isSelectorsListItem(listItem) && listItem.disabled_at && 'text-[#8E8C95] dark:text-[#919191]'}`}
+                                                    title={
+                                                        isSelectorsListItem(listItem) && listItem.disabled_at
+                                                            ? `**Disabled**${listItem.name}`
+                                                            : listItem.name
+                                                    }>
                                                     {listItem.name}
                                                 </div>
-                                                {isSelectorsListItem(listItem) && listItem.disabled_at && (
-                                                    <div className='ml-2 italic'>
-                                                        <Badge
-                                                            label='Disabled'
-                                                            className={'bg-neutral-light-5 dark:bg-neutral-dark-5'}
-                                                        />
-                                                    </div>
-                                                )}
                                             </div>
                                             {getCountElement(listItem)}
                                         </Button>
