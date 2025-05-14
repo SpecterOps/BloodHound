@@ -29,6 +29,7 @@ import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher';
+import { getTagUrlValue } from '../../utils';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -55,7 +56,8 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
     selectorType,
     onSubmit,
 }) => {
-    const { tagId = '', selectorId = '' } = useParams();
+    const { tierId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [results, setResults] = useState<GraphNodes | null>(null);
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
@@ -101,13 +103,13 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
 
                     await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-                    navigate(`/tier-management/details/tags/${tagId}`);
+                    navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
                 } catch (error) {
                     handleError(error, 'deleting', addNotification);
                 }
             }
         },
-        [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]
+        [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]
     );
 
     if (selectorQuery.isLoading) return <Skeleton />;

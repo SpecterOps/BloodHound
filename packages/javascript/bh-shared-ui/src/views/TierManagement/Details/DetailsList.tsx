@@ -15,7 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Badge, Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
+import {
+    AssetGroupTagSelectorsListItem,
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeOwned,
+    AssetGroupTagTypeTier,
+    AssetGroupTagsListItem,
+} from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -67,20 +73,6 @@ type DetailsListProps = {
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-    // const getFilteredList = (list: DetailsList): DetailsList => {
-    //     if (title === 'Tiers') {
-    //         return list.filter(
-    //             (item): item is TagsListItem => isTagListItem(item) && item.type === AssetGroupTagTypeTier
-    //         );
-    //     } else if (title === 'Labels') {
-    //         return list.filter(
-    //             (item): item is TagsListItem => isTagListItem(item) && item.type !== AssetGroupTagTypeTier
-    //         );
-    //     } else {
-    //         return list;
-    //     }
-    // };
-
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
             {title !== 'Tiers' ? (
@@ -131,6 +123,21 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                if (
+                                    isTagListItem(listItem) &&
+                                    listItem.type === AssetGroupTagTypeTier &&
+                                    title !== 'Tiers'
+                                ) {
+                                    return null;
+                                }
+                                if (
+                                    isTagListItem(listItem) &&
+                                    (listItem.type === AssetGroupTagTypeLabel ||
+                                        listItem.type === AssetGroupTagTypeOwned) &&
+                                    title === 'Tiers'
+                                ) {
+                                    return null;
+                                }
                                 return (
                                     <li
                                         key={listItem.id}

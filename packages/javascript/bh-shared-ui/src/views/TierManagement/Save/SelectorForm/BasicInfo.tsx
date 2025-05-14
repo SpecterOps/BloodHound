@@ -43,7 +43,8 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
     setSelectorType,
     selectorType,
 }) => {
-    const { tagId = '', selectorId = '' } = useParams();
+    const { tierId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const {
         formState: { errors },

@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
 import { apiClient } from '../../../../utils';
+import { getTagUrlValue } from '../../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import { CreateSelectorParams, PatchSelectorParams, SelectorFormInputs } from './types';
@@ -62,7 +63,8 @@ const useCreateSelector = (tagId: string | number | undefined) => {
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId } = useParams();
+    const { tierId, labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [selectorType, setSelectorType] = useState<SeedTypes>(SeedTypeObjectId);
     const formMethods = useForm<SelectorFormInputs>();
@@ -89,12 +91,12 @@ const SelectorForm: FC = () => {
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
 
-                navigate(`/tier-management/details/tags/${tagId}`);
+                navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
         },
-        [tagId, selectorId, navigate, patchSelectorMutation, addNotification]
+        [tagId, labelId, selectorId, navigate, patchSelectorMutation, addNotification]
     );
 
     const handleCreateSelector = useCallback(
@@ -104,12 +106,12 @@ const SelectorForm: FC = () => {
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
 
-                navigate(`/tier-management/details/tags/${tagId}`);
+                navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
             } catch (error) {
                 handleError(error, 'creating', addNotification);
             }
         },
-        [tagId, navigate, createSelectorMutation, addNotification]
+        [tagId, labelId, navigate, createSelectorMutation, addNotification]
     );
 
     return (
