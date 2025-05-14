@@ -258,7 +258,8 @@ describe('Selector Form', () => {
 
         const nameInput = await screen.findByLabelText('Name');
 
-        await user.type(nameInput, 'foo');
+        await user.click(nameInput);
+        await user.paste('foo');
 
         longWait(async () => {
             expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
