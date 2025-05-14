@@ -35,6 +35,17 @@ const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => 
     );
 };
 
+const DescriptionField: FC<{ description: string }> = ({ description }) => {
+    return (
+        <div className='flex flex-col gap-x-2'>
+            <span className='font-bold'>Description:</span>
+            <div className='max-h-36 overflow-y-auto'>
+                <p title={description}>{description}</p>
+            </div>
+        </div>
+    );
+};
+
 const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
@@ -50,7 +61,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     </div>
                 )}
                 <div className='mt-4'>
-                    <DetailField label='Description' value={data.description} />
+                    <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
                     <DetailField label='Created by' value={data.created_by} />
@@ -76,7 +87,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     {data.name}
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Description' value={data.description} />
+                    <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
                     <DetailField label='Created by' value={data.created_by} />
@@ -87,7 +98,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Selector Status' value={data.disabled_by ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {getSelectorSeedType(data) === SeedTypeCypher && <Cypher preview initialInput={data.seeds[0].value} />}

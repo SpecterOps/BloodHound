@@ -57,9 +57,7 @@ export const Cypher: FC<{
             return;
         }
 
-        const result = previewQuery.data ? previewQuery.data : null;
-
-        setSeedPreviewResults(result);
+        setSeedPreviewResults(previewQuery.data ?? null);
     }, [previewQuery.data, setSeedPreviewResults]);
 
     const schema = useCallback(() => graphSchema(kindsQuery.data), [kindsQuery.data]);

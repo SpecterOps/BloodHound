@@ -28,13 +28,13 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagNode, AssetGroupTagSelectorSeed, GraphNodes, SeedTypeObjectId } from 'js-client-library';
-import { SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { GraphNodes, SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { SearchValue } from '../../store';
 import { apiClient, cn } from '../../utils';
+import SelectorFormContext from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 
@@ -48,12 +48,11 @@ const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
     });
 };
 
-const AssetGroupSelectorObjectSelect: FC<{
-    setSeeds: (seeds: SelectorSeedRequest[]) => void;
-    setSeedPreviewResults: (nodes: AssetGroupTagNode[] | null) => void;
-    seeds?: AssetGroupTagSelectorSeed[];
-}> = ({ setSeeds, setSeedPreviewResults, seeds = [] }) => {
+const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ seeds }) => {
     const { tagId = '', selectorId = '' } = useParams();
+
+    const { setSeeds, setResults } = useContext(SelectorFormContext);
+
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [stalePreview, setStalePreview] = useState(false);
     const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
@@ -78,7 +77,15 @@ const AssetGroupSelectorObjectSelect: FC<{
     });
 
     const seedsQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
+        queryKey: [
+            'tier-management',
+            'tags',
+            tagId,
+            'selectors',
+            selectorId,
+            'seeds',
+            ...seeds.map((seed) => seed.value),
+        ],
         queryFn: async () => {
             const seedsList = seeds.map((seed) => {
                 return `"${seed.value}"`;
@@ -98,10 +105,10 @@ const AssetGroupSelectorObjectSelect: FC<{
     }, [previewQuery]);
 
     useEffect(() => {
-        const result = previewQuery.data ?? null;
+        if (!previewQuery.data) return;
 
-        setSeedPreviewResults(result);
-    }, [previewQuery.data, setSeedPreviewResults]);
+        setResults(previewQuery.data || []);
+    }, [previewQuery.data, setResults]);
 
     useEffect(() => {
         previewQuery.refetch();

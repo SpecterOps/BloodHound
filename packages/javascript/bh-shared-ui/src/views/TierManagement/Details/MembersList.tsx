@@ -24,7 +24,7 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import { ItemSkeleton, SelectedHighlight } from './utils';
+import { ItemSkeleton, SelectedHighlight, getListHeight } from './utils';
 
 const ITEM_SIZE = 40;
 
@@ -109,13 +109,6 @@ const getFetchCallback = (
             });
         };
     }
-};
-
-const getListHeight = (windoHeight: number) => {
-    if (windoHeight > 1080) return 762;
-    if (1080 >= windoHeight && windoHeight > 900) return 642;
-    if (900 >= windoHeight) return 438;
-    return 438;
 };
 
 interface MembersListProps {

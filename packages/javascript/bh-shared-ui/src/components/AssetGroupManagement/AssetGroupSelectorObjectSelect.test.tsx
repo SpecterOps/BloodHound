@@ -19,6 +19,7 @@ import { SeedTypeObjectId } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, render, screen, waitFor } from '../../test-utils';
+import SelectorFormContext, { initialValue } from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
 import AssetGroupSelectorObjectSelect from './AssetGroupSelectorObjectSelect';
 
 const testNodes = [
@@ -63,7 +64,9 @@ describe('AssetGroupSelectorObjectSelect', () => {
     beforeEach(async () => {
         await act(async () => {
             render(
-                <AssetGroupSelectorObjectSelect setSeeds={setSeeds} seeds={seeds} setSeedPreviewResults={vi.fn()} />
+                <SelectorFormContext.Provider value={initialValue}>
+                    <AssetGroupSelectorObjectSelect seeds={seeds} />
+                </SelectorFormContext.Provider>
             );
         });
     });
@@ -79,7 +82,9 @@ describe('AssetGroupSelectorObjectSelect', () => {
 
         await user.click(deleteBtn);
 
-        expect(setSeeds).toHaveBeenCalledWith([]);
+        waitFor(() => {
+            expect(setSeeds).toHaveBeenCalledWith([]);
+        });
     });
 
     it('invokes setSeeds when a new seed is selected', async () => {

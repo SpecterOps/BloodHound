@@ -62,3 +62,10 @@ export const getSelectorSeedType = (selector: AssetGroupTagSelector): SeedTypes 
 
     return firstSeed.type;
 };
+
+export const getListHeight = (windoHeight: number) => {
+    if (windoHeight > 1080) return 762;
+    if (1080 >= windoHeight && windoHeight > 900) return 642;
+    if (900 >= windoHeight) return 438;
+    return 438;
+};

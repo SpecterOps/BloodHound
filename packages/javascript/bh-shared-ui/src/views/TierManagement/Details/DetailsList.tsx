@@ -27,7 +27,7 @@ import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, itemSkeletons } from './utils';
+import { SelectedHighlight, getListHeight, itemSkeletons } from './utils';
 
 const isTagListItem = (
     listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
@@ -74,7 +74,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     return (
-        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
+        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`}>
             {title !== 'Tiers' ? (
                 <SortableHeader
                     title={title}
@@ -97,8 +97,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 </div>
             )}
             <div
-                className={cn('h-[calc(100%-42px)] overflow-y-auto', {
+                className={cn(`overflow-y-auto`, {
                     'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
+                    'h-[762px]': getListHeight(window.innerHeight) === 762,
+                    'h-[642px]': getListHeight(window.innerHeight) === 642,
+                    'h-[438px]': getListHeight(window.innerHeight) === 438,
                 })}>
                 <ul>
                     {listQuery.isLoading ? (
@@ -123,6 +126,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                // Filters out Tier Tags when the active tab is 'Labels'
                                 if (
                                     isTagListItem(listItem) &&
                                     listItem.type === AssetGroupTagTypeTier &&
@@ -130,6 +134,8 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 ) {
                                     return null;
                                 }
+
+                                // Filters out Label and Owned Tags when the active tab is 'Tiers'
                                 if (
                                     isTagListItem(listItem) &&
                                     (listItem.type === AssetGroupTagTypeLabel ||
@@ -138,6 +144,9 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 ) {
                                     return null;
                                 }
+
+                                const isDisabled = isSelectorsListItem(listItem) && listItem.disabled_by;
+
                                 return (
                                     <li
                                         key={listItem.id}
@@ -160,15 +169,10 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                     className={cn(
                                                         'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]',
                                                         {
-                                                            'text-[#8E8C95] dark:text-[#919191]':
-                                                                isSelectorsListItem(listItem) && listItem.disabled_at,
+                                                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
                                                         }
                                                     )}
-                                                    title={
-                                                        isSelectorsListItem(listItem) && listItem.disabled_at
-                                                            ? `**Disabled**${listItem.name}`
-                                                            : listItem.name
-                                                    }>
+                                                    title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
                                                     {listItem.name}
                                                 </div>
                                             </div>

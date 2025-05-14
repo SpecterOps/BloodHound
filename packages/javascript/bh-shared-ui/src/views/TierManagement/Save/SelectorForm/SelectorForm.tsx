@@ -15,16 +15,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
-import { CreateSelectorRequest, RequestOptions, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import {
+    CreateSelectorRequest,
+    RequestOptions,
+    SelectorSeedRequest,
+    UpdateSelectorRequest,
+} from 'js-client-library/dist/requests';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { useNotifications } from '../../../../providers';
 import { apiClient } from '../../../../utils';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
+import SelectorFormContext from './SelectorFormContext';
 import { CreateSelectorParams, PatchSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -63,14 +69,24 @@ const useCreateSelector = (tagId: string | number | undefined) => {
 };
 
 const SelectorForm: FC = () => {
-    const { tierId, labelId, selectorId } = useParams();
+    const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useNavigate();
 
     const { addNotification } = useNotifications();
 
+    const selectorQuery = useQuery({
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
+        queryFn: async () => {
+            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
+            return response.data.data['selector'];
+        },
+        enabled: selectorId !== '',
+    });
+
     const [selectorType, setSelectorType] = useState<SeedTypes>(SeedTypeObjectId);
     const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
+    const [seeds, setSeeds] = useState<SelectorSeedRequest[]>(selectorQuery.data?.seeds || []);
 
     const formMethods = useForm<SelectorFormInputs>();
 
@@ -129,19 +145,17 @@ const SelectorForm: FC = () => {
     );
 
     return (
-        <FormProvider {...formMethods}>
-            <form
-                onSubmit={formMethods.handleSubmit(onSubmit)}
-                className='flex gap-6 mt-6 w-full max-w-[120rem] justify-between pointer-events-auto'>
-                <BasicInfo setSelectorType={setSelectorType} selectorType={selectorType} />
-                <SeedSelection
-                    selectorType={selectorType}
-                    results={results}
-                    setResults={setResults}
-                    onSubmit={onSubmit}
-                />
-            </form>
-        </FormProvider>
+        <SelectorFormContext.Provider
+            value={{ seeds, setSeeds, results, setResults, selectorType, setSelectorType, selectorQuery }}>
+            <FormProvider {...formMethods}>
+                <form
+                    onSubmit={formMethods.handleSubmit(onSubmit)}
+                    className='flex gap-6 mt-6 w-full max-w-[120rem] justify-between pointer-events-auto'>
+                    <BasicInfo />
+                    <SeedSelection onSubmit={onSubmit} />
+                </form>
+            </FormProvider>
+        </SelectorFormContext.Provider>
     );
 };
 
