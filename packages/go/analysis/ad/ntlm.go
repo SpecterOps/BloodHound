@@ -108,11 +108,10 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 func hasAuthenticatedUser(computer *graph.Node, ntlmCache NTLMCache) bool {
 	if domainSid, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		return false
-	} else if _, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
-		return false
+	} else {
+		_, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid)
+		return ok
 	}
-
-	return true
 }
 
 // Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
@@ -156,7 +155,7 @@ func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, ntlmCa
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
-func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
+func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, adcsCache ADCSCache, ntlmEnabled, treatMissingRestrictOutboundNTLMPropertyAsRestricting bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		operation = analysis.NewPostRelationshipOperation(ctx, db, "PostNTLM")
 		// compositionChannel      = make(chan analysis.CompositionInfo)
@@ -194,7 +193,7 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
-	if ntlmCache, err := NewNTLMCache(ctx, db, groupExpansions); err != nil {
+	if ntlmCache, err := NewNTLMCache(ctx, db, groupExpansions, treatMissingRestrictOutboundNTLMPropertyAsRestricting); err != nil {
 		operation.Done()
 		return nil, err
 	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
