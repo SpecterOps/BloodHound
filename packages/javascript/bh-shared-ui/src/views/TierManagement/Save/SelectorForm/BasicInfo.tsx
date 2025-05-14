@@ -35,9 +35,14 @@ import { FC, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
+import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { apiClient } from '../../../../utils';
 import { SelectorFormInputs } from './types';
 
+/**
+ * selectorStatus takes in the selectorId from the path param in the url and the selector's data.
+ * It returns a boolean value associated with whether the selector is enabled or not.
+ */
 const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
     if (id === '') return true;
     if (data === undefined) return true;
@@ -100,12 +105,13 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                         <Switch
                             id='disabled_at'
                             checked={enabled}
+                            defaultValue={ZERO_VALUE_API_DATE}
                             disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
                             {...register('disabled_at')}
                             onCheckedChange={(checked: boolean) => {
                                 setEnabled((prev) => !prev);
                                 if (checked) {
-                                    setValue('disabled_at', null);
+                                    setValue('disabled_at', ZERO_VALUE_API_DATE);
                                 } else {
                                     setValue('disabled_at', DateTime.now().toISO());
                                 }

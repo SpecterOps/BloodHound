@@ -115,6 +115,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                const showDisabledBadge = isSelectorsListItem(listItem) && listItem.disabled_by;
                                 return (
                                     <li
                                         key={listItem.id}
@@ -134,7 +135,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             }}>
                                             <div className='flex items-center'>
                                                 <div className='text-base'>{listItem.name}</div>
-                                                {isSelectorsListItem(listItem) && listItem.disabled_at && (
+                                                {showDisabledBadge && (
                                                     <div className='ml-2 italic'>
                                                         <Badge
                                                             label='Disabled'

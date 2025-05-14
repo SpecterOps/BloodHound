@@ -20,6 +20,7 @@ import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { useNotifications } from '../../../../providers';
 import { apiClient } from '../../../../utils';
 import BasicInfo from './BasicInfo';
@@ -63,6 +64,9 @@ const useCreateSelector = (tagId: string | number | undefined) => {
 
 const SelectorForm: FC = () => {
     const { tagId, selectorId } = useParams();
+    const navigate = useNavigate();
+
+    const { addNotification } = useNotifications();
 
     const [selectorType, setSelectorType] = useState<SeedTypes>(SeedTypeObjectId);
     const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
@@ -72,18 +76,6 @@ const SelectorForm: FC = () => {
     const patchSelectorMutation = usePatchSelector(tagId);
     const createSelectorMutation = useCreateSelector(tagId);
 
-    const navigate = useNavigate();
-    const { addNotification } = useNotifications();
-
-    const onSubmit: SubmitHandler<SelectorFormInputs> = (data) => {
-        if (selectorId !== undefined) {
-            handlePatchSelector(data);
-        } else {
-            handleCreateSelector(data);
-        }
-        setResults([]);
-    };
-
     const handlePatchSelector = useCallback(
         async (updatedValues: UpdateSelectorRequest) => {
             try {
@@ -91,7 +83,7 @@ const SelectorForm: FC = () => {
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
                 if (updatedValues.disabled_at === 'on') {
-                    updatedValues.disabled_at = null;
+                    updatedValues.disabled_at = ZERO_VALUE_API_DATE;
                 }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
@@ -110,7 +102,7 @@ const SelectorForm: FC = () => {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
                 if (values.disabled_at === 'on') {
-                    values.disabled_at = null;
+                    values.disabled_at = ZERO_VALUE_API_DATE;
                 }
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
@@ -121,6 +113,18 @@ const SelectorForm: FC = () => {
             }
         },
         [tagId, navigate, createSelectorMutation, addNotification]
+    );
+
+    const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(
+        (data) => {
+            if (selectorId !== undefined) {
+                handlePatchSelector(data);
+            } else {
+                handleCreateSelector(data);
+            }
+            setResults([]);
+        },
+        [selectorId, handleCreateSelector, handlePatchSelector, setResults]
     );
 
     return (
