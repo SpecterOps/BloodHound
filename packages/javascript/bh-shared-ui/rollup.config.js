@@ -17,7 +17,6 @@
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
-import css from 'rollup-plugin-import-css';
 
 export default {
     input: 'src/index.ts',
@@ -32,7 +31,6 @@ export default {
         }),
         terser(),
         del({ targets: 'dist/*' }),
-        css(),
     ],
     external: [
         '@bloodhoundenterprise/doodleui',

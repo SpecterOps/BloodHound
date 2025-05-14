@@ -2905,22 +2905,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/pluginutils@npm:^5.1.3":
-  version: 5.1.4
-  resolution: "@rollup/pluginutils@npm:5.1.4"
-  dependencies:
-    "@types/estree": ^1.0.0
-    estree-walker: ^2.0.2
-    picomatch: ^4.0.2
-  peerDependencies:
-    rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-  peerDependenciesMeta:
-    rollup:
-      optional: true
-  checksum: dc0294580effbf68965ed7939c9e469b8c8847b59842e4691fd10d0a8d0b178600bd912694c409ae33600c9059efce72e96f25917cff983afd57f092a7aeb8d2
-  languageName: node
-  linkType: hard
-
 "@rollup/rollup-android-arm-eabi@npm:4.13.2":
   version: 4.13.2
   resolution: "@rollup/rollup-android-arm-eabi@npm:4.13.2"
@@ -4986,7 +4970,6 @@ __metadata:
     react-window-infinite-loader: ^1.0.9
     rollup: ^4.13.2
     rollup-plugin-delete: ^2.0.0
-    rollup-plugin-import-css: ^3.5.8
     swagger-ui-react: ^4.18.3
     tailwind-merge: ^2.5.4
     tailwindcss: ^3.4.17
@@ -10037,13 +10020,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"picomatch@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "picomatch@npm:4.0.2"
-  checksum: a7a5188c954f82c6585720e9143297ccd0e35ad8072231608086ca950bee672d51b0ef676254af0788205e59bd4e4deb4e7708769226bed725bf13370a7d1464
-  languageName: node
-  linkType: hard
-
 "pify@npm:^2.3.0":
   version: 2.3.0
   resolution: "pify@npm:2.3.0"
@@ -11102,17 +11078,6 @@ __metadata:
   dependencies:
     del: ^5.1.0
   checksum: 8c05b55d0f454e8a487118edfc03aba78092b32fc0bd1fb061617bc7a2a9563a8e9ba64af34dcc0769ff75a89d113108fcc143c6b694901dfd7e1a9b254b106f
-  languageName: node
-  linkType: hard
-
-"rollup-plugin-import-css@npm:^3.5.8":
-  version: 3.5.8
-  resolution: "rollup-plugin-import-css@npm:3.5.8"
-  dependencies:
-    "@rollup/pluginutils": ^5.1.3
-  peerDependencies:
-    rollup: ^2.x.x || ^3.x.x || ^4.x.x
-  checksum: 6cb6dfff4164ef82349261fb5a4cb5f48f16249d4e2239093f3f3e8f4e5dc7d32d45d847107d613f672bcd80110b7743117af256ca311920da4d7177eab43a7f
   languageName: node
   linkType: hard
 

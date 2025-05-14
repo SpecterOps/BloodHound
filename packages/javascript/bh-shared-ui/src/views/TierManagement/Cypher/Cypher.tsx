@@ -25,7 +25,6 @@ import { useParams } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
-import './cypher.css';
 
 export const Cypher: FC<{
     preview?: boolean;
@@ -134,7 +133,10 @@ export const Cypher: FC<{
                     <CypherEditor
                         className={cn(
                             'flex flex-col border-solid border border-neutral-light-5 dark:border-neutral-dark-5 bg-white dark:bg-[#002b36] rounded-lg min-h-64 overflow-auto grow-1',
-                            { 'bg-transparent dark:bg-transparent': preview }
+                            {
+                                'bg-transparent [&_.cm-editor]:bg-transparent [&_.cm-editor_.cm-gutters]:bg-transparent [&_.cm-editor_.cm-gutters]:border-transparent dark:bg-transparent dark:[&_.cm-editor]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:bg-transparent dark:[&_.cm-editor_.cm-gutters]:border-transparent':
+                                    preview,
+                            }
                         )}
                         ref={cypherEditorRef}
                         value={cypherQuery}

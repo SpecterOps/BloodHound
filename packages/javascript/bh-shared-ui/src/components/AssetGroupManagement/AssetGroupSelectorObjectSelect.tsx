@@ -98,7 +98,7 @@ const AssetGroupSelectorObjectSelect: FC<{
     }, [previewQuery]);
 
     useEffect(() => {
-        const result = previewQuery.data ? previewQuery.data : null;
+        const result = previewQuery.data ?? null;
 
         setSeedPreviewResults(result);
     }, [previewQuery.data, setSeedPreviewResults]);
