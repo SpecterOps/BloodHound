@@ -158,7 +158,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             <div className='flex items-center'>
                                                 <div
                                                     className={cn(
-                                                        `text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px] ${isSelectorsListItem(listItem) && listItem.disabled_at && 'text-[#8E8C95] dark:text-[#919191]'}`
+                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[350px]',
+                                                        {
+                                                            'text-[#8E8C95] dark:text-[#919191]':
+                                                                isSelectorsListItem(listItem) && listItem.disabled_at,
+                                                        }
                                                     )}
                                                     title={
                                                         isSelectorsListItem(listItem) && listItem.disabled_at
