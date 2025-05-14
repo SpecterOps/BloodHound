@@ -15,12 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GlyphKind, IconDictionary } from 'bh-shared-ui';
+import { GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
-import { GetIconInfo } from 'src/components/NodeIcon';
 import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';

@@ -22,7 +22,7 @@ type NoDataDialogProps = PropsWithChildren<{ open: boolean }>;
 export const NoDataDialog: React.FC<NoDataDialogProps> = ({ open, children }) => {
     return (
         <Dialog
-            open={false}
+            open={open}
             onOpenChange={() => {
                 // unblocks the body from being clickable so the user can go to another tab
                 document.body.style.pointerEvents = '';

@@ -276,3 +276,15 @@ export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
 };
+
+export const GetIconInfo = (iconName: string, customIcons: IconDictionary): IconInfo => {
+    if (iconName in customIcons) {
+        return customIcons[iconName];
+    }
+
+    if (iconName in NODE_ICON) {
+        return NODE_ICON[iconName];
+    }
+
+    return UNKNOWN_ICON;
+};

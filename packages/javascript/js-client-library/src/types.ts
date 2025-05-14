@@ -333,5 +333,3 @@ export type CustomNodeKindType = {
         }
     }
 };
-
-export type CustomNodeIconDictionary = { [index: string]: string }

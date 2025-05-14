@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { IconDictionary } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
@@ -96,18 +95,5 @@ export const setAssetGroupEdit = (assetGroupId: number | null): types.GlobalOpti
     return {
         type: types.GLOBAL_SET_ASSET_GROUP_EDIT,
         assetGroupId,
-    };
-};
-
-export const fetchCustomNodeInformation = (): types.GlobalCustomNodeActionTypes => {
-    return {
-        type: types.GLOBAL_FETCH_CUSTOM_NODE_INFORMATION,
-    };
-};
-
-export const setCustomNodeInformation = (customIcons: IconDictionary): types.GlobalCustomNodeActionTypes => {
-    return {
-        type: types.GLOBAL_SET_CUSTOM_NODE_INFORMATION,
-        customIcons,
     };
 };

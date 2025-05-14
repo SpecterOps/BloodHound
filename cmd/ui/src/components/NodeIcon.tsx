@@ -18,8 +18,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
-import { EntityKinds, IconDictionary, IconInfo, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
-import { useAppSelector } from 'src/store';
+import { EntityKinds, GetIconInfo, IconDictionary, IconInfo } from 'bh-shared-ui';
+import { transformIconDictionary, useCustomNodeKinds } from 'src/hooks/useCustomNodeKinds';
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;
@@ -51,9 +51,9 @@ const useStyles = makeStyles<Theme, IconInfoProp, string>({
 });
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
-    const customIcons = useAppSelector((state) => state.global.customNodeInformation.customIcons);
-    const icon = GetIconInfo(nodeType, customIcons);
+    const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
 
+    const icon = GetIconInfo(nodeType, customIcons);
     const classes = useStyles({ icon });
 
     return (
@@ -65,18 +65,6 @@ const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
             </Box>
         </Tooltip>
     );
-};
-
-export const GetIconInfo = (iconName: string, customIcons: IconDictionary): IconInfo => {
-    if (iconName in customIcons) {
-        return customIcons[iconName];
-    }
-
-    if (iconName in NODE_ICON) {
-        return NODE_ICON[iconName];
-    }
-
-    return UNKNOWN_ICON;
 };
 
 export default NodeIcon;

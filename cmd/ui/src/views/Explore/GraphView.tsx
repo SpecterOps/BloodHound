@@ -18,6 +18,7 @@ import { Popper, SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
     GraphProgress,
+    IconDictionary,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
@@ -42,6 +43,7 @@ import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
+import { transformIconDictionary, useCustomNodeKinds } from 'src/hooks/useCustomNodeKinds';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
@@ -84,7 +86,8 @@ const GraphView: FC = () => {
 
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
-    const customIcons = useAppSelector((state) => state.global.customNodeInformation.customIcons);
+    const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
+    console.log(customIcons);
 
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 

@@ -19,7 +19,7 @@ import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import { EntityKinds } from '../..';
-import { IconInfo, UNKNOWN_ICON } from '../../utils/icons';
+import { GetIconInfo, IconInfo } from '../../utils/icons';
 
 interface NodeIconProps {
     nodeType: EntityKinds | string;
@@ -51,7 +51,7 @@ const useStyles = makeStyles<Theme, IconInfoProp, string>({
 });
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
-    const icon = GetIconInfo(nodeType);
+    const icon = GetIconInfo(nodeType, {});
     const classes = useStyles({ icon });
 
     return (
@@ -63,12 +63,6 @@ const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
             </Box>
         </Tooltip>
     );
-};
-
-// TODO: DELETE THIS COMPONENT AND MOVE UP TO BHE
-export const GetIconInfo = (iconName: string): IconInfo => {
-    console.log(iconName);
-    return UNKNOWN_ICON;
 };
 
 export default NodeIcon;
