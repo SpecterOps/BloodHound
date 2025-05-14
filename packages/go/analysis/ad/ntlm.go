@@ -59,7 +59,7 @@ func (s NTLMCache) GetLdapCacheForDomain(domainSid string) (LDAPSigningCache, bo
 	return cache, ok
 }
 
-func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, toggleDefaultRestrictNTLMBehavior bool) (NTLMCache, error) {
+func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator, treatMissingRestrictOutboundNTLMPropertyAsRestricting bool) (NTLMCache, error) {
 	var (
 		ntlmCache                   = NTLMCache{}
 		allUnprotectedComputerCache = cardinality.NewBitmap64()
@@ -84,30 +84,12 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 				for computer := range cursor.Chan() {
 					innerComputer := computer
 
-					if domainSid, err := innerComputer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+					if !hasAuthenticatedUser(innerComputer, ntlmCache) {
 						continue
-					} else if _, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
+					} else if isProtectedComputer(innerComputer, ntlmCache) {
 						continue
-					} else if ldapSigningForDomain, ok := ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
+					} else if isRestrictingOutboundNTLM(ctx, computer, ntlmCache, treatMissingRestrictOutboundNTLMPropertyAsRestricting) {
 						continue
-					} else if protectedUsersForDomain, ok := ntlmCache.GetProtectedUsersForDomain(domainSid); ok && protectedUsersForDomain.Contains(innerComputer.ID.Uint64()) && !ldapSigningForDomain.IsVulnerableFunctionalLevel {
-						// Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
-						// If protected users doesn't exist, we intentionally fail open here as it is valid for older domains to not have this group
-						continue
-					} else if toggleDefaultRestrictNTLMBehavior {
-						if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
-							// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
-							if !errors.Is(err, graph.ErrPropertyNotFound) {
-								slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
-							}
-							continue
-						} else if restrictOutboundNtlm {
-							continue
-						}
-					} else if restrictOutboundNtlm, err := innerComputer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err == nil {
-						if restrictOutboundNtlm {
-							continue
-						}
 					}
 
 					allUnprotectedComputerCache.Add(innerComputer.ID.Uint64())
@@ -119,6 +101,58 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 			})
 		}
 	})
+}
+
+// Computer is a valid target to record relay attacks against only if
+// it has at least one authenticated user
+func hasAuthenticatedUser(computer *graph.Node, ntlmCache NTLMCache) bool {
+	if domainSid, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return false
+	} else if _, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
+		return false
+	}
+
+	return true
+}
+
+// Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
+// If protected users doesn't exist, we intentionally fail open here as it is valid for older domains to not have this group.
+// We assume protected if we can't determine otherwise.
+func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
+	if domainSid, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+		return true
+	} else if ldapSigningForDomain, ok := ntlmCache.GetLdapCacheForDomain(domainSid); !ok {
+		// ldap signing data not collected for domain
+		return true
+	} else if ldapSigningForDomain.IsVulnerableFunctionalLevel {
+		return false
+	} else if protectedUsersForDomain, ok := ntlmCache.GetProtectedUsersForDomain(domainSid); !ok {
+		return false
+	} else {
+		return protectedUsersForDomain.Contains(computer.ID.Uint64())
+	}
+}
+
+// Check if the computer is restricting outbound NTLM
+// A computer that does is not vulnerable
+// A toggle determines how we'll treat computers missing this property
+func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, ntlmCache NTLMCache, missingPropertyMeansRestricting bool) bool {
+	if missingPropertyMeansRestricting {
+		if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+			// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
+			if !errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
+			}
+			return true
+		} else {
+			return restrictOutboundNtlm
+		}
+	} else if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+		// If we've failed to retrieve the property here tho, we'll instead treat it as unprotected
+		return false
+	} else {
+		return restrictOutboundNtlm
+	}
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
