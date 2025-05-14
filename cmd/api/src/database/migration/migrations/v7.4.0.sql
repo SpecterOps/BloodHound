@@ -169,5 +169,5 @@ SELECT
 	d.cypher
 FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
 
--- Delete the `back_button_support` feature flag
-DELETE FROM feature_flags WHERE key = 'back_button_support';
+-- Enable `back_button_support` feature flag and block users from updating it.
+UPDATE feature_flags SET user_updatable = false and enabled = true WHERE key = 'back_button_support';
