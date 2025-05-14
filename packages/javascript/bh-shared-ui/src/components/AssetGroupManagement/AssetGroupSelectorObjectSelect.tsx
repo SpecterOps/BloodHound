@@ -20,6 +20,7 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
+    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -27,28 +28,84 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SeedTypeObjectId } from 'js-client-library';
+import { AssetGroupTagNode, AssetGroupTagSelectorSeed, GraphNodes, SeedTypeObjectId } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { SearchValue } from '../../store';
+import { apiClient, cn } from '../../utils';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
-const mapSeeds = (seeds: SelectorSeedRequest[]): AssetGroupSelectedNodes => {
-    return seeds.map((seed) => {
-        return { objectid: seed.value };
+const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
+    if (nodes === undefined) return [];
+    return Object.values(nodes).map((node) => {
+        return { objectid: node.objectId, name: node.label, type: node.kind };
     });
 };
 
 const AssetGroupSelectorObjectSelect: FC<{
     setSeeds: (seeds: SelectorSeedRequest[]) => void;
-    seeds?: SelectorSeedRequest[];
-}> = ({ setSeeds, seeds = [] }) => {
+    setSeedPreviewResults: (nodes: AssetGroupTagNode[] | null) => void;
+    seeds?: AssetGroupTagSelectorSeed[];
+}> = ({ setSeeds, setSeedPreviewResults, seeds = [] }) => {
+    const { tagId = '', selectorId = '' } = useParams();
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(mapSeeds(seeds));
+    const [stalePreview, setStalePreview] = useState(false);
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
+
+    const previewQuery = useQuery({
+        queryKey: ['tier-management', 'preview-selectors', SeedTypeObjectId],
+        queryFn: ({ signal }) => {
+            if (selectedNodes.length === 0) return [];
+
+            const seeds = selectedNodes.map((seed) => {
+                return {
+                    type: SeedTypeObjectId,
+                    value: seed.objectid,
+                };
+            });
+
+            return apiClient
+                .assetGroupTagsPreviewSelectors({ seeds: [...seeds] }, { signal })
+                .then((res) => res.data.data['members']);
+        },
+        retry: false,
+    });
+
+    const seedsQuery = useQuery({
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
+        queryFn: async () => {
+            const seedsList = seeds.map((seed) => {
+                return `"${seed.value}"`;
+            });
+
+            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+            const response = await apiClient.cypherSearch(query);
+            setSelectedNodes(mapSeeds(response.data.data.nodes));
+            return response.data.data;
+        },
+        enabled: seeds.length !== 0,
+    });
+
+    const handleRun = useCallback(() => {
+        previewQuery.refetch();
+        setStalePreview(false);
+    }, [previewQuery]);
+
+    useEffect(() => {
+        const result = previewQuery.data ?? null;
+
+        setSeedPreviewResults(result);
+    }, [previewQuery.data, setSeedPreviewResults]);
+
+    useEffect(() => {
+        previewQuery.refetch();
+    }, [seedsQuery.data]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -73,6 +130,7 @@ const AssetGroupSelectorObjectSelect: FC<{
             });
 
             setSearchTerm('');
+            setStalePreview(true);
         },
         [setSeeds]
     );
@@ -92,15 +150,31 @@ const AssetGroupSelectorObjectSelect: FC<{
 
                 return filteredNodes;
             });
+            setStalePreview(true);
         },
         [setSeeds]
     );
+
+    if (seedsQuery.isLoading) return <Skeleton />;
 
     return (
         <div>
             <Card className='rounded-lg'>
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
-                    Object Selector
+                    <div className='flex justify-between'>
+                        <span>Object Selector</span>
+                        <Button
+                            variant='text'
+                            className={cn(
+                                'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
+                                {
+                                    'animate-pulse': stalePreview,
+                                }
+                            )}
+                            onClick={handleRun}>
+                            Run
+                        </Button>
+                    </div>
                     <CardDescription className='pt-3 font-normal'>
                         Use the input field to add objects to the list
                     </CardDescription>
@@ -120,8 +194,8 @@ const AssetGroupSelectorObjectSelect: FC<{
                     </div>
                     <Table className='mt-5 w-full table-fixed'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
-                            {selectedNodes.map((node) => (
-                                <TableRow key={node.objectid} className='border-y p-0 *:p-0 *:h-12'>
+                            {selectedNodes.map((node, index) => (
+                                <TableRow key={node.objectid + index} className='border-y p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
                                         <Button
                                             variant={'text'}

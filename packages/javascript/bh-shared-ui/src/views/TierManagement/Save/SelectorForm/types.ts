@@ -20,7 +20,6 @@ import { ISO_DATE_STRING } from '../../../../utils';
 export interface SelectorFormInputs {
     name: string;
     description: string;
-    autoCertify: boolean;
     disabled_at: ISO_DATE_STRING | null;
     seeds: SelectorSeedRequest[];
 }

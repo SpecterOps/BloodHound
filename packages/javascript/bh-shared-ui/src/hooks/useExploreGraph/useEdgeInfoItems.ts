@@ -16,7 +16,7 @@
 
 import { useQuery } from 'react-query';
 import { EdgeInfoProps } from '../../components';
-import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
+import { NormalizedNodeItem } from '../../components/VirtualizedNodeList';
 import { apiClient } from '../../utils';
 import { useExploreParams } from '../useExploreParams';
 import { useFeatureFlag } from '../useFeatureFlags';
@@ -67,7 +67,7 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type, onNod
         }
     };
 
-    const nodesArray: VirtualizedNodeListItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
+    const nodesArray: NormalizedNodeItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
         name: node.label,
         objectId: node.objectId,
         graphId,

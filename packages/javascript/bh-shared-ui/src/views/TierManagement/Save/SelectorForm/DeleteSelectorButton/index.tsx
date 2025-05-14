@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import SelectorForm from './SelectorForm';
+import DeleteSelectorButton from './DeleteSelectorButton';
 
-export default SelectorForm;
+export default DeleteSelectorButton;
