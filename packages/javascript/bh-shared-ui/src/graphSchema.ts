@@ -689,7 +689,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return undefined;
     }
 }
-export function ActiveDirectoryPathfindingEdges (): ActiveDirectoryRelationshipKind[] {
+export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKind[] {
     return [
         ActiveDirectoryRelationshipKind.Owns,
         ActiveDirectoryRelationshipKind.GenericAll,
@@ -742,7 +742,7 @@ export function ActiveDirectoryPathfindingEdges (): ActiveDirectoryRelationshipK
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.TrustedBy
+        ActiveDirectoryRelationshipKind.TrustedBy,
     ];
 }
 export enum AzureNodeKind {
@@ -965,7 +965,7 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return undefined;
     }
 }
-export type AzureKind = AzureNodeKind | AzureRelationshipKind
+export type AzureKind = AzureNodeKind | AzureRelationshipKind;
 export enum AzureKindProperties {
     AppOwnerOrganizationID = 'appownerorganizationid',
     AppDescription = 'appdescription',
@@ -1126,7 +1126,7 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
     switch (value) {
         case CommonNodeKind.MigrationData:
             return 'MigrationData';
-    default:
+        default:
             return undefined;
     }
 }
