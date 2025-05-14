@@ -24,12 +24,14 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { getTagUrlValue } from '../utils';
 import SelectorForm from './SelectorForm';
 import { TagForm } from './TagForm';
 
 const SaveView: FC = () => {
     const location = useLocation();
-    const { tagId } = useParams();
+    const { tierId, labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
     const showSelectorForm = location.pathname.includes('selector');
 
     return (
@@ -46,7 +48,9 @@ const SaveView: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link to={`/tier-management/edit/tag/${tagId}`}>Tier Details</Link>
+                                    <Link to={`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}`}>
+                                        Tier Details
+                                    </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator />

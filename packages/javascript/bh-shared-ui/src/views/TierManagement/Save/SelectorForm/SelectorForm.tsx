@@ -63,7 +63,8 @@ const useCreateSelector = (tagId: string | number | undefined) => {
 };
 
 const SelectorForm: FC = () => {
-    const { tagId, selectorId } = useParams();
+    const { tierId, labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useNavigate();
 
     const { addNotification } = useNotifications();
@@ -88,7 +89,7 @@ const SelectorForm: FC = () => {
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
 
-                navigate(`/tier-management/details/tags/${tagId}`);
+                navigate(`/tier-management/details/tier/${tagId}`);
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
@@ -107,7 +108,7 @@ const SelectorForm: FC = () => {
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
 
-                navigate(`/tier-management/details/tags/${tagId}`);
+                navigate(`/tier-management/details/tier/${tagId}`);
             } catch (error) {
                 handleError(error, 'creating', addNotification);
             }

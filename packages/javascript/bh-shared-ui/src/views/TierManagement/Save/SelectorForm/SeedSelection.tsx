@@ -27,6 +27,7 @@ import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
+import { getTagUrlValue } from '../../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
@@ -56,7 +57,8 @@ const SeedSelection: FC<{
     results: AssetGroupTagNode[] | null;
     setResults: (results: AssetGroupTagNode[] | null) => void;
 }> = ({ selectorType, onSubmit, results, setResults }) => {
-    const { tagId = '', selectorId = '' } = useParams();
+    const { tierId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -101,13 +103,13 @@ const SeedSelection: FC<{
 
                     await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-                    navigate(`/tier-management/details/tags/${tagId}`);
+                    navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
                 } catch (error) {
                     handleError(error, 'deleting', addNotification);
                 }
             }
         },
-        [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]
+        [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]
     );
 
     if (selectorQuery.isLoading) return <Skeleton />;

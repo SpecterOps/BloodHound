@@ -18,13 +18,20 @@ import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import {
-    ROUTE_TIER_MANAGEMENT_CREATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_EDIT,
-    ROUTE_TIER_MANAGEMENT_EDIT_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_EDIT_TAG,
-    ROUTE_TIER_MANAGEMENT_OBJECT_DETAILS,
-    ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS,
-    ROUTE_TIER_MANAGEMENT_TAG_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_LABEL_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
+    ROUTE_TIER_MANAGEMENT_SAVE,
+    ROUTE_TIER_MANAGEMENT_SAVE_LABEL,
+    ROUTE_TIER_MANAGEMENT_SAVE_TIER,
+    ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_TIER_DETAILS,
+    ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
+    ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
+    // ROUTE_TIER_MANAGEMENT_TAG_DETAILS,
     Routable,
 } from '../../routes';
 
@@ -32,24 +39,55 @@ const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 
 const childRoutes: Routable[] = [
-    { path: ROUTE_TIER_MANAGEMENT_TAG_DETAILS, component: Details, authenticationRequired: true, navigation: true },
+    { path: ROUTE_TIER_MANAGEMENT_TIER_DETAILS, component: Details, authenticationRequired: true, navigation: true },
+    { path: ROUTE_TIER_MANAGEMENT_LABEL_DETAILS, component: Details, authenticationRequired: true, navigation: true },
     {
-        path: ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS,
+        path: ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
         component: Details,
         authenticationRequired: true,
         navigation: true,
     },
-    { path: ROUTE_TIER_MANAGEMENT_OBJECT_DETAILS, component: Details, authenticationRequired: true, navigation: true },
-    { path: ROUTE_TIER_MANAGEMENT_EDIT, component: Save, authenticationRequired: true, navigation: true },
-    { path: ROUTE_TIER_MANAGEMENT_EDIT_TAG, component: Save, authenticationRequired: true, navigation: true },
     {
-        path: ROUTE_TIER_MANAGEMENT_CREATE_SELECTOR,
+        path: ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
+        component: Details,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
+        component: Details,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
+        component: Details,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    { path: ROUTE_TIER_MANAGEMENT_SAVE, component: Save, authenticationRequired: true, navigation: true },
+    { path: ROUTE_TIER_MANAGEMENT_SAVE_TIER, component: Save, authenticationRequired: true, navigation: true },
+    { path: ROUTE_TIER_MANAGEMENT_SAVE_LABEL, component: Save, authenticationRequired: true, navigation: true },
+    {
+        path: ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
         component: Save,
         authenticationRequired: true,
         navigation: true,
     },
     {
-        path: ROUTE_TIER_MANAGEMENT_EDIT_SELECTOR,
+        path: ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
+        component: Save,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR,
+        component: Save,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
+        path: ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR,
         component: Save,
         authenticationRequired: true,
         navigation: true,
@@ -84,7 +122,7 @@ const TierManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to='details/tag/1' replace />} />
+                            <Route path='*' element={<Navigate to='details/tier/1' replace />} />
                         </Routes>
                     </Suspense>
                 </div>

@@ -78,10 +78,10 @@ afterAll(() => server.close());
 mockCodemirrorLayoutMethods();
 
 describe('Selector Form', () => {
-    const user = userEvent.setup();
-    const detailsPath = '/tier-management/details/tag/1/selector/777';
-    const createNewPath = '/tier-management/edit/tag/1/selector';
-    const editExistingPath = '/tier-management/edit/tag/1/selector/777';
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const detailsPath = '/tier-management/details/tier/1/selector/777';
+    const createNewPath = '/tier-management/save/tier/1/selector';
+    const editExistingPath = '/tier-management/save/tier/1/selector/777';
 
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
@@ -185,14 +185,14 @@ describe('Selector Form', () => {
     });
 
     it('shows an error message when unable to delete a selector', async () => {
-        const history = createMemoryHistory({ initialEntries: ['/tier-management/edit/tag/1/selector/777'] });
+        const history = createMemoryHistory({ initialEntries: ['/tier-management/save/tier/1/selector/777'] });
 
         console.error = vi.fn();
 
         render(
             <Routes>
-                <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />;
+                <Route path={'/'} element={<SelectorForm />} />
+                <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />
             </Routes>,
             { history }
         );
@@ -251,7 +251,7 @@ describe('Selector Form', () => {
         render(
             <Routes>
                 <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />;
+                <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />;
             </Routes>,
             { history }
         );

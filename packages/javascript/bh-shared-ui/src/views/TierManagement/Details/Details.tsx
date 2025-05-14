@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
@@ -22,18 +22,21 @@ import { Link, useParams } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
+import { getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 
-const getEditPath = (tagId: string | undefined, selectorId: string | undefined) => {
-    const editPath = '/tier-management/edit';
+const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
+    const savePath = '/tier-management/save';
 
-    if (selectorId && tagId) return `/tier-management/edit/tag/${tagId}/selector/${selectorId}`;
+    if (selectorId && labelId) return `/tier-management/save/label/${labelId}/selector/${selectorId}`;
+    if (selectorId && tierId) return `/tier-management/save/tier/${tierId}/selector/${selectorId}`;
 
-    if (!selectorId && tagId) return `/tier-management/edit/tag/${tagId}`;
+    if (!selectorId && labelId) return `/tier-management/save/label/${labelId}`;
+    if (!selectorId && tierId) return `/tier-management/save/tier/${tierId}`;
 
-    return editPath;
+    return savePath;
 };
 
 const getItemCount = (
@@ -71,9 +74,13 @@ export const getEditButtonState = (
     );
 };
 
+const TIER_ZERO_ID = '1';
+const OWNED_ID = '2';
+
 const Details: FC = () => {
     const navigate = useAppNavigate();
-    const { tagId = '1', selectorId, memberId } = useParams();
+    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
@@ -98,6 +105,23 @@ const Details: FC = () => {
 
     return (
         <div>
+            <Tabs
+                defaultValue='tiers'
+                className='w-full'
+                value={labelId ? 'label' : 'tier'}
+                onValueChange={(value) => {
+                    if (value === 'tier') {
+                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_DETAILS}/${value}/${TIER_ZERO_ID}`);
+                    }
+                    if (value === 'label') {
+                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_DETAILS}/${value}/${OWNED_ID}`);
+                    }
+                }}>
+                <TabsList className='w-full flex justify-start'>
+                    <TabsTrigger value='tier'>Tiers</TabsTrigger>
+                    <TabsTrigger value='label'>Labels</TabsTrigger>
+                </TabsList>
+            </Tabs>
             <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
@@ -109,7 +133,9 @@ const Details: FC = () => {
                                     {
                                         title: 'Create Selector',
                                         onClick: () => {
-                                            navigate(`/tier-management/edit/tag/${tagId}/selector`);
+                                            navigate(
+                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
+                                            );
                                         },
                                     },
                                 ]}
@@ -139,7 +165,7 @@ const Details: FC = () => {
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getEditPath(tagId, selectorId)}>Edit</Link>
+                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
                         </Button>
                     )}
                 </div>
@@ -148,11 +174,13 @@ const Details: FC = () => {
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 h-full *:grow-0 *:basis-1/3'>
                     <div>
                         <DetailsList
-                            title='Tiers'
+                            title={labelId ? 'Labels' : 'Tiers'}
                             listQuery={tagsQuery}
                             selected={tagId}
                             onSelect={(id) => {
-                                navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${id}`);
+                                navigate(
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${id}`
+                                );
                             }}
                         />
                     </div>
@@ -163,7 +191,7 @@ const Details: FC = () => {
                             selected={selectorId}
                             onSelect={(id) => {
                                 navigate(
-                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${id}`
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`
                                 );
                             }}
                         />
@@ -173,7 +201,7 @@ const Details: FC = () => {
                             itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
                             onClick={(id) => {
                                 navigate(
-                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${selectorId}/member/${id}`
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
                                 );
                             }}
                             selected={memberId}

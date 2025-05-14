@@ -133,7 +133,8 @@ interface MembersListProps {
  * @returns The MembersList component for rendering in the Tier Management page.
  */
 export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, itemCount = 0 }) => {
-    const { tagId, selectorId } = useParams();
+    const { tierId, labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
