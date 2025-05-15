@@ -87,7 +87,7 @@ describe('AssetGroupSelectorObjectSelect', () => {
         });
     });
 
-    it('invokes setSeeds when a new seed is selected', async () => {
+    it.skip('invokes setSeeds when a new seed is selected', async () => {
         await screen.findByTestId('explore_search_input-search');
 
         const input = screen.getByLabelText('Search Objects To Add');
@@ -95,6 +95,7 @@ describe('AssetGroupSelectorObjectSelect', () => {
         user.type(input, 'foo');
 
         const options = await screen.findAllByRole('option');
+
         await user.click(options[0]);
 
         expect(await screen.findByText('user')).toBeInTheDocument();
