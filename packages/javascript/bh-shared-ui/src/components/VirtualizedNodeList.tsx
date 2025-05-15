@@ -14,7 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip } from '@bloodhoundenterprise/doodleui';
+import {
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+} from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagNode, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
@@ -92,9 +98,18 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
             onClick={() => normalizedItem.onClick?.(index)}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip tooltip={normalizedItem.name}>
-                <div className='truncate text-ellipsis ml-10'>{normalizedItem.name}</div>
-            </Tooltip>
+            <TooltipProvider>
+                <TooltipRoot>
+                    <TooltipTrigger>
+                        <div className='truncate text-ellipsis ml-10'>{normalizedItem.name}</div>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                        <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                            {normalizedItem.name}
+                        </TooltipContent>
+                    </TooltipPortal>
+                </TooltipRoot>
+            </TooltipProvider>
         </li>
     );
 };
