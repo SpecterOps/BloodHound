@@ -20,7 +20,6 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
-    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -77,15 +76,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
     });
 
     const seedsQuery = useQuery({
-        queryKey: [
-            'tier-management',
-            'tags',
-            tagId,
-            'selectors',
-            selectorId,
-            'seeds',
-            ...seeds.map((seed) => seed.value),
-        ],
+        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
         queryFn: async () => {
             const seedsList = seeds.map((seed) => {
                 return `"${seed.value}"`;
@@ -161,8 +152,6 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
         },
         [setSeeds]
     );
-
-    if (seedsQuery.isLoading) return <Skeleton />;
 
     return (
         <div>
