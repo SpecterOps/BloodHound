@@ -18,6 +18,8 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -109,12 +111,12 @@ func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string
 	)
 
 	err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-		result := tx.Raw(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ? RETURNING id, config;", customNodeKindTable), kindName).Scan(&customNodeKind.ID).Scan(&customNodeKind.Config)
-		if result.RowsAffected == 0 {
+		if err := tx.Raw(fmt.Sprintf("DELETE FROM %s WHERE kind_name = ? RETURNING id, config;", customNodeKindTable), kindName).
+			Row().Scan(&customNodeKind.ID, &customNodeKind.Config); errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
+		} else {
+			return err
 		}
-
-		return CheckError(result)
 	})
 
 	return err
