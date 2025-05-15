@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
-	"net/http"
 )
 
 const (
