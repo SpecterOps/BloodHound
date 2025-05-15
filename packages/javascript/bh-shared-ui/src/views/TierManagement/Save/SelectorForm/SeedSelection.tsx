@@ -90,25 +90,22 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         enabled: selectorId !== '',
     });
 
-    const handleDeleteSelector = useCallback(
-        async (response: boolean) => {
-            if (response === false) {
-                setDeleteDialogOpen(false);
-            } else {
-                try {
-                    if (!tagId || !selectorId)
-                        throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
+    const handleDeleteSelector = useCallback(async () => {
+        try {
+            if (!tagId || !selectorId)
+                throw new Error(`Missing required entity IDs; tagId: ${tagId} , selectorId: ${selectorId}`);
 
-                    await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
+            await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-                    navigate(`/tier-management/details/tags/${tagId}`);
-                } catch (error) {
-                    handleError(error, 'deleting', addNotification);
-                }
-            }
-        },
-        [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]
-    );
+            navigate(`/tier-management/details/tags/${tagId}`);
+        } catch (error) {
+            handleError(error, 'deleting', addNotification);
+        }
+
+        setDeleteDialogOpen(false);
+    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) throw new Error();
@@ -173,7 +170,8 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                 open={deleteDialogOpen}
                 itemName={selectorQuery.data?.name || 'Selector'}
                 itemType='selector'
-                onClose={handleDeleteSelector}
+                onConfirm={handleDeleteSelector}
+                onCancel={handleCancel}
             />
         </>
     );
