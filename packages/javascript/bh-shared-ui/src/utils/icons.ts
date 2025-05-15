@@ -277,6 +277,8 @@ export const UNKNOWN_ICON: IconInfo = {
     color: '#FFFFFF',
 };
 
+export const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
+
 export const GetIconInfo = (iconName: string, customIcons: IconDictionary): IconInfo => {
     if (iconName in customIcons) {
         return customIcons[iconName];

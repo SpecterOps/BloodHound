@@ -1,9 +1,7 @@
 import { findIconDefinition, IconName } from '@fortawesome/fontawesome-svg-core';
 import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
-import { apiClient, GenericQueryOptions, IconDictionary } from '../utils';
-
-const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
+import { apiClient, DEFAULT_ICON_BACKGROUND, GenericQueryOptions, IconDictionary } from '../utils';
 
 export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconDictionary> =>
     apiClient.getCustomNodeKinds(options).then((res) => {
