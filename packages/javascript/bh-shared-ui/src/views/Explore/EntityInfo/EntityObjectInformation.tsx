@@ -55,7 +55,11 @@ const EntityObjectInformation: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     return (
         <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
             <FieldsContainer>
-                <BasicObjectInfoFields handleSourceNodeSelected={handleSourceNodeSelected} {...entityProperties} />
+                <BasicObjectInfoFields
+                    nodeType={nodeType}
+                    handleSourceNodeSelected={handleSourceNodeSelected}
+                    {...entityProperties}
+                />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
