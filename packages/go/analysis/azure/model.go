@@ -18,6 +18,7 @@ package azure
 
 import (
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
@@ -79,15 +80,19 @@ func FromGraphNodes(nodes []*graph.Node) []Node {
 // FromGraphNode takes a *graph.Node and converts it to serializable node struct.
 func FromGraphNode(node *graph.Node) Node {
 	return Node{
-		Kind:       analysis.GetNodeKindDisplayLabel(node),
-		Properties: node.Properties.Map,
+		Kind:          analysis.GetNodeKindDisplayLabel(node),
+		IsTierZero:    tiering.IsTierZero(node),
+		IsOwnedObject: tiering.IsOwned(node),
+		Properties:    node.Properties.Map,
 	}
 }
 
 // Node is a serializable version of *graph.Node
 type Node struct {
-	Kind       string         `json:"kind"`
-	Properties map[string]any `json:"props"`
+	Kind          string         `json:"kind"`
+	IsTierZero    bool           `json:"isTierZero"`
+	IsOwnedObject bool           `json:"isOwnedObject"`
+	Properties    map[string]any `json:"props"`
 }
 
 type BaseDetails struct {

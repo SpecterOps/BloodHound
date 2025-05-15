@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import React from 'react';
 import ConfirmationDialog from './ConfirmationDialog';
 
@@ -21,10 +20,11 @@ const DeleteConfirmationDialog: React.FC<{
     open: boolean;
     itemName: string;
     itemType: string;
-    onClose: (response: boolean) => void;
+    onCancel: () => void;
+    onConfirm: () => void;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, itemName, onClose, isLoading, error, itemType }) => {
+}> = ({ open, itemName, onCancel, isLoading, error, itemType, onConfirm }) => {
     return (
         <ConfirmationDialog
             open={open}
@@ -33,11 +33,12 @@ const DeleteConfirmationDialog: React.FC<{
                 <>
                     Continuing onwards will delete {itemName} and all associated configurations and findings.
                     <br />
-                    <span className='font-bold'>Warning: This change is irreversible.</span>
+                    <span className='font-bold text-red'>Warning: This change is irreversible.</span>
                 </>
             }
             challengeTxt={`Delete this ${itemType}`}
-            onClose={onClose}
+            onCancel={onCancel}
+            onConfirm={onConfirm}
             error={error}
             isLoading={isLoading}
         />

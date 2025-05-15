@@ -17,8 +17,11 @@
 import { Tab, Tabs } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
-import { CommonSearches as prebuiltSearchList } from '../../../commonSearches';
+import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
+import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
+import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
+import { CommonSearchType } from '../../../types';
 
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
@@ -46,7 +49,11 @@ type CommonSearchesProps = {
     onPerformCypherSearch: (query: string) => void;
 };
 
-const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearchesProps) => {
+const InnerCommonSearches = ({
+    onSetCypherQuery,
+    onPerformCypherSearch,
+    prebuiltSearchList,
+}: CommonSearchesProps & { prebuiltSearchList: CommonSearchType[] }) => {
     const classes = useStyles();
 
     const [activeTab, setActiveTab] = useState(AD_TAB);
@@ -92,5 +99,13 @@ const CommonSearches = ({ onSetCypherQuery, onPerformCypherSearch }: CommonSearc
         </div>
     );
 };
+
+const CommonSearches = (props: CommonSearchesProps) => (
+    <FeatureFlag
+        flagKey='tier_management_engine'
+        enabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGT} />}
+        disabled={<InnerCommonSearches {...props} prebuiltSearchList={prebuiltSearchListAGI} />}
+    />
+);
 
 export default CommonSearches;

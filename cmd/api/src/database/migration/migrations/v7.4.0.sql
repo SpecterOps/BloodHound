@@ -172,3 +172,5 @@ FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
 -- is_generic column not actually needed.
 ALTER TABLE ingest_tasks
 DROP COLUMN IF EXISTS is_generic;
+-- Enable `back_button_support` feature flag and block users from updating it.
+UPDATE feature_flags SET user_updatable = false and enabled = true WHERE key = 'back_button_support';

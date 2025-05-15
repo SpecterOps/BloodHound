@@ -405,7 +405,7 @@ LogicApp: types.#Kind & {
 }
 
 AutomationAccount: types.#Kind & {
-  symbol:         "AutomationAccount"
+  	symbol:         "AutomationAccount"
 	schema:         "azure"
 	representation: "AZAutomationAccount"
 }
@@ -727,6 +727,12 @@ SyncedToADUser: types.#Kind & {
 	representation:	"SyncedToADUser"
 }
 
+AZRoleEligible: types.#Kind & {
+	symbol: "AZRoleEligible"
+	schema: "azure"
+	representation: "AZRoleEligible"
+}
+
 RelationshipKinds: [
 	AvereContributor,
 	Contains,
@@ -775,6 +781,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	AZRoleEligible,
 ]
 
 AppRoleTransitRelationshipKinds: [
@@ -875,6 +882,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToADUser,
+	AZRoleEligible,
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])

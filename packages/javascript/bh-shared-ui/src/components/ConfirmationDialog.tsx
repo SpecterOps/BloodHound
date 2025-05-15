@@ -20,6 +20,7 @@ import {
     DialogActions,
     DialogContent,
     DialogDescription,
+    DialogOverlay,
     DialogPortal,
     DialogTitle,
     Input,
@@ -30,27 +31,43 @@ const ConfirmationDialog: React.FC<{
     open: boolean;
     title: string;
     text: string | JSX.Element;
-    onClose: (response: boolean) => void;
+    onCancel: () => void;
+    onConfirm: () => void;
     challengeTxt?: string;
     isLoading?: boolean;
     error?: string;
-}> = ({ open, title, text, onClose, isLoading, error, challengeTxt = '' }) => {
+}> = ({ open, title, text, onCancel, isLoading, error, challengeTxt = '', onConfirm }) => {
     const [challengeTxtReply, setChallengeTxtReply] = useState<string>('');
 
-    const handleClose = useCallback(
-        (response: boolean) => () => {
-            onClose(response);
-            setTimeout(() => {
-                setChallengeTxtReply('');
-            }, 1000);
-        },
-        [onClose]
-    );
+    const handleClose = useCallback(() => {
+        onCancel();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onCancel]);
+
+    const handleConfirm = useCallback(() => {
+        onConfirm();
+        setTimeout(() => {
+            setChallengeTxtReply('');
+        }, 1000);
+    }, [onConfirm]);
 
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                <DialogContent>
+                {/*
+                 *   Sometimes we have a confirmation modal launching over a primary modal
+                 *   (As in UpdateAzurehoundClientDialog -> delete schedule)
+                 *   However, the outer modal is MUI, whose z-index is 1300,
+                 *   While the second ConfirmationModal is Doodle, which uses tailwind z-50.
+                 *   Therefore, the second, more urgent modal, is hidden behind the primary modal.
+                 *   For now, overriding the styles on the confirmation modal and assuming it
+                 *   should have priority over all other modals seems like a reasonable solution.
+                 *   When we remove all MUI dialogs down the road, we may want a prettier solution.
+                 */}
+                <DialogOverlay className='z-[1300]' />
+                <DialogContent className='z-[1400]'>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription className='text-lg'>{text}</DialogDescription>
                     {challengeTxt && (
@@ -58,7 +75,7 @@ const ConfirmationDialog: React.FC<{
                             <DialogDescription className='text-sm'>
                                 Please input "{challengeTxt}" prior to clicking confirm.
                                 <Input
-                                    placeholder={challengeTxt.toLowerCase()}
+                                    placeholder={challengeTxt}
                                     className='border-t-0 border-l-0 border-r-0 rounded-none border-black dark:border-white bg-transparent dark:bg-transparent placeholder-neutral-dark-10 dark:placeholder-neutral-light-10 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2'
                                     onChange={(e) => setChallengeTxtReply(e.target.value)}
                                     value={challengeTxtReply}
@@ -71,13 +88,13 @@ const ConfirmationDialog: React.FC<{
                         {error && <p className='content-center text-[color:#d32f2f] text-xs mt-[3px]'>{error}</p>}
                         <Button
                             variant='tertiary'
-                            onClick={handleClose(false)}
+                            onClick={handleClose}
                             disabled={isLoading}
                             data-testid='confirmation-dialog_button-no'>
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleClose(true)}
+                            onClick={handleConfirm}
                             disabled={isLoading || challengeTxt.toLowerCase() !== challengeTxtReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
                             Confirm
