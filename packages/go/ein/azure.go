@@ -1931,7 +1931,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
 		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role
-		combinedObjectId := strings.ToUpper(strings.Join([]string{azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId}, "@"))
+		combinedObjectId := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId))
 
 		rels = append(rels, NewIngestibleRelationship(IngestibleSource{
 			Source:     strings.ToUpper(combinedObjectId),
