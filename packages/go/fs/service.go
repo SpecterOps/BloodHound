@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,27 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-go 1.23.8
+package fs
 
-use (
-	./cmd/api/src
-	./packages/go/analysis
-	./packages/go/bhlog
-	./packages/go/bomenc
-	./packages/go/cache
-	./packages/go/conftool
-	./packages/go/crypto
-	./packages/go/cypher
-	./packages/go/dawgs
-	./packages/go/ein
-	./packages/go/fs
-	./packages/go/graphschema
-	./packages/go/headers
-	./packages/go/lab
-	./packages/go/mediatypes
-	./packages/go/openapi
-	./packages/go/params
-	./packages/go/schemagen
-	./packages/go/slicesext
-	./packages/go/stbernard
-)
+import "os"
+
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
+
+// Serves as a lightweight wrapper around the os package which allows for
+// path management to be abstracted.
+type Service interface {
+	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+}
+
+type Client struct{}
+
+func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
+	return os.CreateTemp(dir, pattern)
+}
