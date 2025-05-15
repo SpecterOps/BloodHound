@@ -1878,7 +1878,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	// If the node exists, we want to add the new properties to the node
 	targetAZRole := IngestibleNode{
 		ObjectID: combinedObjectId,
-		Label:    azure.Role,
+		Labels:   []graph.Kind{azure.Role},
 		PropertyMap: map[string]any{
 			azure.RoleDefinitionId.String():                                  strings.ToUpper(policyAssignment.RoleDefinitionId),
 			azure.TenantID.String():                                          strings.ToUpper(policyAssignment.TenantId),
@@ -1900,12 +1900,12 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
 		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
-			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-				Source:     strings.ToUpper(approver),
-				SourceType: azure.User,
-			}, IngestibleTarget{
-				Target:     targetAZRole.ObjectID,
-				TargetType: targetAZRole.Label,
+			rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
+				Value: strings.ToUpper(approver),
+				Kind:  azure.User,
+			}, IngestibleEndpoint{
+				Value: targetAZRole.ObjectID,
+				Kind:  targetAZRole.Labels[0],
 			}, IngestibleRel{
 				RelProps: map[string]any{},
 				RelType:  azure.AZRoleApprover,
@@ -1916,12 +1916,12 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	if len(policyAssignment.EndUserAssignmentGroupApprovers) > 0 {
 		// Create an AZRoleApprover edge from each group that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentGroupApprovers {
-			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-				Source:     strings.ToUpper(approver),
-				SourceType: azure.Group,
-			}, IngestibleTarget{
-				Target:     targetAZRole.ObjectID,
-				TargetType: targetAZRole.Label,
+			rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
+				Value: strings.ToUpper(approver),
+				Kind:  azure.Group,
+			}, IngestibleEndpoint{
+				Value: targetAZRole.ObjectID,
+				Kind:  targetAZRole.Labels[0],
 			}, IngestibleRel{
 				RelProps: map[string]any{},
 				RelType:  azure.AZRoleApprover,
@@ -1933,12 +1933,12 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role
 		combinedObjectId := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId))
 
-		rels = append(rels, NewIngestibleRelationship(IngestibleSource{
-			Source:     strings.ToUpper(combinedObjectId),
-			SourceType: azure.Role,
-		}, IngestibleTarget{
-			Target:     targetAZRole.ObjectID,
-			TargetType: targetAZRole.Label,
+		rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
+			Value: strings.ToUpper(combinedObjectId),
+			Kind:  azure.Role,
+		}, IngestibleEndpoint{
+			Value: targetAZRole.ObjectID,
+			Kind:  targetAZRole.Labels[0],
 		}, IngestibleRel{
 			RelProps: map[string]any{},
 			RelType:  azure.AZRoleApprover,
