@@ -1854,6 +1854,100 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 	return relationships
 }
 
+// ConvertAzureRoleManagementPolicyAssignment will create, or update the properties if it exists, an AZRole of a tenant
+// with the supplied RoleManagementPolicyAssignment properties
+// If EndUserAssignmentGroupApprovers contains GUIDs: an edge will be created from each group to the created AZRole
+// If EndUserAssignmentUsersApprovers contains GUIDs: an edge will be created from each user to the created AZRole
+// If both lists are empty: an edge will be created from the tenant's PrivilegedRoleAdministratorRole to the created AZRole
+func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
+	var (
+		rels             = make([]IngestibleRelationship, 0)
+		combinedObjectId = strings.ToUpper(fmt.Sprintf("%s@%s", policyAssignment.RoleDefinitionId, policyAssignment.TenantId))
+	)
+
+	// Format the incoming user and group ids to uppercase string before creating our nodes
+	for i, _ := range policyAssignment.EndUserAssignmentGroupApprovers {
+		policyAssignment.EndUserAssignmentGroupApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentGroupApprovers[i])
+	}
+
+	for i, _ := range policyAssignment.EndUserAssignmentUserApprovers {
+		policyAssignment.EndUserAssignmentUserApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentUserApprovers[i])
+	}
+
+	// We will want to create or update any existing AZRole node that matches the combinedObjectId
+	// If the node exists, we want to add the new properties to the node
+	targetAZRole := IngestibleNode{
+		ObjectID: combinedObjectId,
+		Label:    azure.Role,
+		PropertyMap: map[string]any{
+			azure.RoleDefinitionId.String():                                  strings.ToUpper(policyAssignment.RoleDefinitionId),
+			azure.TenantID.String():                                          strings.ToUpper(policyAssignment.TenantId),
+			azure.EndUserAssignmentRequiresApproval.String():                 policyAssignment.EndUserAssignmentRequiresApproval,
+			azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(): policyAssignment.EndUserAssignmentRequiresCAPAuthenticationContext,
+			azure.EndUserAssignmentUserApprovers.String():                    policyAssignment.EndUserAssignmentUserApprovers,
+			azure.EndUserAssignmentGroupApprovers.String():                   policyAssignment.EndUserAssignmentGroupApprovers,
+			azure.EndUserAssignmentRequiresMFA.String():                      policyAssignment.EndUserAssignmentRequiresMFA,
+			azure.EndUserAssignmentRequiresJustification.String():            policyAssignment.EndUserAssignmentRequiresJustification,
+			azure.EndUserAssignmentRequiresTicketInformation.String():        policyAssignment.EndUserAssignmentRequiresTicketInformation,
+		},
+	}
+
+	if !policyAssignment.EndUserAssignmentRequiresApproval {
+		// We cannot create the edges if the assignment does not require approval
+		return targetAZRole, rels
+	}
+
+	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
+		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
+		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
+			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
+				Source:     strings.ToUpper(approver),
+				SourceType: azure.User,
+			}, IngestibleTarget{
+				Target:     targetAZRole.ObjectID,
+				TargetType: targetAZRole.Label,
+			}, IngestibleRel{
+				RelProps: map[string]any{},
+				RelType:  azure.AZRoleApprover,
+			}))
+		}
+	}
+
+	if len(policyAssignment.EndUserAssignmentGroupApprovers) > 0 {
+		// Create an AZRoleApprover edge from each group that allow approvals to the target azure role
+		for _, approver := range policyAssignment.EndUserAssignmentGroupApprovers {
+			rels = append(rels, NewIngestibleRelationship(IngestibleSource{
+				Source:     strings.ToUpper(approver),
+				SourceType: azure.Group,
+			}, IngestibleTarget{
+				Target:     targetAZRole.ObjectID,
+				TargetType: targetAZRole.Label,
+			}, IngestibleRel{
+				RelProps: map[string]any{},
+				RelType:  azure.AZRoleApprover,
+			}))
+		}
+	}
+
+	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
+		// No users or groups were attached to the policy, we will create the edge from the tenant's PrivilegedRoleAdministratorRole Role node to the target role
+		combinedObjectId := strings.ToUpper(fmt.Sprintf("%s@%s", azure.PrivilegedRoleAdministratorRole, policyAssignment.TenantId))
+
+		rels = append(rels, NewIngestibleRelationship(IngestibleSource{
+			Source:     strings.ToUpper(combinedObjectId),
+			SourceType: azure.Role,
+		}, IngestibleTarget{
+			Target:     targetAZRole.ObjectID,
+			TargetType: targetAZRole.Label,
+		}, IngestibleRel{
+			RelProps: map[string]any{},
+			RelType:  azure.AZRoleApprover,
+		}))
+	}
+
+	return targetAZRole, rels
+}
+
 func CanAddSecret(roleDefinitionId string) bool {
 	return roleDefinitionId == azure.ApplicationAdministratorRole || roleDefinitionId == azure.CloudApplicationAdministratorRole
 }
