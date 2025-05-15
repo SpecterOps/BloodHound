@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package os
+package fs
 
 import "os"
 
-//go:generate go run go.uber.org/mock/mockgen -destination=./mocks/mock.go -package=mocks . Service
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
 
 // Serves as a lightweight wrapper around the os package which allows for
 // path management to be abstracted.
