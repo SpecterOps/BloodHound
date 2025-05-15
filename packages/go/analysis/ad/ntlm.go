@@ -145,6 +145,9 @@ func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, missin
 		return true
 	} else if err != nil {
 		// If we've failed to retrieve the property here tho, we'll instead treat it as unprotected
+		if !errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
+		}
 		return false
 	}
 
