@@ -27,6 +27,7 @@ afterAll(() => server.close());
 
 describe('ObjectCountPanel', () => {
     it('renders error message on error', async () => {
+        console.error = vi.fn();
         server.use(
             rest.get('/api/v2/asset-group-tags/1/members/counts', async (_, res, ctx) => {
                 return res(ctx.status(403));

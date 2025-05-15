@@ -16,11 +16,11 @@
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { createBrowserHistory } from 'history';
-import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
-import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
+import { RequestOptions } from 'js-client-library/dist/requests';
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
@@ -29,6 +29,7 @@ import { apiClient, cn } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import { getTagUrlValue } from '../../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
+import SelectorFormContext from './SelectorFormContext';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -52,15 +53,13 @@ const getListScalar = (windoHeight: number) => {
 };
 
 const SeedSelection: FC<{
-    selectorType: SeedTypes;
     onSubmit: SubmitHandler<SelectorFormInputs>;
-    results: AssetGroupTagNode[] | null;
-    setResults: (results: AssetGroupTagNode[] | null) => void;
-}> = ({ selectorType, onSubmit, results, setResults }) => {
+}> = ({ onSubmit }) => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
-    const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
+    const { seeds, setSeeds, results, setResults, selectorType, selectorQuery } = useContext(SelectorFormContext);
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const { handleSubmit, register } = useFormContext<SelectorFormInputs>();
@@ -82,15 +81,6 @@ const SeedSelection: FC<{
         window.addEventListener('resize', updateHeightScalar);
         return () => window.removeEventListener('resize', updateHeightScalar);
     }, []);
-
-    const selectorQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data['selector'];
-        },
-        enabled: selectorId !== '',
-    });
 
     const handleDeleteSelector = useCallback(
         async (response: boolean) => {
@@ -127,16 +117,18 @@ const SeedSelection: FC<{
                         <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
                             <AssetGroupSelectorObjectSelect
-                                setSeeds={setSeeds}
-                                setSeedPreviewResults={setResults}
-                                seeds={selectorQuery.data?.seeds || []}
+                                seeds={seeds.filter((seed) => {
+                                    return seed.type === SeedTypeObjectId;
+                                })}
                             />
                         ) : (
                             <Cypher
                                 preview={false}
                                 setSeedPreviewResults={setResults}
                                 setSeeds={setSeeds}
-                                initialInput={selectorQuery.data?.seeds[0].value}
+                                initialInput={
+                                    seeds.length > 0 && seeds[0].type === SeedTypeCypher ? seeds[0].value : ''
+                                }
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>

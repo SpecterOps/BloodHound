@@ -17,7 +17,6 @@
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory } from 'history';
 import { setupServer } from 'msw/node';
-import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
@@ -167,36 +166,5 @@ describe('Details', async () => {
                 await screen.findByTestId('tier-management_details_tiers-list_active-tiers-item-3')
             ).toBeInTheDocument();
         });
-    });
-
-    it('allows switching between the Tiers and Labels tabs', async () => {
-        const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/tier/1', '/tier-management/details/label/2'],
-            initialIndex: 0,
-        });
-
-        render(
-            <Routes>
-                <Route path='/tier-management/details/tier/:tagId' element={<Details />} />
-                <Route path='/tier-management/details/label/:tagId' element={<Details />} />
-            </Routes>,
-            { history }
-        );
-
-        // Wait for the tiers list
-        expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
-
-        // Switch to Labels tab
-        await user.click(await screen.findByRole('tab', { name: /Labels/i }));
-
-        // Expect the labels list to render
-        longWait(async () => {
-            expect(await screen.findByTestId('tier-management_details_labels-list')).toBeInTheDocument();
-        });
-
-        // Switch back to Tiers
-        await user.click(await screen.findByRole('tab', { name: /Tiers/i }));
-
-        expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
     });
 });

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
@@ -22,7 +22,7 @@ import { Link, useParams } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { getTagUrlValue } from '../utils';
+import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -74,9 +74,6 @@ export const getEditButtonState = (
     );
 };
 
-const TIER_ZERO_ID = '1';
-const OWNED_ID = '2';
-
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
@@ -105,23 +102,6 @@ const Details: FC = () => {
 
     return (
         <div>
-            <Tabs
-                defaultValue='tiers'
-                className='w-full'
-                value={labelId ? 'label' : 'tier'}
-                onValueChange={(value) => {
-                    if (value === 'tier') {
-                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_DETAILS}/${value}/${TIER_ZERO_ID}`);
-                    }
-                    if (value === 'label') {
-                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_DETAILS}/${value}/${OWNED_ID}`);
-                    }
-                }}>
-                <TabsList className='w-full flex justify-start'>
-                    <TabsTrigger value='tier'>Tiers</TabsTrigger>
-                    <TabsTrigger value='label'>Labels</TabsTrigger>
-                </TabsList>
-            </Tabs>
             <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
@@ -170,43 +150,37 @@ const Details: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4 grow-1'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 h-full *:grow-0 *:basis-1/3'>
-                    <div>
-                        <DetailsList
-                            title={labelId ? 'Labels' : 'Tiers'}
-                            listQuery={tagsQuery}
-                            selected={tagId}
-                            onSelect={(id) => {
-                                navigate(
-                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${id}`
-                                );
-                            }}
-                        />
-                    </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3'>
-                        <DetailsList
-                            title='Selectors'
-                            listQuery={selectorsQuery}
-                            selected={selectorId}
-                            onSelect={(id) => {
-                                navigate(
-                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`
-                                );
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <MembersList
-                            itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
-                            onClick={(id) => {
-                                navigate(
-                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
-                                );
-                            }}
-                            selected={memberId}
-                        />
-                    </div>
+            <div className='flex gap-8 mt-4'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+                    <DetailsList
+                        title={labelId ? 'Labels' : 'Tiers'}
+                        listQuery={tagsQuery}
+                        selected={tagId}
+                        onSelect={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${id}`
+                            );
+                        }}
+                    />
+                    <DetailsList
+                        title='Selectors'
+                        listQuery={selectorsQuery}
+                        selected={selectorId}
+                        onSelect={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`
+                            );
+                        }}
+                    />
+                    <MembersList
+                        itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
+                        onClick={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                            );
+                        }}
+                        selected={memberId}
+                    />
                 </div>
                 <div className='basis-1/3'>
                     <SelectedDetails />
