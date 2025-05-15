@@ -73,6 +73,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
                 .then((res) => res.data.data['members']);
         },
         retry: false,
+        refetchOnWindowFocus: false,
     });
 
     const seedsQuery = useQuery({
@@ -88,6 +89,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
             return response.data.data;
         },
         enabled: seeds.length !== 0,
+        refetchOnWindowFocus: false,
     });
 
     const handleRun = useCallback(() => {

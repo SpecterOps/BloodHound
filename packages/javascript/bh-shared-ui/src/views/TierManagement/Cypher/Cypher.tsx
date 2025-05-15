@@ -45,6 +45,7 @@ export const Cypher: FC<{
                 .then((res) => res.data.data['members']),
         retry: false,
         enabled: selectorId !== undefined,
+        refetchOnWindowFocus: false,
     });
 
     const kindsQuery = useQuery({
