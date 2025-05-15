@@ -499,7 +499,7 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 				// Spawn N (# of selectors) goroutines for each tag for maximum speed.
 				// We are relying on connection pools to negotiate any contention here.
 				for _, selector := range selectors {
-					if !selector.DisabledAt.IsZero() {
+					if !selector.DisabledAt.Time.IsZero() {
 						disabledSelectorIds = append(disabledSelectorIds, selector.ID)
 						continue
 					}

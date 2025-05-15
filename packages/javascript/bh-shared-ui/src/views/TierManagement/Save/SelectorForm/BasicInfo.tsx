@@ -29,14 +29,15 @@ import {
     Skeleton,
     Switch,
 } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
+import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
 import { DateTime } from 'luxon';
-import { FC, useEffect, useState } from 'react';
+import { FC, useContext, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { apiClient } from '../../../../utils';
+import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
 /**
@@ -50,12 +51,11 @@ const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => 
     return true;
 };
 
-const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: SeedTypes }> = ({
-    setSelectorType,
-    selectorType,
-}) => {
+const BasicInfo: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+
+    const { selectorType, setSelectorType, setSeeds, selectorQuery } = useContext(SelectorFormContext);
 
     const {
         formState: { errors },
@@ -70,15 +70,6 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
             return response.data.data['tag'];
         },
         enabled: tagId !== '',
-    });
-
-    const selectorQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data['selector'];
-        },
-        enabled: selectorId !== '',
     });
 
     const [enabled, setEnabled] = useState(selectorStatus(selectorId, selectorQuery.data));
@@ -162,8 +153,10 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                 onValueChange={(value: string) => {
                                     if (value === SeedTypeObjectId.toString()) {
                                         setSelectorType(SeedTypeObjectId);
+                                        setSeeds([]);
                                     } else if (value === SeedTypeCypher.toString()) {
                                         setSelectorType(SeedTypeCypher);
+                                        setSeeds([]);
                                     }
                                 }}>
                                 <SelectTrigger

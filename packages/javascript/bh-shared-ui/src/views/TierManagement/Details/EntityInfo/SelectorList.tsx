@@ -17,10 +17,10 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppIcon } from '../../../../components/AppIcon';
-import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../../routes';
 import { apiClient, cn } from '../../../../utils';
+import { getTagUrlValue } from '../../utils';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
@@ -31,6 +31,7 @@ type SelectorListProps = {
 
 const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
     const navigate = useNavigate();
+    const { labelId } = useParams();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 
     const memberInfoQuery = useQuery(['asset-group-member-info'], () => {
@@ -48,16 +49,16 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
 
     const handleViewClick = useCallback(
         (id: number) => {
-            navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tag/${tagId}/selector/${id}`);
+            navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
         },
-        [tagId, navigate]
+        [tagId, navigate, labelId]
     );
 
     const handleEditClick = useCallback(
         (id: number) => {
-            navigate(`/tier-management/edit/tag/${tagId}/selector/${id}`);
+            navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
         },
-        [tagId, navigate]
+        [tagId, navigate, labelId]
     );
 
     if (memberInfoQuery.isLoading) {

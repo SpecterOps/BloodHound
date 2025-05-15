@@ -17,3 +17,6 @@
 export const getTagUrlValue = (labelId: string | undefined) => {
     return labelId === undefined ? 'tier' : 'label';
 };
+
+export const TIER_ZERO_ID = '1';
+export const OWNED_ID = '2';

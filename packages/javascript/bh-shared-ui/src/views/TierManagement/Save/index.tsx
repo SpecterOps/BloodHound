@@ -36,7 +36,8 @@ const SaveView: FC = () => {
 
     return (
         <div>
-            <Breadcrumb className='mb-2'>
+            {/* TODO: REMOVE HIDDEN CLASS WHEN TAG FORM IS FUNCTIONAL */}
+            <Breadcrumb className='mb-2 hidden'>
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
