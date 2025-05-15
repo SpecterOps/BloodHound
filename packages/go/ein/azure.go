@@ -1837,13 +1837,13 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 
 	relationships := make([]IngestibleRelationship, 0)
 	relationships = append(relationships, NewIngestibleRelationship(
-		IngestibleSource{
-			Source:     strings.ToUpper(instance.PrincipalId),
-			SourceType: azure.Entity,
+		IngestibleEndpoint{
+			Value: strings.ToUpper(instance.PrincipalId),
+			Kind:  azure.Entity,
 		},
-		IngestibleTarget{
-			Target:     id,
-			TargetType: azure.Role,
+		IngestibleEndpoint{
+			Value: id,
+			Kind:  azure.Role,
 		},
 		IngestibleRel{
 			RelProps: map[string]any{},
