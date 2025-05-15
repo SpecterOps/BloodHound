@@ -78,15 +78,17 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
 
     const seedsQuery = useQuery({
         queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             const seedsList = seeds.map((seed) => {
                 return `"${seed.value}"`;
             });
 
             const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
-            const response = await apiClient.cypherSearch(query);
-            setSelectedNodes(mapSeeds(response.data.data.nodes));
-            return response.data.data;
+
+            return apiClient.cypherSearch(query, { signal }).then((res) => {
+                setSelectedNodes(mapSeeds(res.data.data.nodes));
+                return res.data.data;
+            });
         },
         enabled: seeds.length !== 0,
         refetchOnWindowFocus: false,
