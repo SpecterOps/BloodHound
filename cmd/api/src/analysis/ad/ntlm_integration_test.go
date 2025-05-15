@@ -50,7 +50,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Post Process Test - CoerceAndRelayNTLMToADCS")
 		expansions, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions, true)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -97,7 +97,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 		operation := analysis.NewPostRelationshipOperation(context.Background(), db, "NTLM Composition Test - CoerceAndRelayNTLMToADCS")
 		expansions, _, _, _, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, expansions, true)
 		require.NoError(t, err)
 
 		cache := ad2.NewADCSCache()
@@ -157,7 +157,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 
 			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
-			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions, true)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -214,7 +214,7 @@ func TestPostNTLMRelaySMB(t *testing.T) {
 
 			groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 			require.NoError(t, err)
-			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+			ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions, true)
 			require.NoError(t, err)
 
 			err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
@@ -266,7 +266,7 @@ func TestNTLMRelayToSMBComposition(t *testing.T) {
 
 		groupExpansions, computers, _, authenticatedUsers, err := fetchNTLMPrereqs(db)
 		require.NoError(t, err)
-		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions)
+		ntlmCache, err := ad2.NewNTLMCache(context.Background(), db, groupExpansions, true)
 		require.NoError(t, err)
 
 		err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {

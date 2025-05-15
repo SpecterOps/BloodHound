@@ -88,7 +88,7 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 						continue
 					} else if isProtectedComputer(innerComputer, ntlmCache) {
 						continue
-					} else if isRestrictingOutboundNTLM(ctx, computer, ntlmCache, treatMissingRestrictOutboundNTLMPropertyAsRestricting) {
+					} else if isRestrictingOutboundNTLM(ctx, computer, treatMissingRestrictOutboundNTLMPropertyAsRestricting) {
 						continue
 					}
 
@@ -135,23 +135,20 @@ func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
 // Check if the computer is restricting outbound NTLM
 // A computer that does is not vulnerable
 // A toggle determines how we'll treat computers missing this property
-func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, ntlmCache NTLMCache, missingPropertyMeansRestricting bool) bool {
-	if missingPropertyMeansRestricting {
-		if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
-			// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
-			if !errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
-			}
-			return true
-		} else {
-			return restrictOutboundNtlm
+func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, missingPropertyMeansRestricting bool) bool {
+	restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool()
+	if err != nil && missingPropertyMeansRestricting {
+		// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
+		if !errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
 		}
-	} else if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+		return true
+	} else if err != nil {
 		// If we've failed to retrieve the property here tho, we'll instead treat it as unprotected
 		return false
-	} else {
-		return restrictOutboundNtlm
 	}
+
+	return restrictOutboundNtlm
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
