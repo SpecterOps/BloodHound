@@ -11,10 +11,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { useSnackbar } from 'notistack';
 import { SNACKBAR_DURATION } from '../constants';
 import { useNotifications } from '../providers';
-import { act, renderHook } from '../test-utils';
-
+import { act, renderHook, screen, waitFor } from '../test-utils';
 const message = 'This is a notification';
 const messageKey = 'messageKey';
 
@@ -50,4 +50,44 @@ describe('AppNotifications', () => {
         act(() => hook.result.current.removeNotification(messageKey));
         expect(hook.result.current.notifications).toHaveLength(0);
     });
+
+    it('renders a snackbar notification in the dom and tests autoHideDuration', async () => {
+        const hook = renderHook(() => useNotifications());
+        const snack = renderHook(() => useSnackbar());
+
+        act(() => hook.result.current.addNotification(message, messageKey, { autoHideDuration: SNACKBAR_DURATION }));
+
+        //getting the duration value from the useNotification hook
+        const duration = hook.result.current.notifications[0].options.autoHideDuration;
+        act(() => snack.result.current.enqueueSnackbar('test message', { autoHideDuration: duration }));
+
+        await waitFor(() => expect(screen.getByText('test message')).toBeInTheDocument());
+
+        //adding cushion to the timer to allow for transition timing
+        await waitFor(() => expect(screen.queryByText('test message')).not.toBeInTheDocument(), {
+            timeout: SNACKBAR_DURATION + 1000,
+        });
+    });
+
+    // it('renders a snackbar notification in the dom and tests long autoHideDuration', async () => {
+    //     const hook = renderHook(() => useNotifications());
+    //     const snack = renderHook(() => useSnackbar());
+
+    //     vi.useFakeTimers();
+
+    //     act(() =>
+    //         hook.result.current.addNotification(message, messageKey, { autoHideDuration: SNACKBAR_DURATION_LONG })
+    //     );
+
+    //     //getting the duration value from the useNotification hook
+    //     const duration = hook.result.current.notifications[0].options.autoHideDuration;
+    //     act(() => snack.result.current.enqueueSnackbar('test message', { autoHideDuration: duration }));
+
+    //     await waitFor(() => expect(screen.getByText('test message')).toBeInTheDocument());
+
+    //     //adding cushion to the timer to allow for transition timing
+    //     await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000);
+
+    //     expect(screen.queryByText('test message')).not.toBeInTheDocument();
+    // });
 });
