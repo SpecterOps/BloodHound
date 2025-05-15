@@ -42,12 +42,14 @@ func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error 
 	}
 
 	// If a "objectid" is present in the property map, verify it matches the top-level ID
-	if propertyID, ok := node.PropertyMap["objectid"]; ok && propertyID != objectID {
-		slog.Warn("objectid in property map does not match top-level id of node; skipping.",
-			slog.Any("properties.objectid", propertyID),
-			slog.String("expected objectid", objectID),
-		)
-		return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
+	if rawID, ok := node.PropertyMap["objectid"]; ok {
+		if propertyID, ok := rawID.(string); ok && !strings.EqualFold(propertyID, objectID) {
+			slog.Warn("objectid in property map does not match top-level id of node; skipping.",
+				slog.Any("properties.objectid", propertyID),
+				slog.String("expected objectid", objectID),
+			)
+			return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
+		}
 	}
 
 	// the first element in node.Labels determines which icon the UI renders for the node.
