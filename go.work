@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-go 1.23.0
+go 1.23.8
 
 use (
 	./cmd/api/src
@@ -27,6 +27,7 @@ use (
 	./packages/go/cypher
 	./packages/go/dawgs
 	./packages/go/ein
+	./packages/go/fs
 	./packages/go/graphschema
 	./packages/go/headers
 	./packages/go/lab
