@@ -68,10 +68,11 @@ const (
 	Email           Property = "email"
 	IsInherited     Property = "isinherited"
 	CompositionID   Property = "compositionid"
+	PrimaryKind     Property = "primarykind"
 )
 
 func AllProperties() []Property {
-	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID}
+	return []Property{ObjectID, Name, DisplayName, Description, OwnerObjectID, Collected, OperatingSystem, SystemTags, UserTags, LastSeen, LastCollected, WhenCreated, Enabled, PasswordLastSet, Title, Email, IsInherited, CompositionID, PrimaryKind}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -111,6 +112,8 @@ func ParseProperty(source string) (Property, error) {
 		return IsInherited, nil
 	case "compositionid":
 		return CompositionID, nil
+	case "primarykind":
+		return PrimaryKind, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -153,6 +156,8 @@ func (s Property) String() string {
 		return string(IsInherited)
 	case CompositionID:
 		return string(CompositionID)
+	case PrimaryKind:
+		return string(PrimaryKind)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -195,6 +200,8 @@ func (s Property) Name() string {
 		return "Is Inherited"
 	case CompositionID:
 		return "Composition ID"
+	case PrimaryKind:
+		return "Primary Kind"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
