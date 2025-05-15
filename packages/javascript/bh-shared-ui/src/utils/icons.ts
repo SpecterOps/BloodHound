@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { library } from '@fortawesome/fontawesome-svg-core';
 import {
     IconDefinition,
     faArrowsLeftRightToLine,
@@ -47,8 +48,11 @@ import {
     faUser,
     faUsers,
     faWindowRestore,
+    fas,
 } from '@fortawesome/free-solid-svg-icons';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
+
+library.add(fas);
 
 export type IconInfo = {
     icon: IconDefinition;
@@ -271,4 +275,18 @@ export const GLYPHS: GlyphDictionary = {
 export const UNKNOWN_ICON: IconInfo = {
     icon: faQuestion,
     color: '#FFFFFF',
+};
+
+export const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
+
+export const GetIconInfo = (iconName: string, customIcons: IconDictionary): IconInfo => {
+    if (iconName in customIcons) {
+        return customIcons[iconName];
+    }
+
+    if (iconName in NODE_ICON) {
+        return NODE_ICON[iconName];
+    }
+
+    return UNKNOWN_ICON;
 };

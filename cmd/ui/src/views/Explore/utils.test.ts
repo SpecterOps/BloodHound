@@ -32,7 +32,7 @@ describe('Explore utils', () => {
         };
         it('calls sequentialLayout as the default graph layout', () => {
             const graph = new MultiDirectedGraph();
-            initGraph(graph, { nodes: {}, edges: [] }, mockTheme as Theme, false);
+            initGraph(graph, { nodes: {}, edges: [] }, mockTheme as Theme, false, {});
 
             expect(layoutDagreSpy).toBeCalled();
         });

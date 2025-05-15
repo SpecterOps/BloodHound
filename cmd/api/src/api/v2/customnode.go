@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
@@ -31,10 +30,6 @@ import (
 
 const (
 	CustomNodeKindParameter = "kind_name"
-)
-
-var (
-	validIconName = regexp.MustCompile(`^fa-[a-z0-9-]+$`)
 )
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
@@ -74,8 +69,6 @@ func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeReque
 func validateConfig(config model.CustomNodeKindConfig) error {
 	if config.Icon.Type != "font-awesome" {
 		return fmt.Errorf("custom node kind config type (%s) is not supported", config.Icon.Type)
-	} else if !validIconName.MatchString(config.Icon.Name) {
-		return fmt.Errorf("custom node kind config name (%s) is not valid", config.Icon.Name)
 	}
 
 	return nil

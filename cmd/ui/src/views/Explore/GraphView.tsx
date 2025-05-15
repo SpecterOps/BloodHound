@@ -18,6 +18,7 @@ import { Popper, SxProps, useTheme } from '@mui/material';
 import {
     EdgeInfoState,
     GraphProgress,
+    IconDictionary,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
@@ -26,6 +27,7 @@ import {
     setSelectedEdge,
     transformFlatGraphResponse,
     useAvailableEnvironments,
+    useCustomNodeKinds,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -49,6 +51,7 @@ import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -84,6 +87,9 @@ const GraphView: FC = () => {
 
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
+    const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
+    console.log(customIcons);
+
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
@@ -96,12 +102,12 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode);
+        initGraph(graph, items, theme, darkMode, customIcons);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme, darkMode]);
+    }, [graphState.chartProps.items, theme, darkMode, customIcons]);
 
     useEffect(() => {
         if (opts.assetGroupEdit !== null) {
