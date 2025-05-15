@@ -134,7 +134,7 @@ const SelectorForm: FC = () => {
 
     const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(
         (data) => {
-            if (selectorId !== undefined) {
+            if (selectorId !== '') {
                 handlePatchSelector(data);
             } else {
                 handleCreateSelector(data);

@@ -84,7 +84,7 @@ describe('Cypher Search component for Tier Management', () => {
 
         expect(screen.getByText('Cypher Search')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'View in Explore' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Run' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Update Sample Results' })).toBeInTheDocument();
     });
 
     it('runs the query and uses the passed in callback to set the node results', async () => {
@@ -100,7 +100,7 @@ describe('Cypher Search component for Tier Management', () => {
             />
         );
 
-        const runButton = screen.getByRole('button', { name: 'Run' });
+        const runButton = screen.getByRole('button', { name: 'Update Sample Results' });
 
         user.click(runButton);
 

@@ -22,8 +22,8 @@ import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import SelectorForm from '.';
 import { tierHandlers } from '../../../../mocks';
-import { act, longWait, render, screen } from '../../../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../../../utils';
+import { act, longWait, render, screen, waitFor } from '../../../../test-utils';
+import { apiClient, mockCodemirrorLayoutMethods } from '../../../../utils';
 
 const testSelector = {
     id: 777,
@@ -52,6 +52,21 @@ const testObjectIdSelector = {
     ],
 };
 
+const testNodes = [
+    {
+        name: 'bar',
+        objectid: '777',
+        type: 'Bat',
+    },
+];
+const testSearchResults = {
+    data: testNodes,
+};
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 const handlers = [
     ...tierHandlers,
     rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
@@ -66,6 +81,9 @@ const handlers = [
     }),
     rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
         return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+    }),
+    rest.get(`/api/v2/search`, (_, res, ctx) => {
+        return res(ctx.json(testSearchResults));
     }),
 ];
 
@@ -243,7 +261,7 @@ describe('Selector Form', () => {
         });
     });
 
-    test('filling in the name value submits the form and navigates back to the details page', async () => {
+    test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
         const history = createMemoryHistory({
             initialEntries: [detailsPath, editExistingPath],
         });
@@ -270,6 +288,42 @@ describe('Selector Form', () => {
 
         longWait(() => {
             expect(history.location.pathname).toBe(detailsPath);
+        });
+    });
+
+    it('handles creating a new selector', async () => {
+        // Because there is no selector id path parameter in the url, the form is a create form
+        // This means that none of the input fields should have any value aside from default values
+        const history = createMemoryHistory({ initialEntries: [createNewPath] });
+
+        await act(async () => {
+            render(<SelectorForm />, { history });
+        });
+
+        const nameInput = await screen.findByLabelText('Name');
+
+        await user.click(nameInput);
+        await user.paste('foo');
+
+        const createSelectorSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
+
+        const input = screen.getByLabelText('Search Objects To Add');
+
+        await user.click(input);
+        await user.paste('bar');
+
+        const options = await screen.findAllByRole('option');
+
+        await user.click(
+            options.find((option) => {
+                return option.innerText === 'bar';
+            })!
+        );
+
+        await user.click(await screen.findByRole('button', { name: /Save/ }));
+
+        waitFor(() => {
+            expect(createSelectorSpy).toBeCalled();
         });
     });
 
