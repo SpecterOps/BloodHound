@@ -4612,7 +4612,7 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/{asset_group_member_id}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
