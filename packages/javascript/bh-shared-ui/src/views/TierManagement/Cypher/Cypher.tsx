@@ -113,7 +113,7 @@ export const Cypher: FC<{
                                     }
                                 )}
                                 onClick={handleCypherSearch}>
-                                Run
+                                Update Sample Results
                             </Button>
                         )}
                     </div>

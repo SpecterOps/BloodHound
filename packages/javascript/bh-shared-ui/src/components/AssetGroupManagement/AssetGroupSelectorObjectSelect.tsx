@@ -172,7 +172,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
                                 }
                             )}
                             onClick={handleRun}>
-                            Run
+                            Update Sample Results
                         </Button>
                     </div>
                     <CardDescription className='pt-3 font-normal'>
