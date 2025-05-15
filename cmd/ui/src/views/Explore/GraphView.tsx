@@ -27,6 +27,7 @@ import {
     setSelectedEdge,
     transformFlatGraphResponse,
     useAvailableEnvironments,
+    useCustomNodeKinds,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -43,7 +44,6 @@ import { GraphState } from 'src/ducks/explore/types';
 import { setAssetGroupEdit } from 'src/ducks/global/actions';
 import { GlobalOptionsState } from 'src/ducks/global/types';
 import { discardChanges } from 'src/ducks/tierzero/actions';
-import { transformIconDictionary, useCustomNodeKinds } from 'src/hooks/useCustomNodeKinds';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
@@ -51,6 +51,7 @@ import ExploreSearch from 'src/views/Explore/ExploreSearch';
 import usePrompt from 'src/views/Explore/NavigationAlert';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */

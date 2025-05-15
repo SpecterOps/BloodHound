@@ -1,8 +1,9 @@
 import { findIconDefinition, IconName } from '@fortawesome/fontawesome-svg-core';
-import { apiClient, GenericQueryOptions, IconDictionary } from 'bh-shared-ui';
 import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
-import { appendSvgUrls, DEFAULT_ICON_COLOR, NODE_SCALE } from 'src/views/Explore/svgIcons';
+import { apiClient, GenericQueryOptions, IconDictionary } from '../utils';
+
+const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
 
 export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconDictionary> =>
     apiClient.getCustomNodeKinds(options).then((res) => {
@@ -18,7 +19,7 @@ export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconD
 
             customIcons[node.kindName] = {
                 icon: iconDefinition,
-                color: DEFAULT_ICON_COLOR,
+                color: DEFAULT_ICON_BACKGROUND,
             };
         });
 
@@ -36,9 +37,3 @@ export const useCustomNodeKinds = (
         ...queryOptions,
     });
 };
-
-export function transformIconDictionary(customIcons: IconDictionary): IconDictionary {
-    appendSvgUrls(customIcons, NODE_SCALE);
-
-    return customIcons;
-}

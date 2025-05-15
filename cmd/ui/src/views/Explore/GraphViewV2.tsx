@@ -23,6 +23,7 @@ import {
     isWebGLEnabled,
     transformFlatGraphResponse,
     useAvailableEnvironments,
+    useCustomNodeKinds,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -45,6 +46,7 @@ import { initGraph } from 'src/views/Explore/utils';
 import ContextMenuV2 from './ContextMenu/ContextMenuV2';
 import ExploreSearchV2 from './ExploreSearch/ExploreSearchV2';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
+import { transformIconDictionary } from './svgIcons';
 
 const GraphViewV2: FC = () => {
     /* Hooks */
@@ -59,7 +61,7 @@ const GraphViewV2: FC = () => {
     const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
     const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const customIcons = useAppSelector((state) => state.global.customNodeInformation.customIcons);
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});

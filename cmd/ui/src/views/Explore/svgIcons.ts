@@ -18,9 +18,9 @@ import { icon } from '@fortawesome/fontawesome-svg-core';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { GLYPHS, GetIconInfo, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
 
-export const NODE_SCALE = '0.6';
+const NODE_SCALE = '0.6';
 const GLYPH_SCALE = '0.5';
-export const DEFAULT_ICON_COLOR = '#000000';
+const DEFAULT_ICON_COLOR = '#000000';
 
 // Adds object URLs to all icon and glyph definitions so that our fontawesome icons can be used by sigmajs node programs
 export const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): void => {
@@ -48,3 +48,9 @@ appendSvgUrls(GLYPHS, GLYPH_SCALE);
 UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, NODE_SCALE, DEFAULT_ICON_COLOR);
 
 export { GLYPHS, GetIconInfo, NODE_ICON, UNKNOWN_ICON };
+
+export function transformIconDictionary(icons: IconDictionary): IconDictionary {
+    appendSvgUrls(icons, NODE_SCALE);
+
+    return icons;
+} 

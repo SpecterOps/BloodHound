@@ -19,6 +19,7 @@ import { Box, Tooltip } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import { EntityKinds } from '../..';
+import { useCustomNodeKinds } from '../../hooks/useCustomNodeKinds';
 import { GetIconInfo, IconInfo } from '../../utils/icons';
 
 interface NodeIconProps {
@@ -51,7 +52,8 @@ const useStyles = makeStyles<Theme, IconInfoProp, string>({
 });
 
 const NodeIcon: React.FC<NodeIconProps> = ({ nodeType }) => {
-    const icon = GetIconInfo(nodeType, {});
+    const customIcons = useCustomNodeKinds().data ?? {};
+    const icon = GetIconInfo(nodeType, customIcons);
     const classes = useStyles({ icon });
 
     return (
