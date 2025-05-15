@@ -89,7 +89,9 @@ const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) =
             onClick={() => normalizedItem.onClick?.(index)}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip tooltip={normalizedItem.name}>
+            <Tooltip
+                tooltip={normalizedItem.name}
+                contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
                 <div className={cn('truncate ml-2', { 'ml-10': isAssetGroupTagNode(item) })}>{normalizedItem.name}</div>
             </Tooltip>
         </li>
