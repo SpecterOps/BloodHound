@@ -81,22 +81,51 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 	}
 
 	if item.NTLMRegistryData.Collected {
+		// If a registry value doesn't exist, assign its item prop to nil to clear it from the node
+		itemProps[ad.RestrictOutboundNTLM.String()] = nil
+		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = nil
+		itemProps[ad.RequireSecuritySignature.String()] = nil
+		itemProps[ad.EnableSecuritySignature.String()] = nil
+		itemProps[ad.NTLMMinClientSec.String()] = nil
+		itemProps[ad.NTLMMinServerSec.String()] = nil
+		itemProps[ad.LMCompatibilityLevel.String()] = nil
+		itemProps[ad.UseMachineID.String()] = nil
+		itemProps[ad.ClientAllowedNTLMServers.String()] = nil
+
 		/*
-			RestrictSendingNtlmTraffic is sent to us as an uint
+			RestrictSendingNtlmTraffic is sent to us as an uint if sent at all
 			The possible values are
 				0: Allow All
 				1: Audit All
 				2: Deny All
 		*/
-		itemProps[ad.RestrictOutboundNTLM.String()] = item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
-		itemProps[ad.RestrictReceivingNTLMTraffic.String()] = item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
-		itemProps[ad.RequireSecuritySignature.String()] = item.NTLMRegistryData.Result.RequireSecuritySignature != 0
-		itemProps[ad.EnableSecuritySignature.String()] = item.NTLMRegistryData.Result.EnableSecuritySignature != 0
-		itemProps[ad.NTLMMinClientSec.String()] = item.NTLMRegistryData.Result.NtlmMinClientSec
-		itemProps[ad.NTLMMinServerSec.String()] = item.NTLMRegistryData.Result.NtlmMinServerSec
-		itemProps[ad.LMCompatibilityLevel.String()] = item.NTLMRegistryData.Result.LmCompatibilityLevel
-		itemProps[ad.UseMachineID.String()] = item.NTLMRegistryData.Result.UseMachineId != 0
-		itemProps[ad.ClientAllowedNTLMServers.String()] = item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		if item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic != nil {
+			itemProps[ad.RestrictOutboundNTLM.String()] = *item.NTLMRegistryData.Result.RestrictSendingNtlmTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic != nil {
+			itemProps[ad.RestrictReceivingNTLMTraffic.String()] = *item.NTLMRegistryData.Result.RestrictReceivingNTLMTraffic == 2
+		}
+		if item.NTLMRegistryData.Result.RequireSecuritySignature != nil {
+			itemProps[ad.RequireSecuritySignature.String()] = *item.NTLMRegistryData.Result.RequireSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.EnableSecuritySignature != nil {
+			itemProps[ad.EnableSecuritySignature.String()] = *item.NTLMRegistryData.Result.EnableSecuritySignature != 0
+		}
+		if item.NTLMRegistryData.Result.NtlmMinClientSec != nil {
+			itemProps[ad.NTLMMinClientSec.String()] = *item.NTLMRegistryData.Result.NtlmMinClientSec
+		}
+		if item.NTLMRegistryData.Result.NtlmMinServerSec != nil {
+			itemProps[ad.NTLMMinServerSec.String()] = *item.NTLMRegistryData.Result.NtlmMinServerSec
+		}
+		if item.NTLMRegistryData.Result.LmCompatibilityLevel != nil {
+			itemProps[ad.LMCompatibilityLevel.String()] = *item.NTLMRegistryData.Result.LmCompatibilityLevel
+		}
+		if item.NTLMRegistryData.Result.UseMachineId != nil {
+			itemProps[ad.UseMachineID.String()] = *item.NTLMRegistryData.Result.UseMachineId != 0
+		}
+		if item.NTLMRegistryData.Result.ClientAllowedNTLMServers != nil {
+			itemProps[ad.ClientAllowedNTLMServers.String()] = *item.NTLMRegistryData.Result.ClientAllowedNTLMServers
+		}
 	}
 
 	if ldapEnabled, ok := itemProps["ldapenabled"]; ok {
