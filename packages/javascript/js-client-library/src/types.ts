@@ -330,6 +330,7 @@ export type CustomNodeKindType = {
         icon: {
             type: string;
             name: string;
+            color: string;
         }
     }
 };

@@ -88,7 +88,6 @@ const GraphView: FC = () => {
     const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
-    console.log(customIcons);
 
     const [showNodeLabels, setShowNodeLabels] = useState(true);
 

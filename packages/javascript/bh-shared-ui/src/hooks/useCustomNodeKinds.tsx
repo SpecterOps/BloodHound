@@ -18,7 +18,7 @@ export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconD
 
                 customIcons[node.kindName] = {
                     icon: iconDefinition,
-                    color: DEFAULT_ICON_BACKGROUND,
+                    color: node.config.icon.color ? node.config.icon.color : DEFAULT_ICON_BACKGROUND,
                 };
             });
         }
