@@ -56,10 +56,10 @@ describe('AppNotifications', () => {
         vi.useFakeTimers();
         act(() => snack.result.current.enqueueSnackbar('test message', { autoHideDuration: SNACKBAR_DURATION }));
 
-        waitFor(async () => {
-            expect(screen.queryByText('test message')).toBeInTheDocument();
+        waitFor(() => {
+            expect(screen.findByText('test message')).toBeInTheDocument();
             //adding 1s cushion to the timer to allow for transition timing
-            await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION + 1000);
+            vi.advanceTimersByTimeAsync(SNACKBAR_DURATION + 1000);
             expect(screen.queryByText('test message')).not.toBeInTheDocument();
         });
     });
@@ -69,10 +69,10 @@ describe('AppNotifications', () => {
         vi.useFakeTimers();
         act(() => snack.result.current.enqueueSnackbar('test message', { autoHideDuration: SNACKBAR_DURATION_LONG }));
 
-        waitFor(async () => {
+        waitFor(() => {
             expect(screen.queryByText('test message')).toBeInTheDocument();
             //adding 1s cushion to the timer to allow for transition timing
-            await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000);
+            vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000);
             expect(screen.queryByText('test message')).not.toBeInTheDocument();
         });
     });
