@@ -21,7 +21,7 @@ import { AssetGroupTagNode, SeedTypeCypher } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
@@ -33,18 +33,19 @@ export const Cypher: FC<{
     setSeeds?: (seeds: SelectorSeedRequest[]) => void;
 }> = ({ preview = true, initialInput = '', setSeedPreviewResults, setSeeds }) => {
     const { selectorId } = useParams();
+    const location = useLocation();
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [stalePreview, setStalePreview] = useState(false);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
     const previewQuery = useQuery({
-        queryKey: ['tier-management', 'preview-selectors', SeedTypeCypher, cypherQuery],
+        queryKey: ['tier-management', 'preview-selectors', SeedTypeCypher],
         queryFn: ({ signal }) =>
             apiClient
                 .assetGroupTagsPreviewSelectors({ seeds: [{ type: SeedTypeCypher, value: cypherQuery }] }, { signal })
                 .then((res) => res.data.data['members']),
         retry: false,
-        enabled: selectorId !== undefined,
+        enabled: selectorId !== undefined && location.pathname.includes('save'),
         refetchOnWindowFocus: false,
     });
 
@@ -138,7 +139,7 @@ export const Cypher: FC<{
                             }
                         )}
                         ref={cypherEditorRef}
-                        value={cypherQuery}
+                        value={preview ? initialInput : cypherQuery}
                         onValueChanged={onValueChanged}
                         theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                         schema={schema()}
