@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useQuery } from 'react-query';
+import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
@@ -55,7 +56,9 @@ export const useExploreGraph = () => {
         ...query.getQueryConfig(params),
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
-            addNotification(message, key);
+            addNotification(message, key, {
+                autoHideDuration: SNACKBAR_DURATION_LONG,
+            });
         },
     });
 };
