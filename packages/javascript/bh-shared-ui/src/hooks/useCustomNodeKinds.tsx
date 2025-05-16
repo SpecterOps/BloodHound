@@ -7,19 +7,21 @@ export const getCustomNodeKinds = async (options: RequestOptions): Promise<IconD
     apiClient.getCustomNodeKinds(options).then((res) => {
         const customIcons: IconDictionary = {};
 
-        res.data.data.forEach((node) => {
-            const iconName = node.config.icon.name as IconName;
+        if (Array.isArray(res?.data?.data)) {
+            res.data.data.forEach((node) => {
+                const iconName = node.config.icon.name as IconName;
 
-            const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: iconName });
-            if (iconDefinition == undefined) {
-                return;
-            }
+                const iconDefinition = findIconDefinition({ prefix: 'fas', iconName: iconName });
+                if (iconDefinition == undefined) {
+                    return;
+                }
 
-            customIcons[node.kindName] = {
-                icon: iconDefinition,
-                color: DEFAULT_ICON_BACKGROUND,
-            };
-        });
+                customIcons[node.kindName] = {
+                    icon: iconDefinition,
+                    color: DEFAULT_ICON_BACKGROUND,
+                };
+            });
+        }
 
         return customIcons;
     });
