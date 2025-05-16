@@ -80,7 +80,7 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
                 {memberInfoQuery.data.selectors?.map((selector, index) => {
                     return (
                         <div
-                            className={cn('flex items-center gap-2 p-2', {
+                            className={cn('flex items-center gap-2 p-2 overflow-hidden', {
                                 'bg-neutral-light-4 dark:bg-neutral-dark-4': index % 2 === 0,
                             })}
                             key={index}>
@@ -110,7 +110,9 @@ const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                            {selector.name}
+                            <div className='truncate max-w-[350px]' title={selector.name}>
+                                {selector.name}
+                            </div>
                         </div>
                     );
                 })}
