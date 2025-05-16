@@ -17,8 +17,8 @@
 import { Box } from '@mui/material';
 import NodeIcon from '../../components/NodeIcon';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { SearchValue } from '../../store';
 import { EntityKinds } from '../../utils';
+import { SearchValue } from './ExploreSearch/types';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
