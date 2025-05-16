@@ -19,7 +19,6 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
 import EntityInfoContent from './EntityInfoContent';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 const server = setupServer(
     rest.get('/api/v2/azure/roles', (req, res, ctx) => {
@@ -76,11 +75,9 @@ const EntityInfoContentWithProvider = ({
     nodeType: EntityKinds | string;
     databaseId?: string;
 }) => (
-    <EntityInfoPanelContextProvider>
-        <ObjectInfoPanelContextProvider>
-            <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
-        </ObjectInfoPanelContextProvider>
-    </EntityInfoPanelContextProvider>
+    <ObjectInfoPanelContextProvider>
+        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
+    </ObjectInfoPanelContextProvider>
 );
 
 beforeAll(() => server.listen());

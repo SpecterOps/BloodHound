@@ -86,11 +86,6 @@ const testDataNodeArray: VirtualizedNodeListItem = {
     onClick: handleNodeClick,
 };
 
-const backButtonSupportFF = {
-    key: 'back_button_support',
-    enabled: true,
-};
-
 const server = setupServer(
     rest.get('/api/v2/graphs/edge-composition', (_req, res, ctx) => {
         return res(
@@ -110,13 +105,6 @@ const server = setupServer(
         return res(
             ctx.json({
                 data: 0,
-            })
-        );
-    }),
-    rest.get('/api/v2/features', (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [backButtonSupportFF],
             })
         );
     })

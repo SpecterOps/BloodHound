@@ -37,6 +37,9 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('useNodeSearch', () => {
+    // Test is skipped here because of a race condition.
+    // Data returned from useSearch causes an effect to run that resets searchTerm before we can assert on it.
+    // To resolve this, mock useSearch return value, or only enable that query if we have a term to search for.
     it.skip('stores the state of a search term without modifying the query params', async () => {
         const history = createMemoryHistory();
         const hook = renderHook(() => useNodeSearch(), { history });

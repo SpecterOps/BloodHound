@@ -20,7 +20,6 @@ import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 const objectId = 'fake-object-id';
 const adGpoSections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
@@ -127,11 +126,7 @@ afterAll(() => server.close());
 describe('EntityInfoDataTable', () => {
     describe('Node count for nested table that counts all sections', () => {
         it('sums nested section node counts', async () => {
-            render(
-                <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...adGpoSections[0]} />
-                </EntityInfoPanelContextProvider>
-            );
+            render(<EntityInfoDataTable {...adGpoSections[0]} />);
             const sum = await screen.findByText('5,064');
             expect(sum).not.toBeNull();
         });
@@ -144,11 +139,7 @@ describe('EntityInfoDataTable', () => {
                 })
             );
 
-            render(
-                <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...adGpoSections[0]} />
-                </EntityInfoPanelContextProvider>
-            );
+            render(<EntityInfoDataTable {...adGpoSections[0]} />);
 
             const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
 
@@ -164,11 +155,7 @@ describe('EntityInfoDataTable', () => {
             );
 
             const user = userEvent.setup();
-            render(
-                <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...adGpoSections[0]} />
-                </EntityInfoPanelContextProvider>
-            );
+            render(<EntityInfoDataTable {...adGpoSections[0]} />);
 
             const sum = await screen.findAllByText('5,056');
             expect(sum).not.toBeNull();
@@ -185,11 +172,7 @@ describe('EntityInfoDataTable', () => {
         it('Verify Vault Reader count is the count returned by All Readers', async () => {
             const user = userEvent.setup();
 
-            render(
-                <EntityInfoPanelContextProvider>
-                    <EntityInfoDataTable {...azKeyVaultSections[0]} />
-                </EntityInfoPanelContextProvider>
-            );
+            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />);
 
             // wait for the total count to be available - this holds off all following tests until the counts have been returned
             const sum = await screen.findByText('1,998');
