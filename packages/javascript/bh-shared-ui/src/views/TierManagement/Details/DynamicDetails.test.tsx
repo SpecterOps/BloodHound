@@ -21,11 +21,37 @@ import {
     SeedTypeCypher,
     SeedTypeObjectId,
 } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
 import DynamicDetails from './DynamicDetails';
 
 describe('DynamicDetails', () => {
+    const server = setupServer(
+        rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        total_count: 0,
+                        counts: [],
+                    },
+                })
+            );
+        }),
+        rest.get(`/api/v2/graphs/kinds`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
+        })
+    );
+
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
     it('renders details for a selected tier', () => {
         const testTag = {
             isLoading: false,

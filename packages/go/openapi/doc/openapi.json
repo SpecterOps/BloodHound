@@ -16655,6 +16655,9 @@
               },
               "name": {
                 "type": "string"
+              },
+              "color": {
+                "type": "string"
               }
             }
           }

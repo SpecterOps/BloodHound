@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { render } from '../../test-utils';
 import SearchCurrentNodes, { NO_RESULTS_TEXT } from './SearchCurrentNodes';
 import { GraphNodes } from './types';
 
@@ -44,6 +47,21 @@ const nodes: GraphNodes = {
         lastSeen: '',
     },
 };
+
+const server = setupServer(
+    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+beforeAll(() => server.listen());
+afterEach(() => {
+    server.resetHandlers();
+});
+afterAll(() => server.close());
 
 const RESULT_ID = 'explore_search_result-list-item';
 
