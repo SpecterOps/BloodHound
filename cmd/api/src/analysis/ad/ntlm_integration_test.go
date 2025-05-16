@@ -45,7 +45,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 	t.Run("NTLMCoerceAndRelayNTLMToADCS Success - Restrict Outbound NTLM: false", func(t *testing.T) {
 		treatMissingRestrictOutboundNTLMPropertyAsRestricting := true
 		restrictValue := false
-		var restrictOutboundNTLM *bool = &restrictValue
+		restrictOutboundNTLM := &restrictValue
 
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext, restrictOutboundNTLM)
@@ -77,7 +77,7 @@ func TestPostNTLMRelayADCS(t *testing.T) {
 	t.Run("NTLMCoerceAndRelayNTLMToADCS Failure - Restrict Outbound NTLM: true", func(t *testing.T) {
 		treatMissingRestrictOutboundNTLMPropertyAsRestricting := true
 		restrictValue := true
-		var restrictOutboundNTLM *bool = &restrictValue
+		restrictOutboundNTLM := &restrictValue
 
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 			harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext, restrictOutboundNTLM)
@@ -157,7 +157,7 @@ func TestNTLMRelayToADCSComposition(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	treatMissingRestrictOutboundNTLMPropertyAsRestricting := true
 	restrictValue := false
-	var restrictOutboundNTLM *bool = &restrictValue
+	restrictOutboundNTLM := &restrictValue
 
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.NTLMCoerceAndRelayNTLMToADCS.Setup(testContext, restrictOutboundNTLM)
