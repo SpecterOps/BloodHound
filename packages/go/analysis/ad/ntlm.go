@@ -88,11 +88,11 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 						continue
 					} else if isProtectedComputer(innerComputer, ntlmCache) {
 						continue
-					} else if isRestrictingOutboundNTLM(ctx, computer, treatMissingRestrictOutboundNTLMPropertyAsRestricting) {
+					} else if isRestrictingOutboundNTLM(innerComputer, treatMissingRestrictOutboundNTLMPropertyAsRestricting, ctx) {
 						continue
+					} else {
+						allUnprotectedComputerCache.Add(innerComputer.ID.Uint64())
 					}
-
-					allUnprotectedComputerCache.Add(innerComputer.ID.Uint64())
 				}
 
 				ntlmCache.UnprotectedComputersCache = allUnprotectedComputerCache
@@ -135,7 +135,7 @@ func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
 // Check if the computer is restricting outbound NTLM
 // A computer that does is not vulnerable
 // A toggle determines how we'll treat computers missing this property
-func isRestrictingOutboundNTLM(ctx context.Context, computer *graph.Node, missingPropertyMeansRestricting bool) bool {
+func isRestrictingOutboundNTLM(computer *graph.Node, missingPropertyMeansRestricting bool, ctx context.Context) bool {
 	restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool()
 	if err != nil && missingPropertyMeansRestricting {
 		// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
