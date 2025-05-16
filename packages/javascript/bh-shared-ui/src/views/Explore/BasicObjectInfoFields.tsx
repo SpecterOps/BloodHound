@@ -22,15 +22,16 @@ import { EntityKinds } from '../../utils';
 import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
-    handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
-    objectid: string;
     displayname?: string;
-    isTierZero?: boolean;
-    isOwned?: boolean;
-    service_principal_id?: string;
-    noderesourcegroupid?: string;
     grouplinkid?: string;
+    handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
+    isOwned?: boolean;
+    isTierZero?: boolean;
     name?: string;
+    noderesourcegroupid?: string;
+    nodeType?: string;
+    objectid: string;
+    service_principal_id?: string;
 }
 
 const RelatedKindField = (
@@ -64,6 +65,7 @@ const RelatedKindField = (
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = (props): JSX.Element => {
     return (
         <>
+            {props.nodeType && <Field label='Node Type' value={props.nodeType} />}
             {props.isTierZero && <Field label='Tier Zero:' value={true} />}
             {props.isOwned && <Field label='Owned Object:' value={true} />}
             {props.displayname && <Field label='Display Name:' value={props.displayname} />}
