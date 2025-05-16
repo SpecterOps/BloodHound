@@ -41,9 +41,9 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 	expectedRels := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(testData)
 	require.Len(t, expectedRels, 1)
 	expectedRel := expectedRels[0]
-	require.Equal(t, expectedRel.Target, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
+	require.Equal(t, expectedRel.Target.Value, strings.ToUpper(fmt.Sprintf("%s@%s", testData.RoleDefinitionId, testData.TenantId)))
 	require.Equal(t, expectedRel.RelType, azure.AZRoleEligible)
-	require.Equal(t, expectedRel.Source, strings.ToUpper(testData.PrincipalId))
+	require.Equal(t, expectedRel.Source.Value, strings.ToUpper(testData.PrincipalId))
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
@@ -73,7 +73,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 
 		// Assert created node properties
 		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
-		assert.Equal(t, "AZRole", node.Label.String())
+		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
@@ -92,7 +92,7 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 
 		// Assert created node properties
 		assert.Equal(t, "ROLE-1234@TENANT-1234", node.ObjectID)
-		assert.Equal(t, "AZRole", node.Label.String())
+		assert.Equal(t, "AZRole", node.Labels[0].String())
 		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
 		assert.Equal(t, []string{"GROUP-APPROVER-1", "GROUP-APPROVER-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
 		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
@@ -104,28 +104,28 @@ func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
 		// Assert created relationships
 		require.Len(t, rels, 4)
 
-		assert.Equal(t, "USER-APPROVER-1", rels[0].Source)
-		assert.Equal(t, azure.User, rels[0].SourceType)
-		assert.Equal(t, azure.Role, rels[0].TargetType)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target)
+		assert.Equal(t, "USER-APPROVER-1", rels[0].Source.Value)
+		assert.Equal(t, azure.User, rels[0].Source.Kind)
+		assert.Equal(t, azure.Role, rels[0].Target.Kind)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[0].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
 
-		assert.Equal(t, "USER-APPROVER-2", rels[1].Source)
-		assert.Equal(t, azure.User, rels[1].SourceType)
-		assert.Equal(t, azure.Role, rels[1].TargetType)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target)
+		assert.Equal(t, "USER-APPROVER-2", rels[1].Source.Value)
+		assert.Equal(t, azure.User, rels[1].Source.Kind)
+		assert.Equal(t, azure.Role, rels[1].Target.Kind)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[1].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
 
-		assert.Equal(t, "GROUP-APPROVER-1", rels[2].Source)
-		assert.Equal(t, azure.Group, rels[2].SourceType)
-		assert.Equal(t, azure.Role, rels[2].TargetType)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target)
+		assert.Equal(t, "GROUP-APPROVER-1", rels[2].Source.Value)
+		assert.Equal(t, azure.Group, rels[2].Source.Kind)
+		assert.Equal(t, azure.Role, rels[2].Target.Kind)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[2].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
 
-		assert.Equal(t, "GROUP-APPROVER-2", rels[3].Source)
-		assert.Equal(t, azure.Group, rels[3].SourceType)
-		assert.Equal(t, azure.Role, rels[3].TargetType)
-		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target)
+		assert.Equal(t, "GROUP-APPROVER-2", rels[3].Source.Value)
+		assert.Equal(t, azure.Group, rels[3].Source.Kind)
+		assert.Equal(t, azure.Role, rels[3].Target.Kind)
+		assert.Equal(t, "ROLE-1234@TENANT-1234", rels[3].Target.Value)
 		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
 	})
 }

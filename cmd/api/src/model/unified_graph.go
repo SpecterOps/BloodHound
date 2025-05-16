@@ -62,19 +62,27 @@ type UnifiedEdge struct {
 
 func FromDAWGSNode(node *graph.Node, includeProperties bool) UnifiedNode {
 	var (
-		objectId   = getTypedPropertyOrDefault(node.Properties, common.ObjectID.String(), "")
-		label      = getTypedPropertyOrDefault(node.Properties, common.Name.String(), objectId)
-		lastSeen   = getTypedPropertyOrDefault(node.Properties, common.LastSeen.String(), time.Now())
-		properties map[string]any
+		props       = node.Properties
+		objectId    = getTypedPropertyOrDefault(props, common.ObjectID.String(), "")
+		label       = getTypedPropertyOrDefault(props, common.Name.String(), objectId)
+		lastSeen    = getTypedPropertyOrDefault(props, common.LastSeen.String(), time.Now())
+		primaryKind = getTypedPropertyOrDefault(props, common.PrimaryKind.String(), "")
 	)
 
+	// only generic-ingested nodes have the PrimaryKind property set to control what icon the UI displays.
+	kind := primaryKind
+	if kind == "" {
+		kind = analysis.GetNodeKind(node).String()
+	}
+
+	var properties map[string]any
 	if includeProperties {
-		properties = node.Properties.Map
+		properties = props.Map
 	}
 
 	return UnifiedNode{
 		Label:         label,
-		Kind:          analysis.GetNodeKind(node).String(),
+		Kind:          kind,
 		ObjectId:      objectId,
 		IsTierZero:    tiering.IsTierZero(node),
 		IsOwnedObject: tiering.IsOwned(node),

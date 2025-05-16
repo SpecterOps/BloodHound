@@ -156,6 +156,13 @@ CompositionID: types.#StringEnum & {
 	name: 			"Composition ID"
 	representation: "compositionid"
 }
+// Used to specify which icon to display for a node in the graph UI
+PrimaryKind: types.#StringEnum & {
+	symbol:         "PrimaryKind"
+	schema:         "common"
+	name:           "Primary Kind"
+	representation: "primarykind"
+}
 
 Properties: [
 	ObjectID,
@@ -175,7 +182,8 @@ Properties: [
 	Title,
 	Email,
 	IsInherited,
-	CompositionID
+	CompositionID,
+	PrimaryKind
 ]
 
 // Kinds

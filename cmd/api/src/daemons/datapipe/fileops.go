@@ -25,10 +25,10 @@ import (
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
-func SeekToDataTag(decoder *json.Decoder) error {
+func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {
 	var (
-		depth        = 0
-		dataTagFound = false
+		depth    = 0
+		keyFound = false
 	)
 
 	for {
@@ -40,7 +40,7 @@ func SeekToDataTag(decoder *json.Decoder) error {
 			return fmt.Errorf("%w: %w", ingest.ErrJSONDecoderInternal, err)
 		} else {
 			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
-			if dataTagFound {
+			if keyFound {
 				//Do some extra checks
 				if typed, ok := token.(json.Delim); !ok {
 					return ingest.ErrInvalidDataTag
@@ -59,21 +59,24 @@ func SeekToDataTag(decoder *json.Decoder) error {
 					depth++
 				}
 			case string:
-				if !dataTagFound && depth == 1 && typed == "data" {
-					dataTagFound = true
+				if !keyFound && depth == targetDepth && typed == key {
+					keyFound = true
 				}
 			}
 		}
 	}
 }
 
-func CreateIngestDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
+// CreateIngestDecoder returns a JSON decoder that is positioned at the start of the array
+// under the specified top-level key (e.g., "nodes", "edges", "data").
+// The returned decoder is ready to stream-decode each element of the array sequentially.
+func CreateIngestDecoder(reader io.ReadSeeker, key string, targetDepth int) (*json.Decoder, error) {
 	if _, err := reader.Seek(0, io.SeekStart); err != nil {
 		return nil, fmt.Errorf("error seeking to start of file: %w", err)
 	} else {
 		decoder := json.NewDecoder(reader)
-		if err := SeekToDataTag(decoder); err != nil {
-			return nil, fmt.Errorf("error seeking to data tag: %w", err)
+		if err := SeekToKey(decoder, key, targetDepth); err != nil {
+			return nil, fmt.Errorf("error seeking to %s tag: %w", key, err)
 		} else {
 			return decoder, nil
 		}

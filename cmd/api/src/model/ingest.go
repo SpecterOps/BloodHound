@@ -25,7 +25,6 @@ type IngestTask struct {
 	RequestGUID string     `json:"request_guid"`
 	TaskID      null.Int64 `json:"task_id"`
 	FileType    FileType   `json:"file_type"`
-	IsGeneric   bool       `json:"is_generic"`
 
 	BigSerial
 }

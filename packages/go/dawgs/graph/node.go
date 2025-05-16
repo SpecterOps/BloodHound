@@ -31,7 +31,13 @@ const (
 )
 
 func PrepareNode(properties *Properties, kinds ...Kind) *Node {
-	return NewNode(UnregisteredNodeID, properties, kinds...)
+	var filtered []Kind
+	for _, k := range kinds {
+		if k != nil {
+			filtered = append(filtered, k)
+		}
+	}
+	return NewNode(UnregisteredNodeID, properties, filtered...)
 }
 
 func NewNode(id ID, properties *Properties, kinds ...Kind) *Node {
@@ -92,6 +98,9 @@ func (s *Node) SizeOf() size.Size {
 
 func (s *Node) AddKinds(kinds ...Kind) {
 	for _, kind := range kinds {
+		if kind == nil {
+			continue // prevent panics from nil kinds
+		}
 		s.Kinds = s.Kinds.Add(kind)
 		s.AddedKinds = s.AddedKinds.Add(kind)
 		s.DeletedKinds = s.DeletedKinds.Remove(kind)

@@ -30,7 +30,8 @@
             "type": ["array"],
             "items": { "type": "string" },
             "maxItems": 3,
-            "minItems": 1
+            "minItems": 1,
+            "description": "An array of kind labels for the node. The first element is treated as the node's primary kind and is used to determine which icon to display in the graph UI. This primary kind is only used for visual representation and has no semantic significance for data processing."
         }
     },
     "required": ["id", "kinds"],

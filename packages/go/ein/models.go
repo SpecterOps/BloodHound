@@ -19,29 +19,33 @@ package ein
 import "github.com/specterops/bloodhound/dawgs/graph"
 
 // Initialize IngestibleRelationship to ensure the RelProps map can't be nil
-func NewIngestibleRelationship(source IngestibleSource, target IngestibleTarget, rel IngestibleRel) IngestibleRelationship {
+func NewIngestibleRelationship(source IngestibleEndpoint, target IngestibleEndpoint, rel IngestibleRel) IngestibleRelationship {
 	if rel.RelProps == nil {
 		rel.RelProps = make(map[string]any)
 	}
 
 	return IngestibleRelationship{
-		Source:     source.Source,
-		SourceType: source.SourceType,
-		Target:     target.Target,
-		TargetType: target.TargetType,
-		RelProps:   rel.RelProps,
-		RelType:    rel.RelType,
+		Source:   source,
+		Target:   target,
+		RelProps: rel.RelProps,
+		RelType:  rel.RelType,
 	}
 }
 
-type IngestibleSource struct {
-	Source     string
-	SourceType graph.Kind
-}
+// IngestMatchStrategy defines how a node should be matched during ingestion—
+// either by its object ID (default) or by its name.
+type IngestMatchStrategy string
 
-type IngestibleTarget struct {
-	Target     string
-	TargetType graph.Kind
+const (
+	MatchByID   IngestMatchStrategy = "id"
+	MatchByName IngestMatchStrategy = "name"
+)
+
+// IngestibleEndpoint represents a node reference in a relationship to be ingested.
+type IngestibleEndpoint struct {
+	Value   string              // The actual lookup value (either objectid or name)
+	MatchBy IngestMatchStrategy // Strategy used to resolve the node
+	Kind    graph.Kind          // Optional kind filter to help disambiguate nodes
 }
 
 type IngestibleRel struct {
@@ -49,17 +53,19 @@ type IngestibleRel struct {
 	RelType  graph.Kind
 }
 
+// IngestibleRelationship represents a directional relationship between two nodes
+// intended for ingestion into the graph database. Both endpoints include resolution
+// strategies and optional kind filters.
 type IngestibleRelationship struct {
-	Source     string
-	SourceType graph.Kind
-	TargetType graph.Kind
-	Target     string
-	RelProps   map[string]any
-	RelType    graph.Kind
+	Source IngestibleEndpoint
+	Target IngestibleEndpoint
+
+	RelProps map[string]any
+	RelType  graph.Kind
 }
 
 func (s IngestibleRelationship) IsValid() bool {
-	return s.Target != "" && s.Source != "" && s.RelProps != nil
+	return s.Target.Value != "" && s.Source.Value != "" && s.RelProps != nil
 }
 
 type IngestibleSession struct {
@@ -71,7 +77,7 @@ type IngestibleSession struct {
 type IngestibleNode struct {
 	ObjectID    string
 	PropertyMap map[string]any
-	Label       graph.Kind
+	Labels      []graph.Kind
 }
 
 func (s IngestibleNode) IsValid() bool {

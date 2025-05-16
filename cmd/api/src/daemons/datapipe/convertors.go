@@ -17,12 +17,70 @@
 package datapipe
 
 import (
+	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
+
+func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
+	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+
+	node := ein.IngestibleNode{
+		ObjectID:    objectID,
+		PropertyMap: entity.Properties,
+		Labels:      graph.StringsToKinds(entity.Kinds),
+	}
+
+	if node.PropertyMap == nil {
+		node.PropertyMap = make(map[string]any)
+	}
+
+	// If a "objectid" is present in the property map, verify it matches the top-level ID
+	if rawID, ok := node.PropertyMap["objectid"]; ok {
+		if propertyID, ok := rawID.(string); ok && !strings.EqualFold(propertyID, objectID) {
+			slog.Warn("objectid in property map does not match top-level id of node; skipping.",
+				slog.Any("properties.objectid", propertyID),
+				slog.String("expected objectid", objectID),
+			)
+			return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
+		}
+	}
+
+	// the first element in node.Labels determines which icon the UI renders for the node.
+	// it is critical to specify this information because a node can have up to 3 kinds.
+	node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+
+	converted.NodeProps = append(converted.NodeProps, node)
+	return nil
+}
+
+func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
+	ingestibleRel := ein.NewIngestibleRelationship(
+		ein.IngestibleEndpoint{
+			Value:   strings.ToUpper(entity.Start.Value),
+			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:    graph.StringKind(entity.Start.Kind),
+		},
+		ein.IngestibleEndpoint{
+			Value:   strings.ToUpper(entity.End.Value),
+			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:    graph.StringKind(entity.End.Kind),
+		},
+		ein.IngestibleRel{
+			RelProps: entity.Properties,
+			RelType:  graph.StringKind(entity.Kind),
+		},
+	)
+
+	converted.RelProps = append(converted.RelProps, ingestibleRel)
+	return nil
+}
 
 func convertComputerData(computer ein.Computer, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertComputerToNode(computer, ingestTime)
@@ -60,6 +118,7 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData, ingest
 
 	converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+
 }
 
 func convertUserData(user ein.User, converted *ConvertedData, ingestTime time.Time) {
@@ -76,7 +135,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 	baseNodeProp := ein.ConvertObjectToNode(group.IngestBase, ad.Group, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 
-	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source != "" && rel.Target != "" {
+	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source.Value != "" && rel.Target.Value != "" {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, group.Aces, group.ObjectIdentifier, ad.Group)...)
@@ -213,13 +272,13 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	props := ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy, ingestTime)
 	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
 		converted.RelProps = append(converted.RelProps, ein.NewIngestibleRelationship(
-			ein.IngestibleSource{
-				Source:     issuancePolicy.ObjectIdentifier,
-				SourceType: ad.IssuancePolicy,
+			ein.IngestibleEndpoint{
+				Value: issuancePolicy.ObjectIdentifier,
+				Kind:  ad.IssuancePolicy,
 			},
-			ein.IngestibleTarget{
-				Target:     issuancePolicy.GroupLink.ObjectIdentifier,
-				TargetType: issuancePolicy.GroupLink.Kind(),
+			ein.IngestibleEndpoint{
+				Value: issuancePolicy.GroupLink.ObjectIdentifier,
+				Kind:  issuancePolicy.GroupLink.Kind(),
 			},
 			ein.IngestibleRel{
 				RelProps: map[string]any{"isacl": false},
@@ -235,5 +294,4 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.IssuancePolicy); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)
 	}
-
 }

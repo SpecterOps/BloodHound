@@ -29,8 +29,11 @@ import (
 )
 
 func newUpdateKey(identityKind graph.Kind, identityProperties []string, updateKinds graph.Kinds) string {
-	keys := []string{
-		identityKind.String(),
+	var keys []string
+
+	// Defensive check: identityKind may be nil or zero value
+	if identityKind != nil {
+		keys = append(keys, identityKind.String())
 	}
 
 	keys = append(keys, identityProperties...)
@@ -108,8 +111,11 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 	}
 
 	for _, batch := range batchedUpdates {
-		output.WriteString("unwind $p as p merge (s:")
-		output.WriteString(batch.startIdentityKind.String())
+		output.WriteString("unwind $p as p merge (s")
+
+		if batch.startIdentityKind != nil {
+			output.WriteString(fmt.Sprintf(":%s", batch.startIdentityKind.String()))
+		}
 
 		if len(batch.startIdentityProperties) > 0 {
 			output.WriteString(" {")
@@ -130,8 +136,10 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 			output.WriteString("}")
 		}
 
-		output.WriteString(") merge (e:")
-		output.WriteString(batch.endIdentityKind.String())
+		output.WriteString(") merge (e")
+		if batch.endIdentityKind != nil {
+			output.WriteString(fmt.Sprintf(":%s", batch.endIdentityKind.String()))
+		}
 
 		if len(batch.endIdentityProperties) > 0 {
 			output.WriteString(" {")
@@ -178,6 +186,9 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 
 		if len(batch.startNodeKindsToAdd) > 0 {
 			for _, kindToAdd := range batch.startNodeKindsToAdd {
+				if kindToAdd == graph.EmptyKind {
+					continue // skip empty kinds
+				}
 				output.WriteString(", s:")
 				output.WriteString(kindToAdd.String())
 			}
@@ -185,6 +196,9 @@ func cypherBuildRelationshipUpdateQueryBatch(updates []graph.RelationshipUpdate)
 
 		if len(batch.endNodeKindsToAdd) > 0 {
 			for _, kindToAdd := range batch.endNodeKindsToAdd {
+				if kindToAdd == graph.EmptyKind {
+					continue // skip empty kinds
+				}
 				output.WriteString(", e:")
 				output.WriteString(kindToAdd.String())
 			}
@@ -244,8 +258,11 @@ func cypherBuildNodeUpdateQueryBatch(updates []graph.NodeUpdate) ([]string, []ma
 	}
 
 	for _, batch := range batchedUpdates {
-		output.WriteString("unwind $p as p merge (n:")
-		output.WriteString(batch.identityKind.String())
+		output.WriteString("unwind $p as p merge (n")
+
+		if batch.identityKind != nil {
+			output.WriteString(fmt.Sprintf(":%s", batch.identityKind.String()))
+		}
 
 		if len(batch.identityProperties) > 0 {
 			output.WriteString(" {")
