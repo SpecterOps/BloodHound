@@ -19,7 +19,7 @@ import { createMemoryHistory } from 'history';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../../mocks';
-import { render, screen } from '../../../test-utils';
+import { render, screen, waitFor } from '../../../test-utils';
 import { apiClient } from '../../../utils';
 import { MembersList } from './MembersList';
 
@@ -52,10 +52,14 @@ describe('MembersList', () => {
             { history }
         );
 
-        expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, 'name');
+        waitFor(() => {
+            expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, 'name');
+        });
 
         await user.click(screen.getByText('Objects', { exact: false }));
 
-        expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, '-name');
+        waitFor(() => {
+            expect(membersListSpy).toBeCalledWith('1', '1', 0, 129, '-name');
+        });
     });
 });

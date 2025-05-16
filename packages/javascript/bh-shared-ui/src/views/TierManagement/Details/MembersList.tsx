@@ -82,7 +82,6 @@ const getFetchCallback = (
     const tag = selectedTag || 1;
 
     const sort_by = sortOrder === 'asc' ? 'name' : '-name';
-    console.log(sortOrder);
 
     if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
