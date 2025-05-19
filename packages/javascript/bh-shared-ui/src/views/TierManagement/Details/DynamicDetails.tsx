@@ -98,7 +98,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Selector Status' value={data.disabled_by ? 'Disabled' : 'Enabled'} />
+                    <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>
             {getSelectorSeedType(data) === SeedTypeCypher && <Cypher preview initialInput={data.seeds[0].value} />}

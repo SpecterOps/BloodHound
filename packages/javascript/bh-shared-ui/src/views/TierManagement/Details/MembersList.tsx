@@ -85,15 +85,17 @@ const getFetchCallback = (
 
     if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupSelectorMembers(tag, selectedSelector, skip, limit, sort_by).then((res) => {
-                const response = {
-                    data: res.data.data['members'],
-                    skip: res.data.skip,
-                    limit: res.data.limit,
-                    total: res.data.count,
-                };
-                return response;
-            });
+            return apiClient
+                .getAssetGroupTagSelectorMembers(tag, selectedSelector, skip, limit, sort_by)
+                .then((res) => {
+                    const response = {
+                        data: res.data.data['members'],
+                        skip: res.data.skip,
+                        limit: res.data.limit,
+                        total: res.data.count,
+                    };
+                    return response;
+                });
         };
     } else {
         return ({ skip, limit }: { skip: number; limit: number }) => {

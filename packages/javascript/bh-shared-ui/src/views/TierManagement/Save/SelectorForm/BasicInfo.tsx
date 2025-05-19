@@ -30,12 +30,10 @@ import {
     Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { DateTime } from 'luxon';
 import { FC, useContext, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { apiClient } from '../../../../utils';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
@@ -47,7 +45,7 @@ import { SelectorFormInputs } from './types';
 const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
     if (id === '') return true;
     if (data === undefined) return true;
-    if (data.disabled_by !== null) return false;
+    if (data.disabled_at !== null) return false;
     return true;
 };
 
@@ -89,29 +87,30 @@ const BasicInfo: FC = () => {
         <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
             <CardContent>
-                <div className='mb-4'>
-                    <Label htmlFor='disabled_at' className='text-base font-bold'>
-                        Selector Status
-                    </Label>
-                    <div className='flex gap-2 items-center mt-2'>
-                        <Switch
-                            id='disabled_at'
-                            checked={enabled}
-                            defaultValue={ZERO_VALUE_API_DATE}
-                            disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
-                            {...register('disabled_at')}
-                            onCheckedChange={(checked: boolean) => {
-                                setEnabled((prev) => !prev);
-                                if (checked) {
-                                    setValue('disabled_at', ZERO_VALUE_API_DATE);
-                                } else {
-                                    setValue('disabled_at', DateTime.now().toISO());
-                                }
-                            }}
-                        />
-                        <p className='flex items-center ml-2'>{enabled ? 'Enabled' : 'Disabled'}</p>
+                {selectorId === '' ? null : (
+                    <div className='mb-4'>
+                        <Label htmlFor='disabled' className='text-base font-bold'>
+                            Selector Status
+                        </Label>
+                        <div className='flex gap-2 items-center mt-2'>
+                            <Switch
+                                id='disabled'
+                                checked={enabled}
+                                disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
+                                {...register('disabled')}
+                                onCheckedChange={(checked: boolean) => {
+                                    setEnabled((prev) => !prev);
+                                    if (checked) {
+                                        setValue('disabled', false);
+                                    } else {
+                                        setValue('disabled', true);
+                                    }
+                                }}
+                            />
+                            <p className='flex items-center ml-2'>{enabled ? 'Enabled' : 'Disabled'}</p>
+                        </div>
                     </div>
-                </div>
+                )}
                 <p className='font-bold'>
                     Tag: <span className='font-normal'>{tagQuery.data?.name}</span>
                 </p>

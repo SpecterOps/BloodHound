@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createBrowserHistory } from 'history';
 import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import {
     CreateSelectorRequest,
@@ -25,7 +26,6 @@ import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { useNotifications } from '../../../../providers';
 import { apiClient } from '../../../../utils';
 import BasicInfo from './BasicInfo';
@@ -71,6 +71,7 @@ const useCreateSelector = (tagId: string | number | undefined) => {
 const SelectorForm: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const history = createBrowserHistory();
     const navigate = useNavigate();
 
     const { addNotification } = useNotifications();
@@ -99,28 +100,25 @@ const SelectorForm: FC = () => {
                 if (!tagId || !selectorId)
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
-                if (updatedValues.disabled_at === 'on') {
-                    updatedValues.disabled_at = ZERO_VALUE_API_DATE;
+                // 'on' means the switch is 'checked' which means enabled which means disabled is false
+                if (updatedValues.disabled === 'on') {
+                    updatedValues.disabled = false;
                 }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
 
-                navigate(`/tier-management/details/tier/${tagId}`);
+                history.back();
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
         },
-        [tagId, selectorId, navigate, patchSelectorMutation, addNotification]
+        [tagId, selectorId, patchSelectorMutation, addNotification, history]
     );
 
     const handleCreateSelector = useCallback(
         async (values: CreateSelectorRequest) => {
             try {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
-
-                if (values.disabled_at === 'on') {
-                    values.disabled_at = ZERO_VALUE_API_DATE;
-                }
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
 
