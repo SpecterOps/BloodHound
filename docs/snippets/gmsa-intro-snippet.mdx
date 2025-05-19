@@ -1,0 +1,157 @@
+## Overview of gMSAs
+
+Group Managed Service Accounts (gMSA) are managed domain accounts that provide automatic password management, simplified service principal name (SPN) management, and the ability to delegate the management to other objects.
+
+Detailed software requirements from Microsoft are available [here](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh831782(v=ws.11)#software-requirements).
+
+Microsoft gMSA documentation is available [here](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh831782(v=ws.11)).
+
+## Create a gMSA account
+
+To create a gMSA account, start by preparing the domain. 
+
+1.  Log into a domain controller within the domain you want to create a gMSA.
+2.  To validate whether the domain has a KDS Root Key configured, run:
+
+    ```
+    Get-KdsRootKey
+    ```
+
+    If there's no result returned, the KDS Root Key has not been configured in the domain. Continue on to step 3. 
+
+    If there is a result returned, the KDS Root Key has already been configured in the domain. Skip step 3 and move on to [Create the gMSA and password read group](#create-the-gmsa-and-password-read-group). 
+
+    <Frame>
+        <img src="/assets/image-88.png" alt=""/>
+    </Frame>    
+
+3.  Create the KDS Root Key. 
+
+    For a production environment, run: 
+
+    ```
+    Add-KdsRootKey -EffectiveImmediately
+    ```
+    <Frame>
+        <img src="/assets/image-89.png" alt=""/>
+    </Frame>
+
+    For a test environment, make the key available for immediate use by running:
+
+    ```
+    Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))  
+    ```
+## Create the gMSA and password read group
+
+Perform these steps from/against a writeable Domain Controller.
+
+1.  Create a gMSA password read group for computers that should have access to the gMSA password. 
+    
+    Browse to the desired location in Users and Computers and create the group.
+    Alternatively, use this template to create the group using PowerShell:
+
+```json
+    $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
+    $pwdReadOUDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of OU to create the password read group in
+
+    New-ADGroup `
+    -Name "$($gmsaName)_pwdRead" `
+    -GroupScope Global `
+    -GroupCategory Security `
+    -Path $pwdReadOUDN `
+    -Description "This group grants the rights to retrieve the password of the BloodHound data collector (SharpHound) gMSA '$gmsaName'." `
+    -PassThru
+```
+<Frame>
+  <img src="/assets/image-90.png" alt=""/>
+</Frame>
+
+2.  Add the SharpHound {word} server that performs the Sharphound collections as a member of the gMSA password read group. This allows it to access the password of the gMSA and run the service.
+
+    Add the computer to the group in Users and Computers.
+    Alternatively, use this template to add group membership using PowerShell:
+
+    ```json
+        $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
+        $shServerDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of the SharpHound Enterprise server
+
+        Add-ADGroupMember `
+        -Identity "$($gmsaName)_pwdRead" `
+        -Members $shServerDN `
+        -PassThru
+    ```
+    <Frame>
+        <img src="/assets/image-91.png" alt=""/>
+    </Frame>
+
+    When viewing the changes on a Windows server with the GUI enabled, you can see the OUs and the t0_gMSA_SHS_pwdRead group you created.
+
+3.  Create the gMSA and allow the password read group to retrieve its password.
+
+    On a Domain Controller, use this template to create the gMSA and set the retrieve right using PowerShell:
+
+    ```json
+        $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
+        $gmsaOUDN = "&lt;DISGINGUISHED_NAME&gt;" # Distinguished Name of OU to create the gMSA in
+
+        New-ADServiceAccount -Name $gmsaName `
+        -Description "SharpHound service account for BloodHound" `
+        -DNSHostName "$($gmsaName).$((Get-ADDomain).DNSRoot)" `
+        -ManagedPasswordIntervalInDays 32 `
+        -PrincipalsAllowedToRetrieveManagedPassword "$($gmsaName)_pwdRead" `
+        -Enabled $True `
+        -AccountNotDelegated $True `
+        -KerberosEncryptionType AES128,AES256 `
+        -Path $gmsaOUDN `
+        -PassThru
+    ```
+
+    <Tip>If you receive the error `"_New-ADServiceAccount : Key does not exist_"`, try again in 10 hours. This allows all Domain Controllers to converge AD replication of the KDS root key.</Tip>
+
+    <Frame>
+        <img src="/assets/image-92.png" alt=""/>
+    </Frame>
+
+## Prepare the SharpHound {word} server
+
+1.  Restart the SharpHound Enterprise server so that the server's membership of the \`pwdRead\` group takes effect.
+2.  Grant the gMSA the "Log on as a service" User Rights Assignment on the SharpHound {word} server. This can be done through \`secpol.msc\` or policy deployment methods like a GPO.
+3.  (Optional) Test that the SharpHound {word} server can retrieve the gMSA password. See [Test the gMSA](#test-the-gmsa).
+
+## Test the gMSA
+
+Optionally test the gMSA server to make sure that the gMSA is working. 
+
+1.  Check the status of the RSAT PowerShell module. On the SharpHound Enterprise server, open a PowerShell as an Administrator and run:
+
+    ```json
+    Get-WindowsCapability -Name RSAT*
+    ```
+    
+    <Frame>
+        <img src="/assets/image-93.png" alt=""/>
+    </Frame>
+
+    If the Install State shows "Installed", skip to step 2, otherwise run:
+
+    ```
+    Get-WindowsCapability -Name RSAT* -Online | Add-WindowsCapability -Online
+    ```
+   
+    <Frame>
+        <img src="/assets/image-94.png" alt=""/>
+    </Frame>
+
+2.  In the elevated PowerShell, test that the SharpHound server can retrieve the gMSA password by running:
+
+    ```json
+        $gmsaName = "t0_gMSA_SHS" # Name of the gMSA
+
+        Test-ADServiceAccount -Identity $gmsaName
+    ```
+   
+    <Frame>
+        <img src="/assets/image-95.png" alt=""/>
+    </Frame>
+
+The test is successful if the command responds with `True`.
