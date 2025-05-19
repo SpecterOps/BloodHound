@@ -17,16 +17,8 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
-import {
-    Icon,
-    collapseAllSections,
-    useExploreParams,
-    useFeatureFlag,
-    useHeaderStyles,
-    useObjectInfoPanelContext,
-} from 'bh-shared-ui';
+import { Icon, useExploreParams, useHeaderStyles, useObjectInfoPanelContext } from 'bh-shared-ui';
 import React from 'react';
-import { useAppDispatch } from 'src/store';
 
 export interface HeaderProps {
     name: string;
@@ -36,20 +28,15 @@ export interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
-    const dispatch = useAppDispatch();
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams } = useExploreParams();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
-        if (backButtonFlag?.enabled) {
-            setExploreParams({
-                expandedPanelSections: [],
-            });
-        } else {
-            dispatch(collapseAllSections());
-        }
+
+        setExploreParams({
+            expandedPanelSections: [],
+        });
     };
 
     return (
