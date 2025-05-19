@@ -3544,53 +3544,78 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 func TestManagementResource_GetPermission(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseBody string
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
 		name         string
-		permissionID string
-		setupMocks   func(*testing.T, *mocks.MockDatabase)
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name:         "Error: Invalid permission ID format - Bad Request",
-			permissionID: "invalid",
-			setupMocks:   func(t *testing.T, mockDB *mocks.MockDatabase) {},
+			name: "Error: Invalid permission ID format - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"permission_id": "invalid",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
 			},
 		},
 		{
-			name:         "Error: Permission not found - Internal Server Error",
-			permissionID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetPermission(gomock.Any(), gomock.Any()).Return(model.Permission{}, sql.ErrNoRows)
+			name: "Error: Database Error GetPermission - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"permission_id": "123",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetPermission(req.Context(), 123).Return(model.Permission{}, sql.ErrNoRows)
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
-			name:         "Error: Database error - Internal Server Error",
-			permissionID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetPermission(gomock.Any(), gomock.Any()).Return(model.Permission{}, errors.New("database error"))
+			name: "Success: Permission found - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"permission_id": "123",
+				}
+
+				return mux.SetURLVars(request, param)
 			},
-			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			},
-		},
-		{
-			name:         "Success: Permission found - OK",
-			permissionID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				expectedPermission := model.Permission{
 					Authority: "read:users",
 					Name:      "Read Users",
@@ -3598,11 +3623,12 @@ func TestManagementResource_GetPermission(t *testing.T) {
 						ID: 123,
 					},
 				}
-				mockDB.EXPECT().GetPermission(gomock.Any(), gomock.Any()).Return(expectedPermission, nil)
+				mock.mockDatabase.EXPECT().GetPermission(req.Context(), 123).Return(expectedPermission, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseBody: `{"data":{"authority":"read:users","name":"Read Users","id":123}}`,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseBody:   `{"data":{"authority":"read:users", "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "id":123, "name":"Read Users", "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3610,43 +3636,27 @@ func TestManagementResource_GetPermission(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			endpointURL := fmt.Sprintf("/api/v2/permissions/%s", testCase.permissionID)
-			req, err := http.NewRequest("GET", endpointURL, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariablePermissionID: testCase.permissionID,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			response := httptest.NewRecorder()
-			resources.GetPermission(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			if testCase.name == "Success: Permission found - OK" {
-				var responseWrapper struct {
-					Data model.Permission `json:"data"`
-				}
-				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
+			resources.GetPermission(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
-				assert.Equal(t, int32(123), responseWrapper.Data.ID)
-				assert.Equal(t, "read:users", responseWrapper.Data.Authority)
-				assert.Equal(t, "Read Users", responseWrapper.Data.Name)
-			} else {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
