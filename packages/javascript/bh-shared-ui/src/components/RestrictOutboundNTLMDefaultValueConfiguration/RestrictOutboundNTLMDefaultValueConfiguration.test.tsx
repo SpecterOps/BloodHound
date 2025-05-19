@@ -39,7 +39,7 @@ describe('RestrictOutboundNTLMDefaultValueConfiguration', () => {
                 ctx.json({
                     data: [
                         {
-                            key: ConfigurationKey.Citrix,
+                            key: ConfigurationKey.RestrictOutboundNTLMDefaultValue,
                             value: {
                                 enabled: serverState.isRestrictOutboundNTLMDefaultValueConfigurationEnabled,
                             },
