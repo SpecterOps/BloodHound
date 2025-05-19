@@ -23,7 +23,7 @@ import ConfirmRestrictOutboundNTLMDefaultDialog from './RestrictOutboundNTLMDefa
 export const configurationData = {
     title: 'Missing Restrict Outbound NTLM Registry will Default to Enabled',
     description:
-        'When enabled, any computer\'s Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn\'t exist on that computer for NTLM edge processing.  When disabled, treat the missing registry as Not Restricting.',
+        'When enabled, any computer\'s Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn\'t exist on that computer for NTLM edge processing. When disabled, treat the missing registry as Not Restricting.',
 };
 
 const RestrictOutboundNTLMDefaultValueConfiguration: FC = () => {
