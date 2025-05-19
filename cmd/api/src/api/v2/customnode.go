@@ -73,7 +73,7 @@ func validateConfig(config model.CustomNodeKindConfig) error {
 	if config.Icon.Type != "font-awesome" {
 		return fmt.Errorf("custom node kind config type (%s) is not supported", config.Icon.Type)
 	} else if !validColorString.MatchString(config.Icon.Color) && config.Icon.Color != "" {
-		return fmt.Errorf("custom node kind config color (%s) is not invalid", config.Icon.Color)
+		return fmt.Errorf("custom node kind config color (%s) is invalid", config.Icon.Color)
 	}
 
 	return nil
