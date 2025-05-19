@@ -31,7 +31,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const membersListSpy = vi.spyOn(apiClient, 'getAssetGroupSelectorMembers');
+const membersListSpy = vi.spyOn(apiClient, 'getAssetGroupTagSelectorMembers');
 
 describe('MembersList', () => {
     it('sorting the list updates the list by changing the call made to the API', async () => {
