@@ -18,12 +18,14 @@ package datapipe_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type dataTagAssertion struct {
@@ -31,18 +33,41 @@ type dataTagAssertion struct {
 	err       error
 }
 
-func TestSeekToDataTag(t *testing.T) {
-	assertions := []dataTagAssertion{
+func TestSeekToKey(t *testing.T) {
+	t.Run("seek to data tag", func(t *testing.T) {
+		key := "data"
+		assertions := generateAssertionsForKey(key)
+
+		for _, assertion := range assertions {
+			r := strings.NewReader(assertion.rawString)
+			j := json.NewDecoder(r)
+
+			err := datapipe.SeekToKey(j, key, 1)
+			assert.ErrorIs(t, err, assertion.err)
+		}
+	})
+
+	t.Run("seek to nodes tag at depth 2", func(t *testing.T) {
+		r := strings.NewReader(`{"graph":{"nodes":[]}}`)
+		j := json.NewDecoder(r)
+
+		err := datapipe.SeekToKey(j, "nodes", 2)
+		require.Nil(t, err)
+	})
+}
+
+func generateAssertionsForKey(key string) []dataTagAssertion {
+	return []dataTagAssertion{
 		{
-			rawString: "{\"data\": []}",
+			rawString: fmt.Sprintf("{\"%s\": []}", key),
 			err:       nil,
 		},
 		{
-			rawString: "{\"data\": {}}",
+			rawString: fmt.Sprintf("{\"%s\": {}}", key),
 			err:       ingest.ErrInvalidDataTag,
 		},
 		{
-			rawString: "{\"data\": ]}",
+			rawString: fmt.Sprintf("{\"%s\": ]}", key),
 			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
@@ -54,7 +79,7 @@ func TestSeekToDataTag(t *testing.T) {
 			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
-			rawString: "{\"data\": \"oops\"}",
+			rawString: fmt.Sprintf("{\"%s\": \"oops\"}", key),
 			err:       ingest.ErrInvalidDataTag,
 		},
 		{
@@ -62,20 +87,12 @@ func TestSeekToDataTag(t *testing.T) {
 			err:       ingest.ErrJSONDecoderInternal,
 		},
 		{
-			rawString: `{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			rawString: fmt.Sprintf(`{"meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "%s": []}`, key),
 			err:       nil,
 		},
 		{
-			rawString: `{"test": {"data": {}}, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "data": []}`,
+			rawString: fmt.Sprintf(`{"test": {"%s": {}}, "meta": {"methods": 0, "type": "sessions", "count": 0, "version": 5}, "%s": []}`, key, key),
 			err:       nil,
 		},
-	}
-
-	for _, assertion := range assertions {
-		r := strings.NewReader(assertion.rawString)
-		j := json.NewDecoder(r)
-
-		err := datapipe.SeekToDataTag(j)
-		assert.ErrorIs(t, err, assertion.err)
 	}
 }

@@ -126,6 +126,9 @@ func (s Kinds) Strings() []string {
 // ContainsOneOf returns true if the Kinds contains one of the given Kind types or false if it does not.
 func (s Kinds) ContainsOneOf(others ...Kind) bool {
 	for _, kind := range s {
+		if kind == nil {
+			continue
+		}
 		if kind.Is(others...) {
 			return true
 		}

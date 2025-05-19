@@ -183,7 +183,7 @@ func (s *NodeUpdateBatch) Add(update graph.NodeUpdate) (*Future[graph.ID], error
 	if key, err := update.Key(); err != nil {
 		return nil, err
 	} else {
-		update.Node.AddKinds(update.IdentityKind)
+		update.Node.AddKinds(update.Node.Kinds...)
 
 		if len(s.IdentityProperties) == 0 {
 			s.IdentityProperties = make([]string, len(update.IdentityProperties))
