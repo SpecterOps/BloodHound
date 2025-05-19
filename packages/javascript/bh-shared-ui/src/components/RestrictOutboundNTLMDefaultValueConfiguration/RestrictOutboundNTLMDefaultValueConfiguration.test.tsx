@@ -19,13 +19,15 @@ import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from '../../test-utils';
-import CitrixRDPConfiguration, { configurationData } from './RestrictOutboundNTLMDefaultValueConfiguration';
+import RestrictOutboundNTLMDefaultValueConfiguration, {
+    configurationData,
+} from './RestrictOutboundNTLMDefaultValueConfiguration';
 import { dialogTitle } from './RestrictOutboundNTLMDefaultValueConfirmDialog';
 
-describe('CitrixRDPConfiguration', () => {
+describe('RestrictOutboundNTLMDefaultValueConfiguration', () => {
     const setInitialServerState = (savedConfigurationValue?: boolean) => {
         return {
-            isCitrixRDPConfigurationEnabled: savedConfigurationValue || false,
+            isRestrictOutboundNTLMDefaultValueConfigurationEnabled: savedConfigurationValue || false,
         };
     };
 
@@ -39,7 +41,7 @@ describe('CitrixRDPConfiguration', () => {
                         {
                             key: ConfigurationKey.Citrix,
                             value: {
-                                enabled: serverState.isCitrixRDPConfigurationEnabled,
+                                enabled: serverState.isRestrictOutboundNTLMDefaultValueConfigurationEnabled,
                             },
                         },
                     ],
@@ -48,7 +50,7 @@ describe('CitrixRDPConfiguration', () => {
         }),
         rest.put(`/api/v2/config`, async (req, res, ctx) => {
             const body = await req.json();
-            serverState.isCitrixRDPConfigurationEnabled = !!body['value']['enabled'];
+            serverState.isRestrictOutboundNTLMDefaultValueConfigurationEnabled = !!body['value']['enabled'];
             return res(ctx.json({ data: body }));
         })
     );
@@ -59,7 +61,7 @@ describe('CitrixRDPConfiguration', () => {
     describe('Initial render', () => {
         beforeEach(() => {
             serverState = setInitialServerState();
-            render(<CitrixRDPConfiguration />);
+            render(<RestrictOutboundNTLMDefaultValueConfiguration />);
         });
         it('renders the component with all info and switch off', () => {
             const panelTitle = screen.getByText(configurationData.title);
@@ -75,7 +77,7 @@ describe('CitrixRDPConfiguration', () => {
     describe('Click on switch to enable', () => {
         beforeEach(() => {
             serverState = setInitialServerState();
-            render(<CitrixRDPConfiguration />);
+            render(<RestrictOutboundNTLMDefaultValueConfiguration />);
         });
         it('on clicking switch shows modal and when clicking cancel closes it and switch stays disabled', async () => {
             const panelSwitch = screen.getByRole('switch');
@@ -84,7 +86,9 @@ describe('CitrixRDPConfiguration', () => {
             await user.click(panelSwitch);
 
             const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
-            const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
+            const panelDialogDescription = screen.getByText(
+                /missing restrict outbound ntlm properties will be treated as enabled/i
+            );
 
             expect(panelSwitch).toBeInTheDocument();
             expect(panelSwitch).not.toBeChecked();
@@ -107,7 +111,9 @@ describe('CitrixRDPConfiguration', () => {
             await user.click(panelSwitch);
 
             const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
-            const panelDialogDescription = screen.getByText(/analysis has been added with citrix configuration/i);
+            const panelDialogDescription = screen.getByText(
+                /missing restrict outbound ntlm properties will be treated as enabled/i
+            );
 
             expect(panelSwitch).toBeInTheDocument();
             expect(panelSwitch).not.toBeChecked();
@@ -127,7 +133,7 @@ describe('CitrixRDPConfiguration', () => {
         beforeEach(() => {
             const savedConfigurationValue = true;
             serverState = setInitialServerState(savedConfigurationValue);
-            render(<CitrixRDPConfiguration />);
+            render(<RestrictOutboundNTLMDefaultValueConfiguration />);
         });
         it('on clicking switch shows modal and when clicking cancel closes it and switch stays enabled', async () => {
             const panelSwitch = screen.getByRole('switch');
@@ -136,7 +142,9 @@ describe('CitrixRDPConfiguration', () => {
             await user.click(panelSwitch);
 
             const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
-            const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
+            const panelDialogDescription = screen.getByText(
+                /missing restrict outbound ntlm properties will be treated as disabled/i
+            );
 
             expect(panelSwitch).toBeInTheDocument();
             expect(panelSwitch).toBeChecked();
@@ -158,7 +166,9 @@ describe('CitrixRDPConfiguration', () => {
             await user.click(panelSwitch);
 
             const panelDialogTitle = await screen.findByText(dialogTitle, { exact: false });
-            const panelDialogDescription = screen.getByText(/analysis has been removed with citrix configuration/i);
+            const panelDialogDescription = screen.getByText(
+                /missing restrict outbound ntlm properties will be treated as disabled/i
+            );
 
             expect(panelSwitch).toBeInTheDocument();
             expect(panelSwitch).toBeChecked();

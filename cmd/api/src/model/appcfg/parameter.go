@@ -71,11 +71,12 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey string) bool {
 	validKeys := map[string]bool{
-		PasswordExpirationWindow: true,
-		Neo4jConfigs:             true,
-		PruneTTL:                 true,
-		CitrixRDPSupportKey:      true,
-		ReconciliationKey:        true,
+		PasswordExpirationWindow:         true,
+		Neo4jConfigs:                     true,
+		PruneTTL:                         true,
+		CitrixRDPSupportKey:              true,
+		ReconciliationKey:                true,
+		RestrictOutboundNTLMDefaultValue: true,
 	}
 
 	return validKeys[parameterKey]
@@ -104,6 +105,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &CitrixRDPSupport{}
 	case ReconciliationKey:
 		v = &ReconciliationParameter{}
+	case RestrictOutboundNTLMDefaultValue:
+		v = &RestrictOutboundNTLMDefault{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}

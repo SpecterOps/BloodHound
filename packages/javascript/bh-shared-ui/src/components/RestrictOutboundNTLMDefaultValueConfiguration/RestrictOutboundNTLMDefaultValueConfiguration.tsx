@@ -18,12 +18,12 @@ import { FC, useState } from 'react';
 import { useGetConfiguration, useUpdateConfiguration } from '../../hooks';
 import { useNotifications } from '../../providers';
 import CardWithSwitch from '../CardWithSwitch';
-import ConfirmCitrixRDPDialog from './RestrictOutboundNTLMDefaultValueConfirmDialog';
+import ConfirmRestrictOutboundNTLMDefaultDialog from './RestrictOutboundNTLMDefaultValueConfirmDialog';
 
 export const configurationData = {
-    title: 'Default Restrict Outbound NTLM Property Value',
+    title: 'Missing Restrict Outbound NTLM Registry will Default to Enabled',
     description:
-        ''
+        "When enabled, any computer's Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn't exist on that computer for NTLM edge processing.  When disabled, treat the missing registry as Not Restricting.",
 };
 
 const RestrictOutboundNTLMDefaultValueConfiguration: FC = () => {
@@ -33,13 +33,17 @@ const RestrictOutboundNTLMDefaultValueConfiguration: FC = () => {
     const { data, isFetching } = useGetConfiguration();
     const updateConfiguration = useUpdateConfiguration();
 
-    const restrictOutboundNTLMDefaultValueConfigurationEnabled = parseRestrictOutboundNTLMDefaultValueConfiguration(data)?.value.enabled;
+    const restrictOutboundNTLMDefaultValueConfigurationEnabled =
+        parseRestrictOutboundNTLMDefaultValueConfiguration(data)?.value.enabled;
 
     // optimistically update switch state during pending mutations
     const haveUnsettledRequests = updateConfiguration.isLoading || isFetching;
 
     const computeSwitchState = (): boolean => {
-        if (haveUnsettledRequests && updateConfiguration.variables?.key === ConfigurationKey.RestrictOutboundNTLMDefaultValue) {
+        if (
+            haveUnsettledRequests &&
+            updateConfiguration.variables?.key === ConfigurationKey.RestrictOutboundNTLMDefaultValue
+        ) {
             return updateConfiguration.variables?.value.enabled;
         } else {
             return !!restrictOutboundNTLMDefaultValueConfigurationEnabled;
@@ -76,7 +80,7 @@ const RestrictOutboundNTLMDefaultValueConfiguration: FC = () => {
                 disableSwitch={haveUnsettledRequests}
                 onSwitchChange={toggleShowDialog}
             />
-            <ConfirmCitrixRDPDialog
+            <ConfirmRestrictOutboundNTLMDefaultDialog
                 open={isOpenDialog}
                 futureSwitchState={!switchState}
                 onCancel={toggleShowDialog}

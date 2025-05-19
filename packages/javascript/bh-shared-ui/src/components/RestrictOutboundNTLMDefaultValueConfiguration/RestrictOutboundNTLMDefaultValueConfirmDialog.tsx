@@ -25,22 +25,25 @@ type RestrictOutboundNTLMDefaultValueConfirmDialogProps = {
 };
 
 export const dialogTitle = 'Confirm environment configuration';
-const enabledDialogDescription =
-    'Missing Restrict Outbound NTLM properties will be treated as Enabled.';
-const disabledDialogDescription =
-    'Missing Restrict Outbound NTLM properties will be treated as Disabled.';
+const enabledDialogDescription = 'Missing Restrict Outbound NTLM properties will be treated as Enabled.';
+const disabledDialogDescription = 'Missing Restrict Outbound NTLM properties will be treated as Disabled.';
 
-const RestrictOutboundNTLMDefaultValueConfirmDialog: FC<RestrictOutboundNTLMDefaultValueConfirmDialogProps> = ({ open, futureSwitchState, onCancel, onConfirm }) => {
+const RestrictOutboundNTLMDefaultValueConfirmDialog: FC<RestrictOutboundNTLMDefaultValueConfirmDialogProps> = ({
+    open,
+    futureSwitchState,
+    onCancel,
+    onConfirm,
+}) => {
     return (
         <Dialog
             open={open}
             maxWidth='sm'
-            aria-labelledby='citrix-rdp-alert-dialog-title'
-            aria-describedby='citrix-rdp-alert-dialog-description'>
-            <DialogTitle id='citrix-rdp-alert-dialog-title' sx={{ fontSize: '1.25rem' }}>
+            aria-labelledby='restrict-outbound-ntlm-default-alert-dialog-title'
+            aria-describedby='restrict-outbound-ntlm-default-alert-dialog-description'>
+            <DialogTitle id='restrict-outbound-ntlm-default-alert-dialog-title' sx={{ fontSize: '1.25rem' }}>
                 {dialogTitle}
             </DialogTitle>
-            <DialogContent id='citrix-rdp-alert-dialog-description' sx={{ paddingBottom: 0 }}>
+            <DialogContent id='restrict-outbound-ntlm-default-alert-dialog-description' sx={{ paddingBottom: 0 }}>
                 <Typography sx={{ paddingBottom: '1rem', whiteSpace: 'break-spaces', fontSize: '0.75rem' }}>
                     {futureSwitchState ? enabledDialogDescription : disabledDialogDescription}
                 </Typography>
