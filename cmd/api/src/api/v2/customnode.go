@@ -33,7 +33,7 @@ const (
 	CustomNodeKindParameter = "kind_name"
 )
 
-var validColorString = regexp.MustCompile("^#([a-f0-9]{6}|[a-f0-9]{3})$")
+var validColorString = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
