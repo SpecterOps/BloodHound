@@ -14,27 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as bhSharedUI from 'bh-shared-ui';
 import { render } from 'src/test-utils';
 import CopyMenuItem from './CopyMenuItem';
 
+const useExploreSelectedItemSpy = vi.spyOn(bhSharedUI, 'useExploreSelectedItem');
+
 describe('CopyMenuItem', () => {
     const selectedNode = {
-        name: 'foo',
+        label: 'foo',
     };
 
-    beforeEach(() => {
-        render(<CopyMenuItem />, {
-            initialState: {
-                entityinfo: {
-                    selectedNode,
-                },
-            },
-        });
-    });
+    const setup = () => {
+        useExploreSelectedItemSpy.mockReturnValue({ selectedItemQuery: { data: selectedNode } } as any);
+        const screen = render(<CopyMenuItem />);
+        return screen;
+    };
 
     it('handles copying a display name', async () => {
+        const screen = setup();
+
         const user = userEvent.setup();
 
         const copyOption = screen.getByRole('menuitem', { name: /copy/i });
@@ -48,6 +48,6 @@ describe('CopyMenuItem', () => {
         await user.click(displayNameOption);
 
         const clipboardText = await navigator.clipboard.readText();
-        expect(clipboardText).toBe(selectedNode.name);
+        expect(clipboardText).toBe(selectedNode.label);
     });
 });
