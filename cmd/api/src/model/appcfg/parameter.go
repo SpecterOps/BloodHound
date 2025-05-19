@@ -37,8 +37,9 @@ const (
 	PasswordExpirationWindow        = "auth.password_expiration_window"
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
-	Neo4jConfigs        = "neo4j.configuration"
-	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
+	Neo4jConfigs                     = "neo4j.configuration"
+	CitrixRDPSupportKey              = "analysis.citrix_rdp_support"
+	RestrictOutboundNTLMDefaultValue = "analysis.restrict_outbound_ntlm_default_value"
 
 	PruneTTL                      = "prune.ttl"
 	DefaultPruneBaseTTL           = time.Hour * 24 * 7
@@ -217,6 +218,24 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+// RestrictOutboundNTLMDefault
+
+type RestrictOutboundNTLMDefault struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetRestrictOutboundNTLMDefaultValue(ctx context.Context, service ParameterService) bool {
+	var result RestrictOutboundNTLMDefault
+
+	if cfg, err := service.GetConfigurationParameter(ctx, RestrictOutboundNTLMDefaultValue); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch RestrictOutboundNTLMDefaultValue configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid RestrictOutboundNTLMDefaultValue configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled

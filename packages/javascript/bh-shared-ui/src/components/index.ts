@@ -156,6 +156,9 @@ export { default as PasswordResetForm } from './PasswordResetForm';
 export * from './PrebuiltSearchList';
 export { default as PrebuiltSearchList } from './PrebuiltSearchList';
 
+export * from './RestrictOutboundNTLMDefaultValueConfiguration';
+export { default as RestrictOutboundNTLMDefaultValueConfiguration } from './RestrictOutboundNTLMDefaultValueConfiguration'
+
 export * from './SSOProviderInfoPanel';
 export { default as SSOProviderInfoPanel } from './SSOProviderInfoPanel';
 
