@@ -45,10 +45,10 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -61,7 +61,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected edge_type parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -79,7 +79,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected source_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -97,7 +97,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected target_node parameter to be set."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -115,7 +115,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected only one edge_type."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -133,7 +133,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected only one source_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -151,7 +151,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Expected only one target_node."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -169,7 +169,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid edge requested: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -187,7 +187,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid value for startID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -205,7 +205,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid value for endID: test"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -223,7 +223,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -244,7 +244,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
@@ -266,7 +266,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
@@ -288,7 +288,7 @@ func TestManagementResource_GetEdgeComposition(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks, request)
 
 			resources := v2.Resources{
 				Graph: mocks.mockGraph,
