@@ -39,6 +39,13 @@ get:
         application/json:
           schema:
             $ref: './../schemas/model.custom-node.yaml'
+          example:
+            id: 1
+            kindName: "KindA"
+            config:
+              type: "font-awesome"
+              name: "house"
+              color: "#FFFFFF"
     401:
       $ref: './../responses/unauthorized.yaml'
     404:
@@ -64,6 +71,11 @@ put:
           properties:
             config:
               $ref: './../schemas/model.custom-node.config.yaml'
+        example:
+          config:
+            type: "font-awesome"
+            name: "house"
+            color: "#333"
   responses:
     200:
       description: OK

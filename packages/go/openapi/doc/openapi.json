@@ -2767,7 +2767,27 @@
                       }
                     }
                   }
-                }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "kindName": "KindA",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "kindName": "KindB",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -2799,6 +2819,24 @@
                     "type": "object",
                     "additionalProperties": {
                       "$ref": "#/components/schemas/model.custom-node.config"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "custom_types": {
+                  "KindA": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  "KindB": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
                     }
                   }
                 }
@@ -2889,6 +2927,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/model.custom-node"
+                },
+                "example": {
+                  "id": 1,
+                  "kindName": "KindA",
+                  "config": {
+                    "type": "font-awesome",
+                    "name": "house",
+                    "color": "#FFFFFF"
+                  }
                 }
               }
             }
@@ -2923,6 +2970,13 @@
                   "config": {
                     "$ref": "#/components/schemas/model.custom-node.config"
                   }
+                }
+              },
+              "example": {
+                "config": {
+                  "type": "font-awesome",
+                  "name": "house",
+                  "color": "#333"
                 }
               }
             }

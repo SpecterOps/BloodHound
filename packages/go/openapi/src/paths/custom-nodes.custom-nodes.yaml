@@ -38,6 +38,19 @@ get:
                 type: array
                 items:
                   $ref: './../schemas/model.custom-node.yaml'
+          example:
+            - id: 1
+              kindName: "KindA"
+              config:
+                type: "font-awesome"
+                name: "house"
+                color: "#FFFFFF"
+            - id: 2
+              kindName: "KindB"
+              config:
+                type: "font-awesome"
+                name: "coffee"
+                color: "#000000"
     401:
       $ref: './../responses/unauthorized.yaml'
     500:
@@ -63,6 +76,18 @@ post:
               type: object
               additionalProperties:
                 $ref: './../schemas/model.custom-node.config.yaml'
+        example:
+          custom_types:
+            KindA:
+              icon:
+                type: "font-awesome"
+                name: "house"
+                color: "#FFFFFF"
+            KindB:
+              icon:
+                type: "font-awesome"
+                name: "coffee"
+                color: "#000000"
   responses:
     201:
       description: CREATED
