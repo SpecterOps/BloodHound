@@ -81,6 +81,16 @@ func (s *Parameter) IsValidKey(parameterKey string) bool {
 	return validKeys[parameterKey]
 }
 
+func (s *Parameter) IsProtectedKey() bool {
+	protectedKeys := map[string]bool{
+		ScheduledAnalysis:    true,
+		TrustedProxiesConfig: true,
+		FedEULACustomTextKey: true,
+	}
+
+	return protectedKeys[s.Key]
+}
+
 func (s *Parameter) Validate() utils.Errors {
 	// validate the base parameter
 	var (
