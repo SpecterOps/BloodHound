@@ -17,3 +17,6 @@
 -- is_generic column not actually needed.
 ALTER TABLE ingest_tasks
 DROP COLUMN IF EXISTS is_generic;
+
+-- Add EULA custom text
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('eula.customText', 'EULA Custom Text', 'This configuration parameter overrides the EULA agreement text with provided text.', '{"customText": ""}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
