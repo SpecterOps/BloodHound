@@ -27,7 +27,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/src/serde"
@@ -163,13 +162,8 @@ type Configuration struct {
 	DisableIngest                bool                      `json:"disable_ingest"`
 	DisableMigrations            bool                      `json:"disable_migrations"`
 	GraphQueryMemoryLimit        uint16                    `json:"graph_query_memory_limit"`
-	AuthSessionTTLHours          int                       `json:"auth_session_ttl_hours"`
 	EnableTextLogger             bool                      `json:"enable_text_logger"`
 	RecreateDefaultAdmin         bool                      `json:"recreate_default_admin"`
-}
-
-func (s Configuration) AuthSessionTTL() time.Duration {
-	return time.Hour * time.Duration(s.AuthSessionTTLHours)
 }
 
 func (s Configuration) TempDirectory() string {
