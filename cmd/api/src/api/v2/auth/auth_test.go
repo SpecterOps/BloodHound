@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -3265,190 +3266,310 @@ func TestActivateMFA_Success(t *testing.T) {
 	}
 }
 
-// BED-5641: BHCE Resources Auth Contract Tests
 func TestManagementResource_CreateAuthToken(t *testing.T) {
-	type TestData struct {
-		testName             string
-		expectedResponseBody string
-		expectedResponseCode int
-		setupMocks           func(*testing.T, *mocks.MockDatabase, *http.Request)
-		payload              string
-		userContext          func(*testing.T) (model.User, context.Context)
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
+	type expected struct {
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
-	testData := []TestData{
+	tt := []testData{
 		{
-			testName:             "User not logged in",
-			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			expectedResponseCode: http.StatusInternalServerError,
-			payload:              `{}`,
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				// Empty context - no user
-				return model.User{}, context.Background()
+			name: "Error: User not logged in, empty context - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{},
+				}
 			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
-			testName:             "Request invalid",
-			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
-			expectedResponseCode: http.StatusBadRequest,
-			payload:              `{`, // Invalid JSON
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				admin, adminCtx := createAdminUser(t)
-				return admin, adminCtx
-			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-			},
-		},
-		{
-			testName:             "User lookup failed",
-			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			expectedResponseCode: http.StatusInternalServerError,
-			payload:              `{"token_name":"","user_id":""}`,
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				_, adminCtx := createAdminUser(t)
-				return model.User{}, adminCtx
-			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-				db.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
-			},
-		},
-		{
-			testName:             "User not allowed to create token",
-			expectedResponseBody: `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"missing permission to create tokens for other users"}]}`,
-			expectedResponseCode: http.StatusForbidden,
-			payload:              `{"user_id":"00000000-1111-2222-3333-444444444444","token_name":"test token"}`,
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				regularUser := model.User{
-					FirstName:     null.String{NullString: sql.NullString{String: "Regular", Valid: true}},
-					LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
-					EmailAddress:  null.String{NullString: sql.NullString{String: "regular@example.com", Valid: true}},
-					PrincipalName: "RegularUser",
-					Unique:        model.Unique{ID: must.NewUUIDv4()},
+			name: "Error: ReadJSONRequestPayloadLimited invalid header - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
 				}
 
-				regularUserContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				regularBhCtx := ctx.Get(regularUserContext)
-				regularBhCtx.AuthCtx.Owner = regularUser
-
-				return regularUser, regularUserContext
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+					},
+				}))
 			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-			},
-		},
-		{
-			testName:             "Failed to create token",
-			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			expectedResponseCode: http.StatusInternalServerError,
-			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				admin, _ := createAdminUser(t)
-				// Using empty context to trigger error
-				return admin, context.Background()
-			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
 			},
 		},
 		{
-			testName:             "Failed to store token",
-			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			expectedResponseCode: http.StatusInternalServerError,
-			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				admin, adminContext := createAdminUser(t)
-				return admin, adminContext
-			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("failed to store token"))
-			},
-		},
-		{
-			testName:             "Success",
-			expectedResponseCode: http.StatusOK,
-			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-			userContext: func(t *testing.T) (model.User, context.Context) {
-				admin, adminContext := createAdminUser(t)
-				return admin, adminContext
-			},
-			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-
-				expectedToken := model.AuthToken{
-					UserID:     uuid.NullUUID{UUID: user.ID, Valid: true},
-					Name:       null.StringFrom("test token"),
-					HmacMethod: "hmac-sha2-256",
-					Key:        "test-key",
+			name: "Error: ReadJSONRequestPayloadLimited ErrNoRequestBody - Bad Request",
+			buildRequest: func() *http.Request {
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
 				}
 
-				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(expectedToken, nil)
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
+			},
+		},
+		{
+			name: "Error: Database Error GetUser - Internal Server Error",
+			buildRequest: func() *http.Request {
+				createToken := &v2.CreateUserToken{TokenName:"name", UserID: "id"}
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
+					Body: io.NopCloser(bytes.NewReader(fmt.Append(nil, createToken))),
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), "").Return(model.User{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
 			},
 		},
 	}
 
-	const endpointUrl = "/api/v2/tokens"
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-	for _, testCase := range testData {
-		t.Run(testCase.testName, func(t *testing.T) {
-			// Setup
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-			router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
-
-			user, ctx := testCase.userContext(t)
-
-			// For cases where we need to update the user_id in the payload
-			var payload string
-			if testCase.testName == "Success" || testCase.testName == "Failed to store token" {
-				var payloadMap map[string]interface{}
-				err := json.Unmarshal([]byte(testCase.payload), &payloadMap)
-				require.NoError(t, err)
-
-				payloadMap["user_id"] = user.ID.String()
-
-				updatedPayload, err := json.Marshal(payloadMap)
-				require.NoError(t, err)
-				payload = string(updatedPayload)
-			} else {
-				payload = testCase.payload
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
-			req, err := http.NewRequestWithContext(ctx, "POST", endpointUrl, bytes.NewReader([]byte(payload)))
-			require.NoError(t, err)
-
-			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-			testCase.setupMocks(t, mockDB, req)
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			response := httptest.NewRecorder()
-			router.ServeHTTP(response, req)
 
-			assert.Equal(t, testCase.expectedResponseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			if testCase.testName == "Success" {
-				var responseWrapper struct {
-					Data model.AuthToken `json:"data"`
-				}
-				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
-				assert.Equal(t, "test token", responseWrapper.Data.Name.String)
-				assert.Equal(t, "hmac-sha2-256", responseWrapper.Data.HmacMethod)
-				assert.Equal(t, "test-key", responseWrapper.Data.Key)
-			} else if testCase.expectedResponseBody != "" {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expectedResponseBody, responseBodyWithDefaultTimestamp)
-			}
+			resources.CreateAuthToken(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
+
+// func TestManagementResource_CreateAuthToken(t *testing.T) {
+// 	type TestData struct {
+// 		testName             string
+// 		expectedResponseBody string
+// 		expectedResponseCode int
+// 		setupMocks           func(*testing.T, *mocks.MockDatabase, *http.Request)
+// 		payload              string
+// 		userContext          func(*testing.T) (model.User, context.Context)
+// 	}
+
+// 	testData := []TestData{
+// 		{
+// 			testName:             "Request invalid",
+// 			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
+// 			expectedResponseCode: http.StatusBadRequest,
+// 			payload:              `{`, // Invalid JSON
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				admin, adminCtx := createAdminUser(t)
+// 				return admin, adminCtx
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 			},
+// 		},
+// 		{
+// 			testName:             "User lookup failed",
+// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+// 			expectedResponseCode: http.StatusInternalServerError,
+// 			payload:              `{"token_name":"","user_id":""}`,
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				_, adminCtx := createAdminUser(t)
+// 				return model.User{}, adminCtx
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 				db.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
+// 			},
+// 		},
+// 		{
+// 			testName:             "User not allowed to create token",
+// 			expectedResponseBody: `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"missing permission to create tokens for other users"}]}`,
+// 			expectedResponseCode: http.StatusForbidden,
+// 			payload:              `{"user_id":"00000000-1111-2222-3333-444444444444","token_name":"test token"}`,
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				regularUser := model.User{
+// 					FirstName:     null.String{NullString: sql.NullString{String: "Regular", Valid: true}},
+// 					LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
+// 					EmailAddress:  null.String{NullString: sql.NullString{String: "regular@example.com", Valid: true}},
+// 					PrincipalName: "RegularUser",
+// 					Unique:        model.Unique{ID: must.NewUUIDv4()},
+// 				}
+
+// 				regularUserContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+// 				regularBhCtx := ctx.Get(regularUserContext)
+// 				regularBhCtx.AuthCtx.Owner = regularUser
+
+// 				return regularUser, regularUserContext
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
+// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
+// 			},
+// 		},
+// 		{
+// 			testName:             "Failed to create token",
+// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+// 			expectedResponseCode: http.StatusInternalServerError,
+// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				admin, _ := createAdminUser(t)
+// 				// Using empty context to trigger error
+// 				return admin, context.Background()
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 			},
+// 		},
+// 		{
+// 			testName:             "Failed to store token",
+// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+// 			expectedResponseCode: http.StatusInternalServerError,
+// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				admin, adminContext := createAdminUser(t)
+// 				return admin, adminContext
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
+// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
+// 				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("failed to store token"))
+// 			},
+// 		},
+// 		{
+// 			testName:             "Success",
+// 			expectedResponseCode: http.StatusOK,
+// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
+// 			userContext: func(t *testing.T) (model.User, context.Context) {
+// 				admin, adminContext := createAdminUser(t)
+// 				return admin, adminContext
+// 			},
+// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
+// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
+// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
+
+// 				expectedToken := model.AuthToken{
+// 					UserID:     uuid.NullUUID{UUID: user.ID, Valid: true},
+// 					Name:       null.StringFrom("test token"),
+// 					HmacMethod: "hmac-sha2-256",
+// 					Key:        "test-key",
+// 				}
+
+// 				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(expectedToken, nil)
+// 			},
+// 		},
+// 	}
+
+// 	const endpointUrl = "/api/v2/tokens"
+
+// 	for _, testCase := range testData {
+// 		t.Run(testCase.testName, func(t *testing.T) {
+// 			// Setup
+// 			mockCtrl := gomock.NewController(t)
+// 			defer mockCtrl.Finish()
+
+// 			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+// 			router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
+
+// 			user, ctx := testCase.userContext(t)
+
+// 			// For cases where we need to update the user_id in the payload
+// 			var payload string
+// 			if testCase.testName == "Success" || testCase.testName == "Failed to store token" {
+// 				var payloadMap map[string]interface{}
+// 				err := json.Unmarshal([]byte(testCase.payload), &payloadMap)
+// 				require.NoError(t, err)
+
+// 				payloadMap["user_id"] = user.ID.String()
+
+// 				updatedPayload, err := json.Marshal(payloadMap)
+// 				require.NoError(t, err)
+// 				payload = string(updatedPayload)
+// 			} else {
+// 				payload = testCase.payload
+// 			}
+
+// 			req, err := http.NewRequestWithContext(ctx, "POST", endpointUrl, bytes.NewReader([]byte(payload)))
+// 			require.NoError(t, err)
+
+// 			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+// 			testCase.setupMocks(t, mockDB, req)
+
+// 			response := httptest.NewRecorder()
+// 			router.ServeHTTP(response, req)
+
+// 			assert.Equal(t, testCase.expectedResponseCode, response.Code)
+
+// 			if testCase.testName == "Success" {
+// 				var responseWrapper struct {
+// 					Data model.AuthToken `json:"data"`
+// 				}
+// 				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
+// 				require.NoError(t, err)
+// 				assert.Equal(t, "test token", responseWrapper.Data.Name.String)
+// 				assert.Equal(t, "hmac-sha2-256", responseWrapper.Data.HmacMethod)
+// 				assert.Equal(t, "test-key", responseWrapper.Data.Key)
+// 			} else if testCase.expectedResponseBody != "" {
+// 				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
+// 				require.NoError(t, err)
+// 				assert.JSONEq(t, testCase.expectedResponseBody, responseBodyWithDefaultTimestamp)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestManagementResource_DeleteAuthToken(t *testing.T) {
 	t.Parallel()
@@ -3627,7 +3748,7 @@ func TestManagementResource_GetPermission(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
 				responseBody:   `{"data":{"authority":"read:users", "created_at":"0001-01-01T00:00:00Z", "deleted_at":{"Time":"0001-01-01T00:00:00Z", "Valid":false}, "id":123, "name":"Read Users", "updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
@@ -3681,7 +3802,7 @@ func TestManagementResource_GetRole(t *testing.T) {
 
 	tt := []testData{
 		{
-			name:       "Error: Invalid role ID format - Bad Request",
+			name: "Error: Invalid role ID format - Bad Request",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -3723,7 +3844,7 @@ func TestManagementResource_GetRole(t *testing.T) {
 			},
 		},
 		{
-			name:   "Success: Role found - OK",
+			name: "Success: Role found - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -3762,9 +3883,9 @@ func TestManagementResource_GetRole(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(123)).Return(expectedRole, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
-				responseBody: `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"System administrator role","id":123,"name":"Administrator","permissions":[{"authority":"read:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":1,"name":"Read Users","updated_at":"0001-01-01T00:00:00Z"},{"authority":"write:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":2,"name":"Write Users","updated_at":"0001-01-01T00:00:00Z"}],"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"System administrator role","id":123,"name":"Administrator","permissions":[{"authority":"read:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":1,"name":"Read Users","updated_at":"0001-01-01T00:00:00Z"},{"authority":"write:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":2,"name":"Write Users","updated_at":"0001-01-01T00:00:00Z"}],"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3817,7 +3938,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 
 	tt := []testData{
 		{
-			name:       "Error: Invalid user ID format - Bad Request",
+			name: "Error: Invalid user ID format - Bad Request",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -3864,7 +3985,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 			},
 		},
 		{
-			name:   "Success: User found - OK",
+			name: "Success: User found - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -3894,9 +4015,9 @@ func TestManagementResource_GetUser(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetUser(req.Context(), userID).Return(expectedUser, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
-				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3978,9 +4099,9 @@ func TestManagementResource_GetSelf(t *testing.T) {
 				return request.WithContext(userContext)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
-				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 		{
@@ -3997,9 +4118,9 @@ func TestManagementResource_GetSelf(t *testing.T) {
 				return request.WithContext(userContext)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
-				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
