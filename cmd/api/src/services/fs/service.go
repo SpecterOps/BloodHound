@@ -14,8 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-module github.com/specterops/bloodhound/fs
+package fs
 
-go 1.23
+import "os"
 
-require go.uber.org/mock v0.5.2
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
+
+// Serves as a lightweight wrapper around the os package which allows for
+// path management to be abstracted.
+type Service interface {
+	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+}
+
+type Client struct{}
+
+func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
+	return os.CreateTemp(dir, pattern)
+}

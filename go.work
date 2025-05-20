@@ -27,7 +27,6 @@ use (
 	./packages/go/cypher
 	./packages/go/dawgs
 	./packages/go/ein
-	./packages/go/fs
 	./packages/go/graphschema
 	./packages/go/headers
 	./packages/go/lab
