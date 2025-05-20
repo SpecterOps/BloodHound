@@ -113,6 +113,14 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Email Address is required',
+                                        maxLength: {
+                                            value: 310,
+                                            message: 'Email address too long.',
+                                        },
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: 'Please follow the example@domain.com format.',
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -136,6 +144,18 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Principal Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'Principal Name must be less than 1000 characters.',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'Principal name must be 2 letters or more',
+                                        },
+                                        pattern: {
+                                            value: /^[A-Za-z]+$/,
+                                            message: 'No spaces or special characters are allowed',
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -157,6 +177,18 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'First Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'First Name must be less than 1000 characters.',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'First Name must be 2 letters or more',
+                                        },
+                                        pattern: {
+                                            value: /^[A-Za-z]+$/,
+                                            message: 'No spaces or special characters are allowed',
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -178,6 +210,18 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Last Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'Last Name must be less than 1000 characters.',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'Last Name must be 2 letters or more',
+                                        },
+                                        pattern: {
+                                            value: /^[A-Za-z]+$/,
+                                            message: 'No spaces or special characters are allowed',
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
