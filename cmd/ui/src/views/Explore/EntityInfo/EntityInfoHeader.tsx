@@ -17,16 +17,8 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
-import {
-    Icon,
-    NodeIcon,
-    useExploreParams,
-    useFeatureFlag,
-    useHeaderStyles,
-    useObjectInfoPanelContext,
-} from 'bh-shared-ui';
+import { Icon, NodeIcon, useExploreParams, useHeaderStyles, useObjectInfoPanelContext } from 'bh-shared-ui';
 import React from 'react';
-import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
 
 export interface HeaderProps {
     expanded: boolean;
@@ -37,21 +29,16 @@ export interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const { collapseAllSections } = useEntityInfoPanelContext();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
-        if (backButtonFlag?.enabled) {
-            if (expandedPanelSections?.length) {
-                setExploreParams({
-                    expandedPanelSections: [],
-                });
-            }
-        } else {
-            collapseAllSections();
+
+        if (expandedPanelSections?.length) {
+            setExploreParams({
+                expandedPanelSections: [],
+            });
         }
     };
 

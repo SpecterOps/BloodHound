@@ -15,17 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps } from '@mui/material';
-import {
-    ObjectInfoPanelContextProvider,
-    SelectedEdge,
-    collapseAllSections,
-    useExploreParams,
-    useFeatureFlag,
-    usePaneStyles,
-} from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
-import usePreviousValue from 'src/hooks/usePreviousValue';
-import { useAppDispatch } from 'src/store';
+import { ObjectInfoPanelContextProvider, SelectedEdge, usePaneStyles } from 'bh-shared-ui';
+import React, { useState } from 'react';
+
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
 
@@ -37,16 +29,6 @@ interface EdgeInfoPaneProps {
 const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { expandedPanelSections } = useExploreParams();
-    const previousSelectedEdge = usePreviousValue(selectedEdge);
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const dispatch = useAppDispatch();
-
-    useEffect(() => {
-        if (!backButtonFlag?.enabled && previousSelectedEdge?.id !== selectedEdge?.id) {
-            dispatch(collapseAllSections());
-        }
-    }, [expandedPanelSections, dispatch, backButtonFlag, previousSelectedEdge, selectedEdge]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_edge-information-pane'>

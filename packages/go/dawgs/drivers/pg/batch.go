@@ -342,10 +342,10 @@ func (s *RelationshipUpdateByParameters) Append(ctx context.Context, update *sql
 	s.StartIDs = append(s.StartIDs, update.StartID.Value)
 	s.EndIDs = append(s.EndIDs, update.EndID.Value)
 
-	if mappedKindID, err := schemaManager.MapKind(ctx, update.Relationship.Kind); err != nil {
+	if mappedKindIDs, err := schemaManager.AssertKinds(ctx, []graph.Kind{update.Relationship.Kind}); err != nil {
 		return err
 	} else {
-		s.KindIDs = append(s.KindIDs, mappedKindID)
+		s.KindIDs = append(s.KindIDs, mappedKindIDs...)
 	}
 
 	if propertiesJSONB, err := pgsql.PropertiesToJSONB(update.Relationship.Properties); err != nil {
