@@ -149,7 +149,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.Seeds = updateSeeds
 
 	// call the update function
-	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor, selector)
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor.ID.String(), updateActor.EmailAddress.String, selector)
 	require.NoError(t, err)
 
 	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)

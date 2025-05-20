@@ -706,6 +706,45 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 	return nil
 }
 
+func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Database, graphDb graph.Database) error {
+	if selectorsToMigrate, err := db.GetCustomAssetGroupTagSelectorsToMigrate(ctx); err != nil {
+		return err
+	} else {
+		countUpdated := 0
+		for _, selector := range selectorsToMigrate {
+			if len(selector.Seeds) > 1 {
+				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", "selector", selector)
+				continue
+			} else if len(selector.Seeds) == 1 {
+				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
+					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
+						slog.WarnContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+					} else {
+						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
+						if name == "" {
+							slog.WarnContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							return nil
+						}
+						selector.Name = name
+						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
+							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", "selector", selector)
+						}
+						countUpdated++
+					}
+					return nil
+				}); err != nil {
+					return err
+				}
+			}
+		}
+		if len(selectorsToMigrate) > 0 {
+			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countUpdated", countUpdated, "countFound", len(selectorsToMigrate))
+		}
+	}
+
+	return nil
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	var errors []error
@@ -716,6 +755,12 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
 			errors = append(errors, err)
 		}
+
+		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: migrating custom selector names failed: %v", err))
+			errors = append(errors, err)
+		}
+
 		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
 			errors = append(errors, err)

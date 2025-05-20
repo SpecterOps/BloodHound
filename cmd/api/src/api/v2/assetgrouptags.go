@@ -274,7 +274,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Seeds = nil
 		}
 
-		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor, selector); err != nil {
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), actor.EmailAddress.String, selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if seedsTemp != nil {
