@@ -22,6 +22,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -158,4 +159,21 @@ func TestParameters_GetEULACustomText(t *testing.T) {
 	}))
 
 	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
+}
+
+func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
+	var (
+		db                        = integration.SetupDB(t)
+		testCtx                   = context.Background()
+		customAuthSessionTTLHours = 77
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"hours": customAuthSessionTTLHours})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.SessionTTLHours,
+		Value: newVal,
+	}))
+
+	require.Equal(t, time.Hour*time.Duration(customAuthSessionTTLHours), appcfg.GetSessionTTLHours(testCtx, db))
 }
