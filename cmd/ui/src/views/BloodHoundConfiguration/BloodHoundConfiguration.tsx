@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Link, Typography } from '@mui/material';
-import { CitrixRDPConfiguration, PageWithTitle } from 'bh-shared-ui';
+import { CitrixRDPConfiguration, PageWithTitle, RestrictOutboundNTLMDefaultValueConfiguration } from 'bh-shared-ui';
 
 const BloodHoundConfiguration = () => {
     return (
@@ -32,6 +32,7 @@ const BloodHoundConfiguration = () => {
             }>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <CitrixRDPConfiguration />
+                <RestrictOutboundNTLMDefaultValueConfiguration />
             </Box>
         </PageWithTitle>
     );
