@@ -38,6 +38,8 @@ type ParameterKey string
 const (
 	PasswordExpirationWindow        ParameterKey = "auth.password_expiration_window"
 	DefaultPasswordExpirationWindow              = time.Hour * 24 * 90
+	
+	SessionTTLHours ParameterKey = "auth.session_ttl_hours"
 
 	Neo4jConfigs        ParameterKey = "neo4j.configuration"
 	CitrixRDPSupportKey ParameterKey = "analysis.citrix_rdp_support"
@@ -400,4 +402,22 @@ func GetFedRAMPCustomEULA(ctx context.Context, service ParameterService) string 
 	}
 
 	return result.CustomText
+}
+
+type SessionTTLHoursParameter struct {
+	Hours int `json:"hours,omitempty"`
+}
+
+func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
+	var result = SessionTTLHoursParameter{
+		Hours: 8, // Default to a logged in auth session time to live of 8 hours
+	}
+
+	if sessionTTLHours, err := service.GetConfigurationParameter(ctx, SessionTTLHours); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch auth session ttl hours; returning default values")
+	} else if err = sessionTTLHours.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
+	}
+
+	return time.Hour * time.Duration(result.Hours)
 }

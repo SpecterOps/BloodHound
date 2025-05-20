@@ -22,3 +22,7 @@ UPDATE asset_group_tags SET analysis_enabled = position = 1 WHERE type = 1 AND a
 
 -- Add EULA custom text
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('eula.custom_text', 'EULA Custom Text', 'This configuration parameter overrides the EULA agreement text with provided text.', '{"custom_text": ""}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add Auth Session TTL Hours
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('auth.session_ttl_hours', 'Auth Session TTL Hours', 'This configuration parameter determines the length of time in hours a logged in session stays active before expiration', '{"hours": 8}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
