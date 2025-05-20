@@ -52,6 +52,8 @@ const (
 	TierManagementParameterKey = "analysis.tiering" //This key is not intended to be user updateable, so should not be added to IsValidKey
 	DefaultTierLimit           = 1
 	DefaultLabelLimit          = 0
+    
+	FedEULACustomTextKey = "eula.customText"
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -349,4 +351,21 @@ func GetTieringParameters(ctx context.Context, service ParameterService) Tiering
 	}
 
 	return result
+}
+
+type FedEULACustomText struct {
+	CustomText string `json:"customText,omitempty"`
+}
+
+// GetFedRAMPCustomEULA Note this is not gated by the FedEULA FF and that should be checked alongside this
+func GetFedRAMPCustomEULA(ctx context.Context, service ParameterService) string {
+	var result FedEULACustomText
+
+	if fedEulaCustomText, err := service.GetConfigurationParameter(ctx, FedEULACustomTextKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch eula custom text; returning default value")
+	} else if err = fedEulaCustomText.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid eula custom text supplied; returning default value")
+	}
+
+	return result.CustomText
 }

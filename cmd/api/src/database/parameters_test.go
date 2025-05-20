@@ -142,3 +142,20 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 		}
 	}
 }
+
+func TestParameters_GetEULACustomText(t *testing.T) {
+	var (
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		customEULATxt = "I AM BATMAN"
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"customText": customEULATxt})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.FedEULACustomTextKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
+}
