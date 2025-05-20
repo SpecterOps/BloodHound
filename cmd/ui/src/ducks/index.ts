@@ -16,6 +16,5 @@
 
 export { default as assetgroups } from './assetgroups';
 export { default as auth } from './auth/authSlice';
-export { default as entityinfo } from './entityinfo';
 export { default as global } from './global';
 export { default as tierzero } from './tierzero';
