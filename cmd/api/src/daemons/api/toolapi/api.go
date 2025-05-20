@@ -92,7 +92,7 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Get("/analysis/schedule", toolContainer.GetScheduledAnalysisConfiguration)
 	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
-
+	router.Put("/parameters", toolContainer.SetApplicationParameter)
 	for _, extension := range extensions {
 		extension(router)
 	}
