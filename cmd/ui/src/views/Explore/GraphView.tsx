@@ -14,20 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popper, SxProps, useTheme } from '@mui/material';
+import { Popper, useTheme } from '@mui/material';
 import {
-    EdgeInfoState,
     GraphProgress,
     IconDictionary,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
     isWebGLEnabled,
-    setEdgeInfoOpen,
-    setSelectedEdge,
     transformFlatGraphResponse,
     useAvailableEnvironments,
     useCustomNodeKinds,
+    useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -39,92 +37,55 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setEntityInfoOpen, setSelectedNode } from 'src/ducks/entityinfo/actions';
-import { GraphState } from 'src/ducks/explore/types';
-import { setAssetGroupEdit } from 'src/ducks/global/actions';
-import { GlobalOptionsState } from 'src/ducks/global/types';
-import { discardChanges } from 'src/ducks/tierzero/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
-import EdgeInfoPane from 'src/views/Explore/EdgeInfo/EdgeInfoPane';
-import EntityInfoPanel from 'src/views/Explore/EntityInfo/EntityInfoPanel';
-import ExploreSearch from 'src/views/Explore/ExploreSearch';
-import usePrompt from 'src/views/Explore/NavigationAlert';
+import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
+import { useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
+import ExploreSearch from './ExploreSearch/ExploreSearch';
+import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
     const theme = useTheme();
 
-    const dispatch = useAppDispatch();
-
-    const graphState: GraphState = useAppSelector((state) => state.explore);
-
-    const opts: GlobalOptionsState = useAppSelector((state) => state.global.options);
-
-    const formIsDirty = Object.keys(useAppSelector((state) => state.tierzero).changelog).length > 0;
+    const graphQuery = useSigmaExploreGraph();
+    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
-    const { data, isLoading, isError } = useAvailableEnvironments();
-
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
-    const exportableGraphState = useAppSelector((state) => state.explore.export);
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
-
     const currentSearchAnchorElement = useRef(null);
-
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
-
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
 
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
-
     useEffect(() => {
-        let items: any = graphState.chartProps.items;
-        if (!items) return;
+        let items: any = graphQuery.data;
+
+        if (!items && !graphQuery.isError) return;
+        if (!items) items = {};
+
         // `items` may be empty, or it may contain an empty `nodes` object
         if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
         initGraph(graph, items, theme, darkMode, customIcons);
+        setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphState.chartProps.items, theme, darkMode, customIcons]);
-
-    useEffect(() => {
-        if (opts.assetGroupEdit !== null) {
-            dispatch(setAssetGroupEdit(null));
-        }
-    }, [opts.assetGroupEdit, dispatch]);
-
-    //Clear the changelog when leaving the explore page.
-    useEffect(() => {
-        return () => {
-            formIsDirty && dispatch(discardChanges());
-        };
-    }, [dispatch, formIsDirty]);
-
-    usePrompt(
-        'You will lose any unsaved changes if you navigate away from this page without saving. Continue?',
-        formIsDirty
-    );
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons]);
 
     if (isLoading) {
         return (
@@ -141,46 +102,17 @@ const GraphView: FC = () => {
     }
 
     /* Event Handlers */
-    const findNodeAndSelect = (id: string) => {
-        const selectedItem = graphState.chartProps.items?.[id];
-        if (selectedItem?.data?.nodetype) {
-            dispatch(setSelectedEdge(null));
-            dispatch(
-                setSelectedNode({
-                    id: selectedItem.data.objectid,
-                    type: selectedItem.data.nodetype,
-                    name: selectedItem.data.name,
-                    graphId: id,
-                })
-            );
-        }
-    };
-
     const handleClickNode = (id: string) => {
-        dispatch(setEdgeInfoOpen(false));
-        dispatch(setEntityInfoOpen(true));
-        findNodeAndSelect(id);
+        setSelectedItem(id);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        const nodeId = event.node;
-        findNodeAndSelect(nodeId);
+        setSelectedItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
-    };
-
-    const infoPaneStyles: SxProps = {
-        bottom: 0,
-        top: 0,
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2),
-        maxWidth: theme.spacing(50),
-        position: 'absolute',
-        right: theme.spacing(2),
-        width: theme.spacing(50),
     };
 
     return (
@@ -202,7 +134,7 @@ const GraphView: FC = () => {
                 <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
                     <GraphButtons
                         onExportJson={() => {
-                            exportToJson(exportableGraphState);
+                            exportToJson(exportJsonData);
                         }}
                         onReset={() => {
                             sigmaChartRef.current?.resetCamera();
@@ -234,7 +166,7 @@ const GraphView: FC = () => {
                         showNodeLabels={showNodeLabels}
                         showEdgeLabels={showEdgeLabels}
                         isCurrentSearchOpen={false}
-                        isJsonExportDisabled={isEmpty(exportableGraphState)}
+                        isJsonExportDisabled={isEmpty(exportJsonData)}
                     />
                 </div>
                 <Popper
@@ -256,13 +188,9 @@ const GraphView: FC = () => {
                     </div>
                 </Popper>
             </div>
-            {edgeInfoState.open ? (
-                <EdgeInfoPane sx={infoPaneStyles} selectedEdge={edgeInfoState.selectedEdge} />
-            ) : (
-                <EntityInfoPanel sx={infoPaneStyles} selectedNode={selectedNode} />
-            )}
+            <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
-            <GraphProgress loading={graphState.loading} />
+            <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
         </div>
     );
