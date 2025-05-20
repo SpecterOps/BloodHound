@@ -52,7 +52,7 @@ const (
 	TierManagementParameterKey = "analysis.tiering" //This key is not intended to be user updateable, so should not be added to IsValidKey
 	DefaultTierLimit           = 1
 	DefaultLabelLimit          = 0
-    
+
 	FedEULACustomTextKey = "eula.customText"
 )
 
@@ -84,6 +84,17 @@ func (s *Parameter) IsValidKey(parameterKey string) bool {
 	}
 
 	return validKeys[parameterKey]
+}
+
+func (s *Parameter) IsProtectedKey() bool {
+	protectedKeys := map[string]bool{
+		ScheduledAnalysis:          true,
+		TrustedProxiesConfig:       true,
+		FedEULACustomTextKey:       true,
+		TierManagementParameterKey: true,
+	}
+
+	return protectedKeys[s.Key]
 }
 
 func (s *Parameter) Validate() utils.Errors {

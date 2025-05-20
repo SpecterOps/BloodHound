@@ -137,7 +137,7 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, parameters, 8)
 	for _, parameter := range parameters {
-		if parameter.Key != appcfg.ScheduledAnalysis && parameter.Key != appcfg.TrustedProxiesConfig && parameter.Key != appcfg.TierManagementParameterKey {
+		if !parameter.IsProtectedKey() {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
