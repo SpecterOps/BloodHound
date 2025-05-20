@@ -38,7 +38,7 @@ type ParameterKey string
 const (
 	PasswordExpirationWindow        ParameterKey = "auth.password_expiration_window"
 	DefaultPasswordExpirationWindow              = time.Hour * 24 * 90
-	
+
 	SessionTTLHours ParameterKey = "auth.session_ttl_hours"
 
 	Neo4jConfigs        ParameterKey = "neo4j.configuration"
@@ -90,7 +90,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours:
 		return true
 	default:
 		return false
