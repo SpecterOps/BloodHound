@@ -3932,21 +3932,28 @@ func TestManagementResource_GetUser(t *testing.T) {
 func TestManagementResource_GetSelf(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name        string
-		userContext func(*testing.T) context.Context
-		expected    expected
-		validations func(*testing.T, *httptest.ResponseRecorder, context.Context)
+		name         string
+		buildRequest func() *http.Request
+		expected     expected
 	}
-
 	tt := []testData{
 		{
 			name: "Success: Get authenticated user - OK",
-			userContext: func(t *testing.T) context.Context {
-				userID := must.NewUUIDv4()
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				userID := uuid.FromStringOrNil("id")
 				user := model.User{
 					FirstName:     null.StringFrom("John"),
 					LastName:      null.StringFrom("Doe"),
@@ -3968,53 +3975,31 @@ func TestManagementResource_GetSelf(t *testing.T) {
 				bhCtx := ctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = user
 
-				return userContext
+				return request.WithContext(userContext)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,
-			},
-			validations: func(t *testing.T, response *httptest.ResponseRecorder, reqCtx context.Context) {
-				var responseWrapper struct {
-					Data model.User `json:"data"`
-				}
-				err := json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
-
-				bhCtx := ctx.Get(reqCtx)
-				user, ok := bhCtx.AuthCtx.Owner.(model.User)
-				require.True(t, ok)
-
-				assert.Equal(t, user.ID, responseWrapper.Data.ID)
-				assert.Equal(t, user.FirstName.String, responseWrapper.Data.FirstName.String)
-				assert.Equal(t, user.LastName.String, responseWrapper.Data.LastName.String)
-				assert.Equal(t, user.EmailAddress.String, responseWrapper.Data.EmailAddress.String)
-				assert.Equal(t, user.PrincipalName, responseWrapper.Data.PrincipalName)
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":[{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"The big boy.","id":0,"name":"Big Boy","permissions":[],"updated_at":"0001-01-01T00:00:00Z"}],"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 		{
 			name: "Success: Get empty authenticated user - OK",
-			userContext: func(t *testing.T) context.Context {
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
 				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
 				bhCtx := ctx.Get(userContext)
 				bhCtx.AuthCtx.Owner = model.User{}
 
-				return userContext
+				return request.WithContext(userContext)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,
-			},
-			validations: func(t *testing.T, response *httptest.ResponseRecorder, reqCtx context.Context) {
-				var responseWrapper struct {
-					Data model.User `json:"data"`
-				}
-				err := json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
-
-				assert.Empty(t, responseWrapper.Data.ID)
-				assert.False(t, responseWrapper.Data.FirstName.Valid)
-				assert.False(t, responseWrapper.Data.LastName.Valid)
-				assert.False(t, responseWrapper.Data.EmailAddress.Valid)
-				assert.Empty(t, responseWrapper.Data.PrincipalName)
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":null,"eula_accepted":false,"first_name":null,"id":"00000000-0000-0000-0000-000000000000","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":null,"principal_name":"","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -4022,24 +4007,26 @@ func TestManagementResource_GetSelf(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+			}
 
-			resources, _ := apitest.NewAuthManagementResource(mockCtrl)
-
-			reqCtx := testCase.userContext(t)
-			req, err := http.NewRequest("GET", "/api/v2/users/self", nil)
-			require.NoError(t, err)
-
-			req = req.WithContext(reqCtx)
+			request := testCase.buildRequest()
 
 			response := httptest.NewRecorder()
-			resources.GetSelf(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			testCase.validations(t, response, reqCtx)
+			resources.GetSelf(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
