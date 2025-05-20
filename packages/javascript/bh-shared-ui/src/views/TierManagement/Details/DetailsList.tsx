@@ -145,7 +145,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                     return null;
                                 }
 
-                                const isDisabled = isSelectorsListItem(listItem) && listItem.disabled_by;
+                                const isDisabled = isSelectorsListItem(listItem) && listItem.disabled_at;
 
                                 return (
                                     <li

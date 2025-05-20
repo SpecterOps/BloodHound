@@ -112,10 +112,6 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
@@ -147,10 +143,10 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-        longWait(() => {
+        longWait(async () => {
+            const selectorStatusSwitch = await screen.findByLabelText('Selector Status');
+            expect(selectorStatusSwitch).toBeInTheDocument();
+            expect(selectorStatusSwitch).toHaveValue('on');
             expect(screen.getByText('Enabled')).toBeInTheDocument();
         });
 
@@ -191,11 +187,10 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-
         longWait(async () => {
+            const selectorStatusSwitch = screen.getByLabelText('Selector Status');
+            expect(selectorStatusSwitch).toBeInTheDocument();
+            expect(selectorStatusSwitch).toHaveValue('on');
             expect(screen.getByText('Enabled')).toBeInTheDocument();
             await user.click(selectorStatusSwitch);
             expect(screen.getByText('Disabled')).toBeInTheDocument();

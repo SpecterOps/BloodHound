@@ -219,7 +219,7 @@ class BHEAPIClient {
             )
         );
 
-    getAssetGroupSelectorMembers = (
+    getAssetGroupTagSelectorMembers = (
         tagId: number | string,
         selectorId: number | string,
         skip: number,

@@ -35,7 +35,9 @@ export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'>
 
 export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
 
-export type UpdateSelectorRequest = Partial<Omit<CreateSelectorRequest, 'id'>>;
+export type UpdateSelectorRequest = Partial<
+    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+>;
 
 export interface CreateAssetGroupRequest {
     name: string;

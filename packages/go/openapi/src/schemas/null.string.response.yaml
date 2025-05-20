@@ -14,29 +14,5 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-allOf:
-  - $ref: './model.asset-group-tags-selector-create.yaml'
-  - type: object
-    properties:
-      id:
-        type: integer
-      asset_group_tag_id:
-        type: integer
-      created_at:
-        type: string
-        format: date-time
-      created_by:
-        type: string
-      updated_at:
-        type: string
-        format: date-time
-      updated_by:
-        type: string
-      disabled_at:
-        $ref: './null.time.response.yaml'
-      disabled_by:
-        $ref: './null.string.response.yaml'
-      is_default:
-        type: boolean
-      allow_disable:
-        type: boolean
+type: string
+nullable: true

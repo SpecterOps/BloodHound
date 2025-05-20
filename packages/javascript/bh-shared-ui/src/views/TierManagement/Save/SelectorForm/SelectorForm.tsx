@@ -14,18 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { createBrowserHistory } from 'history';
+import { AssetGroupTagNode, AssetGroupTagSelector, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import {
     CreateSelectorRequest,
     RequestOptions,
     SelectorSeedRequest,
     UpdateSelectorRequest,
 } from 'js-client-library/dist/requests';
+import isEmpty from 'lodash/isEmpty';
+import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ZERO_VALUE_API_DATE } from '../../../../constants';
 import { useNotifications } from '../../../../providers';
 import { apiClient } from '../../../../utils';
 import BasicInfo from './BasicInfo';
@@ -68,9 +70,32 @@ const useCreateSelector = (tagId: string | number | undefined) => {
     });
 };
 
+const diffValues = (
+    data: AssetGroupTagSelector | undefined,
+    formValues: UpdateSelectorRequest
+): UpdateSelectorRequest => {
+    if (data === undefined) return formValues;
+
+    const diffed: UpdateSelectorRequest = {};
+    const disabled = data.disabled_at !== null;
+
+    // 'on' means the switch hasn't been touched yet which means default to current disabled state
+    if (formValues.disabled === 'on') {
+        formValues.disabled = disabled;
+    }
+
+    if (data.name !== formValues.name) diffed.name = formValues.name;
+    if (data.description !== formValues.description) diffed.description = formValues.description;
+    if (formValues.disabled !== disabled) diffed.disabled = formValues.disabled;
+    if (!isEqual(formValues.seeds, data.seeds)) diffed.seeds = formValues.seeds;
+
+    return diffed;
+};
+
 const SelectorForm: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const history = createBrowserHistory();
     const navigate = useNavigate();
 
     const { addNotification } = useNotifications();
@@ -99,18 +124,35 @@ const SelectorForm: FC = () => {
                 if (!tagId || !selectorId)
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
-                if (updatedValues.disabled_at === 'on') {
-                    updatedValues.disabled_at = ZERO_VALUE_API_DATE;
+                const diffedValues = diffValues(selectorQuery.data, updatedValues);
+
+                if (isEmpty(diffedValues)) {
+                    addNotification(
+                        'No changes to selector detected',
+                        `tier-management_update-selector_no-changes-warn_${selectorId}`,
+                        {
+                            anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                        }
+                    );
+                    return;
                 }
 
-                await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
+                await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues: diffedValues });
 
-                navigate(`/tier-management/details/tier/${tagId}`);
+                addNotification(
+                    'Selector was updated successfully!',
+                    `tier-management_update-selector_success_${selectorId}`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
+
+                history.back();
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
         },
-        [tagId, selectorId, navigate, patchSelectorMutation, addNotification]
+        [tagId, selectorId, patchSelectorMutation, addNotification, history, selectorQuery.data]
     );
 
     const handleCreateSelector = useCallback(
@@ -118,11 +160,11 @@ const SelectorForm: FC = () => {
             try {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
-                if (values.disabled_at === 'on') {
-                    values.disabled_at = ZERO_VALUE_API_DATE;
-                }
-
                 await createSelectorMutation.mutateAsync({ tagId, values });
+
+                addNotification('Selector was created successfully!', undefined, {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                });
 
                 navigate(`/tier-management/details/tier/${tagId}`);
             } catch (error) {
