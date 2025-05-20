@@ -178,17 +178,17 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(ctx, collection, 
 }
 
 // CreateAssetGroupHistoryRecord mocks base method.
-func (m *MockDatabase) CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
+func (m *MockDatabase) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", ctx, actor, target, action, assetGroupTagId, environmentId, note)
+	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", ctx, actorId, email, target, action, assetGroupTagId, environmentId, note)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAssetGroupHistoryRecord indicates an expected call of CreateAssetGroupHistoryRecord.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actor, target, action, assetGroupTagId, environmentId, note any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actorId, email, target, action, assetGroupTagId, environmentId, note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), ctx, actor, target, action, assetGroupTagId, environmentId, note)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), ctx, actorId, email, target, action, assetGroupTagId, environmentId, note)
 }
 
 // CreateAssetGroupTag mocks base method.
@@ -1239,6 +1239,21 @@ func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(ctx, parameterKey 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), ctx, parameterKey)
 }
 
+// GetCustomAssetGroupTagSelectorsToMigrate mocks base method.
+func (m *MockDatabase) GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomAssetGroupTagSelectorsToMigrate", ctx)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomAssetGroupTagSelectorsToMigrate indicates an expected call of GetCustomAssetGroupTagSelectorsToMigrate.
+func (mr *MockDatabaseMockRecorder) GetCustomAssetGroupTagSelectorsToMigrate(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomAssetGroupTagSelectorsToMigrate", reflect.TypeOf((*MockDatabase)(nil).GetCustomAssetGroupTagSelectorsToMigrate), ctx)
+}
+
 // GetCustomNodeKind mocks base method.
 func (m *MockDatabase) GetCustomNodeKind(ctx context.Context, kindName string) (model.CustomNodeKind, error) {
 	m.ctrl.T.Helper()
@@ -2039,18 +2054,18 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTag(ctx, user, tag any) *gom
 }
 
 // UpdateAssetGroupTagSelector mocks base method.
-func (m *MockDatabase) UpdateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", ctx, user, selector)
+	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", ctx, actorId, email, selector)
 	ret0, _ := ret[0].(model.AssetGroupTagSelector)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateAssetGroupTagSelector indicates an expected call of UpdateAssetGroupTagSelector.
-func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(ctx, user, selector any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(ctx, actorId, email, selector any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), ctx, user, selector)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), ctx, actorId, email, selector)
 }
 
 // UpdateAuthSecret mocks base method.
