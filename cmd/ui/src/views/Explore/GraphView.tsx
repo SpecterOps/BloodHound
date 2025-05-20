@@ -66,8 +66,6 @@ const GraphView: FC = () => {
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
 
-    const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
-
     useEffect(() => {
         let items: any = graphQuery.data;
 
@@ -79,13 +77,14 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
+        const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
         initGraph(graph, items, theme, darkMode, customIcons);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError]);
 
     if (isLoading) {
         return (

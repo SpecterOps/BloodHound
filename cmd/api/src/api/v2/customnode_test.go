@@ -30,7 +30,6 @@ import (
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -237,8 +236,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockGraphQuery *mocks.MockGraph
-		mockDatabase   *dbmocks.MockDatabase
+		mockDatabase *dbmocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
