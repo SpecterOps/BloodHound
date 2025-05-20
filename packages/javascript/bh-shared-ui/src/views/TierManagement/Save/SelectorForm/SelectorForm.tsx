@@ -15,13 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createBrowserHistory } from 'history';
-import { AssetGroupTagNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { AssetGroupTagNode, AssetGroupTagSelector, SeedTypeObjectId, SeedTypes } from 'js-client-library';
 import {
     CreateSelectorRequest,
     RequestOptions,
     SelectorSeedRequest,
     UpdateSelectorRequest,
 } from 'js-client-library/dist/requests';
+import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
@@ -68,6 +69,28 @@ const useCreateSelector = (tagId: string | number | undefined) => {
     });
 };
 
+const diffValues = (
+    data: AssetGroupTagSelector | undefined,
+    formValues: UpdateSelectorRequest
+): UpdateSelectorRequest => {
+    if (data === undefined) return formValues;
+
+    const diffed: UpdateSelectorRequest = {};
+    const disabled = data.disabled_at !== null;
+
+    // 'on' means the switch is 'checked' which means enabled which means disabled is false
+    if (formValues.disabled === 'on') {
+        formValues.disabled = false;
+    }
+
+    if (data.name !== formValues.name) diffed.name = formValues.name;
+    if (data.description !== formValues.description) diffed.description = formValues.description;
+    if (formValues.disabled !== disabled) diffed.disabled = formValues.disabled;
+    if (!isEqual(formValues.seeds, data.seeds)) diffed.seeds = formValues.seeds;
+
+    return diffed;
+};
+
 const SelectorForm: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
@@ -100,19 +123,21 @@ const SelectorForm: FC = () => {
                 if (!tagId || !selectorId)
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
-                // 'on' means the switch is 'checked' which means enabled which means disabled is false
-                if (updatedValues.disabled === 'on') {
-                    updatedValues.disabled = false;
-                }
+                const diffedValues = diffValues(selectorQuery.data, updatedValues);
 
-                await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues });
+                await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues: diffedValues });
+
+                addNotification('Selector was updated successfully!', 'tier-management_update-selector', {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    variant: 'success',
+                });
 
                 history.back();
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
         },
-        [tagId, selectorId, patchSelectorMutation, addNotification, history]
+        [tagId, selectorId, patchSelectorMutation, addNotification, history, selectorQuery.data]
     );
 
     const handleCreateSelector = useCallback(
@@ -121,6 +146,11 @@ const SelectorForm: FC = () => {
                 if (!tagId) throw new Error(`Missing required ID. tagId: ${tagId}`);
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
+
+                addNotification('Selector was created successfully!', 'tier-management_create-selector', {
+                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    variant: 'success',
+                });
 
                 navigate(`/tier-management/details/tier/${tagId}`);
             } catch (error) {
