@@ -3664,53 +3664,78 @@ func TestManagementResource_GetPermission(t *testing.T) {
 func TestManagementResource_GetRole(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseBody string
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name       string
-		roleID     string
-		setupMocks func(*testing.T, *mocks.MockDatabase)
-		expected   expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
 		{
 			name:       "Error: Invalid role ID format - Bad Request",
-			roleID:     "invalid",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"role_id": "invalid",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
 			},
 		},
 		{
-			name:   "Error: Role not found - Internal Server Error",
-			roleID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), gomock.Any()).Return(model.Role{}, sql.ErrNoRows)
+			name: "Error: Database Error GetRole - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"role_id": "123",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(123)).Return(model.Role{}, sql.ErrNoRows)
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			},
-		},
-		{
-			name:   "Error: Database error - Internal Server Error",
-			roleID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), gomock.Any()).Return(model.Role{}, errors.New("database error"))
-			},
-			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
 			name:   "Success: Role found - OK",
-			roleID: "123",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"role_id": "123",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				permissionRead := model.Permission{
 					Authority: "read:users",
 					Name:      "Read Users",
@@ -3734,11 +3759,12 @@ func TestManagementResource_GetRole(t *testing.T) {
 						ID: 123,
 					},
 				}
-				mockDB.EXPECT().GetRole(gomock.Any(), gomock.Any()).Return(expectedRole, nil)
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(123)).Return(expectedRole, nil)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,
-				responseBody: `{"data":{"name":"Administrator","description":"System administrator role","permissions":[{"authority":"read:users","name":"Read Users","id":1},{"authority":"write:users","name":"Write Users","id":2}],"id":123}}`,
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseBody: `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"description":"System administrator role","id":123,"name":"Administrator","permissions":[{"authority":"read:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":1,"name":"Read Users","updated_at":"0001-01-01T00:00:00Z"},{"authority":"write:users","created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"id":2,"name":"Write Users","updated_at":"0001-01-01T00:00:00Z"}],"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3746,46 +3772,27 @@ func TestManagementResource_GetRole(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			endpointURL := fmt.Sprintf("/api/v2/roles/%s", testCase.roleID)
-			req, err := http.NewRequest("GET", endpointURL, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableRoleID: testCase.roleID,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			response := httptest.NewRecorder()
-			resources.GetRole(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			if testCase.name == "Success: Role found - OK" {
-				var responseWrapper struct {
-					Data model.Role `json:"data"`
-				}
-				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
+			resources.GetRole(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
-				assert.Equal(t, int32(123), responseWrapper.Data.ID)
-				assert.Equal(t, "Administrator", responseWrapper.Data.Name)
-				assert.Equal(t, "System administrator role", responseWrapper.Data.Description)
-				assert.Len(t, responseWrapper.Data.Permissions, 2)
-				assert.Equal(t, "read:users", responseWrapper.Data.Permissions[0].Authority)
-				assert.Equal(t, "write:users", responseWrapper.Data.Permissions[1].Authority)
-			} else {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -3793,56 +3800,88 @@ func TestManagementResource_GetRole(t *testing.T) {
 func TestManagementResource_GetUser(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseBody string
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name       string
-		userID     string
-		setupMocks func(*testing.T, *mocks.MockDatabase)
-		expected   expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
-
-	validUUID := "00000000-0000-0000-0000-000000000001"
 
 	tt := []testData{
 		{
 			name:       "Error: Invalid user ID format - Bad Request",
-			userID:     "invalid-uuid",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"user_id": "invalid",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
 			},
 		},
 		{
-			name:   "Error: User not found - Internal Server Error",
-			userID: validUUID,
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, sql.ErrNoRows)
+			name: "Error: Database Error GetUser - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"user_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				userID, err := uuid.FromString("00000000-0000-0000-0000-000000000001")
+				if err != nil {
+					t.Fatalf("uuid required for test name %s", t.Name())
+				}
+
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), userID).Return(model.User{}, errors.New("error"))
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-			},
-		},
-		{
-			name:   "Error: Database error - Internal Server Error",
-			userID: validUUID,
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("database error"))
-			},
-			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
 			name:   "Success: User found - OK",
-			userID: validUUID,
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				userID, _ := uuid.FromString(validUUID)
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"user_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				return mux.SetURLVars(request, param)
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				userID, err := uuid.FromString("00000000-0000-0000-0000-000000000001")
+				if err != nil {
+					t.Fatalf("uuid required for test name %s", t.Name())
+				}
+
 				expectedUser := model.User{
 					FirstName:     null.StringFrom("John"),
 					LastName:      null.StringFrom("Doe"),
@@ -3852,11 +3891,12 @@ func TestManagementResource_GetUser(t *testing.T) {
 						ID: userID,
 					},
 				}
-				mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(expectedUser, nil)
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), userID).Return(expectedUser, nil)
 			},
 			expected: expected{
 				responseCode: http.StatusOK,
-				responseBody: `{"data":{"id":"00000000-0000-0000-0000-000000000001","first_name":"John","last_name":"Doe","email_address":"john.doe@example.com","principal_name":"john.doe"}}`,
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}, "Location":[]string{"/"}},
+				responseBody: `{"data":{"AuthSecret":null,"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"email_address":"john.doe@example.com","eula_accepted":false,"first_name":"John","id":"00000000-0000-0000-0000-000000000001","is_disabled":false,"last_login":"0001-01-01T00:00:00Z","last_name":"Doe","principal_name":"john.doe","roles":null,"sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -3864,46 +3904,27 @@ func TestManagementResource_GetUser(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			endpointURL := fmt.Sprintf("/api/v2/users/%s", testCase.userID)
-			req, err := http.NewRequest("GET", endpointURL, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableUserID: testCase.userID,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			response := httptest.NewRecorder()
-			resources.GetUser(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			if testCase.name == "Success: User found - OK" {
-				var responseWrapper struct {
-					Data model.User `json:"data"`
-				}
-				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-				require.NoError(t, err)
+			resources.GetUser(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
-				expectedID, _ := uuid.FromString(validUUID)
-				assert.Equal(t, expectedID, responseWrapper.Data.ID)
-				assert.Equal(t, "John", responseWrapper.Data.FirstName.String)
-				assert.Equal(t, "Doe", responseWrapper.Data.LastName.String)
-				assert.Equal(t, "john.doe@example.com", responseWrapper.Data.EmailAddress.String)
-				assert.Equal(t, "john.doe", responseWrapper.Data.PrincipalName)
-			} else {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			require.Equal(t, testCase.expected.responseCode, status)
+			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
