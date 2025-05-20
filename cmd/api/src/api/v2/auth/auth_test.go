@@ -3345,13 +3345,12 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		{
 			name: "Error: Database Error GetUser - Internal Server Error",
 			buildRequest: func() *http.Request {
-				createToken := &v2.CreateUserToken{TokenName:"name", UserID: "id"}
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
 					URL: &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader(fmt.Append(nil, createToken))),
+					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3361,12 +3360,163 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				}))
 			},
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockDatabase.EXPECT().GetUser(req.Context(), "").Return(model.User{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
-				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Error: invalid userID verifyUserID - Forbidden",
+			buildRequest: func() *http.Request {
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
+					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"1"}`))),
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"missing permission to create tokens for other users"}]}`,
+			},
+		},
+		{
+			name: "Error: auth.NewUserAuthToken error creating auth token - Internal Server Error",
+			buildRequest: func() *http.Request {
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
+					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth","ManageUsers"),
+							},
+						},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Error: database error db.CreateAuthToken - Internal Server Error",
+			buildRequest: func() *http.Request {
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
+					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Permissions: model.Permissions{model.NewPermission("auth","ManageUsers"),},
+								},
+							},
+						},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth","ManageUsers"),
+							},
+						},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().CreateAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Success: created auth token; user has correct permissions - OK",
+			buildRequest: func() *http.Request {
+				header := http.Header{}
+				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+				request := &http.Request{
+					URL: &url.URL{},
+					Header: header,
+					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Roles: model.Roles{
+								{
+									Permissions: model.Permissions{model.NewPermission("auth","ManageUsers"),},
+								},
+							},
+						},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth","ManageUsers"),
+							},
+						},
+					},
+				}))
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().CreateAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{
+					UserID: uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					ClientID: uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					Name: null.StringFrom("name"),
+					Key: "key",
+					HmacMethod: "hmac-sha2-256",
+					LastAccess: time.Time{},
+					Unique: model.Unique{
+						ID: uuid.FromStringOrNil("id"),
+						Basic: model.Basic{
+							CreatedAt: time.Time{},
+							UpdatedAt: time.Time{},
+							DeletedAt: sql.NullTime{},
+						},
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"hmac_method":"hmac-sha2-256","id":"00000000-0000-0000-0000-000000000000","key":"key","last_access":"0001-01-01T00:00:00Z","name":"name","updated_at":"0001-01-01T00:00:00Z","user_id":null}}`,
 			},
 		},
 	}
@@ -3392,184 +3542,12 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
-
-// func TestManagementResource_CreateAuthToken(t *testing.T) {
-// 	type TestData struct {
-// 		testName             string
-// 		expectedResponseBody string
-// 		expectedResponseCode int
-// 		setupMocks           func(*testing.T, *mocks.MockDatabase, *http.Request)
-// 		payload              string
-// 		userContext          func(*testing.T) (model.User, context.Context)
-// 	}
-
-// 	testData := []TestData{
-// 		{
-// 			testName:             "Request invalid",
-// 			expectedResponseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"error unmarshalling JSON payload"}]}`,
-// 			expectedResponseCode: http.StatusBadRequest,
-// 			payload:              `{`, // Invalid JSON
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				admin, adminCtx := createAdminUser(t)
-// 				return admin, adminCtx
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 			},
-// 		},
-// 		{
-// 			testName:             "User lookup failed",
-// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-// 			expectedResponseCode: http.StatusInternalServerError,
-// 			payload:              `{"token_name":"","user_id":""}`,
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				_, adminCtx := createAdminUser(t)
-// 				return model.User{}, adminCtx
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 				db.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{}, errors.New("user not found"))
-// 			},
-// 		},
-// 		{
-// 			testName:             "User not allowed to create token",
-// 			expectedResponseBody: `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"missing permission to create tokens for other users"}]}`,
-// 			expectedResponseCode: http.StatusForbidden,
-// 			payload:              `{"user_id":"00000000-1111-2222-3333-444444444444","token_name":"test token"}`,
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				regularUser := model.User{
-// 					FirstName:     null.String{NullString: sql.NullString{String: "Regular", Valid: true}},
-// 					LastName:      null.String{NullString: sql.NullString{String: "User", Valid: true}},
-// 					EmailAddress:  null.String{NullString: sql.NullString{String: "regular@example.com", Valid: true}},
-// 					PrincipalName: "RegularUser",
-// 					Unique:        model.Unique{ID: must.NewUUIDv4()},
-// 				}
-
-// 				regularUserContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-// 				regularBhCtx := ctx.Get(regularUserContext)
-// 				regularBhCtx.AuthCtx.Owner = regularUser
-
-// 				return regularUser, regularUserContext
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-// 			},
-// 		},
-// 		{
-// 			testName:             "Failed to create token",
-// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-// 			expectedResponseCode: http.StatusInternalServerError,
-// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				admin, _ := createAdminUser(t)
-// 				// Using empty context to trigger error
-// 				return admin, context.Background()
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 			},
-// 		},
-// 		{
-// 			testName:             "Failed to store token",
-// 			expectedResponseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
-// 			expectedResponseCode: http.StatusInternalServerError,
-// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				admin, adminContext := createAdminUser(t)
-// 				return admin, adminContext
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-// 				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(model.AuthToken{}, errors.New("failed to store token"))
-// 			},
-// 		},
-// 		{
-// 			testName:             "Success",
-// 			expectedResponseCode: http.StatusOK,
-// 			payload:              `{"token_name":"test token"}`, // user_id will be updated in the test
-// 			userContext: func(t *testing.T) (model.User, context.Context) {
-// 				admin, adminContext := createAdminUser(t)
-// 				return admin, adminContext
-// 			},
-// 			setupMocks: func(t *testing.T, db *mocks.MockDatabase, req *http.Request) {
-// 				user, _ := authz.GetUserFromAuthCtx(ctx.FromRequest(req).AuthCtx)
-// 				db.EXPECT().GetUser(gomock.Any(), user.ID).Return(user, nil)
-
-// 				expectedToken := model.AuthToken{
-// 					UserID:     uuid.NullUUID{UUID: user.ID, Valid: true},
-// 					Name:       null.StringFrom("test token"),
-// 					HmacMethod: "hmac-sha2-256",
-// 					Key:        "test-key",
-// 				}
-
-// 				db.EXPECT().CreateAuthToken(gomock.Any(), gomock.Any()).Return(expectedToken, nil)
-// 			},
-// 		},
-// 	}
-
-// 	const endpointUrl = "/api/v2/tokens"
-
-// 	for _, testCase := range testData {
-// 		t.Run(testCase.testName, func(t *testing.T) {
-// 			// Setup
-// 			mockCtrl := gomock.NewController(t)
-// 			defer mockCtrl.Finish()
-
-// 			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-// 			router := createRouter(endpointUrl, resources.CreateAuthToken, "POST")
-
-// 			user, ctx := testCase.userContext(t)
-
-// 			// For cases where we need to update the user_id in the payload
-// 			var payload string
-// 			if testCase.testName == "Success" || testCase.testName == "Failed to store token" {
-// 				var payloadMap map[string]interface{}
-// 				err := json.Unmarshal([]byte(testCase.payload), &payloadMap)
-// 				require.NoError(t, err)
-
-// 				payloadMap["user_id"] = user.ID.String()
-
-// 				updatedPayload, err := json.Marshal(payloadMap)
-// 				require.NoError(t, err)
-// 				payload = string(updatedPayload)
-// 			} else {
-// 				payload = testCase.payload
-// 			}
-
-// 			req, err := http.NewRequestWithContext(ctx, "POST", endpointUrl, bytes.NewReader([]byte(payload)))
-// 			require.NoError(t, err)
-
-// 			req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
-
-// 			testCase.setupMocks(t, mockDB, req)
-
-// 			response := httptest.NewRecorder()
-// 			router.ServeHTTP(response, req)
-
-// 			assert.Equal(t, testCase.expectedResponseCode, response.Code)
-
-// 			if testCase.testName == "Success" {
-// 				var responseWrapper struct {
-// 					Data model.AuthToken `json:"data"`
-// 				}
-// 				err = json.Unmarshal(response.Body.Bytes(), &responseWrapper)
-// 				require.NoError(t, err)
-// 				assert.Equal(t, "test token", responseWrapper.Data.Name.String)
-// 				assert.Equal(t, "hmac-sha2-256", responseWrapper.Data.HmacMethod)
-// 				assert.Equal(t, "test-key", responseWrapper.Data.Key)
-// 			} else if testCase.expectedResponseBody != "" {
-// 				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-// 				require.NoError(t, err)
-// 				assert.JSONEq(t, testCase.expectedResponseBody, responseBodyWithDefaultTimestamp)
-// 			}
-// 		})
-// 	}
-// }
 
 func TestManagementResource_DeleteAuthToken(t *testing.T) {
 	t.Parallel()
