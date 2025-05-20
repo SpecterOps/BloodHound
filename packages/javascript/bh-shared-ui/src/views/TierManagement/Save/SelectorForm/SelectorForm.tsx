@@ -22,6 +22,7 @@ import {
     SelectorSeedRequest,
     UpdateSelectorRequest,
 } from 'js-client-library/dist/requests';
+import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
@@ -78,9 +79,9 @@ const diffValues = (
     const diffed: UpdateSelectorRequest = {};
     const disabled = data.disabled_at !== null;
 
-    // 'on' means the switch is 'checked' which means enabled which means disabled is false
+    // 'on' means the switch hasn't been touched yet which means default to current disabled state
     if (formValues.disabled === 'on') {
-        formValues.disabled = false;
+        formValues.disabled = disabled;
     }
 
     if (data.name !== formValues.name) diffed.name = formValues.name;
@@ -124,6 +125,14 @@ const SelectorForm: FC = () => {
                     throw new Error(`Missing required entity IDs; tagId: ${tagId}, selectorId: ${selectorId}`);
 
                 const diffedValues = diffValues(selectorQuery.data, updatedValues);
+
+                if (isEmpty(diffedValues)) {
+                    addNotification('No changes to selector detected', 'tier-management_update-selector', {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                        variant: 'warning',
+                    });
+                    return;
+                }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues: diffedValues });
 
