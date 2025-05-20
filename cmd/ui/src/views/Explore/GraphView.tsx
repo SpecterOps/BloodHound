@@ -17,7 +17,6 @@
 import { Popper, useTheme } from '@mui/material';
 import {
     GraphProgress,
-    IconDictionary,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
@@ -66,6 +65,8 @@ const GraphView: FC = () => {
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
 
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+
     useEffect(() => {
         let items: any = graphQuery.data;
 
@@ -77,14 +78,13 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        const customIcons: IconDictionary = useCustomNodeKinds({ select: transformIconDictionary }).data ?? {};
-        initGraph(graph, items, theme, darkMode, customIcons);
+        initGraph(graph, items, theme, darkMode, customIcons.data ?? {});
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
 
     if (isLoading) {
         return (
