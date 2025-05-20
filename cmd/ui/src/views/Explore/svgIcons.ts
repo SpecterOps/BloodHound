@@ -16,9 +16,10 @@
 
 import { icon } from '@fortawesome/fontawesome-svg-core';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { DEFAULT_ICON_BACKGROUND, GLYPHS, GetIconInfo, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
+import { GLYPHS, GetIconInfo, GlyphDictionary, IconDictionary, NODE_ICON, UNKNOWN_ICON } from 'bh-shared-ui';
 
 const NODE_SCALE = '0.6';
+const DEFAULT_ICON_COLOR = '#000000';
 const GLYPH_SCALE = '0.5';
 
 // Adds object URLs to all icon and glyph definitions so that our fontawesome icons can be used by sigmajs node programs
@@ -26,7 +27,7 @@ const appendSvgUrls = (icons: IconDictionary | GlyphDictionary, scale: string): 
     Object.entries(icons).forEach(([type, value]) => {
         if (value.url) return;
 
-        const color = (icons[type] as any).iconColor || DEFAULT_ICON_BACKGROUND;
+        const color = (icons[type] as any).iconColor || DEFAULT_ICON_COLOR;
         icons[type].url = getModifiedSvgUrlFromIcon(value.icon, scale, color);
     });
 };
@@ -44,7 +45,7 @@ const getModifiedSvgUrlFromIcon = (iconDefinition: IconDefinition, scale: string
 // Append URLs for nodes, glyphs, and any additional utility icons
 appendSvgUrls(NODE_ICON, NODE_SCALE);
 appendSvgUrls(GLYPHS, GLYPH_SCALE);
-UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, NODE_SCALE, DEFAULT_ICON_BACKGROUND);
+UNKNOWN_ICON.url = getModifiedSvgUrlFromIcon(UNKNOWN_ICON.icon, NODE_SCALE, DEFAULT_ICON_COLOR);
 
 export { GLYPHS, GetIconInfo, NODE_ICON, UNKNOWN_ICON };
 

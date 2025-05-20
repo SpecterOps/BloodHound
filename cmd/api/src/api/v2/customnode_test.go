@@ -41,8 +41,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
-		mockGraphQuery *mocks.MockGraph
-		mockDatabase   *dbmocks.MockDatabase
+		mockDatabase *dbmocks.MockDatabase
 	}
 	type expected struct {
 		responseBody   string
