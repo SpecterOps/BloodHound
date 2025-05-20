@@ -127,19 +127,25 @@ const SelectorForm: FC = () => {
                 const diffedValues = diffValues(selectorQuery.data, updatedValues);
 
                 if (isEmpty(diffedValues)) {
-                    addNotification('No changes to selector detected', 'tier-management_update-selector', {
-                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                        variant: 'warning',
-                    });
+                    addNotification(
+                        'No changes to selector detected',
+                        `tier-management_update-selector_no-changes-warn_${selectorId}`,
+                        {
+                            anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                        }
+                    );
                     return;
                 }
 
                 await patchSelectorMutation.mutateAsync({ tagId, selectorId, updatedValues: diffedValues });
 
-                addNotification('Selector was updated successfully!', 'tier-management_update-selector', {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    variant: 'success',
-                });
+                addNotification(
+                    'Selector was updated successfully!',
+                    `tier-management_update-selector_success_${selectorId}`,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
 
                 history.back();
             } catch (error) {
@@ -156,9 +162,8 @@ const SelectorForm: FC = () => {
 
                 await createSelectorMutation.mutateAsync({ tagId, values });
 
-                addNotification('Selector was created successfully!', 'tier-management_create-selector', {
+                addNotification('Selector was created successfully!', undefined, {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                    variant: 'success',
                 });
 
                 navigate(`/tier-management/details/tier/${tagId}`);
