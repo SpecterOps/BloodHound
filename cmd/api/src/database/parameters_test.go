@@ -136,7 +136,7 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 8)
+	require.Len(t, parameters, 9)
 	for _, parameter := range parameters {
 		if !parameter.IsProtectedKey(parameter.Key) {
 			require.True(t, parameter.IsValidKey(parameter.Key))
