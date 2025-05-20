@@ -115,11 +115,11 @@ const CreateUserForm: React.FC<{
                                         required: 'Email Address is required',
                                         maxLength: {
                                             value: 310,
-                                            message: 'Email address too long.',
+                                            message: 'Email address must be less than 310 characters',
                                         },
                                         pattern: {
                                             value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                                            message: 'Please follow the example@domain.com format.',
+                                            message: 'Please follow the example@domain.com format',
                                         },
                                     }}
                                     render={({ field }) => (
@@ -146,7 +146,7 @@ const CreateUserForm: React.FC<{
                                         required: 'Principal Name is required',
                                         maxLength: {
                                             value: 1000,
-                                            message: 'Principal Name must be less than 1000 characters.',
+                                            message: 'Principal Name must be less than 1000 characters',
                                         },
                                         minLength: {
                                             value: 2,
@@ -179,7 +179,7 @@ const CreateUserForm: React.FC<{
                                         required: 'First Name is required',
                                         maxLength: {
                                             value: 1000,
-                                            message: 'First Name must be less than 1000 characters.',
+                                            message: 'First Name must be less than 1000 characters',
                                         },
                                         minLength: {
                                             value: 2,
@@ -212,7 +212,7 @@ const CreateUserForm: React.FC<{
                                         required: 'Last Name is required',
                                         maxLength: {
                                             value: 1000,
-                                            message: 'Last Name must be less than 1000 characters.',
+                                            message: 'Last Name must be less than 1000 characters',
                                         },
                                         minLength: {
                                             value: 2,
