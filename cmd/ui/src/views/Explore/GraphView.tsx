@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2023 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import {
     isWebGLEnabled,
     transformFlatGraphResponse,
     useAvailableEnvironments,
+    useCustomNodeKinds,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -41,6 +42,7 @@ import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
+import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -63,6 +65,8 @@ const GraphView: FC = () => {
     const sigmaChartRef = useRef<any>(null);
     const currentSearchAnchorElement = useRef(null);
 
+    const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+
     useEffect(() => {
         let items: any = graphQuery.data;
 
@@ -74,13 +78,13 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode);
+        initGraph(graph, items, theme, darkMode, customIcons.data ?? {});
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
 
     if (isLoading) {
         return (

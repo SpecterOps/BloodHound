@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { act, render } from 'src/test-utils';
 
 import userEvent from '@testing-library/user-event';
@@ -35,6 +37,20 @@ const mockContextValue = {
     isObjectInfoPanelOpen: true,
     setIsObjectInfoPanelOpen,
 };
+
+const server = setupServer(
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 const setup = async () => {
     const url = `?expandedPanelSections=['test','test1']`;
