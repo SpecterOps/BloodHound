@@ -519,6 +519,8 @@ func TestManagementResource_ProcessFileUpload(t *testing.T) {
 			require.Equal(t, testCase.expected.responseHeader, header)
 			if body != "" {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
 			}
 		})
 	}
