@@ -83,14 +83,19 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
+					restrictingOutboundNTLM := false
 
 					if !hasAuthenticatedUser(innerComputer, ntlmCache) {
 						continue
 					} else if isProtectedComputer(innerComputer, ntlmCache) {
 						continue
-					} else if isRestrictingOutboundNTLM(innerComputer, treatMissingRestrictOutboundNTLMPropertyAsRestricting, ctx) {
-						continue
-					} else {
+					} else if restrictingOutboundNTLM, err = isRestrictingOutboundNTLM(innerComputer, treatMissingRestrictOutboundNTLMPropertyAsRestricting); err != nil {
+						if !errors.Is(err, graph.ErrPropertyNotFound) {
+							slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
+						}
+					}
+
+					if !restrictingOutboundNTLM {
 						allUnprotectedComputerCache.Add(innerComputer.ID.Uint64())
 					}
 				}
@@ -135,23 +140,13 @@ func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
 // Check if the computer is restricting outbound NTLM
 // A computer that does is not vulnerable
 // A toggle determines how we'll treat computers missing this property
-func isRestrictingOutboundNTLM(computer *graph.Node, missingPropertyMeansRestricting bool, ctx context.Context) bool {
-	restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool()
-	if err != nil && missingPropertyMeansRestricting {
-		// If we've failed to retrieve the property because it doesn't exist we'll fail closed here. We will treat it as if it is protected to prevent false positives
-		if !errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
-		}
-		return true
-	} else if err != nil {
-		// If we've failed to retrieve the property here tho, we'll instead treat it as unprotected
-		if !errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
-		}
-		return false
+func isRestrictingOutboundNTLM(computer *graph.Node, missingPropertyMeansRestricting bool) (bool, error) {
+	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
+		// If we've failed to retrieve the property because it doesn't exist we may fail closed here. We will treat it as if it is protected to prevent false positives
+		return missingPropertyMeansRestricting, err
+	} else {
+		return restrictOutboundNtlm, nil
 	}
-
-	return restrictOutboundNtlm
 }
 
 // PostNTLM is the initial function used to execute our NTLM analysis
@@ -205,9 +200,6 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 					continue
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
-				} else if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
-					// Any computers that are restricted/protected are not valid targets for the next relays
-					continue
 				} else {
 					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserGroupID)
@@ -217,7 +209,10 @@ func PostNTLM(ctx context.Context, db graph.Database, groupExpansions impact.Pat
 						continue
 					}
 
-					if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+					if !ntlmCache.UnprotectedComputersCache.Contains(innerComputer.ID.Uint64()) {
+						// Any computers that are restricted/protected are not valid targets for the next relays
+						continue
+					} else if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ntlmCache.LdapCache)
 					}); err != nil {
 						slog.WarnContext(ctx, fmt.Sprintf("Post processing failed for %s: %v", ad.CoerceAndRelayNTLMToLDAP, err))
@@ -575,6 +570,7 @@ func GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx context.Context, db graph.Dat
 
 // PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
+// RestrictOutboundNTLM has no relevance on the target computer passed in here, but instead on the Admin computers attached to it
 func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
