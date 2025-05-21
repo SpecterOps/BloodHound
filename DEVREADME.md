@@ -21,6 +21,8 @@ More detailed information regarding [contributing](https://github.com/SpecterOps
 - [Yarn v3.6](https://v3.yarnpkg.com/getting-started/install)
     - installation using `npm corepack` is recommended (instructions in the link above)
 - [Go v1.23](https://go.dev/dl/)
+  - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) is also needed
+  - make sure `$HOME/go/bin` (or wherever your Go packages are installed) is in your `$PATH`
 - [Python v3.10](https://www.python.org/downloads/)
 
 ## Quick Start
@@ -53,6 +55,6 @@ Packages in the BHCE repo will follow one of two conventions:
 - If the package lives within `cmd/api/src`:
   - `github.com/specterops/bloodhound/src/<path-to>/<package>`
   - is covered by the `go.mod` file in the `src` directory
-- If the pacakge lives within `packages/go`:
+- If the package lives within `packages/go`:
   - `github.com/specterops/bloodhound/<package>`
   - requires its own `go.mod`
