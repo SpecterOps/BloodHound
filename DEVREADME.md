@@ -26,8 +26,9 @@ More detailed information regarding [contributing](https://github.com/SpecterOps
 - [Python v3.10](https://www.python.org/downloads/)
 
 ## Quick Start
-
+Please make sure you have all dev requisites and docker is running!
 - Run `just init`
+  - this should only ever be run once; the only reason to run it again is if you wipe the repo and start fresh or if you want to wipe your config files and start over
 - Run `just bh-dev`
 - To access the UI, navigate to `http://bloodhound.localhost`.
 
