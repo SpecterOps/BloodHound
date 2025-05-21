@@ -1,0 +1,109 @@
+---
+title: "2025-05-21 Release Notes (v7.4.0)"
+---
+
+## Announcements
+
+### Tier Management Early Access is Live\!
+In preparation for BloodHound Enterprise's ability to support multiple tiers, the Group Management feature needed a complete overhaul. This release includes Early Access support for those interested in trying it out. We are adding considerable flexibility and improved ease of use to BloodHound with the Tier Management update, including how objects are tagged, providing better visibility into that process, and making querying for tagged objects much easier.
+
+With Tier Management:
+  - Querying for tagged objects in Cypher is much simpler, so no coalesce/split is needed! (All cypher queries targeting tagged objects will need rewriting).
+  - Added support for Cypher selectors.
+  - Selecting an OU will now tag all objects within (recursively).
+  - Tier Management view provides information on which selectors are tagging an object.
+  - BloodHound Enterprise now supports the Owned label!
+  - And much more!
+
+Please reach out to your TAM with any questions or feedback!
+
+### New BloodHound Enterprise Splunk App is Live!
+
+We've completely rewritten our BloodHound Enterprise Splunk app, providing significantly more customization, support for proxies, and much more! The new Splunk app is available on SplunkBase and supports both on-premise and cloud deployments of Splunk. Unfortunately, due to the volume of changes, there was no clean way to provide an upgrade path for this new version of the Splunk app, so upgrading will require a fresh installation.
+
+Find the new appp here: https://splunkbase.splunk.com/app/7818
+
+## Summary
+
+- **BloodHound (v7.4.0)**
+  - New and Improved Features
+    - Tier Management early access is now available (see notes for details)!
+    - General availability of the back button (deep-linking)\!
+    - TrustedBy edge replaced with SameForestTrust, CrossForestTrust, SpoofSIDHistory, and AbuseTGTDelegation edges to more accurately reflect traversable Attack Paths (enhanced by SharpHound upgrade).
+    - Improved Cypher query performance.
+    - Added validation to HostsCAService edge to require the presence of the hosting computer.
+  - Bug Fixes
+    - Resolved an issue with ingesting numeric properties on Domain objects (Huge thank you to [@mwstock](https://github.com/mwstock)!).
+    - Numbers will no longer appear as dates in Entity panels.
+    - Database Management under Administration will now properly warn when unavailable to the current user.
+    - _[BHE Only]_ Users with the "User" role may now see Client details.
+    - _[BHE Only]_ Collection schedules will now always display in the current user's timezone.
+    - _[BHE Only]_ Resolved an issue improper reconciliation on PublishedTo edges.
+    - _[BHE Only]_ Filtering environments by Risk in the Environment Selector will now consistently show all intended results.
+- **SharpHound (v2.6.6)**
+  - New and Improved Features
+    - Extended trust collection support and visibility.
+    - Updated the logging level of certain edge-case handling logs to more accurately indicate whether they impacted a collection.
+- **AzureHound (v2.4.1)**
+  - _AzureHound v2.4.1 supports preparing for upcoming functionality, but has no functional changes._
+
+## BloodHound (v7.4.0)
+
+### New and Improved Features
+
+- **Tier Management Early Access** - In preparation for BloodHound Enterprise's ability to support multiple tiers, the Group Management feature needed a complete overhaul. This release includes Early Access support for those interested in trying it out. We are adding considerable flexibility and improved ease of use to BloodHound with the Tier Management update, including how objects are tagged, providing better visibility into that process, and making querying for tagged objects much easier.\
+  \
+  With Tier Management:
+    - Querying for tagged objects in Cypher is much simpler, so no coalesce/split is needed! (All cypher queries targeting tagged objects will need rewriting).
+    - Added support for Cypher selectors.
+    - Introduced significantly more default (disabled) selectors for objects SpecterOps considers Tier Zero for consideration.
+    - Added the ability to disable selectors.
+    - Object selectors can target multiple objects.
+    - Selectors now support both names and descriptions for clarity.
+    - Selecting an OU will now tag all objects within (recursively).
+    - Tier Management view provides information on which selectors are tagging an object.
+    - BloodHound Enterprise now supports the Owned label!
+
+  Known Caveats:
+    - Quick "Add to Tier Zero" buttons are not yet supported and will be added in the next couple of releases.
+    - Tagging of GPOs and OUs into Tier Zero with Tier Management does not account for inheritance blocking. This will be resolved in the next release.
+    - All existing custom selectors present at the time of release were migrated to the new system. There is no two-way or ongoing sync capabilities if you decide to utilize Tier Management in early access.
+    - Existing, custom selectors with ObjectIDs as names will be attempted to be renamed automatically to match the the name of the affiliated on our next release.
+- **General availability of the back button (deep-linking)\!** - Not content with "just a back button," we went all-in, adding full deep-link support to the application. This supports going "forward" and "back" in the application and allows sharing links among teams when something interesting is discovered. This functionality may be enabled within the "Early Access" configuration section of the "Administration" section.\
+  \
+  BloodHound Enterprise customers will see support for deep linking across both the Attack Paths and Posture pages.\
+  \
+  Within the Explore view, links should include:
+  - Currently selected search tab
+  - The content searched within that tab (objects, cypher, etc)
+  - Any selected object or edge on the graph
+  - Selected Entity panel exp
+  - Selected graph layout
+- **TrustedBy edge replacement** - The `TrustedBy` edge has always offered valuable information. However, it historically hid valuable information. One of the most common questions we get from folks after running a Pathfinding query is, "Is this a real path? Can I follow that `TrustedBy` edge?" Wonder no more! In this release, we are replacing `TrustedBy` with four new edges, `SameForestTrust`, `CrossForestTrust`, `SpoofSIDHistory`, and `AbuseTGTDelegation`, to reflect traversable Attack Paths more accurately.\
+\
+With this change, `SameForestTrust` and `CrossForestTrust` will represent the structural trusts within Active Directory. They are non-traversable and, therefore, will not appear within Pathfinding. `SpoofSIDHistory` and `AbuseTGTDelegation` will provide traversable edges (and appear in Pathfinding queries) that will indicate to BloodHound users whether or not a valid path exists across an Active Directory trust.\
+\
+This replacement does not require a SharpHound upgrade, however v2.6.6 does add enhanced collection logic and provides additional visibility into cross-forest attacks.
+- **Improved Cypher query performance** - Long-time BloodHound CE/Enterprise users or those who have spent time digging around in GitHub will have noticed the various "quality control" checks we have in place, specifically around Cypher queries. Created as a mechanism to prevent over-consumption of resources within BloodHound, we discovered multiple areas where these analytics were overly aggressive in their protections. We have completely rewritten and simplified these mechanisms, making heavy use of the capabilities provided to us by our PostgreSQL migration to proffer those protections instead. These changes apply to all BloodHound CE/Enterprise users, regardless of the backend database utilized.
+- **HostsCAService additional validation** - We have added an additional validation step to the creation of the `HostsCAService` edge, requiring the presence of a hosting computer before the edge can be created.
+
+### Bug Fixes
+
+- Resolved an issue with ingesting numeric properties on Domain objects (Huge thank you to [@mwstock](https://github.com/mwstock)!).
+- Numbers will no longer appear as dates in Entity panels.
+- Database Management under Administration will now properly warn when unavailable to the current user.
+- _[BHE Only]_ Users with the "User" role may now see Client details.
+- _[BHE Only]_ Collection schedules will now always display in the current user's timezone.
+- _[BHE Only]_ Resolved an issue improper reconciliation on PublishedTo edges.
+- _[BHE Only]_ Filtering environments by Risk in the Environment Selector will now consistently show all intended results.
+
+## SharpHound (v2.6.6)
+
+### New and Improved Features
+
+- Extended trust collection support and visibility.
+- Updated the logging level of certain edge-case handling logs to more accurately indicate whether they impacted a collection.
+
+## AzureHound (v2.4.1)
+
+_AzureHound v2.4.1 supports preparing for upcoming functionality, but has no functional changes._
