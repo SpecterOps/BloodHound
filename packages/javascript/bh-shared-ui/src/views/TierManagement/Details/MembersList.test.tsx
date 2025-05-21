@@ -16,6 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory } from 'history';
+import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../../mocks';
@@ -25,7 +26,16 @@ import { MembersList } from './MembersList';
 
 const handlers = [...tierHandlers];
 
-const server = setupServer(...handlers);
+const server = setupServer(
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
+    ...handlers
+);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

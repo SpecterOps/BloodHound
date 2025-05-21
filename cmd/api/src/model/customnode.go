@@ -54,8 +54,9 @@ type CustomNodeKindConfig struct {
 }
 
 type CustomNodeIcon struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
+	Type  string `json:"type"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
 }
 
 func (s *CustomNodeKindConfig) Scan(value interface{}) error {
