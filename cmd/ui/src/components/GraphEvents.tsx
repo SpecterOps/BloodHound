@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { setSelectedEdge } from 'bh-shared-ui';
+import { setSelectedEdge, useExploreParams } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -57,6 +57,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const dispatch = useAppDispatch();
     const selectedEdge = useAppSelector((state) => state.edgeinfo.selectedEdge);
     const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const { exploreLayout } = useExploreParams();
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
@@ -73,9 +74,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const prevent = useRef(false);
 
     const graph = sigma.getGraph();
+    const sigmaChartRef = ref as React.MutableRefObject<any>;
 
     useImperativeHandle(
-        ref,
+        sigmaChartRef,
         () => {
             return {
                 resetCamera: () => {
@@ -300,7 +302,15 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }, [draggedNode, setSettings, showEdgeLabels]);
 
     useEffect(() => {
-        resetCamera(sigma);
+        if (sigmaChartRef?.current) {
+            if (exploreLayout === 'sequential') {
+                sigmaChartRef?.current?.runSequentialLayout();
+            } else if (exploreLayout === 'standard') {
+                sigmaChartRef?.current?.runStandardLayout();
+            }
+
+            resetCamera(sigma);
+        }
     }, [sigma]);
 
     useEffect(() => {

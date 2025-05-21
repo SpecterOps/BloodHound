@@ -57,7 +57,7 @@ const GraphView: FC = () => {
 
     const dispatch = useAppDispatch();
 
-    const { setExploreParams, exploreLayout } = useExploreParams();
+    const { setExploreParams } = useExploreParams();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
 
@@ -104,14 +104,6 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-
-        if (exploreLayout === 'sequential') {
-            sigmaChartRef.current?.runSequentialLayout();
-        }
-
-        if (exploreLayout === 'standard') {
-            sigmaChartRef.current?.runStandardLayout();
-        }
     }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
