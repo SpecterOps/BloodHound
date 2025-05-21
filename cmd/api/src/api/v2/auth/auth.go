@@ -770,7 +770,7 @@ func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, reques
 		} else if err = s.db.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 			api.HandleDatabaseError(request, response, err)
 			return
-		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
+ 		} else if token.UserID.Valid && token.UserID.UUID != user.ID && !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 		} else if err := s.db.DeleteAuthToken(request.Context(), token); err != nil {

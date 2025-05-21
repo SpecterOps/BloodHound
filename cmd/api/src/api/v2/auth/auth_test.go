@@ -3283,10 +3283,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
 	}
-
 	tt := []testData{
 		{
-			name: "Error: User not logged in, empty context - Internal Server Error",
+			name: "Error: GetUserFromAuthCtx unable to get user from ctx - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{},
@@ -3325,7 +3324,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
 				}
 
@@ -3348,9 +3347,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3374,9 +3373,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"1"}`))),
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"1"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3400,9 +3399,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"id"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3411,7 +3410,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 						PermissionOverrides: authz.PermissionOverrides{
 							Enabled: true,
 							Permissions: model.Permissions{
-								model.NewPermission("auth","ManageUsers"),
+								model.NewPermission("auth", "ManageUsers"),
 							},
 						},
 					},
@@ -3432,9 +3431,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3442,14 +3441,14 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 						Owner: model.User{
 							Roles: model.Roles{
 								{
-									Permissions: model.Permissions{model.NewPermission("auth","ManageUsers"),},
+									Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
 								},
 							},
 						},
 						PermissionOverrides: authz.PermissionOverrides{
 							Enabled: true,
 							Permissions: model.Permissions{
-								model.NewPermission("auth","ManageUsers"),
+								model.NewPermission("auth", "ManageUsers"),
 							},
 						},
 					},
@@ -3471,9 +3470,9 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 				header := http.Header{}
 				header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
 				request := &http.Request{
-					URL: &url.URL{},
+					URL:    &url.URL{},
 					Header: header,
-					Body: io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
+					Body:   io.NopCloser(bytes.NewReader([]byte(`{"token_name":"name","user_id":"00000000-0000-0000-0000-000000000000"}`))),
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
@@ -3481,14 +3480,14 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 						Owner: model.User{
 							Roles: model.Roles{
 								{
-									Permissions: model.Permissions{model.NewPermission("auth","ManageUsers"),},
+									Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
 								},
 							},
 						},
 						PermissionOverrides: authz.PermissionOverrides{
 							Enabled: true,
 							Permissions: model.Permissions{
-								model.NewPermission("auth","ManageUsers"),
+								model.NewPermission("auth", "ManageUsers"),
 							},
 						},
 					},
@@ -3497,10 +3496,10 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				mock.mockDatabase.EXPECT().GetUser(req.Context(), uuid.FromStringOrNil("00000000-0000-0000-0000-000000000000")).Return(model.User{}, nil)
 				mock.mockDatabase.EXPECT().CreateAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{
-					UserID: uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
-					ClientID: uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
-					Name: null.StringFrom("name"),
-					Key: "key",
+					UserID:     uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					ClientID:   uuid.NullUUID{UUID: uuid.FromStringOrNil("id")},
+					Name:       null.StringFrom("name"),
+					Key:        "key",
 					HmacMethod: "hmac-sha2-256",
 					LastAccess: time.Time{},
 					Unique: model.Unique{
@@ -3552,90 +3551,232 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 func TestManagementResource_DeleteAuthToken(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseBody string
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name        string
-		tokenID     string
-		setupMocks  func(*testing.T, *mocks.MockDatabase, *http.Request)
-		userContext func(*testing.T) context.Context
-		expected    expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
-
-	validUUID := "00000000-0000-0000-0000-000000000001"
-	validUserID := must.NewUUIDv4()
 
 	tt := []testData{
 		{
-			name:    "Error: User not logged in",
-			tokenID: validUUID,
-			userContext: func(t *testing.T) context.Context {
-				return context.Background()
+			name: "Error: GetUserFromAuthCtx unable to get user from ctx - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{},
+				}
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, req *http.Request) {},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
-			name:    "Error: Invalid token ID",
-			tokenID: "invalid-uuid",
-			userContext: func(t *testing.T) context.Context {
-				user := model.User{
-					Unique: model.Unique{
-						ID: validUserID,
-					},
+			name: "Error: invalid token_id - Bad Request",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
 				}
 
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.AuthCtx.Owner = user
+				param := map[string]string{
+					"token_id": "invalid",
+				}
 
-				return userContext
+
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth", "ManageUsers"),
+							},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, req *http.Request) {},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
 			},
 		},
+		{
+			name: "Error: Database error db.GetAuthToken - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"token_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth", "ManageUsers"),
+							},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
+			},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Error: Database Error db.AppendAuditLog - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"token_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								model.NewPermission("auth", "ManageUsers"),
+							},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
+			},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{}, nil)
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Error: request user ID != auth token user - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"token_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Unique: model.Unique{
+								ID: must.NewUUIDv4(),
+							},
+						},
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
+			},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		// {
+		// 	name:    "Error: Invalid token ID",
+		// 	tokenID: "invalid-uuid",
+		// 	userContext: func(t *testing.T) context.Context {
+		// 		user := model.User{
+		// 			Unique: model.Unique{
+		// 				ID: validUserID,
+		// 			},
+		// 		}
+
+		// 		userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
+		// 		bhCtx := ctx.Get(userContext)
+		// 		bhCtx.AuthCtx.Owner = user
+
+		// 		return userContext
+		// 	},
+		// 	setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, req *http.Request) {},
+		// 	expected: expected{
+		// 		responseCode: http.StatusBadRequest,
+		// 		responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
+		// 	},
+		// },
 	}
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			endpointURL := fmt.Sprintf("/api/v2/tokens/%s", testCase.tokenID)
-			req, err := http.NewRequest("DELETE", endpointURL, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableTokenID: testCase.tokenID,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
 
-			req = req.WithContext(testCase.userContext(t))
-
-			testCase.setupMocks(t, mockDB, req)
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			response := httptest.NewRecorder()
-			resources.DeleteAuthToken(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, authz.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 
-			if testCase.expected.responseBody != "" {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			resources.DeleteAuthToken(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -3753,8 +3894,8 @@ func TestManagementResource_GetPermission(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
@@ -3889,8 +4030,8 @@ func TestManagementResource_GetRole(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
@@ -4021,8 +4162,8 @@ func TestManagementResource_GetUser(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
@@ -4123,8 +4264,8 @@ func TestManagementResource_GetSelf(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
