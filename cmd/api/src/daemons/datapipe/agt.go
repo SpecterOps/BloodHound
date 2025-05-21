@@ -292,11 +292,9 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 				query.Kind(query.Relationship(), ad.GPLink),
 				query.Kind(query.Start(), ad.GPO),
 			)).Do(func(path *graph.PathSegment) error {
-			if path.Trunk != nil {
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Trunk.Node})
-			}
-			channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Node})
-
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+			})
 			return nil
 		})}); err != nil {
 		return err
@@ -310,10 +308,9 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 				query.Kind(query.Relationship(), ad.Contains),
 				query.Kind(query.Start(), ad.Container),
 			)).Do(func(path *graph.PathSegment) error {
-				if path.Trunk != nil {
-					channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Trunk.Node})
-				}
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Node})
+				path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+				})
 				return nil
 			})}); err != nil {
 			return err
@@ -331,12 +328,12 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 			query.KindIn(query.Relationship(), azure.Contains),
 			query.KindIn(query.Start(), azure.Entity),
 		)).Do(func(path *graph.PathSegment) error {
-			if path.Trunk != nil && path.Trunk.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Trunk.Node})
-			}
-			if path.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Node})
-			}
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				if nextSegment.Node.Kinds.ContainsOneOf(azure.Subscription, azure.ResourceGroup, azure.ManagementGroup) {
+					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+				}
+				return true
+			})
 			return nil
 		})}); err != nil {
 		return err
@@ -350,10 +347,9 @@ func fetchAzureParentNodes(ctx context.Context, tx traversal.Traversal, node *gr
 				query.Kind(query.Relationship(), azure.RunsAs),
 				query.Kind(query.Start(), azure.App),
 			)).Do(func(path *graph.PathSegment) error {
-				if path.Trunk != nil {
-					channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Trunk.Node})
-				}
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: path.Node})
+				path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+				})
 				return nil
 			})}); err != nil {
 			return err
