@@ -33,6 +33,13 @@ const server = setupServer(
                 data: searchResults,
             })
         );
+    }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
