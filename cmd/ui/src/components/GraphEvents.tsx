@@ -313,7 +313,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         } else {
             resetCamera(sigma);
         }
-    }, [sigma]);
+    }, [sigma, exploreLayout, sigmaChartRef]);
 
     useEffect(() => {
         if (selectedEdge) setHighlightedNode(null);
