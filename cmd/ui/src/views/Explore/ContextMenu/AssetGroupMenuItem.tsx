@@ -16,7 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, apiClient, useAppNavigate, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
@@ -25,6 +25,7 @@ import { useAppSelector } from 'src/store';
 const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
     const { refetch } = useExploreGraph();
+    const navigate = useAppNavigate();
 
     const [open, setOpen] = useState(false);
 
@@ -34,7 +35,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
 
     const mutation = useMutation({
-        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
+        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' }) => {
             return apiClient.updateAssetGroupSelector(assetGroupId, [
                 {
                     selector_name: nodeId,
@@ -71,7 +72,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const handleRemoveFromAssetGroup = () => {
         if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
+            navigate(`/tier-management/details/tag/${assetGroupId}`);
         }
     };
 
@@ -111,19 +112,9 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     // selected node is a custom member of the group
     if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
         return (
-            <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
-                    Remove from {assetGroupName}
-                </MenuItem>
-                {isMenuItemForTierZero ? (
-                    <ConfirmNodeChangesDialog
-                        handleCancel={() => setOpen(false)}
-                        handleApply={handleRemoveFromAssetGroup}
-                        open={open}
-                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
-                    />
-                ) : null}
-            </>
+            <MenuItem onClick={handleRemoveFromAssetGroup}>
+                Remove from {assetGroupName}
+            </MenuItem>
         );
     }
 };
