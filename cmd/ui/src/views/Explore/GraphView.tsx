@@ -26,6 +26,7 @@ import {
     setSelectedEdge,
     transformFlatGraphResponse,
     useAvailableEnvironments,
+    useExploreParams,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -55,6 +56,8 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const dispatch = useAppDispatch();
+
+    const { setExploreParams, exploreLayout } = useExploreParams();
 
     const graphState: GraphState = useAppSelector((state) => state.explore);
 
@@ -101,6 +104,14 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
+
+        if (exploreLayout === 'sequential') {
+            sigmaChartRef.current?.runSequentialLayout();
+        }
+
+        if (exploreLayout === 'standard') {
+            sigmaChartRef.current?.runStandardLayout();
+        }
     }, [graphState.chartProps.items, theme, darkMode]);
 
     useEffect(() => {
@@ -203,9 +214,11 @@ const GraphView: FC = () => {
                             sigmaChartRef.current?.resetCamera();
                         }}
                         onRunSequentialLayout={() => {
+                            setExploreParams({ exploreLayout: 'sequential' });
                             sigmaChartRef.current?.runSequentialLayout();
                         }}
                         onRunStandardLayout={() => {
+                            setExploreParams({ exploreLayout: 'standard' });
                             sigmaChartRef.current?.runStandardLayout();
                         }}
                         onSearchCurrentResults={() => {
