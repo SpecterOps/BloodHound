@@ -20,7 +20,7 @@ import EdgeInfoPane from './EdgeInfo/EdgeInfoPane';
 import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 
 const GraphItemInformationPanel = () => {
-    const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
+    const { infoPanelItem, selectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     const theme = useTheme();
 
@@ -35,7 +35,7 @@ const GraphItemInformationPanel = () => {
         width: theme.spacing(50),
     };
 
-    if (!selectedItem || selectedItemQuery.isLoading) {
+    if (!infoPanelItem || selectedItemQuery.isLoading) {
         return <EntityInfoPanel sx={infoPaneStyles} selectedNode={null} />;
     }
 
@@ -43,7 +43,7 @@ const GraphItemInformationPanel = () => {
         return (
             <EntityInfoPanel
                 sx={infoPaneStyles}
-                selectedNode={{ graphId: selectedItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
+                selectedNode={{ graphId: infoPanelItem, id: '', name: 'Unknown', type: 'Unknown' as EntityKinds }}
             />
         );
     }
@@ -71,7 +71,7 @@ const GraphItemInformationPanel = () => {
 
     if (selectedItemQuery.data && isNode(selectedItemQuery.data)) {
         const selectedNode = {
-            graphId: selectedItem,
+            graphId: infoPanelItem,
             id: selectedItemQuery.data.objectId,
             name: selectedItemQuery.data.label,
             type: selectedItemQuery.data.kind as EntityKinds,
