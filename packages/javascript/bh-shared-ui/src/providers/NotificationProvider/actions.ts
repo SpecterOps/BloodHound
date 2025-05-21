@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OptionsObject } from 'notistack';
+import { SNACKBAR_DURATION } from '../../constants';
 import { Notification } from './model';
-
 export enum ActionType {
     Add = 'add',
     Dismiss = 'dismiss',
@@ -35,8 +35,8 @@ export const addNotification = (notification: string, key?: string, options: Opt
             message: notification,
             key: key || (new Date().getTime() + Math.random()).toString(),
             options: {
+                autoHideDuration: SNACKBAR_DURATION,
                 ...options,
-                autoHideDuration: 5000,
             },
             dismissed: false,
         },
