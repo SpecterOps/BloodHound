@@ -310,6 +310,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
             }
 
             resetCamera(sigma);
+        } else {
+            resetCamera(sigma);
         }
     }, [sigma]);
 
