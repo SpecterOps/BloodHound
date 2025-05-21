@@ -14,10 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { default as deepLinking } from './deepLinking';
 import { default as initial } from './initial';
 
 export default {
     initial,
-    deepLinking,
 };

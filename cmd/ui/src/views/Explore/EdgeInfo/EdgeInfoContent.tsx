@@ -16,68 +16,23 @@
 
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import {
-    EdgeCompositionRelationships,
     EdgeInfoComponents,
-    EdgeInfoProps,
-    EdgeInfoState,
     EdgeSections,
     SelectedEdge,
-    apiClient,
-    edgeSectionToggle,
-    searchbarActions,
-    transformToFlatGraphResponse,
     useExploreParams,
-    useFeatureFlag,
     useFetchEntityProperties,
 } from 'bh-shared-ui';
-import isEmpty from 'lodash/isEmpty';
-import { Dispatch, FC, Fragment } from 'react';
-import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
-import { addSnackbar } from 'src/ducks/global/actions';
-import { useAppDispatch, useAppSelector } from 'src/store';
+import { FC, Fragment } from 'react';
 import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
 
-const getOnChange = async (
-    dispatch: Dispatch<any>,
-    sourceNodeId: number,
-    targetNodeId: number,
-    selectedEdgeName: string
-) => {
-    dispatch(setGraphLoading(true));
-    await apiClient
-        .getEdgeComposition(sourceNodeId, targetNodeId, selectedEdgeName)
-        .then((result) => {
-            if (isEmpty(result.data.data.nodes)) {
-                throw new Error('empty result set');
-            }
-            const formattedData = transformToFlatGraphResponse(result.data);
-
-            dispatch(saveResponseForExport(formattedData));
-            dispatch(putGraphData(formattedData));
-        })
-        .catch((err) => {
-            if (err?.code === 'ERR_CANCELED') {
-                return;
-            }
-            dispatch(putGraphError(err));
-            dispatch(addSnackbar('Query failed. Please try again.', 'edgeCompositionGraphQuery', {}));
-        })
-        .finally(() => {
-            dispatch(setGraphLoading(false));
-        });
-};
-
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
-    const dispatch = useAppDispatch();
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { setExploreParams, selectedItem, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
     const { entityProperties: targetNodeProperties } = useFetchEntityProperties({ objectId, nodeType: type });
-    const edgeInfoState: EdgeInfoState = useAppSelector((state) => state.edgeinfo);
 
     return (
         <Box>
@@ -87,15 +42,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                     {Object.entries(sections).map((section, index) => {
                         const Section = section[1];
                         const sectionKeyLabel = section[0] as keyof typeof EdgeSections;
-                        const expandedSections = edgeInfoState.expandedSections;
-                        const isExpandedSection = expandedSections[sectionKeyLabel];
 
-                        const sendOnChange =
-                            EdgeCompositionRelationships.includes(selectedEdge.name) && section[0] === 'composition';
-
-                        const isExpandedPanelSection = backButtonFlag?.enabled
-                            ? (expandedPanelSections as string[]).includes(sectionKeyLabel)
-                            : isExpandedSection;
+                        const isExpandedPanelSection = (expandedPanelSections as string[]).includes(sectionKeyLabel);
 
                         const setExpandedPanelSectionsParam = () => {
                             setExploreParams({
@@ -114,37 +62,8 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         };
 
                         const handleOnChange = (isOpen: boolean) => {
-                            if (backButtonFlag?.enabled) {
-                                if (isOpen) setExpandedPanelSectionsParam();
-                                else removeExpandedPanelSectionParams();
-                            } else {
-                                if (isOpen && sendOnChange) {
-                                    getOnChange(
-                                        dispatch,
-                                        parseInt(`${sourceNode.id}`),
-                                        parseInt(`${targetNode.id}`),
-                                        selectedEdge.name
-                                    );
-                                }
-                                dispatch(
-                                    edgeSectionToggle({
-                                        section: sectionKeyLabel,
-                                        expanded: !isExpandedSection,
-                                    })
-                                );
-                            }
-                        };
-
-                        const handleRelayTargetsItemClick: EdgeInfoProps['onNodeClick'] = (node) => {
-                            dispatch(
-                                searchbarActions.sourceNodeSelected({
-                                    objectid: node.objectId,
-                                    type: node.kind,
-                                    name: node.name,
-                                })
-                            );
-
-                            dispatch(searchbarActions.tabChanged('primary'));
+                            if (isOpen) setExpandedPanelSectionsParam();
+                            else removeExpandedPanelSectionParams();
                         };
 
                         return (
@@ -166,11 +85,6 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
                                         haslaps={!!targetNodeProperties?.haslaps}
-                                        onNodeClick={
-                                            section[0] === 'relaytargets' || section[0] === 'coerciontargets'
-                                                ? handleRelayTargetsItemClick
-                                                : undefined
-                                        }
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>

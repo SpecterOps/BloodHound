@@ -17,6 +17,8 @@
 package datapipe
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -29,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 )
@@ -38,11 +41,40 @@ const (
 	ReconcileProperty    = "reconcile"
 )
 
-func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, ingestSchema ingest_service.IngestSchema, adcsEnabled bool) error {
-	if meta, err := ingest_service.ValidateMetaTag(reader, ingestSchema, false); err != nil {
-		return fmt.Errorf("error validating meta tag: %w", err)
+type ReadOptions struct {
+	FileType     model.FileType // JSON or ZIP
+	IngestSchema ingest_service.IngestSchema
+	ADCSEnabled  bool
+}
+
+// ReadFileForIngest orchestrates the ingestion of a file into the graph database,
+// performing any necessary metadata validation and schema enforcement before
+// delegating to the core ingest logic.
+//
+// If the file type is ZIP, additional validation is performed using JSON Schema,
+// and the full stream is consumed to enable downstream readers to function correctly.
+// Zip files are validated here and not at file upload time because it would be expensive to
+// decompress the entire zip into memory.
+// Files that fail this validation step will not be processed further.
+//
+// Returns an error if metadata validation or ingestion fails.
+func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options ReadOptions) error {
+
+	var (
+		shouldValidateGraph = false
+	)
+
+	// if filetype == ZIP, we need to validate against jsonschema because
+	// the archive bypassed validation controls at file upload time, as opposed to JSON files,
+	// which were validated at file upload time
+	if options.FileType == model.FileTypeZip {
+		shouldValidateGraph = true
+	}
+
+	if meta, err := ingest_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
+		return err
 	} else {
-		return IngestWrapper(batch, reader, meta, adcsEnabled)
+		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}
 }
 
@@ -54,6 +86,27 @@ func IngestBasicData(batch *TimestampedBatch, converted ConvertedData) error {
 	}
 
 	if err := IngestRelationships(batch, ad.Entity, converted.RelProps); err != nil {
+		errs.Add(err)
+	}
+
+	return errs.Combined()
+}
+
+// IngestGenericData writes generic graph data into the database using the provided batch.
+// It attempts to ingest all nodes and relationships from the ConvertedData object.
+//
+// Because generic entities do not have a predefined base kind (unlike AZ or AD), this function passes
+// graph.EmptyKind to the node and relationship ingestion functions. This indicates that no
+// base kind should be applied uniformly to all ingested entities, and instead the kind(s)
+// defined directly on each node or edge (if any) are used as-is.
+func IngestGenericData(batch *TimestampedBatch, converted ConvertedData) error {
+	errs := util.NewErrorCollector()
+
+	if err := IngestNodes(batch, graph.EmptyKind, converted.NodeProps); err != nil {
+		errs.Add(err)
+	}
+
+	if err := IngestRelationships(batch, graph.EmptyKind, converted.RelProps); err != nil {
 		errs.Add(err)
 	}
 
@@ -96,46 +149,104 @@ func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) erro
 	return errs.Combined()
 }
 
+// IngestWrapper dispatches the ingest process based on the metadata's type.
 func IngestWrapper(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
-	switch meta.Type {
-	case ingest.DataTypeComputer:
-		if meta.Version >= 5 {
-			return decodeBasicData(batch, reader, convertComputerData)
-		}
-	case ingest.DataTypeUser:
-		return decodeBasicData(batch, reader, convertUserData)
-	case ingest.DataTypeGroup:
-		return decodeGroupData(batch, reader)
-	case ingest.DataTypeDomain:
-		return decodeBasicData(batch, reader, convertDomainData)
-	case ingest.DataTypeGPO:
-		return decodeBasicData(batch, reader, convertGPOData)
-	case ingest.DataTypeOU:
-		return decodeBasicData(batch, reader, convertOUData)
-	case ingest.DataTypeSession:
-		return decodeSessionData(batch, reader)
-	case ingest.DataTypeContainer:
-		return decodeBasicData(batch, reader, convertContainerData)
-	case ingest.DataTypeAIACA:
-		return decodeBasicData(batch, reader, convertAIACAData)
-	case ingest.DataTypeRootCA:
-		return decodeBasicData(batch, reader, convertRootCAData)
-	case ingest.DataTypeEnterpriseCA:
-		return decodeBasicData(batch, reader, convertEnterpriseCAData)
-	case ingest.DataTypeNTAuthStore:
-		return decodeBasicData(batch, reader, convertNTAuthStoreData)
-	case ingest.DataTypeCertTemplate:
-		return decodeBasicData(batch, reader, convertCertTemplateData)
-	case ingest.DataTypeAzure:
-		return decodeAzureData(batch, reader)
-	case ingest.DataTypeIssuancePolicy:
-		return decodeBasicData(batch, reader, convertIssuancePolicy)
+	if handler, ok := ingestHandlers[meta.Type]; !ok {
+		return fmt.Errorf("no handler for ingest data type: %v", meta.Type)
+	} else {
+		return handler(batch, reader, meta)
 	}
+}
 
-	return nil
+type ingestHandler func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error
+
+func defaultBasicHandler[T any](conversionFunc ConversionFuncWithTime[T]) ingestHandler {
+	return func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		decoder, err := getDefaultDecoder(reader)
+		if err != nil {
+			return err
+		}
+		return decodeBasicData(batch, decoder, conversionFunc)
+	}
+}
+
+var ingestHandlers = map[ingest.DataType]ingestHandler{
+	ingest.DataTypeGeneric: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		// decode nodes, if present
+		decoder, err := CreateIngestDecoder(reader, "nodes", 2)
+		if errors.Is(err, ingest.ErrDataTagNotFound) {
+			slog.Debug("no nodes found in generic ingest payload; continuing to edges")
+		} else if err != nil {
+			return err
+		} else {
+			if err = decodeGenericData(batch, decoder, convertGenericNode); err != nil {
+				return err
+			}
+		}
+
+		// decode edges, if present
+		decoder, err = CreateIngestDecoder(reader, "edges", 2)
+		if errors.Is(err, ingest.ErrDataTagNotFound) {
+			slog.Debug("no edges found in generic ingest payload")
+		} else if err != nil {
+			return err
+		} else {
+			return decodeGenericData(batch, decoder, convertGenericEdge)
+		}
+
+		return nil
+	},
+	ingest.DataTypeComputer: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else if meta.Version >= 5 {
+			return decodeBasicData(batch, decoder, convertComputerData)
+		} else {
+			return nil
+		}
+	},
+	ingest.DataTypeGroup: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeGroupData(batch, decoder)
+		}
+	},
+	ingest.DataTypeSession: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeSessionData(batch, decoder)
+		}
+	},
+	ingest.DataTypeAzure: func(batch *TimestampedBatch, reader io.ReadSeeker, meta ingest.Metadata) error {
+		if decoder, err := getDefaultDecoder(reader); err != nil {
+			return err
+		} else {
+			return decodeAzureData(batch, decoder)
+		}
+	},
+	ingest.DataTypeUser:           defaultBasicHandler(convertUserData),
+	ingest.DataTypeDomain:         defaultBasicHandler(convertDomainData),
+	ingest.DataTypeGPO:            defaultBasicHandler(convertGPOData),
+	ingest.DataTypeOU:             defaultBasicHandler(convertOUData),
+	ingest.DataTypeContainer:      defaultBasicHandler(convertContainerData),
+	ingest.DataTypeAIACA:          defaultBasicHandler(convertAIACAData),
+	ingest.DataTypeRootCA:         defaultBasicHandler(convertRootCAData),
+	ingest.DataTypeEnterpriseCA:   defaultBasicHandler(convertEnterpriseCAData),
+	ingest.DataTypeNTAuthStore:    defaultBasicHandler(convertNTAuthStoreData),
+	ingest.DataTypeCertTemplate:   defaultBasicHandler(convertCertTemplateData),
+	ingest.DataTypeIssuancePolicy: defaultBasicHandler(convertIssuancePolicy),
+}
+
+func getDefaultDecoder(reader io.ReadSeeker) (*json.Decoder, error) {
+	return CreateIngestDecoder(reader, "data", 1)
 }
 
 func NormalizeEinNodeProperties(properties map[string]any, objectID string, ingestTime time.Time) map[string]any {
+	if properties == nil {
+		properties = make(map[string]any)
+	}
 	delete(properties, ReconcileProperty)
 	properties[common.LastSeen.String()] = ingestTime
 	properties[common.ObjectID.String()] = strings.ToUpper(objectID)
@@ -168,25 +279,28 @@ func NormalizeEinNodeProperties(properties map[string]any, objectID string, inge
 	return properties
 }
 
-func IngestNode(timestampedBatch *TimestampedBatch, identityKind graph.Kind, nextNode ein.IngestibleNode) error {
-	normalizedProperties := NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, timestampedBatch.IngestTime)
+func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
+	var (
+		nodeKinds            = mergeBaseKind(baseKind, nextNode.Labels...)
+		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
+		nodeUpdate           = graph.NodeUpdate{
+			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
+			IdentityProperties: []string{
+				common.ObjectID.String(),
+			},
+		}
+	)
 
-	return timestampedBatch.Batch.UpdateNodeBy(graph.NodeUpdate{
-		Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nextNode.Label),
-		IdentityKind: identityKind,
-		IdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	})
+	return batch.Batch.UpdateNodeBy(nodeUpdate)
 }
 
-func IngestNodes(batch *TimestampedBatch, identityKind graph.Kind, nodes []ein.IngestibleNode) error {
+func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
 	for _, next := range nodes {
-		if err := IngestNode(batch, identityKind, next); err != nil {
+		if err := IngestNode(batch, baseKind, next); err != nil {
 			slog.Error(fmt.Sprintf("Error ingesting node ID %s: %v", next.ObjectID, err))
 			errs.Add(err)
 		}
@@ -194,52 +308,35 @@ func IngestNodes(batch *TimestampedBatch, identityKind graph.Kind, nodes []ein.I
 	return errs.Combined()
 }
 
-func IngestRelationship(batch *TimestampedBatch, nodeIDKind graph.Kind, nextRel ein.IngestibleRelationship) error {
-	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
-	nextRel.Source = strings.ToUpper(nextRel.Source)
-	nextRel.Target = strings.ToUpper(nextRel.Target)
-
-	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
-		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
-
-		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Source,
-			common.LastSeen: batch.IngestTime,
-		}), nextRel.SourceType),
-		StartIdentityKind: nodeIDKind,
-		StartIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-
-		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: nextRel.Target,
-			common.LastSeen: batch.IngestTime,
-		}), nextRel.TargetType),
-		EndIdentityKind: nodeIDKind,
-		EndIdentityProperties: []string{
-			common.ObjectID.String(),
-		},
-	})
-}
-
-func IngestRelationships(batch *TimestampedBatch, nodeIDKind graph.Kind, relationships []ein.IngestibleRelationship) error {
+// IngestRelationships resolves and writes a batch of ingestible relationships to the graph.
+//
+// This function first calls resolveRelationships to resolve node identifiers based on name and kind.
+//
+// Each resolved relationship update is applied to the graph via batch.UpdateRelationshipBy.
+// Errors encountered during resolution or update are collected and returned as a single combined error.
+func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relationships []ein.IngestibleRelationship) error {
 	var (
 		errs = util.NewErrorCollector()
 	)
 
-	for _, next := range relationships {
-		if err := IngestRelationship(batch, nodeIDKind, next); err != nil {
-			slog.Error(fmt.Sprintf("Error ingesting relationship from %s to %s : %v", next.Source, next.Target, err))
+	updates, err := resolveRelationships(batch, relationships, baseKind)
+	if err != nil {
+		errs.Add(err)
+	}
+
+	for _, update := range updates {
+		if err := batch.Batch.UpdateRelationshipBy(*update); err != nil {
 			errs.Add(err)
 		}
 	}
+
 	return errs.Combined()
 }
 
 func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelationship) error {
 	nextRel.RelProps[common.LastSeen.String()] = batch.IngestTime
-	nextRel.Source = strings.ToUpper(nextRel.Source)
-	nextRel.Target = strings.ToUpper(nextRel.Target)
+	nextRel.Source.Value = strings.ToUpper(nextRel.Source.Value)
+	nextRel.Target.Value = strings.ToUpper(nextRel.Target.Value)
 
 	return batch.Batch.UpdateRelationshipBy(graph.RelationshipUpdate{
 		Relationship: graph.PrepareRelationship(graph.AsProperties(nextRel.RelProps), nextRel.RelType),
@@ -247,7 +344,7 @@ func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelatio
 		Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			ad.DistinguishedName: nextRel.Source,
 			common.LastSeen:      batch.IngestTime,
-		}), nextRel.SourceType),
+		}), nextRel.Source.Kind),
 		StartIdentityKind: ad.Entity,
 		StartIdentityProperties: []string{
 			ad.DistinguishedName.String(),
@@ -256,7 +353,7 @@ func ingestDNRelationship(batch *TimestampedBatch, nextRel ein.IngestibleRelatio
 		End: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 			common.ObjectID: nextRel.Target,
 			common.LastSeen: batch.IngestTime,
-		}), nextRel.TargetType),
+		}), nextRel.Target.Kind),
 		EndIdentityKind: ad.Entity,
 		EndIdentityProperties: []string{
 			common.ObjectID.String(),
