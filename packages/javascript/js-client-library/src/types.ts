@@ -331,6 +331,6 @@ export type CustomNodeKindType = {
             type: string;
             name: string;
             color: string;
-        }
-    }
+        };
+    };
 };
