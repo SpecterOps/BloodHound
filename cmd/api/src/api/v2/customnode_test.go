@@ -19,7 +19,6 @@ package v2_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/specterops/bloodhound/src/auth"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/auth"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
