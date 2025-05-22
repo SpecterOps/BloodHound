@@ -18,9 +18,15 @@ import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient, GenericQueryOptions } from '../../utils';
 
-export const getDataAvailable = async (options: RequestOptions): Promise<boolean> =>
+export const getDataAvailable = async (options: RequestOptions): Promise<boolean> => 
     apiClient.cypherSearch('MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1', options).then((res) => {
         return Object.keys(res?.data?.data?.nodes).length > 0;
+    }).catch((err) => {
+        if (err?.response?.status === 404) {
+            return false;
+        } else {
+            throw err
+        }
     });
 
 export const useDataAvailable = (queryOptions?: GenericQueryOptions<boolean>): UseQueryResult<boolean> => {
