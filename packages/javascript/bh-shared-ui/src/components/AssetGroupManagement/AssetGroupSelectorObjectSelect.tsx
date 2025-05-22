@@ -30,9 +30,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { GraphNode, SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
 import { SearchValue } from '../../store';
-import { apiClient, cn } from '../../utils';
+import { apiClient } from '../../utils';
 import SelectorFormContext from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
@@ -41,16 +40,17 @@ export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
 const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ seeds }) => {
-    const { tagId = '', selectorId = '' } = useParams();
-
     const { setSeeds, setResults } = useContext(SelectorFormContext);
-
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [stalePreview, setStalePreview] = useState(false);
     const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
 
     const previewQuery = useQuery({
-        queryKey: ['tier-management', 'preview-selectors', SeedTypeObjectId],
+        queryKey: [
+            'tier-management',
+            'preview-selectors',
+            SeedTypeObjectId,
+            { ...selectedNodes.map((node) => node.objectid) },
+        ],
         queryFn: ({ signal }) => {
             if (selectedNodes.length === 0) return [];
 
@@ -69,43 +69,6 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
         refetchOnWindowFocus: false,
     });
 
-    const seedsQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId, 'seeds'],
-        queryFn: async ({ signal }) => {
-            const seedsList = seeds.map((seed) => {
-                return `"${seed.value}"`;
-            });
-
-            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
-
-            const nodesByObjectId = new Map<string, GraphNode>();
-            await apiClient
-                .cypherSearch(query, { signal })
-                .then((res) => {
-                    Object.values(res.data.data.nodes).forEach((node) => {
-                        nodesByObjectId.set(node.objectId, node);
-                    });
-                })
-                .catch(() => {});
-
-            const newSelectedNodes = seeds.map((seed) => {
-                const node = nodesByObjectId.get(seed.value);
-                if (node !== undefined) {
-                    return { objectid: node.objectId, name: node.label, type: node.kind };
-                }
-                return { objectid: seed.value };
-            });
-            setSelectedNodes(newSelectedNodes);
-        },
-        enabled: seeds.length !== 0,
-        refetchOnWindowFocus: false,
-    });
-
-    const handleRun = useCallback(() => {
-        previewQuery.refetch();
-        setStalePreview(false);
-    }, [previewQuery]);
-
     useEffect(() => {
         if (!previewQuery.data) return;
 
@@ -113,8 +76,37 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
     }, [previewQuery.data, setResults]);
 
     useEffect(() => {
-        previewQuery.refetch();
-    }, [seedsQuery.data]);
+        const cypherQuery = async () => {
+            const nodesByObjectId = new Map<string, GraphNode>();
+
+            const seedsList = seeds.map((seed) => {
+                return `"${seed.value}"`;
+            });
+
+            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+
+            await apiClient
+                .cypherSearch(query)
+                .then((res) => {
+                    Object.values(res.data.data.nodes).forEach((node) => {
+                        nodesByObjectId.set(node.objectId, node);
+                    });
+                })
+                .catch(() => {});
+
+            return seeds.map((seed) => {
+                const node = nodesByObjectId.get(seed.value);
+                if (node !== undefined) {
+                    return { objectid: node.objectId, name: node.label, type: node.kind };
+                }
+                return { objectid: seed.value };
+            });
+        };
+
+        cypherQuery().then((newSelectedNodes) => {
+            setSelectedNodes(newSelectedNodes);
+        });
+    }, [selectedNodes.length, seeds]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -139,7 +131,6 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
             });
 
             setSearchTerm('');
-            setStalePreview(true);
         },
         [setSeeds]
     );
@@ -159,7 +150,6 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
 
                 return filteredNodes;
             });
-            setStalePreview(true);
         },
         [setSeeds]
     );
@@ -170,17 +160,6 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
                     <div className='flex justify-between'>
                         <span>Object Selector</span>
-                        <Button
-                            variant='text'
-                            className={cn(
-                                'p-0 text-sm text-primary font-bold dark:text-secondary-variant-2 hover:no-underline',
-                                {
-                                    'animate-pulse': stalePreview,
-                                }
-                            )}
-                            onClick={handleRun}>
-                            Update Sample Results
-                        </Button>
                     </div>
                     <CardDescription className='pt-3 font-normal'>
                         Use the input field to add objects to the list
