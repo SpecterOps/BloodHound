@@ -27,7 +27,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { GraphNodes, SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
+import { GraphNode, SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
@@ -39,13 +39,6 @@ import NodeIcon from '../NodeIcon';
 
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
-
-const mapSeeds = (nodes: GraphNodes | undefined): AssetGroupSelectedNodes => {
-    if (nodes === undefined) return [];
-    return Object.values(nodes).map((node) => {
-        return { objectid: node.objectId, name: node.label, type: node.kind };
-    });
-};
 
 const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ seeds }) => {
     const { tagId = '', selectorId = '' } = useParams();
@@ -85,10 +78,24 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
 
             const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
 
-            return apiClient.cypherSearch(query, { signal }).then((res) => {
-                setSelectedNodes(mapSeeds(res.data.data.nodes));
-                return res.data.data;
+            const nodesByObjectId = new Map<string, GraphNode>();
+            await apiClient
+                .cypherSearch(query, { signal })
+                .then((res) => {
+                    Object.values(res.data.data.nodes).forEach((node) => {
+                        nodesByObjectId.set(node.objectId, node);
+                    });
+                })
+                .catch(() => {});
+
+            const newSelectedNodes = seeds.map((seed) => {
+                const node = nodesByObjectId.get(seed.value);
+                if (node !== undefined) {
+                    return { objectid: node.objectId, name: node.label, type: node.kind };
+                }
+                return { objectid: seed.value };
             });
+            setSelectedNodes(newSelectedNodes);
         },
         enabled: seeds.length !== 0,
         refetchOnWindowFocus: false,
