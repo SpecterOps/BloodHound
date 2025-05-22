@@ -594,6 +594,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), ctx, assetGroupIds)
 }
 
+// DeleteAssetGroupTag mocks base method.
+func (m *MockDatabase) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupTag", ctx, user, assetGroupTag)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupTag indicates an expected call of DeleteAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupTag(ctx, user, assetGroupTag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupTag), ctx, user, assetGroupTag)
+}
+
 // DeleteAssetGroupTagSelector mocks base method.
 func (m *MockDatabase) DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error {
 	m.ctrl.T.Helper()
@@ -1940,20 +1954,6 @@ func (m *MockDatabase) SetUserSessionFlag(ctx context.Context, userSession *mode
 func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(ctx, userSession, key, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), ctx, userSession, key, state)
-}
-
-// SoftDeleteAssetGroupTag mocks base method.
-func (m *MockDatabase) SoftDeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag, selectors model.AssetGroupTagSelectors) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SoftDeleteAssetGroupTag", ctx, user, assetGroupTag, selectors)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SoftDeleteAssetGroupTag indicates an expected call of SoftDeleteAssetGroupTag.
-func (mr *MockDatabaseMockRecorder) SoftDeleteAssetGroupTag(ctx, user, assetGroupTag, selectors any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoftDeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).SoftDeleteAssetGroupTag), ctx, user, assetGroupTag, selectors)
 }
 
 // SweepAssetGroupCollections mocks base method.
