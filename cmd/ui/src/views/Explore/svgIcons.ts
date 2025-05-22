@@ -53,4 +53,4 @@ export function transformIconDictionary(icons: IconDictionary): IconDictionary {
     appendSvgUrls(icons, NODE_SCALE);
 
     return icons;
-} 
+}

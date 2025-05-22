@@ -279,9 +279,9 @@ export const UNKNOWN_ICON: IconInfo = {
 
 export const DEFAULT_ICON_BACKGROUND = '#FFFFFF';
 
-/** 
+/**
  * Returns icon metadata for a given icon name.
- * 
+ *
  * This function checks the user-provided customIcons dictionary first,
  * allowing users to override the default icon definitions. If no override
  * is found, it falls back to the built-in NODE_ICON map. If the icon name
