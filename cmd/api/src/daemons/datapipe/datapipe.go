@@ -39,6 +39,7 @@ const (
 )
 
 type Daemon struct {
+	ingestService       ingest.IngestService
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
@@ -55,6 +56,8 @@ func (s *Daemon) Name() string {
 
 func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
 	return &Daemon{
+
+		ingestService:       ingest.NewIngestService(ctx, connections.RDMS, connections.Graph, cfg, ingestSchema),
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,
@@ -87,21 +90,21 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
-			FailAnalyzedIngestJobs(s.ctx, s.db)
+			s.ingestService.FailAnalyzedIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			PartialCompleteIngestJobs(s.ctx, s.db)
+			s.ingestService.PartialCompleteIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
 	} else {
-		CompleteAnalyzedIngestJobs(s.ctx, s.db)
+		s.ingestService.CompleteAnalyzedIngestJobs()
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
@@ -125,11 +128,15 @@ func resetCache(cacher cache.Cache, _ bool) {
 }
 
 func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		s.processIngestTasks(s.ctx, ingestTasks)
+
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
+		return
 	}
+
+	defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
+
+	s.ingestService.ProcessIngestTasks()
 }
 
 func (s *Daemon) Start(ctx context.Context) {
@@ -157,13 +164,13 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for ingest jobs
-			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
+			s.ingestService.ProcessStaleIngestJobs()
 
 			// Manage nominal state transitions for ingest jobs
-			ProcessFinishedIngestJobs(s.ctx, s.db)
+			s.ingestService.ProcessFinishedIngestJobs()
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
+			if hasJobsWaitingForAnalysis, err := s.ingestService.HasIngestJobsWaitingForAnalysis(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()

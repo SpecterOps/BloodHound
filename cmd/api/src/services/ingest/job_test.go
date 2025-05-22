@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package ingest
+package ingest_test
 
 import (
 	"bytes"
@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/src/model/ingest"
+	ingestService "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,7 +37,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 		file, err := os.Open("../../test/fixtures/fixtures/goodzip.zip")
 		assert.Nil(t, err)
 
-		_, err = WriteAndValidateZip(io.Reader(file), &writer)
+		_, err = ingestService.WriteAndValidateZip(io.Reader(file), &writer)
 		assert.Nil(t, err)
 	})
 
@@ -46,7 +47,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 			badZip = strings.NewReader("123123")
 		)
 
-		_, err := WriteAndValidateZip(badZip, &writer)
+		_, err := ingestService.WriteAndValidateZip(badZip, &writer)
 		assert.Equal(t, err, ingest.ErrInvalidZipFile)
 	})
 }
@@ -98,12 +99,12 @@ func TestWriteAndValidateJSON(t *testing.T) {
 		// },
 	}
 
-	schema, err := LoadIngestSchema()
+	schema, err := ingestService.LoadIngestSchema()
 	if err != nil {
 		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
 	}
 
-	v := NewIngestValidator(schema)
+	v := ingestService.NewIngestValidator(schema)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,17 +127,17 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	src := &ErrorReader{err: errors.New("read error")}
 	dst := &bytes.Buffer{}
 
-	schema, err := LoadIngestSchema()
+	schema, err := ingestService.LoadIngestSchema()
 	if err != nil {
 		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
 	}
 
-	v := NewIngestValidator(schema)
+	v := ingestService.NewIngestValidator(schema)
 
 	_, err = v.WriteAndValidateJSON(src, dst)
 
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, ErrInvalidJSON)
+	assert.ErrorIs(t, err, ingestService.ErrInvalidJSON)
 }
 
 // ErrorReader is a mock reader that always returns an error
@@ -147,3 +148,125 @@ type ErrorReader struct {
 func (er *ErrorReader) Read(p []byte) (n int, err error) {
 	return 0, er.err
 }
+
+// func TestHasJobsWaitingForAnalysis(t *testing.T) {
+// 	var (
+// 		mockCtrl = gomock.NewController(t)
+// 		dbMock   = mocks.NewMockDatabase(mockCtrl)
+// 	)
+
+// 	defer mockCtrl.Finish()
+
+// 	t.Run("Has Jobs Waiting for Analysis", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{}}, nil)
+
+// 		hasJobs, err := ingestService.HasIngestJobsWaitingForAnalysis()
+
+// 		require.True(t, hasJobs)
+// 		require.Nil(t, err)
+// 	})
+
+// 	t.Run("Has No Jobs Waiting for Analysis", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{}, nil)
+
+// 		hasJobs, err := ingestService.HasIngestJobsWaitingForAnalysis(context.Background(), dbMock)
+
+// 		require.False(t, hasJobs)
+// 		require.Nil(t, err)
+// 	})
+// }
+
+// func TestFailAnalyzedIngestJobs(t *testing.T) {
+// 	const jobID int64 = 1
+
+// 	var (
+// 		mockCtrl = gomock.NewController(t)
+// 		dbMock   = mocks.NewMockDatabase(mockCtrl)
+// 	)
+
+// 	defer mockCtrl.Finish()
+
+// 	t.Run("Fail Analyzed Ingest Jobs", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusAnalyzing,
+// 		}}, nil)
+
+// 		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, job model.IngestJob) error {
+// 			require.Equal(t, model.JobStatusFailed, job.Status)
+// 			return nil
+// 		})
+
+// 		ingestService.FailAnalyzedIngestJobs(context.Background(), dbMock)
+// 	})
+// }
+
+// func TestCompleteAnalyzedIngestJobs(t *testing.T) {
+// 	const jobID int64 = 1
+
+// 	var (
+// 		mockCtrl = gomock.NewController(t)
+// 		dbMock   = mocks.NewMockDatabase(mockCtrl)
+// 	)
+
+// 	defer mockCtrl.Finish()
+
+// 	t.Run("Complete Analyzed Ingest Jobs", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusAnalyzing).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusAnalyzing,
+// 		}}, nil)
+
+// 		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
+// 			require.Equal(t, model.JobStatusComplete, IngestJob.Status)
+// 			return nil
+// 		})
+
+// 		ingestService.CompleteAnalyzedIngestJobs(context.Background(), dbMock)
+// 	})
+// }
+
+// func TestProcessFinishedIngestJobs(t *testing.T) {
+// 	const jobID int64 = 1
+
+// 	var (
+// 		mockCtrl = gomock.NewController(t)
+// 		dbMock   = mocks.NewMockDatabase(mockCtrl)
+// 	)
+
+// 	defer mockCtrl.Finish()
+
+// 	t.Run("Transition Jobs with No Remaining Ingest Tasks", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusIngesting,
+// 		}}, nil)
+
+// 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{}, nil)
+// 		dbMock.EXPECT().UpdateIngestJob(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, IngestJob model.IngestJob) error {
+// 			require.Equal(t, model.JobStatusAnalyzing, IngestJob.Status)
+// 			return nil
+// 		})
+
+// 		ingestService.ProcessFinishedIngestJobs(context.Background(), dbMock)
+// 	})
+
+// 	t.Run("Don't Transition Jobs with Remaining Ingest Tasks", func(t *testing.T) {
+// 		dbMock.EXPECT().GetIngestJobsWithStatus(gomock.Any(), model.JobStatusIngesting).Return([]model.IngestJob{{
+// 			BigSerial: model.BigSerial{
+// 				ID: jobID,
+// 			},
+// 			Status: model.JobStatusIngesting,
+// 		}}, nil)
+
+// 		dbMock.EXPECT().GetIngestTasksForJob(gomock.Any(), jobID).Return([]model.IngestTask{{}}, nil)
+
+// 		ingestService.ProcessFinishedIngestJobs(context.Background(), dbMock)
+// 	})
+// }

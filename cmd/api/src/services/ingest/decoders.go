@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package ingest
 
 import (
 	"errors"
@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
 /*
@@ -61,7 +62,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 		}
 
 		if count == IngestCountThreshold {
-			if err = IngestBasicData(batch, convertedData); err != nil {
+			if err = ingestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -71,7 +72,7 @@ func decodeBasicData[T any](batch graph.Batch, reader io.ReadSeeker, conversionF
 	}
 
 	if count > 0 {
-		if err = IngestBasicData(batch, convertedData); err != nil {
+		if err = ingestBasicData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -103,7 +104,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 			count++
 			convertGroupData(group, &convertedData)
 			if count == IngestCountThreshold {
-				if err = IngestGroupData(batch, convertedData); err != nil {
+				if err = ingestGroupData(batch, convertedData); err != nil {
 					errs.Add(err)
 				}
 
@@ -114,7 +115,7 @@ func decodeGroupData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestGroupData(batch, convertedData); err != nil {
+		if err = ingestGroupData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -188,7 +189,7 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 			convert(data.Data, &convertedData)
 			count++
 			if count == IngestCountThreshold {
-				if err = IngestAzureData(batch, convertedData); err != nil {
+				if err = ingestAzureData(batch, convertedData); err != nil {
 					errs.Add(err)
 				}
 				convertedData.Clear()
@@ -198,10 +199,49 @@ func decodeAzureData(batch graph.Batch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestAzureData(batch, convertedData); err != nil {
+		if err = ingestAzureData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
 
 	return errs.Combined()
+}
+
+func IngestWrapper(batch graph.Batch, reader io.ReadSeeker, meta ingest.Metadata, adcsEnabled bool) error {
+	switch meta.Type {
+	case ingest.DataTypeComputer:
+		if meta.Version >= 5 {
+			return decodeBasicData(batch, reader, convertComputerData)
+		}
+	case ingest.DataTypeUser:
+		return decodeBasicData(batch, reader, convertUserData)
+	case ingest.DataTypeGroup:
+		return decodeGroupData(batch, reader)
+	case ingest.DataTypeDomain:
+		return decodeBasicData(batch, reader, convertDomainData)
+	case ingest.DataTypeGPO:
+		return decodeBasicData(batch, reader, convertGPOData)
+	case ingest.DataTypeOU:
+		return decodeBasicData(batch, reader, convertOUData)
+	case ingest.DataTypeSession:
+		return decodeSessionData(batch, reader)
+	case ingest.DataTypeContainer:
+		return decodeBasicData(batch, reader, convertContainerData)
+	case ingest.DataTypeAIACA:
+		return decodeBasicData(batch, reader, convertAIACAData)
+	case ingest.DataTypeRootCA:
+		return decodeBasicData(batch, reader, convertRootCAData)
+	case ingest.DataTypeEnterpriseCA:
+		return decodeBasicData(batch, reader, convertEnterpriseCAData)
+	case ingest.DataTypeNTAuthStore:
+		return decodeBasicData(batch, reader, convertNTAuthStoreData)
+	case ingest.DataTypeCertTemplate:
+		return decodeBasicData(batch, reader, convertCertTemplateData)
+	case ingest.DataTypeAzure:
+		return decodeAzureData(batch, reader)
+	case ingest.DataTypeIssuancePolicy:
+		return decodeBasicData(batch, reader, convertIssuancePolicy)
+	}
+
+	return nil
 }

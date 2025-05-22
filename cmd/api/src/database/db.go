@@ -32,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
-	"github.com/specterops/bloodhound/src/services/ingest"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -66,7 +65,19 @@ type Database interface {
 	Close(ctx context.Context)
 
 	// Ingest
-	ingest.IngestData
+	// Task handlers
+	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
+	DeleteAllIngestTasks(ctx context.Context) error
+	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
+
+	// Job handlers
+	CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
+	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
+	GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
+	GetAllIngestJobs(ctx context.Context, skip int, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error)
+	GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
+	DeleteAllIngestJobs(ctx context.Context) error
+	CancelAllIngestJobs(ctx context.Context) error
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	CountAllIngestTasks(ctx context.Context) (int64, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error

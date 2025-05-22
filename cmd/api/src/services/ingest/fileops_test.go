@@ -14,15 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe_test
+package ingest_test
 
 import (
 	"encoding/json"
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/model/ingest"
+	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,7 +75,7 @@ func TestSeekToDataTag(t *testing.T) {
 		r := strings.NewReader(assertion.rawString)
 		j := json.NewDecoder(r)
 
-		err := datapipe.SeekToDataTag(j)
+		err := ingest_service.SeekToDataTag(j)
 		assert.ErrorIs(t, err, assertion.err)
 	}
 }

@@ -30,6 +30,7 @@ import (
 	reflect "reflect"
 
 	model "github.com/specterops/bloodhound/src/model"
+	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -145,6 +146,20 @@ func (mr *MockIngestDataMockRecorder) DeleteAllIngestTasks(ctx any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllIngestTasks", reflect.TypeOf((*MockIngestData)(nil).DeleteAllIngestTasks), ctx)
 }
 
+// DeleteIngestTask mocks base method.
+func (m *MockIngestData) DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteIngestTask", ctx, ingestTask)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteIngestTask indicates an expected call of DeleteIngestTask.
+func (mr *MockIngestDataMockRecorder) DeleteIngestTask(ctx, ingestTask any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteIngestTask", reflect.TypeOf((*MockIngestData)(nil).DeleteIngestTask), ctx, ingestTask)
+}
+
 // GetAllIngestJobs mocks base method.
 func (m *MockIngestData) GetAllIngestJobs(ctx context.Context, skip, limit int, order string, filter model.SQLFilter) ([]model.IngestJob, int, error) {
 	m.ctrl.T.Helper()
@@ -159,6 +174,36 @@ func (m *MockIngestData) GetAllIngestJobs(ctx context.Context, skip, limit int, 
 func (mr *MockIngestDataMockRecorder) GetAllIngestJobs(ctx, skip, limit, order, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestJobs", reflect.TypeOf((*MockIngestData)(nil).GetAllIngestJobs), ctx, skip, limit, order, filter)
+}
+
+// GetAllIngestTasks mocks base method.
+func (m *MockIngestData) GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllIngestTasks", ctx)
+	ret0, _ := ret[0].(model.IngestTasks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllIngestTasks indicates an expected call of GetAllIngestTasks.
+func (mr *MockIngestDataMockRecorder) GetAllIngestTasks(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestTasks", reflect.TypeOf((*MockIngestData)(nil).GetAllIngestTasks), ctx)
+}
+
+// GetFlagByKey mocks base method.
+func (m *MockIngestData) GetFlagByKey(arg0 context.Context, arg1 string) (appcfg.FeatureFlag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFlagByKey", arg0, arg1)
+	ret0, _ := ret[0].(appcfg.FeatureFlag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFlagByKey indicates an expected call of GetFlagByKey.
+func (mr *MockIngestDataMockRecorder) GetFlagByKey(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFlagByKey", reflect.TypeOf((*MockIngestData)(nil).GetFlagByKey), arg0, arg1)
 }
 
 // GetIngestJob mocks base method.
@@ -189,6 +234,21 @@ func (m *MockIngestData) GetIngestJobsWithStatus(ctx context.Context, status mod
 func (mr *MockIngestDataMockRecorder) GetIngestJobsWithStatus(ctx, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestJobsWithStatus", reflect.TypeOf((*MockIngestData)(nil).GetIngestJobsWithStatus), ctx, status)
+}
+
+// GetIngestTasksForJob mocks base method.
+func (m *MockIngestData) GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIngestTasksForJob", ctx, jobID)
+	ret0, _ := ret[0].(model.IngestTasks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIngestTasksForJob indicates an expected call of GetIngestTasksForJob.
+func (mr *MockIngestDataMockRecorder) GetIngestTasksForJob(ctx, jobID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestTasksForJob", reflect.TypeOf((*MockIngestData)(nil).GetIngestTasksForJob), ctx, jobID)
 }
 
 // UpdateIngestJob mocks base method.
