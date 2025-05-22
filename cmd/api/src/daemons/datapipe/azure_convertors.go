@@ -144,6 +144,8 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureAutomationAccountRoleAssignment
 	case enums.KindAZRoleManagementPolicyAssignment:
 		return convertAzureRoleManagementPolicyAssignment
+	case enums.KindAZRoleEligibilityScheduleInstance:
+		return convertAzureRoleEligibilityScheduleInstance
 	default:
 		// TODO: we should probably have a hook or something to log the unknown type
 		return func(rm json.RawMessage, cd *ConvertedAzureData, now time.Time) {}
@@ -725,5 +727,20 @@ func convertAzureRoleManagementPolicyAssignment(raw json.RawMessage, converted *
 		nodes, relationships := ein.ConvertAzureRoleManagementPolicyAssignment(data)
 		converted.NodeProps = append(converted.NodeProps, nodes)
 		converted.RelProps = append(converted.RelProps, relationships...)
+	}
+}
+
+func convertAzureRoleEligibilityScheduleInstance(raw json.RawMessage, converted *ConvertedAzureData, ingestTime time.Time) {
+	var data models.RoleEligibilityScheduleInstance
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure role eligibility schedule instance", err))
+	} else {
+		//If the scope is not the directory, we are going to skip creating the edges for now
+		if data.DirectoryScopeId != "/" {
+			return
+		}
+		relProps := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(data)
+		converted.RelProps = append(converted.RelProps, relProps...)
 	}
 }
