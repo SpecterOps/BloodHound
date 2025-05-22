@@ -36,8 +36,9 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
+import { setExploreLayout } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
@@ -49,6 +50,8 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
+    const dispatch = useAppDispatch();
+
     const { data, isLoading, isError } = useAvailableEnvironments();
     const { setSelectedItem } = useExploreSelectedItem();
 
@@ -139,9 +142,11 @@ const GraphView: FC = () => {
                             sigmaChartRef.current?.resetCamera();
                         }}
                         onRunSequentialLayout={() => {
+                            dispatch(setExploreLayout('sequential'));
                             sigmaChartRef.current?.runSequentialLayout();
                         }}
                         onRunStandardLayout={() => {
+                            dispatch(setExploreLayout('standard'));
                             sigmaChartRef.current?.runStandardLayout();
                         }}
                         onSearchCurrentResults={() => {
