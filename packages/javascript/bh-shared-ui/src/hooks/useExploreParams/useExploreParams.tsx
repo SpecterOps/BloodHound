@@ -20,8 +20,6 @@ import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
 import { setParamsFactory } from '../../utils/searchParams/searchParams';
 
-type ExploreLayoutOptions = 'standard' | 'sequential';
-type ExploreLayoutOptionsBHE = ExploreLayoutOptions | 'organic' | 'structural' | 'radial' | 'lens' | 'tweak';
 export type ExploreSearchTab = 'node' | 'pathfinding' | 'cypher';
 type SearchType = ExploreSearchTab | 'relationship' | 'composition';
 
@@ -36,9 +34,6 @@ export type ExploreQueryParams = {
     relationshipQueryType: EntityRelationshipQueryTypes | null;
     relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
-    exploreLayout: ExploreLayoutOptions | null;
-    // Hard copy of Chart library layout options
-    exploreLayoutBHE: ExploreLayoutOptionsBHE | null;
 };
 
 export const acceptedExploreSearchTabs = {
@@ -92,8 +87,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
         relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
-        exploreLayout: searchParams.get('exploreLayout') as ExploreQueryParams['exploreLayout'],
-        exploreLayoutBHE: searchParams.get('exploreLayoutBHE') as ExploreQueryParams['exploreLayoutBHE'],
         setExploreParams: useCallback(
             (updatedParams: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) =>
                 setParamsFactory(
@@ -109,7 +102,6 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                         'relationshipQueryType',
                         'relationshipQueryItemId',
                         'pathFilters',
-                        'exploreLayout',
                     ],
                     navigateOpts
                 )(updatedParams),

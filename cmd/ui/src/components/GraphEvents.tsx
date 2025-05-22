@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { useExploreParams, useExploreSelectedItem } from 'bh-shared-ui';
+import { useExploreSelectedItem } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -27,6 +27,7 @@ import {
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
+import { useAppSelector } from 'src/store';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
 export interface GraphEventProps {
@@ -53,7 +54,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }: GraphEventProps,
     ref
 ) {
-    const { exploreLayout } = useExploreParams();
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+
     const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();

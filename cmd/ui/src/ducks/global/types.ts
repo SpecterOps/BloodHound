@@ -27,6 +27,7 @@ const GLOBAL_SET_ASSET_GROUPS = 'app/global/GLOBALSETASSETGROUPS';
 const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
+const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -39,11 +40,16 @@ export {
     GLOBAL_SET_DARK_MODE,
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
+    GLOBAL_SET_EXPLORE_LAYOUT,
 };
+
+export type ExploreLayoutOptions = 'standard' | 'sequential';
+export type ExploreLayoutOptionsBHE = ExploreLayoutOptions | 'organic' | 'structural' | 'radial' | 'lens' | 'tweak';
 
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
+    exploreLayout?: ExploreLayoutOptionsBHE;
 }
 
 export interface GlobalOptionsState {
@@ -76,8 +82,17 @@ export interface SetDarkModeAction {
     type: typeof GLOBAL_SET_DARK_MODE;
     darkMode: boolean;
 }
+export interface SetExploreLayoutAction {
+    type: typeof GLOBAL_SET_EXPLORE_LAYOUT;
+    exploreLayout: ExploreLayoutOptionsBHE;
+}
 
-export type GlobalViewActionTypes = AddSnackbarAction | RemoveSnackbarAction | CloseSnackbarAction | SetDarkModeAction;
+export type GlobalViewActionTypes =
+    | AddSnackbarAction
+    | RemoveSnackbarAction
+    | CloseSnackbarAction
+    | SetDarkModeAction
+    | SetExploreLayoutAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
