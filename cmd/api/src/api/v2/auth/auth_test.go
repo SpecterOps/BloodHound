@@ -3688,7 +3688,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: request user ID != auth token user - Internal Server Error",
+			name: "Error: request user ID != auth token user - Forbidden",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{},
@@ -3705,6 +3705,7 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 								ID: must.NewUUIDv4(),
 							},
 						},
+						// No AuthManageUsers Permission
 						PermissionOverrides: authz.PermissionOverrides{
 							Enabled: true,
 							Permissions: model.Permissions{},
@@ -3722,6 +3723,60 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 					},
 				}, nil)
 				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(nil)
+				// purpose of failed audit log is to add code coverage
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(context.DeadlineExceeded)
+			},
+			expected: expected{
+				responseCode:   http.StatusForbidden,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"http_status":403,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"Forbidden"}]}`,
+			},
+		},
+		{
+			name: "Error: Database error db.DeleteAuthToken - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
+
+				param := map[string]string{
+					"token_id": "00000000-0000-0000-0000-000000000001",
+				}
+
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Unique: model.Unique{
+								ID: must.NewUUIDv4(),
+							},
+						},
+						// AuthManageUsers Permission
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								authz.Permissions().AuthManageUsers,
+							},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
+			},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().DeleteAuthToken(req.Context(), model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+					},
+				}).Return(errors.New("error"))
+				// purpose of failed audit log is to add code coverage
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(database.ErrNotFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -3729,28 +3784,57 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
-		// {
-		// 	name:    "Error: Invalid token ID",
-		// 	tokenID: "invalid-uuid",
-		// 	userContext: func(t *testing.T) context.Context {
-		// 		user := model.User{
-		// 			Unique: model.Unique{
-		// 				ID: validUserID,
-		// 			},
-		// 		}
+		{
+			name: "Success: Auth token deleted - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{},
+				}
 
-		// 		userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-		// 		bhCtx := ctx.Get(userContext)
-		// 		bhCtx.AuthCtx.Owner = user
+				param := map[string]string{
+					"token_id": "00000000-0000-0000-0000-000000000001",
+				}
 
-		// 		return userContext
-		// 	},
-		// 	setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, req *http.Request) {},
-		// 	expected: expected{
-		// 		responseCode: http.StatusBadRequest,
-		// 		responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"id is malformed."}]}`,
-		// 	},
-		// },
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{
+					AuthCtx: authz.Context{
+						Owner: model.User{
+							Unique: model.Unique{
+								ID: must.NewUUIDv4(),
+							},
+						},
+						// AuthManageUsers Permission
+						PermissionOverrides: authz.PermissionOverrides{
+							Enabled: true,
+							Permissions: model.Permissions{
+								authz.Permissions().AuthManageUsers,
+							},
+						},
+					},
+				}))
+
+				return mux.SetURLVars(request, param)
+			},
+
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetAuthToken(req.Context(), gomock.Any()).Return(model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().DeleteAuthToken(req.Context(), model.AuthToken{
+					UserID: uuid.NullUUID{
+						Valid: true,
+					},
+				}).Return(nil)
+				// purpose of failed audit log is to add code coverage
+				mock.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Location":[]string{"/"}},
+			},
+		},
 	}
 
 	for _, testCase := range tt {
@@ -3776,7 +3860,11 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
-			assert.JSONEq(t, testCase.expected.responseBody, body)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
