@@ -179,12 +179,9 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
 		Root: node,
 		Driver: pattern.Do(func(path *graph.PathSegment) error {
-			if path.Trunk != nil {
-				channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceChild, Node: path.Trunk.Node})
-			}
-
-			channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceChild, Node: path.Node})
-
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceChild, Node: nextSegment.Node})
+			})
 			return nil
 		})}); err != nil {
 
