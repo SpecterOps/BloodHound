@@ -36,6 +36,7 @@ type AssetGroupTagData interface {
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
+	SoftDeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag, selectors model.AssetGroupTagSelectors) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -304,6 +305,35 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		return model.AssetGroupTag{}, err
 	}
 	return tag, nil
+}
+
+func (s *BloodhoundDB) SoftDeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag, selectors model.AssetGroupTagSelectors) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionSoftDeleteAssetGroupTag,
+			Model:  &assetGroupTag, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	// Still need to delete all selectors tied to a tier/label
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+		if result := tx.Exec(fmt.Sprintf(`
+			UPDATE %s SET updated_at = NOW(), updated_by = ?, deleted_at = ?, deleted_by = ?
+			WHERE id = ?`,
+			assetGroupTag.TableName()),
+			user.ID.String(), assetGroupTag.DeletedAt, assetGroupTag.DeletedBy, assetGroupTag.ID); result.Error != nil {
+			return CheckError(result)
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
