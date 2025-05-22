@@ -1,5 +1,5 @@
 ---
-title: "2025-05-26 Release Notes (v7.4.0)"
+title: "2025-05-27 Release Notes (v7.4.0)"
 ---
 
 ## Announcements
@@ -69,6 +69,9 @@ Find the new appp here: https://splunkbase.splunk.com/app/7818
     - Tagging of GPOs and OUs into Tier Zero with Tier Management does not account for inheritance blocking. This will be resolved in the next release.
     - All existing custom selectors present at the time of release were migrated to the new system. There is no two-way or ongoing sync capabilities if you decide to utilize Tier Management in early access.
     - Existing, custom selectors with ObjectIDs as names will be attempted to be renamed automatically to match the the name of the affiliated on our next release.
+<Frame>
+  <img src="/assets/tier_management_relnotes.png" alt="Updated Tier Management view in v7.4.0"/>
+</Frame>
 - **General availability of the back button (deep-linking)\!** - Not content with "just a back button," we went all-in, adding full deep-link support to the application. This supports going "forward" and "back" in the application and allows sharing links among teams when something interesting is discovered. This functionality may be enabled within the "Early Access" configuration section of the "Administration" section.\
   \
   BloodHound Enterprise customers will see support for deep linking across both the Attack Paths and Posture pages.\
@@ -84,6 +87,9 @@ Find the new appp here: https://splunkbase.splunk.com/app/7818
 With this change, `SameForestTrust` and `CrossForestTrust` will represent the structural trusts within Active Directory. They are non-traversable and, therefore, will not appear within Pathfinding. `SpoofSIDHistory` and `AbuseTGTDelegation` will provide traversable edges (and appear in Pathfinding queries) that will indicate to BloodHound users whether or not a valid path exists across an Active Directory trust.\
 \
 This replacement does not require a SharpHound upgrade, however v2.6.6 does add enhanced collection logic and provides additional visibility into cross-forest attacks.
+<Frame>
+  <img src="/assets/trustedby_replacement_relnotes.png" alt="Replacements for TrustedBy in v7.4.0"/>
+</Frame>
 - **Improved Cypher query performance** - Long-time BloodHound CE/Enterprise users or those who have spent time digging around in GitHub will have noticed the various "quality control" checks we have in place, specifically around Cypher queries. Created as a mechanism to prevent over-consumption of resources within BloodHound, we discovered multiple areas where these analytics were overly aggressive in their protections. We have completely rewritten and simplified these mechanisms, making heavy use of the capabilities provided to us by our PostgreSQL migration to proffer those protections instead. These changes apply to all BloodHound CE/Enterprise users, regardless of the backend database utilized.
 - **HostsCAService additional validation** - We have added an additional validation step to the creation of the `HostsCAService` edge, requiring the presence of a hosting computer before the edge can be created.
 
