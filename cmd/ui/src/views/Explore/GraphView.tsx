@@ -22,8 +22,8 @@ import {
     exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
-    useAvailableEnvironments,
     useCustomNodeKinds,
+    useDataAvailable,
     useExploreSelectedItem,
     useToggle,
 } from 'bh-shared-ui';
@@ -49,7 +49,7 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
-    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { data, isLoading, isError } = useDataAvailable();
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -190,7 +190,7 @@ const GraphView: FC = () => {
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataDialogWithLinks open={!data?.length} />
+            <NoDataDialogWithLinks open={!data} />
         </div>
     );
 };
