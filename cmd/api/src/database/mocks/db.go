@@ -1942,6 +1942,20 @@ func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(ctx, userSession, key, st
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), ctx, userSession, key, state)
 }
 
+// SoftDeleteAssetGroupTag mocks base method.
+func (m *MockDatabase) SoftDeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag, selectors model.AssetGroupTagSelectors) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SoftDeleteAssetGroupTag", ctx, user, assetGroupTag, selectors)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SoftDeleteAssetGroupTag indicates an expected call of SoftDeleteAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) SoftDeleteAssetGroupTag(ctx, user, assetGroupTag, selectors any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoftDeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).SoftDeleteAssetGroupTag), ctx, user, assetGroupTag, selectors)
+}
+
 // SweepAssetGroupCollections mocks base method.
 func (m *MockDatabase) SweepAssetGroupCollections(ctx context.Context) {
 	m.ctrl.T.Helper()

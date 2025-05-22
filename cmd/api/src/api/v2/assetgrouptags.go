@@ -713,3 +713,18 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		api.WriteBasicResponse(request.Context(), GetAssetGroupMembersResponse{Members: members}, http.StatusOK, response)
 	}
 }
+
+func (s *Resources) SoftDeleteAssetGroupTag(response http.ResponseWriter, request *http.Request) {
+	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
+		slog.Error("Unable to get user from auth context")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
+	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
+	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), tagId, model.SQLFilter{}, model.SQLFilter{}); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if err := s.DB.SoftDeleteAssetGroupTag(request.Context(), user, assetGroupTag, selectors); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	}
+}
