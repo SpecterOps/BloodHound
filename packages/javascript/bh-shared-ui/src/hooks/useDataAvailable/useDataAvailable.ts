@@ -18,16 +18,17 @@ import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient, GenericQueryOptions } from '../../utils';
 
-export const getDataAvailable = async (options: RequestOptions): Promise<boolean> => 
-    apiClient.cypherSearch('MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1', options).then((res) => {
+export const getDataAvailable = async (options: RequestOptions): Promise<boolean> => {
+    try {
+        const res = await apiClient.cypherSearch('MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1', options);
         return Object.keys(res?.data?.data?.nodes).length > 0;
-    }).catch((err) => {
+    } catch (err: any) {
         if (err?.response?.status === 404) {
-            return false;
-        } else {
-            throw err
+            return false; // API returns 404 when response contains 0 entities – treat as no data available
         }
-    });
+        throw err;
+    }
+};
 
 export const useDataAvailable = (queryOptions?: GenericQueryOptions<boolean>): UseQueryResult<boolean> => {
     return useQuery({
