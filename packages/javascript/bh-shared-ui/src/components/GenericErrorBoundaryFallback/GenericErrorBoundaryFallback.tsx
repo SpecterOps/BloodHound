@@ -20,7 +20,7 @@ const GenericErrorBoundaryFallback = () => {
     return (
         <Container maxWidth='xl'>
             <Box py={2}>
-                <Alert severity='error'>
+                <Alert severity='error' sx={{ display: 'flex', justifySelf: 'flex-end' }}>
                     <AlertTitle>Error</AlertTitle>
                     An unexpected error has occurred. Please refresh the page and try again.
                 </Alert>
