@@ -14,14 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package auth
+package auth_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/specterops/bloodhound/src/utils/test"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -29,8 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/src/utils/test"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
@@ -41,7 +40,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/specterops/bloodhound/src/api"
-	api_mocks "github.com/specterops/bloodhound/src/api/mocks"
+	apimocks "github.com/specterops/bloodhound/src/api/mocks"
+	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
+
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -65,13 +66,13 @@ func TestLoginExpiry(t *testing.T) {
 
 	req2 := api.LoginRequest{LoginMethod: auth.ProviderTypeSecret, Username: "abc", Secret: "123"}
 
-	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
+	mockAuthenticator := apimocks.NewMockAuthenticator(mockCtrl)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * -1)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(2)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
-	resources := NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
+	resources := v2auth.NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
 	type Input struct {
 		Payload api.LoginRequest
@@ -142,71 +143,52 @@ func TestLoginExpiry(t *testing.T) {
 func TestLoginResource_Logout(t *testing.T) {
 	t.Parallel()
 
-	type request struct {
-		method string
-		url    string
-		ctx    context.Context
+	type mock struct {
+		mockAuth *apimocks.MockAuthenticator
 	}
-
-	type response struct {
-		status  int
-		headers map[string]string
-		body    string
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
 	}
-
 	type testData struct {
-		name       string
-		setupMocks func(*testing.T, *api_mocks.MockAuthenticator)
-		request    request
-		response   response
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
-
-	mockHost := func(t *testing.T) (*url.URL, string) {
-		host, err := url.Parse("https://example.com")
-		require.NoError(t, err)
-		return host, fmt.Sprintf("%s%s", host, api.UserInterfacePath)
-	}
-
-	createContext := func(t *testing.T) context.Context {
-		host, _ := mockHost(t)
-
-		userSession := model.UserSession{
-			BigSerial: model.BigSerial{
-				ID: 1,
-			},
-		}
-
-		authContext := auth.Context{
-			Session: userSession,
-		}
-
-		bhContext := &ctx.Context{
-			Host:    host,
-			AuthCtx: authContext,
-		}
-
-		return context.WithValue(context.Background(), ctx.ValueKey, bhContext)
-	}
-
-	_, redirectURL := mockHost(t)
-
 	tt := []testData{
 		{
-			name: "Success: Logout redirects to UI path",
-			setupMocks: func(t *testing.T, mockAuth *api_mocks.MockAuthenticator) {
-				mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
+			name: "Success: Logout redirects to UI path - OK",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				userSession := model.UserSession{
+					BigSerial: model.BigSerial{
+						ID: 1,
+					},
+				}
+
+				authContext := auth.Context{
+					Session: userSession,
+				}
+
+				bhContext := &ctx.Context{
+					AuthCtx: authContext,
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			request: request{
-				method: http.MethodGet,
-				url:    "/api/v2/auth/logout",
-				ctx:    createContext(t),
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
 			},
-			response: response{
-				status: http.StatusOK,
-				headers: map[string]string{
-					"Location": redirectURL,
-				},
-				body: "",
+			expected: expected{
+				responseCode: http.StatusOK,
+				responseHeader: http.Header{"Location":[]string{"//www.example.com/"}},
 			},
 		},
 	}
@@ -214,40 +196,26 @@ func TestLoginResource_Logout(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			mockAuth := api_mocks.NewMockAuthenticator(mockCtrl)
-			mockDB := mocks.NewMockDatabase(mockCtrl)
-
-			testCase.setupMocks(t, mockAuth)
-
-			router := mux.NewRouter()
-			resource := NewLoginResource(config.Configuration{}, mockAuth, mockDB)
-
-			router.HandleFunc("/api/v2/auth/logout", resource.Logout).Methods(testCase.request.method)
-
-			req, err := http.NewRequest(testCase.request.method, testCase.request.url, nil)
-			require.NoError(t, err)
-			req = req.WithContext(testCase.request.ctx)
-
-			recorder := httptest.NewRecorder()
-
-			router.ServeHTTP(recorder, req)
-
-			status, headers, body := test.ProcessResponse(t, recorder)
-
-			assert.Equal(t, testCase.response.status, status, "Status code should match expected")
-
-			for headerKey, headerValue := range testCase.response.headers {
-				assert.Equal(t, headerValue, headers.Get(headerKey),
-					fmt.Sprintf("Header '%s' should match expected value", headerKey))
+			mocks := &mock{
+				mockAuth: apimocks.NewMockAuthenticator(ctrl),
 			}
 
-			if testCase.response.body != "" {
-				assert.Equal(t, testCase.response.body, body, "Response body should match expected")
-			}
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
+
+			resource := v2auth.NewLoginResource(config.Configuration{}, mocks.mockAuth, nil)
+
+			response := httptest.NewRecorder()
+
+			resource.Logout(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, _ := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 		})
 	}
 }
