@@ -47,6 +47,18 @@ type ReadOptions struct {
 	ADCSEnabled  bool
 }
 
+type TimestampedBatch struct {
+	Batch      graph.Batch
+	IngestTime time.Time
+}
+
+func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+	return &TimestampedBatch{
+		Batch:      batch,
+		IngestTime: ingestTime,
+	}
+}
+
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,
 // performing any necessary metadata validation and schema enforcement before
 // delegating to the core ingest logic.
