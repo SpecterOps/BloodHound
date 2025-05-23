@@ -21,8 +21,8 @@ import { useGraphHasData } from './useGraphHasData';
 
 const populatedPayload = {
     data: {
-        nodes: [
-            {
+        nodes: {
+            test: {
                 isOwnedObject: false,
                 isTierZero: false,
                 kind: 'Group',
@@ -30,13 +30,13 @@ const populatedPayload = {
                 lastSeen: '2025-05-20T19:40:47.175300929Z',
                 objectId: 'S-1-5-21-3702535222-3822678775-2090119576-513',
             },
-        ],
+        },
     },
 };
 
 const emptyPayload = {
     data: {
-        nodes: [],
+        nodes: {},
     },
 };
 const server = setupServer();
