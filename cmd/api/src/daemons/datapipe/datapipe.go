@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/specterops/bloodhound/src/services/job"
 )
@@ -49,6 +50,7 @@ type Daemon struct {
 	orphanedFileSweeper *OrphanFileSweeper
 	ingestSchema        ingest.IngestSchema
 	jobService          job.JobService
+	graphifyService     graphify.GraphifyService
 }
 
 func (s *Daemon) Name() string {
@@ -66,6 +68,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		tickInterval:        tickInterval,
 		ingestSchema:        ingestSchema,
 		jobService:          job.NewJobService(ctx, connections.RDMS),
+		graphifyService:     graphify.NewGraphifyService(ctx, connections.RDMS, connections.Graph, cfg, ingestSchema),
 	}
 }
 
@@ -128,10 +131,12 @@ func resetCache(cacher cache.Cache, _ bool) {
 }
 
 func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 	} else {
-		s.processIngestTasks(s.ctx, ingestTasks)
+
+		defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
+		s.graphifyService.ProcessIngestTasks()
 	}
 }
 
@@ -160,7 +165,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for ingest jobs
-			s.jobService.ProcessStaleIngestJobs(s.ctx, s.db)
+			s.jobService.ProcessStaleIngestJobs()
 
 			// Manage nominal state transitions for ingest jobs
 			s.jobService.ProcessFinishedIngestJobs()

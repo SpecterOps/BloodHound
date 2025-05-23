@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package graphify
 
 import (
 	"archive/zip"
@@ -35,7 +35,7 @@ import (
 )
 
 // clearFileTask removes a generic ingest task for ingested data.
-func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
+func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error removing ingest task from db: %v", err))
 	}
@@ -43,7 +43,7 @@ func (s *Daemon) clearFileTask(ingestTask model.IngestTask) {
 
 // preProcessIngestFile will take a path and extract zips if necessary, returning the paths for files to process
 // along with any errors and the number of failed files (in the case of a zip archive)
-func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]string, int, error) {
+func (s *GraphifyService) preProcessIngestFile(path string, fileType model.FileType) ([]string, int, error) {
 	if fileType == model.FileTypeJson {
 		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
 		return []string{path}, 0, nil
@@ -95,7 +95,7 @@ func (s *Daemon) preProcessIngestFile(path string, fileType model.FileType) ([]s
 
 // processIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
+func (s *GraphifyService) processIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
@@ -115,7 +115,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask, i
 				if err != nil {
 					failed++
 					return err
-				} else if err := ReadFileForIngest(timestampedBatch, file, ReadOptions{IngestSchema: s.ingestSchema, FileType: task.FileType, ADCSEnabled: adcsEnabled}); err != nil {
+				} else if err := ReadFileForIngest(timestampedBatch, file, ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}); err != nil {
 					failed++
 					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 				}
@@ -135,43 +135,40 @@ func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask, i
 }
 
 // processIngestTasks covers the generic ingest case for ingested data.
-func (s *Daemon) processIngestTasks(ctx context.Context, ingestTasks model.IngestTasks) {
-	nowUTC := time.Now().UTC()
-	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
-	defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
-
-	for _, ingestTask := range ingestTasks {
-		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-		// handling assumes that all failures should be logged and not returned.
-		if ctx.Err() != nil {
-			return
-		}
-
-		if s.cfg.DisableIngest {
-			slog.WarnContext(ctx, "Skipped processing of ingestTasks due to config flag.")
-			return
-		}
-
-		total, failed, err := s.processIngestFile(ctx, ingestTask, nowUTC)
-
-		if errors.Is(err, fs.ErrNotExist) {
-			slog.WarnContext(ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
-		} else if job, err := s.db.GetIngestJob(ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err))
-		} else {
-			job.TotalFiles += total
-			job.FailedFiles += failed
-
-			if err = s.db.UpdateIngestJob(ctx, job); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+func (s *GraphifyService) ProcessIngestTasks() {
+	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
+	} else {
+		for _, ingestTask := range ingestTasks {
+			// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
+			// handling assumes that all failures should be logged and not returned.
+			if s.ctx.Err() != nil {
+				return
 			}
-		}
 
-		s.clearFileTask(ingestTask)
+			if s.cfg.DisableIngest {
+				slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
+				return
+			}
+
+			total, failed, err := s.processIngestFile(s.ctx, ingestTask, time.Now().UTC())
+
+			if errors.Is(err, fs.ErrNotExist) {
+				slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
+			} else if err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", ingestTask.ID, ingestTask.FileName, err))
+			} else if job, err := s.db.GetIngestJob(s.ctx, ingestTask.TaskID.ValueOrZero()); err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", ingestTask.ID, err))
+			} else {
+				job.TotalFiles += total
+				job.FailedFiles += failed
+
+				if err = s.db.UpdateIngestJob(s.ctx, job); err != nil {
+					slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+				}
+			}
+
+			s.clearFileTask(ingestTask)
+		}
 	}
 }

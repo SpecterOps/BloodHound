@@ -48,10 +48,10 @@ func timeOutIngestJob(ctx context.Context, db JobData, jobID int64, message stri
 }
 
 // ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
-func (s *JobService) ProcessStaleIngestJobs(ctx context.Context, db JobData) {
+func (s *JobService) ProcessStaleIngestJobs() {
 	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
 	// commit state transitions when shutting down.
-	if ctx.Err() != nil {
+	if s.ctx.Err() != nil {
 		return
 	}
 
@@ -60,18 +60,18 @@ func (s *JobService) ProcessStaleIngestJobs(ctx context.Context, db JobData) {
 		threshold = now.Add(-jobActivityTimeout)
 	)
 
-	if jobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error getting running jobs: %v", err))
+	if jobs, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusRunning); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error getting running jobs: %v", err))
 	} else {
 		for _, job := range jobs {
 			if job.LastIngest.Before(threshold) {
-				slog.WarnContext(ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
+				slog.WarnContext(s.ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
 					job.ID,
 					now.Sub(threshold).Minutes(),
 					job.LastIngest.Format(time.RFC3339)))
 
-				if err := timeOutIngestJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
+				if err := timeOutIngestJob(s.ctx, s.db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
+					slog.ErrorContext(s.ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
 				}
 			}
 		}
