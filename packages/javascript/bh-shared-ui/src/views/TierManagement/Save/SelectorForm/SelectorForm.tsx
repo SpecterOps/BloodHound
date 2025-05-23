@@ -24,7 +24,7 @@ import {
 } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -185,6 +185,10 @@ const SelectorForm: FC = () => {
         },
         [selectorId, handleCreateSelector, handlePatchSelector, setResults]
     );
+
+    useEffect(() => {
+        if (selectorQuery.data) setSeeds(selectorQuery.data.seeds);
+    }, [selectorQuery.data]);
 
     return (
         <SelectorFormContext.Provider
