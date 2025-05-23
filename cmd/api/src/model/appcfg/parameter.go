@@ -330,7 +330,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 
 type ScheduledAnalysisParameter struct {
 	Enabled bool   `json:"enabled,omitempty"`
-	RRule   string `json:"rrule,omitempty"`
+	RRule   string `json:"rrule,omitempty" validate:"rrule"`
 }
 
 func GetScheduledAnalysisParameter(ctx context.Context, service ParameterService) (ScheduledAnalysisParameter, error) {
