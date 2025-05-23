@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/dawgs/drivers/neo4j"
@@ -93,7 +92,7 @@ func Test_GetAppConfigWithParameter(t *testing.T) {
 		testCtx                 = integration.NewFOSSContext(t)
 	)
 
-	config, err := testCtx.AdminClient().GetAppConfig(appcfg.PasswordExpirationWindow)
+	config, err := testCtx.AdminClient().GetAppConfig(string(appcfg.PasswordExpirationWindow))
 	require.Nilf(t, err, "Error while getting app config: %v", err)
 	require.True(t, len(config) == 1, "Response contains too many results")
 	require.Equal(t, appcfg.PasswordExpirationWindow, config[0].Key)
@@ -106,8 +105,8 @@ func Test_PutAppConfig(t *testing.T) {
 
 	var (
 		updatedPasswordExpiration                appcfg.PasswordExpiration
-		updatedPasswordExpirationWindowParameter = v2.AppConfigUpdateRequest{
-			Key: appcfg.PasswordExpirationWindow,
+		updatedPasswordExpirationWindowParameter = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.PasswordExpirationWindow),
 			Value: map[string]any{
 				"duration": updatedDuration,
 			},
@@ -122,7 +121,7 @@ func Test_PutAppConfig(t *testing.T) {
 	require.Equal(t, time.Hour*24*30, updatedPasswordExpiration.Duration)
 
 	// Check that our change really is in the database
-	config, err := testCtx.AdminClient().GetAppConfig(appcfg.PasswordExpirationWindow)
+	config, err := testCtx.AdminClient().GetAppConfig(string(appcfg.PasswordExpirationWindow))
 	require.Nilf(t, err, "Error while getting updated app config: %v", err)
 
 	mapParameter(t, &updatedPasswordExpiration, config[0])
@@ -130,10 +129,10 @@ func Test_PutAppConfig(t *testing.T) {
 }
 
 func mapParameter[T *appcfg.PasswordExpiration |
-	*appcfg.Neo4jParameters |
-	*appcfg.CitrixRDPSupport |
-	*appcfg.PruneTTLParameters |
-	*appcfg.ReconciliationParameter](t *testing.T, value T, parameter appcfg.Parameter) {
+*appcfg.Neo4jParameters |
+*appcfg.CitrixRDPSupport |
+*appcfg.PruneTTLParameters |
+*appcfg.ReconciliationParameter](t *testing.T, value T, parameter appcfg.Parameter) {
 	err := parameter.Value.Map(&value)
 	require.Nilf(t, err, "Failed to map parameter value to %T type: %v", value, err)
 }

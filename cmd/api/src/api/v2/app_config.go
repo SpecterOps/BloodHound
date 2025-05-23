@@ -21,18 +21,12 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
 type ListAppConfigParametersResponse struct {
 	Data appcfg.Parameters `json:"data"`
-}
-
-type AppConfigUpdateRequest struct {
-	Key   string         `json:"key"`
-	Value map[string]any `json:"value"`
 }
 
 func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, request *http.Request) {
@@ -45,9 +39,9 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 	} else if parameterFilter, hasParameterFilter := queryFilters.FirstFilter(queryParameterName); hasParameterFilter {
 		if parameterFilter.Operator != model.Equals {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
-		} else if !cfgParameter.IsValidKey(parameterFilter.Value) {
+		} else if !cfgParameter.IsValidKey(appcfg.ParameterKey(parameterFilter.Value)) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
-		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilter.Value); err != nil {
+		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), appcfg.ParameterKey(parameterFilter.Value)); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), appcfg.Parameters{cfgParameter}, http.StatusOK, response)
@@ -61,12 +55,12 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 
 func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, request *http.Request) {
 	var (
-		appConfig AppConfigUpdateRequest
+		appConfig appcfg.AppConfigUpdateRequest
 	)
 
 	if err := api.ReadJSONRequestPayloadLimited(&appConfig, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if parameter, err := convertAppConfigUpdateRequestToParameter(appConfig); err != nil {
+	} else if parameter, err := appcfg.ConvertAppConfigUpdateRequestToParameter(appConfig); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration update request not converted to a parameter: %s", parameter.Key), request), response)
 	} else if !parameter.IsValidKey(parameter.Key) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameter.Key), request), response)
@@ -76,16 +70,5 @@ func (s Resources) SetApplicationConfiguration(response http.ResponseWriter, req
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), appConfig, http.StatusOK, response)
-	}
-}
-
-func convertAppConfigUpdateRequestToParameter(appConfigUpdateRequest AppConfigUpdateRequest) (appcfg.Parameter, error) {
-	if value, err := types.NewJSONBObject(appConfigUpdateRequest.Value); err != nil {
-		return appcfg.Parameter{}, fmt.Errorf("failed to convert value to JSONBObject: %w", err)
-	} else {
-		return appcfg.Parameter{
-			Key:   appConfigUpdateRequest.Key,
-			Value: value,
-		}, nil
 	}
 }

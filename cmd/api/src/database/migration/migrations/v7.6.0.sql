@@ -22,4 +22,4 @@ UPDATE asset_group_tags SET analysis_enabled = position = 1 WHERE type = 1 AND a
 
   
 -- Add EULA custom text
-INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('eula.customText', 'EULA Custom Text', 'This configuration parameter overrides the EULA agreement text with provided text.', '{"customText": ""}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('eula.custom_text', 'EULA Custom Text', 'This configuration parameter overrides the EULA agreement text with provided text.', '{"custom_text": ""}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
