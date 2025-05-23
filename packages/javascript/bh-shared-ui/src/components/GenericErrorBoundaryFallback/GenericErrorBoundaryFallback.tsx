@@ -19,8 +19,8 @@ import { Alert, AlertTitle, Box, Container } from '@mui/material';
 const GenericErrorBoundaryFallback = () => {
     return (
         <Container maxWidth='xl'>
-            <Box py={2}>
-                <Alert severity='error' sx={{ display: 'flex', justifySelf: 'flex-end' }}>
+            <Box py={2} sx={{ display: 'flex', justifyContent: 'flex-end' }} data-testid='error-boundary'>
+                <Alert severity='error'>
                     <AlertTitle>Error</AlertTitle>
                     An unexpected error has occurred. Please refresh the page and try again.
                 </Alert>

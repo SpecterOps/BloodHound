@@ -17,7 +17,7 @@
 import { render, screen } from '../../test-utils';
 import GenericErrorBoundaryFallback from './GenericErrorBoundaryFallback';
 
-describe('GenericErrorBoundaryFallack', () => {
+describe('GenericErrorBoundaryFallback', () => {
     beforeEach(async () => {
         render(<GenericErrorBoundaryFallback />);
     });
@@ -31,8 +31,9 @@ describe('GenericErrorBoundaryFallack', () => {
     });
 
     it('should be aligned to right of screen', () => {
-        const elem = screen.getByRole('alert');
+        const elem = screen.getByTestId('error-boundary');
         const styles = getComputedStyle(elem);
-        expect(styles.justifySelf).toEqual('flex-end');
+        expect(styles.display).toEqual('flex');
+        expect(styles.justifyContent).toEqual('flex-end');
     });
 });
