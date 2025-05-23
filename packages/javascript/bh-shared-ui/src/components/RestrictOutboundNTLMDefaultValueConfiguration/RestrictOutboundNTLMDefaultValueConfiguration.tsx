@@ -64,9 +64,16 @@ const RestrictOutboundNTLMDefaultValueConfiguration: FC = () => {
                 value: { enabled: !switchState },
             },
             {
-                onError: () => {
-                    addNotification('There was an error updating configuration.');
+                onSuccess: () => {
+                    addNotification('Configuration updated.', undefined, { variant: 'success' });
                 },
+                onError: () => {
+                    addNotification(
+                        'There was an error updating configuration.',
+                        undefined,
+                        { variant: 'error' }
+                    );
+},
             }
         );
     };

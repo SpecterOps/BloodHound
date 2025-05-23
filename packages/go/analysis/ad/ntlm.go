@@ -83,16 +83,17 @@ func NewNTLMCache(ctx context.Context, db graph.Database, groupExpansions impact
 			return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 				for computer := range cursor.Chan() {
 					innerComputer := computer
-					restrictingOutboundNTLM := false
 
 					if !hasAuthenticatedUser(innerComputer, ntlmCache) {
 						continue
 					} else if isProtectedComputer(innerComputer, ntlmCache) {
 						continue
-					} else if restrictingOutboundNTLM, err = isRestrictingOutboundNTLM(innerComputer, treatMissingRestrictOutboundNTLMPropertyAsRestricting); err != nil {
-						if !errors.Is(err, graph.ErrPropertyNotFound) {
-							slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", computer.ID))
-						}
+					}
+
+					restrictingOutboundNTLM, err := isRestrictingOutboundNTLM(innerComputer, treatMissingRestrictOutboundNTLMPropertyAsRestricting)
+					// An Error Property Not Found isn't unusual, but any other error should be noted
+					if !errors.Is(err, graph.ErrPropertyNotFound) {
+						slog.WarnContext(ctx, fmt.Sprintf("Error getting restrictoutboundntlm from computer %d", innerComputer.ID))
 					}
 
 					if !restrictingOutboundNTLM {
@@ -121,7 +122,6 @@ func hasAuthenticatedUser(computer *graph.Node, ntlmCache NTLMCache) bool {
 
 // Check if the computer is in protected users. If it is and the functional level isn't vulnerable, this computer isn't vulnerable.
 // If protected users doesn't exist, we intentionally fail open here as it is valid for older domains to not have this group.
-// We assume protected if we can't determine otherwise.
 func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
 	if domainSid, err := computer.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 		return true
@@ -142,7 +142,7 @@ func isProtectedComputer(computer *graph.Node, ntlmCache NTLMCache) bool {
 // A toggle determines how we'll treat computers missing this property
 func isRestrictingOutboundNTLM(computer *graph.Node, missingPropertyMeansRestricting bool) (bool, error) {
 	if restrictOutboundNtlm, err := computer.Properties.Get(ad.RestrictOutboundNTLM.String()).Bool(); err != nil {
-		// If we've failed to retrieve the property because it doesn't exist we may fail closed here. We will treat it as if it is protected to prevent false positives
+		// If we've failed to retrieve the property because it doesn't exist we may fail closed here. We may treat it as if it is protected to prevent false positives if so configured
 		return missingPropertyMeansRestricting, err
 	} else {
 		return restrictOutboundNtlm, nil
