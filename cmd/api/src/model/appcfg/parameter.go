@@ -86,8 +86,8 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 }
 
 // IsProtectedKey These keys should not be updatable by users
-func (s *Parameter) IsProtectedKey() bool {
-	switch s.Key {
+func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
+	switch parameterKey {
 	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey:
 		return true
 	default:
