@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/job"
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 
 type Daemon struct {
 	ingestService       ingest.IngestService
+	jobService          job.JobService
 	db                  database.Database
 	graphdb             graph.Database
 	cache               cache.Cache
@@ -58,6 +60,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 	return &Daemon{
 
 		ingestService:       ingest.NewIngestService(ctx, connections.RDMS, connections.Graph, cfg, ingestSchema),
+		jobService:          job.NewJobService(ctx, connections.RDMS),
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
 		cache:               cache,
@@ -90,21 +93,21 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
-			s.ingestService.FailAnalyzedIngestJobs()
+			s.jobService.FailAnalyzedIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			s.ingestService.PartialCompleteIngestJobs()
+			s.jobService.PartialCompleteIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
 	} else {
-		s.ingestService.CompleteAnalyzedIngestJobs()
+		s.jobService.CompleteAnalyzedIngestJobs()
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
@@ -164,13 +167,13 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for ingest jobs
-			s.ingestService.ProcessStaleIngestJobs()
+			s.jobService.ProcessStaleIngestJobs()
 
 			// Manage nominal state transitions for ingest jobs
-			s.ingestService.ProcessFinishedIngestJobs()
+			s.jobService.ProcessFinishedIngestJobs()
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := s.ingestService.HasIngestJobsWaitingForAnalysis(); err != nil {
+			if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
