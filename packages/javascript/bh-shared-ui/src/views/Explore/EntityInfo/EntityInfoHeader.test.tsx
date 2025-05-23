@@ -18,7 +18,6 @@ import { setupServer } from 'msw/node';
 import { act, render } from '../../../test-utils';
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { AzureNodeKind } from '../../../graphSchema';
 import { ObjectInfoPanelContext } from '../providers/ObjectInfoPanelProvider';
 import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
@@ -28,11 +27,6 @@ const testProps: HeaderProps = {
     name: 'testName',
     onToggleExpanded: vi.fn(),
     nodeType: AzureNodeKind.Group,
-};
-
-const backButtonSupportFF = {
-    key: 'back_button_support',
-    enabled: true,
 };
 
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
@@ -45,10 +39,10 @@ const mockContextValue = {
 };
 
 const server = setupServer(
-    rest.get('/api/v2/features', (_req, res, ctx) => {
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
         return res(
             ctx.json({
-                data: [backButtonSupportFF],
+                data: [],
             })
         );
     })
@@ -61,20 +55,18 @@ afterAll(() => server.close());
 const setup = async () => {
     const url = `?expandedPanelSections=['test','test1']`;
 
-    const history = createMemoryHistory({ initialEntries: [url] });
-
     const screen = await act(async () => {
         return render(
             <ObjectInfoPanelContext.Provider value={mockContextValue}>
                 <EntityInfoHeader {...testProps} />
             </ObjectInfoPanelContext.Provider>,
-            { history }
+            { route: url }
         );
     });
 
     const user = userEvent.setup();
 
-    return { screen, user, history };
+    return { screen, user };
 };
 
 describe('EntityInfoHeader', async () => {
@@ -93,12 +85,12 @@ describe('EntityInfoHeader', async () => {
         expect(collapseAllButton).toBeInTheDocument();
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {
-        const { screen, history, user } = await setup();
+        const { screen, user } = await setup();
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
 
         await user.click(collapseAllButton);
 
-        expect(history.location.search).not.toContain('expandedPanelSections');
+        expect(window.location.search).not.toContain('expandedPanelSections');
         expect(mockContextValue.isObjectInfoPanelOpen).toBe(false);
     });
 });

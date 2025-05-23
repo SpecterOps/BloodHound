@@ -349,7 +349,7 @@ const DatabaseManagement: FC = () => {
                     </FormControl>
 
                     <Button disabled={!hasPermission} onClick={() => dispatch({ type: 'open_dialog' })}>
-                        Proceed
+                        Delete
                     </Button>
                 </Box>
             </Box>

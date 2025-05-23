@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { createMemoryHistory } from 'history';
+import userEvent from '@testing-library/user-event';
 import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
@@ -147,9 +147,6 @@ describe('EntityInfoDataTable', () => {
         });
 
         it('displays 0 when a given sections returns empty, and sums the rest of the sections correctly', async () => {
-            const url = `?expandedPanelSections=${adGpoSections[0].label}`;
-            const history = createMemoryHistory({ initialEntries: [url] });
-
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
                     const _ous = { ...queryCount.ous, count: undefined };
@@ -158,10 +155,14 @@ describe('EntityInfoDataTable', () => {
                 })
             );
 
-            render(<EntityInfoDataTable {...adGpoSections[0]} />, { history });
+            const user = userEvent.setup();
+            render(<EntityInfoDataTable {...adGpoSections[0]} />);
 
             const sum = await screen.findAllByText('5,056');
             expect(sum).not.toBeNull();
+
+            const button = await screen.findByRole('button');
+            await user.click(button);
 
             const zero = await screen.findByText('0');
             expect(zero.textContent).toBe('0');
@@ -170,10 +171,11 @@ describe('EntityInfoDataTable', () => {
 
     describe('Node count for Vault Readers nested table', () => {
         it('Verify Vault Reader count is the count returned by All Readers', async () => {
-            const url = `?expandedPanelSections=${azKeyVaultSections[0].label}`;
-            const history = createMemoryHistory({ initialEntries: [url] });
+            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />);
 
-            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />, { history });
+            // wait for the total count to be available - this holds off all following tests until the counts have been returned
+            const sum = await screen.findByText('1,998');
+            expect(sum).not.toBeNull();
 
             // verify the vault reader count is as expected
             const vaultReadersHeader = await screen.findByText('Vault Readers');

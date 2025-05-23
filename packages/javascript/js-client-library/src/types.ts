@@ -322,3 +322,15 @@ export type StyledGraphEdge = {
 };
 
 export type FlatGraphResponse = Record<string, StyledGraphNode | StyledGraphEdge>;
+
+export type CustomNodeKindType = {
+    id: number;
+    kindName: string;
+    config: {
+        icon: {
+            type: string;
+            name: string;
+            color: string;
+        };
+    };
+};

@@ -38,10 +38,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: false,
                     },
-                    {
-                        key: 'back_button_support',
-                        enabled: true,
-                    },
                 ],
             })
         );
