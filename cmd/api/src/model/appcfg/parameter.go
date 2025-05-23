@@ -129,6 +129,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &TrustedProxiesParameters{}
 	case FedEULACustomTextKey:
 		v = &FedEULACustomTextParameter{}
+	case SessionTTLHours:
+		v = &SessionTTLHoursParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
