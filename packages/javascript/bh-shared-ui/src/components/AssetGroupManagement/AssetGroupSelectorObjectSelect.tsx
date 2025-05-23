@@ -76,6 +76,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
     }, [previewQuery.data, setResults]);
 
     useEffect(() => {
+        if (seeds.length === 0) return;
         const cypherQuery = async () => {
             const nodesByObjectId = new Map<string, GraphNode>();
 
@@ -106,7 +107,7 @@ const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ 
         cypherQuery().then((newSelectedNodes) => {
             setSelectedNodes(newSelectedNodes);
         });
-    }, [selectedNodes.length, seeds]);
+    }, [seeds]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
