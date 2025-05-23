@@ -93,8 +93,8 @@ func testRoleAccess(t *testing.T, roleName string) {
 			userClient, ok := lab.Unpack(harness, userClientFixture)
 			assert.True(ok)
 
-			updatedPasswordExpirationWindowParameter := v2.AppConfigUpdateRequest{
-				Key: appcfg.PasswordExpirationWindow,
+			updatedPasswordExpirationWindowParameter := appcfg.AppConfigUpdateRequest{
+				Key: string(appcfg.PasswordExpirationWindow),
 				Value: map[string]any{
 					"duration": "P30D",
 				},

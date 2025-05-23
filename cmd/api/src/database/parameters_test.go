@@ -149,7 +149,7 @@ func TestParameters_GetEULACustomText(t *testing.T) {
 		testCtx       = context.Background()
 		customEULATxt = "I AM BATMAN"
 	)
-	newVal, err := types.NewJSONBObject(map[string]any{"customText": customEULATxt})
+	newVal, err := types.NewJSONBObject(map[string]any{"custom_text": customEULATxt})
 	require.Nil(t, err)
 
 	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
