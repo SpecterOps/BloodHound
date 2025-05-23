@@ -129,10 +129,10 @@ func Test_PutAppConfig(t *testing.T) {
 }
 
 func mapParameter[T *appcfg.PasswordExpiration |
-*appcfg.Neo4jParameters |
-*appcfg.CitrixRDPSupport |
-*appcfg.PruneTTLParameters |
-*appcfg.ReconciliationParameter](t *testing.T, value T, parameter appcfg.Parameter) {
+	*appcfg.Neo4jParameters |
+	*appcfg.CitrixRDPSupport |
+	*appcfg.PruneTTLParameters |
+	*appcfg.ReconciliationParameter](t *testing.T, value T, parameter appcfg.Parameter) {
 	err := parameter.Value.Map(&value)
 	require.Nilf(t, err, "Failed to map parameter value to %T type: %v", value, err)
 }
