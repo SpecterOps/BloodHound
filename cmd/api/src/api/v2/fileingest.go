@@ -37,6 +37,7 @@ import (
 	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 
 	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/job"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
@@ -101,7 +102,7 @@ func (s Resources) ListIngestJobs(response http.ResponseWriter, request *http.Re
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 100); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if ingestJobs, count, err := ingest.GetAllIngestJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
+		} else if ingestJobs, count, err := job.GetAllIngestJobs(request.Context(), s.DB, skip, limit, strings.Join(order, ", "), sqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(request.Context(), ingestJobs, limit, skip, count, http.StatusOK, response)
@@ -115,7 +116,7 @@ func (s Resources) StartIngestJob(response http.ResponseWriter, request *http.Re
 
 	if user, valid := auth.GetUserFromAuthCtx(reqCtx.AuthCtx); !valid {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, api.ErrorResponseDetailsAuthenticationInvalid, request), response)
-	} else if ingestJob, err := ingest.StartIngestJob(request.Context(), s.DB, user); err != nil {
+	} else if ingestJob, err := job.StartIngestJob(request.Context(), s.DB, user); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), ingestJob, http.StatusCreated, response)
@@ -137,7 +138,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Content type must be application/json or application/zip", request), response)
 	} else if jobID, err := strconv.Atoi(jobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
+	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestTaskParams, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, ingest.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
@@ -163,7 +164,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
 	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, ingest.IngestTaskParams{Filename: ingestTaskParams.Filename, FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if err = ingest.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
+	} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusAccepted)
@@ -177,11 +178,11 @@ func (s Resources) EndIngestJob(response http.ResponseWriter, request *http.Requ
 
 	if jobID, err := strconv.Atoi(jobIdString); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if ingestJob, err := ingest.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
+	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if ingestJob.Status != model.JobStatusRunning {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "job must be in running status to end", request), response)
-	} else if err := ingest.EndIngestJob(request.Context(), s.DB, ingestJob); err != nil {
+	} else if err := job.EndIngestJob(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		response.WriteHeader(http.StatusOK)

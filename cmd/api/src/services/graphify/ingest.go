@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package graphify
 
 import (
 	"encoding/json"
@@ -45,6 +45,18 @@ type ReadOptions struct {
 	FileType     model.FileType // JSON or ZIP
 	IngestSchema ingest_service.IngestSchema
 	ADCSEnabled  bool
+}
+
+type TimestampedBatch struct {
+	Batch      graph.Batch
+	IngestTime time.Time
+}
+
+func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+	return &TimestampedBatch{
+		Batch:      batch,
+		IngestTime: ingestTime,
+	}
 }
 
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,
