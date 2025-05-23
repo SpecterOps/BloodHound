@@ -37,11 +37,12 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 	if queryFilters, err := s.QueryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else if parameterFilter, hasParameterFilter := queryFilters.FirstFilter(queryParameterName); hasParameterFilter {
+		parameterFilterValue := appcfg.ParameterKey(parameterFilter.Value)
 		if parameterFilter.Operator != model.Equals {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
-		} else if !cfgParameter.IsValidKey(appcfg.ParameterKey(parameterFilter.Value)) {
+		} else if !(cfgParameter.IsValidKey(parameterFilterValue) || cfgParameter.IsProtectedKey(parameterFilterValue)) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
-		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), appcfg.ParameterKey(parameterFilter.Value)); err != nil {
+		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilterValue); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteBasicResponse(request.Context(), appcfg.Parameters{cfgParameter}, http.StatusOK, response)

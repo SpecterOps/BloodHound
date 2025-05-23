@@ -137,7 +137,7 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, parameters, 8)
 	for _, parameter := range parameters {
-		if !parameter.IsProtectedKey() {
+		if !parameter.IsProtectedKey(parameter.Key) {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
