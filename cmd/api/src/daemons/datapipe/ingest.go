@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/changestream"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
@@ -289,9 +290,18 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 				common.ObjectID.String(),
 			},
 		}
+
+		nodeChange = changestream.NewNodeChange(changestream.ChangeTypeUpdate, nextNode.ObjectID, nodeKinds, graph.AsProperties(normalizedProperties).Clone())
 	)
 
-	return batch.Batch.UpdateNodeBy(nodeUpdate)
+	if lastChange, err := batch.ChangeStream.LastNodeChange(batch.Ctx, nodeChange); err != nil {
+		return err
+	} else if lastChange.ShouldSubmit() {
+		batch.ChangeStream.Submit(batch.Ctx, nodeChange)
+		return batch.Batch.UpdateNodeBy(nodeUpdate)
+	}
+
+	return nil
 }
 
 func IngestNodes(batch *TimestampedBatch, baseKind graph.Kind, nodes []ein.IngestibleNode) error {

@@ -38,7 +38,9 @@ var (
 
 type Log interface {
 	LastNodeChange(ctx context.Context, proposedChange *NodeChange) (ChangeLookup, error)
+	CachedLastNodeChange(proposedChange *NodeChange) (ChangeLookup, error)
 	LastEdgeChange(ctx context.Context, proposedChange *EdgeChange) (ChangeLookup, error)
+	CachedLastEdgeChange(proposedChange *EdgeChange) (ChangeLookup, error)
 	Submit(ctx context.Context, change Change) bool
 }
 

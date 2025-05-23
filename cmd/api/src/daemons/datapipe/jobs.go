@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/bomenc"
+	"github.com/specterops/bloodhound/dawgs/drivers/pg/changestream"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/src/database"
@@ -37,14 +38,18 @@ import (
 )
 
 type TimestampedBatch struct {
-	Batch      graph.Batch
-	IngestTime time.Time
+	Batch        graph.Batch
+	ChangeStream changestream.Log
+	IngestTime   time.Time
+	Ctx          context.Context
 }
 
-func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+func NewTimestampedBatch(ctx context.Context, batch graph.Batch, changeStream changestream.Log, ingestTime time.Time) *TimestampedBatch {
 	return &TimestampedBatch{
-		Batch:      batch,
-		IngestTime: ingestTime,
+		Batch:        batch,
+		ChangeStream: changeStream,
+		IngestTime:   ingestTime,
+		Ctx:          ctx,
 	}
 }
 
@@ -222,7 +227,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask, i
 		failed = 0
 
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
+			timestampedBatch := NewTimestampedBatch(ctx, batch, s.csLog, ingestTime)
 
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)

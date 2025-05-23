@@ -23,7 +23,6 @@ import (
 
 	"github.com/specterops/bloodhound/dawgs/drivers/pg/model"
 	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
 func postgresIndexType(indexType graph.IndexType) string {
@@ -306,10 +305,6 @@ func ValidateRelationshipUpdateByBatch(updates []graph.RelationshipUpdate) (*Rel
 	updateBatch := NewRelationshipUpdateBatch()
 
 	for _, update := range updates {
-		if update.Relationship.Kind.Is(ad.SQLAdmin, ad.AllowedToAct) {
-			update.Relationship.Kind.Is()
-		}
-
 		if err := updateBatch.Add(update); err != nil {
 			return nil, err
 		}
