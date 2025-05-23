@@ -17,12 +17,66 @@
 package job
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/services/ingest"
 )
+
+const jobActivityTimeout = time.Minute * 20
+
+func updateIngestJobStatus(ctx context.Context, db JobData, job model.IngestJob, status model.JobStatus, message string) error {
+	job.Status = status
+	job.StatusMessage = message
+	job.EndTime = time.Now().UTC()
+
+	return db.UpdateIngestJob(ctx, job)
+}
+
+func timeOutIngestJob(ctx context.Context, db JobData, jobID int64, message string) error {
+	if job, err := db.GetIngestJob(ctx, jobID); err != nil {
+		return err
+	} else {
+		job.Status = model.JobStatusTimedOut
+		job.StatusMessage = message
+		job.EndTime = time.Now().UTC()
+
+		return db.UpdateIngestJob(ctx, job)
+	}
+}
+
+// ProcessStaleIngestJobs fetches all runnings ingest jobs and transitions them to a timed out state if the job has been inactive for too long.
+func (s *JobService) ProcessStaleIngestJobs(ctx context.Context, db JobData) {
+	// Because our database interfaces do not yet accept contexts this is a best-effort check to ensure that we do not
+	// commit state transitions when shutting down.
+	if ctx.Err() != nil {
+		return
+	}
+
+	var (
+		now       = time.Now().UTC()
+		threshold = now.Add(-jobActivityTimeout)
+	)
+
+	if jobs, err := db.GetIngestJobsWithStatus(ctx, model.JobStatusRunning); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error getting running jobs: %v", err))
+	} else {
+		for _, job := range jobs {
+			if job.LastIngest.Before(threshold) {
+				slog.WarnContext(ctx, fmt.Sprintf("Ingest timeout: No ingest activity observed for Job ID %d in %f minutes (last ingest was %s)). Upload incomplete",
+					job.ID,
+					now.Sub(threshold).Minutes(),
+					job.LastIngest.Format(time.RFC3339)))
+
+				if err := timeOutIngestJob(ctx, db, job.ID, fmt.Sprintf("Ingest timeout: No ingest activity observed in %f minutes. Upload incomplete.", now.Sub(threshold).Minutes())); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Error marking ingest job %d as timed out: %v", job.ID, err))
+				}
+			}
+		}
+	}
+}
 
 func (s *JobService) HasIngestJobsWaitingForAnalysis() (bool, error) {
 	if ingestJobsUnderAnalysis, err := s.db.GetIngestJobsWithStatus(s.ctx, model.JobStatusAnalyzing); err != nil {
@@ -43,7 +97,7 @@ func (s *JobService) FailAnalyzedIngestJobs() {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
-			if err := ingest.UpdateIngestJobStatus(s.ctx, s.db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
+			if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusFailed, "Analysis failed"); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed updating ingest job %d to failed status: %v", job.ID, err))
 			}
 		}
@@ -61,7 +115,7 @@ func (s *JobService) PartialCompleteIngestJobs() {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to load ingest jobs under analysis: %v", err))
 	} else {
 		for _, job := range ingestJobsUnderAnalysis {
-			if err := ingest.UpdateIngestJobStatus(s.ctx, s.db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
+			if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusPartiallyComplete, "Partially Completed"); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed updating ingest job %d to partially completed status: %v", job.ID, err))
 			}
 		}
@@ -94,7 +148,7 @@ func (s *JobService) CompleteAnalyzedIngestJobs() {
 				}
 			}
 
-			if err := ingest.UpdateIngestJobStatus(s.ctx, s.db, job, status, message); err != nil {
+			if err := updateIngestJobStatus(s.ctx, s.db, job, status, message); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
 			}
 		}
@@ -116,7 +170,7 @@ func (s *JobService) ProcessFinishedIngestJobs() {
 			if remainingIngestTasks, err := s.db.GetIngestTasksForJob(s.ctx, job.ID); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed looking up remaining ingest tasks for ingest job %d: %v", job.ID, err))
 			} else if len(remainingIngestTasks) == 0 {
-				if err := ingest.UpdateIngestJobStatus(s.ctx, s.db, job, model.JobStatusAnalyzing, "Analyzing"); err != nil {
+				if err := updateIngestJobStatus(s.ctx, s.db, job, model.JobStatusAnalyzing, "Analyzing"); err != nil {
 					slog.ErrorContext(s.ctx, fmt.Sprintf("Error updating ingest job %d: %v", job.ID, err))
 				}
 			}
