@@ -160,7 +160,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			s.ingestAvailableTasks()
 
 			// Manage time-out state progression for ingest jobs
-			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
+			s.jobService.ProcessStaleIngestJobs(s.ctx, s.db)
 
 			// Manage nominal state transitions for ingest jobs
 			s.jobService.ProcessFinishedIngestJobs()
