@@ -2615,7 +2615,7 @@
       "post": {
         "operationId": "UploadFileToJob",
         "summary": "Upload File To Job",
-        "description": "Uploads a file associated with the ingest job identified by job_id. The endpoint supports the following data formats: SharpHound, AzureHound, and Generic Ingest, which represents a full graph snapshot (nodes and edges).",
+        "description": "Saves a collection file to a file upload job",
         "tags": [
           "Collection Uploads",
           "Community",
@@ -2625,43 +2625,9 @@
           "description": "The body of the file upload request.",
           "content": {
             "application/json": {
-                "schema": {
-                    "type": "object"
-                },
-                "example": {
-                  "graph": {
-                      "nodes": [
-                          {
-                              "id": "user123",
-                              "kinds": ["Employee"],
-                              "properties": {
-                                  "name": "Alice",
-                                  "email": "alice@example.com",
-                                  "lastSeen": "2025-05-13T14:00:00Z",
-                                  "groups": ["admin", "engineering"]
-                              }
-                          },
-                          {
-                              "id": "server456",
-                              "kinds": ["Device"],
-                              "properties": {
-                                  "hostname": "srv-nyc-01",
-                                  "ip": "10.0.0.5"
-                              }
-                          }
-                      ],
-                      "edges": [
-                          {
-                              "kind": "MemberOf",
-                              "start": { "value": "user123" },
-                              "end": { "value": "server456" },
-                              "properties": {
-                                  "firstSeen": "2025-04-10T12:00:00Z"
-                              }
-                          }
-                      ]
-                  }
-                }                
+              "schema": {
+                "type": "object"
+              }
             }
           }
         },
