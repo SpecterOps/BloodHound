@@ -19,6 +19,7 @@ import { useExploreSelectedItem } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
+import { MouseCoords } from 'sigma/types';
 import {
     getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
@@ -40,6 +41,19 @@ export interface GraphEventProps {
     showEdgeLabels?: boolean;
 }
 
+const preventAllDefaults = (event: SigmaNodeEventPayload | MouseCoords) => {
+    event.preventSigmaDefault();
+
+    const original: MouseEvent = (event as MouseCoords).original;
+    if (original instanceof MouseEvent) {
+        original.preventDefault();
+        original.stopPropagation();
+    }
+};
+
+// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
+const MOUSE_BUTTON_PRIMARY = 0;
+
 export const GraphEvents = forwardRef(function GraphEvents(
     {
         onDoubleClickNode,
@@ -53,7 +67,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }: GraphEventProps,
     ref
 ) {
-    const { selectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
@@ -61,12 +75,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [draggedNode, setDraggedNode] = useState<string | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
+    const isDragging = !!draggedNode;
 
-    const isLongPress = useRef(false);
     const dragTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const clickTimerRef = useRef<ReturnType<typeof setTimeout>>();
-    const prevent = useRef(false);
 
     const graph = sigma.getGraph();
 
@@ -96,9 +108,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const clearDraggedNode = () => {
         setDraggedNode(null);
-        setIsDragging(false);
         clearTimeout(dragTimerRef.current);
-        isLongPress.current = false;
     };
 
     const curvedEdgeReducer = useCallback(
@@ -154,24 +164,16 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 setHoveredNode(null);
             },
             downNode: (event) => {
-                // a button value of `0` indicates that the main button of the mouse device was pressed
-                // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
-                if (event.event.original.button === 0) {
-                    setDraggedNode(event.node);
-
-                    dragTimerRef.current = setTimeout(() => {
-                        isLongPress.current = true;
-                    }, 150);
+                if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    // Drag after a timeout, to prevent accidental dragging
+                    dragTimerRef.current = setTimeout(() => setDraggedNode(event.node), 200);
                 }
             },
             mouseup: () => clearDraggedNode(),
             mousemovebody: (event) => {
                 if (draggedNode) {
-                    setIsDragging(true);
-                    // Prevent sigma to move camera:
-                    event.preventSigmaDefault();
-                    event.original.preventDefault();
-                    event.original.stopPropagation();
+                    // Prevent Sigma from moving camera
+                    preventAllDefaults(event);
 
                     // Get new position of node
                     const position = sigma.viewportToGraph(event);
@@ -181,40 +183,42 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             mousemove: (event) => {
                 if (draggedNode) {
-                    // Prevent sigma to move camera:
-                    event.preventSigmaDefault();
-                    event.original.preventDefault();
-                    event.original.stopPropagation();
+                    // Prevent Sigma from moving camera
+                    preventAllDefaults(event);
                 }
             },
             doubleClickNode: (event) => {
-                if (!onDoubleClickNode) return;
-                event.preventSigmaDefault();
-                clearDraggedNode();
-                clearTimeout(clickTimerRef.current);
-                prevent.current = true;
-                onDoubleClickNode(event.node);
+                // Prevent zoom when node is double clicked
+                preventAllDefaults(event);
+
+                if (onDoubleClickNode) {
+                    // Prevent single click event on second click
+                    clearTimeout(clickTimerRef.current);
+
+                    onDoubleClickNode(event.node);
+                }
             },
             clickNode: (event) => {
-                if (onClickNode && !isLongPress.current && !isDragging) {
-                    clearDraggedNode();
-
-                    clickTimerRef.current = setTimeout(function () {
-                        if (!prevent.current) {
-                            onClickNode(event.node);
-                        }
-                        prevent.current = false;
-                    }, 200);
+                if (onClickNode) {
+                    clickTimerRef.current = setTimeout(
+                        () => onClickNode(event.node),
+                        // Double Click timeout marginally degrades experience; only apply if handler provided
+                        onDoubleClickNode ? 200 : 0
+                    );
                 }
             },
             rightClickNode: (event) => {
-                event.preventSigmaDefault();
+                preventAllDefaults(event);
                 onRightClickNode?.(event);
             },
-            // We need our reducers to run again when the camera state gets updated to position edge labels correctly.
-            // Despite its name, this event only triggers on camera update, not any Sigma update
+            // Reducers must run again on camera state update to position edge labels correctly
+            // Despite the name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
-            clickStage: () => onClickStage && onClickStage(),
+            clickStage: () => {
+                // Unselect selected item
+                setSelectedItem();
+                onClickStage?.();
+            },
         });
     }, [
         registerEvents,
@@ -227,6 +231,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         draggedNode,
         isDragging,
         sigmaContainer,
+        setSelectedItem,
     ]);
 
     useEffect(() => {
