@@ -419,6 +419,9 @@ func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Dura
 		slog.WarnContext(ctx, "Failed to fetch auth session ttl hours; returning default values")
 	} else if err = sessionTTLHours.Map(&result); err != nil {
 		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
+	} else if result.Hours <= 0 {
+		slog.WarnContext(ctx, "auth session ttl hours ≤ 0; returning default values")
+		result.Hours = 8
 	}
 
 	return time.Hour * time.Duration(result.Hours)
