@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/job"
 )
 
 const (
@@ -47,6 +48,7 @@ type Daemon struct {
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
 	ingestSchema        ingest.IngestSchema
+	jobService          job.JobService
 }
 
 func (s *Daemon) Name() string {
@@ -63,6 +65,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
 		ingestSchema:        ingestSchema,
+		jobService:          job.NewJobService(ctx, connections.RDMS),
 	}
 }
 
@@ -87,21 +90,21 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
-			FailAnalyzedIngestJobs(s.ctx, s.db)
+			s.jobService.FailAnalyzedIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			PartialCompleteIngestJobs(s.ctx, s.db)
+			s.jobService.PartialCompleteIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
 	} else {
-		CompleteAnalyzedIngestJobs(s.ctx, s.db)
+		s.jobService.CompleteAnalyzedIngestJobs()
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
@@ -160,10 +163,10 @@ func (s *Daemon) Start(ctx context.Context) {
 			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
 
 			// Manage nominal state transitions for ingest jobs
-			ProcessFinishedIngestJobs(s.ctx, s.db)
+			s.jobService.ProcessFinishedIngestJobs()
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
+			if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
