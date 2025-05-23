@@ -23,8 +23,8 @@ import {
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
-    useDataAvailable,
     useExploreSelectedItem,
+    useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -49,7 +49,7 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
-    const { data, isLoading, isError } = useDataAvailable();
+    const { data, isLoading, isError } = useGraphHasData();
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);

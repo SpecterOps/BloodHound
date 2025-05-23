@@ -17,7 +17,7 @@
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../test-utils';
-import { useDataAvailable } from './useDataAvailable';
+import { useGraphHasData } from './useGraphHasData';
 
 const populatedPayload = {
     data: {
@@ -45,7 +45,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('useDataAvailable', () => {
+describe('useGraphHasData', () => {
     it('false when no nodes available', async () => {
         server.use(
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
@@ -53,7 +53,7 @@ describe('useDataAvailable', () => {
             })
         );
 
-        const { result } = renderHook(() => useDataAvailable());
+        const { result } = renderHook(() => useGraphHasData());
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(result.current.data).toEqual(false);
@@ -66,7 +66,7 @@ describe('useDataAvailable', () => {
             })
         );
 
-        const { result } = renderHook(() => useDataAvailable());
+        const { result } = renderHook(() => useGraphHasData());
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
         expect(result.current.data).toEqual(true);
@@ -79,7 +79,7 @@ describe('useDataAvailable', () => {
             })
         );
 
-        const { result } = renderHook(() => useDataAvailable());
+        const { result } = renderHook(() => useGraphHasData());
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         expect(result.current.isError).toBe(false);

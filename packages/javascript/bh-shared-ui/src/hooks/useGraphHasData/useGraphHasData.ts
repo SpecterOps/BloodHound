@@ -18,7 +18,7 @@ import { RequestOptions } from 'js-client-library';
 import { useQuery, UseQueryResult } from 'react-query';
 import { apiClient, GenericQueryOptions } from '../../utils';
 
-export const getDataAvailable = async (options: RequestOptions): Promise<boolean> => {
+export const getGraphHasData = async (options: RequestOptions): Promise<boolean> => {
     try {
         const res = await apiClient.cypherSearch('MATCH (A) WHERE NOT A:MigrationData RETURN A LIMIT 1', options);
         return Object.keys(res?.data?.data?.nodes).length > 0;
@@ -30,10 +30,10 @@ export const getDataAvailable = async (options: RequestOptions): Promise<boolean
     }
 };
 
-export const useDataAvailable = (queryOptions?: GenericQueryOptions<boolean>): UseQueryResult<boolean> => {
+export const useGraphHasData = (queryOptions?: GenericQueryOptions<boolean>): UseQueryResult<boolean> => {
     return useQuery({
-        queryKey: ['getDataAvailable'],
-        queryFn: ({ signal }) => getDataAvailable({ signal }),
+        queryKey: ['getGraphHasData'],
+        queryFn: ({ signal }) => getGraphHasData({ signal }),
         ...queryOptions,
     });
 };

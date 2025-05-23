@@ -64,4 +64,4 @@ export * from './usePreviousValue';
 
 export * from './useCustomNodeKinds';
 
-export * from './useDataAvailable';
+export * from './useGraphHasData';
