@@ -725,6 +725,8 @@ func (s *Resources) DeleteAssetGroupTag(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
+	} else if assetGroupTag.Position.Int32 == 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
 	} else if err := s.DB.DeleteAssetGroupTag(request.Context(), user, assetGroupTag); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {

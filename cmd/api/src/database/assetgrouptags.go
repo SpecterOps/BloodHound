@@ -42,6 +42,7 @@ type AssetGroupTagData interface {
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
+	CascadeDecrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -370,8 +371,18 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			}
 		}
 
+		if assetGroupTag.Type == 1 {
+			if assetGroupTag.Position.Int32 == 1 {
+				return fmt.Errorf("you cannot delete tier 0 or a tier in the 1st position")
+			}
+
+			if err := bhdb.CascadeDecrementAssetGroupTagPosition(ctx, user, assetGroupTag.Position); err != nil {
+				return err
+			}
+		}
+
 		if result := tx.Exec(fmt.Sprintf(`
-			UPDATE %s SET updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?
+			UPDATE %s SET updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?, position = null
 			WHERE id = ?`,
 			assetGroupTag.TableName()),
 			user.ID.String(), user.ID.String(), assetGroupTag.ID); result.Error != nil {
@@ -385,6 +396,16 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) CascadeDecrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error {
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+		UPDATE %s
+		SET position = position - 1,
+		    updated_at = NOW(),
+			updated_by = ?
+		WHERE position > ?
+		  AND type = 1`, model.AssetGroupTag{}.TableName()), user.ID.String(), position))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
