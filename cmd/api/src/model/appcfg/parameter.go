@@ -36,19 +36,12 @@ import (
 type ParameterKey string
 
 const (
-	PasswordExpirationWindow        ParameterKey = "auth.password_expiration_window"
-	DefaultPasswordExpirationWindow              = time.Hour * 24 * 90
-
-	SessionTTLHours ParameterKey = "auth.session_ttl_hours"
-
-	Neo4jConfigs        ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey ParameterKey = "analysis.citrix_rdp_support"
-
-	PruneTTL                      ParameterKey = "prune.ttl"
-	DefaultPruneBaseTTL                        = time.Hour * 24 * 7
-	DefaultPruneHasSessionEdgeTTL              = time.Hour * 24 * 3
-
-	ReconciliationKey ParameterKey = "analysis.reconciliation"
+	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs             ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                 ParameterKey = "prune.ttl"
+	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 
 	DefaultTierLimit  = 1
 	DefaultLabelLimit = 0
@@ -58,6 +51,13 @@ const (
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
+)
+
+const (
+	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
+	DefaultSessionTTLHours          = 8
+	DefaultPruneBaseTTL             = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL   = time.Hour * 24 * 3
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -412,7 +412,7 @@ type SessionTTLHoursParameter struct {
 
 func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
 	var result = SessionTTLHoursParameter{
-		Hours: 8, // Default to a logged in auth session time to live of 8 hours
+		Hours: DefaultSessionTTLHours, // Default to a logged in auth session time to live of 8 hours
 	}
 
 	if sessionTTLHours, err := service.GetConfigurationParameter(ctx, SessionTTLHours); err != nil {
@@ -421,7 +421,7 @@ func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Dura
 		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
 	} else if result.Hours <= 0 {
 		slog.WarnContext(ctx, "auth session ttl hours ≤ 0; returning default values")
-		result.Hours = 8
+		result.Hours = DefaultSessionTTLHours
 	}
 
 	return time.Hour * time.Duration(result.Hours)
