@@ -150,7 +150,6 @@ describe('EntityInfoDataTable', () => {
             server.use(
                 rest.get(`api/v2/gpos/${objectId}/ous`, (req, res, ctx) => {
                     const _ous = { ...queryCount.ous, count: undefined };
-                    console.log(_ous);
                     return res(ctx.json(_ous));
                 })
             );
@@ -171,7 +170,9 @@ describe('EntityInfoDataTable', () => {
 
     describe('Node count for Vault Readers nested table', () => {
         it('Verify Vault Reader count is the count returned by All Readers', async () => {
-            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />);
+            const url = `?expandedPanelSections=${azKeyVaultSections[0].label}`;
+
+            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />, { route: url });
 
             // wait for the total count to be available - this holds off all following tests until the counts have been returned
             const sum = await screen.findByText('1,998');

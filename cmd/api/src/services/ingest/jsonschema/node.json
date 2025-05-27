@@ -6,24 +6,14 @@
         "id": { "type": "string" },
         "properties": {
             "type": ["object", "null"],
+            "description": "A key-value map of node attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",
             "additionalProperties": {
-                "anyOf": [
-                    { "type": "string" },
-                    { "type": "number" },
-                    { "type": "boolean" },
-                    { "type": "null" },
-                    {
-                        "type": "array",
-                        "items": {
-                            "anyOf": [
-                                {  "type": "string" } ,
-                                {  "type": "number" } ,
-                                {  "type": "boolean" } ,
-                                {  "type": "null" }
-                            ]
-                        }
+                "type": ["string", "number", "boolean", "array"],
+                "items": {
+                    "not": {
+                        "type": "object"
                     }
-                ]
+                }
             }
         },
         "kinds": {
@@ -45,7 +35,8 @@
             "properties": {
                 "manufacturer": "Brandon Corp",
                 "model": "4000x",
-                "isActive": true
+                "isActive": true,
+                "rating": 43.50
             },
             "kinds": ["Device", "Asset"]
         },
