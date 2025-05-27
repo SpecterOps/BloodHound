@@ -17,6 +17,13 @@ With Tier Management:
 
 Please reach out to your TAM with any questions or feedback!
 
+### Understanding and Mitigating BadSuccessor
+Recently [Yuval Gordon](https://x.com/YuG0rd) at Akamai released the blog post [BadSuccessor: Abusing dMSA to Escalate Privileges in Active Directory](https://www.akamai.com/blog/security-research/abusing-dmsa-for-privilege-escalation-in-active-directory) with some great research on abusing a new managed service account type for Active Directory which was released in Windows Server 2025. If you haven’t read that post in full yet, we highly recommend doing so.
+
+As a follow-up to that discovery, SpecterOps’ own Jim Sykura has published [Understanding & Mitigating BadSuccessor](https://specterops.io/blog/2025/05/27/understanding-mitigating-badsuccessor/) blog post with further breakdown and recommended steps for identifying and mitigating the potential escalation path, including queries for use within BloodHound.
+
+We highly recommend reading this post for more information.
+
 ### New BloodHound Enterprise Splunk App is Live!
 
 We've completely rewritten our BloodHound Enterprise Splunk app, providing significantly more customization, support for proxies, and much more! The new Splunk app is available on SplunkBase and supports both on-premise and cloud deployments of Splunk. Unfortunately, due to the volume of changes, there was no clean way to provide an upgrade path for this new version of the Splunk app, so upgrading will require a fresh installation.
