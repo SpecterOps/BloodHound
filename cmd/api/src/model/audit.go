@@ -91,7 +91,7 @@ const (
 	AuditLogActionUpdateCustomNodeKind AuditLogAction = "UpdateCustomNodeKind"
 	AuditLogActionDeleteCustomNodeKind AuditLogAction = "DeleteCustomNodeKind"
 
-	AuditLogActionToggleEarlyAccessFeature AuditLogAction = "ToggleEarlyAccessFeature"
+	AuditLogActionToggleEarlyAccessFeatureFlag AuditLogAction = "ToggleEarlyAccessFeatureFlag"
 
 	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
 	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"

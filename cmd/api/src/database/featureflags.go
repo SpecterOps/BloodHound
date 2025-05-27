@@ -42,7 +42,7 @@ func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, e
 func (s *BloodhoundDB) SetFlag(ctx context.Context, flag appcfg.FeatureFlag) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionToggleEarlyAccessFeature,
+			Action: model.AuditLogActionToggleEarlyAccessFeatureFlag,
 			Model:  flag,
 		}
 	)
