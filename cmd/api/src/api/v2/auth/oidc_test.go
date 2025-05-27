@@ -388,7 +388,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
-		// TODO: BED-5641 Will require further abstraction of http package for this to be testable
+		// TODO: BED-5641 Will require further abstraction of OIDC package for this to be testable
 		// {
 		// 	name: "Success: OIDC Login, Redirect to Provider - Found",
 		// 	args: model.SSOProvider{
@@ -848,6 +848,8 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 	}
 }
 
+// TODO BED-5641:
+// Move to utilities
 func zeroOutExpiresHeader(headers http.Header) http.Header {
 	const zeroTime = "Thu, 01 Jan 1970 00:00:00 GMT"
 

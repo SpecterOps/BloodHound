@@ -4695,6 +4695,12 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
+		// TODO BED-5641:
+		// Options
+		// 1. Mock
+		// 2. Validate Base64 Encoded Value
+		// 3. Validate prior to zero-ing out the rest
+		// 4. Validate expected format
 		// {
 		// 	name: "Success: MFAEnrollmentReponse - OK",
 		// 	buildRequest: func() *http.Request {
@@ -4742,7 +4748,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 		// 	expected: expected{
 		// 		responseCode:   http.StatusOK,
 		// 		responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//example.com/"}},
-		// 		responseBody:   `{"data":{"qr_code":"data:image/png;base64,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","totp_secret":"APUH4ZFNDGYY2GMYE4HRHELGEWHZ42SZ"}}`,
+		// 		responseBody:   `{"data":{"qr_code":"data:image/png;base64,XXX"}}`,
 		// 	},
 		// },
 	}
