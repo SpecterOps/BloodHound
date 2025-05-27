@@ -32,8 +32,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/graphify"
-	"github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/specterops/bloodhound/src/services/job"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 const (
@@ -48,7 +48,7 @@ type Daemon struct {
 	tickInterval        time.Duration
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        ingest.IngestSchema
+	ingestSchema        upload.IngestSchema
 	jobService          job.JobService
 	graphifyService     graphify.GraphifyService
 }
@@ -57,7 +57,7 @@ func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
+func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema upload.IngestSchema) *Daemon {
 	return &Daemon{
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
@@ -130,13 +130,13 @@ func resetCache(cacher cache.Cache, _ bool) {
 	}
 }
 
-func (s *Daemon) ingestAvailableTasks() {
+func (s *Daemon) processGraphifyTasks() {
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 	} else {
 
 		defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
-		s.graphifyService.ProcessIngestTasks()
+		s.graphifyService.ProcessTasks()
 	}
 }
 
@@ -162,7 +162,7 @@ func (s *Daemon) Start(ctx context.Context) {
 			}
 
 			// Ingest all available ingest tasks
-			s.ingestAvailableTasks()
+			s.processGraphifyTasks()
 
 			// Manage time-out state progression for ingest jobs
 			s.jobService.ProcessStaleIngestJobs()

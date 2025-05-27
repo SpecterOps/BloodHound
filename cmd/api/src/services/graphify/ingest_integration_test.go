@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/graphify"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
@@ -352,7 +352,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 
 	var (
 		testContext     = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-		ingestSchema, _ = ingest.LoadIngestSchema()
+		ingestSchema, _ = upload.LoadIngestSchema()
 		validReader     = bytes.NewReader([]byte(`{"graph":{"nodes":[{"id": "1234", "kinds": ["kindA","kindB"],"properties":{"true": true,"hello":"world"}}]}}`))
 		// invalidReader simulates reading a file that doesn't pass jsonschema validation against the nodes schema.
 		// ReadFileForIngest() should kick out, ingesting no graph data
@@ -405,7 +405,7 @@ func Test_ReadFileForIngest(t *testing.T) {
 				timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
 				err := graphify.ReadFileForIngest(timestampedBatch, invalidReader, readOptions)
 				require.NotNil(t, err)
-				var report ingest.ValidationReport
+				var report upload.ValidationReport
 				if errors.As(err, &report) {
 					// verify nodes[0] caused a validation error
 					require.Len(t, report.ValidationErrors, 1)

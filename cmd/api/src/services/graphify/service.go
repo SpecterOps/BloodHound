@@ -22,7 +22,7 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 // The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
@@ -43,10 +43,10 @@ type GraphifyService struct {
 	db      GraphifyData
 	graphdb graph.Database
 	cfg     config.Configuration
-	schema  ingest.IngestSchema
+	schema  upload.IngestSchema
 }
 
-func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema ingest.IngestSchema) GraphifyService {
+func NewGraphifyService(ctx context.Context, db GraphifyData, graphDb graph.Database, cfg config.Configuration, schema upload.IngestSchema) GraphifyService {
 	return GraphifyService{
 		ctx:     ctx,
 		db:      db,
