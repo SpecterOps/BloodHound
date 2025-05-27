@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type ADCSCache struct {
@@ -38,6 +39,7 @@ type ADCSCache struct {
 	// To discourage direct access without getting a read lock, these are private
 	authStoreForChainValid map[graph.ID]cardinality.Duplex[uint64] //Auth stores with a valid chain to the domain, key is domain ID
 	rootCAForChainValid    map[graph.ID]cardinality.Duplex[uint64] //Root CA with a valid chain to the domain, key is domain ID
+	hasHostingComputer     map[graph.ID]bool
 	//authStorePathToDomain           map[graph.ID]map[graph.ID]graph.Path
 	//rootCAPathToDomain              map[graph.ID]map[graph.ID]graph.Path
 	expandedCertTemplateControllers map[graph.ID]cardinality.Duplex[uint64]
@@ -56,6 +58,7 @@ func NewADCSCache() ADCSCache {
 		mu:                              &sync.RWMutex{},
 		authStoreForChainValid:          make(map[graph.ID]cardinality.Duplex[uint64]),
 		rootCAForChainValid:             make(map[graph.ID]cardinality.Duplex[uint64]),
+		hasHostingComputer:              make(map[graph.ID]bool),
 		expandedCertTemplateControllers: make(map[graph.ID]cardinality.Duplex[uint64]),
 		certTemplateHasSpecialEnrollers: make(map[graph.ID]bool),
 		enterpriseCAHasSpecialEnrollers: make(map[graph.ID]bool),
@@ -101,7 +104,6 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 			} else {
 				s.certTemplateControllers[ct.ID] = firstDegreePrincipals.Slice()
 			}
-
 		}
 
 		for _, eca := range s.enterpriseCertAuthorities {
@@ -122,6 +124,20 @@ func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpris
 				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching published cert templates for enterprise ca %d: %v", eca.ID, err))
 			} else {
 				s.publishedTemplateCache[eca.ID] = publishedTemplates.Slice()
+			}
+
+			if hostingComputers, err := fetchFirstDegreeNodes(tx, eca, ad.HostsCAService); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Error fetching hosting computers for enterprise ca %d: %v", eca.ID, err))
+			} else {
+				hasHostingComputer := false
+				for _, computer := range hostingComputers.Slice() {
+					if enabled, err := computer.Properties.Get(common.Enabled.String()).Bool(); err != nil {
+						continue
+					} else if enabled {
+						hasHostingComputer = true
+					}
+				}
+				s.hasHostingComputer[eca.ID] = hasHostingComputer
 			}
 		}
 
@@ -191,6 +207,16 @@ func (s *ADCSCache) DoesCAChainProperlyToDomain(enterpriseCA, domain *graph.Node
 		return false
 	} else {
 		return s.rootCAForChainValid[domainID].Contains(caID) && s.authStoreForChainValid[domainID].Contains(caID)
+	}
+}
+
+func (s *ADCSCache) DoesCAHaveHostingComputer(enterpriseCA *graph.Node) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if hasHost, ok := s.hasHostingComputer[enterpriseCA.ID]; !ok {
+		return false
+	} else {
+		return hasHost
 	}
 }
 
@@ -294,11 +320,11 @@ func (s *ADCSCache) GetDomains() []*graph.Node {
 }
 
 func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
-	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+	if sameForestTrustNodes, err := FetchNodesWithSameForestTrustRelationship(tx, domain); err != nil {
 		return false, err
 	} else {
-		for _, trustedByDomain := range trustedByNodes {
-			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+		for _, sameForestTrustDomain := range sameForestTrustNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
 				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasUPNCertMappingInForest: %v", err))
 				continue
 			} else {
@@ -319,11 +345,11 @@ func hasUPNCertMappingInForest(tx graph.Transaction, domain *graph.Node) (bool, 
 }
 
 func hasWeakCertBindingInForest(tx graph.Transaction, domain *graph.Node) (bool, error) {
-	if trustedByNodes, err := FetchNodesWithTrustedByParentChildRelationship(tx, domain); err != nil {
+	if sameForestTrustNodes, err := FetchNodesWithSameForestTrustRelationship(tx, domain); err != nil {
 		return false, err
 	} else {
-		for _, trustedByDomain := range trustedByNodes {
-			if dcForNodes, err := FetchNodesWithDCForEdge(tx, trustedByDomain); err != nil {
+		for _, sameForestTrustDomain := range sameForestTrustNodes {
+			if dcForNodes, err := FetchNodesWithDCForEdge(tx, sameForestTrustDomain); err != nil {
 				slog.Warn(fmt.Sprintf("unable to fetch DCFor nodes in hasWeakCertBindingInForest: %v", err))
 				continue
 			} else {

@@ -25,9 +25,9 @@ import {
     PageWithTitle,
     SelectedEnvironment,
     TenantInfo,
+    useInitialEnvironment,
 } from 'bh-shared-ui';
 import { useEffect, useState } from 'react';
-import { useInitialEnvironment } from 'src/hooks/useInitialEnvironment';
 import { dataCollectionMessage } from './utils';
 
 const useStyles = makeStyles((theme) => ({
@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const QualityAssuranceV2: React.FC = () => {
+const QualityAssurance: React.FC = () => {
     const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
@@ -154,7 +154,7 @@ const QualityAssuranceV2: React.FC = () => {
     );
 };
 
-export default QualityAssuranceV2;
+export default QualityAssurance;
 
 const QualityAssuranceDescription = () => (
     <Typography variant='body2' paragraph>

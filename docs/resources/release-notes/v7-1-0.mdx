@@ -1,0 +1,82 @@
+---
+title: 2025-03-06 Release Notes (v7.1.0)
+---
+## Announcements
+
+### BloodHound User Email Uniqueness Enforcement
+
+BloodHound will now enforce email address uniqueness on all BloodHound users as of this release. This change will improve our overall user experience by reducing the opportunity for conflicting login-flow experiences and will enhance overall platform security.
+
+Don't hesitate to contact your TAM with any other questions or for help recovering access to previously duplicate accounts.
+
+### SplunkSOAR Integration is Live!
+
+Our SplunkSOAR integration is now live on SplunkBase! This integration supports polling for new findings, fetching asset information from BloodHound Enterprise, and can validate whether a path exists between two objects as part of your automations. Please let us know if you have any feedback as you utilize the integration!
+
+The application is available on SplunkBase, located here: https://splunkbase.splunk.com/app/7772
+
+## Summary
+
+- **BloodHound (v7.1.0)**
+  - New and Improved Features
+    - Early access for NTLM relay Attack Path primitives! *(Requires SharpHound upgrade, enabling functionality)*.
+    - Rewrite of Owns/WriteOwner Attack Path primitives for improved accuracy *(Requires SharpHound upgrade)*.
+    - Added support for collecting last login time for BloodHound users via the API.
+    - BloodHound user email addresses are now uniquely enforced.
+    - Added support for ingesting empty local group objects (better support for Citrix RDP processing).
+    - Improved logic for post-processing edges across domains, specifically related to special groups (Authenticated Users, etc.) within ADCS.
+    - Added support for just-in-time role assignments by IDP on every login via SSO.
+    - *[BHE Only]* Added the ability to sort the findings chart on the Posture page by Severity and Finding Count columns.
+    - *[BHE Only]* The default Administration page has been set to "Manage Clients".
+    - Removed visibility of several Admin-only buttons from Read Only users.
+    - *[CE Only]* Added support for recreating a default Admin user via environment variable.
+  - Bug Fixes
+    - Text will no longer overflow buttons on the Explore page.
+    - Resolved several Cypher syntax errors for customers running on PostgreSQL graph databases.
+    - *[BHE Only]* Opening Remediation plans in a new tab will now correctly include all UI elements.
+
+- **SharpHound (v2.6.0)**
+  - New and Improved Features
+    - Added support for NTLM relay Attack Path primitives!
+    - Updated support for Owns/WriteOwner Attack Path primitives.
+    - *[BHE Only]* SharpHound Enterprise will no longer update setting.json during collection runs with the current job information.
+
+- **AzureHound (v2.3.0)**
+  - New and Improved Features
+    - AzureHound now supports Managed Identities for authentication!
+
+### BloodHound (v7.0.0)
+
+#### New and Improved Features
+
+- **NTLM relay Attack Paths in Early Access** - NTLM relay attacks represent a common escalation technique for adversaries within target environments. Starting today, after enabling the Early Access flag under Administration, BloodHound will support coerced relay via LDAP, LDAPS, and SMB. These paths represent significant risk for most organizations, and will include Attack Path findings for BloodHound Enterprise customers. *(Requires SharpHound upgrade, enabling functionality)*.
+- **Owns/WriteOwner rewrite** - A rewrite stemming from a discussion with one of our customers, this update adds support for the OWNER RIGHTS SID, as well as the dsHeuristics flag which both modify the permissions granted via the Owns and WriteOwner edges. It also introduces two new edges, OwnsLimitedRights and WriteOwnerLimitedRights to indicate where limited escalation paths exist. *(Requires SharpHound upgrade)*.
+- **Last login time for BloodHound users via the API** - BloodHound users will now store a last login time with the user object on every login. This will help you understand unutilized accounts in your BloodHound environment.
+- **BloodHound user email addresses are now uniquely enforced** - BloodHound will enforce email address uniqueness on all BloodHound users as of this release. This change will improve our overall user experience by reducing the opportunity for conflicting login-flow experiences and will enhance overall platform security.
+- **Added support for ingesting empty local group objects (better support for Citrix RDP processing)** - Primarily focused on improving our coverage for Citrix RDP (if enabled in the Configuration section of Administration), this change will ingest empty LocalGroup objects for computers to ensure that an empty Direct Access Users group will result in the appropriately created CanRDP edges for the computer.
+- **Improved logic for post-processing edges across domains, specifically related to special groups (Authenticated Users, etc.) within ADCS** - ADCS escalation paths will now more consistently and accurately appear across domain trusts. This updated logic improves the accuracy of the ADCS edges for paths where large default groups such as Authenticated Users or Domain Users have paths to escalate privilege across domain boundaries.
+- **Added support for just-in-time role assignments by IDP on every login via SSO** - We previously added the ability to create new users just-in-time on first login via SSO. This update extends that functionality to enable SSO providers to assert the role that should be assigned to each user upon login. This allows users to implement additional security mechanisms via IDP login flow for attempting to log in as an Administrator versus a regular user, for example.
+- ***[BHE Only]* Added the ability to sort the findings chart on the Posture page by Severity and Finding Count columns** - We made it clearer that findings could be sorted by finding count and severity. Previously this was only possible by "un-sorting" previously applied sorts on the table.
+- ***[CE Only]* Added support for recreating a default Admin user via environment variable** - If you forgot your password for your account in your CE environment, you can now more easily regain access! Utilizing the bhe_recreate_default_admin=true environment variable will completely recreate your local administrator account and reset the password to either the one provided via your config, or to a random one if not set. This functionality has already been added to [BloodHound CLI](https://github.com/SpecterOps/bloodhound-cli) via the "reset pwd" command.
+- *[BHE Only]* The default Administration page has been set to "Manage Clients".
+- Removed visibility of several Admin-only buttons from Read Only users.
+
+#### Bug Fixes
+
+- Text will no longer overflow buttons on the Explore page.
+- Resolved several Cypher syntax errors for customers running on PostgreSQL graph databases.
+- *[BHE Only]* Opening Remediation plans in a new tab will now correctly include all UI elements.
+
+### SharpHound (v2.6.0)
+
+#### New and Improved Features
+
+- Added support for NTLM relay Attack Path primitives!
+- Updated support for Owns/WriteOwner Attack Path primitives.
+- *[BHE Only]* SharpHound Enterprise will no longer update setting.json during collection runs with the current job information.
+
+### AzureHound (v2.3.0)
+
+#### New and Improved Features
+
+- AzureHound now supports Managed Identities for authentication!

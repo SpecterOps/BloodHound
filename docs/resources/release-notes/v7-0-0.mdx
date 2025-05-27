@@ -1,0 +1,65 @@
+---
+title: 2025-02-05 Release Notes (v7.0.0)
+---
+
+## Announcements
+
+### Coming Soon: BloodHound User Email Uniqueness Enforcement
+
+In approximately three weeks, on release v7.1.0, we will begin enforcing email address uniqueness on all BloodHound users. This change will improve our overall user experience by reducing the opportunity for conflicting login-flow experiences and will enhance overall platform security. In today's release, any duplicate email addresses will include a warning indicating they are duplicated and must be changed. Also, our Customer Success team will contact affected customers to inform them of any deduplication needed.
+
+Please don't hesitate to contact your TAM with any other questions.
+
+### Improved Analysis Algorithm Generally Available
+
+Thank you so much to everyone who has participated in testing our new, improved analysis algorithm! The updates are ready for prime time and have been enabled in all environments with this release. We will release a hotfix within the next few business days with additional Cypher fixes and remove the option to disable it from the Early Access configuration menu.
+
+## Summary
+
+- **BloodHound (v7.0.0)**
+  - New and Improved Features
+    - New vertical navigation!
+    - *[BHE Only]* Improved analysis algorithm performance improvements and general availability.
+    - *[BHE Only]* Added support for viewing all environments by type to the Posture page.
+    - *[BHE Only]* New "Attack Paths" metric on the Posture page to track remediation progress.
+    - *[BHE Only]* Improved CSV export functionality for all findings.
+    - *[BHE Only]* Increased visibility to the number of findings created and resolved on the Posture page.
+  - Bug Fixes
+    - *[BHE Only]* Resolved multiple issues resulting in inaccurate "Timed Out" statuses in the Finished Jobs Log.
+    - Added support for most multi-part cypher queries for customers running with a PostgreSQL backend.
+    - Fixed an issue preventing the migration of users from one SSO provider to another.
+    - Updated all pre-saved queries to exclude gMSAs and MSAs from Kerberoastable users consistently.
+    - Updated GPO Inheritance tracking for OUs to ensure consistency between Affected OUs on GPO objects and Affecting GPOs on OU objects.
+
+- **SharpHound (v2.5.13)**
+  - *No new release.*
+
+- **AzureHound (v2.2.1)**
+  - *No new release.*
+
+### BloodHound (v7.0.0)
+
+#### New and Improved Features
+
+- **New vertical navigation** - BloodHound Enterprise and CE have forever utilized a navigation bar along the top of the browser screen, and it was time for a change! Our new vertical navigation bar makes better use of screen real estate (particularly as more users adopt ultrawide monitors) and lets us bring additional options forward to make them quicker and easier to access than before.  
+- ***[BHE Only]* Improved analysis algorithm performance improvements and general availability** - Thank you so much to everyone who has participated in testing our new, improved analysis algorithm! The updates are ready for prime time and have been enabled in all environments with this release. We will release a hotfix within the next few business days with additional Cypher fixes and remove the option to disable it from the Early Access configuration menu.
+- ***[BHE Only]* The Posture page now supports viewing all environments by type** - Users can now view "All AD Domains" or "All Azure Tenants" to view summarized metrics across their environments. These views remove certain data points that cannot be summarized across multiple environments but still give visibility into the changes across those environments over time!  
+- ***[BHE Only]* New "Attack Paths" metric** - The new Attack Paths metric gives customers an additional metric by which to track remediation progress on the Posture page. This metric measures the total Exposure or Impact of all findings based on the metric that defines its severity. For example, Tier Zero findings will contribute Attack Paths based on measured Exposure, while Kerberoastable or Large Default Group findings will contribute based on measured Impact.
+- ***[BHE Only]* Improved CSV export functionality** - The CSV export capability has been updated! Exports across finding types will now be more consistent, including all the new data points delivered by the improved analysis algorithm, and, if exported from the UI, will provide cleaner human-readable column headers for ease of use.
+- ***[BHE Only]* Increased visibility created/resolved findings** - Hovering the "Change" column on the posture page will display additional detail indicating the number of initial, new, and resolved findings over the filtered duration. These are summary metrics calculated over time.  
+
+#### Bug Fixes
+
+- *[BHE Only]* Resolved multiple issues resulting in inaccurate "Timed Out" statuses in the Finished Jobs Log.
+- Added support for most multi-part cypher queries for customers running with a PostgreSQL backend.
+- Fixed an issue preventing the migration of users from one SSO provider to another.
+- Updated all pre-saved queries to exclude gMSAs and MSAs from Kerberoastable users consistently.
+- Updated GPO Inheritance tracking for OUs to ensure consistency between Affected OUs on GPO objects and Affecting GPOs on OU objects.
+
+### SharpHound (v2.5.13)
+
+*No new release.*
+
+### AzureHound (v2.2.1)
+
+*No new release.*

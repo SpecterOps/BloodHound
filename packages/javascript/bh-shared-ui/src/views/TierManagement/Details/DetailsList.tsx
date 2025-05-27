@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Badge, Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
@@ -22,19 +23,38 @@ import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { SelectedHighlight, itemSkeletons } from './utils';
 
-type DetailsListItem = {
-    name: string;
-    id: number;
-    count: number;
+const isTagListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagsListItem => {
+    if (listItem.counts === undefined) return false;
+    return 'selectors' in listItem.counts;
+};
+
+const isSelectorsListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagSelectorsListItem => {
+    if (listItem.counts === undefined) return false;
+    return !('selectors' in listItem.counts);
+};
+
+const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem): React.ReactNode => {
+    if (listItem.counts === undefined) {
+        return null;
+    } else if (isTagListItem(listItem)) {
+        return <span className='text-base'>{listItem.counts.selectors.toLocaleString()}</span>;
+    } else if (isSelectorsListItem(listItem)) {
+        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
+    } else {
+        return null;
+    }
 };
 
 type DetailsListProps = {
     title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: UseQueryResult<DetailsListItem[], unknown>;
-    selected: number | null;
+    listQuery: UseQueryResult<AssetGroupTagsListItem[]> | UseQueryResult<AssetGroupTagSelectorsListItem[]>;
+    selected: string | undefined;
     onSelect: (id: number) => void;
 };
-
 /**
  * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
@@ -45,8 +65,7 @@ type DetailsListProps = {
  * @returns The component that displays a list of entities for the tier management page
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
-    const [sortOrder, setSortOrder] = useState<SortOrder>();
-
+    const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     return (
         <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
             {title !== 'Tiers' ? (
@@ -71,7 +90,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 </div>
             )}
             <div
-                className={cn('h-full max-h-full overflow-y-auto', {
+                className={cn('h-[calc(100%-42px)] overflow-y-auto', {
                     'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
                 })}>
                 <ul>
@@ -80,12 +99,12 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             return skeleton(title, index);
                         })
                     ) : listQuery.isError ? (
-                        <li className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
+                        <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
                         listQuery.data
-                            .sort((a, b) => {
+                            ?.sort((a, b) => {
                                 switch (sortOrder) {
                                     case 'asc':
                                         return a.name.localeCompare(b.name);
@@ -100,9 +119,10 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                     <li
                                         key={listItem.id}
                                         className={cn(
-                                            'border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
+                                            'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
                                             {
-                                                'bg-neutral-light-4 dark:bg-neutral-dark-4': selected === listItem.id,
+                                                'bg-neutral-light-4 dark:bg-neutral-dark-4':
+                                                    selected === listItem.id.toString(),
                                             }
                                         )}>
                                         <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
@@ -112,8 +132,18 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
-                                            <span className='text-base'>{listItem.name}</span>
-                                            <span className='text-base'>{listItem.count.toLocaleString()}</span>
+                                            <div className='flex items-center'>
+                                                <div className='text-base'>{listItem.name}</div>
+                                                {isSelectorsListItem(listItem) && listItem.disabled_at && (
+                                                    <div className='ml-2 italic'>
+                                                        <Badge
+                                                            label='Disabled'
+                                                            className={'bg-neutral-light-5 dark:bg-neutral-dark-5'}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {getCountElement(listItem)}
                                         </Button>
                                     </li>
                                 );

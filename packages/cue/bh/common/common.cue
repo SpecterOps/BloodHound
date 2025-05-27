@@ -97,8 +97,15 @@ UserTags: types.#StringEnum & {
 LastSeen: types.#StringEnum & {
 	symbol:         "LastSeen"
 	schema:         "common"
-	name:           "Last Collected by BloodHound"
+	name:           "Last Seen by BloodHound"
 	representation: "lastseen"
+}
+
+LastCollected: types.#StringEnum & {
+	symbol:         "LastCollected"
+	schema:         "common"
+	name:           "Last Collected by BloodHound"
+	representation: "lastcollected"
 }
 
 WhenCreated: types.#StringEnum & {
@@ -149,6 +156,13 @@ CompositionID: types.#StringEnum & {
 	name: 			"Composition ID"
 	representation: "compositionid"
 }
+// Used to specify which icon to display for a node in the graph UI
+PrimaryKind: types.#StringEnum & {
+	symbol:         "PrimaryKind"
+	schema:         "common"
+	name:           "Primary Kind"
+	representation: "primarykind"
+}
 
 Properties: [
 	ObjectID,
@@ -161,13 +175,15 @@ Properties: [
 	SystemTags,
 	UserTags,
 	LastSeen,
+	LastCollected,
 	WhenCreated,
 	Enabled,
 	PasswordLastSet,
 	Title,
 	Email,
 	IsInherited,
-	CompositionID
+	CompositionID,
+	PrimaryKind
 ]
 
 // Kinds

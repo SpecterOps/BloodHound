@@ -16,9 +16,7 @@
 
 type: object
 properties:
-  selector_id:
-    type: integer
-  data:
+  type:
     type: integer
   value:
     type: string

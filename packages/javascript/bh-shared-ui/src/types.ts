@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { EntityKinds } from './utils/content';
+
 // recursively applies Partial<T> to nested object types
 
 export type DeepPartial<T> = T extends object
@@ -50,4 +52,20 @@ export type PrimaryNavItem = {
     icon: JSX.Element;
     route: string;
     testId: string;
+};
+
+export type CommonSearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        description: string;
+        cypher: string;
+    }[];
+};
+
+export type SelectedNode = {
+    id: string;
+    type: EntityKinds;
+    name: string;
+    graphId?: string;
 };

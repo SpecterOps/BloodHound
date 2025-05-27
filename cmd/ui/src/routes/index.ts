@@ -23,7 +23,7 @@ const DisabledUser = React.lazy(() => import('src/views/DisabledUser'));
 const ExpiredPassword = React.lazy(() => import('src/views/ExpiredPassword'));
 const Home = React.lazy(() => import('src/views/Home/Home'));
 const NotFound = React.lazy(() => import('src/views/NotFound'));
-const ExploreGraphViewFeatureToggle = React.lazy(() => import('src/views/Explore/GraphViewFeatureToggle'));
+const ExploreGraphView = React.lazy(() => import('src/views/Explore/GraphView'));
 const UserProfile = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.UserProfile })));
 const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors'));
 const Administration = React.lazy(() => import('src/views/Administration'));
@@ -57,7 +57,7 @@ export const ROUTES: Routable[] = [
     },
     {
         path: routes.ROUTE_EXPLORE,
-        component: ExploreGraphViewFeatureToggle,
+        component: ExploreGraphView,
         authenticationRequired: true,
         navigation: true,
     },
@@ -101,36 +101,10 @@ export const ROUTES: Routable[] = [
     },
 ];
 
-const TierManagement = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.TierManagement }))
-);
-const TierManagementEdit = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.Edit }))
-);
-const TierManagementCreate = React.lazy(() =>
-    import('bh-shared-ui').then((module) => ({ default: module.TierManagement.Create }))
-);
-
-export const TIER_MANAGEMENT_ROUTES: Routable[] = [
-    {
-        exact: true,
-        path: routes.ROUTE_TIER_MANAGEMENT,
-        component: TierManagement,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        exact: true,
-        path: routes.ROUTE_TIER_MANAGEMENT_EDIT,
-        component: TierManagementEdit,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        exact: true,
-        path: routes.ROUTE_TIER_MANAGEMENT_CREATE,
-        component: TierManagementCreate,
-        authenticationRequired: true,
-        navigation: true,
-    },
-];
+export const TIER_MANAGEMENT_ROUTE: Routable = {
+    exact: true,
+    path: routes.ROUTE_TIER_MANAGEMENT_ROOT,
+    component: React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.TierManagement }))),
+    authenticationRequired: true,
+    navigation: true,
+};

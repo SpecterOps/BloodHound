@@ -21,15 +21,6 @@ import { setupServer } from 'msw/node';
 import { render, screen, waitFor } from 'src/test-utils';
 import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
 
-const useExploreParamsSpy = vi.spyOn(bhSharedUi, 'useExploreParams');
-const mockSetExploreParams = vi.fn();
-const testSelectedItem = 'fake_edge_id';
-useExploreParamsSpy.mockReturnValue({
-    expandedPanelSections: [],
-    selectedItem: testSelectedItem,
-    setExploreParams: mockSetExploreParams,
-} as any);
-
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
         return res(
@@ -153,13 +144,19 @@ const hasLapsDisabledTestText = windowsAbuseHasLapsText(
     selectedEdgeHasLapsDisabled.targetNode.name
 );
 
+const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: bhSharedUi.SelectedEdge }) => (
+    <bhSharedUi.ObjectInfoPanelContextProvider>
+        <EdgeInfoContent selectedEdge={selectedEdge!} />
+    </bhSharedUi.ObjectInfoPanelContextProvider>
+);
+
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EdgeInfoContent', () => {
     test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdge} />);
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdge} />);
 
         expect(await screen.findByText(/source node/)).toBeInTheDocument();
 
@@ -175,7 +172,7 @@ describe('EdgeInfoContent', () => {
         expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
         expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Collected by BloodHound:/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
 
         //The whole app does not crash and require a refresh
         expect(
@@ -183,7 +180,7 @@ describe('EdgeInfoContent', () => {
         ).not.toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that haslaps is enabled shows correct Windows Abuse text', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsEnabled} />);
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHasLapsEnabled} />);
 
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByText('Windows Abuse');
@@ -192,7 +189,7 @@ describe('EdgeInfoContent', () => {
         expect(screen.getByText(hasLapsEnabledTestText, { exact: false })).toBeInTheDocument();
     });
     test('Selecting an edge with a Computer target node that does not have haslaps enabled shows correct Windows Abuse text', async () => {
-        render(<EdgeInfoContent selectedEdge={selectedEdgeHasLapsDisabled} />);
+        render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeHasLapsDisabled} />);
 
         const user = userEvent.setup();
         const windowAbuseAccordion = screen.getByText('Windows Abuse');
@@ -202,18 +199,14 @@ describe('EdgeInfoContent', () => {
     });
 
     describe('EdgeInfoContent support for Deep Linking', () => {
+        const test_id = selectedEdgeADCSESC4.id;
         const setup = () => {
-            const screen = render(<EdgeInfoContent selectedEdge={selectedEdgeADCSESC4} />);
+            const screen = render(<EdgeInfoContentWithProvider selectedEdge={selectedEdgeADCSESC4} />, {
+                route: `?selectedItem=${test_id}`,
+            });
             const user = userEvent.setup();
 
             server.use(
-                rest.get('/api/v2/features', (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            data: [{ key: 'back_button_support', enabled: true }],
-                        })
-                    );
-                }),
                 rest.get('/api/v2/graphs/edge-composition', (req, res, ctx) => {
                     return res(
                         ctx.json({
@@ -232,11 +225,10 @@ describe('EdgeInfoContent', () => {
             const compositionAccordion = screen.getByText('Composition');
             await user.click(compositionAccordion);
 
-            await waitFor(() =>
-                expect(mockSetExploreParams).toBeCalledWith(
-                    expect.objectContaining({ searchType: 'composition', relationshipQueryItemId: testSelectedItem })
-                )
-            );
+            await waitFor(() => {
+                expect(window.location.search).toContain('searchType=composition');
+            });
+            expect(window.location.search).toContain(`relationshipQueryItemId=${test_id}`);
         });
         it('calls setExploreParams with only the expandedSection label when selecting any accordion that is not composition', async () => {
             const { user, screen } = setup();
@@ -244,11 +236,9 @@ describe('EdgeInfoContent', () => {
             const generalAccordion = screen.getByText('General');
             await user.click(generalAccordion);
 
-            await waitFor(() => expect(mockSetExploreParams).toBeCalledWith({ expandedPanelSections: ['general'] }));
-            expect(mockSetExploreParams).not.toBeCalledWith({
-                searchType: null,
-                relationshipQueryItemId: testSelectedItem,
-            });
+            await waitFor(() => expect(window.location.search).toContain('expandedPanelSections=general'));
+            expect(window.location.search).not.toContain('searchType');
+            expect(window.location.search).not.toContain(`relationshipQueryItemId=${test_id}`);
         });
     });
 });

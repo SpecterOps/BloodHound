@@ -367,15 +367,21 @@ type Parenthetical struct {
 	Expression Expression
 }
 
-func (s Parenthetical) AsSelectItem() SelectItem {
+func NewParenthetical(expr Expression) *Parenthetical {
+	return &Parenthetical{
+		Expression: expr,
+	}
+}
+
+func (s *Parenthetical) AsSelectItem() SelectItem {
 	return s
 }
 
-func (s Parenthetical) NodeType() string {
+func (s *Parenthetical) NodeType() string {
 	return "parenthetical"
 }
 
-func (s Parenthetical) AsExpression() Expression {
+func (s *Parenthetical) AsExpression() Expression {
 	return s
 }
 
@@ -400,6 +406,16 @@ func (s JoinOperator) NodeType() string {
 type OrderBy struct {
 	Expression Expression
 	Ascending  bool
+}
+
+func NewOrderBy(ascending bool) *OrderBy {
+	return &OrderBy{
+		Ascending: ascending,
+	}
+}
+
+func (s OrderBy) AsExpression() Expression {
+	return s
 }
 
 func (s OrderBy) NodeType() string {
@@ -633,14 +649,6 @@ func (s RowColumnReference) AsSelectItem() SelectItem {
 
 type CompoundIdentifier []Identifier
 
-func (s CompoundIdentifier) Replace(old, new Identifier) {
-	for idx, identifier := range s {
-		if identifier == old {
-			s[idx] = new
-		}
-	}
-}
-
 func (s CompoundIdentifier) Root() Identifier {
 	return s[0]
 }
@@ -651,20 +659,6 @@ func (s CompoundIdentifier) HasField() bool {
 
 func (s CompoundIdentifier) Field() Identifier {
 	return s[1]
-}
-
-func (s CompoundIdentifier) AsExpressions() []Expression {
-	expressions := make([]Expression, len(s))
-
-	for idx, identifier := range s {
-		expressions[idx] = identifier.AsExpression()
-	}
-
-	return expressions
-}
-
-func (s CompoundIdentifier) Identifier() Identifier {
-	return Identifier(strings.Join(s.Strings(), "."))
 }
 
 func (s CompoundIdentifier) String() string {
@@ -1167,7 +1161,7 @@ func (s With) NodeType() string {
 type Query struct {
 	CommonTableExpressions *With
 	Body                   SetExpression
-	OrderBy                []OrderBy
+	OrderBy                []*OrderBy
 	Offset                 models.Optional[Expression]
 	Limit                  models.Optional[Expression]
 }

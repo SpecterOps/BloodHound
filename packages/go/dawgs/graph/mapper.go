@@ -26,6 +26,25 @@ type numeric interface {
 	uint | uint8 | uint16 | uint32 | uint64 | int | int8 | int16 | int32 | int64 | float32 | float64 | ID
 }
 
+func SliceOf[T any](raw any) ([]T, error) {
+	if slice, typeOK := raw.([]any); !typeOK {
+		return nil, fmt.Errorf("expected []any slice but received %T", raw)
+	} else {
+		sliceCopy := make([]T, len(slice))
+
+		for idx, sliceValue := range slice {
+			if typedSliceValue, typeOK := sliceValue.(T); !typeOK {
+				var empty T
+				return nil, fmt.Errorf("expected type %T but received %T", empty, sliceValue)
+			} else {
+				sliceCopy[idx] = typedSliceValue
+			}
+		}
+
+		return sliceCopy, nil
+	}
+}
+
 func AsNumeric[T numeric](rawValue any) (T, error) {
 	var empty T
 
@@ -125,359 +144,249 @@ func AsKinds(rawValue any) (Kinds, error) {
 	}
 }
 
-func AsTime(value any) (time.Time, error) {
+func AsTime(value any) (time.Time, bool) {
 	switch typedValue := value.(type) {
 	case string:
-		if parsedTime, err := time.Parse(time.RFC3339Nano, typedValue); err != nil {
-			return time.Time{}, err
-		} else {
-			return parsedTime, nil
+		if parsedTime, err := time.Parse(time.RFC3339Nano, typedValue); err == nil {
+			return parsedTime, true
 		}
 
 	case float64:
-		return time.Unix(int64(typedValue), 0), nil
+		return time.Unix(int64(typedValue), 0), true
 
 	case int64:
-		return time.Unix(typedValue, 0), nil
+		return time.Unix(typedValue, 0), true
 
 	case time.Time:
-		return typedValue, nil
-
-	default:
-		return time.Time{}, fmt.Errorf("unexecpted type %T will not negotiate to time.Time", value)
+		return typedValue, true
 	}
+
+	return time.Time{}, false
 }
 
-func defaultMapValue(rawValue, target any) (bool, error) {
+func defaultMapValue(rawValue, target any) bool {
 	switch typedTarget := target.(type) {
 	case *uint:
-		if value, err := AsNumeric[uint](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[uint](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]uint:
-		if value, err := AsNumericSlice[uint](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[uint](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *uint8:
-		if value, err := AsNumeric[uint8](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[uint8](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]uint8:
-		if value, err := AsNumericSlice[uint8](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[uint8](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *uint16:
-		if value, err := AsNumeric[uint16](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[uint16](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]uint16:
-		if value, err := AsNumericSlice[uint16](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[uint16](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *uint32:
-		if value, err := AsNumeric[uint32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[uint32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]uint32:
-		if value, err := AsNumericSlice[uint32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[uint32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *uint64:
-		if value, err := AsNumeric[uint64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[uint64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]uint64:
-		if value, err := AsNumericSlice[uint64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[uint64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *int:
-		if value, err := AsNumeric[int](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[int](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]int:
-		if value, err := AsNumericSlice[int](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[int](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *int8:
-		if value, err := AsNumeric[int8](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[int8](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]int8:
-		if value, err := AsNumericSlice[int8](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[int8](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *int16:
-		if value, err := AsNumeric[int16](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[int16](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]int16:
-		if value, err := AsNumericSlice[int16](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[int16](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *int32:
-		if value, err := AsNumeric[int32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[int32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]int32:
-		if value, err := AsNumericSlice[int32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[int32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *int64:
-		if value, err := AsNumeric[int64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[int64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]int64:
-		if value, err := AsNumericSlice[int64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[int64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *ID:
-		if value, err := AsNumeric[ID](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[ID](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]ID:
-		if value, err := AsNumericSlice[ID](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[ID](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *float32:
-		if value, err := AsNumeric[float32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[float32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]float32:
-		if value, err := AsNumericSlice[float32](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[float32](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *float64:
-		if value, err := AsNumeric[float64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumeric[float64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]float64:
-		if value, err := AsNumericSlice[float64](rawValue); err != nil {
-			return false, err
-		} else {
+		if value, err := AsNumericSlice[float64](rawValue); err == nil {
 			*typedTarget = value
+			return true
 		}
 
 	case *bool:
-		if value, typeOK := rawValue.(bool); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to bool", value)
-		} else {
+		if value, typeOK := rawValue.(bool); typeOK {
 			*typedTarget = value
+			return true
 		}
 
 	case *Kind:
-		if strValue, typeOK := rawValue.(string); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to string", rawValue)
-		} else {
+		if strValue, typeOK := rawValue.(string); typeOK {
 			*typedTarget = StringKind(strValue)
+			return true
 		}
 
 	case *string:
-		if value, typeOK := rawValue.(string); !typeOK {
-			return false, fmt.Errorf("unexecpted type %T will not negotiate to string", rawValue)
-		} else {
+		if value, typeOK := rawValue.(string); typeOK {
 			*typedTarget = value
+			return true
 		}
 
 	case *[]Kind:
-		if kindValues, err := AsKinds(rawValue); err != nil {
-			return false, err
-		} else {
+		if kindValues, err := AsKinds(rawValue); err == nil {
 			*typedTarget = kindValues
+			return true
 		}
 
 	case *Kinds:
-		if kindValues, err := AsKinds(rawValue); err != nil {
-			return false, err
-		} else {
+		if kindValues, err := AsKinds(rawValue); err == nil {
 			*typedTarget = kindValues
+			return true
 		}
 
 	case *[]string:
-		if stringValues, err := SliceOf[string](rawValue); err != nil {
-			return false, err
-		} else {
+		if stringValues, err := SliceOf[string](rawValue); err == nil {
 			*typedTarget = stringValues
+			return true
 		}
 
 	case *time.Time:
-		if value, err := AsTime(rawValue); err != nil {
-			return false, err
-		} else {
+		if value, typeOK := AsTime(rawValue); typeOK {
 			*typedTarget = value
+			return true
 		}
-
-	default:
-		return false, nil
 	}
 
-	return true, nil
+	// Unsupported by this mapper
+	return false
 }
 
-type MapFunc func(rawValue, target any) (bool, error)
+type MapFunc func(rawValue, target any) bool
 
-type valueMapper struct {
+type ValueMapper struct {
 	mapperFuncs []MapFunc
-	values      []any
-	idx         int
 }
 
-func NewValueMapper(values []any, mappers ...MapFunc) ValueMapper {
-	return &valueMapper{
+func NewValueMapper(mappers ...MapFunc) ValueMapper {
+	return ValueMapper{
 		mapperFuncs: append(mappers, defaultMapValue),
-		values:      values,
-		idx:         0,
 	}
 }
 
-func (s *valueMapper) Count() int {
-	return len(s.values)
-}
-
-func (s *valueMapper) Next() (any, error) {
-	if s.idx >= len(s.values) {
-		return nil, fmt.Errorf("attempting to get more values than returned - saw %d but wanted %d", len(s.values), s.idx+1)
-	}
-
-	nextValue := s.values[s.idx]
-	s.idx++
-
-	return nextValue, nil
-}
-
-func (s *valueMapper) Map(target any) error {
-	if rawValue, err := s.Next(); err != nil {
-		return err
-	} else {
-		for _, mapperFunc := range s.mapperFuncs {
-			if mapped, err := mapperFunc(rawValue, target); err != nil {
-				return err
-			} else if mapped {
-				return nil
-			}
+func (s ValueMapper) TryMap(value, target any) bool {
+	for _, mapperFunc := range s.mapperFuncs {
+		if mapperFunc(value, target) {
+			return true
 		}
 	}
 
-	return fmt.Errorf("unsupported scan type %T", target)
-}
-
-func SliceOf[T any](raw any) ([]T, error) {
-	if slice, typeOK := raw.([]any); !typeOK {
-		return nil, fmt.Errorf("expected []any slice but received %T", raw)
-	} else {
-		sliceCopy := make([]T, len(slice))
-
-		for idx, sliceValue := range slice {
-			if typedSliceValue, typeOK := sliceValue.(T); !typeOK {
-				var empty T
-				return nil, fmt.Errorf("expected type %T but received %T", empty, sliceValue)
-			} else {
-				sliceCopy[idx] = typedSliceValue
-			}
-		}
-
-		return sliceCopy, nil
-	}
-}
-
-func (s *valueMapper) MapOptions(targets ...any) (any, error) {
-	if rawValue, err := s.Next(); err != nil {
-		return nil, err
-	} else {
-		for _, target := range targets {
-			for _, mapperFunc := range s.mapperFuncs {
-				if mapped, _ := mapperFunc(rawValue, target); mapped {
-					return target, nil
-				}
-			}
-		}
-
-		return nil, fmt.Errorf("no matching target given for type: %T", rawValue)
-	}
-}
-
-func (s *valueMapper) Scan(targets ...any) error {
-	for idx, mapValue := range targets {
-		if err := s.Map(mapValue); err != nil {
-			return err
-		} else {
-			targets[idx] = mapValue
-		}
-	}
-
-	return nil
+	return false
 }

@@ -3,7 +3,7 @@ title: "SAML: Okta Configuration"
 description: "This document provides instructions for creating an application within Okta for compatibility with BloodHound Enterprise."
 ---
 
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
  For general instructions on adding a SAML provider to BloodHound Enterprise, or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
 
@@ -27,8 +27,6 @@ The following SAML settings are required for Okta to integrate with BloodHound E
 
 | **SAML Setting** | **Value** |
 | --- | --- |
-| **Single sign on URL** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;/acs<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
-| **Audience URI (SP Entity ID)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
 | **Name ID format** | EmailAddress |
 | **Application username** | Email |
 

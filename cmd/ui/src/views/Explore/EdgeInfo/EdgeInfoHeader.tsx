@@ -17,11 +17,10 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Typography } from '@mui/material';
-import { Icon, collapseAllSections, useHeaderStyles } from 'bh-shared-ui';
+import { Icon, useExploreParams, useHeaderStyles, useObjectInfoPanelContext } from 'bh-shared-ui';
 import React from 'react';
-import { useAppDispatch } from 'src/store';
 
-interface HeaderProps {
+export interface HeaderProps {
     name: string;
     expanded: boolean;
     onToggleExpanded: (expanded: boolean) => void;
@@ -29,7 +28,16 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
-    const dispatch = useAppDispatch();
+    const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
+    const { setExploreParams } = useExploreParams();
+
+    const handleCollapseAll = () => {
+        setIsObjectInfoPanelOpen(false);
+
+        setExploreParams({
+            expandedPanelSections: [],
+        });
+    };
 
     return (
         <div className={styles.header}>
@@ -51,9 +59,7 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpande
 
             <Icon
                 tip='Collapse All'
-                click={() => {
-                    dispatch(collapseAllSections());
-                }}
+                click={handleCollapseAll}
                 className={styles.icon}
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />

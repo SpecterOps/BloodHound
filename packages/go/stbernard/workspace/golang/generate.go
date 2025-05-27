@@ -17,69 +17,140 @@
 package golang
 
 import (
+	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"sync"
 
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
+// fileContentContainsGenerationDirective uses a bufio.Scanner to search a given reader line-by-line
+// looking for golang code generation directives. Upon finding the first code generation directive
+// this function returns true with no error. If no code generation directives exist this function will
+// return false instead.
+func fileContentContainsGenerationDirective(fin io.Reader) (bool, error) {
+	scanner := bufio.NewScanner(fin)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		if strings.HasPrefix(line, "//go:generate") {
+			// If we find a go generate directive return right away
+			return true, nil
+		}
+	}
+
+	return false, scanner.Err()
+}
+
+// packageHasGenerationDirectives scans a golang package at a given path for any files that contain a
+// golang code generation directive. Upon finding any file in the package that contains a code
+// generation directive, this function returns true with no error. If no code generation directives exist
+// in the package, this function returns false instead.
+func packageHasGenerationDirectives(packagePath string) (bool, error) {
+	hasGolangCodeGenDirectives := false
+
+	if err := filepath.Walk(packagePath, func(path string, info os.FileInfo, err error) error {
+		// Don't bother reading anything that isn't a golang source file
+		if info.IsDir() || filepath.Ext(info.Name()) != ".go" {
+			return nil
+		}
+
+		// Open the file and search for code generation directives
+		if fin, err := os.Open(path); err != nil {
+			return err
+		} else {
+			defer fin.Close()
+
+			if hasGolangCodeGenDirectives, err = fileContentContainsGenerationDirective(fin); err != nil {
+				return err
+			} else if hasGolangCodeGenDirectives {
+				// Skip the rest of the FS walk for this package
+				return filepath.SkipAll
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return false, err
+	}
+
+	return hasGolangCodeGenDirectives, nil
+}
+
+// parallelGenerateModulePackages spins up runtime.NumCPU() concurrent workers that will attempt golang code generation
+// for each GoPackage transmitted over the jobC channel.
+func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitGroup, env environment.Environment, addErr func(err error)) {
+	for workerID := 1; workerID <= runtime.NumCPU(); workerID++ {
+		waitGroup.Add(1)
+
+		go func() {
+			defer waitGroup.Done()
+
+			for {
+				if nextPackage, canContinue := channels.Receive(context.TODO(), jobC); !canContinue {
+					break
+				} else if hasGenerationDirectives, err := packageHasGenerationDirectives(nextPackage.Dir); err != nil {
+					addErr(err)
+				} else if hasGenerationDirectives {
+					var (
+						command = "go"
+						args    = []string{"generate", nextPackage.Dir}
+					)
+
+					if err := cmdrunner.Run(command, args, nextPackage.Dir, env); err != nil {
+						addErr(err)
+					}
+				}
+			}
+		}()
+	}
+}
+
 // WorkspaceGenerate runs go generate ./... for all module paths passed
 func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-	)
+		errs     []error
+		errsLock = &sync.Mutex{}
+		addErr   = func(err error) {
+			errsLock.Lock()
+			defer errsLock.Unlock()
 
-	for _, modPath := range modPaths {
-		wg.Add(1)
-		go func(modPath string) {
-			defer wg.Done()
-			if err := moduleGenerate(modPath, env); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("code generation for module %s: %w", modPath, err))
-				mu.Unlock()
-			}
-		}(modPath)
-	}
-
-	wg.Wait()
-
-	return errors.Join(errs...)
-}
-
-func moduleGenerate(modPath string, env environment.Environment) error {
-	var (
-		errs []error
-		wg   sync.WaitGroup
-		mu   sync.Mutex
-	)
-
-	if packages, err := moduleListPackages(modPath); err != nil {
-		return fmt.Errorf("listing packages for module %s: %w", modPath, err)
-	} else {
-		for _, pkg := range packages {
-			wg.Add(1)
-			go func(pkg GoPackage) {
-				defer wg.Done()
-
-				var (
-					command = "go"
-					args    = []string{"generate", pkg.Dir}
-				)
-
-				if err := cmdrunner.Run(command, args, pkg.Dir, env); err != nil {
-					mu.Lock()
-					errs = append(errs, fmt.Errorf("generate code for package %s: %w", pkg, err))
-					mu.Unlock()
-				}
-			}(pkg)
+			errs = append(errs, err)
 		}
 
-		wg.Wait()
+		jobC      = make(chan GoPackage)
+		waitGroup = &sync.WaitGroup{}
+	)
 
-		return errors.Join(errs...)
+	// Start the parallel workers first
+	go parallelGenerateModulePackages(jobC, waitGroup, env, addErr)
+
+	// For each known module path attempt generation of each module package
+	for _, modPath := range modPaths {
+		if modulePackages, err := moduleListPackages(modPath); err != nil {
+			return fmt.Errorf("listing packages for module %s: %w", modPath, err)
+		} else {
+			for _, modulePackage := range modulePackages {
+				if !channels.Submit(context.Background(), jobC, modulePackage) {
+					return fmt.Errorf("canceled")
+				}
+			}
+		}
 	}
+
+	close(jobC)
+
+	waitGroup.Wait()
+
+	return errors.Join(errs...)
 }

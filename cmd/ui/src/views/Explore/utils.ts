@@ -15,16 +15,47 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Theme } from '@mui/material';
-import { GlyphKind } from 'bh-shared-ui';
+import { GetIconInfo, GlyphKind, IconDictionary } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 import { GraphData, GraphEdges, GraphNodes } from 'js-client-library';
+import { RankDirection, layoutDagre } from 'src/hooks/useLayoutDagre/useLayoutDagre';
 import { GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
-import { GLYPHS, NODE_ICON, UNKNOWN_ICON } from './svgIcons';
+import { GLYPHS } from './svgIcons';
 
-export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Theme, darkMode: boolean) => {
+export const standardLayout = (graph: MultiDirectedGraph) => {
+    forceAtlas2.assign(graph, {
+        iterations: 128,
+        settings: {
+            scalingRatio: 1000,
+            barnesHutOptimize: true,
+        },
+    });
+};
+
+export const sequentialLayout = (graph: MultiDirectedGraph) => {
+    const { assign: assignDagre } = layoutDagre(
+        {
+            graph: {
+                rankdir: RankDirection.LEFT_RIGHT,
+                ranksep: 500,
+            },
+        },
+        graph
+    );
+
+    assignDagre();
+};
+
+export const initGraph = (
+    graph: MultiDirectedGraph,
+    items: GraphData,
+    theme: Theme,
+    darkMode: boolean,
+    customIcons: IconDictionary
+) => {
     const { nodes, edges } = items;
 
     const themedOptions = {
@@ -45,21 +76,21 @@ export const initGraph = (graph: MultiDirectedGraph, items: GraphData, theme: Th
         },
     };
 
-    initGraphNodes(graph, nodes, themedOptions);
+    initGraphNodes(graph, nodes, themedOptions, customIcons);
     initGraphEdges(graph, edges, themedOptions);
 
     random.assign(graph, { scale: 1000 });
 
-    forceAtlas2.assign(graph, {
-        iterations: 128,
-        settings: {
-            scalingRatio: 1000,
-            barnesHutOptimize: true,
-        },
-    });
+    // RUN DEFAULT LAYOUT
+    sequentialLayout(graph);
 };
 
-const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOptions: ThemedOptions) => {
+const initGraphNodes = (
+    graph: MultiDirectedGraph,
+    nodes: GraphNodes,
+    themedOptions: ThemedOptions,
+    customIcons: IconDictionary
+) => {
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
         // Set default node parameters
@@ -70,7 +101,7 @@ const initGraphNodes = (graph: MultiDirectedGraph, nodes: GraphNodes, themedOpti
             ...themedOptions.labels,
         };
 
-        const icon = NODE_ICON[node.kind] || UNKNOWN_ICON;
+        const icon = GetIconInfo(node.kind, customIcons);
         nodeParams.color = icon.color;
         nodeParams.image = icon.url || '';
         nodeParams.glyphs = [];

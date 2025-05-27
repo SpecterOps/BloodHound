@@ -151,12 +151,17 @@ func formatValue(builder *OutputBuilder, value any) error {
 }
 
 func formatLiteral(builder *OutputBuilder, literal pgsql.Literal) error {
-	if !literal.Null {
-		return formatValue(builder, literal.Value)
+	if literal.Null {
+		builder.Write("null")
+		return nil
 	}
 
-	builder.Write("null")
-	return nil
+	switch literal.CastType {
+	case pgsql.Interval:
+		builder.Write("interval ")
+	}
+
+	return formatValue(builder, literal.Value)
 }
 
 func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
@@ -179,7 +184,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				return err
 			}
 
-		case pgsql.OrderBy:
+		case *pgsql.OrderBy:
 			// Don't emit 'asc' since it's the default
 			if !typedNextExpr.Ascending {
 				exprStack = append(exprStack, pgsql.FormattingLiteral(" desc"))
@@ -264,6 +269,11 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 			exprStack = append(exprStack, *typedNextExpr)
 
 		case pgsql.BinaryExpression:
+			switch typedNextExpr.Operator {
+			case pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
+			}
+
 			// Push the operands and operator onto the stack in reverse order
 			exprStack = append(exprStack,
 				typedNextExpr.ROperand,
@@ -272,6 +282,11 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				pgsql.FormattingLiteral(" "),
 				typedNextExpr.LOperand,
 			)
+
+			switch typedNextExpr.Operator {
+			case pgsql.OperatorJSONField, pgsql.OperatorJSONTextField:
+				exprStack = append(exprStack, pgsql.FormattingLiteral("("))
+			}
 
 		case pgsql.TableReference:
 			if typedNextExpr.Binding.Set {
@@ -440,7 +455,7 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 					exprStack = append(exprStack, pgsql.FormattingLiteral("("))
 				}
 
-			case pgsql.Parenthetical:
+			case *pgsql.Parenthetical:
 				// Avoid formatting type-casted parenthetical statements as (('test'))::text - this should instead look like ('test')::text
 				exprStack = append(exprStack, pgsql.FormattingLiteral(typedNextExpr.CastType), pgsql.FormattingLiteral("::"))
 				exprStack = append(exprStack, typedNextExpr.Expression)
@@ -451,13 +466,10 @@ func formatNode(builder *OutputBuilder, rootExpr pgsql.SyntaxNode) error {
 				exprStack = append(exprStack, pgsql.FormattingLiteral("("))
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			exprStack = append(exprStack, pgsql.FormattingLiteral(")"))
 			exprStack = append(exprStack, typedNextExpr.Expression)
 			exprStack = append(exprStack, pgsql.FormattingLiteral("("))
-
-		case *pgsql.Parenthetical:
-			exprStack = append(exprStack, *typedNextExpr)
 
 		case pgsql.Parameter:
 			if builder.MaterializeParameters {

@@ -18,6 +18,7 @@ package translate
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 
@@ -30,7 +31,7 @@ func unwrapParenthetical(parenthetical pgsql.Expression) pgsql.Expression {
 
 	for next != nil {
 		switch typedNext := next.(type) {
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			next = typedNext.Expression
 
 		default:
@@ -47,7 +48,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) erro
 	} else {
 		switch typedTranslatedAtom := translatedAtom.(type) {
 		case pgsql.Identifier:
-			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbol); err != nil {
 				return err
 			} else {
 				s.treeTranslator.PushOperand(pgsql.CompoundIdentifier{typedTranslatedAtom, pgsql.ColumnProperties})
@@ -59,7 +60,7 @@ func (s *Translator) translatePropertyLookup(lookup *cypher.PropertyLookup) erro
 			}
 
 		case pgsql.FunctionCall:
-			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbols[0]); err != nil {
+			if fieldIdentifierLiteral, err := pgsql.AsLiteral(lookup.Symbol); err != nil {
 				return err
 			} else if componentName, typeOK := fieldIdentifierLiteral.Value.(string); !typeOK {
 				return fmt.Errorf("expected a string component name in translated literal but received type: %T", fieldIdentifierLiteral.Value)
@@ -147,11 +148,18 @@ func ExtractSyntaxNodeReferences(root pgsql.SyntaxNode) (*pgsql.IdentifierSet, e
 	))
 }
 
-func coalescePropertyLookup(propertyLookup *pgsql.BinaryExpression, zeroValue any, dataType pgsql.DataType) pgsql.Expression {
-	return &pgsql.FunctionCall{
-		Function:   pgsql.FunctionCoalesce,
-		Parameters: []pgsql.Expression{propertyLookup, pgsql.NewLiteral(zeroValue, dataType)},
-		CastType:   pgsql.Text,
+func rewriteStringWildCardLiteral(expression pgsql.Expression) (pgsql.Expression, error) {
+	switch typedExpression := expression.(type) {
+	case pgsql.Literal:
+		if strValue, typeOK := typedExpression.Value.(string); !typeOK {
+			return nil, fmt.Errorf("expected a string literal but received type: %T", typedExpression.Value)
+		} else {
+			rewritten := strings.Replace(strValue, "_", "\\_", -1)
+			return pgsql.NewLiteral(rewritten, pgsql.Text), nil
+		}
+
+	default:
+		return expression, nil
 	}
 }
 
@@ -244,18 +252,18 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint.ArrayBaseType())
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
-				// Auto coalesce for property lookups
-				expression.LOperand = coalescePropertyLookup(leftPropertyLookup, "", pgsql.Text)
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, pgsql.Text)
+
+				// If the right operand is a literal, it may contain characters that have special meaning in PgSQL
+				// but do not in Cypher. These characters must be escaped
+				if rewrittenROperand, err := rewriteStringWildCardLiteral(expression.ROperand); err != nil {
+					return err
+				} else {
+					expression.ROperand = rewrittenROperand
+				}
 
 			default:
-				switch rOperandTypeHint {
-				case pgsql.Text:
-					// Auto coalesce for property lookups
-					expression.LOperand = coalescePropertyLookup(leftPropertyLookup, "", pgsql.Text)
-
-				default:
-					expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
-				}
+				expression.LOperand = rewritePropertyLookupOperator(leftPropertyLookup, rOperandTypeHint)
 			}
 		}
 	}
@@ -273,18 +281,13 @@ func rewritePropertyLookupOperands(expression *pgsql.BinaryExpression) error {
 				}
 
 			case pgsql.OperatorCypherStartsWith, pgsql.OperatorCypherEndsWith, pgsql.OperatorCypherContains, pgsql.OperatorRegexMatch:
-				// Auto coalesce for property lookups
-				expression.LOperand = coalescePropertyLookup(rightPropertyLookup, "", pgsql.Text)
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, pgsql.Text)
+
+				// If the left operand is a literal, unlike the right operand case there is no need to rewrite
+				// for special (like, ilike, etc.) character classes
 
 			default:
-				switch lOperandTypeHint {
-				case pgsql.Text:
-					// Auto coalesce for property lookups
-					expression.ROperand = coalescePropertyLookup(rightPropertyLookup, "", pgsql.Text)
-
-				default:
-					expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
-				}
+				expression.ROperand = rewritePropertyLookupOperator(rightPropertyLookup, lOperandTypeHint)
 			}
 		}
 	}
@@ -320,7 +323,7 @@ func (s *Builder) IsEmpty() bool {
 	return len(s.stack) == 0
 }
 
-func (s *Builder) PopOperand() (pgsql.Expression, error) {
+func (s *Builder) PopOperand(kindMapper *contextAwareKindMapper) (pgsql.Expression, error) {
 	next := s.stack[len(s.stack)-1]
 	s.stack = s.stack[:len(s.stack)-1]
 
@@ -331,7 +334,7 @@ func (s *Builder) PopOperand() (pgsql.Expression, error) {
 		}
 
 	case *pgsql.BinaryExpression:
-		if err := applyBinaryExpressionTypeHints(typedNext); err != nil {
+		if err := applyBinaryExpressionTypeHints(kindMapper, typedNext); err != nil {
 			return nil, err
 		}
 	}
@@ -347,7 +350,7 @@ func (s *Builder) PushOperand(operand pgsql.Expression) {
 	s.stack = append(s.stack, operand)
 }
 
-func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error) {
+func ConjoinExpressions(kindMapper *contextAwareKindMapper, expressions []pgsql.Expression) (pgsql.Expression, error) {
 	var conjoined pgsql.Expression
 
 	for _, expression := range expressions {
@@ -362,7 +365,7 @@ func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error
 
 		conjoinedBinaryExpression := pgsql.NewBinaryExpression(conjoined, pgsql.OperatorAnd, expression)
 
-		if err := applyBinaryExpressionTypeHints(conjoinedBinaryExpression); err != nil {
+		if err := applyBinaryExpressionTypeHints(kindMapper, conjoinedBinaryExpression); err != nil {
 			return nil, err
 		}
 
@@ -373,49 +376,63 @@ func ConjoinExpressions(expressions []pgsql.Expression) (pgsql.Expression, error
 }
 
 type ExpressionTreeTranslator struct {
-	IdentifierConstraints *ConstraintTracker
+	UserConstraints        *ConstraintTracker
+	TranslationConstraints *ConstraintTracker
 
-	projectionConstraints []*Constraint
-	treeBuilder           *Builder
-	parentheticalDepth    int
-	disjunctionDepth      int
-	conjunctionDepth      int
+	treeBuilder        *Builder
+	kindMapper         *contextAwareKindMapper
+	parentheticalDepth int
+	disjunctionDepth   int
+	conjunctionDepth   int
 }
 
-func NewExpressionTreeTranslator() *ExpressionTreeTranslator {
+func NewExpressionTreeTranslator(kindMapper *contextAwareKindMapper) *ExpressionTreeTranslator {
 	return &ExpressionTreeTranslator{
-		IdentifierConstraints: NewConstraintTracker(),
-		treeBuilder:           NewExpressionTreeBuilder(),
+		UserConstraints:        NewConstraintTracker(),
+		TranslationConstraints: NewConstraintTracker(),
+		treeBuilder:            NewExpressionTreeBuilder(),
+		kindMapper:             kindMapper,
 	}
 }
 
-func (s *ExpressionTreeTranslator) ConsumeSet(identifierSet *pgsql.IdentifierSet) (*Constraint, error) {
-	return s.IdentifierConstraints.ConsumeSet(identifierSet)
+func mergeUserAndTranslationConstraints(userConstraints, translationConstraints *Constraint) *Constraint {
+	if userConstraints.Expression != nil {
+		// Fold the user constraints into the translation constraints wrapped in a parenthetical
+		translationConstraints.Expression = pgsql.OptionalAnd(pgsql.NewParenthetical(userConstraints.Expression), translationConstraints.Expression)
+
+		// Ensure that the identifier dependencies in the constraint are merged as well
+		translationConstraints.Dependencies.MergeSet(userConstraints.Dependencies)
+	}
+
+	return translationConstraints
 }
 
-func (s *ExpressionTreeTranslator) ConsumeAll() (*Constraint, error) {
-	if constraint, err := s.IdentifierConstraints.ConsumeAll(); err != nil {
+func (s *ExpressionTreeTranslator) ConsumeConstraintsFromVisibleSet(visible *pgsql.IdentifierSet) (*Constraint, error) {
+	if userConstraints, err := s.UserConstraints.ConsumeSet(s.kindMapper, visible); err != nil {
+		return nil, err
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeSet(s.kindMapper, visible); err != nil {
 		return nil, err
 	} else {
-		constraintExpressions := []pgsql.Expression{constraint.Expression}
-
-		for _, projectionConstraint := range s.projectionConstraints {
-			constraint.Dependencies.MergeSet(projectionConstraint.Dependencies)
-			constraintExpressions = append(constraintExpressions, projectionConstraint.Expression)
-		}
-
-		if conjoined, err := ConjoinExpressions(constraintExpressions); err != nil {
-			return nil, err
-		} else {
-			constraint.Expression = conjoined
-		}
-
-		return constraint, nil
+		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
 	}
 }
 
-func (s *ExpressionTreeTranslator) ConstrainSet(identifierSet *pgsql.IdentifierSet, expression pgsql.Expression) error {
-	return s.IdentifierConstraints.Constrain(identifierSet, expression)
+func (s *ExpressionTreeTranslator) ConsumeAllConstraints() (*Constraint, error) {
+	if userConstraints, err := s.UserConstraints.ConsumeAll(s.kindMapper); err != nil {
+		return nil, err
+	} else if translationConstraints, err := s.TranslationConstraints.ConsumeAll(s.kindMapper); err != nil {
+		return nil, err
+	} else {
+		return mergeUserAndTranslationConstraints(userConstraints, translationConstraints), nil
+	}
+}
+
+func (s *ExpressionTreeTranslator) AddTranslationConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
+	return s.TranslationConstraints.Constrain(s.kindMapper, requiredIdentifiers, expression)
+}
+
+func (s *ExpressionTreeTranslator) AddUserConstraint(requiredIdentifiers *pgsql.IdentifierSet, expression pgsql.Expression) error {
+	return s.UserConstraints.Constrain(s.kindMapper, requiredIdentifiers, expression)
 }
 
 func (s *ExpressionTreeTranslator) PushOperand(expression pgsql.Expression) {
@@ -427,10 +444,10 @@ func (s *ExpressionTreeTranslator) PeekOperand() pgsql.Expression {
 }
 
 func (s *ExpressionTreeTranslator) PopOperand() (pgsql.Expression, error) {
-	return s.treeBuilder.PopOperand()
+	return s.treeBuilder.PopOperand(s.kindMapper)
 }
 
-func (s *ExpressionTreeTranslator) popOperandAsConstraint() error {
+func (s *ExpressionTreeTranslator) popOperandAsUserConstraint() error {
 	if nextExpression, err := s.PopOperand(); err != nil {
 		return err
 	} else if identifierDeps, err := ExtractSyntaxNodeReferences(nextExpression); err != nil {
@@ -441,14 +458,14 @@ func (s *ExpressionTreeTranslator) popOperandAsConstraint() error {
 			nextExpression = rewritePropertyLookupOperator(propertyLookup, pgsql.Boolean)
 		}
 
-		return s.ConstrainSet(identifierDeps, nextExpression)
+		return s.AddUserConstraint(identifierDeps, nextExpression)
 	}
 }
 
-func (s *ExpressionTreeTranslator) PopRemainingExpressionsAsConstraints() error {
+func (s *ExpressionTreeTranslator) PopRemainingExpressionsAsUserConstraints() error {
 	// Pull the right operand only if one exists
 	for !s.treeBuilder.IsEmpty() {
-		if err := s.popOperandAsConstraint(); err != nil {
+		if err := s.popOperandAsUserConstraint(); err != nil {
 			return err
 		}
 	}
@@ -462,14 +479,14 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-	if rightOperand, err := s.treeBuilder.PopOperand(); err != nil {
+	if rightOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return err
 	} else if rightDependencies, err := ExtractSyntaxNodeReferences(rightOperand); err != nil {
 		return err
 	} else if s.treeBuilder.IsEmpty() {
 		// If the tree builder is empty then this operand is at the top of the disjunction chain
-		return s.ConstrainSet(rightDependencies, rightOperand)
-	} else if leftOperand, err := s.treeBuilder.PopOperand(); err != nil {
+		return s.AddUserConstraint(rightDependencies, rightOperand)
+	} else if leftOperand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return err
 	} else {
 		newOrExpression := pgsql.NewBinaryExpression(
@@ -478,7 +495,7 @@ func (s *ExpressionTreeTranslator) ConstrainDisjointOperandPair() error {
 			rightOperand,
 		)
 
-		if err := applyBinaryExpressionTypeHints(newOrExpression); err != nil {
+		if err := applyBinaryExpressionTypeHints(s.kindMapper, newOrExpression); err != nil {
 			return err
 		}
 
@@ -494,7 +511,7 @@ func (s *ExpressionTreeTranslator) ConstrainConjoinedOperandPair() error {
 		return fmt.Errorf("expected at least one operand for constraint extraction")
 	}
 
-	if err := s.popOperandAsConstraint(); err != nil {
+	if err := s.popOperandAsUserConstraint(); err != nil {
 		return err
 	}
 
@@ -508,7 +525,7 @@ func (s *ExpressionTreeTranslator) PopBinaryExpression(operator pgsql.Operator) 
 		return nil, err
 	} else {
 		newBinaryExpression := pgsql.NewBinaryExpression(leftOperand, operator, rightOperand)
-		return newBinaryExpression, applyBinaryExpressionTypeHints(newBinaryExpression)
+		return newBinaryExpression, applyBinaryExpressionTypeHints(s.kindMapper, newBinaryExpression)
 	}
 }
 
@@ -574,26 +591,44 @@ func rewriteIdentityOperands(scope *Scope, newExpression *pgsql.BinaryExpression
 	return nil
 }
 
+// isConcatenationOperation accepts two pgsql.DataType values and attempts to determine if the value are able to be
+// concatenated.
+//
+// For further information regarding the conditional logic, please see the PgSQL upstream documentation:
+// https://www.postgresql.org/docs/9.1/functions-string.html
+func isConcatenationOperation(lOperandType, rOperandType pgsql.DataType) bool {
+	// Any use of an array type automatically assumes concatenation
+	if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
+		return true
+	}
+
+	// The case below must be able to infer operator intent from the following cases:
+	// text + unknown
+	// unknown + text
+	// text + text
+
+	// In the case below where both operands have no type information, no further
+	// intent can be inferred for this operator
+	switch lOperandType {
+	case pgsql.Text:
+		switch rOperandType {
+		case pgsql.Text, pgsql.UnknownDataType:
+			return true
+		}
+
+	case pgsql.UnknownDataType:
+		switch rOperandType {
+		case pgsql.Text:
+			return true
+		}
+	}
+
+	return false
+}
+
 func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.BinaryExpression) error {
 	switch newExpression.Operator {
 	case pgsql.OperatorAdd:
-		isConcatenationOperation := func(lOperandType, rOperandType pgsql.DataType) bool {
-			// Any use of an array type automatically assumes concatenation
-			if lOperandType.IsArrayType() || rOperandType.IsArrayType() {
-				return true
-			}
-
-			switch lOperandType {
-			case pgsql.Text:
-				switch rOperandType {
-				case pgsql.Text:
-					return true
-				}
-			}
-
-			return false
-		}
-
 		// In the case of the use of the cypher `+` operator we must attempt to disambiguate if the intent
 		// is to concatenate or to perform an addition
 		if lOperandType, err := InferExpressionType(newExpression.LOperand); err != nil {
@@ -628,7 +663,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue+"%", rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {
@@ -704,7 +739,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral(stringValue+"%", rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {
@@ -764,7 +799,7 @@ func (s *ExpressionTreeTranslator) rewriteBinaryExpression(newExpression *pgsql.
 				newExpression.ROperand = pgsql.NewLiteral("%"+stringValue, rOperandDataType)
 			}
 
-		case pgsql.Parenthetical:
+		case *pgsql.Parenthetical:
 			if typeCastedROperand, err := TypeCastExpression(typedROperand, pgsql.Text); err != nil {
 				return err
 			} else {
@@ -902,7 +937,7 @@ func (s *ExpressionTreeTranslator) PushParenthetical() {
 func (s *ExpressionTreeTranslator) PopParenthetical() (*pgsql.Parenthetical, error) {
 	s.parentheticalDepth -= 1
 
-	if operand, err := s.treeBuilder.PopOperand(); err != nil {
+	if operand, err := s.treeBuilder.PopOperand(s.kindMapper); err != nil {
 		return nil, err
 	} else if parentheticalExpr, typeOK := operand.(*pgsql.Parenthetical); !typeOK {
 		return nil, fmt.Errorf("expected type *pgsql.Parenthetical but received %T", operand)

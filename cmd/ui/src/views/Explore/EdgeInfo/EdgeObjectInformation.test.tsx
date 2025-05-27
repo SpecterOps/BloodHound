@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SelectedEdge } from 'bh-shared-ui';
+import { ObjectInfoPanelContextProvider, SelectedEdge } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { render, screen } from 'src/test-utils';
@@ -34,6 +34,12 @@ const selectedEdge: SelectedEdge = {
     },
     targetNode: { name: 'target_node', id: '2', objectId: '2', type: 'User' },
 };
+
+const EdgeObjectInformationWithProvider = () => (
+    <ObjectInfoPanelContextProvider>
+        <EdgeObjectInformation selectedEdge={selectedEdge} />
+    </ObjectInfoPanelContextProvider>
+);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -66,7 +72,7 @@ describe('EdgeObjectInformation', () => {
             })
         );
 
-        render(<EdgeObjectInformation selectedEdge={selectedEdge} />);
+        render(<EdgeObjectInformationWithProvider />);
 
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 
@@ -77,7 +83,7 @@ describe('EdgeObjectInformation', () => {
         expect(screen.getByText(/target_node/)).toBeInTheDocument();
         expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
         expect(screen.getByText(/FALSE/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Collected by BloodHound:/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
     });
 
     test('Error handling for fetching edge information', async () => {
@@ -93,7 +99,7 @@ describe('EdgeObjectInformation', () => {
             })
         );
 
-        render(<EdgeObjectInformation selectedEdge={selectedEdge} />);
+        render(<EdgeObjectInformationWithProvider />);
 
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 

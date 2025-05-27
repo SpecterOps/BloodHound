@@ -15,14 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage, useFeatureFlag, usePaneStyles } from 'bh-shared-ui';
-import React, { useEffect, useState } from 'react';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
-import usePreviousValue from 'src/hooks/usePreviousValue';
+import {
+    NoEntitySelectedHeader,
+    NoEntitySelectedMessage,
+    ObjectInfoPanelContextProvider,
+    SelectedNode,
+    usePaneStyles,
+} from 'bh-shared-ui';
+import React, { useState } from 'react';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
-import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 interface EntityInfoPanelProps {
     selectedNode: SelectedNode | null;
@@ -32,15 +34,6 @@ interface EntityInfoPanelProps {
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-    const { setExpandedSections } = useEntityInfoPanelContext();
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
-    const previousSelectedNode = usePreviousValue(selectedNode);
-
-    useEffect(() => {
-        if (!backButtonFlag?.enabled && previousSelectedNode?.id !== selectedNode?.id) {
-            setExpandedSections({});
-        }
-    }, [setExpandedSections, previousSelectedNode, selectedNode, backButtonFlag]);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
@@ -75,9 +68,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
 };
 
 const WrappedEntityInfoPanel: React.FC<EntityInfoPanelProps> = (props) => (
-    <EntityInfoPanelContextProvider>
+    <ObjectInfoPanelContextProvider>
         <EntityInfoPanel {...props} />
-    </EntityInfoPanelContextProvider>
+    </ObjectInfoPanelContextProvider>
 );
 
 export default WrappedEntityInfoPanel;

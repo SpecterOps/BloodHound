@@ -70,9 +70,9 @@ func (s ACE) Kind() graph.Kind {
 
 func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 	return WriteOwnerLimitedPrincipal{
-		SourceData: IngestibleSource{
-			Source:     s.PrincipalSID,
-			SourceType: s.Kind(),
+		SourceData: IngestibleEndpoint{
+			Value: s.PrincipalSID,
+			Kind:  s.Kind(),
 		},
 		IsInherited: s.IsInherited,
 	}
@@ -246,6 +246,7 @@ type Domain struct {
 	ChildObjects []TypedPrincipal
 	Trusts       []Trust
 	Links        []GPLink
+	GPOChanges   GPOChanges
 }
 
 type SessionAPIResult struct {
@@ -336,8 +337,36 @@ type Computer struct {
 	NTLMRegistryData        NTLMRegistryDataAPIResult
 }
 
+type GPOChanges struct {
+	LocalAdmins        []TypedPrincipal
+	RemoteDesktopUsers []TypedPrincipal
+	DcomUsers          []TypedPrincipal
+	PSRemoteUsers      []TypedPrincipal
+	AffectedComputers  []TypedPrincipal
+}
+
 type OU struct {
 	IngestBase
 	ChildObjects []TypedPrincipal
 	Links        []GPLink
+	GPOChanges   GPOChanges
+}
+
+type GenericNode struct {
+	ID         string
+	Kinds      []string
+	Properties map[string]any
+}
+
+type GenericEdge struct {
+	Start      EdgeEndpoint
+	End        EdgeEndpoint
+	Kind       string
+	Properties map[string]any
+}
+
+type EdgeEndpoint struct {
+	Value   string
+	Kind    string
+	MatchBy string `json:"match_by"`
 }

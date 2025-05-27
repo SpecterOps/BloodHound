@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -290,11 +290,7 @@ func FetchGPOAffectedTierZeroPathDelegate(tx graph.Transaction, node *graph.Node
 					BranchQuery:   FilterContainsRelationship,
 					DescentFilter: descentFilter,
 					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						if systemTags, err := segment.Node.Properties.Get(ad.AdminTierZero).String(); err != nil {
-							return false
-						} else {
-							return strings.Contains(systemTags, ad.AdminTierZero)
-						}
+						return tiering.IsTierZero(node)
 					},
 				}, SelectGPOTierZeroCandidateFilter); err != nil {
 					return nil, err
@@ -644,7 +640,7 @@ func CreateDomainTrustListDelegate(direction graph.Direction) analysis.ListDeleg
 			Root:      node,
 			Direction: direction,
 			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.TrustedBy)
+				return query.KindIn(query.Relationship(), ad.SameForestTrust, ad.CrossForestTrust)
 			},
 			Skip:  skip,
 			Limit: limit,
@@ -660,7 +656,7 @@ func CreateDomainTrustPathDelegate(direction graph.Direction) analysis.PathDeleg
 			Root:      node,
 			Direction: direction,
 			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.TrustedBy)
+				return query.KindIn(query.Relationship(), ad.SameForestTrust, ad.CrossForestTrust)
 			},
 		})
 	}
@@ -1606,18 +1602,6 @@ func FetchAllGroupMembers(ctx context.Context, db graph.Database, targets graph.
 	return allGroupMembers, nil
 }
 
-func FetchDomainTierZeroAssets(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
-	domainSID, _ := domain.Properties.GetOrDefault(ad.DomainSID.String(), "").String()
-
-	return ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-		return query.And(
-			query.Kind(query.Node(), ad.Entity),
-			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSID),
-			query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero),
-		)
-	}))
-}
-
 func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
@@ -1628,15 +1612,14 @@ func FetchCertTemplatesPublishedToCA(tx graph.Transaction, ca *graph.Node) (grap
 	}))
 }
 
-func FetchNodesWithTrustedByParentChildRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
+func FetchNodesWithSameForestTrustRelationship(tx graph.Transaction, root *graph.Node) (graph.NodeSet, error) {
 	if pathSet, err := ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:      root,
 		Direction: graph.DirectionInbound,
 		BranchQuery: func() graph.Criteria {
 			return query.And(
 				query.KindIn(query.Start(), ad.Domain),
-				query.KindIn(query.Relationship(), ad.TrustedBy),
-				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.KindIn(query.Relationship(), ad.SameForestTrust),
 			)
 		},
 	}); err != nil {

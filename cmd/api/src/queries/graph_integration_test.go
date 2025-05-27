@@ -227,6 +227,40 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 	})
 }
 
+func TestGetPrimaryNodeKindCounts(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.SetupActiveDirectory()
+	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.GraphQuery{
+			Graph: db,
+		}
+
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity, azure.Entity)
+		require.Nil(t, err)
+
+		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
+		require.Greater(t, len(results), 1)
+	})
+}
+
+func TestFetchNodeByGraphId(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZBaseHarness.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		graphQuery := queries.GraphQuery{Graph: db}
+
+		node, err := graphQuery.FetchNodeByGraphId(context.Background(), harness.AZBaseHarness.User.ID)
+		require.Nil(t, err)
+		require.NotNil(t, node)
+
+		require.Equal(t, harness.AZBaseHarness.User.ID, node.ID)
+	})
+}
+
 func TestGetEntityResults_Cache(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
@@ -366,4 +400,98 @@ func TestGraphQuery_GetAllShortestPaths(t *testing.T) {
 			require.Nil(t, err)
 			require.Equal(t, 0, len(paths))
 		})
+}
+
+func TestGetFilteredAndSortedNodesPaginated(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+
+	testContext.SetupActiveDirectory()
+
+	t.Run("Test sort ascending", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			graphQuery := queries.GraphQuery{
+				Graph: db,
+			}
+
+			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
+				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID ascending
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				0,
+				0)
+			require.Nil(t, err)
+			// verify some nodes were returned
+			require.Greater(t, len(results), 10)
+
+			// verify the nodes are sorted ascending by ID
+			prevNodeId := int64(0)
+			for _, node := range results {
+				require.GreaterOrEqual(t, node.ID.Int64(), prevNodeId)
+				prevNodeId = node.ID.Int64()
+			}
+		})
+	})
+
+	t.Run("Test sort descending", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			graphQuery := queries.GraphQuery{
+				Graph: db,
+			}
+
+			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
+				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionDescending}}, // sort by node ID descending
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				0,
+				0)
+			require.Nil(t, err)
+			// verify some nodes were returned
+			require.Greater(t, len(results), 10)
+
+			prevNodeId := results[0].ID.Int64()
+			for _, node := range results {
+				require.LessOrEqual(t, node.ID.Int64(), prevNodeId)
+				prevNodeId = node.ID.Int64()
+			}
+		})
+	})
+
+	t.Run("Test limit", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			graphQuery := queries.GraphQuery{
+				Graph: db,
+			}
+
+			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
+				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				0,
+				5)
+			require.Nil(t, err)
+			require.Len(t, results, 5)
+		})
+	})
+
+	t.Run("Test offset", func(t *testing.T) {
+		testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
+			graphQuery := queries.GraphQuery{
+				Graph: db,
+			}
+
+			results, err := graphQuery.GetFilteredAndSortedNodesPaginated(
+				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				0,
+				0)
+			require.Nil(t, err)
+
+			// call again with offset 10, making sure results are properly shifted
+			savedNode := results[10]
+			results, err = graphQuery.GetFilteredAndSortedNodesPaginated(
+				query.SortItems{{SortCriteria: query.NodeID(), Direction: query.SortDirectionAscending}}, // sort by node ID Ascending
+				query.KindIn(query.Node(), ad.User), // give me all the nodes of kind ad.User
+				10,
+				0)
+			require.Nil(t, err)
+			require.Equal(t, savedNode, results[0])
+		})
+	})
 }

@@ -19,6 +19,7 @@ package ingest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -35,7 +36,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 		file, err := os.Open("../../test/fixtures/fixtures/goodzip.zip")
 		assert.Nil(t, err)
 
-		err = WriteAndValidateZip(io.Reader(file), &writer)
+		_, err = WriteAndValidateZip(io.Reader(file), &writer)
 		assert.Nil(t, err)
 	})
 
@@ -45,7 +46,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 			badZip = strings.NewReader("123123")
 		)
 
-		err := WriteAndValidateZip(badZip, &writer)
+		_, err := WriteAndValidateZip(badZip, &writer)
 		assert.Equal(t, err, ingest.ErrInvalidZipFile)
 	})
 }
@@ -97,12 +98,19 @@ func TestWriteAndValidateJSON(t *testing.T) {
 		// },
 	}
 
+	schema, err := LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
+
+	v := NewIngestValidator(schema)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			src := bytes.NewReader(tt.input)
 			dst := &bytes.Buffer{}
 
-			err := WriteAndValidateJSON(src, dst)
+			_, err := v.WriteAndValidateJSON(src, dst)
 			if tt.expectedError != nil {
 				assert.Error(t, err)
 				assert.ErrorIs(t, err, tt.expectedError)
@@ -118,7 +126,14 @@ func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
 	src := &ErrorReader{err: errors.New("read error")}
 	dst := &bytes.Buffer{}
 
-	err := WriteAndValidateJSON(src, dst)
+	schema, err := LoadIngestSchema()
+	if err != nil {
+		assert.Fail(t, fmt.Sprintf("failed to load ingest schema: %s", err))
+	}
+
+	v := NewIngestValidator(schema)
+
+	_, err = v.WriteAndValidateJSON(src, dst)
 
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, ErrInvalidJSON)

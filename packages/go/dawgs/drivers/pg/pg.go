@@ -32,12 +32,11 @@ import (
 const (
 	DriverName = "pg"
 
-	poolInitConnectionTimeout = time.Second * 10
-	defaultTransactionTimeout = time.Minute * 15
-
 	// defaultBatchWriteSize is currently set to 2k. This is meant to strike a balance between the cost of thousands
 	// of round-trips against the cost of locking tables for too long.
 	defaultBatchWriteSize = 2_000
+
+	poolInitConnectionTimeout = time.Second * 10
 )
 
 func afterPooledConnectionEstablished(ctx context.Context, conn *pgx.Conn) error {
@@ -67,48 +66,39 @@ func afterPooledConnectionRelease(conn *pgx.Conn) bool {
 	return true
 }
 
-func newDatabase(connectionString string) (*Driver, error) {
+func NewPool(connectionString string) (*pgxpool.Pool, error) {
+	if connectionString == "" {
+		return nil, fmt.Errorf("graph connection requires a connection url to be set")
+	}
+
 	poolCtx, done := context.WithTimeout(context.Background(), poolInitConnectionTimeout)
 	defer done()
 
-	if poolCfg, err := pgxpool.ParseConfig(connectionString); err != nil {
+	poolCfg, err := pgxpool.ParseConfig(connectionString)
+	if err != nil {
 		return nil, err
-	} else {
-		// TODO: Min and Max connections for the pool should be configurable
-		poolCfg.MinConns = 5
-		poolCfg.MaxConns = 50
-
-		// Bind functions to the AfterConnect and AfterRelease hooks to ensure that composite type registration occurs.
-		// Without composite type registration, the pgx connection type will not be able to marshal PG OIDs to their
-		// respective Golang structs.
-		poolCfg.AfterConnect = afterPooledConnectionEstablished
-		poolCfg.AfterRelease = afterPooledConnectionRelease
-
-		if pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg); err != nil {
-			return nil, err
-		} else {
-			driverInst := &Driver{
-				pool:                      pool,
-				defaultTransactionTimeout: defaultTransactionTimeout,
-				batchWriteSize:            defaultBatchWriteSize,
-			}
-
-			// Because the schema manager will act on the database on its own it needs a reference to the driver
-			// TODO: This cyclical dependency might want to be unwound
-			driverInst.schemaManager = NewSchemaManager(driverInst)
-			return driverInst, nil
-		}
 	}
+
+	// TODO: Min and Max connections for the pool should be configurable
+	poolCfg.MinConns = 5
+	poolCfg.MaxConns = 50
+
+	// Bind functions to the AfterConnect and AfterRelease hooks to ensure that composite type registration occurs.
+	// Without composite type registration, the pgx connection type will not be able to marshal PG OIDs to their
+	// respective Golang structs.
+	poolCfg.AfterConnect = afterPooledConnectionEstablished
+	poolCfg.AfterRelease = afterPooledConnectionRelease
+
+	pool, err := pgxpool.NewWithConfig(poolCtx, poolCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return pool, nil
 }
 
 func init() {
 	dawgs.Register(DriverName, func(ctx context.Context, cfg dawgs.Config) (graph.Database, error) {
-		if connectionString, typeOK := cfg.DriverCfg.(string); !typeOK {
-			return nil, fmt.Errorf("expected string for configuration type but got %T", cfg)
-		} else if graphDB, err := newDatabase(connectionString); err != nil {
-			return nil, err
-		} else {
-			return graphDB, nil
-		}
+		return NewDriver(cfg.Pool), nil
 	})
 }

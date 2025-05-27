@@ -18,20 +18,13 @@ import {
     EntityInfoDataTableProps,
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
-    abortEntitySectionRequest,
+    SelectedNode,
     entityRelationshipEndpoints,
-    searchbarActions,
-    transformFlatGraphResponse,
     useExploreParams,
-    useFeatureFlag,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
-import { useDispatch } from 'react-redux';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
-import { putGraphData, putGraphError, saveResponseForExport, setGraphLoading } from 'src/ducks/explore/actions';
-import { addSnackbar } from 'src/ducks/global/actions';
+
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { useEntityInfoPanelContext } from './EntityInfoPanelContext';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     id,
@@ -41,15 +34,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     sections,
     parentLabels = [],
 }) => {
-    const dispatch = useDispatch();
-    const { data: backButtonFlag } = useFeatureFlag('back_button_support');
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { expandedSections, toggleSection } = useEntityInfoPanelContext();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = backButtonFlag?.enabled
-        ? (expandedPanelSections as string[]).includes(label)
-        : !!expandedSections[label];
+    const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
+
     const countQuery = useQuery(
         ['relatedCount', label, id],
         () => {
@@ -88,50 +77,24 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
         setExploreParams({
             expandedPanelSections: labelList,
-            searchType: 'relationship',
-            relationshipQueryType: queryType,
-            relationshipQueryItemId: id,
+            ...(isUnderRenderLimit && {
+                searchType: 'relationship',
+                relationshipQueryType: queryType,
+                relationshipQueryItemId: id,
+            }),
         });
     };
 
     const handleOnChange = (isOpen: boolean) => {
-        if (backButtonFlag?.enabled) {
-            if (isOpen) handleSetV2Graph();
-            else removeExpandedPanelSectionParams();
+        if (isOpen) handleSetGraph();
+        else removeExpandedPanelSectionParams();
+    };
+
+    const handleSetGraph = async () => {
+        if (!endpoint) {
+            setParentExpandedSectionParam();
         } else {
-            toggleSection(label);
-            if (isOpen) handleSetV1Graph();
-        }
-    };
-    const handleSetV2Graph = async () => {
-        if (!endpoint) setParentExpandedSectionParam();
-        if (endpoint && isUnderRenderLimit) {
             setExpandedPanelSectionsParams();
-        }
-    };
-
-    const handleSetV1Graph = async () => {
-        if (endpoint && isUnderRenderLimit) {
-            abortEntitySectionRequest();
-            dispatch(setGraphLoading(true));
-
-            await endpoint({ id, type: 'graph' })
-                .then((result) => {
-                    const formattedData = transformFlatGraphResponse(result);
-
-                    dispatch(saveResponseForExport(formattedData));
-                    dispatch(putGraphData(result));
-                })
-                .catch((err) => {
-                    if (err?.code === 'ERR_CANCELED') {
-                        return;
-                    }
-                    dispatch(putGraphError(err));
-                    dispatch(addSnackbar('Query failed. Please try again.', 'nodeRelationshipGraphQuery', {}));
-                })
-                .finally(() => {
-                    dispatch(setGraphLoading(false));
-                });
         }
     };
 
@@ -143,22 +106,8 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         });
     };
 
-    const setSourceNodeSelected = (item: SelectedNode) => {
-        dispatch(
-            searchbarActions.sourceNodeSelected({
-                objectid: item.id,
-                type: item.type,
-                name: item.name,
-            })
-        );
-    };
-
     const handleOnClick = (item: SelectedNode) => {
-        if (backButtonFlag?.enabled) {
-            setNodeSearchParams(item);
-        } else {
-            setSourceNodeSelected(item);
-        }
+        setNodeSearchParams(item);
     };
 
     let count: number | undefined;

@@ -22,12 +22,13 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/specterops/bloodhound/dawgs/util/size"
+
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 )
 
 func FetchAllNodeProperties(tx graph.Transaction, nodes graph.NodeSet) error {
@@ -53,31 +54,29 @@ func FetchNodeProperties(tx graph.Transaction, nodes graph.NodeSet, propertyName
 	return tx.Nodes().Filter(
 		query.InIDs(query.NodeID(), nodes.IDs()...),
 	).Query(func(results graph.Result) error {
-		var nodeID graph.ID
+		var (
+			nodeID graph.ID
+			mapper = results.Mapper()
+		)
 
 		for results.Next() {
-			if values, err := results.Values(); err != nil {
-				return err
-			} else {
-				nodeProperties := map[string]any{}
+			var (
+				nodeProperties = map[string]any{}
+				values         = results.Values()
+			)
 
-				// Map the node ID first
-				if err := values.Map(&nodeID); err != nil {
-					return err
-				}
-
-				// Map requested properties next by matching the name index
-				for idx := 0; idx < len(propertyNames); idx++ {
-					if next, err := values.Next(); err != nil {
-						return err
-					} else {
-						nodeProperties[propertyNames[idx]] = next
-					}
-				}
-
-				// Update the node in the node set
-				nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
+			// Map the node ID first
+			if !mapper.TryMap(values[0], &nodeID) {
+				return fmt.Errorf("expected node ID as first value but received %T", values[0])
 			}
+
+			// Map requested properties next by matching the name index
+			for idx := 0; idx < len(propertyNames); idx++ {
+				nodeProperties[propertyNames[idx]] = values[1+idx]
+			}
+
+			// Update the node in the node set
+			nodes[nodeID].Properties = graph.AsProperties(nodeProperties)
 		}
 
 		return nil
@@ -164,6 +163,32 @@ func FetchNodeIDs(query graph.NodeQuery) ([]graph.ID, error) {
 	})
 }
 
+func FetchNodesByQuery(tx graph.Transaction, query string, limit int) (graph.NodeSet, error) {
+	nodes := graph.NodeSet{}
+
+	if result := tx.Query(query, nil); result.Error() != nil {
+		return nodes, result.Error()
+	} else {
+		defer result.Close()
+
+		// Re: (limit <= 0 || nodes.Len() < limit)
+		//
+		// If the limit is set to < 0 the first part of this condition returns true and short-circuits. Otherwise,
+		// the check goes on to see if there are more nodes in the node set than the specified allowed limit
+		for (limit <= 0 || nodes.Len() < limit) && result.Next() {
+			var node graph.Node
+
+			if err := result.Scan(&node); err != nil {
+				return nil, err
+			}
+
+			nodes.Add(&node)
+		}
+
+		return nodes, result.Error()
+	}
+}
+
 func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, error) {
 	var (
 		currentPath graph.Path
@@ -177,33 +202,33 @@ func FetchPathSetByQuery(tx graph.Transaction, query string) (graph.PathSet, err
 
 		for result.Next() {
 			var (
-				relationship graph.Relationship
-				node         graph.Node
-				path         graph.Path
+				relationship = &graph.Relationship{}
+				node         = &graph.Node{}
+				path         = &graph.Path{}
+				mapper       = result.Mapper()
 			)
 
-			if values, err := result.Values(); err != nil {
-				return pathSet, err
-			} else if mapped, err := values.MapOptions(&relationship, &node, &path); err != nil {
-				return pathSet, err
-			} else {
-				switch typedMapped := mapped.(type) {
-				case *graph.Relationship:
-					currentPath.Edges = append(currentPath.Edges, typedMapped)
-
-				case *graph.Node:
-					currentPath.Nodes = append(currentPath.Nodes, typedMapped)
-
-				case *graph.Path:
-					pathSet = append(pathSet, *typedMapped)
+			for _, nextValue := range result.Values() {
+				if mapper.TryMap(nextValue, relationship) {
+					currentPath.Edges = append(currentPath.Edges, relationship)
+					relationship = &graph.Relationship{}
+				} else if mapper.TryMap(nextValue, node) {
+					currentPath.Nodes = append(currentPath.Nodes, node)
+					node = &graph.Node{}
+				} else if mapper.TryMap(nextValue, path) {
+					pathSet = append(pathSet, *path)
+					path = &graph.Path{}
 				}
+			}
 
-				if tx.GraphQueryMemoryLimit() > 0 {
-					currentPathSize := size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
-					pathSetSize := size.Of(pathSet)
-					if currentPathSize > tx.GraphQueryMemoryLimit() || pathSetSize > tx.GraphQueryMemoryLimit() {
-						return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.GraphQueryMemoryLimit().Mebibytes())
-					}
+			if tx.GraphQueryMemoryLimit() > 0 {
+				var (
+					currentPathSize = size.OfSlice(currentPath.Edges) + size.OfSlice(currentPath.Nodes)
+					pathSetSize     = size.Of(pathSet)
+				)
+
+				if currentPathSize > tx.GraphQueryMemoryLimit() || pathSetSize > tx.GraphQueryMemoryLimit() {
+					return pathSet, fmt.Errorf("%s - Limit: %.2f MB", "query required more memory than allowed", tx.GraphQueryMemoryLimit().Mebibytes())
 				}
 			}
 		}
@@ -260,6 +285,7 @@ func CollectNodeIDs(relationshipQuery graph.RelationshipQuery) (RelationshipNode
 	})
 }
 
+// Note this does not work with mutations inside the delegate
 func ForEachNodeID(tx graph.Transaction, ids []graph.ID, delegate func(node *graph.Node) error) error {
 	return tx.Nodes().Filterf(func() graph.Criteria {
 		return query.InIDs(query.NodeID(), ids...)

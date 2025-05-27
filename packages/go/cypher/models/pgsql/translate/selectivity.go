@@ -68,7 +68,7 @@ var knownNodePropertySelectivity = map[string]int{
 }
 
 type measureSelectivityVisitor struct {
-	walk.HierarchicalVisitor[pgsql.SyntaxNode]
+	walk.Visitor[pgsql.SyntaxNode]
 
 	scope            *Scope
 	selectivityStack []int
@@ -76,9 +76,9 @@ type measureSelectivityVisitor struct {
 
 func newMeasureSelectivityVisitor(scope *Scope) *measureSelectivityVisitor {
 	return &measureSelectivityVisitor{
-		HierarchicalVisitor: walk.NewComposableHierarchicalVisitor[pgsql.SyntaxNode](),
-		scope:               scope,
-		selectivityStack:    []int{0},
+		Visitor:          walk.NewVisitor[pgsql.SyntaxNode](),
+		scope:            scope,
+		selectivityStack: []int{0},
 	}
 }
 
@@ -208,8 +208,10 @@ func MeasureSelectivity(scope *Scope, owningIdentifierBound bool, expression pgs
 		visitor.addSelectivity(selectivityWeightNarrowSearch)
 	}
 
-	if err := walk.PgSQL(expression, visitor); err != nil {
-		return 0, err
+	if expression != nil {
+		if err := walk.PgSQL(expression, visitor); err != nil {
+			return 0, err
+		}
 	}
 
 	return visitor.Selectivity(), nil

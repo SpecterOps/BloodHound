@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { NavigateOptions, useSearchParams } from 'react-router-dom';
 import { EdgeCheckboxType } from '../../edgeTypes';
 import { MappedStringLiteral } from '../../types';
 import { EntityRelationshipQueryTypes, entityRelationshipEndpoints } from '../../utils/content';
@@ -70,7 +70,7 @@ export const parseRelationshipQueryType = (paramValue: string | null): EntityRel
 };
 
 interface UseExploreParamsReturn extends ExploreQueryParams {
-    setExploreParams: (params: Partial<ExploreQueryParams>) => void;
+    setExploreParams: (params: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) => void;
 }
 
 export const useExploreParams = (): UseExploreParamsReturn => {
@@ -87,22 +87,24 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
         relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
-        // react doesnt like this because it doesnt know the params needed for the function factory return function.
-        // but the params needed are not needed in the deps array
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setExploreParams: useCallback(
-            setParamsFactory(setSearchParams, [
-                'exploreSearchTab',
-                'primarySearch',
-                'secondarySearch',
-                'cypherSearch',
-                'searchType',
-                'expandedPanelSections',
-                'selectedItem',
-                'relationshipQueryType',
-                'relationshipQueryItemId',
-                'pathFilters',
-            ]),
+            (updatedParams: Partial<ExploreQueryParams>, navigateOpts?: NavigateOptions) =>
+                setParamsFactory(
+                    setSearchParams,
+                    [
+                        'exploreSearchTab',
+                        'primarySearch',
+                        'secondarySearch',
+                        'cypherSearch',
+                        'searchType',
+                        'expandedPanelSections',
+                        'selectedItem',
+                        'relationshipQueryType',
+                        'relationshipQueryItemId',
+                        'pathFilters',
+                    ],
+                    navigateOpts
+                )(updatedParams),
             [setSearchParams]
         ),
     };

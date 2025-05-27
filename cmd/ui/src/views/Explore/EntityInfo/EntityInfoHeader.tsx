@@ -17,11 +17,10 @@
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
-import { Icon, NodeIcon, useHeaderStyles } from 'bh-shared-ui';
+import { Icon, NodeIcon, useExploreParams, useHeaderStyles, useObjectInfoPanelContext } from 'bh-shared-ui';
 import React from 'react';
-import { useEntityInfoPanelContext } from 'src/views/Explore/EntityInfo/EntityInfoPanelContext';
 
-interface HeaderProps {
+export interface HeaderProps {
     expanded: boolean;
     name: string;
     onToggleExpanded: (expanded: boolean) => void;
@@ -30,7 +29,18 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
-    const entityInfoPanelContext = useEntityInfoPanelContext();
+    const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
+    const { setExploreParams, expandedPanelSections } = useExploreParams();
+
+    const handleCollapseAll = () => {
+        setIsObjectInfoPanelOpen(false);
+
+        if (expandedPanelSections?.length) {
+            setExploreParams({
+                expandedPanelSections: [],
+            });
+        }
+    };
 
     return (
         <Box className={styles.header}>
@@ -54,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
 
             <Icon
                 tip='Collapse All'
-                click={() => entityInfoPanelContext.collapseAllSections()}
+                click={handleCollapseAll}
                 className={styles.icon}
                 data-testid='explore_entity-information-panel_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />

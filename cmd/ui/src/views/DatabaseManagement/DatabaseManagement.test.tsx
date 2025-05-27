@@ -26,7 +26,7 @@ describe('DatabaseManagement', () => {
         rest.get('/api/v2/self', (req, res, ctx) => {
             return res(
                 ctx.json({
-                    data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
+                    data: createAuthStateWithPermissions([Permission.WIPE_DB]).user,
                 })
             );
         }),
@@ -59,17 +59,17 @@ describe('DatabaseManagement', () => {
         render(<DatabaseManagement />);
 
         const title = screen.getByText(/Database Management/i);
-        const button = screen.getByRole('button', { name: /proceed/i });
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
 
         expect(title).toBeInTheDocument();
         expect(await screen.findByRole('checkbox', { name: /Collected graph data/i })).toBeInTheDocument();
 
         const checkboxes = screen.getAllByRole('checkbox');
         expect(checkboxes.length).toEqual(5);
-        expect(button).toBeInTheDocument();
+        expect(deleteButton).toBeInTheDocument();
     });
 
-    it('disables the proceed button and all checkboxes if the user lacks permission', async () => {
+    it('disables the delete button and all checkboxes if the user lacks permission', async () => {
         render(<DatabaseManagement />);
 
         const checkboxes = await screen.getAllByRole('checkbox');
@@ -78,19 +78,19 @@ describe('DatabaseManagement', () => {
             expect(checkbox).toBeDisabled();
         });
 
-        const proceedButton = screen.getByRole('button', { name: 'Proceed' });
+        const deleteButton = screen.getByRole('button', { name: 'Delete' });
 
-        expect(proceedButton).toBeDisabled();
+        expect(deleteButton).toBeDisabled();
     });
 
-    it('displays error if proceed button is clicked when no checkbox is selected', async () => {
+    it('displays error if delete button is clicked when no checkbox is selected', async () => {
         render(<DatabaseManagement />);
 
         const user = userEvent.setup();
 
-        const button = screen.getByRole('button', { name: /proceed/i });
-        await waitFor(() => expect(button).not.toBeDisabled());
-        await user.click(button);
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await waitFor(() => expect(deleteButton).not.toBeDisabled());
+        await user.click(deleteButton);
 
         const errorMsg = screen.getByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
@@ -101,9 +101,9 @@ describe('DatabaseManagement', () => {
 
         const user = userEvent.setup();
 
-        const button = screen.getByRole('button', { name: /proceed/i });
-        await waitFor(() => expect(button).not.toBeDisabled());
-        await user.click(button);
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await waitFor(() => expect(deleteButton).not.toBeDisabled());
+        await user.click(deleteButton);
 
         const errorMsg = await screen.findByText(/please make a selection/i);
         expect(errorMsg).toBeInTheDocument();
@@ -123,10 +123,12 @@ describe('DatabaseManagement', () => {
         await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
-        const button = screen.getByRole('button', { name: /proceed/i });
-        await user.click(button);
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
 
-        const dialog = screen.getByRole('dialog', { name: /confirm deleting data/i });
+        const dialog = screen.getByRole('dialog', {
+            name: /Delete data from the current environment\?/i,
+        });
         expect(dialog).toBeInTheDocument();
 
         const closeButton = screen.getByRole('button', { name: /cancel/i });
@@ -144,11 +146,11 @@ describe('DatabaseManagement', () => {
         await waitFor(() => expect(checkbox).not.toBeDisabled());
         await user.click(checkbox);
 
-        const proceedButton = screen.getByRole('button', { name: /proceed/i });
-        await user.click(proceedButton);
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
 
         const textField = screen.getByRole('textbox');
-        await user.type(textField, 'Please delete my data');
+        await user.type(textField, 'Delete this environment data');
 
         const confirmButton = screen.getByRole('button', { name: /confirm/i });
         await user.click(confirmButton);

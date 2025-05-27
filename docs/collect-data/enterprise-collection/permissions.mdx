@@ -2,7 +2,7 @@
 title: SharpHound Enterprise Data Collection and Permissions
 ---
 
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
 
 SharpHound Enterprise data collection utilizes the open-source [SharpHound Common](https://github.com/BloodHoundAD/SharpHoundCommon) library, maintained by the BloodHound Enterprise Engineering team.
 
@@ -35,9 +35,14 @@ Reference: [Current Object Properties collected by SharpHound](https://github.co
 
 SharpHound collects this information utilizing signed LDAP queries against a domain controller in the domain. By default, all Authenticated Users can enumerate almost all AD Structure Data utilized by BloodHound Enterprise.
 
-### [Granting Access to the Deleted Objects Container (Optional)
+### Granting Access to the Deleted Objects Container (Optional)
 
-To improve reconciliation performance in tracking deleted objects, it is recommended to grant the SharpHound service account [access to the "Deleted Objects" container](https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/non-administrators-view-deleted-object-container).
+To improve reconciliation performance in tracking deleted objects, we recommended granting the SharpHound service account [read access to the "Deleted Objects" container](https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/non-administrators-view-deleted-object-container).
+
+* Domain NC Deleted Objects DistinguishedName (DN): `CN=Deleted Objects,<Domain DN>`
+* Configuration NC Deleted Objects DistinguishedName (DN): `CN=Deleted Objects,CN=Configuration,<Forest root domain DN>`
+
+It's not required to have the AD recycle bin enabled.
 
 ## Local Group Membership
 

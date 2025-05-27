@@ -3,22 +3,11 @@ Title: "SAML: Entra ID Configuration"
 description: "This document provides instructions for creating an application within Entra ID for compatibility with BloodHound Enterprise."
 ---
 
-<img src="/assets/enterprise-AND-community-edition-pill-tag.svg"/> 
+<img noZoom src="/assets/enterprise-AND-community-edition-pill-tag.svg"/>
 
 For general instructions on adding a SAML provider to BloodHound Enterprise or for configuring users to utilize a SAML provider, see [SAML in BloodHound Enterprise](/manage-bloodhound/auth/saml).
 
 See [SAML Order of Operations and Quick Reference](/manage-bloodhound/auth/saml) before starting.
-
-## SAML Settings
-
-The following SAML settings are required for Entra ID to integrate with BloodHound Enterprise:
-
-
-| **SAML Setting** | **Value** |
-| --- | --- |
-| **Identifier**<br/><br/>**(Entity ID)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
-| **Reply URL**<br/><br/>**(Assertion Consumer Service URL)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;/acs<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
-| **Sign On URL**<br/><br/>**(Optional)** | https://&lt;DOMAIN&gt;.bloodhoundenterprise.io/api/v1/login/saml/&lt;PROVIDER-NAME&gt;<br/><br/>_&lt;DOMAIN&gt;: the subdomain of your tenant URL._<br/><br/>_&lt;PROVIDER-NAME&gt;: the name chosen for the SAML provider within the BloodHound Enterprise configuration_ |
 
 ## Create an Enterprise Application
 

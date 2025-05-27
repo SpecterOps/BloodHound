@@ -17,14 +17,73 @@
 package datapipe
 
 import (
+	"fmt"
+	"log/slog"
 	"strings"
+	"time"
 
+	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func convertComputerData(computer ein.Computer, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertComputerToNode(computer)
+func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {
+	objectID := strings.ToUpper(entity.ID) // BloodHound convention: object IDs are uppercased
+
+	node := ein.IngestibleNode{
+		ObjectID:    objectID,
+		PropertyMap: entity.Properties,
+		Labels:      graph.StringsToKinds(entity.Kinds),
+	}
+
+	if node.PropertyMap == nil {
+		node.PropertyMap = make(map[string]any)
+	}
+
+	// If a "objectid" is present in the property map, verify it matches the top-level ID
+	if rawID, ok := node.PropertyMap["objectid"]; ok {
+		if propertyID, ok := rawID.(string); ok && !strings.EqualFold(propertyID, objectID) {
+			slog.Warn("objectid in property map does not match top-level id of node; skipping.",
+				slog.Any("properties.objectid", propertyID),
+				slog.String("expected objectid", objectID),
+			)
+			return fmt.Errorf("skipping invalid node. objectid: %s", objectID)
+		}
+	}
+
+	// the first element in node.Labels determines which icon the UI renders for the node.
+	// it is critical to specify this information because a node can have up to 3 kinds.
+	node.PropertyMap[common.PrimaryKind.String()] = node.Labels[0]
+
+	converted.NodeProps = append(converted.NodeProps, node)
+	return nil
+}
+
+func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error {
+	ingestibleRel := ein.NewIngestibleRelationship(
+		ein.IngestibleEndpoint{
+			Value:   strings.ToUpper(entity.Start.Value),
+			MatchBy: ein.IngestMatchStrategy(entity.Start.MatchBy),
+			Kind:    graph.StringKind(entity.Start.Kind),
+		},
+		ein.IngestibleEndpoint{
+			Value:   strings.ToUpper(entity.End.Value),
+			MatchBy: ein.IngestMatchStrategy(entity.End.MatchBy),
+			Kind:    graph.StringKind(entity.End.Kind),
+		},
+		ein.IngestibleRel{
+			RelProps: entity.Properties,
+			RelType:  graph.StringKind(entity.Kind),
+		},
+	)
+
+	converted.RelProps = append(converted.RelProps, ingestibleRel)
+	return nil
+}
+
+func convertComputerData(computer ein.Computer, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertComputerToNode(computer, ingestTime)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
 	if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
 		converted.RelProps = append(converted.RelProps, primaryGroupRel)
@@ -59,10 +118,11 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData) {
 
 	converted.NodeProps = append(converted.NodeProps, ein.ParseDCRegistryData(computer))
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+
 }
 
-func convertUserData(user ein.User, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(user.IngestBase, ad.User)
+func convertUserData(user ein.User, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(user.IngestBase, ad.User, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, user.Aces, user.ObjectIdentifier, ad.User)...)
 	if rel := ein.ParseObjectContainer(user.IngestBase, ad.User); rel.IsValid() {
@@ -71,11 +131,11 @@ func convertUserData(user ein.User, converted *ConvertedData) {
 	converted.RelProps = append(converted.RelProps, ein.ParseUserMiscData(user)...)
 }
 
-func convertGroupData(group ein.Group, converted *ConvertedGroupData) {
-	baseNodeProp := ein.ConvertObjectToNode(group.IngestBase, ad.Group)
+func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(group.IngestBase, ad.Group, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 
-	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source != "" && rel.Target != "" {
+	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source.Value != "" && rel.Target.Value != "" {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, group.Aces, group.ObjectIdentifier, ad.Group)...)
@@ -85,8 +145,8 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData) {
 	converted.DistinguishedNameProps = append(converted.DistinguishedNameProps, groupMembershipData.DistinguishedNameMembers...)
 }
 
-func convertDomainData(domain ein.Domain, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(domain.IngestBase, ad.Domain)
+func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(domain.IngestBase, ad.Domain, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
 	if len(domain.ChildObjects) > 0 {
@@ -100,16 +160,20 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData) {
 	domainTrustData := ein.ParseDomainTrusts(domain)
 	converted.RelProps = append(converted.RelProps, domainTrustData.TrustRelationships...)
 	converted.NodeProps = append(converted.NodeProps, domainTrustData.ExtraNodeProps...)
+
+	parsedLocalGroupData := ein.ParseGPOChanges(domain.GPOChanges)
+	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
 }
 
-func convertGPOData(gpo ein.GPO, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO)
+func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
 }
 
-func convertOUData(ou ein.OU, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(ou.IngestBase, ad.OU)
+func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ou.IngestBase, ad.OU, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ou.Aces, ou.ObjectIdentifier, ad.OU)...)
 	if container := ein.ParseObjectContainer(ou.IngestBase, ad.OU); container.IsValid() {
@@ -120,6 +184,10 @@ func convertOUData(ou ein.OU, converted *ConvertedData) {
 	if len(ou.ChildObjects) > 0 {
 		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(ou.ChildObjects, ou.ObjectIdentifier, ad.OU)...)
 	}
+
+	parsedLocalGroupData := ein.ParseGPOChanges(ou.GPOChanges)
+	converted.RelProps = append(converted.RelProps, parsedLocalGroupData.Relationships...)
+	converted.NodeProps = append(converted.NodeProps, parsedLocalGroupData.Nodes...)
 }
 
 func convertSessionData(session ein.Session, converted *ConvertedSessionData) {
@@ -132,8 +200,8 @@ func CreateConvertedSessionData(count int) ConvertedSessionData {
 	return converted
 }
 
-func convertContainerData(container ein.Container, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(container.IngestBase, ad.Container)
+func convertContainerData(container ein.Container, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(container.IngestBase, ad.Container, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, container.Aces, container.ObjectIdentifier, ad.Container)...)
 
@@ -146,8 +214,8 @@ func convertContainerData(container ein.Container, converted *ConvertedData) {
 	}
 }
 
-func convertAIACAData(aiaca ein.AIACA, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(aiaca), ad.AIACA)
+func convertAIACAData(aiaca ein.AIACA, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(aiaca), ad.AIACA, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA)...)
 
@@ -156,8 +224,8 @@ func convertAIACAData(aiaca ein.AIACA, converted *ConvertedData) {
 	}
 }
 
-func convertRootCAData(rootca ein.RootCA, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA)
+func convertRootCAData(rootca ein.RootCA, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, rootca.Aces, rootca.ObjectIdentifier, ad.RootCA)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseRootCAMiscData(rootca)...)
@@ -167,11 +235,11 @@ func convertRootCAData(rootca ein.RootCA, converted *ConvertedData) {
 	}
 }
 
-func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertEnterpriseCAToNode(enterpriseca)
-	converted.NodeProps = append(converted.NodeProps, ein.ConvertEnterpriseCAToNode(enterpriseca))
+func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProps := ein.ConvertEnterpriseCAToNode(enterpriseca, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProps)
 	converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProps, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 
 	if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {
@@ -179,8 +247,8 @@ func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *Converted
 	}
 }
 
-func convertNTAuthStoreData(ntauthstore ein.NTAuthStore, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore)
+func convertNTAuthStoreData(ntauthstore ein.NTAuthStore, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseNTAuthStoreData(ntauthstore)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore)...)
@@ -190,8 +258,8 @@ func convertNTAuthStoreData(ntauthstore ein.NTAuthStore, converted *ConvertedDat
 	}
 }
 
-func convertCertTemplateData(certtemplate ein.CertTemplate, converted *ConvertedData) {
-	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(certtemplate), ad.CertTemplate)
+func convertCertTemplateData(certtemplate ein.CertTemplate, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(certtemplate), ad.CertTemplate, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, certtemplate.Aces, certtemplate.ObjectIdentifier, ad.CertTemplate)...)
 
@@ -200,17 +268,17 @@ func convertCertTemplateData(certtemplate ein.CertTemplate, converted *Converted
 	}
 }
 
-func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *ConvertedData) {
-	props := ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy)
+func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *ConvertedData, ingestTime time.Time) {
+	props := ein.ConvertObjectToNode(issuancePolicy.IngestBase, ad.IssuancePolicy, ingestTime)
 	if issuancePolicy.GroupLink.ObjectIdentifier != "" {
 		converted.RelProps = append(converted.RelProps, ein.NewIngestibleRelationship(
-			ein.IngestibleSource{
-				Source:     issuancePolicy.ObjectIdentifier,
-				SourceType: ad.IssuancePolicy,
+			ein.IngestibleEndpoint{
+				Value: issuancePolicy.ObjectIdentifier,
+				Kind:  ad.IssuancePolicy,
 			},
-			ein.IngestibleTarget{
-				Target:     issuancePolicy.GroupLink.ObjectIdentifier,
-				TargetType: issuancePolicy.GroupLink.Kind(),
+			ein.IngestibleEndpoint{
+				Value: issuancePolicy.GroupLink.ObjectIdentifier,
+				Kind:  issuancePolicy.GroupLink.Kind(),
 			},
 			ein.IngestibleRel{
 				RelProps: map[string]any{"isacl": false},
@@ -226,5 +294,4 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.IssuancePolicy); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)
 	}
-
 }

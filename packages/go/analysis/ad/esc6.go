@@ -220,13 +220,8 @@ func GetADCSESC6EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		MATCH p1 = (n {objectid:'S-1-5-21-2697957641-2271029196-387917394-2227'})-[:MemberOf*0..]->()-[:Enroll]->(ca)-[:TrustedForNTAuth]->(nt)-[:NTAuthStoreFor]->(d {objectid:'S-1-5-21-2697957641-2271029196-387917394'})
 		WHERE ca.isuserspecifiessanenabled = true
 
-		MATCH p2 = (d:Domain)-[r:TrustedBy*0..]->()<-[:DCFor]-(dc:Computer)
-		WITH *, relationships(p2) AS r
-		WHERE ALL(rel IN r WHERE type(rel) = "DCFor" OR rel.trusttype = "ParentChild")
-		AND (
-			// ESC6b only
-			dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31]
-		)
+		MATCH p2 = (d:Domain)-[r:SameForestTrust*0..]->()<-[:DCFor]-(dc:Computer)
+		WHERE dc.certificatemappingmethodsraw IN [4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31] // ESC6b only
 
 		MATCH p3 = (n)-[:MemberOf*0..]->()-[:GenericAll|Enroll|AllExtendedRights]->(ct)-[:PublishedTo]->(ca)-[:IssuedSignedBy|EnterpriseCAFor|RootCAFor*1..]->(d:Domain)
 		WHERE ct.nosecurityextension = true                                                  <- ESC6a only
@@ -433,8 +428,7 @@ func ADCSESC6Path2Pattern(domainId graph.ID) traversal.PatternContinuation {
 	return traversal.NewPattern().
 		InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.TrustedBy),
-				query.Equals(query.RelationshipProperty(ad.TrustType.String()), "ParentChild"),
+				query.Kind(query.Relationship(), ad.SameForestTrust),
 				query.Kind(query.Start(), ad.Domain),
 			)).
 		Inbound(query.And(

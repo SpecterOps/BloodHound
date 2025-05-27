@@ -2,7 +2,7 @@
 title: BloodHound Community Edition Quickstart
 ---
 
-  <img src="/assets/community-edition-pill-tag.svg"/>
+  <img noZoom src="/assets/community-edition-pill-tag.svg"/>
 
 Set up BloodHound Community Edition (BloodHound CE) with Docker Compose and start identifying and visualizing security risks..
 
@@ -22,7 +22,7 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
 
 <Warning>BloodHound Community Edition is a security auditing tool that was written to test the resilience of networks against attackers. Because this tool can equally be used for evil, some anti-malware and EDR solutions flag BloodHound and its components as **malware**. If you encounter issues with downloads being blocked and files being prohibited from execution, you may have to shut off these protections. We recommend that you set up BloodHound on a dedicated machine so that your regular work environment remains protected. If you are planning to use BloodHound on a corporate network, please notify your Security Operations Center (SOC) ahead of time and ensure you have the required permissions to audit the network. For legal and ethical reasons, you must never use BloodHound on systems you do not own or lack explicit permission to audit. </Warning>
 
-# Install BloodHound CE 
+# Install BloodHound CE
 
 1. Install [Docker Desktop](https://www.docker.com/get-started). This gives you access to Docker Compose.
 
@@ -34,12 +34,12 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
     ```
 
     ``` powershell Windows PowerShell
-    curl -L -k -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -o "%USERPROFILE%\Downloads\bloodhound-cli-windows-amd64.zip" https://github.com/SpecterOps/bloodhound-cli/releases/latest/download/bloodhound-cli-windows-amd64.zip
+    curl.exe -L -o "$env:USERPROFILE\Downloads\bloodhound-cli-windows-amd64.zip" https://github.com/SpecterOps/bloodhound-cli/releases/latest/download/bloodhound-cli-windows-amd64.zip
     ```
 
     ```bash Mac
     curl -L -o bloodhound-cli-darwin-arm64.tar.gz https://github.com/SpecterOps/bloodhound-cli/releases/latest/download/bloodhound-cli-darwin-arm64.tar.gz
-    ``` 
+    ```
   </CodeGroup>
 
 3.	Next, unpack the file:
@@ -50,7 +50,7 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
     ```
 
     ``` powershell Windows PowerShell
-    tar -xf bloodhound-cli-windows-amd64.zip
+    cd "$env:USERPROFILE\Downloads"; tar -xf bloodhound-cli-windows-amd64.zip
     ```
 
     ```bash Mac
@@ -58,7 +58,7 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
     ```
   </CodeGroup>
 
-4. In your terminal, enter the following command to install BloodHound Community Edition via BloodHound CLI: 
+4. In your terminal, enter the following command to install BloodHound Community Edition via BloodHound CLI:
 
   <CodeGroup>
     ```bash Linux
@@ -75,34 +75,34 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
   </CodeGroup>
 
   <Note>
-    **If you encounter Mac Error: “bloodhound-cli” Not Opened. Apple could not verify “bloodhound-cli” is free of malware that may harm your mac or compromise your privacy.** 
-    In case you get this error message, you need to allow bloodhound-cli to be executed.  
+    **If you encounter Mac Error: “bloodhound-cli” Not Opened. Apple could not verify “bloodhound-cli” is free of malware that may harm your mac or compromise your privacy.**
+    In case you get this error message, you need to allow bloodhound-cli to be executed.
       1.	Go to **System Settings** (or System Preferences on older macOS versions)
       2. Navigate to **Privacy & Security**
       3. Scroll down to the **Security** section
       4. You should see a message stating that bloodhound-cli was blocked
       5. Click **Allow Anyway**
-      6. Repeat the CLI command `./bloodhound-cli install` 
+      6. Repeat the CLI command `./bloodhound-cli install`
       7. Click **Open Anyway**
-      8. Enter your password or use your fingerprint to confirm 
+      8. Enter your password or use your fingerprint to confirm
   </Note>
 
   <Note>
-    **If you encounter Mac Error: Malware Blocked – “com.docker.vmnetd” was not openend because it contains malware. This action did not harm your Mac.** 
-   In case you get the error message, you need to uninstall and re-install Docker.   
-      1. Follow the [Docker uninstall instructions](https://docs.docker.com/desktop/uninstall/) (click tab for your operating system). 
-      2. Re-install [Docker Desktop](https://www.docker.com/get-started/). 
-      3. Repeat the CLI command `./bloodhound-cli install` 
+    **If you encounter Mac Error: Malware Blocked – “com.docker.vmnetd” was not openend because it contains malware. This action did not harm your Mac.**
+   In case you get the error message, you need to uninstall and re-install Docker.
+      1. Follow the [Docker uninstall instructions](https://docs.docker.com/desktop/uninstall/) (click tab for your operating system).
+      2. Re-install [Docker Desktop](https://www.docker.com/get-started/).
+      3. Repeat the CLI command `./bloodhound-cli install`
   </Note>
 
 
   <Note>
-    **If you encounter Mac Error: “Docker is installed on this system, but the daemon is not running”** 
-   In case you get the error message, you need to uninstall and re-install Docker.   
-      1. Simply **launch Docker Desktop** and proceed. 
+    **If you encounter Mac Error: “Docker is installed on this system, but the daemon is not running”**
+   In case you get the error message, you need to uninstall and re-install Docker.
+      1. Simply **launch Docker Desktop** and proceed.
   </Note>
 
-5. The installation will now proceed. You’ll know it’s complete when you see the randomly generated password displayed on your screen. Make sure to keep your terminal open until you have changed your password in a future step. 
+5. The installation will now proceed. You’ll know it’s complete when you see the randomly generated password displayed on your screen. Make sure to keep your terminal open until you have changed your password in a future step.
 
     ```
     [+] Checking the status of Docker and the Compose plugin...
@@ -111,7 +111,7 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
     [+] Downloading the development YAML file from https://raw.githubusercontent.com/SpecterOps/BloodHound_CLI/refs/heads/main/docker-compose.dev.yml...
 
     [… downloading lots of files …]
-    
+
     Network root_default  Creating
     Network root_default  Created
     Volume "root_postgres-data"  Creating
@@ -157,13 +157,13 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
       </CodeGroup>
 
 
-6. 1.	Go to [http://localhost:8080/ui/login](http://localhost:8080/ui/login), and log in with `admin` and the randomly generated password from the last installation step.
+6. Go to [http://localhost:8080/ui/login](http://localhost:8080/ui/login), and log in with `admin` and the randomly generated password from the last installation step.
 
     <Note>
       The default `docker-compose.yml` example binds only to localhost (127.0.0.1). To access BloodHound outside of localhost, follow the instructions in [examples/docker-compose/README.md](https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/README.md) to configure host binding for the container.
     </Note>
 
-6. Reset the password as prompted.
+7. Reset the password as prompted.
 
 You're now logged in to a locally hosted BloodHound CE tenant running with Docker Compose.
 
@@ -185,7 +185,7 @@ To ingest the BloodHound sample data:
     * Coverage for local permissions
     * Multiple ADCS escalation paths
 
-    Azure Sample Data generated with AzureHound includes: 
+    Azure Sample Data generated with AzureHound includes:
     * Full collection of an Azure environment
     * Support for user-sync hybrid paths when ingested alongside the example AD data
 
@@ -256,9 +256,9 @@ To look at identified attack paths in the graph, go to the **Explore** page in t
 
 Learn more in [Explore → Search for Objects](/analyze-data/bloodhound-gui/explore-objects).
 
-# Update BloodHound CE 
+# Update BloodHound CE
 
-The easiest way to update your instance of BloodHound Community Edition is via `bloodhound-cli`. 
+The easiest way to update your instance of BloodHound Community Edition is via `bloodhound-cli`.
 
     <CodeGroup>
         ```bash Linux

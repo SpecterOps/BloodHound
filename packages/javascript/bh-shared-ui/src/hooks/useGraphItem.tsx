@@ -70,9 +70,11 @@ export const useGraphItem = (itemId?: string) => {
                         targetNode,
                     };
                 }
+
+                const [id, nodeData] = Object.entries(res.data?.data?.nodes)[0];
                 return {
-                    id: itemId,
-                    ...res.data?.data?.nodes?.[itemId || ''],
+                    id,
+                    ...nodeData,
                 };
             });
         },

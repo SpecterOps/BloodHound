@@ -14,19 +14,47 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
+import { createAuthStateWithPermissions } from 'bh-shared-ui';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import {
     ROUTE_ADMINISTRATION_DATA_QUALITY,
     ROUTE_ADMINISTRATION_EARLY_ACCESS_FEATURES,
     ROUTE_ADMINISTRATION_MANAGE_USERS,
     ROUTE_ADMINISTRATION_SSO_CONFIGURATION,
 } from 'src/routes/constants';
-import { render, screen } from 'src/test-utils';
+import { act, render, screen } from 'src/test-utils';
 import Administration from './Administration';
+
+const server = setupServer(
+    rest.get('/api/v2/self', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: createAuthStateWithPermissions([]).user,
+            })
+        );
+    }),
+    rest.get('/api/v2/file-upload/accepted-types', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [
+                    'application/json',
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/zip-compressed',
+                ],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('Administration', () => {
     it('should render navigation links to all Administration sub-pages', async () => {
-        render(<Administration />);
+        await act(async () => render(<Administration />));
 
         expect(screen.getByRole('link', { name: 'Data Quality' })).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Data Quality' })).toHaveAttribute(
@@ -53,21 +81,17 @@ describe('Administration', () => {
         );
     });
 
-    it('should redirect to nested /file-ingest route if user navigates to /', () => {
-        const history = createMemoryHistory();
-        history.push('/');
-        render(<Administration />, {
-            history,
-        });
-        expect(history.location.pathname).toBe('/file-ingest');
+    it('should redirect to nested /file-ingest route if user navigates to /', async () => {
+        await act(async () => render(<Administration />));
+        expect(window.location.pathname).toBe('/file-ingest');
     });
 
-    it('should redirect to nested /file-ingest route if user navigates to an invalid route', () => {
-        const history = createMemoryHistory();
-        history.push('/invalid');
-        render(<Administration />, {
-            history,
-        });
-        expect(history.location.pathname).toBe('/file-ingest');
+    it('should redirect to nested /file-ingest route if user navigates to an invalid route', async () => {
+        await act(async () =>
+            render(<Administration />, {
+                route: '/invalid',
+            })
+        );
+        expect(window.location.pathname).toBe('/file-ingest');
     });
 });

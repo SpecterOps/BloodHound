@@ -17,11 +17,11 @@
 package integration
 
 import (
+	"embed"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
@@ -33,6 +33,9 @@ import (
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/harnesses"
 )
+
+//go:embed harnesses
+var Harnesses embed.FS
 
 func RandomObjectID(t test.Controller) string {
 	newUUID, err := uuid.NewV4()
@@ -67,65 +70,6 @@ type GraphTestHarness interface {
 	Setup(testContext *GraphTestContext)
 }
 
-type CompletenessHarness struct {
-	UserA        *graph.Node
-	UserB        *graph.Node
-	UserC        *graph.Node
-	UserD        *graph.Node
-	UserInactive *graph.Node
-	ComputerA    *graph.Node
-	ComputerB    *graph.Node
-	ComputerC    *graph.Node
-	ComputerD    *graph.Node
-	Group        *graph.Node
-	DomainSid    string
-}
-
-func (s *CompletenessHarness) Setup(testCtx *GraphTestContext) {
-	s.DomainSid = RandomDomainSID()
-	s.UserA = testCtx.NewActiveDirectoryUser("CUserA", s.DomainSid)
-	s.UserB = testCtx.NewActiveDirectoryUser("CUserB", s.DomainSid)
-	s.UserC = testCtx.NewActiveDirectoryUser("CUserC", s.DomainSid)
-	s.UserD = testCtx.NewActiveDirectoryUser("CUserD", s.DomainSid)
-	s.Group = testCtx.NewActiveDirectoryGroup("CGroup", s.DomainSid)
-	s.UserInactive = testCtx.NewActiveDirectoryUser("CUserInactive", s.DomainSid)
-	s.ComputerA = testCtx.NewActiveDirectoryComputer("CComputerA", s.DomainSid)
-	s.ComputerB = testCtx.NewActiveDirectoryComputer("CComputerB", s.DomainSid)
-	s.ComputerC = testCtx.NewActiveDirectoryComputer("CComputerC", s.DomainSid)
-	s.ComputerD = testCtx.NewActiveDirectoryComputer("CComputerD", s.DomainSid)
-
-	testCtx.NewRelationship(s.ComputerA, s.UserA, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerA, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.ComputerB, s.UserB, ad.HasSession)
-	testCtx.NewRelationship(s.UserA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.UserInactive, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerA, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerB, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerC, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.ComputerD, s.Group, ad.MemberOf)
-	testCtx.NewRelationship(s.Group, s.ComputerC, ad.AdminTo)
-	testCtx.NewRelationship(s.UserD, s.ComputerC, ad.AdminTo)
-	s.UserA.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserA)
-	s.UserB.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserB)
-	s.UserC.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserC)
-	s.UserD.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC())
-	testCtx.UpdateNode(s.UserD)
-	s.UserInactive.Properties.Set(ad.LastLogonTimestamp.String(), time.Now().UTC().Add(-time.Hour*3000))
-	testCtx.UpdateNode(s.UserInactive)
-	s.ComputerC.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerC.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerC)
-	s.ComputerD.Properties.Set(common.PasswordLastSet.String(), time.Now().UTC())
-	s.ComputerD.Properties.Set(common.OperatingSystem.String(), "WINDOWS")
-	testCtx.UpdateNode(s.ComputerD)
-}
-
 type TrustDCSyncHarness struct {
 	DomainA *graph.Node
 	DomainB *graph.Node
@@ -155,12 +99,12 @@ func (s *TrustDCSyncHarness) Setup(testCtx *GraphTestContext) {
 	s.UserB = testCtx.NewActiveDirectoryUser("UserB", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 	s.UserC = testCtx.NewActiveDirectoryUser("UserC", testCtx.Harness.RootADHarness.ActiveDirectoryDomainSID)
 
-	testCtx.NewRelationship(s.DomainA, s.DomainB, ad.TrustedBy)
-	testCtx.NewRelationship(s.DomainB, s.DomainA, ad.TrustedBy)
-	testCtx.NewRelationship(s.DomainA, s.DomainC, ad.TrustedBy)
+	testCtx.NewRelationship(s.DomainA, s.DomainB, ad.SameForestTrust)
+	testCtx.NewRelationship(s.DomainB, s.DomainA, ad.SameForestTrust)
+	testCtx.NewRelationship(s.DomainA, s.DomainC, ad.SameForestTrust)
 
-	testCtx.NewRelationship(s.DomainB, s.DomainD, ad.TrustedBy)
-	testCtx.NewRelationship(s.DomainD, s.DomainB, ad.TrustedBy)
+	testCtx.NewRelationship(s.DomainB, s.DomainD, ad.SameForestTrust)
+	testCtx.NewRelationship(s.DomainD, s.DomainB, ad.SameForestTrust)
 
 	testCtx.NewRelationship(s.GPOA, s.DomainA, ad.GPLink, graph.AsProperties(graph.PropertyMap{
 		ad.Enforced: false,
@@ -7383,14 +7327,14 @@ func (s *ESC6bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
 
-	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
@@ -7674,14 +7618,14 @@ func (s *ESC9aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
 
-	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
 	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
@@ -7966,14 +7910,14 @@ func (s *ESC9bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
 
-	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "0")
 	s.DC1.Properties.Set(ad.StrongCertificateBindingEnforcementRaw.String(), "1")
@@ -8222,14 +8166,14 @@ func (s *ESC10aHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
 
-	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
@@ -8483,14 +8427,14 @@ func (s *ESC10bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC0, s.Domain02, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC1, s.Domain12, ad.DCFor)
 
-	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.TrustedBy, graph.AsProperties(graph.PropertyMap{ad.TrustType: "ParentChild"}))
-	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.TrustedBy)
-	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.TrustedBy)
+	graphTestContext.NewRelationship(s.Domain0, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain0, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain02, s.Domain01, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain01, s.Domain02, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain12, s.Domain11, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain12, ad.SameForestTrust)
+	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
+	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
 	s.DC0.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "4")
 	s.DC1.Properties.Set(ad.CertificateMappingMethodsRaw.String(), "31")
@@ -8873,6 +8817,7 @@ type CoerceAndRelayNTLMtoADCS struct {
 	AuthenticatedUsersGroup *graph.Node
 	CertTemplate1           *graph.Node
 	Computer                *graph.Node
+	CAHost                  *graph.Node
 	Domain                  *graph.Node
 	EnterpriseCA1           *graph.Node
 	NTAuthStore             *graph.Node
@@ -8896,6 +8841,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 		SubjectAltRequireSPN:          false,
 		SubjectAltRequireUPN:          false,
 	})
+	s.CAHost = graphTestContext.NewActiveDirectoryComputer("CAHost", domainSid)
 	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
@@ -8904,6 +8850,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Computer, s.CertTemplate1, ad.Enroll)
 	graphTestContext.NewRelationship(s.Computer, s.EnterpriseCA1, ad.Enroll)
 	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CAHost, s.EnterpriseCA1, ad.HostsCAService)
 	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
 	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
@@ -8920,6 +8867,8 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)
+	s.CAHost.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.CAHost)
 	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
@@ -9803,6 +9752,117 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
 }
 
+type IngestRelationships struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+
+	ExistingRel *graph.Relationship
+}
+
+func (s *IngestRelationships) Setup(graphTestContext *GraphTestContext) {
+	s.Node1 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "COMPUTER A",
+	}), graph.StringKind("Computer"))
+
+	s.Node2 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "COMPUTER B",
+	}), graph.StringKind("Computer"))
+
+	s.ExistingRel = graphTestContext.NewRelationship(s.Node1, s.Node2, graph.StringKind("existing_edge_kind"))
+}
+
+type GenericIngest struct {
+	Node1 *graph.Node
+	Node2 *graph.Node
+	// Nodes 3 and 4 have the same name to support cases that need to branch on ambiguous resolution
+	Node3 *graph.Node
+	Node4 *graph.Node
+	// Nodes 5 and 6 have the same name, different kinds, to support cases that branch on optional kind filter
+	Node5 *graph.Node
+	Node6 *graph.Node
+
+	// nodes 7 and 8 only have one kind
+	Node7 *graph.Node
+	Node8 *graph.Node
+
+	Node9  *graph.Node
+	Node10 *graph.Node
+}
+
+func (s *GenericIngest) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryComputer("NAME A", domainsid)
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("NAME B", domainsid)
+
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node4 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+
+	s.Node5 = graphTestContext.NewActiveDirectoryComputer("NAMEY NAME KINDY KIND", domainsid)
+	s.Node6 = graphTestContext.NewActiveDirectoryUser("NAMEY NAME KINDY KIND", domainsid)
+
+	s.Node7 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("KindA"))
+	s.Node8 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "5678",
+		common.Name:     "BOBBY",
+	}), graph.StringKind("KindB"))
+
+	s.Node9 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0001",
+		common.Name:     "SERVER-01",
+	}), graph.StringKind("Device"))
+	s.Node10 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "0002",
+		common.Name:     "DC-01",
+	}), graph.StringKind("DomainController"))
+}
+
+type ResolveEndpointsByName struct {
+	Node1 *graph.Node
+	// nodes 2 and 3 have the same name + kind, to support cases that need to branch on ambiguous resolution
+	Node2 *graph.Node
+	Node3 *graph.Node
+
+	Node4 *graph.Node
+}
+
+func (s *ResolveEndpointsByName) Setup(graphTestContext *GraphTestContext) {
+	domainsid := RandomDomainSID()
+
+	s.Node1 = graphTestContext.NewActiveDirectoryUser("ALICE", domainsid)
+
+	s.Node2 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+	s.Node3 = graphTestContext.NewActiveDirectoryComputer("SAME NAME", domainsid)
+
+	s.Node4 = graphTestContext.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.ObjectID: "1234",
+		common.Name:     "BOB",
+	}), graph.StringKind("GenericDevice"))
+
+}
+
+type Version730_Migration_Harness struct {
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+}
+
+func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext) {
+	domain1Sid := RandomDomainSID()
+
+	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1Sid)
+	s.Computer1.Properties.Set(ad.SMBSigning.String(), true)
+	graphTestContext.UpdateNode(s.Computer1)
+
+	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1Sid)
+	s.Computer2.Properties.Set(ad.SMBSigning.String(), false)
+	graphTestContext.UpdateNode(s.Computer1)
+}
+
 type HarnessDetails struct {
 	RDP                                             RDPHarness
 	RDPB                                            RDPHarness2
@@ -9818,7 +9878,6 @@ type HarnessDetails struct {
 	MembershipHarness                               MembershipHarness
 	ForeignHarness                                  ForeignDomainHarness
 	TrustDCSync                                     TrustDCSyncHarness
-	Completeness                                    CompletenessHarness
 	AZBaseHarness                                   AZBaseHarness
 	AZGroupMembership                               AZGroupMembershipHarness
 	AZManagementGroup                               AZManagementGroupHarness
@@ -9912,4 +9971,8 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay
 	OwnsWriteOwnerPriorCollectorVersions            OwnsWriteOwnerPriorCollectorVersions
+	GenericIngest                                   GenericIngest
+	ResolveEndpointsByName                          ResolveEndpointsByName
+	IngestRelationships                             IngestRelationships
+	Version730_Migration                            Version730_Migration_Harness
 }
