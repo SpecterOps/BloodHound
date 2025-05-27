@@ -24,8 +24,9 @@ describe('GraphLayoutButtons', () => {
 
     it('should render', () => {
         const testOnReset = vi.fn();
-        const testOnRunStandardLayout = vi.fn();
-        const testOnRunSequentialLayout = vi.fn();
+        // const testOnRunStandardLayout = vi.fn();
+        // const testOnRunSequentialLayout = vi.fn();
+        const testOnLayoutChange = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
         const testOnToggleAllLabels = vi.fn();
@@ -39,8 +40,9 @@ describe('GraphLayoutButtons', () => {
             <SigmaContainer>
                 <GraphButtons
                     onReset={testOnReset}
-                    onRunStandardLayout={testOnRunStandardLayout}
-                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onLayoutChange={testOnLayoutChange}
+                    // onRunStandardLayout={testOnRunStandardLayout}
+                    // onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
                     onToggleAllLabels={testOnToggleAllLabels}
@@ -63,8 +65,9 @@ describe('GraphLayoutButtons', () => {
 
     it('interacting with any menu item closes the menu', async () => {
         const testOnReset = vi.fn();
-        const testOnRunStandardLayout = vi.fn();
-        const testOnRunSequentialLayout = vi.fn();
+        const testOnLayoutChange = vi.fn();
+        // const testOnRunStandardLayout = vi.fn();
+        // const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
         const testOnToggleAllLabels = vi.fn();
@@ -78,8 +81,9 @@ describe('GraphLayoutButtons', () => {
             <SigmaContainer>
                 <GraphButtons
                     onReset={testOnReset}
-                    onRunStandardLayout={testOnRunStandardLayout}
-                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onLayoutChange={testOnLayoutChange}
+                    // onRunStandardLayout={testOnRunStandardLayout}
+                    // onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
                     onToggleAllLabels={testOnToggleAllLabels}
@@ -107,8 +111,9 @@ describe('GraphLayoutButtons', () => {
 
     it('export action is disabled if the canvas is empty', async () => {
         const testOnReset = vi.fn();
-        const testOnRunStandardLayout = vi.fn();
-        const testOnRunSequentialLayout = vi.fn();
+        const testOnLayoutChange = vi.fn();
+        // const testOnRunStandardLayout = vi.fn();
+        // const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
         const testOnToggleAllLabels = vi.fn();
@@ -122,8 +127,9 @@ describe('GraphLayoutButtons', () => {
             <SigmaContainer>
                 <GraphButtons
                     onReset={testOnReset}
-                    onRunStandardLayout={testOnRunStandardLayout}
-                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onLayoutChange={testOnLayoutChange}
+                    // onRunStandardLayout={testOnRunStandardLayout}
+                    // onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
                     onToggleAllLabels={testOnToggleAllLabels}
@@ -148,8 +154,9 @@ describe('GraphLayoutButtons', () => {
 
     it('export action is enabled if the there is graph data saved', async () => {
         const testOnReset = vi.fn();
-        const testOnRunStandardLayout = vi.fn();
-        const testOnRunSequentialLayout = vi.fn();
+        const testOnLayoutChange = vi.fn();
+        // const testOnRunStandardLayout = vi.fn();
+        // const testOnRunSequentialLayout = vi.fn();
         const testOnExportJson = vi.fn();
         const testOnSearchCurrentResults = vi.fn();
         const testOnToggleAllLabels = vi.fn();
@@ -163,8 +170,9 @@ describe('GraphLayoutButtons', () => {
             <SigmaContainer>
                 <GraphButtons
                     onReset={testOnReset}
-                    onRunStandardLayout={testOnRunStandardLayout}
-                    onRunSequentialLayout={testOnRunSequentialLayout}
+                    onLayoutChange={testOnLayoutChange}
+                    // onRunStandardLayout={testOnRunStandardLayout}
+                    // onRunSequentialLayout={testOnRunSequentialLayout}
                     onExportJson={testOnExportJson}
                     onSearchCurrentResults={testOnSearchCurrentResults}
                     onToggleAllLabels={testOnToggleAllLabels}

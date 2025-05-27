@@ -194,3 +194,5 @@ export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
 export * from './Navigation';
+
+export * from './TableView';

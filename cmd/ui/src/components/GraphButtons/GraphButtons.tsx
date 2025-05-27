@@ -22,8 +22,9 @@ import { FC } from 'react';
 
 interface GraphButtonsProps {
     onReset: () => void;
-    onRunStandardLayout: () => void;
-    onRunSequentialLayout: () => void;
+    // onRunStandardLayout: () => void;
+    // onRunSequentialLayout: () => void;
+    onLayoutChange: (layout: string) => void;
     onExportJson: () => void;
     onSearchCurrentResults: () => void;
     onToggleAllLabels: () => void;
@@ -37,8 +38,9 @@ interface GraphButtonsProps {
 
 const GraphButtons: FC<GraphButtonsProps> = ({
     onReset,
-    onRunStandardLayout,
-    onRunSequentialLayout,
+    // onRunStandardLayout,
+    // onRunSequentialLayout,
+    onLayoutChange,
     onExportJson,
     onSearchCurrentResults,
     onToggleAllLabels,
@@ -62,8 +64,9 @@ const GraphButtons: FC<GraphButtonsProps> = ({
             </GraphMenu>
 
             <GraphMenu label='Layout'>
-                <MenuItem onClick={onRunSequentialLayout}>Sequential</MenuItem>
-                <MenuItem onClick={onRunStandardLayout}>Standard</MenuItem>
+                <MenuItem onClick={() => onLayoutChange('sequential')}>Sequential</MenuItem>
+                <MenuItem onClick={() => onLayoutChange('standard')}>Standard</MenuItem>
+                <MenuItem onClick={() => onLayoutChange('table')}>Table</MenuItem>
             </GraphMenu>
 
             <GraphMenu label='Export'>
