@@ -178,7 +178,7 @@ func TestLoginResource_Logout(t *testing.T) {
 
 				bhContext := &ctx.Context{
 					AuthCtx: authContext,
-					Host: request.URL,
+					Host:    request.URL,
 				}
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
@@ -187,8 +187,8 @@ func TestLoginResource_Logout(t *testing.T) {
 				mock.mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/"}},
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 	}
