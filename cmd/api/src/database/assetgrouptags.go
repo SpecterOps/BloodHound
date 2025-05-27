@@ -36,6 +36,8 @@ type AssetGroupTagData interface {
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
+	ShiftTierOrder(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) error
+	GetMaxTierPosition(ctx context.Context) (int32, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -299,12 +301,28 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
 			return err
 		}
+
+		if tag.Type == 1 {
+			if !tag.Position.Valid {
+				if position, err := bhdb.GetMaxTierPosition(ctx); err != nil {
+					return err
+				} else {
+					tag.Position = null.Int32From(position + 1)
+				}
+			}
+			if err := bhdb.CascadeIncrementAssetGroupTagPosition(ctx, user, tag.Position); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return model.AssetGroupTag{}, err
 	}
 	return tag, nil
 }
+
+// returning sql statment RETURNING
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
 	var results = model.AssetGroupTagSelectors{}
@@ -407,4 +425,63 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
+}
+
+// func (s *BloodhoundDB) ShiftTierOrder(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) error {
+
+// 	var (
+// 		userIdStr = user.ID.String()
+// 		tag       = model.AssetGroupTag{
+// 			Type:           tagType,
+// 			CreatedBy:      userIdStr,
+// 			UpdatedBy:      userIdStr,
+// 			Name:           name,
+// 			Description:    description,
+// 			Position:       position,
+// 			RequireCertify: requireCertify,
+// 		}
+
+// 		auditEntry = model.AuditEntry{
+// 			Action: model.AuditLogActionUpdateAssetGroupTag,
+// 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+// 		}
+// 	)
+
+// 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+// 		bhdb := NewBloodhoundDB(tx, s.idResolver)
+// 		if result := tx.Exec(fmt.Sprintf(`UPDATE %s SET position = position + 1 WHERE position >= $1`, tag.TableName()), position); result.Error != nil {
+// 			return CheckError(result)
+// 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
+// 			fmt.Printf("db err is: %v", err)
+// 			return err
+// 		}
+
+// 		return nil
+// 	}); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
+	var max int32
+	var tag model.AssetGroupTag
+
+	if result := s.db.WithContext(ctx).
+		Raw(fmt.Sprintf("SELECT COALESCE(MAX(position), -1) FROM %s", tag.TableName())).
+		Scan(&max); result.Error != nil {
+		return 0, CheckError(result)
+	} else {
+		return max, nil
+	}
+}
+
+func (s *BloodhoundDB) CascadeIncrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error {
+	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+		UPDATE %s
+		SET position = position + 1,
+		    updated_at = NOW(),
+			updated_by = ?
+		WHERE position > ?
+		  AND type = 1`, model.AssetGroupTag{}.TableName()), user.ID.String(), position))
 }

@@ -1375,6 +1375,21 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), ctx, assetGroupID)
 }
 
+// GetMaxTierPosition mocks base method.
+func (m *MockDatabase) GetMaxTierPosition(ctx context.Context) (int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxTierPosition", ctx)
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMaxTierPosition indicates an expected call of GetMaxTierPosition.
+func (mr *MockDatabaseMockRecorder) GetMaxTierPosition(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxTierPosition", reflect.TypeOf((*MockDatabase)(nil).GetMaxTierPosition), ctx)
+}
+
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
@@ -1925,6 +1940,20 @@ func (m *MockDatabase) SetUserSessionFlag(ctx context.Context, userSession *mode
 func (mr *MockDatabaseMockRecorder) SetUserSessionFlag(ctx, userSession, key, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserSessionFlag", reflect.TypeOf((*MockDatabase)(nil).SetUserSessionFlag), ctx, userSession, key, state)
+}
+
+// ShiftTierOrder mocks base method.
+func (m *MockDatabase) ShiftTierOrder(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name, description string, position null.Int32, requireCertify null.Bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShiftTierOrder", ctx, tagType, user, name, description, position, requireCertify)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ShiftTierOrder indicates an expected call of ShiftTierOrder.
+func (mr *MockDatabaseMockRecorder) ShiftTierOrder(ctx, tagType, user, name, description, position, requireCertify any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShiftTierOrder", reflect.TypeOf((*MockDatabase)(nil).ShiftTierOrder), ctx, tagType, user, name, description, position, requireCertify)
 }
 
 // SweepAssetGroupCollections mocks base method.

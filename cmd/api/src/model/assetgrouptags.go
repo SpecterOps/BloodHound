@@ -245,3 +245,24 @@ type AssetGroupSelectorNode struct {
 func (s AssetGroupSelectorNode) TableName() string {
 	return "asset_group_tag_selector_nodes"
 }
+
+type AssetGroupTier struct {
+	ID              int         `json:"id"`
+	AssetGroupTagId null.Int64  `json:"asset_group_tag_id"`
+	CreatedAt       time.Time   `json:"created_at"`
+	CreatedBy       string      `json:"created_by"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	UpdatedBy       string      `json:"updated_by"`
+	DisabledAt      null.Time   `json:"disabled_at"`
+	DisabledBy      null.String `json:"disabled_by"`
+	Name            string      `json:"name" validate:"required"`
+	Description     string      `json:"description"`
+}
+
+type AssetGroupTierRequest struct {
+	Type        string     `json:"type"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	AutoCertify null.Bool  `json:"auto_certify"`
+	Position    null.Int32 `json:"position"`
+}
