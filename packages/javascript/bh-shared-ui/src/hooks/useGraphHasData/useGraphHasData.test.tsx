@@ -46,7 +46,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('useGraphHasData', () => {
-    it('false when no nodes available', async () => {
+    it('returns false when no nodes are available', async () => {
         server.use(
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
                 return res(ctx.json(emptyPayload));
@@ -59,7 +59,7 @@ describe('useGraphHasData', () => {
         expect(result.current.data).toEqual(false);
     });
 
-    it('true when nodes available', async () => {
+    it('returns true when nodes are available', async () => {
         server.use(
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
                 return res(ctx.json(populatedPayload));
@@ -72,7 +72,7 @@ describe('useGraphHasData', () => {
         expect(result.current.data).toEqual(true);
     });
 
-    it('false on 404', async () => {
+    it('returns false on 404', async () => {
         server.use(
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
                 return res(ctx.status(404), ctx.json({}));
