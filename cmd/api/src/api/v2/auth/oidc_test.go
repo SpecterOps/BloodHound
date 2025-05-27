@@ -22,16 +22,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	"github.com/specterops/bloodhound/src/api/v2/auth"
+	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -47,15 +50,15 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 	t.Run("successfully create a new OIDCProvider", func(t *testing.T) {
 		mockDB.EXPECT().GetRole(gomock.Any(), int32(0)).Return(model.Role{}, nil)
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang", "https://localhost/v2auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{
 			ClientID: "bloodhound",
-			Issuer:   "https://localhost/auth",
+			Issuer:   "https://localhost/v2auth",
 		}, nil)
 
 		test.Request(t).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Bloodhound gang",
-				Issuer:   "https://localhost/auth",
+				Issuer:   "https://localhost/v2auth",
 				ClientID: "bloodhound",
 				Config:   &model.SSOProviderConfig{},
 			}).
@@ -74,15 +77,15 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		}
 
 		mockDB.EXPECT().GetRole(gomock.Any(), int32(3)).Return(model.Role{Serial: model.Serial{ID: 3}}, nil)
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang2", "https://localhost/auth", "bloodhound", config).Return(model.OIDCProvider{
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "Bloodhound gang2", "https://localhost/v2auth", "bloodhound", config).Return(model.OIDCProvider{
 			ClientID: "bloodhound",
-			Issuer:   "https://localhost/auth",
+			Issuer:   "https://localhost/v2auth",
 		}, nil)
 
 		test.Request(t).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Bloodhound gang2",
-				Issuer:   "https://localhost/auth",
+				Issuer:   "https://localhost/v2auth",
 				ClientID: "bloodhound",
 				Config:   &config,
 			}).
@@ -95,7 +98,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 		mockDB.EXPECT().GetRole(gomock.Any(), int32(7)).Return(model.Role{Serial: model.Serial{ID: 7}}, fmt.Errorf("role id is invalid"))
 
 		test.Request(t).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Gotham Net 2",
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
@@ -121,7 +124,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 	t.Run("error validating request field", func(t *testing.T) {
 		test.Request(t).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "1234:not:a:url",
 				ClientID: "bloodhound",
@@ -132,7 +135,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	})
 
 	t.Run("error invalid Issuer", func(t *testing.T) {
-		request := auth.UpsertOIDCProviderRequest{
+		request := v2auth.UpsertOIDCProviderRequest{
 			Issuer: "12345:bloodhound",
 		}
 		test.Request(t).
@@ -144,12 +147,12 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
 		mockDB.EXPECT().GetRole(gomock.Any(), int32(0)).Return(model.Role{}, nil)
-		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{}, fmt.Errorf("error"))
+		mockDB.EXPECT().CreateOIDCProvider(gomock.Any(), "test", "https://localhost/v2auth", "bloodhound", model.SSOProviderConfig{}).Return(model.OIDCProvider{}, fmt.Errorf("error"))
 
 		test.Request(t).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "test",
-				Issuer:   "https://localhost/auth",
+				Issuer:   "https://localhost/v2auth",
 				ClientID: "bloodhound",
 				Config:   &model.SSOProviderConfig{},
 			}).
@@ -181,7 +184,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithURLPathVars(urlParams).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Gotham Net 2",
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
@@ -198,7 +201,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithURLPathVars(urlParams).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Gotham Net 2",
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
@@ -221,7 +224,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithURLPathVars(urlParams).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "Gotham Net 2",
 				Issuer:   "https://gotham-2.net",
 				ClientID: "gotham-net-2",
@@ -263,7 +266,7 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithURLPathVars(urlParams).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "test",
 				Issuer:   "1234:not:a:url",
 				ClientID: "bloodhound",
@@ -279,9 +282,9 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 
 		test.Request(t).
 			WithURLPathVars(urlParams).
-			WithBody(auth.UpsertOIDCProviderRequest{
+			WithBody(v2auth.UpsertOIDCProviderRequest{
 				Name:     "test",
-				Issuer:   "https://localhost/auth",
+				Issuer:   "https://localhost/v2auth",
 				ClientID: "bloodhound",
 			}).
 			OnHandlerFunc(resources.UpdateSSOProvider).
@@ -293,192 +296,162 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 	t.Parallel()
 
-	type request struct {
-		method string
-		url    string
-		ctx    context.Context
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
 	}
-
-	type response struct {
-		statusCode   int
-		headers      map[string]string
-		cookieNames  []string
-		errorMessage string
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
 	}
-
 	type testData struct {
-		name        string
-		ssoProvider model.SSOProvider
-		setupMocks  func(*testing.T, *mocks.MockDatabase)
-		request     request
-		response    response
-		skip        bool
+		name         string
+		args         model.SSOProvider
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
-
-	mockHost := func(t *testing.T) *url.URL {
-		host, err := url.Parse("https://example.com")
-		require.NoError(t, err)
-		return host
-	}
-
-	createContext := func(t *testing.T) context.Context {
-		host := mockHost(t)
-		bhContext := &ctx.Context{
-			Host: host,
-		}
-		return ctx.Set(context.Background(), bhContext)
-	}
-
-	testProvider := func(includeOIDC bool) model.SSOProvider {
-		provider := model.SSOProvider{
-			Name: "Test Provider",
-			Type: model.SessionAuthProviderOIDC,
-			Slug: "test-provider",
-			Config: model.SSOProviderConfig{
-				AutoProvision: model.SSOProviderAutoProvisionConfig{
-					Enabled:       true,
-					RoleProvision: true,
-					DefaultRoleId: 1,
-				},
-			},
-			Serial: model.Serial{
-				ID: 1,
-			},
-		}
-
-		if includeOIDC {
-			provider.OIDCProvider = &model.OIDCProvider{
-				Issuer:   "https://test-issuer.com",
-				ClientID: "test-client-id",
-			}
-		}
-
-		return provider
-	}
-
-	errorMessage := "Your SSO connection failed due to misconfiguration, please contact your Administrator"
 
 	tt := []testData{
 		{
-			name:        "Error: No OIDC Provider - Redirect to Login",
-			ssoProvider: testProvider(false),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			request: request{
-				method: http.MethodGet,
-				url:    "/api/v2/auth/sso/oidc/login",
-				ctx:    createContext(t),
-			},
-			response: response{
-				statusCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": fmt.Sprintf("/ui/login?error=%s", url.QueryEscape(errorMessage)),
+			name: "Error: No OIDC Provider, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
 				},
-				cookieNames:  []string{},
-				errorMessage: errorMessage,
+				Serial: model.Serial{
+					ID: 1,
+				},
+			},
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 		{
-			name:        "Error: OIDC Provider Creation Fails - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			request: request{
-				method: http.MethodGet,
-				url:    "/api/v2/auth/sso/oidc/login",
-				ctx:    createContext(t),
-			},
-			response: response{
-				statusCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": fmt.Sprintf("/ui/login?error=%s", url.QueryEscape(errorMessage)),
+			name: "Error: OIDC Provider Creation Fails oidc.NewProvider, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
 				},
-				cookieNames:  []string{},
-				errorMessage: errorMessage,
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
+			},
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
-		{
-			name:        "Success: OIDC Login - Redirect to Provider",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			request: request{
-				method: http.MethodGet,
-				url:    "/api/v2/auth/sso/oidc/login",
-				ctx:    createContext(t),
-			},
-			response: response{
-				statusCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": "",
-				},
-				cookieNames: []string{api.AuthPKCECookieName, api.AuthStateCookieName},
-			},
-			skip: true,
-		},
+		// TODO: BED-5641 Will require further abstraction of http package for this to be testable
+		// {
+		// 	name: "Success: OIDC Login, Redirect to Provider - Found",
+		// 	args: model.SSOProvider{
+		// 		Name: "Test Provider",
+		// 		Type: model.SessionAuthProviderOIDC,
+		// 		Slug: "test-provider",
+		// 		Config: model.SSOProviderConfig{
+		// 			AutoProvision: model.SSOProviderAutoProvisionConfig{
+		// 				Enabled:       true,
+		// 				RoleProvision: true,
+		// 				DefaultRoleId: 1,
+		// 			},
+		// 		},
+		// 		Serial: model.Serial{
+		// 			ID: 1,
+		// 		},
+		// 		OIDCProvider: &model.OIDCProvider{
+		// 			Issuer:   "https://test-issuer.com",
+		// 			ClientID: "test-client-id",
+		// 		},
+		// 	},
+		// 	buildRequest: func() *http.Request {
+		// 		request := http.Request{
+		// 			URL: mockHost(),
+		// 		}
+
+		// 		bhContext := &ctx.Context{
+		// 			Host: request.URL,
+		// 		}
+
+		// 		return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+		// 	},
+		// 	setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+		// 	expected: expected{
+		// 		responseCode:    http.StatusFound,
+		// 		responseHeader:  http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
+		// 	},
+		// },
 	}
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
-			if testCase.skip {
-				t.Skip("Skipping test that requires external OIDC provider connectivity")
-			}
-
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-			testCase.setupMocks(t, mockDB)
-
-			req, err := http.NewRequest(testCase.request.method, testCase.request.url, nil)
-			require.NoError(t, err)
-			req = req.WithContext(testCase.request.ctx)
-
-			recorder := httptest.NewRecorder()
-
-			resources.OIDCLoginHandler(recorder, req, testCase.ssoProvider)
-
-			status, headers, _ := test.ProcessResponse(t, recorder)
-
-			assert.Equal(t, testCase.response.statusCode, status,
-				"Status code should match expected")
-
-			for key, expectedValue := range testCase.response.headers {
-				if key == "Location" && testCase.name == "Success: OIDC Login - Redirect to Provider" {
-					assert.Contains(t, headers.Get(key), "response_type=code",
-						"Location header should contain response_type")
-					assert.Contains(t, headers.Get(key), "client_id=test-client-id",
-						"Location header should contain client_id")
-					assert.Contains(t, headers.Get(key), "state=",
-						"Location header should contain state parameter")
-					assert.Contains(t, headers.Get(key), "code_challenge=",
-						"Location header should contain code_challenge")
-				} else if expectedValue != "" {
-					assert.Contains(t, headers.Get(key), expectedValue,
-						fmt.Sprintf("Header '%s' should contain expected value", key))
-				}
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
-			if testCase.response.errorMessage != "" {
-				location := headers.Get("Location")
-				assert.Contains(t, location, "/ui/login",
-					"Location header should redirect to login page")
-				assert.Contains(t, location, url.QueryEscape(testCase.response.errorMessage),
-					"Location header should contain error message")
-			}
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
-			if len(testCase.response.cookieNames) > 0 {
-				cookies := recorder.Result().Cookies()
-				cookieMap := make(map[string]bool)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
-				for _, cookie := range cookies {
-					cookieMap[cookie.Name] = true
-				}
+			response := httptest.NewRecorder()
 
-				for _, expectedCookie := range testCase.response.cookieNames {
-					assert.True(t, cookieMap[expectedCookie],
-						fmt.Sprintf("Response should contain cookie '%s'", expectedCookie))
-				}
-			}
+			resource.OIDCLoginHandler(response, request, testCase.args)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, _ := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 		})
 	}
 }
@@ -486,227 +459,362 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode    int
-		redirectToLogin bool
-		errorMessage    string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
 		name         string
-		ssoProvider  model.SSOProvider
-		setupMocks   func(*testing.T, *mocks.MockDatabase)
+		args         model.SSOProvider
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
-		setupHost    func(*testing.T) *url.URL
-		setupCookies func(*testing.T, *http.Request)
-		formParams   map[string]string
 	}
-
-	mockHost := func(t *testing.T) *url.URL {
-		host, err := url.Parse("https://example.com")
-		require.NoError(t, err)
-		return host
-	}
-
-	testProvider := func(includeOIDC bool) model.SSOProvider {
-		provider := model.SSOProvider{
-			Name: "Test Provider",
-			Type: model.SessionAuthProviderOIDC,
-			Slug: "test-provider",
-			Config: model.SSOProviderConfig{
-				AutoProvision: model.SSOProviderAutoProvisionConfig{
-					Enabled:       true,
-					RoleProvision: true,
-					DefaultRoleId: 1,
-				},
-			},
-			Serial: model.Serial{
-				ID: 1,
-			},
-		}
-
-		if includeOIDC {
-			provider.OIDCProvider = &model.OIDCProvider{
-				Issuer:   "https://test-issuer.com",
-				ClientID: "test-client-id",
-			}
-		}
-
-		return provider
-	}
-
-	validCookies := func(t *testing.T, req *http.Request) {
-		stateCookie := &http.Cookie{
-			Name:     api.AuthStateCookieName,
-			Value:    "valid-state",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		pkceCookie := &http.Cookie{
-			Name:     api.AuthPKCECookieName,
-			Value:    "valid-pkce",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		req.AddCookie(stateCookie)
-		req.AddCookie(pkceCookie)
-	}
-
-	noCookies := func(t *testing.T, req *http.Request) {
-		// No cookies added
-	}
-
-	onlyStateCookie := func(t *testing.T, req *http.Request) {
-		stateCookie := &http.Cookie{
-			Name:     api.AuthStateCookieName,
-			Value:    "valid-state",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		req.AddCookie(stateCookie)
-	}
-
-	onlyPKCECookie := func(t *testing.T, req *http.Request) {
-		pkceCookie := &http.Cookie{
-			Name:     api.AuthPKCECookieName,
-			Value:    "valid-pkce",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		req.AddCookie(pkceCookie)
-	}
-
-	invalidStateCookie := func(t *testing.T, req *http.Request) {
-		stateCookie := &http.Cookie{
-			Name:     api.AuthStateCookieName,
-			Value:    "invalid-state",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		pkceCookie := &http.Cookie{
-			Name:     api.AuthPKCECookieName,
-			Value:    "valid-pkce",
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-		}
-		req.AddCookie(stateCookie)
-		req.AddCookie(pkceCookie)
-	}
-
 	tt := []testData{
 		{
-			name:        "Error: No OIDC Provider - Redirect to Login",
-			ssoProvider: testProvider(false),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+			name: "Error: No OIDC Provider, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: noCookies,
-			formParams: map[string]string{
-				api.FormParameterCode:  "auth-code",
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: Missing Code Parameter - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Invalid SSO Provider response: `code` parameter is missing",
+			name: "Error: Empty Authorization Code, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: noCookies,
-			formParams: map[string]string{
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: Missing State Parameter - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Invalid SSO Provider response: `state` parameter is missing",
+			name: "Error: Empty State, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: noCookies,
-			formParams: map[string]string{
-				api.FormParameterCode: "auth-code",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Form: url.Values{},
+				}
+
+				request.Form.Add("code", "test")
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: Missing PKCE Cookie - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Invalid request: `pkce` is missing",
+			name: "Error: Auth PKCE Cookie ErrNoCookie, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: onlyStateCookie,
-			formParams: map[string]string{
-				api.FormParameterCode:  "auth-code",
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Form: url.Values{},
+				}
+
+				request.Form.Add("code", "test")
+				request.Form.Add("state", "test")
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: Missing State Cookie - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Invalid request: `state` is missing",
+			name: "Error: Auth State Cookie ErrNoCookie, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: onlyPKCECookie,
-			formParams: map[string]string{
-				api.FormParameterCode:  "auth-code",
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Form:   url.Values{},
+					Header: http.Header{},
+				}
+
+				request.Form.Add("code", "test")
+				request.Form.Add("state", "test")
+
+				pkceCookie := &http.Cookie{
+					Name:     api.AuthPKCECookieName,
+					Value:    "valid-pkce",
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				}
+				request.AddCookie(pkceCookie)
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: State Mismatch - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Invalid: `state` do not match",
+			name: "Error: State Mismatch, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: invalidStateCookie,
-			formParams: map[string]string{
-				api.FormParameterCode:  "auth-code",
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Form:   url.Values{},
+					Header: http.Header{},
+				}
+
+				request.Form.Add("code", "test")
+				request.Form.Add("state", "test")
+
+				pkceCookie := &http.Cookie{
+					Name:     api.AuthPKCECookieName,
+					Value:    "valid-pkce",
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				}
+				request.AddCookie(pkceCookie)
+
+				stateCookie := &http.Cookie{
+					Name:     api.AuthStateCookieName,
+					Value:    "state",
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				}
+				request.AddCookie(stateCookie)
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
-			name:        "Error: OIDC Provider Creation Fails - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks:  func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+			name: "Error: oidc.NewProvider Error, Redirect to Login - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
 			},
-			setupHost:    mockHost,
-			setupCookies: validCookies,
-			formParams: map[string]string{
-				api.FormParameterCode:  "auth-code",
-				api.FormParameterState: "valid-state",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Form:   url.Values{},
+					Header: http.Header{},
+				}
+
+				request.Form.Add("code", "test")
+				request.Form.Add("state", "state")
+
+				pkceCookie := &http.Cookie{
+					Name:     api.AuthPKCECookieName,
+					Value:    "valid-pkce",
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				}
+				request.AddCookie(pkceCookie)
+
+				stateCookie := &http.Cookie{
+					Name:     api.AuthStateCookieName,
+					Value:    "state",
+					Path:     "/",
+					Secure:   true,
+					HttpOnly: true,
+				}
+				request.AddCookie(stateCookie)
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 	}
@@ -714,52 +822,50 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			host := testCase.setupHost(t)
-
-			req := httptest.NewRequest("POST", "/api/v2/auth/sso/oidc/callback", nil)
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-			req.Form = url.Values{}
-			for key, value := range testCase.formParams {
-				req.Form.Add(key, value)
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
-			testCase.setupCookies(t, req)
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
-			bhContext := &ctx.Context{
-				Host: host,
-			}
-
-			goContext := ctx.Set(context.Background(), bhContext)
-			req = req.WithContext(goContext)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.OIDCCallbackHandler(response, req, testCase.ssoProvider)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.OIDCCallbackHandler(response, request, testCase.args)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			if testCase.expected.redirectToLogin {
-				location := response.Header().Get("Location")
-				require.NotEmpty(t, location)
+			status, header, _ := test.ProcessResponse(t, response)
 
-				assert.Contains(t, location, "/ui/login")
-				assert.Contains(t, location, url.QueryEscape(testCase.expected.errorMessage))
-			}
+			updatedHeader := zeroOutExpiresHeader(header)
 
-			cookies := response.Result().Cookies()
-			for _, cookie := range cookies {
-				if cookie.Name == api.AuthPKCECookieName || cookie.Name == api.AuthStateCookieName {
-					assert.LessOrEqual(t, cookie.MaxAge, 0, "Auth cookies should be deleted")
-				}
-			}
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, updatedHeader)
 		})
 	}
+}
+
+func zeroOutExpiresHeader(headers http.Header) http.Header {
+	const zeroTime = "Thu, 01 Jan 1970 00:00:00 GMT"
+
+	cookies := headers["Set-Cookie"]
+	for i, cookie := range cookies {
+		// Replace Expires attribute
+		if strings.Contains(cookie, "Expires=") {
+			start := strings.Index(cookie, "Expires=")
+			end := strings.Index(cookie[start:], ";")
+			if end == -1 {
+				// No following attribute, just slice to end
+				cookies[i] = cookie[:start] + "Expires=" + zeroTime
+			} else {
+				end += start // adjust to full string index
+				cookies[i] = cookie[:start] + "Expires=" + zeroTime + cookie[end:]
+			}
+		}
+	}
+	headers["Set-Cookie"] = cookies
+	return headers
 }
