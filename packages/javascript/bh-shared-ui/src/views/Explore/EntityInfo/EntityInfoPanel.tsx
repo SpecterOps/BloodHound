@@ -19,7 +19,7 @@ import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils'
 import { usePaneStyles } from '../InfoStyles';
 import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
 
-import { SelectedNode } from '../../../utils';
+import { SelectedNode } from '../../../types';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 

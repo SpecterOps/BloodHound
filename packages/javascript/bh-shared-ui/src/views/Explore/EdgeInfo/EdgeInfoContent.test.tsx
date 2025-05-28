@@ -16,20 +16,10 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import * as useExploreParams from '../../../hooks/useExploreParams';
 import { SelectedEdge } from '../../../store';
 import { render, screen, waitFor } from '../../../test-utils';
 import { ObjectInfoPanelContextProvider } from '../providers';
 import EdgeInfoContent from './EdgeInfoContent';
-
-const useExploreParamsSpy = vi.spyOn(useExploreParams, 'useExploreParams');
-const mockSetExploreParams = vi.fn();
-const testSelectedItem = 'fake_edge_id';
-useExploreParamsSpy.mockReturnValue({
-    expandedPanelSections: [],
-    selectedItem: testSelectedItem,
-    setExploreParams: mockSetExploreParams,
-} as any);
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {

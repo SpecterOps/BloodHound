@@ -230,13 +230,16 @@ describe('Selector Form', () => {
     });
 
     test('filling in the name value submits the form and navigates back to the details page', async () => {
-        render(
-            <Routes>
-                <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />;
-            </Routes>,
-            { route: editExistingPath }
-        );
+        await act(async () => {
+            render(
+                <Routes>
+                    <Route path={'/'} element={<SelectorForm />} />;
+                    <Route path={'/tier-management/details/tags/:tagId'} element={<SelectorForm />} />
+                    <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />
+                </Routes>,
+                { route: editExistingPath }
+            );
+        });
 
         const nameInput = await screen.findByLabelText('Name');
 

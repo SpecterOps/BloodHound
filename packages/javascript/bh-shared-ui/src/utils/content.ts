@@ -18,13 +18,6 @@ import { RequestOptions } from 'js-client-library';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../graphSchema';
 import { apiClient } from './api';
 
-export type SelectedNode = {
-    id: string;
-    type: EntityKinds;
-    name: string;
-    graphId?: string;
-};
-
 type EntitySectionEndpointParams = {
     id: string;
     counts?: boolean;

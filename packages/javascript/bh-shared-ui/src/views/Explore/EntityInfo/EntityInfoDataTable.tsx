@@ -17,7 +17,8 @@ import { useQuery } from 'react-query';
 import InfiniteScrollingTable from '../../../components/InfiniteScrollingTable';
 import { NODE_GRAPH_RENDER_LIMIT } from '../../../constants';
 import { useExploreParams } from '../../../hooks';
-import { EntityInfoDataTableProps, SelectedNode, entityRelationshipEndpoints } from '../../../utils';
+import { SelectedNode } from '../../../types';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({

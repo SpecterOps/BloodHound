@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods, this will clear them up
+/**
+ * Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods; running this
+ * function in your test file will prevent those errors.
+ */
 export const mockCodemirrorLayoutMethods = () => {
     const getBoundingClientRect = (): DOMRect => {
         const rec = {
@@ -41,4 +44,20 @@ export const mockCodemirrorLayoutMethods = () => {
     HTMLElement.prototype.getClientRects = (): DOMRectList => new FakeDOMRectList();
     Range.prototype.getBoundingClientRect = getBoundingClientRect;
     Range.prototype.getClientRects = (): DOMRectList => new FakeDOMRectList();
+};
+
+/**
+ * Some asynchronous actions that we may use in tests, such as vitest's timer methods, require us to silence the
+ * `An update to ... inside a test was not wrapped in act(...)` warning ourselves.
+ *
+ * Reference: https://github.com/vitest-dev/vitest/issues/7196#issuecomment-2579005069
+ * @param callback - async function to run while `act` warnings are toggled off
+ */
+export const disableActWarningsForAsync = async (callback: () => any) => {
+    (globalThis as any).IS_REACT_ACT_ENVIRONMENT = false;
+    try {
+        await callback();
+    } finally {
+        (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+    }
 };

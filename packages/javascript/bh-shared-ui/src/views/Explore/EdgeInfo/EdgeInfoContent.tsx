@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { ElementType, FC, Fragment } from 'react';
-import EdgeInfoComponents, { EdgeInfoProps } from '../../../components/HelpTexts';
+import EdgeInfoComponents from '../../../components/HelpTexts';
 import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
 import { EdgeSections, SelectedEdge } from '../../../store';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
@@ -41,8 +41,6 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                         const Section = section[1] as ElementType;
                         const sectionKeyLabel = section[0] as keyof typeof EdgeSections;
 
-                        const clickableEdgeItems = ['relaytargets', 'coerciontargets'];
-
                         const isExpandedPanelSection = (expandedPanelSections as string[]).includes(sectionKeyLabel);
 
                         const setExpandedPanelSectionsParam = () => {
@@ -66,14 +64,6 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                             else removeExpandedPanelSectionParams();
                         };
 
-                        const handleRelayTargetsItemClick: EdgeInfoProps['onNodeClick'] = (node) => {
-                            setExploreParams({
-                                primarySearch: node.objectId,
-                                searchType: 'node',
-                                exploreSearchTab: 'node',
-                            });
-                        };
-
                         return (
                             <Fragment key={index}>
                                 <Box padding={1}>
@@ -93,11 +83,6 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                         targetType={targetNode.type}
                                         targetId={targetNode.objectId}
                                         haslaps={!!targetNodeProperties?.haslaps}
-                                        onNodeClick={
-                                            clickableEdgeItems.includes(section[0])
-                                                ? handleRelayTargetsItemClick
-                                                : undefined
-                                        }
                                     />
                                 </EdgeInfoCollapsibleSection>
                             </Fragment>

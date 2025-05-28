@@ -18,6 +18,7 @@ import { useSnackbar } from 'notistack';
 import { SNACKBAR_DURATION, SNACKBAR_DURATION_LONG } from '../constants';
 import { useNotifications } from '../providers';
 import { act, renderHook, screen } from '../test-utils';
+import { disableActWarningsForAsync } from '../utils/testHelpers';
 const message = 'This is a notification';
 const messageKey = 'messageKey';
 
@@ -61,14 +62,16 @@ describe('AppNotifications', () => {
     it('renders a snackbar notification in the dom and tests autoHideDuration', async () => {
         const snack = renderHook(() => useSnackbar());
         vi.useFakeTimers();
-        await act(() =>
+        await act(async () =>
             snack.result.current.enqueueSnackbar('test message', {
                 autoHideDuration: SNACKBAR_DURATION,
             })
         );
         expect(await screen.findByText('test message')).toBeInTheDocument();
         //adding 1s cushion to the timer to allow for transition timing
-        await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION + 1000);
+
+        await disableActWarningsForAsync(() => vi.advanceTimersByTimeAsync(SNACKBAR_DURATION + 1000));
+
         expect(screen.queryByText('test message')).not.toBeInTheDocument();
     });
 
@@ -82,7 +85,9 @@ describe('AppNotifications', () => {
         );
         expect(await screen.findByText('test message')).toBeInTheDocument();
         //adding 1s cushion to the timer to allow for transition timing
-        await vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000);
+
+        await disableActWarningsForAsync(() => vi.advanceTimersByTimeAsync(SNACKBAR_DURATION_LONG + 1000));
+
         expect(screen.queryByText('test message')).not.toBeInTheDocument();
     });
 });
