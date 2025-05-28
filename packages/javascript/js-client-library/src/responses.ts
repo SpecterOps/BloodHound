@@ -22,6 +22,7 @@ import {
     AssetGroupTagSelectorsCounts,
     CollectorManifest,
     CommunityCollectorType,
+    CustomNodeKindType,
     EnterpriseCollectorType,
     GraphData,
     NodeSourceTypes,
@@ -291,3 +292,5 @@ export type GetCollectorsResponse = BasicResponse<{
 export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityCollectorType, CollectorManifest[]>>;
 
 export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
+
+export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;

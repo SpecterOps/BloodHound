@@ -22,29 +22,23 @@ import {
     GroupManagementContent,
     HIGH_VALUE_LABEL,
     Permission,
+    SelectedNode,
     TIER_ZERO_TAG,
     createTypedSearchParams,
-    searchbarActions,
     useAppNavigate,
     useExploreParams,
-    useFeatureFlag,
     useInitialEnvironment,
     useNodeByObjectId,
     usePermissions,
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
-import { setSelectedNode } from 'src/ducks/entityinfo/actions';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import { useAppDispatch } from 'src/store';
 import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
-    const dispatch = useAppDispatch();
     const navigate = useAppNavigate();
-    const backButtonFlagQuery = useFeatureFlag('back_button_support');
 
     const { data: environment } = useInitialEnvironment({ orderBy: 'name' });
 
@@ -61,34 +55,21 @@ const GroupManagement = () => {
             type: member.primary_kind as EntityKinds,
             name: member.name,
         });
-        if (backButtonFlagQuery.data?.enabled) {
-            setExploreParams({ expandedPanelSections: null });
-        }
+
+        setExploreParams({ expandedPanelSections: null });
     };
 
     const handleShowNodeInExplore = () => {
         if (openNode) {
-            const searchNode = {
-                objectid: openNode.id,
-                label: openNode.name,
-                ...openNode,
-            };
-
-            if (backButtonFlagQuery.data?.enabled) {
-                navigate({
-                    pathname: ROUTE_EXPLORE,
-                    search: createTypedSearchParams<ExploreQueryParams>({
-                        selectedItem: getGraphNodeByObjectId.data?.id,
-                        primarySearch: openNode?.id,
-                        searchType: 'node',
-                        exploreSearchTab: 'node',
-                    }),
-                });
-            } else {
-                dispatch(searchbarActions.sourceNodeSelected(searchNode));
-                dispatch(setSelectedNode(openNode));
-                navigate(ROUTE_EXPLORE);
-            }
+            navigate({
+                pathname: ROUTE_EXPLORE,
+                search: createTypedSearchParams<ExploreQueryParams>({
+                    selectedItem: getGraphNodeByObjectId.data?.id,
+                    primarySearch: openNode?.id,
+                    searchType: 'node',
+                    exploreSearchTab: 'node',
+                }),
+            });
         }
     };
 

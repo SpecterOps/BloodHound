@@ -19,7 +19,18 @@ import { setupServer } from 'msw/node';
 import { render, screen } from '../../../test-utils';
 import ObjectCountPanel from './ObjectCountPanel';
 
-const server = setupServer();
+const server = setupServer(
+    rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    total_count: 0,
+                    counts: [],
+                },
+            })
+        );
+    })
+);
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());

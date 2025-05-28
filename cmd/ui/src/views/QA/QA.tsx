@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const QualityAssuranceV2: React.FC = () => {
+const QualityAssurance: React.FC = () => {
     const { data: initialEnvironment, isLoading } = useInitialEnvironment({ orderBy: 'name' });
 
     const [selectedEnvironment, setSelectedEnvironment] = useState<SelectedEnvironment | null>(
@@ -154,7 +154,7 @@ const QualityAssuranceV2: React.FC = () => {
     );
 };
 
-export default QualityAssuranceV2;
+export default QualityAssurance;
 
 const QualityAssuranceDescription = () => (
     <Typography variant='body2' paragraph>

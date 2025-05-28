@@ -14,17 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useFeatureFlag } from 'bh-shared-ui';
-import React from 'react';
-import GraphView from './GraphView';
-import GraphViewV2 from './GraphViewV2';
+package fs
 
-interface GraphViewFeatureToggleProps {}
+import "os"
 
-const GraphViewFeatureToggle: React.FC<GraphViewFeatureToggleProps> = () => {
-    const { data: flag } = useFeatureFlag('back_button_support');
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
 
-    return flag?.enabled ? <GraphViewV2 /> : <GraphView />;
-};
+// Serves as a lightweight wrapper around the os package which allows for
+// path management to be abstracted.
+type Service interface {
+	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+}
 
-export default GraphViewFeatureToggle;
+type Client struct{}
+
+func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
+	return os.CreateTemp(dir, pattern)
+}

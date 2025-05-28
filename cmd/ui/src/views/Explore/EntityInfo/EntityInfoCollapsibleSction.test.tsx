@@ -17,7 +17,6 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from 'src/test-utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
-import { EntityInfoPanelContextProvider } from './EntityInfoPanelContextProvider';
 
 describe('EntityInfoCollapsibleSection', () => {
     it('renders an error message without throwing a TypeError', async () => {
@@ -31,17 +30,15 @@ describe('EntityInfoCollapsibleSection', () => {
         const error = {};
 
         render(
-            <EntityInfoPanelContextProvider>
-                <EntityInfoCollapsibleSection
-                    label={testLabel}
-                    count={testCount}
-                    onChange={testOnChange}
-                    isLoading={testIsLoading}
-                    isError={testIsError}
-                    error={error}
-                    isExpanded={isExpanded}
-                />
-            </EntityInfoPanelContextProvider>
+            <EntityInfoCollapsibleSection
+                label={testLabel}
+                count={testCount}
+                onChange={testOnChange}
+                isLoading={testIsLoading}
+                isError={testIsError}
+                error={error}
+                isExpanded={isExpanded}
+            />
         );
 
         expect(screen.getByText(testLabel)).toBeInTheDocument();
