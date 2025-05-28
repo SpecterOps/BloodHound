@@ -283,10 +283,12 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			if body != "" {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
 			}
 		})
 	}
@@ -464,10 +466,12 @@ func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			if body != "" {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
 			}
 		})
 	}

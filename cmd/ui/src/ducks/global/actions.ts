@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { SNACKBAR_DURATION } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { OptionsObject, SnackbarKey } from 'notistack';
 import * as types from './types';
@@ -35,7 +36,7 @@ export const addSnackbar = (
             message: notification,
             key: key || (new Date().getTime() + Math.random()).toString(),
             options: {
-                autoHideDuration: 5000,
+                autoHideDuration: SNACKBAR_DURATION,
                 ...options,
             },
             dismissed: false,

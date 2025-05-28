@@ -34,6 +34,13 @@ const server = setupServer(
                 data: assetGroupMembers,
             })
         );
+    }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

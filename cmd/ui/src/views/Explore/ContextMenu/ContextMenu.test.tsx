@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, EntityKinds, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { DeepPartial, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -68,13 +68,6 @@ afterAll(() => server.close());
 
 const setup = async (permissions?: Permission[], primarySearch?: string, secondarySearch?: string) => {
     const initialState: DeepPartial<AppState> = {
-        entityinfo: {
-            selectedNode: {
-                name: 'foo',
-                id: '1234',
-                type: 'User' as EntityKinds,
-            },
-        },
         assetgroups: {
             assetGroups: [
                 { tag: 'owned', id: 1 },

@@ -37,7 +37,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -95,10 +94,10 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -124,7 +123,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
 			},
@@ -156,7 +155,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
 			},
@@ -188,7 +187,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
@@ -225,7 +224,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
@@ -263,7 +262,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
@@ -300,7 +299,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
@@ -328,7 +327,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 
 				return mux.SetURLVars(request, param)
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
@@ -355,7 +354,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks, request)
 
 			resources := v2.Resources{
 				DB: mocks.mockDatabase,
@@ -368,10 +367,12 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			if body != "" {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
 			}
 		})
 	}

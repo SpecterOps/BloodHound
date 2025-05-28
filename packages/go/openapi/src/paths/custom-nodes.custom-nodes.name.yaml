@@ -39,6 +39,13 @@ get:
         application/json:
           schema:
             $ref: './../schemas/model.custom-node.yaml'
+          example:
+            id: 1
+            kindName: "KindA"
+            config:
+              type: "font-awesome"
+              name: "house"
+              color: "#FFFFFF"
     401:
       $ref: './../responses/unauthorized.yaml'
     404:
@@ -49,8 +56,10 @@ put:
   operationId: UpdateCustomNode
   summary: Update custom node
   description: |
-    Update the configuration for a specific custom node kind.
-    Returns the updated configuration for the specific node kind.
+    This endpoint updates an existing node kind along with optional display metadata such as icons and colors.
+    The provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.
+    Only free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.
+    If no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.
   tags:
     - Custom Node Management
     - Community
@@ -64,6 +73,12 @@ put:
           properties:
             config:
               $ref: './../schemas/model.custom-node.config.yaml'
+        example:
+          config:
+            icon:
+              type: "font-awesome"
+              name: "house"
+              color: "#333"
   responses:
     200:
       description: OK

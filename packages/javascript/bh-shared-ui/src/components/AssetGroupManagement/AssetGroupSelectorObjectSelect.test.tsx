@@ -42,6 +42,24 @@ describe('AssetGroupSelectorObjectSelect', () => {
 
     const setSeeds = vi.fn();
 
+    const server = setupServer(
+        rest.get(`/api/v2/search`, (_, res, ctx) => {
+            return res(ctx.json(testSearchResults));
+        }),
+        rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {},
+                })
+            );
+        })
+    );
+    beforeAll(() => server.listen());
+    afterEach(() => {
+        server.resetHandlers();
+    });
+    afterAll(() => server.close());
+
     beforeEach(async () => {
         await act(async () => {
             render(<AssetGroupSelectorObjectSelect setSeeds={setSeeds} seeds={seeds} />);
@@ -63,12 +81,6 @@ describe('AssetGroupSelectorObjectSelect', () => {
     });
 
     it('invokes setSeeds when a new seed is selected', async () => {
-        const server = setupServer(
-            rest.get(`/api/v2/search`, (_, res, ctx) => {
-                return res(ctx.json(testSearchResults));
-            })
-        );
-
         server.listen();
 
         await screen.findByTestId('explore_search_input-search');

@@ -16,11 +16,9 @@
 
 import { all, call } from 'redux-saga/effects';
 import assetgroupsSaga from 'src/ducks/assetgroups/saga';
-import exploreSaga from 'src/ducks/explore/saga';
-import searchSaga from 'src/ducks/searchbar/saga';
 import tierZeroSaga from 'src/ducks/tierzero/saga';
 
-const sagas = [call(exploreSaga), call(searchSaga), call(tierZeroSaga), call(assetgroupsSaga)];
+const sagas = [call(tierZeroSaga), call(assetgroupsSaga)];
 
 export default function* rootSaga() {
     yield all(sagas);

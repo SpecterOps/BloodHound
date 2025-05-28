@@ -195,4 +195,8 @@ describe('MainNav', () => {
         expect(poweredByText).toHaveClass('group-hover:flex');
         // ---- classes displayed on hover ----
     });
+    it('should have a .z-nav class', () => {
+        const navbarElement = screen.getByRole('navigation');
+        expect(navbarElement).toHaveClass('z-nav');
+    });
 });

@@ -17,9 +17,9 @@
 import { faBullseye, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
-import { SearchValue } from '../../../store';
 import { EdgeFilter, PathfindingFilterState } from './EdgeFilter';
 import PathfindingSwapButton from './PathfindingSwapButton';
+import { SearchValue } from './types';
 
 type PathfindingSearchState = {
     sourceSearchTerm: string;

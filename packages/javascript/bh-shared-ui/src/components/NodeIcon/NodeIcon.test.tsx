@@ -14,19 +14,79 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '../../test-utils';
+import { GetCustomNodeKindsResponse } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act, render } from '../../test-utils';
 import NodeIcon from './NodeIcon';
 
+const icons: GetCustomNodeKindsResponse = {
+    data: [
+        {
+            id: 1,
+            kindName: 'KindA',
+            config: {
+                icon: {
+                    type: 'font-awesome',
+                    name: 'coffee',
+                    color: '#333333',
+                },
+            },
+        },
+        {
+            id: 1,
+            kindName: 'Group',
+            config: {
+                icon: {
+                    type: 'font-awesome',
+                    name: 'house',
+                    color: '#FFFFFF',
+                },
+            },
+        },
+    ],
+};
+
+const server = setupServer(
+    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+        return res(ctx.json(icons));
+    })
+);
+beforeAll(() => server.listen());
+afterEach(() => {
+    server.resetHandlers();
+});
+afterAll(() => server.close());
+
 describe('NodeIcon', () => {
-    it('renders correctly', () => {
-        render(<NodeIcon nodeType={'User'} />);
+    const setup = async (nodeType: string) => {
+        const screen = await act(async () => {
+            return render(<NodeIcon nodeType={nodeType} />);
+        });
+        return screen;
+    };
+
+    it('renders correctly', async () => {
+        const screen = await setup('User');
         expect(screen.getByTitle('User')).toBeInTheDocument();
     });
 
-    it('renders correctly when an unexpected nodeType is passed', () => {
+    it('renders correctly when an unexpected nodeType is passed', async () => {
         const testNodeType = 'unexpected value';
-        render(<NodeIcon nodeType={testNodeType} />);
+        const screen = await setup(testNodeType);
         expect(screen.getByTitle(testNodeType)).toBeInTheDocument();
         expect(screen.getByText('question')).toBeInTheDocument(); // fallback icon
+    });
+
+    it('renders custom icon correctly', async () => {
+        const screen = await setup('KindA');
+        expect(screen.getByTitle('KindA')).toBeInTheDocument();
+        expect(screen.getByText('mug-saucer')).toBeInTheDocument();
+    });
+
+    it('renders custom icon overlap correctly', async () => {
+        const screen = await setup('Group');
+        expect(screen.getByTitle('Group')).toBeInTheDocument();
+        expect(screen.getByText('house')).toBeInTheDocument();
     });
 });

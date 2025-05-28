@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
@@ -306,13 +307,28 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 				sb.WriteString(", ")
 			}
 
-			// this rule fails when there is a nested object in the property bag
-			if len(cause.InstanceLocation) > 0 && cause.InstanceLocation[0] == "properties" && cause.BasicOutput().KeywordLocation == "/anyOf" {
-				if len(cause.InstanceLocation) > 1 {
-					badPropertyName := cause.InstanceLocation[1]
-					sb.WriteString(fmt.Sprintf("nested object cannot be stored as property. remove \"%s\" from properties.", badPropertyName))
-				}
-			} else {
+			isPropertyError := len(cause.InstanceLocation) > 1 && cause.InstanceLocation[0] == "properties"
+			propertyName := ""
+			if isPropertyError {
+				propertyName = cause.InstanceLocation[1]
+			}
+
+			switch {
+			// Case: property value is an object (not allowed)
+			case isPropertyError && isTypeError(cause, "object"):
+				sb.WriteString(fmt.Sprintf(
+					"Invalid property '%s': objects are not allowed in the property bag. Use only strings, numbers, booleans, nulls, or arrays of these types.",
+					propertyName,
+				))
+
+			// Case: array contains a nested object (also not allowed)
+			case isPropertyError && isNotError(cause):
+				sb.WriteString(fmt.Sprintf(
+					"Invalid property '%s': array contains an object. Arrays must contain only primitive values (string, number, boolean, or null).",
+					propertyName,
+				))
+
+			default:
 				sb.WriteString(cause.Error())
 			}
 		}
@@ -322,6 +338,16 @@ func formatSchemaValidationError(arrayName string, index int, err error) string 
 		sb.WriteString(err.Error())
 	}
 	return sb.String()
+}
+
+func isTypeError(cause *jsonschema.ValidationError, got string) bool {
+	typeErr, ok := cause.ErrorKind.(*kind.Type)
+	return ok && typeErr.Got == got
+}
+
+func isNotError(cause *jsonschema.ValidationError) bool {
+	_, ok := cause.ErrorKind.(*kind.Not)
+	return ok
 }
 
 func formatAggregateErrors(errs []validationError) string {

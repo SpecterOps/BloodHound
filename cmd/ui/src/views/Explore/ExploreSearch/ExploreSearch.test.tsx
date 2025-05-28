@@ -54,6 +54,13 @@ const server = setupServer(
                 data: { kinds: ['Tier Zero', 'Tier One', 'Tier Two'] },
             })
         );
+    }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 

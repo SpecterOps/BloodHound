@@ -26,7 +26,7 @@ export default {
                 'nav-width-expanded': '17.5rem',
             },
             zIndex: {
-                nav: '1200',
+                nav: '1400',
             },
         },
     },

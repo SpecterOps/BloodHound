@@ -2767,7 +2767,27 @@
                       }
                     }
                   }
-                }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "kindName": "KindA",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "kindName": "KindB",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -2782,7 +2802,7 @@
       "post": {
         "operationId": "CreateCustomNodes",
         "summary": "Create custom nodes",
-        "description": "Create one or more custom node configurations.\nThis endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported\n",
+        "description": "This endpoint registers new node kinds along with optional display metadata such as icons and colors.\nThe provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.\nOnly free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.\nIf no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.\nBatch input is supported; you may submit multiple configuration objects in a single request.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2799,6 +2819,24 @@
                     "type": "object",
                     "additionalProperties": {
                       "$ref": "#/components/schemas/model.custom-node.config"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "custom_types": {
+                  "KindA": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  "KindB": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
                     }
                   }
                 }
@@ -2889,6 +2927,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/model.custom-node"
+                },
+                "example": {
+                  "id": 1,
+                  "kindName": "KindA",
+                  "config": {
+                    "type": "font-awesome",
+                    "name": "house",
+                    "color": "#FFFFFF"
+                  }
                 }
               }
             }
@@ -2907,7 +2954,7 @@
       "put": {
         "operationId": "UpdateCustomNode",
         "summary": "Update custom node",
-        "description": "Update the configuration for a specific custom node kind.\nReturns the updated configuration for the specific node kind.\n",
+        "description": "This endpoint updates an existing node kind along with optional display metadata such as icons and colors.\nThe provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.\nOnly free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.\nIf no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2922,6 +2969,15 @@
                 "properties": {
                   "config": {
                     "$ref": "#/components/schemas/model.custom-node.config"
+                  }
+                }
+              },
+              "example": {
+                "config": {
+                  "icon": {
+                    "type": "font-awesome",
+                    "name": "house",
+                    "color": "#333"
                   }
                 }
               }
@@ -16654,6 +16710,9 @@
                 "type": "string"
               },
               "name": {
+                "type": "string"
+              },
+              "color": {
                 "type": "string"
               }
             }

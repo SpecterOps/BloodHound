@@ -17,6 +17,8 @@
 import { Screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AssetGroupMemberCountsResponse, AssetGroupMemberParams } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { createMockAssetGroupMemberParams, createMockMemberCounts } from '../../mocks/factories';
 import { act, render } from '../../test-utils';
@@ -26,6 +28,20 @@ const filterParams = createMockAssetGroupMemberParams();
 const memberCounts = createMockMemberCounts();
 
 describe('AssetGroupEdit', () => {
+    const server = setupServer(
+        rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: [],
+                })
+            );
+        })
+    );
+
+    beforeAll(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
     const setup = async (options?: {
         filterParams?: AssetGroupMemberParams;
         memberCounts?: AssetGroupMemberCountsResponse['data'];

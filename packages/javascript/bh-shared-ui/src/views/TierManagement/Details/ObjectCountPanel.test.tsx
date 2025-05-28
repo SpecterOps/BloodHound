@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { useQuery } from 'react-query';
 import { vi } from 'vitest';
 import ObjectCountPanel from './ObjectCountPanel';
@@ -28,6 +30,23 @@ vi.mock('../../../utils', () => ({
         getAssetGroupMembersCount: vi.fn(),
     },
 }));
+
+const server = setupServer(
+    rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {
+                    total_count: 0,
+                    counts: [],
+                },
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('ObjectCountPanel', () => {
     it('renders error message on error', () => {

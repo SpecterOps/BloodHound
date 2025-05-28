@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as types from './types';
+package fs
 
-export const setEntityInfoOpen = (open: boolean): types.EntityInfoActionTypes => {
-    return {
-        type: types.ENTITY_INFO_OPEN,
-        open: open,
-    };
-};
+import "os"
 
-export const setSelectedNode = (selectedNode: types.SelectedNode): types.EntityInfoActionTypes => {
-    return {
-        type: types.SET_SELECTED_NODE,
-        selectedNode,
-    };
-};
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
+
+// Serves as a lightweight wrapper around the os package which allows for
+// path management to be abstracted.
+type Service interface {
+	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+}
+
+type Client struct{}
+
+func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
+	return os.CreateTemp(dir, pattern)
+}

@@ -30,7 +30,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SeedTypeObjectId } from 'js-client-library';
 import { SelectorSeedRequest } from 'js-client-library/dist/requests';
 import { FC, useCallback, useState } from 'react';
-import { SearchValue } from '../../store';
+import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 

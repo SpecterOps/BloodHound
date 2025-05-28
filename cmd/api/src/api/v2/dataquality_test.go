@@ -924,10 +924,10 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -940,7 +940,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
 			},
@@ -959,7 +959,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
 			},
@@ -980,7 +980,7 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks, request)
 
 			resources := v2.Resources{
 				Graph: mocks.mockGraph,
@@ -993,8 +993,8 @@ func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}

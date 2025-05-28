@@ -148,5 +148,9 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 		}
 	}
 
+	close(jobC)
+
+	waitGroup.Wait()
+
 	return errors.Join(errs...)
 }

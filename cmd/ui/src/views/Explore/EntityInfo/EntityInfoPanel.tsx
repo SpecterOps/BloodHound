@@ -19,10 +19,10 @@ import {
     NoEntitySelectedHeader,
     NoEntitySelectedMessage,
     ObjectInfoPanelContextProvider,
+    SelectedNode,
     usePaneStyles,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 

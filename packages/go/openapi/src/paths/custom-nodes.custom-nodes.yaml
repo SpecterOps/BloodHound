@@ -38,6 +38,19 @@ get:
                 type: array
                 items:
                   $ref: './../schemas/model.custom-node.yaml'
+          example:
+            - id: 1
+              kindName: "KindA"
+              config:
+                type: "font-awesome"
+                name: "house"
+                color: "#FFFFFF"
+            - id: 2
+              kindName: "KindB"
+              config:
+                type: "font-awesome"
+                name: "coffee"
+                color: "#000000"
     401:
       $ref: './../responses/unauthorized.yaml'
     500:
@@ -46,8 +59,11 @@ post:
   operationId: CreateCustomNodes
   summary: Create custom nodes
   description: |
-    Create one or more custom node configurations.
-    This endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported
+    This endpoint registers new node kinds along with optional display metadata such as icons and colors.
+    The provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.
+    Only free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.
+    If no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.
+    Batch input is supported; you may submit multiple configuration objects in a single request.
   tags:
     - Custom Node Management
     - Community
@@ -63,6 +79,18 @@ post:
               type: object
               additionalProperties:
                 $ref: './../schemas/model.custom-node.config.yaml'
+        example:
+          custom_types:
+            KindA:
+              icon:
+                type: "font-awesome"
+                name: "house"
+                color: "#FFFFFF"
+            KindB:
+              icon:
+                type: "font-awesome"
+                name: "coffee"
+                color: "#000000"
   responses:
     201:
       description: CREATED
