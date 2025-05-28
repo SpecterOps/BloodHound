@@ -41,9 +41,9 @@ func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	}
 }
 
-// preProcessIngestFile will take a path and extract zips if necessary, returning the paths for files to process
+// extractIngestFiles will take a path and extract zips if necessary, returning the paths for files to process
 // along with any errors and the number of failed files (in the case of a zip archive)
-func (s *GraphifyService) preProcessIngestFile(path string, fileType model.FileType) ([]string, int, error) {
+func (s *GraphifyService) extractIngestFiles(path string, fileType model.FileType) ([]string, int, error) {
 	if fileType == model.FileTypeJson {
 		//If this isn't a zip file, just return a slice with the path in it and let stuff process as normal
 		return []string{path}, 0, nil
@@ -56,49 +56,67 @@ func (s *GraphifyService) preProcessIngestFile(path string, fileType model.FileT
 			filePaths = make([]string, 0, len(archive.File))
 		)
 
+		defer func() {
+			if err := archive.Close(); err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Error closing archive %s: %v", path, err))
+			}
+			if err := os.Remove(path); err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting archive %s: %v", path, err))
+			}
+		}()
+
 		for _, f := range archive.File {
 			//skip directories
 			if f.FileInfo().IsDir() {
 				continue
 			}
-			// Break out if temp file creation fails
-			// Collect errors for other failures within the archive
-			tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh")
+
+			fileName, err := s.extractToTempFile(f)
 			if err != nil {
-				return []string{}, 0, err
-			}
-
-			defer func() {
-				if err != nil {
-					_ = tempFile.Close()
-					// This is new functionality. I don't see anywhere else these files are cleaned up, but
-					// would definitely like a sanity check on this
-					_ = os.Remove(tempFile.Name())
-				}
-			}()
-
-			if srcFile, err := f.Open(); err != nil {
-				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
 				failed++
-			} else if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
-				errs.Add(fmt.Errorf("error normalizing file %s to UTF8 in archive %s: %v", f.Name, path, err))
-				failed++
-			} else if _, err := io.Copy(tempFile, normFile); err != nil {
-				errs.Add(fmt.Errorf("error extracting file %s in archive %s: %v", f.Name, path, err))
-				failed++
+				errs.Add(err)
 			} else {
-				filePaths = append(filePaths, tempFile.Name())
+				filePaths = append(filePaths, fileName)
 			}
-		}
-
-		//Close the archive and delete it
-		if err := archive.Close(); err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Error closing archive %s: %v", path, err))
-		} else if err := os.Remove(path); err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Error deleting archive %s: %v", path, err))
 		}
 
 		return filePaths, failed, errs.Combined()
+	}
+}
+
+func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
+	// Given a single artifact in an archive, extract it out to a temporary file
+	tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh")
+	if err != nil {
+		return "", err
+	}
+
+	success := false
+	defer func() {
+		// Always close the tempFile, but...
+		tempFile.Close()
+		if !success {
+			// ... only delete if it wasn't successful. Otherwise we leave it around to be processed
+			os.Remove(tempFile.Name())
+		}
+	}()
+
+	srcFile, err := f.Open()
+	if err != nil {
+		return "", err
+	}
+	defer srcFile.Close()
+
+	// this creates a normalized file to feed to the copy
+	if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
+		return "", err
+		// and this is what actually copies it to disk
+	} else if _, err := io.Copy(tempFile, normFile); err != nil {
+		return "", err
+	} else {
+		// let the deferred method above know we shouldn't delete it and return the filename
+		success = true
+		return tempFile.Name(), nil
 	}
 }
 
@@ -113,8 +131,8 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 	}
 
 	// Try to pre-process the file. If any of them fail, stop processing and return the error
-	if paths, failedPreprocessing, err := s.preProcessIngestFile(task.FileName, task.FileType); err != nil {
-		return 0, failedPreprocessing, err
+	if paths, failedExtracting, err := s.extractIngestFiles(task.FileName, task.FileType); err != nil {
+		return 0, failedExtracting, err
 	} else {
 
 		failedIngestion := 0
@@ -125,7 +143,7 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 			for _, filePath := range paths {
 				readOpts := ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}
 
-				err = processSingleFile(context.Background(), filePath, timestampedBatch, readOpts)
+				err := processSingleFile(ctx, filePath, timestampedBatch, readOpts)
 				if err != nil {
 					failedIngestion++
 					return err
