@@ -860,7 +860,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 	}
 }
 
-// TODO BED-5641:
+// TODO: BED-5641
 // Move to utilities
 func zeroOutExpiresHeader(headers http.Header) http.Header {
 	const zeroTime = "Thu, 01 Jan 1970 00:00:00 GMT"

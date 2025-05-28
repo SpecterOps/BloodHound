@@ -27,8 +27,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -37,19 +35,16 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
 	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -74,7 +69,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 		{
 			name: "Error: Database Error SSO Provider not found - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Host: "www.example.com",
 					},
@@ -83,7 +78,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 				vars := map[string]string{
 					api.URIPathVariableSSOProviderSlug: "provider",
 				}
-				return mux.SetURLVars(&request, vars)
+				return mux.SetURLVars(request, vars)
 
 			},
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
@@ -111,7 +106,6 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 				bhContext := &ctx.Context{
 					Host: request.URL,
 				}
-
 				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 
 				return mux.SetURLVars(request, vars)
@@ -218,7 +212,6 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 				bhContext := &ctx.Context{
 					Host: request.URL,
 				}
-
 				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 
 				return mux.SetURLVars(request, vars)
@@ -419,13 +412,13 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 				mock.mockDatabase.EXPECT().GetAllSAMLProviders(req.Context()).Return(model.SAMLProviders{}, sql.ErrNoRows)
 			},
 			buildRequest: func() *http.Request {
-				request := http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Host: "www.example.com",
 					},
 				}
 
-				return &request
+				return request
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1929,63 +1922,102 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 	}
 }
 
+// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
 func TestManagementResource_ServeMetadata(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode int
-		contentType  string
-		responseBody string
+		responseCode   int
+		responseHeader http.Header
+		responseBody   string
 	}
 	type testData struct {
-		name            string
-		ssoProviderSlug string
-		setupMocks      func(*testing.T, *mocks.MockDatabase)
-		setupContext    func(*testing.T) context.Context
-		expected        expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name:            "Error: Provider not found",
-			ssoProviderSlug: "nonexistent-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "nonexistent-provider").Return(model.SSOProvider{}, sql.ErrNoRows)
+			name: "Error: Database error db.GetSSOProviderBySlug - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderSlug: "provider",
+				}
+				return mux.SetURLVars(request, vars)
+
 			},
-			setupContext: func(t *testing.T) context.Context {
-				return context.Background()
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(req.Context(), "provider").Return(model.SSOProvider{}, sql.ErrNoRows)
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				contentType:  "application/json",
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
-			name:            "Error: Provider is not a SAML provider",
-			ssoProviderSlug: "oidc-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "oidc-provider").Return(model.SSOProvider{
+			name: "Error: SAML Provider is nil - Not Found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderSlug: "provider",
+				}
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(req.Context(), "provider").Return(model.SSOProvider{
 					Name:         "OIDC Provider",
 					Slug:         "oidc-provider",
 					Type:         model.SessionAuthProviderOIDC,
 					SAMLProvider: nil,
 				}, nil)
 			},
-			setupContext: func(t *testing.T) context.Context {
-				return context.Background()
-			},
 			expected: expected{
-				responseCode: http.StatusNotFound,
-				contentType:  "application/json",
-				responseBody: `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
 		{
-			name:            "Error: Service provider creation fails",
-			ssoProviderSlug: "okta",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "okta").Return(model.SSOProvider{
+			name: "Error: NewServiceProvider Unable to parse SAML cert and provider key - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderSlug: "provider",
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(req.Context(), "provider").Return(model.SSOProvider{
 					Name: "Okta",
 					Slug: "okta",
 					Type: model.SessionAuthProviderSAML,
@@ -1997,17 +2029,10 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 					},
 				}, nil)
 			},
-			setupContext: func(t *testing.T) context.Context {
-				hostURL, _ := url.Parse("https://example.com")
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.Host = hostURL
-				return userContext
-			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				contentType:  "application/json",
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"failed to parse service provider Okta Provider's cert pair: x509: malformed certificate"}]}`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"failed to parse service provider Okta Provider's cert pair: x509: malformed certificate"}]}`,
 			},
 		},
 	}
@@ -2016,35 +2041,27 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
+			ctrl := gomock.NewController(t)
 
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			endpointURL := fmt.Sprintf("/api/v2/sso/%s/metadata.xml", testCase.ssoProviderSlug)
-			req, err := http.NewRequest("GET", endpointURL, nil)
-			require.NoError(t, err)
-
-			reqCtx := testCase.setupContext(t)
-			req = req.WithContext(reqCtx)
-
-			vars := map[string]string{
-				api.URIPathVariableSSOProviderSlug: testCase.ssoProviderSlug,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
+
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.ServeMetadata(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.ServeMetadata(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			if testCase.expected.responseCode != http.StatusOK {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -2052,234 +2069,241 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode        int
-		contentType         string
-		contentDisposition  string
-		responseBodyPattern string
-	}
-	type testData struct {
-		name       string
-		providerID string
-		setupMocks func(*testing.T, *mocks.MockDatabase)
-		expected   expected
-	}
-
-	tt := []testData{
-		{
-			name:       "Error: Invalid provider ID format - Not Found",
-			providerID: "invalid",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode:        http.StatusNotFound,
-				contentType:         "application/json",
-				responseBodyPattern: `{"http_status":404,"timestamp":".*","request_id":"","errors":\[{"context":"","message":"resource not found"}\]}`,
-			},
-		},
-		{
-			name:       "Error: Provider not found - Database Error",
-			providerID: "1",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().
-					GetSSOProviderById(gomock.Any(), int32(1)).
-					Return(model.SSOProvider{}, sql.ErrNoRows)
-			},
-			expected: expected{
-				responseCode:        http.StatusInternalServerError,
-				contentType:         "application/json",
-				responseBodyPattern: `{"http_status":500,"timestamp":".*","request_id":"","errors":\[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}\]}`,
-			},
-		},
-		{
-			name:       "Error: Provider is not a SAML provider - Not Found",
-			providerID: "1",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().
-					GetSSOProviderById(gomock.Any(), int32(1)).
-					Return(model.SSOProvider{
-						Name:         "OIDC Provider",
-						Slug:         "oidc-provider",
-						Type:         model.SessionAuthProviderOIDC,
-						SAMLProvider: nil,
-					}, nil)
-			},
-			expected: expected{
-				responseCode:        http.StatusNotFound,
-				contentType:         "application/json",
-				responseBodyPattern: `{"http_status":404,"timestamp":".*","request_id":"","errors":\[{"context":"","message":"resource not found"}\]}`,
-			},
-		},
-		{
-			name:       "Success: SAML provider certificate served",
-			providerID: "1",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().
-					GetSSOProviderById(gomock.Any(), int32(1)).
-					Return(model.SSOProvider{
-						Name: "Okta Provider",
-						Slug: "okta-provider",
-						Type: model.SessionAuthProviderSAML,
-						SAMLProvider: &model.SAMLProvider{
-							Name:        "Okta Provider",
-							DisplayName: "Okta SSO",
-						},
-					}, nil)
-			},
-			expected: expected{
-				responseCode:        http.StatusOK,
-				contentDisposition:  `attachment; filename="okta-provider-signing-certificate.pem"`,
-				responseBodyPattern: ".*BEGIN CERTIFICATE.*",
-			},
-		},
-	}
-
-	for _, testCase := range tt {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			endpointURL := fmt.Sprintf("/api/v2/saml/providers/%s/signing-certificate", testCase.providerID)
-			req, err := http.NewRequest("GET", endpointURL, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableSSOProviderID: testCase.providerID,
-			}
-			req = mux.SetURLVars(req, vars)
-
-			response := httptest.NewRecorder()
-			resources.ServeSigningCertificate(response, req)
-
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
-
-			if testCase.expected.contentType != "" {
-				assert.Contains(t, response.Header().Get("Content-Type"), testCase.expected.contentType)
-			}
-
-			if testCase.expected.contentDisposition != "" {
-				assert.Equal(t, testCase.expected.contentDisposition, response.Header().Get("Content-Disposition"))
-			}
-
-			if testCase.expected.responseBodyPattern != "" {
-				responseBody := response.Body.String()
-				matched, err := regexp.MatchString(testCase.expected.responseBodyPattern, responseBody)
-				require.NoError(t, err)
-				assert.True(t, matched, "Response body does not match expected pattern. Got: %s", responseBody)
-			}
-		})
-	}
-}
-
-func TestManagementResource_SAMLLoginHandler(t *testing.T) {
-	t.Parallel()
-
-	type expected struct {
-		responseCode    int
-		headers         map[string]string
-		responsePattern string
+		responseCode   int
+		responseHeader http.Header
+		responseBody   string
 	}
 	type testData struct {
 		name         string
-		ssoProvider  model.SSOProvider
-		setupMocks   func(*testing.T, *mocks.MockDatabase)
-		setupContext func(*testing.T) context.Context
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name: "Error: Nil SAML Provider - Redirect to Login with Error Message",
-			ssoProvider: model.SSOProvider{
+			name: "Error: invalid provider ID - Not Found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderID: "id",
+				}
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
+			},
+		},
+		{
+			name: "Error: Database error db.GetSSOProviderById - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderID: "1",
+				}
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(req.Context(), int32(1)).Return(model.SSOProvider{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Error: ssoProvider.SAMLProvider is nil - Not Found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderID: "1",
+				}
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(req.Context(), int32(1)).Return(model.SSOProvider{
+					Name:         "OIDC Provider",
+					Slug:         "oidc-provider",
+					Type:         model.SessionAuthProviderOIDC,
+					SAMLProvider: nil,
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
+			},
+		},
+		{
+			name: "Success: Served - Not Found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderID: "1",
+				}
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(req.Context(), int32(1)).Return(model.SSOProvider{
+					Name: "OIDC Provider",
+					Slug: "oidc-provider",
+					Type: model.SessionAuthProviderOIDC,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "name",
+						DisplayName:     "display",
+						IssuerURI:       "uri",
+						SingleSignOnURI: "uri",
+						MetadataXML:     []byte{},
+						RootURIVersion:  model.SAMLRootURIVersion1,
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"oidc-provider-signing-certificate.pem\""}, "Content-Type": []string{"text/plain; charset=utf-8"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----",
+			},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
+
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+
+			response := httptest.NewRecorder()
+
+			resource.ServeSigningCertificate(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if status != http.StatusOK {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
+		})
+	}
+}
+
+// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
+func TestManagementResource_SAMLLoginHandler(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		args         model.SSOProvider
+		buildRequest func() *http.Request
+		expected     expected
+	}
+
+	tt := []testData{
+		{
+			name: "Error: Nil SAML Provider, Redirect to Login with Error Message - Found",
+			args: model.SSOProvider{
 				Name:         "Test Provider",
 				Slug:         "test-provider",
 				Type:         model.SessionAuthProviderSAML,
 				SAMLProvider: nil,
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			setupContext: func(t *testing.T) context.Context {
-				hostURL, _ := url.Parse("https://example.com")
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.Host = hostURL
-				return userContext
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			expected: expected{
-				responseCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": "https://example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator",
-				},
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 		{
-			name: "Error: Service Provider Creation Fails - Redirect to Login with Error Message",
-			ssoProvider: model.SSOProvider{
+			name: "Error: auth.NewServiceProvider error, Redirect to Login with Error Message - Found",
+			args: model.SSOProvider{
 				Name: "Test Provider",
 				Slug: "test-provider",
 				Type: model.SessionAuthProviderSAML,
 				SAMLProvider: &model.SAMLProvider{
-					Name:            "Test SAML Provider",
-					DisplayName:     "Test SAML SSO",
-					IssuerURI:       "invalid-uri",
-					SingleSignOnURI: "",
+					Name: "name",
 				},
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			setupContext: func(t *testing.T) context.Context {
-				hostURL, _ := url.Parse("https://example.com")
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.Host = hostURL
-				return userContext
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			expected: expected{
-				responseCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": "https://example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator",
-				},
-			},
-		},
-		{
-			name: "Error: Authentication Request Creation Fails - Redirect to Login with Error Message",
-			ssoProvider: model.SSOProvider{
-				Name: "Valid Provider",
-				Slug: "valid-provider",
-				Type: model.SessionAuthProviderSAML,
-				SAMLProvider: &model.SAMLProvider{
-					Name:            "Valid SAML Provider",
-					DisplayName:     "Valid SAML SSO",
-					IssuerURI:       "https://valid-provider.com/saml",
-					SingleSignOnURI: "https://valid-provider.com/sso",
-					MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://valid-provider.com/saml">
-						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://valid-provider.com/sso"/>
-						</IDPSSODescriptor>
-					</EntityDescriptor>`),
-				},
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			setupContext: func(t *testing.T) context.Context {
-				hostURL, _ := url.Parse("https://example.com")
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.Host = hostURL
-				return userContext
-			},
-			expected: expected{
-				responseCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": "https://example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator",
-				},
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 		{
 			name: "Error: Post Binding Also Fails - Redirect to Login with Error Message",
-			ssoProvider: model.SSOProvider{
+			args: model.SSOProvider{
 				Name: "POST Provider",
 				Slug: "post-provider",
 				Type: model.SessionAuthProviderSAML,
@@ -2295,19 +2319,21 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					</EntityDescriptor>`),
 				},
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			setupContext: func(t *testing.T) context.Context {
-				hostURL, _ := url.Parse("https://example.com")
-				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
-				bhCtx := ctx.Get(userContext)
-				bhCtx.Host = hostURL
-				return userContext
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			expected: expected{
-				responseCode: http.StatusFound,
-				headers: map[string]string{
-					"Location": "https://example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator",
-				},
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 	}
@@ -2315,170 +2341,159 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+			}
 
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
+			request := testCase.buildRequest()
 
-			testCase.setupMocks(t, mockDB)
-
-			req, err := http.NewRequest("GET", "/api/v2/sso/provider/login", nil)
-			require.NoError(t, err)
-
-			reqCtx := testCase.setupContext(t)
-			req = req.WithContext(reqCtx)
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.SAMLLoginHandler(response, req, testCase.ssoProvider)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.SAMLLoginHandler(response, request, testCase.args)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			for name, expectedValue := range testCase.expected.headers {
-				value := response.Header().Get(name)
-				assert.Equal(t, expectedValue, value, "Header %s does not match", name)
-			}
+			status, header, _ := test.ProcessResponse(t, response)
 
-			if testCase.expected.responsePattern != "" {
-				responseBody := response.Body.String()
-				matched, err := regexp.MatchString(testCase.expected.responsePattern, responseBody)
-				require.NoError(t, err)
-				assert.True(t, matched, "Response body does not match expected pattern. Got: %s", responseBody)
-			}
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 		})
 	}
 }
 
+// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
 func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode    int
-		redirectToLogin bool
-		errorMessage    string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name        string
-		ssoProvider model.SSOProvider
-		setupMocks  func(*testing.T, *mocks.MockDatabase)
-		expected    expected
-		setupHost   func(*testing.T) *url.URL
-		formValues  url.Values
-	}
-
-	mockHost := func(t *testing.T) *url.URL {
-		host, err := url.Parse("https://example.com")
-		require.NoError(t, err)
-		return host
-	}
-
-	testProvider := func(includeSAML bool) model.SSOProvider {
-		provider := model.SSOProvider{
-			Name: "Test Provider",
-			Type: model.SessionAuthProviderSAML,
-			Slug: "test-provider",
-			Config: model.SSOProviderConfig{
-				AutoProvision: model.SSOProviderAutoProvisionConfig{
-					Enabled:       true,
-					RoleProvision: true,
-					DefaultRoleId: 1,
-				},
-			},
-			Serial: model.Serial{
-				ID: 1,
-			},
-		}
-
-		if includeSAML {
-			provider.SAMLProvider = &model.SAMLProvider{
-				Name:            "Test SAML Provider",
-				DisplayName:     "Test SAML Provider",
-				IssuerURI:       "https://test-issuer.com",
-				SingleSignOnURI: "https://test-issuer.com/sso",
-				PrincipalAttributeMappings: []string{
-					"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
-				},
-				SSOProviderID: null.Int32From(1),
-			}
-		}
-
-		return provider
-	}
-
-	validFormValues := url.Values{
-		"SAMLResponse": []string{"valid-saml-response"},
+		name         string
+		args         model.SSOProvider
+		buildRequest func() *http.Request
+		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name:        "Error: No SAML Provider - Redirect to Login",
-			ssoProvider: testProvider(false),
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+			name: "Error: Nil SAML Provider, Redirect to Login with Error Message - Found",
+			args: model.SSOProvider{
+				Name:         "Test Provider",
+				Slug:         "test-provider",
+				Type:         model.SessionAuthProviderSAML,
+				SAMLProvider: nil,
+			},
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
-			setupHost:  mockHost,
-			formValues: validFormValues,
 		},
 		{
-			name:        "Error: Service Provider Creation Failed - Redirect to Login",
-			ssoProvider: testProvider(true),
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
+			name: "Error: auth.NewServiceProvider error, Redirect to Login with Error Message - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Slug: "test-provider",
+				Type: model.SessionAuthProviderSAML,
+				SAMLProvider: &model.SAMLProvider{
+					Name: "name",
+				},
+			},
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			expected: expected{
-				responseCode:    http.StatusFound,
-				redirectToLogin: true,
-				errorMessage:    "Your SSO connection failed due to misconfiguration, please contact your Administrator",
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
-			setupHost:  mockHost,
-			formValues: validFormValues,
+		},
+		{
+			name: "Error: Post Binding Also Fails - Redirect to Login with Error Message",
+			args: model.SSOProvider{
+				Name: "POST Provider",
+				Slug: "post-provider",
+				Type: model.SessionAuthProviderSAML,
+				SAMLProvider: &model.SAMLProvider{
+					Name:            "POST SAML Provider",
+					DisplayName:     "POST SAML SSO",
+					IssuerURI:       "https://post-provider.com/saml",
+					SingleSignOnURI: "https://post-provider.com/sso",
+					MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+				},
+			},
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
+			},
 		},
 	}
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			host := testCase.setupHost(t)
-
-			var req *http.Request
-			var err error
-			if testCase.formValues != nil {
-				req, err = http.NewRequest("POST", "/api/v2/saml/callback", strings.NewReader(testCase.formValues.Encode()))
-				require.NoError(t, err)
-				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			} else {
-				req, err = http.NewRequest("POST", "/api/v2/saml/callback", nil)
-				require.NoError(t, err)
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
-			bhContext := &ctx.Context{
-				Host: host,
-			}
-			goContext := ctx.Set(context.Background(), bhContext)
-			req = req.WithContext(goContext)
+			request := testCase.buildRequest()
+
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.SAMLCallbackHandler(response, req, testCase.ssoProvider)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.SAMLCallbackHandler(response, request, testCase.args)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			if testCase.expected.redirectToLogin {
-				location := response.Header().Get("Location")
-				require.NotEmpty(t, location)
-				assert.Contains(t, location, "/login")
-				assert.Contains(t, location, url.QueryEscape(testCase.expected.errorMessage))
-			}
+			status, header, _ := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 		})
 	}
 }
