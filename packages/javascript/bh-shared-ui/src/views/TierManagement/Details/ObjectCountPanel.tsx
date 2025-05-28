@@ -22,10 +22,7 @@ import { apiClient } from '../../../utils';
 const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
     const objectsCountQuery = useQuery({
         queryKey: ['asset-group-tags-count', tagId],
-        queryFn: async () => {
-            const res = await apiClient.getAssetGroupTagMembersCount(tagId);
-            return res.data.data;
-        },
+        queryFn: ({ signal }) => apiClient.getAssetGroupTagMembersCount(tagId, { signal }).then((res) => res.data.data),
     });
 
     if (objectsCountQuery.isLoading) {
@@ -56,7 +53,7 @@ const ObjectCountPanel: FC<{ tagId: string }> = ({ tagId }) => {
                 </div>
             </Card>
         );
-    } else if (objectsCountQuery.isSuccess) {
+    } else if (objectsCountQuery.isSuccess && objectsCountQuery.data) {
         return (
             <Card className='flex flex-col max-h-full px-6 py-6 select-none overflow-y-auto max-w-[32rem]'>
                 <div className='flex justify-between items-center'>
