@@ -18,6 +18,7 @@ package auth_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -25,12 +26,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/mocks"
+	oidcmock "github.com/specterops/bloodhound/src/services/oidc/mocks"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
@@ -298,6 +301,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockOIDC     *oidcmock.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -382,13 +386,15 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
-			expected: expected{
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
+			}, expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
-		// TODO: BED-5641 Will require further abstraction of OIDC package for this to be testable
+		// TODO: BED-5641 Cookies Generated are ever-changing, so will need different ways
+		// to assert
 		// {
 		// 	name: "Success: OIDC Login, Redirect to Provider - Found",
 		// 	args: model.SSOProvider{
@@ -412,7 +418,9 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 		// 	},
 		// 	buildRequest: func() *http.Request {
 		// 		request := http.Request{
-		// 			URL: mockHost(),
+		// 			URL: &url.URL{
+		// 				Host: "www.example.com",
+		// 			},
 		// 		}
 
 		// 		bhContext := &ctx.Context{
@@ -421,10 +429,12 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 		// 		return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 		// 	},
-		// 	setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+		// 	setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+		// 		mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
+		// 	},
 		// 	expected: expected{
 		// 		responseCode:    http.StatusFound,
-		// 		responseHeader:  http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?counts=true"}},
+		// 		responseHeader:  http.Header{"Location":[]string{"//www.example.com/"}, "Set-Cookie":[]string{"pkce=GWCMaJYOC-E9kXgsPlOY50Erv1QNtp0gLGeL85JnZ8U; Path=/; Expires=Tue, 27 May 2025 21:17:27 GMT; HttpOnly; SameSite=None", "state=pZNLypZ6JNveRB3JCQ6md4mx0E5kryv6F2KzU0PwKHRUX1tb2pdIVaIfaGOvUvstAVn8ovjLDGoAtaUWO7gIGHsx3BSZQ696YsWflf8=; Path=/; Expires=Tue, 27 May 2025 21:17:27 GMT; HttpOnly; SameSite=None"}},
 		// 	},
 		// },
 	}
@@ -436,12 +446,14 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockOIDC:     oidcmock.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks, request)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
+			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
 

@@ -20,7 +20,9 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -30,8 +32,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -39,12 +43,10 @@ import (
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
-	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
 	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/stretchr/testify/require"
@@ -799,20 +801,8 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 		})
 	}
 }
-
 func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 	t.Parallel()
-
-	type expected struct {
-		responseCode int
-		responseBody string
-	}
-	type testData struct {
-		name       string
-		setupForm  func() (*bytes.Buffer, *multipart.Writer)
-		setupMocks func(*testing.T, *mocks.MockDatabase)
-		expected   expected
-	}
 
 	validMetadataXML := `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
 		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
@@ -820,342 +810,481 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 		</IDPSSODescriptor>
 	</EntityDescriptor>`
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		responseBody   string
+	}
+	type testData struct {
+		name         string
+		buildRequest func(testName string) *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
+	}
 	tt := []testData{
 		{
-			name: "Error: ParseMultipartForm fails",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-				writer.Close()
-				return body, writer
+			name: "Error: Missing Content Type Header, ParseMultipartForm - Bad Request",
+			buildRequest: func(string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"name\" parameter"}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
 			},
 		},
 		{
-			name: "Error: Missing provider name",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
+			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", "bound"))
+
+				form := multipart.Form{
+					File: map[string][]*multipart.FileHeader{},
+				}
+				formBytes, err := json.Marshal(form)
+				if err != nil {
+					t.Fatalf("error occurred while marshalling form bytes, needed for test %s: %v", name, err)
+				}
+				request.Body = io.NopCloser(bytes.NewReader(formBytes))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"multipart: NextPart: EOF"}]}`,
+			},
+		},
+		{
+			name: "Error: missing name parameter, getProviderNameFromMultipartRequest - Bad Request",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("nope", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"name\" parameter"}]}`,
+			},
+		},
+		{
+			name: "Error: missing metadata parameter, getMetadataFromMultipartRequest - Bad Request",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"metadata\" parameter"}]}`,
+			},
+		},
+		{
+			name: "Error: missing sso provider config, getSSOProviderConfigFromMultipartRequest - Bad Request",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				metadataFile.Write([]byte(validMetadataXML))
-
-				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				_, err = metadataFile.Write([]byte(validMetadataXML))
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
 
-				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleIDField.Write([]byte("1"))
-
-				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleProvisionField.Write([]byte("false"))
-
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
-			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"name\" parameter"}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"config.auto_provision.enabled\" parameter"}]}`,
 			},
 		},
 		{
-			name: "Error: Missing metadata file",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
-				}
-				nameField.Write([]byte("Okta Provider"))
-
-				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
-				if err != nil {
-					t.Fatal(err)
-				}
-				autoProvisionField.Write([]byte("true"))
-
-				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleIDField.Write([]byte("1"))
-
-				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleProvisionField.Write([]byte("false"))
-
-				writer.Close()
-				return body, writer
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
+			name: "Error: auth.GetIDPSingleSignOnServiceURL - Bad Request",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
 					},
-				}, nil).AnyTimes()
-			},
-			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"metadata\" parameter"}]}`,
-			},
-		},
-		{
-			name: "Error: Duplicate provider name",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+					Header: http.Header{},
 				}
-				nameField.Write([]byte("Existing Provider"))
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				metadataFile.Write([]byte(validMetadataXML))
+				_, err = metadataFile.Write([]byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
+		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-GET" Location="https://okta.com/sso"/>
+		</IDPSSODescriptor>
+	</EntityDescriptor>`))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
 
 				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing creating config auto provision enabled form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision enabled form field, needed for test %s: %v", testName, err)
+				}
 
 				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
 				}
-				roleIDField.Write([]byte("1"))
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
 
 				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
 				}
-				roleProvisionField.Write([]byte("false"))
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
 
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
 
-				config := model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						DefaultRoleId: 1,
-						RoleProvision: false,
-					},
-				}
-
-				mockDB.EXPECT().
-					CreateSAMLIdentityProvider(gomock.Any(), gomock.Any(), gomock.Eq(config)).
-					Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
 			},
 			expected: expected{
-				responseCode: http.StatusConflict,
-				responseBody: `{
-            "http_status":409,
-            "timestamp":"0001-01-01T00:00:00Z",
-            "request_id":"",
-            "errors":[
-                { "context":"", "message":"sso provider name must be unique" }
-            ]
-        }`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"metadata does not have a SSO service that supports HTTP POST binding"}]}`,
 			},
 		},
 		{
-			name: "Error: Database error",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+			name: "Error: Database error duplicate provider db.CreateSAMLIdentityProvider - Conflict",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
 				}
-				nameField.Write([]byte("New Provider"))
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				metadataFile.Write([]byte(validMetadataXML))
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
 
 				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
 
 				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
 				}
-				roleIDField.Write([]byte("1"))
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
 
 				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
 				}
-				roleProvisionField.Write([]byte("false"))
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
 
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
-
-				config := model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						DefaultRoleId: 1,
-						RoleProvision: false,
-					},
-				}
-
-				mockDB.EXPECT().
-					CreateSAMLIdentityProvider(gomock.Any(), gomock.Any(), gomock.Eq(config)).
-					Return(model.SAMLProvider{}, errors.New("database error"))
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLIdentityProvider(req.Context(), gomock.Any(), gomock.Any()).Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusConflict,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":409,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"sso provider name must be unique"}]}`,
 			},
 		},
 		{
-			name: "Success: Valid provider created",
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+			name: "Error: Database error db.CreateSAMLIdentityProvider- Bad Request",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
 				}
-				nameField.Write([]byte("New Provider"))
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				metadataFile.Write([]byte(validMetadataXML))
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
 
 				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
 
 				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
 				}
-				roleIDField.Write([]byte("1"))
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
 
 				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
 				}
-				roleProvisionField.Write([]byte("false"))
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
 
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
-
-				config := model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						DefaultRoleId: 1,
-						RoleProvision: false,
-					},
-				}
-
-				newProvider := model.SAMLProvider{
-					Name:            "New Provider",
-					DisplayName:     "New Provider",
-					IssuerURI:       "https://okta.com/saml",
-					SingleSignOnURI: "https://okta.com/sso",
-					MetadataXML:     []byte(validMetadataXML),
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}
-
-				mockDB.EXPECT().
-					CreateSAMLIdentityProvider(gomock.Any(), gomock.Any(), gomock.Eq(config)).
-					Return(newProvider, nil)
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLIdentityProvider(req.Context(), gomock.Any(), gomock.Any()).Return(model.SAMLProvider{}, errors.New("error"))
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseBody: `{
-        "data": {
-            "name": "New Provider",
-            "display_name": "New Provider",
-            "idp_issuer_uri": "https://okta.com/saml",
-            "idp_sso_uri": "https://okta.com/sso",
-            "root_uri_version": 0,
-            "principal_attribute_mappings": null,
-            "sp_issuer_uri": "",
-            "sp_sso_uri": "",
-            "sp_metadata_uri": "",
-            "sp_acs_uri": "",
-            "sso_provider_id": null,
-            "id": 1,
-            "created_at": "0001-01-01T00:00:00Z",
-            "updated_at": "0001-01-01T00:00:00Z",
-            "deleted_at": {
-                "Time": "0001-01-01T00:00:00Z",
-                "Valid": false
-            }
-        }
-    }`,
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Success: Provider Multipart Created - OK",
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error writing name field %v needed for ", err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
+
+				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
+				}
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
+
+				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+
+				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().CreateSAMLIdentityProvider(req.Context(), gomock.Any(), gomock.Any()).Return(model.SAMLProvider{
+					Name:            "name",
+					DisplayName:     "display",
+					IssuerURI:       "uri",
+					SingleSignOnURI: "uri",
+					MetadataXML:     []byte{},
+					RootURIVersion:  model.SAMLRootURIVersion1,
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"display_name":"display","id":0,"idp_issuer_uri":"uri","idp_sso_uri":"uri","name":"name","principal_attribute_mappings":null,"root_uri_version":1,"sp_acs_uri":"","sp_issuer_uri":"","sp_metadata_uri":"","sp_sso_uri":"","sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -1163,30 +1292,27 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
+			}
 
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-			testCase.setupMocks(t, mockDB)
+			request := testCase.buildRequest(t.Name())
+			testCase.setupMocks(t, mocks, request)
 
-			body, writer := testCase.setupForm()
-			req, err := http.NewRequest("POST", "/api/v2/saml/providers", body)
-			require.NoError(t, err)
-			req.Header.Set("Content-Type", writer.FormDataContentType())
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.CreateSAMLProviderMultipart(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.CreateSAMLProviderMultipart(response, request)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			if testCase.name == "Success: Valid provider created" {
-				assert.JSONEq(t, testCase.expected.responseBody, response.Body.String())
-			} else {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }
@@ -1194,357 +1320,583 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 	t.Parallel()
 
-	type expected struct {
-		responseCode int
-		responseBody string
-	}
-	type testData struct {
-		name        string
-		ssoProvider model.SSOProvider
-		setupForm   func() (*bytes.Buffer, *multipart.Writer)
-		setupMocks  func(*testing.T, *mocks.MockDatabase)
-		expected    expected
-	}
-
 	validMetadataXML := `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
 		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
 			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://okta.com/sso"/>
 		</IDPSSODescriptor>
 	</EntityDescriptor>`
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		responseBody   string
+	}
+	type testData struct {
+		name         string
+		args         model.SSOProvider
+		buildRequest func(testName string) *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
+	}
 	tt := []testData{
 		{
-			name: "Error: SAMLProvider is nil",
-			ssoProvider: model.SSOProvider{
+			name: "Error: Nil ssoProvider.SAMLProvider - Not Found",
+			args: model.SSOProvider{
 				SAMLProvider: nil,
 			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-				writer.Close()
-				return body, writer
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode: http.StatusNotFound,
-				responseBody: `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
-			},
-		},
-		{
-			name: "Error: ParseMultipartForm fails",
-			ssoProvider: model.SSOProvider{
-				SAMLProvider: &model.SAMLProvider{
-					Name:        "Existing Provider",
-					DisplayName: "Existing Provider",
-				},
-			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				return body, nil
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {},
-			expected: expected{
-				responseCode: http.StatusBadRequest,
-				responseBody: `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
-		},
-		{
-			name: "Error: Duplicate provider name",
-			ssoProvider: model.SSOProvider{
-				SAMLProvider: &model.SAMLProvider{
-					Name:        "Existing Provider",
-					DisplayName: "Existing Provider",
-				},
-			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
-				}
-				nameField.Write([]byte("Updated Provider"))
-
-				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
-				if err != nil {
-					t.Fatal(err)
-				}
-				autoProvisionField.Write([]byte("true"))
-
-				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleIDField.Write([]byte("1"))
-
-				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
-				if err != nil {
-					t.Fatal(err)
-				}
-				roleProvisionField.Write([]byte("false"))
-
-				writer.Close()
-				return body, writer
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
+			buildRequest: func(string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
 					},
-				}, nil).AnyTimes()
+				}
 
-				mockDB.EXPECT().
-					UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).
-					Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
+				return request
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusConflict,
-				responseBody: `{"http_status":409,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"sso provider name must be unique"}]}`,
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
 		{
-			name: "Error: Database error",
-			ssoProvider: model.SSOProvider{
-				SAMLProvider: &model.SAMLProvider{
-					Name:        "Existing Provider",
-					DisplayName: "Existing Provider",
-				},
+			name: "Error: Missing Content Type Header, ParseMultipartForm - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
 			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+			buildRequest: func(string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
 				}
-				nameField.Write([]byte("Updated Provider"))
 
-				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
-				if err != nil {
-					t.Fatal(err)
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+			},
+		},
+		{
+			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
+			},
+			buildRequest: func(name string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
 				}
-				autoProvisionField.Write([]byte("true"))
 
-				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
-				if err != nil {
-					t.Fatal(err)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", "bound"))
+
+				form := multipart.Form{
+					File: map[string][]*multipart.FileHeader{},
 				}
-				roleIDField.Write([]byte("1"))
-
-				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				formBytes, err := json.Marshal(form)
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while marshalling form bytes, needed for test %s: %v", name, err)
 				}
-				roleProvisionField.Write([]byte("false"))
+				request.Body = io.NopCloser(bytes.NewReader(formBytes))
 
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"multipart: NextPart: EOF"}]}`,
+			},
+		},
+		{
+			name: "Error: duplicate name parameters, getProviderNameFromMultipartRequest - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
+			},
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider #1")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+				err = writer.WriteField("name", "okta provider #2")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
 
-				mockDB.EXPECT().
-					UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).
-					Return(model.SAMLProvider{}, errors.New("database error"))
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"expected only one \"name\" parameter"}]}`,
 			},
 		},
 		{
-			name: "Success: Provider updated with new name",
-			ssoProvider: model.SSOProvider{
-				SAMLProvider: &model.SAMLProvider{
-					Name:        "Existing Provider",
-					DisplayName: "Existing Provider",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				},
+			name: "Error: duplicate metadata forms, getMetadataFromMultipartRequest - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
 			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
 				}
-				nameField.Write([]byte("Updated Provider"))
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				metadataFile.Write([]byte(validMetadataXML))
-
-				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				_, err = metadataFile.Write([]byte(validMetadataXML))
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
 
-				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
+				dupeMetadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
-				roleIDField.Write([]byte("1"))
-
-				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				_, err = dupeMetadataFile.Write([]byte(validMetadataXML))
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
 				}
-				roleProvisionField.Write([]byte("false"))
 
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
-			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
 
-				updatedProvider := model.SAMLProvider{
-					Name:            "Updated Provider",
-					DisplayName:     "Updated Provider",
-					IssuerURI:       "https://okta.com/saml",
-					SingleSignOnURI: "https://okta.com/sso",
-					MetadataXML:     []byte(validMetadataXML),
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
 
-				mockDB.EXPECT().
-					UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).
-					Return(updatedProvider, nil)
+				return request
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseBody: `{
-					"data": {
-						"name": "Updated Provider",
-						"display_name": "Updated Provider",
-						"idp_issuer_uri": "https://okta.com/saml",
-						"idp_sso_uri": "https://okta.com/sso",
-						"root_uri_version": 0,
-						"principal_attribute_mappings": null,
-						"sp_issuer_uri": "",
-						"sp_sso_uri": "",
-						"sp_metadata_uri": "",
-						"sp_acs_uri": "",
-						"sso_provider_id": null,
-						"id": 1,
-						"created_at": "0001-01-01T00:00:00Z",
-						"updated_at": "0001-01-01T00:00:00Z",
-						"deleted_at": {
-							"Time": "0001-01-01T00:00:00Z",
-							"Valid": false
-						}
-					}
-				}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"errors":[{"context":"","message":"expected only one \"metadata\" parameter"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
-			name: "Success: Provider updated without metadata",
-			ssoProvider: model.SSOProvider{
-				SAMLProvider: &model.SAMLProvider{
-					Name:        "Existing Provider",
-					DisplayName: "Existing Provider",
-					IssuerURI:   "https://existing.com/saml",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				},
+			name: "Error: duplicate sso provider config, getSSOProviderConfigFromMultipartRequest - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
 			},
-			setupForm: func() (*bytes.Buffer, *multipart.Writer) {
-				body := &bytes.Buffer{}
-				writer := multipart.NewWriter(body)
-
-				nameField, err := writer.CreateFormField("name")
-				if err != nil {
-					t.Fatal(err)
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
 				}
-				nameField.Write([]byte("Updated Provider"))
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
 
 				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while writing creating config auto provision enabled form file, needed for test %s: %v", testName, err)
 				}
-				autoProvisionField.Write([]byte("true"))
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision enabled form field, needed for test %s: %v", testName, err)
+				}
+
+				dupeAutoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision enabled form file, needed for test %s: %v", testName, err)
+				}
+				_, err = dupeAutoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision enabled form field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"expected only one \"config.auto_provision.enabled\" parameter"}]}`,
+			},
+		},
+		{
+			name: "Error: auth.GetIDPSingleSignOnServiceURL - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
+			},
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
+			<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+				<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-GET" Location="https://okta.com/sso"/>
+			</IDPSSODescriptor>
+		</EntityDescriptor>`))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
+
+				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision enabled form file, needed for test %s: %v", testName, err)
+				}
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision enabled form field, needed for test %s: %v", testName, err)
+				}
 
 				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
 				}
-				roleIDField.Write([]byte("1"))
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
 
 				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
 				}
-				roleProvisionField.Write([]byte("false"))
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
 
+				// Close the writer to finalize the body
 				writer.Close()
-				return body, writer
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
 			},
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{
-					Name: "Admin",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}, nil).AnyTimes()
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
 
-				updatedProvider := model.SAMLProvider{
-					Name:        "Updated Provider",
-					DisplayName: "Updated Provider",
-					IssuerURI:   "https://existing.com/saml",
-					Serial: model.Serial{
-						ID: 1,
-					},
-				}
-
-				mockDB.EXPECT().
-					UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).
-					Return(updatedProvider, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusOK,
-				responseBody: `{
-					"data": {
-						"name": "Updated Provider",
-						"display_name": "Updated Provider",
-						"idp_issuer_uri": "https://existing.com/saml",
-						"idp_sso_uri": "",
-						"root_uri_version": 0,
-						"principal_attribute_mappings": null,
-						"sp_issuer_uri": "",
-						"sp_sso_uri": "",
-						"sp_metadata_uri": "",
-						"sp_acs_uri": "",
-						"sso_provider_id": null,
-						"id": 1,
-						"created_at": "0001-01-01T00:00:00Z",
-						"updated_at": "0001-01-01T00:00:00Z",
-						"deleted_at": {
-							"Time": "0001-01-01T00:00:00Z",
-							"Valid": false
-						}
-					}
-				}`,
+				responseCode:   http.StatusBadRequest,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"metadata does not have a SSO service that supports HTTP POST binding"}]}`,
+			},
+		},
+		{
+			name: "Error: Database error duplicate provider db.UpdateSAMLIdentityProvider - Conflict",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
+			},
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
+
+				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
+				}
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
+
+				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+
+				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
+			},
+			expected: expected{
+				responseCode:   http.StatusConflict,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":409,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"sso provider name must be unique"}]}`,
+			},
+		},
+		{
+			name: "Error: Database error db.UpdateSAMLIdentityProvider - Bad Request",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{},
+			},
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error occurred while writing name field, needed for test %s: %v", testName, err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
+
+				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
+				}
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
+
+				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+
+				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+			},
+		},
+		{
+			name: "Success: Provider Multipart Updated - OK",
+			args: model.SSOProvider{
+				SAMLProvider: &model.SAMLProvider{
+					Name:            "name",
+					DisplayName:     "display",
+					IssuerURI:       "uri",
+					SingleSignOnURI: "uri",
+					MetadataXML:     []byte{},
+					RootURIVersion:  model.SAMLRootURIVersion1,
+				},
+			},
+			buildRequest: func(testName string) *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+					Header: http.Header{},
+				}
+
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				err := writer.WriteField("name", "okta provider")
+				if err != nil {
+					t.Fatalf("error writing name field %v needed for ", err)
+				}
+
+				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
+				if err != nil {
+					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
+				}
+				_, err = metadataFile.Write([]byte(validMetadataXML))
+				if err != nil {
+					t.Fatalf("error occurred while writing to metadata form file, needed for test %s: %v", testName, err)
+				}
+
+				autoProvisionField, err := writer.CreateFormField("config.auto_provision.enabled")
+				if err != nil {
+					t.Fatalf("error occurred while writing creating config auto provision form file, needed for test %s: %v", testName, err)
+				}
+				_, err = autoProvisionField.Write([]byte("true"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to auto provision form field, needed for test %s: %v", testName, err)
+				}
+
+				roleIDField, err := writer.CreateFormField("config.auto_provision.default_role_id")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleIDField.Write([]byte("1"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision default role id form field, needed for test %s: %v", testName, err)
+				}
+
+				roleProvisionField, err := writer.CreateFormField("config.auto_provision.role_provision")
+				if err != nil {
+					t.Fatalf("error occurred while creating config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+				_, err = roleProvisionField.Write([]byte("false"))
+				if err != nil {
+					t.Fatalf("error occurred while writing to config auto provision role provision form field, needed for test %s: %v", testName, err)
+				}
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", writer.Boundary()))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{
+					Name:            "name",
+					DisplayName:     "display",
+					IssuerURI:       "uri",
+					SingleSignOnURI: "uri",
+					MetadataXML:     []byte{},
+					RootURIVersion:  model.SAMLRootURIVersion1,
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"display_name":"display","id":0,"idp_issuer_uri":"uri","idp_sso_uri":"uri","name":"name","principal_attribute_mappings":null,"root_uri_version":1,"sp_acs_uri":"","sp_issuer_uri":"","sp_metadata_uri":"","sp_sso_uri":"","sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
 	}
@@ -1552,33 +1904,27 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-			testCase.setupMocks(t, mockDB)
-
-			body, writer := testCase.setupForm()
-			req, err := http.NewRequest("PUT", "/api/v2/saml/providers/1", body)
-			require.NoError(t, err)
-
-			if writer != nil {
-				req.Header.Set("Content-Type", writer.FormDataContentType())
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
+
+			request := testCase.buildRequest(t.Name())
+			testCase.setupMocks(t, mocks, request)
+
+			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
-			resources.UpdateSAMLProviderRequest(response, req, testCase.ssoProvider)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			resource.UpdateSAMLProviderRequest(response, request, testCase.args)
+			mux.NewRouter().ServeHTTP(response, request)
 
-			if testCase.name == "Success: Provider updated with new name" || testCase.name == "Success: Provider updated without metadata" {
-				assert.JSONEq(t, testCase.expected.responseBody, response.Body.String())
-			} else {
-				responseBodyWithDefaultTimestamp, err := utils.ReplaceFieldValueInJsonString(response.Body.String(), "timestamp", "0001-01-01T00:00:00Z")
-				require.NoError(t, err)
-				assert.JSONEq(t, testCase.expected.responseBody, responseBodyWithDefaultTimestamp)
-			}
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}
 }

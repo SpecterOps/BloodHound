@@ -165,7 +165,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to generate state: %v", err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
-	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario

@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/src/services/oidc"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
@@ -58,6 +59,7 @@ type ManagementResource struct {
 	QueryParameterFilterParser model.QueryParameterFilterParser
 	authorizer                 auth.Authorizer   // Used for Permissions
 	authenticator              api.Authenticator // Used for secrets
+	OIDC                       oidc.Service
 }
 
 func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
@@ -68,6 +70,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		QueryParameterFilterParser: model.NewQueryParameterFilterParser(),
 		authorizer:                 authorizer,
 		authenticator:              authenticator,
+		OIDC:                       &oidc.Client{},
 	}
 }
 
