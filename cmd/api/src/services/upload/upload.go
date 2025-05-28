@@ -35,10 +35,6 @@ var ErrInvalidJSON = errors.New("file is not valid json")
 
 func SaveIngestFile(location string, request *http.Request, validator IngestValidator) (IngestTaskParams, error) {
 	fileData := request.Body
-	tempFile, err := os.CreateTemp(location, "bh")
-	if err != nil {
-		return IngestTaskParams{Filename: "", FileType: model.FileTypeJson}, fmt.Errorf("error creating ingest file: %w", err)
-	}
 
 	var (
 		fileType     model.FileType
@@ -56,29 +52,44 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if _, err := WriteAndValidateFile(fileData, tempFile, validationFn); err != nil {
+	if tempFileName, err := WriteAndValidateFile(fileData, location, validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
 		return IngestTaskParams{
-			Filename: tempFile.Name(),
+			Filename: tempFileName,
 			FileType: fileType,
 		}, nil
 	}
 
 }
 
-func WriteAndValidateFile(fileData io.ReadCloser, tempFile *os.File, validationFunc FileValidator) (ingest.Metadata, error) {
-	if meta, err := validationFunc(fileData, tempFile); err != nil {
-		if err := tempFile.Close(); err != nil {
-			slog.Error(fmt.Sprintf("Error closing temp file %s with failed validation: %v", tempFile.Name(), err))
-		} else if err := os.Remove(tempFile.Name()); err != nil {
-			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFile.Name(), err))
-		}
-		return meta, err
-	} else {
-		if err := tempFile.Close(); err != nil {
-			slog.Error(fmt.Sprintf("Error closing temp file with successful validation %s: %v", tempFile.Name(), err))
-		}
-		return meta, nil
+func WriteAndValidateFile(fileData io.Reader, location string, validationFunc FileValidator) (string, error) {
+	// Write a temp file. If it passes validation, keep it around and return the filename. Otherwise destroy it.
+	tempFile, err := os.CreateTemp(location, "bh")
+	if err != nil {
+		return "", fmt.Errorf("error creating ingest file: %w", err)
 	}
+
+	// Save this for later
+	tempFileName := tempFile.Name()
+
+	// Run validation on the file to see if we even want to keep it
+	_, validationErr := validationFunc(fileData, tempFile)
+
+	// We close the file next, not last. We can't defer this if we might want to delete it.
+	// Note: fileData does not need to be closed because the HTTP server manages it's lifecyle
+	if closeErr := tempFile.Close(); closeErr != nil {
+		slog.Error(fmt.Sprintf("Error closing temp file %s: %v", tempFileName, closeErr))
+	}
+
+	// If the validation was not successful, after we close the file, we remove it and return the error
+	if validationErr != nil {
+		if removeErr := os.Remove(tempFileName); removeErr != nil {
+			slog.Error(fmt.Sprintf("Error deleting temp file %s: %v", tempFileName, removeErr))
+		}
+		return "", validationErr
+	}
+
+	// Assuming no other errors, return the name of the closed temp file
+	return tempFileName, nil
 }

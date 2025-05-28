@@ -23,8 +23,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-// The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
-type IngestData interface {
+// The UploadData interface is designed to manage the lifecycle of uploading and creating tasks for graphify
+type UploadData interface {
 	// Task handlers
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 	DeleteAllIngestTasks(ctx context.Context) error

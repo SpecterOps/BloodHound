@@ -21,7 +21,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-// The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
+// The JobData interface is designed to manage the lifecycle of jobs in a system that processes graph-based data
 type JobData interface {
 	// Task handlers
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)

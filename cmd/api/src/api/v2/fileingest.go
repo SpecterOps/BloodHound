@@ -36,8 +36,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	ingestModel "github.com/specterops/bloodhound/src/model/ingest"
 
-	"github.com/specterops/bloodhound/src/services/ingest"
 	"github.com/specterops/bloodhound/src/services/job"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 const FileUploadJobIdPathParameterName = "file_upload_job_id"
@@ -127,7 +127,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 	var (
 		requestId   = ctx.FromRequest(request).RequestID
 		jobIdString = mux.Vars(request)[FileUploadJobIdPathParameterName]
-		validator   = ingest.NewIngestValidator(s.IngestSchema)
+		validator   = upload.NewIngestValidator(s.IngestSchema)
 	)
 
 	if request.Body != nil {
@@ -140,9 +140,9 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 	} else if ingestJob, err := job.GetIngestJobByID(request.Context(), s.DB, int64(jobID)); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if ingestTaskParams, err := ingest.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, ingest.ErrInvalidJSON) {
+	} else if ingestTaskParams, err := upload.SaveIngestFile(s.Config.TempDirectory(), request, validator); errors.Is(err, upload.ErrInvalidJSON) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if report, ok := err.(ingest.ValidationReport); ok {
+	} else if report, ok := err.(upload.ValidationReport); ok {
 		var (
 			msgs       = report.BuildAPIError()
 			errDetails = []api.ErrorDetails{}
@@ -162,7 +162,7 @@ func (s Resources) ProcessIngestTask(response http.ResponseWriter, request *http
 		api.WriteErrorResponse(request.Context(), e, response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error saving ingest file: %v", err), request), response)
-	} else if _, err = ingest.CreateIngestTask(request.Context(), s.DB, ingest.IngestTaskParams{Filename: ingestTaskParams.Filename, FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
+	} else if _, err = upload.CreateIngestTask(request.Context(), s.DB, upload.IngestTaskParams{Filename: ingestTaskParams.Filename, FileType: ingestTaskParams.FileType, RequestID: requestId, JobID: int64(jobID)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if err = job.TouchIngestJobLastIngest(request.Context(), s.DB, ingestJob); err != nil {
 		api.HandleDatabaseError(request, response, err)
