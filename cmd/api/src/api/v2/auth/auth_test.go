@@ -4695,7 +4695,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
-		// TODO BED-5641:
+		// TODO: BED-5641
 		// Options
 		// 1. Mock
 		// 2. Validate Base64 Encoded Value
