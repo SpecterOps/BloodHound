@@ -35,12 +35,13 @@ func DirCheck(path string) bool {
 
 func IgnorePathValidation(ignorPaths []string, wd, path string) bool {
 	for _, ig := range ignorPaths {
-		if wd+"/"+ig != path {
-			return true
+		if strings.Contains(path, ig) {
+			fmt.Printf("path %v result %v\n", false, path)
+			return false
 		}
 	}
 
-	return false
+	return true
 }
 
 func IsHeaderPresent(path string) (bool, error) {

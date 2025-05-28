@@ -75,7 +75,6 @@ func main() {
 		scanPath := license.IgnorePathValidation(ignorPaths, wd, path)
 
 		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 && scanPath {
-
 			// worker updates the task channel with one of two values. "skip" when the header is present
 			// or a file path to be consumed by another worker to format the file
 			wg.Add(1)
@@ -107,25 +106,25 @@ func main() {
 					case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".cue", ".scss":
 						h := license.GenerateLicenseHeader("//")
 						if err := license.WriteFile(path, h); err != nil {
-							err := fmt.Errorf("failed formatting file: %s", path)
+							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".jsx", ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
 						h := license.GenerateLicenseHeader("#")
 						if err := license.WriteFile(path, h); err != nil {
-							err := fmt.Errorf("failed formatting file: %s", path)
+							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".sql":
 						h := license.GenerateLicenseHeader("--")
 						if err := license.WriteFile(path, h); err != nil {
-							err := fmt.Errorf("failed formatting file: %s", path)
+							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".xml", ".html":
 						h := license.GenerateXMLLicenseHeader()
 						if err := license.WriteXMLFile(path, h); err != nil {
-							err := fmt.Errorf("failed formatting file: %s", path)
+							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					default:
