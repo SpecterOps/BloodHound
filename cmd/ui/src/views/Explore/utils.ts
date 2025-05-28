@@ -98,7 +98,6 @@ const initGraphNodes = (
             type: 'combined',
             label: node.label,
             forceLabel: true,
-            hidden: node.hidden,
             ...themedOptions.labels,
         };
 

@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popper, useTheme } from '@mui/material';
+import { useTheme } from '@mui/material';
 import {
+    GraphControls,
     GraphProgress,
-    SearchCurrentNodes,
     TableView,
     WebGLDisabledAlert,
-    exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useAvailableEnvironments,
@@ -34,7 +33,6 @@ import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
@@ -44,6 +42,8 @@ import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
+
+const layoutOptions = ['sequential', 'standard', 'table'];
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -57,15 +57,13 @@ const GraphView: FC = () => {
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+    const [selectedLayout, setSelectedLayout] = useState<(typeof layoutOptions)[number]>('sequential');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
+    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
-    const [showTableView, setShowTableView] = useState(false);
 
     const sigmaChartRef = useRef<any>(null);
-    const currentSearchAnchorElement = useRef(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
@@ -75,9 +73,8 @@ const GraphView: FC = () => {
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
-        const shouldHideNodes = showTableView;
         // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items, shouldHideNodes);
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 
@@ -87,7 +84,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, showTableView]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
 
     if (isLoading) {
         return (
@@ -117,6 +114,19 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
+    const handleLayoutChange = (layout: string) => {
+        setSelectedLayout(layout);
+        if (layout === 'standard') {
+            sigmaChartRef.current?.runStandardLayout();
+        } else if (layout === 'sequential') {
+            sigmaChartRef.current?.runSequentialLayout();
+        } else if (layout === 'table') {
+            graphologyGraph?.updateEachNodeAttributes((node, attr) => {
+                return { ...attr, hidden: true };
+            });
+        }
+    };
+
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -133,73 +143,31 @@ const GraphView: FC = () => {
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
-                    <GraphButtons
-                        onExportJson={() => {
-                            exportToJson(exportJsonData);
-                        }}
-                        onReset={sigmaChartRef.current?.resetCamera}
-                        onLayoutChange={(layout) => {
-                            if (layout === 'standard') {
-                                sigmaChartRef.current?.runStandardLayout();
-                            } else if (layout === 'sequential') {
-                                sigmaChartRef.current?.runSequentialLayout();
-                            } else if (layout === 'table') {
-                                setShowTableView((open) => {
-                                    return !open;
-                                });
-                            }
-                        }}
-                        onSearchCurrentResults={toggleCurrentSearch}
-                        onToggleAllLabels={() => {
-                            if (!showNodeLabels || !showEdgeLabels) {
-                                setShowNodeLabels(true);
-                                setShowEdgeLabels(true);
-                            } else {
-                                setShowNodeLabels(false);
-                                setShowEdgeLabels(false);
-                            }
-                        }}
-                        onToggleNodeLabels={() => {
-                            setShowNodeLabels((prev) => !prev);
-                        }}
-                        onToggleEdgeLabels={() => {
-                            setShowEdgeLabels((prev) => !prev);
-                        }}
-                        showNodeLabels={showNodeLabels}
-                        showEdgeLabels={showEdgeLabels}
-                        isCurrentSearchOpen={false}
-                        isJsonExportDisabled={isEmpty(exportJsonData)}
-                    />
-                </div>
-                <Popper
-                    open={currentSearchOpen}
-                    anchorEl={currentSearchAnchorElement.current}
-                    placement='top'
-                    disablePortal
-                    className='w-[90%] z-[1]'>
-                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
-                        <SearchCurrentNodes
-                            sx={{ padding: 1, marginBottom: 1 }}
-                            currentNodes={currentNodes || {}}
-                            onSelect={(node) => {
-                                handleClickNode?.(node.id);
-                                toggleCurrentSearch?.();
-                            }}
-                            onClose={toggleCurrentSearch}
-                        />
-                    </div>
-                </Popper>
+                <GraphControls
+                    layoutOptions={layoutOptions}
+                    selectedLayout={selectedLayout}
+                    onLayoutChange={handleLayoutChange}
+                    showNodeLabels={showNodeLabels}
+                    onToggleNodeLabels={toggleShowNodeLabels}
+                    showEdgeLabels={showEdgeLabels}
+                    onToggleEdgeLabels={toggleShowEdgeLabels}
+                    jsonData={exportJsonData}
+                    onReset={sigmaChartRef.current?.resetCamera}
+                    currentNodes={currentNodes}
+                />
             </div>
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
             <TableView
-                open={showTableView}
+                open={selectedLayout === 'table'}
                 onClose={() => {
-                    setShowTableView(false);
-                    sigmaChartRef.current?.runSequentialLayout();
+                    handleLayoutChange('sequential');
+
+                    graphologyGraph?.updateEachNodeAttributes((node, attr) => {
+                        return { ...attr, hidden: false };
+                    });
                 }}
             />
         </div>
