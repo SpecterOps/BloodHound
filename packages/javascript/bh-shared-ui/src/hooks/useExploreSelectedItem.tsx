@@ -25,12 +25,17 @@ export const useExploreSelectedItem = () => {
     const selectedItemQuery = useGraphItem(selectedItem!);
 
     const setSelectedItem = useCallback(
-        (itemId: string) => {
-            if (itemId !== selectedItem)
+        (itemId: string, onSelect?: () => void) => {
+            if (itemId !== selectedItem) {
                 setExploreParams({
                     selectedItem: itemId,
                     expandedPanelSections: null,
                 });
+
+                if (onSelect) {
+                    onSelect();
+                }
+            }
         },
         [selectedItem, setExploreParams]
     );
