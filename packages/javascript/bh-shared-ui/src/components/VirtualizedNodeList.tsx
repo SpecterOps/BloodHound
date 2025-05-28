@@ -15,43 +15,64 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from '@bloodhoundenterprise/doodleui';
-import { GraphNode } from 'js-client-library';
+import { AssetGroupTagNode, GraphNode } from 'js-client-library';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import { cn } from '../utils';
 import NodeIcon from './NodeIcon';
 
-export type VirtualizedNodeListItem = {
+export type NormalizedNodeItem = {
     name: string;
     objectId: string;
-    graphId?: string;
     kind: string;
     onClick?: (index: number) => void;
+    graphId?: string;
 };
 
-const isGraphNode = (node: any): node is GraphNode => {
-    return node.label !== undefined;
+const isGraphNode = (node: unknown): node is GraphNode => {
+    return 'label' in (node as GraphNode);
 };
 
-const normalizeItem = (item: VirtualizedNodeListItem | GraphNode): VirtualizedNodeListItem => {
-    if (isGraphNode(item))
+const isAssetGroupTagNode = (node: unknown): node is AssetGroupTagNode => {
+    return 'object_id' in (node as AssetGroupTagNode);
+};
+
+const isNormalizedNodeItem = (node: unknown): node is NormalizedNodeItem => {
+    const castedNode = node as NormalizedNodeItem;
+    return 'name' in castedNode && 'objectId' in castedNode && 'kind' in castedNode;
+};
+
+const normalizeItem = <T,>(item: T): NormalizedNodeItem => {
+    const defaultName = 'NO NAME';
+
+    if (isGraphNode(item)) {
         return {
             ...item,
-            name: item.label || item.objectId || 'NO NAME',
+            name: item.label || item.objectId || defaultName,
         };
-    else
+    } else if (isAssetGroupTagNode(item)) {
         return {
             ...item,
-            name: item.name || item.objectId || 'NO NAME',
+            name: item.name || item.object_id || defaultName,
+            objectId: item.object_id,
+            kind: item.primary_kind,
         };
+    } else if (isNormalizedNodeItem(item)) {
+        return {
+            ...item,
+            name: item.name || item.objectId || defaultName,
+        };
+    } else {
+        throw new Error('item type is unknown');
+    }
 };
 
 const InnerElement = ({ style, ...rest }: any) => (
     // Top margin is adjusted to account for FixedSizeList's default of 'overflow: auto'
     // causing the scrollbar to render even for a single node
-    <ul style={{ ...style, overflowX: 'hidden', marginTop: 0 }} {...rest}></ul>
+    <ul style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest}></ul>
 );
 
-const Row = ({ data, index, style }: ListChildComponentProps<VirtualizableNodes>) => {
+const Row = <T,>({ data, index, style }: ListChildComponentProps<NodeList<T>>) => {
     const items = data;
     const item = items[index];
     const normalizedItem = normalizeItem(item);
@@ -64,31 +85,28 @@ const Row = ({ data, index, style }: ListChildComponentProps<VirtualizableNodes>
                     'bg-neutral-light-3 dark:bg-neutral-dark-3': index % 2 !== 0,
                 }
             )}
-            style={{
-                ...style,
-                padding: '0 8px',
-            }}
+            style={{ ...style }}
             onClick={() => normalizedItem.onClick?.(index)}
             data-testid='entity-row'>
             <NodeIcon nodeType={normalizedItem.kind} />
-            <Tooltip tooltip={normalizedItem.name}>
-                <div className='truncate text-ellipsis ml-10'>{normalizedItem.name}</div>
+            <Tooltip
+                tooltip={normalizedItem.name}
+                contentProps={{ className: 'max-w-80 dark:bg-neutral-dark-5 border-0' }}>
+                <div className={cn('truncate ml-2', { 'ml-10': isAssetGroupTagNode(item) })}>{normalizedItem.name}</div>
             </Tooltip>
         </li>
     );
 };
 
-type NodeList<T> = T[];
+type NodeList<T> = Array<T>;
 
-export type VirtualizableNodes = NodeList<VirtualizedNodeListItem | GraphNode>;
-
-interface VirtualizedNodeListProps {
-    nodes: VirtualizableNodes;
+interface VirtualizedNodeListProps<T> {
+    nodes: NodeList<T>;
     itemSize?: number;
     heightScalar?: number;
 }
 
-const VirtualizedNodeList = ({ nodes, itemSize = 32, heightScalar = 16 }: VirtualizedNodeListProps) => {
+const VirtualizedNodeList = <T,>({ nodes, itemSize = 32, heightScalar = 16 }: VirtualizedNodeListProps<T>) => {
     return (
         <FixedSizeList
             height={Math.min(nodes.length, heightScalar) * itemSize}

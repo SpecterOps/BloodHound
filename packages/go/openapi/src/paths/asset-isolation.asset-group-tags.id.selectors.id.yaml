@@ -81,11 +81,11 @@ patch:
       application/json:
         schema:
           allOf:
-            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
+            - $ref: './../schemas/model.asset-group-tags-selector-update.yaml'
             - type: object
               properties:
-                disabled_at:
-                  $ref: './../schemas/null.time.yaml'
+                disabled:
+                  type: boolean
 
   responses:
     200:
