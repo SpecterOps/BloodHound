@@ -220,7 +220,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
                     clickTimerRef.current = setTimeout(function () {
                         if (!prevent.current) {
-                            onClickNode(event);
+                            onClickNode(event.node);
                         }
                         prevent.current = false;
                     }, 200);
