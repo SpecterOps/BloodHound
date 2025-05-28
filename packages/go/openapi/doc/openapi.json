@@ -2407,6 +2407,129 @@
         }
       }
     },
+    "/api/v2/kennel/manifest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelManifest",
+        "summary": "Get kennel manifest",
+        "description": "Retrieves a manifest of community collectors",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.kennel-manifest"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/kennel/enterprise-manifest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelEnterpriseManifest",
+        "summary": "Get kennel enterprise manifest",
+        "description": "Retrieves a manifest of enterprise collectors",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.kennel-enterprise-manifest"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/kennel/download/{asset_name}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_name",
+          "description": "Asset name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelAsset",
+        "summary": "Download asset",
+        "description": "Downloads an enterprise asset (collector or checksum)",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/binary-response"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/file-upload": {
       "parameters": [
         {
@@ -16629,6 +16752,98 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/model.collector-version"
+            }
+          }
+        }
+      },
+      "model.version-meta": {
+        "type": "object",
+        "properties": {
+          "major": {
+            "type": "integer"
+          },
+          "minor": {
+            "type": "integer"
+          },
+          "patch": {
+            "type": "integer"
+          },
+          "prerelease": {
+            "type": "string"
+          }
+        }
+      },
+      "model.kennel-asset": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "download_url": {
+            "type": "string"
+          },
+          "checksum_download_url": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "arch": {
+            "type": "string"
+          }
+        }
+      },
+      "model.kennel-version": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "version_meta": {
+            "$ref": "#/components/schemas/model.version-meta"
+          },
+          "release_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "release_assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-asset"
+            }
+          }
+        }
+      },
+      "model.kennel-manifest": {
+        "type": "object",
+        "properties": {
+          "sharphound": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          },
+          "azurehound": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          }
+        }
+      },
+      "model.kennel-enterprise-manifest": {
+        "type": "object",
+        "properties": {
+          "sharphound_enterprise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          },
+          "azurehound_enterprise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
             }
           }
         }
