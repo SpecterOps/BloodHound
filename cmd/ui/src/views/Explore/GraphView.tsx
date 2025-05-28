@@ -75,8 +75,9 @@ const GraphView: FC = () => {
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
 
+        const shouldHideNodes = showTableView;
         // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items, showTableView);
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items, shouldHideNodes);
 
         const graph = new MultiDirectedGraph();
 
@@ -115,7 +116,7 @@ const GraphView: FC = () => {
     const handleCloseContextMenu = () => {
         setContextMenu(null);
     };
-    console.log(sigmaChartRef.current);
+
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -137,9 +138,7 @@ const GraphView: FC = () => {
                         onExportJson={() => {
                             exportToJson(exportJsonData);
                         }}
-                        onReset={() => {
-                            sigmaChartRef.current?.resetCamera();
-                        }}
+                        onReset={sigmaChartRef.current?.resetCamera}
                         onLayoutChange={(layout) => {
                             if (layout === 'standard') {
                                 sigmaChartRef.current?.runStandardLayout();
@@ -209,15 +208,13 @@ const GraphView: FC = () => {
 
 /**
  * TODO:
- * hide/show nodes
- *   this is complicated in sigma, what does it look like in bhe?
- *   also complicated in BHE, you have to replace nodes with just empty nodes
- *     -- simplify by state being a key that will execute or get the correct graph layout settings
- * how can we standardize the layout selection
+ * simplify graph controls and the layout options and the search nodes stuff
+ * how are we going to hide this functionality temporarily
+ *   fake out the response from a shared hook for auto detection, and comment out the table layout option
+ *
  * show placeholder when no nodes are present and we are viewing the table
  * where do we throw in the empty node check?
  *   same thing for BHE
- * how are we going to hide this functionality temporarily
  */
 
 export default GraphView;
