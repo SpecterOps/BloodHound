@@ -48,7 +48,7 @@ const createDefaultQueryClient = () => {
 };
 
 const createProviders = ({ queryClient, route, theme, children }) => {
-    window.history.pushState({}, 'Test page', route);
+    window.history.pushState({}, 'Initialize', route);
     return (
         <QueryClientProvider client={queryClient}>
             <StyledEngineProvider injectFirst>

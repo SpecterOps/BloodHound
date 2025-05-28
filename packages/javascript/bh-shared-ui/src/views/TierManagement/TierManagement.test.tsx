@@ -56,7 +56,7 @@ describe('Tier Management', async () => {
         waitFor(() => {
             expect(tierTab).not.toHaveAttribute('data-state', 'active');
             expect(labelTab).toHaveAttribute('data-state', 'active');
-            expect(window.location).toBe('/tier-management/details/label/2');
+            expect(window.location.pathname).toBe('/tier-management/details/label/2');
         });
 
         // Switch back to Tiers
@@ -65,7 +65,7 @@ describe('Tier Management', async () => {
         waitFor(() => {
             expect(tierTab).toHaveAttribute('data-state', 'active');
             expect(labelTab).not.toHaveAttribute('data-state', 'active');
-            expect(window.location).toBe('/tier-management/details/tier/1');
+            expect(window.location.pathname).toBe('/tier-management/details/tier/1');
         });
     });
 });

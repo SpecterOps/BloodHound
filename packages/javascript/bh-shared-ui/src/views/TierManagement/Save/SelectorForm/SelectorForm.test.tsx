@@ -250,12 +250,11 @@ describe('Selector Form', () => {
         await act(async () => {
             render(
                 <Routes>
-                    <Route path={'/'} element={<SelectorForm />} />;
+                    <Route path={'/'} element={<SelectorForm />} />
                     <Route
                         path={'/tier-management/save/tier/:tierId/selector/:selectorId'}
                         element={<SelectorForm />}
                     />
-                    ;
                 </Routes>,
                 { route: editExistingPath }
             );
