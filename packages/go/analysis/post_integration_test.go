@@ -68,12 +68,12 @@ func TestDeleteTransitEdges(t *testing.T) {
 	)
 
 	// In order to validate that DeleteTransitEdges and the updated PostProcessedRelationships for both AD and Azure are correct, we need to simulate
-	// the completion of post-processing in: lib/go/analysis/azure/post.go
+	// the completion of post-processing in: bhce/cmd/api/src/analysis/azure/post.go
 	//
 	// The specific function that is responsible for creating the edges below can be found in bhce/packages/go/analysis/hybrid/hybrid.go - PostHybrid(...)
 	//
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
-	// in lib/go/analysis/azure/post.go.
+	// in bhce/cmd/api/src/analysis/azure/post.go.
 	testCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
 	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
 
