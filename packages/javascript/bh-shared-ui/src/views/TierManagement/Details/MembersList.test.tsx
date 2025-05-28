@@ -54,7 +54,7 @@ describe('MembersList', () => {
                     element={<MembersList selected='1' onClick={vi.fn()} itemCount={1} />}
                 />
             </Routes>,
-            { route: '/tier-management/details/tag/1/selector/1' }
+            { route: '/tier-management/details/tier/1/selector/1' }
         );
 
         waitFor(() => {
