@@ -21,7 +21,6 @@ import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material'
 import { render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { createMemoryHistory } from 'history';
 import { NotificationsProvider } from './providers';
 import { darkPalette } from './constants';
 import { SnackbarProvider } from 'notistack';
