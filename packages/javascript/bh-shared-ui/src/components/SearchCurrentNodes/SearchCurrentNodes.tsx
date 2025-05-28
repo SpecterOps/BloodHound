@@ -47,7 +47,9 @@ const SearchCurrentNodes: FC<{
 
     useEffect(() => inputRef.current?.focus(), []);
 
-    if (selectedNode) onSelect(selectedNode);
+    useEffect(() => {
+        if (selectedNode) onSelect(selectedNode);
+    }, [selectedNode, onSelect]);
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
