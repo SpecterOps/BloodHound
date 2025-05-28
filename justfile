@@ -61,7 +61,7 @@ _prep-steps:
 
 # check license is applied to source files
 check-license:
-  python3 license_check.py
+  go run packages/go/stbernard/command/license/main.go
 
 # run go commands in the context of the api project
 go *ARGS:
