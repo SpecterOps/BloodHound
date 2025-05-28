@@ -23,17 +23,17 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func SearchTierZeroNodes(tieringEnabled bool) graph.Criteria {
+func SearchTierZeroNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Node(), KindTagTierZero)
+		return query.KindIn(query.Node(), tierKinds...)
 	} else {
 		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
 }
 
-func SearchTierZeroNodesRel(tieringEnabled bool) graph.Criteria {
+func SearchTierZeroNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Start(), KindTagTierZero)
+		return query.Kind(query.Start(), tierKinds...)
 	} else {
 		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
