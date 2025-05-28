@@ -57,7 +57,7 @@ export const createPathFilterString = (types: string[]) => {
 };
 
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
-export const transformFlatGraphResponse = (graph: FlatGraphResponse, hideNodes?: boolean): GraphData => {
+export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
     const result: GraphData = {
         nodes: {},
         edges: [],
@@ -74,7 +74,6 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse, hideNodes?:
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,
-                hidden: hideNodes,
             };
         } else if (isLink(item)) {
             const edge = item as StyledGraphEdge;

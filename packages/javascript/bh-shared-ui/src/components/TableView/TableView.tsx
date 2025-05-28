@@ -10,7 +10,7 @@ const TableView: React.FC<TableViewProps> = (props) => {
     const { open, onClose } = props;
 
     if (!open) return null;
-    console.log('SHOW ME');
+
     return (
         <div className='absolute bottom-4 left-4 right-4 h-1/2 bg-pink-300 flex justify-center items-center'>
             {' '}

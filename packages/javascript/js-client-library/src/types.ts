@@ -268,7 +268,6 @@ export type GraphNode = {
     isTierZero: boolean;
     isOwnedObject: boolean;
     descendent_count?: number | null;
-    hidden?: boolean;
 };
 
 export type GraphNodes = Record<string, GraphNode>;
