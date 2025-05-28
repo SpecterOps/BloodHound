@@ -17,94 +17,196 @@
 package model_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 
-func TestModel_BuildSQLFilter_Failure(t *testing.T) {
-	filter1 := model.QueryParameterFilter{
-		Name:         "filtercolumn1",
-		Operator:     model.FilterOperator("foo"), // invalid predicate
-		Value:        "0",
-		IsStringData: false,
+func TestBuildSQLFilter(t *testing.T) {
+	testCases := []struct {
+		name    string
+		input   model.Filters
+		output  model.SQLFilter
+		wantErr bool
+	}{
+		{
+			name: "greater than",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "gt",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo > 12",
+			},
+		},
+		{
+			name: "greater than or equals",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "gte",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo >= 12",
+			},
+		},
+		{
+			name: "less than",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "lt",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo < 12",
+			},
+		},
+		{
+			name: "less than or equals",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "lte",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo <= 12",
+			},
+		},
+		{
+			name: "equals int",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "eq",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = 12",
+			},
+		},
+		{
+			name: "equals float",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "eq",
+					Value:    "12.215",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = 12.215",
+			},
+		},
+		{
+			name: "equals string",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "eq",
+					Value:    "1notanumber2",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = '1notanumber2'",
+			},
+		},
+		{
+			name: "equals boolean",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "eq",
+					Value:    "false",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo = false",
+			},
+		},
+		{
+			name: "equals null",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "eq",
+					Value:    "null",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo is null",
+			},
+		},
+		{
+			name: "not equals int",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "neq",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo != 12",
+			},
+		},
+		{
+			name: "not equals null",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "neq",
+					Value:    "null",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo is not null",
+			},
+		},
+		{
+			name: "aprox equals",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "~eq",
+					Value:    "12",
+				}},
+			},
+			output: model.SQLFilter{
+				SQLString: "foo like '%12%'",
+			},
+		},
+		{
+			name: "broken operator",
+			input: model.Filters{
+				"foo": []model.Filter{{
+					Operator: "NOT OPERATOR",
+					Value:    "12",
+				}},
+			},
+			wantErr: true,
+		},
 	}
 
-	queryParameterFilterMap := model.QueryParameterFilterMap{
-		filter1.Name: model.QueryParameterFilters{filter1},
-	}
+	// Run each test case and compare the output with the expected result
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actualOutput, err := model.BuildSQLFilter(tc.input)
 
-	_, err := queryParameterFilterMap.BuildSQLFilter()
-	require.Contains(t, err.Error(), "invalid filter predicate")
-}
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
 
-func TestModel_BuildSQLFilter_Success(t *testing.T) {
-	numericMin := model.QueryParameterFilter{
-		Name:         "filtercolumn1",
-		Operator:     model.GreaterThan,
-		Value:        "0",
-		IsStringData: false,
-	}
+				return
+			}
 
-	numericMax := model.QueryParameterFilter{
-		Name:         "filtercolumn2",
-		Operator:     model.LessThan,
-		Value:        "10",
-		IsStringData: false,
-	}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
 
-	stringValue := model.QueryParameterFilter{
-		Name:         "filtercolumn3",
-		Operator:     model.Equals,
-		Value:        "stringValue",
-		IsStringData: true,
-	}
-
-	boolEquals := model.QueryParameterFilter{
-		Name:         "filtercolumn4",
-		Operator:     model.Equals,
-		Value:        "true",
-		IsStringData: false,
-	}
-
-	boolNotEquals := model.QueryParameterFilter{
-		Name:         "filtercolumn5",
-		Operator:     model.NotEquals,
-		Value:        "false",
-		IsStringData: false,
-	}
-
-	approximatelyEquals := model.QueryParameterFilter{
-		Name:         "filtercolumn6",
-		Operator:     model.ApproximatelyEquals,
-		Value:        "testing value",
-		IsStringData: true,
-	}
-
-	expectedResults := map[string]model.SQLFilter{
-		"numericMin":                {SQLString: fmt.Sprintf("%s > ?", numericMin.Name), Params: []any{numericMin.Value}},
-		"numericMax":                {SQLString: fmt.Sprintf("%s < ?", numericMax.Name), Params: []any{numericMax.Value}},
-		"stringValue":               {SQLString: fmt.Sprintf("%s = ?", stringValue.Name), Params: []any{stringValue.Value}},
-		"boolEquals":                {SQLString: fmt.Sprintf("%s = ?", boolEquals.Name), Params: []any{boolEquals.Value}},
-		"boolNotEquals":             {SQLString: fmt.Sprintf("%s <> ?", boolNotEquals.Name), Params: []any{boolNotEquals.Value}},
-		"stringApproximatelyEquals": {SQLString: fmt.Sprintf("%s ILIKE ?", approximatelyEquals.Name), Params: []any{approximatelyEquals.Value}},
-	}
-
-	queryParameterFilterMap := model.QueryParameterFilterMap{
-		numericMax.Name:          model.QueryParameterFilters{numericMin, numericMax},
-		stringValue.Name:         model.QueryParameterFilters{stringValue},
-		boolEquals.Name:          model.QueryParameterFilters{boolEquals},
-		boolNotEquals.Name:       model.QueryParameterFilters{boolNotEquals},
-		approximatelyEquals.Name: model.QueryParameterFilters{approximatelyEquals},
-	}
-
-	result, err := queryParameterFilterMap.BuildSQLFilter()
-	require.Nil(t, err)
-
-	for _, val := range expectedResults {
-		require.Contains(t, result.SQLString, val.SQLString)
-		require.EqualValues(t, result.Params, result.Params)
+			if actualOutput.SQLString != tc.output.SQLString {
+				t.Errorf("incorrect SQL string: got %q, want %q", actualOutput.SQLString, tc.output.SQLString)
+			}
+		})
 	}
 }

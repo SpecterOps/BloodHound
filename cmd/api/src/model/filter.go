@@ -144,55 +144,129 @@ func (s QueryParameterFilter) BuildGDBNodeFilter() graph.Criteria {
 
 type QueryParameterFilterMap map[string]QueryParameterFilters
 
-func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
-	var (
-		result    strings.Builder
-		predicate string
-		params    []any
-	)
+// ToFiltersModel converts the query parameter filter map model into the newer, more generic filter
+// model. This is useful when accessing newer functions that expect the newer model without having
+// refactor multiple sites all-at-once.
+func (s QueryParameterFilterMap) ToFiltersModel() Filters {
+	convertedFilters := Filters{}
 
-	for _, filters := range s {
-		for _, filter := range filters {
-			if result.Len() > 0 {
-				result.WriteString(" AND ")
+	for name, oldModelFilters := range s {
+		newModelFilters := make([]Filter, len(oldModelFilters))
+
+		for idx, oldModelFilter := range oldModelFilters {
+			newModelFilters[idx] = Filter{
+				Operator: oldModelFilter.Operator,
+				Value:    oldModelFilter.Value,
 			}
+		}
+
+		convertedFilters[name] = newModelFilters
+	}
+
+	return convertedFilters
+}
+
+// filterValueAsPGLiteral takes a string value and returns a PG SQL literal that represents the value in the form of a
+// Go struct. This function will attempt to parse the string value into different types but otherwise defaults to the
+// given string value as a wrapped literal.
+func filterValueAsPGLiteral(valueStr string, isNullValue bool) (pgsql.Literal, error) {
+	if isNullValue {
+		return pgsql.NullLiteral(), nil
+	}
+
+	if valueInt64, err := strconv.ParseInt(valueStr, 10, 64); err == nil {
+		return pgsql.NewLiteral(valueInt64, pgsql.Int8), nil
+	}
+
+	if valueFloat64, err := strconv.ParseFloat(valueStr, 64); err == nil {
+		return pgsql.NewLiteral(valueFloat64, pgsql.Float8), nil
+	}
+
+	if valueBool, err := strconv.ParseBool(valueStr); err == nil {
+		return pgsql.NewLiteral(valueBool, pgsql.Boolean), nil
+	}
+
+	// Default to the pgsql package type conversion
+	return pgsql.AsLiteral(valueStr)
+}
+
+// BuildSQLFilter builds a PGSQL syntax-correct SQLFilter result from the given Filters struct. This function
+// uses the PGSQL AST to ensure formatted SQL correctness.
+func BuildSQLFilter(filters Filters) (SQLFilter, error) {
+	var whereClauseFragment pgsql.Expression
+
+	for name, filterOperations := range filters {
+		for _, filter := range filterOperations {
+			var (
+				operator    pgsql.Operator
+				filterValue = filter.Value
+				isNullValue = filterValue == NullString
+			)
 
 			switch filter.Operator {
 			case GreaterThan:
-				predicate = GreaterThanSymbol
+				operator = pgsql.OperatorGreaterThan
+
 			case GreaterThanOrEquals:
-				predicate = GreaterThanOrEqualsSymbol
+				operator = pgsql.OperatorGreaterThanOrEqualTo
+
 			case LessThan:
-				predicate = LessThanSymbol
+				operator = pgsql.OperatorLessThan
+
 			case LessThanOrEquals:
-				predicate = LessThanOrEqualsSymbol
+				operator = pgsql.OperatorLessThanOrEqualTo
+
 			case Equals:
-				predicate = EqualsSymbol
-				// This would need to be updated for a nullable string column
-				if filter.Value == NullString && !filter.IsStringData {
-					result.WriteString(filter.Name + " IS NULL")
-					continue
+				if isNullValue {
+					operator = pgsql.OperatorIs
+				} else {
+					operator = pgsql.OperatorEquals
 				}
+
 			case NotEquals:
-				predicate = NotEqualsSymbol
-				// This would need to be updated for a nullable string column
-				if filter.Value == NullString && !filter.IsStringData {
-					result.WriteString(filter.Name + " IS NOT NULL")
-					continue
+				if isNullValue {
+					operator = pgsql.OperatorIsNot
+				} else {
+					operator = pgsql.OperatorNotEquals
 				}
+
 			case ApproximatelyEquals:
-				predicate = ApproximatelyEqualSymbol
-				filter.Value = fmt.Sprintf("%%%s%%", filter.Value)
+				operator = pgsql.OperatorLike
+				filterValue = "%" + filterValue + "%"
+
 			default:
-				return SQLFilter{}, fmt.Errorf("invalid filter predicate specified")
+				return SQLFilter{}, fmt.Errorf("invalid operator specified")
 			}
 
-			_, _ = result.WriteString(fmt.Sprintf("%s %s ?", filter.Name, predicate))
-			params = append(params, filter.Value)
+			if literalValue, err := filterValueAsPGLiteral(filterValue, isNullValue); err != nil {
+				return SQLFilter{}, fmt.Errorf("invalid filter value specified for %s: %w", name, err)
+			} else {
+				whereClauseFragment = pgsql.OptionalAnd(whereClauseFragment, pgsql.NewBinaryExpression(
+					pgsql.Identifier(name),
+					operator,
+					literalValue,
+				))
+			}
 		}
 	}
 
-	return SQLFilter{SQLString: result.String(), Params: params}, nil
+	var filter SQLFilter
+
+	if whereClauseFragment != nil {
+		if sqlFragment, err := format.SyntaxNode(whereClauseFragment); err != nil {
+			return filter, fmt.Errorf("failed formatting SQL filter: %w", err)
+		} else {
+			filter = SQLFilter{
+				SQLString: sqlFragment,
+			}
+		}
+	}
+
+	return filter, nil
+}
+
+func (s QueryParameterFilterMap) BuildSQLFilter() (SQLFilter, error) {
+	return BuildSQLFilter(s.ToFiltersModel())
 }
 
 func guessFilterValueType(raw string) any {

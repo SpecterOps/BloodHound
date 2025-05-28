@@ -14832,6 +14832,39 @@
         }
       }
     },
+    "/api/v2/attack-paths/details": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "put": {
+        "operationId": "GetAllAttackPathFindings",
+        "summary": "Get all attack path findings",
+        "description": "Fetches all attack path findings and their associated details, including documentation.",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/api.response.all-findings"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/domains/{domain_id}/available-types": {
       "parameters": [
         {
@@ -19373,6 +19406,19 @@
               "type": "string"
             },
             "example": "header1,header2,header3\ncell1,cell2,cell3\ncell4,cell5,cell6\n...\n"
+          }
+        }
+      },
+      "api.response.all-findings": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "description": "List of unified findings."
+          },
+          "finding_assets": {
+            "type": "object",
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name."
           }
         }
       }
