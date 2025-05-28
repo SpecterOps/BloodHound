@@ -33,7 +33,41 @@ func SearchTierZeroNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Cri
 
 func SearchTierZeroNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Start(), tierKinds...)
+		return query.KindIn(query.Start(), tierKinds...)
+	} else {
+		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
+	}
+}
+
+type SearchTierNodesFn func() graph.Criteria
+
+type SearchTierNodesCriteria struct {
+	PrimaryTierKind       graph.Kind
+	SearchTierNodes       graph.Criteria
+	SearchTierNodesRel    graph.Criteria
+	SearchPrimaryTierNode graph.Criteria
+	SearchPrimaryTierRel  graph.Criteria
+}
+
+func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
+	if tieringEnabled {
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Node(), tierKinds...)
+	} else {
+		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
+	}
+}
+
+func SearchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
+	if tieringEnabled {
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Start(), tierKinds...)
 	} else {
 		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
