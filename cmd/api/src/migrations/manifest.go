@@ -74,7 +74,7 @@ func Version_740_Migration(ctx context.Context, db graph.Database) error {
 			edgeProperties := graph.NewProperties()
 			edgeProperties.Set(ad.IsACL.String(), false)
 			edgeProperties.Set(ad.TrustType.String(), trustType)
-			edgeProperties.Set(common.LastSeen.String(), rel.Properties.Get(common.LastSeen.String()))
+			edgeProperties.Set(common.LastSeen.String(), rel.Properties.Get(common.LastSeen.String()).Any())
 
 			// Create new edge in opposite direction
 			if err := batch.CreateRelationship(&graph.Relationship{
