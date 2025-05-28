@@ -20,20 +20,27 @@ import { useExploreParams } from './useExploreParams';
 import { useGraphItem } from './useGraphItem';
 
 export const useExploreSelectedItem = () => {
-    const { selectedItem, setExploreParams } = useExploreParams();
+    const { highlightedItem, selectedItem, setExploreParams } = useExploreParams();
 
     const selectedItemQuery = useGraphItem(selectedItem!);
 
+    /** Set the selected node or edge. The most recently selected item will stay highlighted */
     const setSelectedItem = useCallback(
         (itemId: string) => {
-            if (itemId !== selectedItem)
-                setExploreParams({
-                    selectedItem: itemId,
-                    expandedPanelSections: null,
-                });
+            setExploreParams({
+                expandedPanelSections: null,
+                highlightedItem: itemId,
+                selectedItem: itemId,
+            });
         },
-        [selectedItem, setExploreParams]
+        [setExploreParams]
     );
+
+    const cancelHighlight = useCallback(() => {
+        setExploreParams({
+            highlightedItem: null,
+        });
+    }, [setExploreParams]);
 
     const selectedItemType = useMemo(
         () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
@@ -41,6 +48,8 @@ export const useExploreSelectedItem = () => {
     );
 
     return {
+        cancelHighlight,
+        highlightedItem,
         selectedItem,
         selectedItemQuery,
         setSelectedItem,
