@@ -30,7 +30,7 @@ type IngestTaskParams struct {
 	JobID     int64
 }
 
-func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParams) (model.IngestTask, error) {
+func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParams) (model.IngestTask, error) {
 	newIngestTask := model.IngestTask{
 		FileName:    params.Filename,
 		RequestGUID: params.RequestID,
@@ -41,6 +41,6 @@ func CreateIngestTask(ctx context.Context, db IngestData, params IngestTaskParam
 	return db.CreateIngestTask(ctx, newIngestTask)
 }
 
-func CreateCompositionInfo(ctx context.Context, db IngestData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
+func CreateCompositionInfo(ctx context.Context, db UploadData, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error) {
 	return db.CreateCompositionInfo(ctx, nodes, edges)
 }

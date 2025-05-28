@@ -53,19 +53,31 @@ func (s *GraphifyService) preProcessIngestFile(path string, fileType model.FileT
 		var (
 			errs      = util.NewErrorCollector()
 			failed    = 0
-			filePaths = make([]string, len(archive.File))
+			filePaths = make([]string, 0, len(archive.File))
 		)
 
-		for i, f := range archive.File {
+		for _, f := range archive.File {
 			//skip directories
 			if f.FileInfo().IsDir() {
 				continue
 			}
 			// Break out if temp file creation fails
 			// Collect errors for other failures within the archive
-			if tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh"); err != nil {
+			tempFile, err := os.CreateTemp(s.cfg.TempDirectory(), "bh")
+			if err != nil {
 				return []string{}, 0, err
-			} else if srcFile, err := f.Open(); err != nil {
+			}
+
+			defer func() {
+				if err != nil {
+					_ = tempFile.Close()
+					// This is new functionality. I don't see anywhere else these files are cleaned up, but
+					// would definitely like a sanity check on this
+					_ = os.Remove(tempFile.Name())
+				}
+			}()
+
+			if srcFile, err := f.Open(); err != nil {
 				errs.Add(fmt.Errorf("error opening file %s in archive %s: %v", f.Name, path, err))
 				failed++
 			} else if normFile, err := bomenc.NormalizeToUTF8(srcFile); err != nil {
@@ -74,11 +86,8 @@ func (s *GraphifyService) preProcessIngestFile(path string, fileType model.FileT
 			} else if _, err := io.Copy(tempFile, normFile); err != nil {
 				errs.Add(fmt.Errorf("error extracting file %s in archive %s: %v", f.Name, path, err))
 				failed++
-			} else if err := tempFile.Close(); err != nil {
-				errs.Add(fmt.Errorf("error closing temp file %s: %v", f.Name, err))
-				failed++
 			} else {
-				filePaths[i] = tempFile.Name()
+				filePaths = append(filePaths, tempFile.Name())
 			}
 		}
 
@@ -102,36 +111,52 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 	} else {
 		adcsEnabled = adcsFlag.Enabled
 	}
-	if paths, failed, err := s.preProcessIngestFile(task.FileName, task.FileType); err != nil {
-		return 0, failed, err
-	} else {
-		failed = 0
 
-		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
+	// Try to pre-process the file. If any of them fail, stop processing and return the error
+	if paths, failedPreprocessing, err := s.preProcessIngestFile(task.FileName, task.FileType); err != nil {
+		return 0, failedPreprocessing, err
+	} else {
+
+		failedIngestion := 0
+
+		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
 			for _, filePath := range paths {
-				file, err := os.Open(filePath)
-				if err != nil {
-					failed++
-					return err
-				} else if err := ReadFileForIngest(timestampedBatch, file, ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}); err != nil {
-					failed++
-					slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
-				}
+				readOpts := ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}
 
-				if err := file.Close(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error closing ingest file %s: %v", filePath, err))
-				} else if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
-					slog.WarnContext(ctx, fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
-				} else if err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
+				err = processSingleFile(context.Background(), filePath, timestampedBatch, readOpts)
+				if err != nil {
+					failedIngestion++
+					return err
 				}
 			}
 
 			return nil
 		})
 	}
+}
+
+func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
+		return err
+	}
+	defer file.Close()
+
+	if err := ReadFileForIngest(batch, file, readOpts); err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
+		return err
+	}
+
+	if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
+		slog.WarnContext(ctx, fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
+	} else if err != nil {
+		slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
+	}
+
+	return nil
 }
 
 // processIngestTasks covers the generic ingest case for ingested data.
