@@ -17,8 +17,9 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
 import { NodeResponse, apiClient, useAppNavigate, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { selectTierZeroAssetGroupId, selectOwnedAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 
@@ -26,6 +27,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     const { addNotification } = useNotifications();
     const { refetch } = useExploreGraph();
     const navigate = useAppNavigate();
+    const queryClient = useQueryClient();
 
     const [open, setOpen] = useState(false);
 
@@ -41,16 +43,17 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     ]).get(assetGroupId);
 
     const mutation = useMutation({
-        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' }) => {
-            return apiClient.updateAssetGroupSelector(assetGroupId, [
-                {
-                    selector_name: nodeId,
-                    sid: nodeId,
-                    action,
-                },
-            ]);
+        mutationFn: (node: NodeResponse) => {
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                seeds: [{
+                    type: SeedTypeObjectId,
+                    value: node.objectId,
+                }],
+            });
         },
-        onSuccess: () => {
+        onSuccess: (data: any, node: NodeResponse) => {
+            queryClient.invalidateQueries(['check-tier-node', assetGroupTag, node.objectId]);
             refetch();
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
@@ -68,7 +71,7 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
 
     const handleAddToAssetGroup = () => {
         if (selectedNode && 'objectId' in selectedNode) {
-            mutation.mutate({ nodeId: selectedNode.objectId, action: 'add' });
+            mutation.mutate(selectedNode);
         }
     };
 
