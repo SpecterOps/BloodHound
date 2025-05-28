@@ -67,7 +67,6 @@ describe('AppNotifications', () => {
             })
         );
         expect(await screen.findByText('test message')).toBeInTheDocument();
-        //adding 1s cushion to the timer to allow for transition timing
 
         await act(async () => {
             //adding 1s cushion to the timer to allow for transition timing
@@ -88,7 +87,6 @@ describe('AppNotifications', () => {
             })
         );
         expect(await screen.findByText('test message')).toBeInTheDocument();
-        //adding 1s cushion to the timer to allow for transition timing
 
         await act(async () => {
             //adding 1s cushion to the timer to allow for transition timing
