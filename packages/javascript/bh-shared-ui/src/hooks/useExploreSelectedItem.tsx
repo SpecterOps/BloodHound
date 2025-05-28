@@ -26,12 +26,11 @@ export const useExploreSelectedItem = () => {
 
     const setSelectedItem = useCallback(
         (itemId: string) => {
-            if (itemId !== selectedItem) {
+            if (itemId !== selectedItem)
                 setExploreParams({
                     selectedItem: itemId,
                     expandedPanelSections: null,
                 });
-            }
         },
         [selectedItem, setExploreParams]
     );
