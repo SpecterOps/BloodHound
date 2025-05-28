@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-<<<<<<<< HEAD:packages/javascript/bh-shared-ui/src/views/Explore/providers/index.ts
-export * from './ObjectInfoPanelProvider';
-========
 package fs
 
 import "os"
@@ -34,4 +31,3 @@ type Client struct{}
 func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
 	return os.CreateTemp(dir, pattern)
 }
->>>>>>>> f5e3fc740ef479a91aef50b4fcbb59711d02ac45:cmd/api/src/services/fs/fs.go
