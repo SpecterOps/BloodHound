@@ -4791,7 +4791,7 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/{asset_group_member_id}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -5650,7 +5650,7 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
                   },
                   {
                     "type": "object",
@@ -5794,13 +5794,13 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "disabled_at": {
-                        "$ref": "#/components/schemas/null.time"
+                      "disabled": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -17307,7 +17307,7 @@
           }
         }
       },
-      "model.asset-group-tags-selector-request": {
+      "model.asset-group-tags-selector-create": {
         "type": "object",
         "properties": {
           "name": {
@@ -17327,10 +17327,20 @@
           }
         }
       },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
       "model.asset-group-tags-selector-response": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
           },
           {
             "type": "object",
@@ -17356,22 +17366,16 @@
                 "type": "string"
               },
               "disabled_at": {
-                "$ref": "#/components/schemas/null.time"
+                "$ref": "#/components/schemas/null.time.response"
               },
               "disabled_by": {
-                "$ref": "#/components/schemas/null.string"
+                "$ref": "#/components/schemas/null.string.response"
               },
               "is_default": {
                 "type": "boolean"
               },
               "allow_disable": {
                 "type": "boolean"
-              },
-              "seeds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
-                }
               }
             }
           }
@@ -17433,12 +17437,6 @@
           "updated_by": {
             "type": "string"
           },
-          "deleted_at": {
-            "$ref": "#/components/schemas/null.time"
-          },
-          "deleted_by": {
-            "$ref": "#/components/schemas/null.string"
-          },
           "position": {
             "$ref": "#/components/schemas/null.int32"
           },
@@ -17446,6 +17444,22 @@
             "$ref": "#/components/schemas/null.boolean"
           }
         }
+      },
+      "model.asset-group-tags-selector-update": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "disabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
       },
       "model.bh-graph.item-border": {
         "type": "object",

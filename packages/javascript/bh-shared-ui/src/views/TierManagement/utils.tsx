@@ -14,24 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+export const getTagUrlValue = (labelId: string | undefined) => {
+    return labelId === undefined ? 'tier' : 'label';
+};
 
-export interface SelectorFormInputs {
-    name: string;
-    description: string;
-    seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
-}
-
-export interface CreateSelectorParams {
-    tagId: string | number;
-    values: CreateSelectorRequest;
-}
-export interface DeleteSelectorParams {
-    tagId: string | number;
-    selectorId: string | number;
-}
-
-export interface PatchSelectorParams extends DeleteSelectorParams {
-    updatedValues: UpdateSelectorRequest;
-}
+export const TIER_ZERO_ID = '1';
+export const OWNED_ID = '2';

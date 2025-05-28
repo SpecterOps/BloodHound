@@ -29,21 +29,31 @@ import {
     Skeleton,
     Switch,
 } from '@bloodhoundenterprise/doodleui';
-import { SeedTypeCypher, SeedTypeObjectId, SeedTypes, SeedTypesMap } from 'js-client-library';
-import { DateTime } from 'luxon';
-import { FC, useEffect, useState } from 'react';
+import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
+import { FC, useContext, useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { AppIcon } from '../../../../components';
-import { apiClient, cn } from '../../../../utils';
+import { apiClient } from '../../../../utils';
+import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
-const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: SeedTypes }> = ({
-    setSelectorType,
-    selectorType,
-}) => {
-    const { tagId = '', selectorId = '' } = useParams();
+/**
+ * selectorStatus takes in the selectorId from the path param in the url and the selector's data.
+ * It returns a boolean value associated with whether the selector is enabled or not.
+ */
+const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => {
+    if (id === '') return true;
+    if (data === undefined) return true;
+    if (data.disabled_at !== null) return false;
+    return true;
+};
+
+const BasicInfo: FC = () => {
+    const { tierId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
+    const { selectorType, setSelectorType, setSeeds, selectorQuery } = useContext(SelectorFormContext);
 
     const {
         formState: { errors },
@@ -60,16 +70,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
         enabled: tagId !== '',
     });
 
-    const selectorQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data['selector'];
-        },
-        enabled: selectorId !== '',
-    });
-
-    const [disabled, setDisabled] = useState(selectorQuery.data?.disabled_at === null);
+    const [enabled, setEnabled] = useState(selectorStatus(selectorId, selectorQuery.data));
 
     // Updates the select option if editing an existing selector to match the existing selectors value
     useEffect(() => {
@@ -83,31 +84,33 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
     if (tagQuery.isError || selectorQuery.isError) throw new Error();
 
     return (
-        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 max-h-[36rem]'}>
+        <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>
             <CardHeader className='text-xl font-bold'>Defining Selector</CardHeader>
             <CardContent>
-                <div className={cn('mb-4', { hidden: !selectorQuery.data?.allow_disable })}>
-                    <Label htmlFor='disabled_at' className='text-base font-bold'>
-                        Selector Status
-                    </Label>
-                    <div className='flex gap-2 items-center mt-2'>
-                        <Switch
-                            id='disabled_at'
-                            defaultChecked={!disabled}
-                            {...register('disabled_at')}
-                            onCheckedChange={(checked: boolean) => {
-                                if (checked) {
-                                    setValue('disabled_at', DateTime.now().toISO());
-                                    setDisabled(true);
-                                } else {
-                                    setValue('disabled_at', null);
-                                    setDisabled(false);
-                                }
-                            }}
-                        />
-                        <p className='flex items-center ml-2'>{disabled ? 'Enabled' : 'Disabled'}</p>
+                {selectorId === '' ? null : (
+                    <div className='mb-4'>
+                        <Label htmlFor='disabled' className='text-base font-bold'>
+                            Selector Status
+                        </Label>
+                        <div className='flex gap-2 items-center mt-2'>
+                            <Switch
+                                id='disabled'
+                                checked={enabled}
+                                disabled={selectorQuery.data === undefined ? false : !selectorQuery.data.allow_disable}
+                                {...register('disabled')}
+                                onCheckedChange={(checked: boolean) => {
+                                    setEnabled((prev) => !prev);
+                                    if (checked) {
+                                        setValue('disabled', false);
+                                    } else {
+                                        setValue('disabled', true);
+                                    }
+                                }}
+                            />
+                            <p className='flex items-center ml-2'>{enabled ? 'Enabled' : 'Disabled'}</p>
+                        </div>
                     </div>
-                </div>
+                )}
                 <p className='font-bold'>
                     Tag: <span className='font-normal'>{tagQuery.data?.name}</span>
                 </p>
@@ -120,8 +123,9 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                             <Input
                                 id='name'
                                 {...register('name', { required: true, value: selectorQuery.data?.name })}
+                                autoComplete='off'
                                 className={
-                                    'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
+                                    'pointer-events-auto rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
                                 }
                             />
                             {errors.name && (
@@ -137,7 +141,7 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                 {...register('description', { value: selectorQuery.data?.description })}
                                 rows={3}
                                 className={
-                                    'rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
+                                    'resize-none rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
                                 }
                                 placeholder='Description Input'
                             />
@@ -149,8 +153,10 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                 onValueChange={(value: string) => {
                                     if (value === SeedTypeObjectId.toString()) {
                                         setSelectorType(SeedTypeObjectId);
+                                        setSeeds([]);
                                     } else if (value === SeedTypeCypher.toString()) {
                                         setSelectorType(SeedTypeCypher);
+                                        setSeeds([]);
                                     }
                                 }}>
                                 <SelectTrigger
@@ -168,25 +174,6 @@ const BasicInfo: FC<{ setSelectorType: (type: SeedTypes) => void; selectorType: 
                                     </SelectContent>
                                 </SelectPortal>
                             </Select>
-                        </div>
-                        <div className='hidden'>
-                            <Label htmlFor='autoCertify' className='text-base font-bold'>
-                                Automatic Certification
-                            </Label>
-                            <div className='flex gap-2 items-center mt-2'>
-                                <Switch
-                                    id='autoCertify'
-                                    defaultChecked
-                                    {...register('autoCertify')}
-                                    onCheckedChange={(checked: boolean) => {
-                                        setValue('autoCertify', checked);
-                                    }}
-                                />
-                                <p className='flex items-center ml-2'>
-                                    Selector automatically applies certification for objects tagged
-                                    <AppIcon.Info className='mt-[2px] ml-2' />
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>

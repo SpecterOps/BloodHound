@@ -14,24 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
+import { Cypher } from './Cypher';
 
-export interface SelectorFormInputs {
-    name: string;
-    description: string;
-    seeds: SelectorSeedRequest[];
-    disabled?: boolean | string;
-}
-
-export interface CreateSelectorParams {
-    tagId: string | number;
-    values: CreateSelectorRequest;
-}
-export interface DeleteSelectorParams {
-    tagId: string | number;
-    selectorId: string | number;
-}
-
-export interface PatchSelectorParams extends DeleteSelectorParams {
-    updatedValues: UpdateSelectorRequest;
-}
+export default Cypher;

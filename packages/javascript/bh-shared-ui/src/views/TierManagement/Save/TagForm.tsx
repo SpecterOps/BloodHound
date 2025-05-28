@@ -31,6 +31,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient, cn } from '../../../utils';
+import { getTagUrlValue } from '../utils';
 
 type TagFormInputs = {
     name: string;
@@ -39,7 +40,8 @@ type TagFormInputs = {
 };
 
 export const TagForm: FC = () => {
-    const { tagId = '' } = useParams();
+    const { tierId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
     const history = createBrowserHistory();
     const {
         register,
@@ -55,7 +57,7 @@ export const TagForm: FC = () => {
         console.log(data);
         console.log(errors);
 
-        navigate(`/tier-management/details/tag/${tagId}`);
+        navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
     };
 
     const tagQuery = useQuery({
@@ -130,7 +132,7 @@ export const TagForm: FC = () => {
                 <Button
                     variant={'primary'}
                     onClick={() => {
-                        navigate(`/tier-management/edit/tag/${tagId}/selector`);
+                        navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
                     }}>
                     Define Selector
                 </Button>

@@ -20,7 +20,7 @@ import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import { LuxonFormat } from '../../../utils';
-import { Cypher } from '../Cypher';
+import { Cypher } from '../Cypher/Cypher';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 
@@ -31,6 +31,17 @@ const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => 
             <span className='truncate text-ellipsis' title={value}>
                 {value}
             </span>
+        </div>
+    );
+};
+
+const DescriptionField: FC<{ description: string }> = ({ description }) => {
+    return (
+        <div className='flex flex-col gap-x-2'>
+            <span className='font-bold'>Description:</span>
+            <div className='max-h-36 overflow-y-auto'>
+                <p title={description}>{description}</p>
+            </div>
         </div>
     );
 };
@@ -50,7 +61,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     </div>
                 )}
                 <div className='mt-4'>
-                    <DetailField label='Description' value={data.description} />
+                    <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
                     <DetailField label='Created by' value={data.created_by} />
@@ -76,7 +87,7 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     {data.name}
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Description' value={data.description} />
+                    <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
                     <DetailField label='Created by' value={data.created_by} />
