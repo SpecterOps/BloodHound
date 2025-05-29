@@ -30,6 +30,7 @@ vi.mock('../../../utils', () => ({
 describe('SummaryCard', () => {
     const props = {
         title: 'Test Tier',
+        type: 1,
         selectorCount: 7,
         memberCount: 13,
         id: 99,
