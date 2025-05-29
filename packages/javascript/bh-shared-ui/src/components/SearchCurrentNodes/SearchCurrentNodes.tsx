@@ -77,7 +77,10 @@ const SearchCurrentNodes: FC<{
             const { changes, type } = actionAndChanges;
             switch (type) {
                 case useCombobox.stateChangeTypes.ItemClick:
-                    if (changes.selectedItem) setSelectedNode(changes.selectedItem);
+                    if (changes.selectedItem) {
+                        setSelectedNode(changes.selectedItem);
+                        onSelect(changes.selectedItem);
+                    }
                     return { ...changes, inputValue: '' };
                 default:
                     return changes;
