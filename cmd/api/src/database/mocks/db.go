@@ -91,18 +91,18 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
 }
 
-// CascadeDecrementAssetGroupTagPosition mocks base method.
-func (m *MockDatabase) CascadeDecrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error {
+// CascadeShiftTierPositions mocks base method.
+func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CascadeDecrementAssetGroupTagPosition", ctx, user, position)
+	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, user, position, direction)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CascadeDecrementAssetGroupTagPosition indicates an expected call of CascadeDecrementAssetGroupTagPosition.
-func (mr *MockDatabaseMockRecorder) CascadeDecrementAssetGroupTagPosition(ctx, user, position any) *gomock.Call {
+// CascadeShiftTierPositions indicates an expected call of CascadeShiftTierPositions.
+func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, user, position, direction any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeDecrementAssetGroupTagPosition", reflect.TypeOf((*MockDatabase)(nil).CascadeDecrementAssetGroupTagPosition), ctx, user, position)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, user, position, direction)
 }
 
 // Close mocks base method.

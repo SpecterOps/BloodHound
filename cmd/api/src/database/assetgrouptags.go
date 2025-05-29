@@ -42,7 +42,7 @@ type AssetGroupTagData interface {
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
-	CascadeDecrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error
+	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction string) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -372,20 +372,24 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 		}
 
 		if assetGroupTag.Type == 1 {
-			if assetGroupTag.Position.Int32 == 1 {
+			if assetGroupTag.Position.Int32 == 1 && assetGroupTag.Position.Valid {
 				return fmt.Errorf("you cannot delete tier 0 or a tier in the 1st position")
 			}
 
-			if err := bhdb.CascadeDecrementAssetGroupTagPosition(ctx, user, assetGroupTag.Position); err != nil {
-				return err
+			if assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, assetGroupTag.Position, "decrement"); err != nil {
+					return err
+				}
 			}
 		}
 
 		if result := tx.Exec(fmt.Sprintf(`
-			UPDATE %s SET updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?, position = null
+			UPDATE %s SET kind_id = null, updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?, position = null
 			WHERE id = ?`,
 			assetGroupTag.TableName()),
 			user.ID.String(), user.ID.String(), assetGroupTag.ID); result.Error != nil {
+			return CheckError(result)
+		} else if result := tx.Exec("DELETE FROM kind WHERE id = ?", assetGroupTag.KindId); result.Error != nil {
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
 			return err
@@ -398,14 +402,31 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) CascadeDecrementAssetGroupTagPosition(ctx context.Context, user model.User, position null.Int32) error {
-	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf(`
+func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction string) error {
+	shiftOp := ""
+	switch direction {
+	case "increment":
+		shiftOp = "position = position + 1"
+	case "decrement":
+		shiftOp = "position = position - 1"
+	default:
+		return fmt.Errorf("invalid shift direction: %s", direction)
+	}
+
+	query := fmt.Sprintf(`
 		UPDATE %s
-		SET position = position - 1,
+		SET %s,
 		    updated_at = NOW(),
-			updated_by = ?
-		WHERE position > ?
-		  AND type = 1`, model.AssetGroupTag{}.TableName()), user.ID.String(), position))
+		    updated_by = ?
+		WHERE type = 1
+		  AND position %s ?
+		  AND position > 1`,
+		model.AssetGroupTag{}.TableName(),
+		shiftOp,
+		map[string]string{"increment": ">= ", "decrement": ">"}[direction],
+	)
+
+	return CheckError(s.db.WithContext(ctx).Exec(query, user.ID.String(), position.Int32))
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {

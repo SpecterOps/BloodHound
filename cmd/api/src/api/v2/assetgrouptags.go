@@ -727,6 +727,9 @@ func (s *Resources) DeleteAssetGroupTag(response http.ResponseWriter, request *h
 		api.HandleDatabaseError(request, response, err)
 	} else if assetGroupTag.Position.Int32 == 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
+	} else if err := datapipe.ClearAssetGroupTagNodeSet(request.Context(), s.DB, s.Graph, tagId); err != nil {
+		// Should this be a warning instead???
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("AGT: clearing the tag's node set failed: %v", err), request), response)
 	} else if err := s.DB.DeleteAssetGroupTag(request.Context(), user, assetGroupTag); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
