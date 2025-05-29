@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -393,50 +392,48 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
-		// TODO: BED-5641 Cookies Generated are ever-changing, so will need different ways
-		// to assert
-		// {
-		// 	name: "Success: OIDC Login, Redirect to Provider - Found",
-		// 	args: model.SSOProvider{
-		// 		Name: "Test Provider",
-		// 		Type: model.SessionAuthProviderOIDC,
-		// 		Slug: "test-provider",
-		// 		Config: model.SSOProviderConfig{
-		// 			AutoProvision: model.SSOProviderAutoProvisionConfig{
-		// 				Enabled:       true,
-		// 				RoleProvision: true,
-		// 				DefaultRoleId: 1,
-		// 			},
-		// 		},
-		// 		Serial: model.Serial{
-		// 			ID: 1,
-		// 		},
-		// 		OIDCProvider: &model.OIDCProvider{
-		// 			Issuer:   "https://test-issuer.com",
-		// 			ClientID: "test-client-id",
-		// 		},
-		// 	},
-		// 	buildRequest: func() *http.Request {
-		// 		request := http.Request{
-		// 			URL: &url.URL{
-		// 				Host: "www.example.com",
-		// 			},
-		// 		}
+		{
+			name: "Success: OIDC Login, Redirect to Provider - Found",
+			args: model.SSOProvider{
+				Name: "Test Provider",
+				Type: model.SessionAuthProviderOIDC,
+				Slug: "test-provider",
+				Config: model.SSOProviderConfig{
+					AutoProvision: model.SSOProviderAutoProvisionConfig{
+						Enabled:       true,
+						RoleProvision: true,
+						DefaultRoleId: 1,
+					},
+				},
+				Serial: model.Serial{
+					ID: 1,
+				},
+				OIDCProvider: &model.OIDCProvider{
+					Issuer:   "https://test-issuer.com",
+					ClientID: "test-client-id",
+				},
+			},
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
 
-		// 		bhContext := &ctx.Context{
-		// 			Host: request.URL,
-		// 		}
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
 
-		// 		return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
-		// 	},
-		// 	setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-		// 		mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
-		// 	},
-		// 	expected: expected{
-		// 		responseCode:    http.StatusFound,
-		// 		responseHeader:  http.Header{"Location":[]string{"//www.example.com/"}, "Set-Cookie":[]string{"pkce=GWCMaJYOC-E9kXgsPlOY50Erv1QNtp0gLGeL85JnZ8U; Path=/; Expires=Tue, 27 May 2025 21:17:27 GMT; HttpOnly; SameSite=None", "state=pZNLypZ6JNveRB3JCQ6md4mx0E5kryv6F2KzU0PwKHRUX1tb2pdIVaIfaGOvUvstAVn8ovjLDGoAtaUWO7gIGHsx3BSZQ696YsWflf8=; Path=/; Expires=Tue, 27 May 2025 21:17:27 GMT; HttpOnly; SameSite=None"}},
-		// 	},
-		// },
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"//www.example.com/"}, "Set-Cookie": []string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
+			},
+		},
 	}
 
 	for _, testCase := range tt {
@@ -461,6 +458,12 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, _ := test.ProcessResponse(t, response)
+
+			// Cookies are regenerated in every response therefore the
+			// the cookie attributes needed to be overwritten.
+			header = test.ModifyCookieAttribute(header, "Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
+			header = test.ModifyCookieAttribute(header, "state", "state")
+			header = test.ModifyCookieAttribute(header, "pkce", "pkce")
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
@@ -852,34 +855,10 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 			status, header, _ := test.ProcessResponse(t, response)
 
-			updatedHeader := zeroOutExpiresHeader(header)
+			updatedHeader := test.ModifyCookieAttribute(header, "Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, updatedHeader)
 		})
 	}
-}
-
-// TODO: BED-5641
-// Move to utilities
-func zeroOutExpiresHeader(headers http.Header) http.Header {
-	const zeroTime = "Thu, 01 Jan 1970 00:00:00 GMT"
-
-	cookies := headers["Set-Cookie"]
-	for i, cookie := range cookies {
-		// Replace Expires attribute
-		if strings.Contains(cookie, "Expires=") {
-			start := strings.Index(cookie, "Expires=")
-			end := strings.Index(cookie[start:], ";")
-			if end == -1 {
-				// No following attribute, just slice to end
-				cookies[i] = cookie[:start] + "Expires=" + zeroTime
-			} else {
-				end += start // adjust to full string index
-				cookies[i] = cookie[:start] + "Expires=" + zeroTime + cookie[end:]
-			}
-		}
-	}
-	headers["Set-Cookie"] = cookies
-	return headers
 }

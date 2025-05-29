@@ -4732,4 +4732,3 @@ func TestManagementResource_DeleteAuthToken(t *testing.T) {
 		})
 	}
 }
-

@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/utils"
@@ -49,4 +50,49 @@ func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, ht
 	}
 
 	return response.Code, response.Header(), ""
+}
+
+// ModifyCookieAttribute searches the provided HTTP headers and updates the specified cookie
+// attribute (e.g., "Secure", "SameSite", "Path") to a new value.
+// If the attribute is found in a cookie string, its value is replaced with the provided value.
+// Cookies that do not contain the specified attribute are left unchanged.
+func ModifyCookieAttribute(headers http.Header, attrKey, value string) http.Header {
+	cookies := headers["Set-Cookie"]
+	if len(cookies) == 0 {
+		// No cookies to modify, return unchanged.
+		return headers
+	}
+
+	attrPrefix := attrKey + "="
+	var newCookies []string
+	modified := false
+
+	for _, cookie := range cookies {
+		start := strings.Index(cookie, attrPrefix)
+		if start == -1 {
+			// Attribute not found, keep original.
+			newCookies = append(newCookies, cookie)
+			continue
+		}
+
+		// Find end of the attribute (next semicolon or end of string)
+		end := strings.Index(cookie[start:], ";")
+		var newCookie string
+		if end == -1 {
+			// Attribute is last; replace till end
+			newCookie = cookie[:start] + attrPrefix + value
+		} else {
+			end += start // Adjust to full string index
+			newCookie = cookie[:start] + attrPrefix + value + cookie[end:]
+		}
+
+		newCookies = append(newCookies, newCookie)
+		modified = true
+	}
+
+	if modified {
+		headers["Set-Cookie"] = newCookies
+	}
+
+	return headers
 }
