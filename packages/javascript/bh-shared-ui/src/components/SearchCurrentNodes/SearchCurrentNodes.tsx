@@ -38,7 +38,6 @@ const SearchCurrentNodes: FC<{
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [items, setItems] = useState<FlatNode[]>([]);
-    const [selectedNode, setSelectedNode] = useState<FlatNode | null | undefined>(null);
 
     // Node data is a lot easier to work with in the combobox if we transform to an array of flat objects
     const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
@@ -46,10 +45,6 @@ const SearchCurrentNodes: FC<{
     });
 
     useEffect(() => inputRef.current?.focus(), []);
-
-    useEffect(() => {
-        if (selectedNode) onSelect(selectedNode);
-    }, [selectedNode, onSelect]);
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
@@ -78,7 +73,6 @@ const SearchCurrentNodes: FC<{
             switch (type) {
                 case useCombobox.stateChangeTypes.ItemClick:
                     if (changes.selectedItem) {
-                        setSelectedNode(changes.selectedItem);
                         onSelect(changes.selectedItem);
                     }
                     return { ...changes, inputValue: '' };
