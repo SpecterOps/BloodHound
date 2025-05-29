@@ -294,15 +294,21 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		if tag.Type == 1 {
-			if !tag.Position.Valid {
+
+			positionProvided := tag.Position.Valid
+
+			if !positionProvided {
 				if position, err := bhdb.GetMaxTierPosition(ctx); err != nil {
 					return err
 				} else {
 					tag.Position = null.Int32From(position + 1)
 				}
 			}
-			if err := bhdb.CascadeShiftTierPositions(ctx, user, tag.Position, ShiftUp); err != nil {
-				return err
+
+			if positionProvided {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, tag.Position, ShiftUp); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -322,7 +328,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			description,
 			userIdStr,
 			userIdStr,
-			position,
+			tag.Position,
 			requireCertify,
 		).Scan(&tag); result.Error != nil {
 			return CheckError(result)
@@ -441,16 +447,21 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 }
 
 func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
-	var max int32
+	var max null.Int32
 	var tag model.AssetGroupTag
 
 	if result := s.db.WithContext(ctx).
-		Raw(fmt.Sprintf("SELECT COALESCE(MAX(position), -1) FROM %s", tag.TableName())).
+		Raw(fmt.Sprintf("SELECT MAX(position) FROM %s", tag.TableName())).
 		Scan(&max); result.Error != nil {
 		return 0, CheckError(result)
-	} else {
-		return max, nil
 	}
+
+	if !max.Valid {
+		// No rows in table: treat max as 0
+		return 0, nil
+	}
+
+	return max.Int32, nil
 }
 
 func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {

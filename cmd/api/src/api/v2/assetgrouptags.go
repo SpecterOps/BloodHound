@@ -740,9 +740,6 @@ func validateTagRequest(req *model.AssetGroupTag) bool {
 		if !req.RequireCertify.Valid {
 			req.RequireCertify = null.BoolFrom(true)
 		}
-		if !req.Position.Valid {
-			req.Position = null.Int32From(0)
-		}
 	}
 	return true
 }
