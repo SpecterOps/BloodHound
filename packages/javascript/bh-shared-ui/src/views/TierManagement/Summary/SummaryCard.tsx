@@ -31,11 +31,21 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, selectorCount, memberCount, 
             <div className='flex-1 flex flex-col items-center justify-center border-l border-black dark:border-white text-sm'>
                 <div
                     onClick={(e) => {
-                        //prevent event bubbling since card is clickable as well as this link
+                        // Prevent event bubbling for the view details action
                         e.stopPropagation();
                         navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tier/${id}`);
                     }}
-                    className=' flex items-center space-x-2 hover:underline cursor-pointer'>
+                    className=' flex items-center space-x-2 hover:underline cursor-pointer'
+                    role='button'
+                    tabIndex={0}
+                    aria-label={`View details for ${title}`}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigate(`/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/tier/${id}`);
+                        }
+                    }}>
                     <Plus />
                     <p>View Details</p>
                 </div>
