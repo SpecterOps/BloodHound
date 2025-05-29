@@ -196,7 +196,7 @@ func convertSessionData(session ein.Session, converted *ConvertedSessionData) {
 
 func CreateConvertedSessionData(count int) ConvertedSessionData {
 	converted := ConvertedSessionData{}
-	converted.SessionProps = make([]ein.IngestibleSession, count)
+	converted.SessionProps = make([]ein.IngestibleSession, 0, count)
 	return converted
 }
 
