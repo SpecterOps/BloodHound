@@ -16,9 +16,9 @@
 
 import { useTheme } from '@mui/material';
 import {
+    ExploreTable,
     GraphControls,
     GraphProgress,
-    TableView,
     WebGLDisabledAlert,
     isWebGLEnabled,
     transformFlatGraphResponse,
@@ -161,7 +161,7 @@ const GraphView: FC = () => {
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!data?.length} />
-            <TableView
+            <ExploreTable
                 open={selectedLayout === 'table'}
                 onClose={() => {
                     handleLayoutChange('sequential');
@@ -177,10 +177,9 @@ const GraphView: FC = () => {
 
 /**
  * TODO:
+ * What should be the width of search current results? It changes as the parent element widens
+ *   existing behavior
  *
- * show placeholder when no nodes are present and we are viewing the table
- * where do we throw in the empty node check?
- *   same thing for BHE
  */
 
 export default GraphView;
