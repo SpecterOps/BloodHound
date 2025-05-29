@@ -15,12 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SeedTypeObjectId } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen, waitFor } from '../../test-utils';
-import SelectorFormContext, { initialValue } from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
-import AssetGroupSelectorObjectSelect from './AssetGroupSelectorObjectSelect';
+import { act, render, screen, waitFor } from '../../../../test-utils';
+import ObjectSelect from './ObjectSelect';
+import SelectorFormContext, { initialValue } from './SelectorFormContext';
 
 const testNodes = [
     {
@@ -42,6 +41,9 @@ const server = setupServer(
     }),
     rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
         return res(ctx.json({ data: { nodes: testNodes } }));
+    }),
+    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
     })
 );
 
@@ -49,41 +51,27 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('AssetGroupSelectorObjectSelect', () => {
+describe('AssetGroupTagsSelectorObjectSelect', () => {
     const user = userEvent.setup();
-    const seeds = [
-        {
-            value: '1',
-            type: SeedTypeObjectId,
-            selector_id: 1,
-        },
-    ];
 
-    const setSeeds = vi.fn();
-
-    const server = setupServer(
-        rest.get(`/api/v2/search`, (_, res, ctx) => {
-            return res(ctx.json(testSearchResults));
-        }),
-        rest.get(`/api/v2/customnode`, (req, res, ctx) => {
-            return res(
-                ctx.json({
-                    data: {},
-                })
-            );
-        })
-    );
-    beforeAll(() => server.listen());
-    afterEach(() => {
-        server.resetHandlers();
-    });
-    afterAll(() => server.close());
+    const dispatch = vi.fn();
 
     beforeEach(async () => {
         await act(async () => {
             render(
-                <SelectorFormContext.Provider value={initialValue}>
-                    <AssetGroupSelectorObjectSelect seeds={seeds} />
+                <SelectorFormContext.Provider
+                    value={{
+                        ...initialValue,
+                        selectedObjects: [
+                            {
+                                objectid: '1',
+                                type: 'User',
+                                name: 'Bob',
+                            },
+                        ],
+                        dispatch,
+                    }}>
+                    <ObjectSelect />
                 </SelectorFormContext.Provider>
             );
         });
@@ -101,7 +89,7 @@ describe('AssetGroupSelectorObjectSelect', () => {
         await user.click(deleteBtn);
 
         waitFor(() => {
-            expect(setSeeds).toHaveBeenCalledWith([]);
+            expect(dispatch).toHaveBeenCalledWith([]);
         });
     });
 
@@ -120,7 +108,10 @@ describe('AssetGroupSelectorObjectSelect', () => {
         expect(await screen.findByText('foo')).toBeInTheDocument();
 
         waitFor(() => {
-            expect(setSeeds).toHaveBeenCalledWith([...seeds, { type: SeedTypeObjectId, value: '2' }]);
+            expect(dispatch).toHaveBeenCalledWith({
+                type: 'add-selected-object',
+                node: { objectid: '2', name: 'foo', type: 'User' },
+            });
         });
     });
 });

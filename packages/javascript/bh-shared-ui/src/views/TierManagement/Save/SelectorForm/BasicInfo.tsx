@@ -30,11 +30,11 @@ import {
     Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap } from 'js-client-library';
-import { FC, useContext, useEffect, useState } from 'react';
+import { FC, useContext, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { apiClient } from '../../../../utils';
+import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
 
@@ -53,7 +53,7 @@ const BasicInfo: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
-    const { selectorType, setSelectorType, setSeeds, selectorQuery } = useContext(SelectorFormContext);
+    const { dispatch, selectorType, selectorQuery } = useContext(SelectorFormContext);
 
     const {
         formState: { errors },
@@ -72,16 +72,10 @@ const BasicInfo: FC = () => {
 
     const [enabled, setEnabled] = useState(selectorStatus(selectorId, selectorQuery.data));
 
-    // Updates the select option if editing an existing selector to match the existing selectors value
-    useEffect(() => {
-        const type = selectorQuery.data?.seeds[0].type;
-        if (type) {
-            setSelectorType(type);
-        }
-    }, [selectorQuery.data, setSelectorType]);
+    const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
 
-    if (tagQuery.isLoading || selectorQuery.isLoading) return <Skeleton />;
-    if (tagQuery.isError || selectorQuery.isError) throw new Error();
+    if (isLoading) return <Skeleton />;
+    if (isError) throw new Error();
 
     return (
         <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>
@@ -152,11 +146,13 @@ const BasicInfo: FC = () => {
                                 value={selectorType.toString()}
                                 onValueChange={(value: string) => {
                                     if (value === SeedTypeObjectId.toString()) {
-                                        setSelectorType(SeedTypeObjectId);
-                                        setSeeds([]);
+                                        dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
+                                        dispatch({ type: 'set-seeds', seeds: [] });
+                                        dispatch({ type: 'set-selected-objects', nodes: [] });
                                     } else if (value === SeedTypeCypher.toString()) {
-                                        setSelectorType(SeedTypeCypher);
-                                        setSeeds([]);
+                                        dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
+                                        dispatch({ type: 'set-seeds', seeds: [] });
+                                        dispatch({ type: 'set-selected-objects', nodes: [] });
                                     }
                                 }}>
                                 <SelectTrigger
