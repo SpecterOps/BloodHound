@@ -736,10 +736,6 @@ func convertAzureRoleEligibilityScheduleInstance(raw json.RawMessage, converted 
 	if err := json.Unmarshal(raw, &data); err != nil {
 		slog.Error(fmt.Sprintf(SerialError, "azure role eligibility schedule instance", err))
 	} else {
-		//If the scope is not the directory, we are going to skip creating the edges for now
-		if data.DirectoryScopeId != "/" {
-			return
-		}
 		relProps := ein.ConvertAzureRoleEligibilityScheduleInstanceToRel(data)
 		converted.RelProps = append(converted.RelProps, relProps...)
 	}
