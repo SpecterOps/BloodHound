@@ -13,9 +13,6 @@ import SummaryCard from './SummaryCard';
 vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
     default: () => <div data-testid='large-right-arrow' />,
 }));
-vi.mock('../../../components/AppIcon/Icons/Plus', () => ({
-    default: () => <div data-testid='plus' />,
-}));
 
 // Mock route and navigation
 vi.mock('../../../routes', () => ({
@@ -55,7 +52,6 @@ describe('SummaryCard', () => {
     it('renders icons', () => {
         render(<SummaryCard {...props} />);
         expect(screen.getAllByTestId('large-right-arrow')).toHaveLength(2);
-        expect(screen.getByTestId('plus')).toBeInTheDocument();
     });
 
     it('navigates to the details page when "View Details" is clicked', async () => {
