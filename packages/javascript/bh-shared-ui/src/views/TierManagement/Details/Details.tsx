@@ -18,8 +18,8 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { Link, useParams } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../../components';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { AppIcon } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
@@ -78,6 +78,8 @@ const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const location = useLocation();
+    const value = location.pathname.includes('tier/') ? 'Tier' : 'Label';
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
@@ -105,21 +107,24 @@ const Details: FC = () => {
             <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
-                        <div className='flex items-center align-middle'>
-                            <CreateMenu
-                                createMenuTitle='Create Selector'
-                                disabled={!tagId}
-                                menuItems={[
-                                    {
-                                        title: 'Create Selector',
-                                        onClick: () => {
-                                            navigate(
-                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
-                                            );
-                                        },
-                                    },
-                                ]}
-                            />
+                        <div className='flex items-center align-middle gap-4'>
+                            <Button
+                                onClick={() => {
+                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`)
+                                }}>
+                                Create Selector
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    if (value === 'Label') {
+                                        navigate(`/tier-management/save/label`)
+                                    }
+                                    if (value === 'Tier') {
+                                        navigate(`/tier-management/save/tier`)
+                                    }
+                                }}>
+                                Create {value}
+                            </Button>
                             <div className='hidden'>
                                 <div>
                                     <AppIcon.Info className='mr-4 ml-2' size={24} />
