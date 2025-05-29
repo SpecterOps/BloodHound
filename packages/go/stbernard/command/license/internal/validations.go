@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func DirCheck(path string) bool {
+func dirCheck(path string) bool {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		fmt.Printf("failed getting file stat %v\n", err)
@@ -33,10 +33,9 @@ func DirCheck(path string) bool {
 	return fileInfo.IsDir()
 }
 
-func IgnorePathValidation(ignorPaths []string, wd, path string) bool {
+func ignorePathValidation(ignorPaths []string, wd, path string) bool {
 	for _, ig := range ignorPaths {
 		if strings.Contains(path, ig) {
-			fmt.Printf("path %v result %v\n", false, path)
 			return false
 		}
 	}
@@ -44,7 +43,7 @@ func IgnorePathValidation(ignorPaths []string, wd, path string) bool {
 	return true
 }
 
-func IsHeaderPresent(path string) (bool, error) {
+func isHeaderPresent(path string) (bool, error) {
 	fileReader, err := os.Open(path)
 	if err != nil {
 		return false, err

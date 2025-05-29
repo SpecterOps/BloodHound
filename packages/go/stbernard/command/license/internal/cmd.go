@@ -15,7 +15,7 @@
 //  SPDX-License-Identifier: Apache-2.0
 //
 
-package main
+package license
 
 import (
 	"errors"
@@ -26,17 +26,15 @@ import (
 	"slices"
 	"sync"
 	"time"
-
-	license "github.com/specterops/bloodhound/packages/go/stbernard/command/license/internal"
 )
 
-func main() {
+func Run() error {
 
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("checked failed license root files error: %v", err)
 	}
-	if err := license.CheckRootFiles(wd); err != nil {
+	if err := checkRootFiles(wd); err != nil {
 		fmt.Printf("checked failed license root files error: %v", err)
 	}
 
@@ -70,9 +68,9 @@ func main() {
 		task := make(chan string, len(paths))
 
 		// series of validations before processing all the paths against directories, disallowed extensions and paths
-		ext := license.ParseFileExtension(path)
-		isDir := license.DirCheck(path)
-		scanPath := license.IgnorePathValidation(ignorPaths, wd, path)
+		ext := parseFileExtension(path)
+		isDir := dirCheck(path)
+		scanPath := ignorePathValidation(ignorPaths, wd, path)
 
 		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 && scanPath {
 			// worker updates the task channel with one of two values. "skip" when the header is present
@@ -81,7 +79,7 @@ func main() {
 			go func() {
 				defer wg.Done()
 
-				result, err := license.IsHeaderPresent(path)
+				result, err := isHeaderPresent(path)
 				if err != nil {
 					err := fmt.Errorf("failed checking license header")
 					errs = append(errs, err)
@@ -104,26 +102,26 @@ func main() {
 				if result != "skip" {
 					switch ext {
 					case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".cue", ".scss":
-						h := license.GenerateLicenseHeader("//")
-						if err := license.WriteFile(path, h); err != nil {
+						h := generateLicenseHeader("//")
+						if err := writeFile(path, h); err != nil {
 							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".jsx", ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
-						h := license.GenerateLicenseHeader("#")
-						if err := license.WriteFile(path, h); err != nil {
+						h := generateLicenseHeader("#")
+						if err := writeFile(path, h); err != nil {
 							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".sql":
-						h := license.GenerateLicenseHeader("--")
-						if err := license.WriteFile(path, h); err != nil {
+						h := generateLicenseHeader("--")
+						if err := writeFile(path, h); err != nil {
 							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
 					case ".xml", ".html":
-						h := license.GenerateXMLLicenseHeader()
-						if err := license.WriteXMLFile(path, h); err != nil {
+						h := generateXMLLicenseHeader()
+						if err := writeXMLFile(path, h); err != nil {
 							err := fmt.Errorf("failed to append license header: %s", path)
 							errs = append(errs, err)
 						}
@@ -139,13 +137,10 @@ func main() {
 		fmt.Printf("error walking the path: %v\n", err)
 	}
 
-	tErr := errors.Join(errs...)
-	if tErr != nil {
-		fmt.Printf("processing errors %s\n", fmt.Sprint(tErr))
-	}
-
 	// block main untill all the goroutines in done state
 	wg.Wait()
 	diff := time.Since(now)
 	fmt.Printf("running scans on bhce took %v\n", diff)
+
+	return errors.Join(errs...)
 }

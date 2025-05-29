@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func CheckRootFiles(wd string) error {
+func checkRootFiles(wd string) error {
 	rootFiles := []string{"LICENSE", "LICENSE.header"}
 
 	for _, file := range rootFiles {
@@ -44,7 +44,7 @@ func createLicenseFiles(path string) error {
 			s := strings.Contains(path, "header")
 			switch s {
 			case true:
-				formattedHeader := GenerateLicenseHeader("")
+				formattedHeader := generateLicenseHeader("")
 				if err := os.WriteFile(path, []byte(strings.Join(formattedHeader, "")), 0777); err != nil {
 					log.Fatal(err)
 				}

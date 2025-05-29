@@ -26,7 +26,7 @@ import (
 	"time"
 )
 
-func ParseFileExtension(path string) string {
+func parseFileExtension(path string) string {
 	ext := ""
 	parts := strings.Split(path, ".")
 
@@ -39,7 +39,7 @@ func ParseFileExtension(path string) string {
 	return ext
 }
 
-func GenerateLicenseHeader(commentPrefix string) []string {
+func generateLicenseHeader(commentPrefix string) []string {
 	var formattedHeader []string
 	s := strings.Split(licenseHeader, "\n")
 
@@ -54,7 +54,7 @@ func GenerateLicenseHeader(commentPrefix string) []string {
 	return formattedHeader
 }
 
-func WriteFile(path string, formattedHeaderContent []string) error {
+func writeFile(path string, formattedHeaderContent []string) error {
 	var newContent []string
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -70,7 +70,7 @@ func WriteFile(path string, formattedHeaderContent []string) error {
 	return nil
 }
 
-func GenerateXMLLicenseHeader() []string {
+func generateXMLLicenseHeader() []string {
 	s := fmt.Sprintf("<!-- %v \n-->", licenseHeader)
 
 	formattedHeaderContent := strings.Split(s, "\n")
@@ -81,7 +81,7 @@ func GenerateXMLLicenseHeader() []string {
 	return formattedHeaderContent
 }
 
-func WriteXMLFile(path string, formattedHeaderContent []string) error {
+func writeXMLFile(path string, formattedHeaderContent []string) error {
 
 	var newContent []string
 	data, err := os.ReadFile(path)
