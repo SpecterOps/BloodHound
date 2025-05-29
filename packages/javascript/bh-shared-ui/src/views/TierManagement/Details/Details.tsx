@@ -110,12 +110,6 @@ const Details: FC = () => {
                         <div className='flex items-center align-middle gap-4'>
                             <Button
                                 onClick={() => {
-                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`)
-                                }}>
-                                Create Selector
-                            </Button>
-                            <Button
-                                onClick={() => {
                                     if (value === 'Label') {
                                         navigate(`/tier-management/save/label`)
                                     }
@@ -124,6 +118,13 @@ const Details: FC = () => {
                                     }
                                 }}>
                                 Create {value}
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`)
+                                }}>
+                                Create Selector
                             </Button>
                             <div className='hidden'>
                                 <div>
