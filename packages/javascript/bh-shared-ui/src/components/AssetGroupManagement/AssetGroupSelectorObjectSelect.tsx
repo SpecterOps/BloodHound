@@ -27,28 +27,87 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { SeedTypeObjectId } from 'js-client-library';
-import { SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useState } from 'react';
-import { SearchValue } from '../../store';
+import { GraphNode, SeedTypeObjectId, SelectorSeedRequest } from 'js-client-library';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
+import { apiClient } from '../../utils';
+import { SearchValue } from '../../views/Explore/ExploreSearch/types';
+import SelectorFormContext from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
 import ExploreSearchCombobox from '../ExploreSearchCombobox';
 import NodeIcon from '../NodeIcon';
 
 export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
 export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
 
-const mapSeeds = (seeds: SelectorSeedRequest[]): AssetGroupSelectedNodes => {
-    return seeds.map((seed) => {
-        return { objectid: seed.value };
-    });
-};
-
-const AssetGroupSelectorObjectSelect: FC<{
-    setSeeds: (seeds: SelectorSeedRequest[]) => void;
-    seeds?: SelectorSeedRequest[];
-}> = ({ setSeeds, seeds = [] }) => {
+const AssetGroupSelectorObjectSelect: FC<{ seeds: SelectorSeedRequest[] }> = ({ seeds }) => {
+    const { setSeeds, setResults } = useContext(SelectorFormContext);
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>(mapSeeds(seeds));
+    const [selectedNodes, setSelectedNodes] = useState<AssetGroupSelectedNodes>([]);
+
+    const previewQuery = useQuery({
+        queryKey: [
+            'tier-management',
+            'preview-selectors',
+            SeedTypeObjectId,
+            { ...selectedNodes.map((node) => node.objectid) },
+        ],
+        queryFn: ({ signal }) => {
+            if (selectedNodes.length === 0) return [];
+
+            const seeds = selectedNodes.map((seed) => {
+                return {
+                    type: SeedTypeObjectId,
+                    value: seed.objectid,
+                };
+            });
+
+            return apiClient
+                .assetGroupTagsPreviewSelectors({ seeds: [...seeds] }, { signal })
+                .then((res) => res.data.data['members']);
+        },
+        retry: false,
+        refetchOnWindowFocus: false,
+    });
+
+    useEffect(() => {
+        if (!previewQuery.data) return;
+
+        setResults(previewQuery.data || []);
+    }, [previewQuery.data, setResults]);
+
+    useEffect(() => {
+        if (seeds.length === 0) return;
+        const cypherQuery = async () => {
+            const nodesByObjectId = new Map<string, GraphNode>();
+
+            const seedsList = seeds.map((seed) => {
+                return `"${seed.value}"`;
+            });
+
+            const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+
+            await apiClient
+                .cypherSearch(query)
+                .then((res) => {
+                    Object.values(res.data.data.nodes).forEach((node) => {
+                        nodesByObjectId.set(node.objectId, node);
+                    });
+                })
+                .catch(() => {});
+
+            return seeds.map((seed) => {
+                const node = nodesByObjectId.get(seed.value);
+                if (node !== undefined) {
+                    return { objectid: node.objectId, name: node.label, type: node.kind };
+                }
+                return { objectid: seed.value };
+            });
+        };
+
+        cypherQuery().then((newSelectedNodes) => {
+            setSelectedNodes(newSelectedNodes);
+        });
+    }, [seeds]);
 
     const handleSelectedNode = useCallback(
         (node: SearchValue) => {
@@ -100,7 +159,9 @@ const AssetGroupSelectorObjectSelect: FC<{
         <div>
             <Card className='rounded-lg'>
                 <CardHeader className='px-6 first:pt-6 text-xl font-bold'>
-                    Object Selector
+                    <div className='flex justify-between'>
+                        <span>Object Selector</span>
+                    </div>
                     <CardDescription className='pt-3 font-normal'>
                         Use the input field to add objects to the list
                     </CardDescription>
@@ -120,8 +181,8 @@ const AssetGroupSelectorObjectSelect: FC<{
                     </div>
                     <Table className='mt-5 w-full table-fixed'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
-                            {selectedNodes.map((node) => (
-                                <TableRow key={node.objectid} className='border-y p-0 *:p-0 *:h-12'>
+                            {selectedNodes.map((node, index) => (
+                                <TableRow key={node.objectid + index} className='border-y p-0 *:p-0 *:h-12'>
                                     <TableCell className='*:p-0 text-center w-[30px]'>
                                         <Button
                                             variant={'text'}

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useMemo, useState } from 'react';
-import { SearchValue } from '../../store';
+import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import { useExploreParams } from '../useExploreParams';
 import { getKeywordAndTypeValues, useSearch } from '../useSearch';
 

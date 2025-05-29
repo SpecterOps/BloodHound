@@ -22,7 +22,8 @@ import DynamicDetails from './DynamicDetails';
 import WrappedEntityInfoPanel from './EntityInfo/EntityInfoPanel';
 
 export const SelectedDetails: FC = () => {
-    const { selectorId, memberId, tagId } = useParams();
+    const { tierId, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const tagQuery = useQuery({
         queryKey: ['tier-management', 'tag', tagId],
