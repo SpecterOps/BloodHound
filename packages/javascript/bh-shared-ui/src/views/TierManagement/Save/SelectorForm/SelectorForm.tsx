@@ -102,7 +102,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
         case 'set-selected-objects':
             return { ...state, selectedObjects: action.nodes };
         case 'set-selector-type':
-            return { ...state, selectorType: action.selectorType };
+            return { ...state, selectorType: action.selectorType, seeds: [], selectedObjects: [] };
         case 'set-seeds':
             return { ...state, seeds: action.seeds };
         default:

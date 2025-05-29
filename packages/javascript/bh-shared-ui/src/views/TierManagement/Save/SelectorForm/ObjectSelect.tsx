@@ -70,7 +70,7 @@ const ObjectSelect: FC = () => {
                             />
                         </div>
                     </div>
-                    <Table className='mt-5 w-full table-fixed'>
+                    <Table className='mt-5 w-full table-fixed' role='table' aria-label='Selected Objects'>
                         <TableBody className='first:border-t-[1px] last:border-b-[1px] border-neutral-light-5 dark:border-netural-dark-5'>
                             {selectedObjects.map((node, index) => (
                                 <TableRow key={node.objectid + index} className='border-y p-0 *:p-0 *:h-12'>
@@ -78,7 +78,7 @@ const ObjectSelect: FC = () => {
                                         <Button
                                             variant={'text'}
                                             onClick={() => handleDeleteNode(node)}
-                                            aria-label='Remove object'>
+                                            aria-label={`Remove ${node.name || node.objectid}`}>
                                             <FontAwesomeIcon icon={faTrashCan} />
                                         </Button>
                                     </TableCell>

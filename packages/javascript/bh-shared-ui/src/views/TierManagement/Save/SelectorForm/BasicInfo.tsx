@@ -147,12 +147,8 @@ const BasicInfo: FC = () => {
                                 onValueChange={(value: string) => {
                                     if (value === SeedTypeObjectId.toString()) {
                                         dispatch({ type: 'set-selector-type', selectorType: SeedTypeObjectId });
-                                        dispatch({ type: 'set-seeds', seeds: [] });
-                                        dispatch({ type: 'set-selected-objects', nodes: [] });
                                     } else if (value === SeedTypeCypher.toString()) {
                                         dispatch({ type: 'set-selector-type', selectorType: SeedTypeCypher });
-                                        dispatch({ type: 'set-seeds', seeds: [] });
-                                        dispatch({ type: 'set-selected-objects', nodes: [] });
                                     }
                                 }}>
                                 <SelectTrigger

@@ -83,7 +83,7 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
         expect(screen.getByText('Use the input field to add objects to the list')).toBeInTheDocument();
     });
 
-    it('invokes setSeeds when a current seed is deleted', async () => {
+    it('dispatches an action to the delete the associated node', async () => {
         const deleteBtn = await screen.findByText('trash-can');
 
         await user.click(deleteBtn);
@@ -96,7 +96,7 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
         });
     });
 
-    it.skip('invokes setSeeds when a new seed is selected', async () => {
+    it('dispatches an action to add the associated node', async () => {
         await screen.findByTestId('explore_search_input-search');
 
         const input = screen.getByLabelText('Search Objects To Add');
@@ -107,14 +107,14 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
 
         await user.click(options[0]);
 
-        expect(await screen.findByText('user')).toBeInTheDocument();
-        expect(await screen.findByText('foo')).toBeInTheDocument();
-
         waitFor(() => {
             expect(dispatch).toHaveBeenCalledWith({
                 type: 'add-selected-object',
                 node: { objectid: '2', name: 'foo', type: 'User' },
             });
+
+            expect(screen.getByText('user')).toBeInTheDocument();
+            expect(screen.getByText('foo')).toBeInTheDocument();
         });
     });
 });
