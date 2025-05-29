@@ -21,9 +21,9 @@ import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { AppIcon } from '../../../components';
 import {
-    ROUTE_TIER_MANAGEMENT_DETAILS,
+    ROUTE_TIER_MANAGEMENT_CREATE_LABEL,
     ROUTE_TIER_MANAGEMENT_CREATE_TIER,
-    ROUTE_TIER_MANAGEMENT_CREATE_LABEL
+    ROUTE_TIER_MANAGEMENT_DETAILS,
 } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
@@ -114,17 +114,17 @@ const Details: FC = () => {
                             <Button
                                 onClick={() => {
                                     if (getTagUrlValue(labelId) === 'label') {
-                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_LABEL}`)
+                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_LABEL}`);
                                     } else if (getTagUrlValue(labelId) === 'tier') {
-                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_TIER}`)
+                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_TIER}`);
                                     }
                                 }}>
                                 Create {value}
                             </Button>
                             <Button
-                                variant="secondary"
+                                variant='secondary'
                                 onClick={() => {
-                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`)
+                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
                                 }}>
                                 Create Selector
                             </Button>
