@@ -19,6 +19,8 @@ package auth_test
 import (
 	"bytes"
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -27,6 +29,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
+
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -39,6 +43,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
+	tlsmocks "github.com/specterops/bloodhound/src/services/tls/mocks"
 
 	"github.com/specterops/bloodhound/src/api"
 	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
@@ -47,6 +52,12 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"go.uber.org/mock/gomock"
 )
+
+var validMetadataXML = `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
+		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://okta.com/sso"/>
+		</IDPSSODescriptor>
+	</EntityDescriptor>`
 
 func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 	t.Parallel()
@@ -797,12 +808,6 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 	t.Parallel()
 
-	validMetadataXML := `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
-		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://okta.com/sso"/>
-		</IDPSSODescriptor>
-	</EntityDescriptor>`
-
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
 	}
@@ -1000,6 +1005,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error occurred while creating metadata form file, needed for test %s: %v", testName, err)
 				}
+				// Binding causes error
 				_, err = metadataFile.Write([]byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
 		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
 			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-GET" Location="https://okta.com/sso"/>
@@ -1312,12 +1318,6 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 
 func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 	t.Parallel()
-
-	validMetadataXML := `<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
-		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://okta.com/sso"/>
-		</IDPSSODescriptor>
-	</EntityDescriptor>`
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
@@ -1922,12 +1922,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 	}
 }
 
-// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
 func TestManagementResource_ServeMetadata(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockTLS      *tlsmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2026,13 +2026,57 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 						DisplayName:     "Okta SSO",
 						IssuerURI:       "https://okta.com/saml",
 						SingleSignOnURI: "https://okta.com/sso",
+						MetadataXML:     []byte(validMetadataXML),
 					},
 				}, nil)
+				mock.mockTLS.EXPECT().Parse(gomock.Any()).Return(&x509.Certificate{}, &rsa.PrivateKey{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"//www.example.com/"}},
-				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"failed to parse service provider Okta Provider's cert pair: x509: malformed certificate"}]}`,
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"failed to parse service provider Okta Provider's cert pair: error"}]}`,
+			},
+		},
+		{
+			name: "Success: Metadata Served - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Host: "www.example.com",
+					},
+				}
+
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderSlug: "provider",
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				request = request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+
+				return mux.SetURLVars(request, vars)
+
+			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(req.Context(), "provider").Return(model.SSOProvider{
+					Name: "Okta",
+					Slug: "okta",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "Okta Provider",
+						DisplayName:     "Okta SSO",
+						IssuerURI:       "https://okta.com/saml",
+						SingleSignOnURI: "https://okta.com/sso",
+						MetadataXML:     []byte(validMetadataXML),
+					},
+				}, nil)
+				mock.mockTLS.EXPECT().Parse(gomock.Any()).Return(&x509.Certificate{}, &rsa.PrivateKey{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/samlmetadata+xml"}, "Location": []string{"//www.example.com/"}},
+				responseBody:   string("<EntityDescriptor xmlns=\"urn:oasis:names:tc:SAML:2.0:metadata\" validUntil=\"XXX\" entityID=\"//www.example.com/Okta%20Provider\">\n  <SPSSODescriptor xmlns=\"urn:oasis:names:tc:SAML:2.0:metadata\" validUntil=\"XXX\" protocolSupportEnumeration=\"urn:oasis:names:tc:SAML:2.0:protocol\" AuthnRequestsSigned=\"true\" WantAssertionsSigned=\"true\">\n    <KeyDescriptor use=\"encryption\">\n      <KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <X509Data xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n          <X509Certificate xmlns=\"http://www.w3.org/2000/09/xmldsig#\"></X509Certificate>\n        </X509Data>\n      </KeyInfo>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes128-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes192-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes256-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p\"></EncryptionMethod>\n    </KeyDescriptor>\n    <KeyDescriptor use=\"signing\">\n      <KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <X509Data xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n          <X509Certificate xmlns=\"http://www.w3.org/2000/09/xmldsig#\"></X509Certificate>\n        </X509Data>\n      </KeyInfo>\n    </KeyDescriptor>\n    <NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</NameIDFormat>\n    <AssertionConsumerService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST\" Location=\"\" index=\"1\"></AssertionConsumerService>\n    <AssertionConsumerService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact\" Location=\"\" index=\"2\"></AssertionConsumerService>\n  </SPSSODescriptor>\n</EntityDescriptor>"),
 			},
 		},
 	}
@@ -2045,13 +2089,14 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockTLS:      tlsmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks, request)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
-
+			resource.TLS = mocks.mockTLS
 			response := httptest.NewRecorder()
 
 			resource.ServeMetadata(response, request)
@@ -2061,7 +2106,18 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
-			assert.JSONEq(t, testCase.expected.responseBody, body)
+			if status != http.StatusOK {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+
+				// find all validUntil fields and replace the time.Time value with
+				// a persistent value.
+				// matches 'validUntil=' followed by non-space/non-semicolon chars
+				regex := regexp.MustCompile(`validUntil=[^ ;]*`)
+				body := regex.ReplaceAllString(body, "validUntil=\"XXX\"")
+
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
@@ -2230,12 +2286,12 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 	}
 }
 
-// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
 func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockTLS      *tlsmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2245,6 +2301,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 		name         string
 		args         model.SSOProvider
 		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
 	}
 
@@ -2269,6 +2326,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
@@ -2296,40 +2354,8 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			expected: expected{
-				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
-			},
-		},
-		{
-			name: "Error: Post Binding Also Fails - Redirect to Login with Error Message",
-			args: model.SSOProvider{
-				Name: "POST Provider",
-				Slug: "post-provider",
-				Type: model.SessionAuthProviderSAML,
-				SAMLProvider: &model.SAMLProvider{
-					Name:            "POST SAML Provider",
-					DisplayName:     "POST SAML SSO",
-					IssuerURI:       "https://post-provider.com/saml",
-					SingleSignOnURI: "https://post-provider.com/sso",
-					MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
-						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
-						</IDPSSODescriptor>
-					</EntityDescriptor>`),
-				},
-			},
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						Host: "www.example.com",
-					},
-				}
-
-				bhContext := &ctx.Context{
-					Host: request.URL,
-				}
-				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockTLS.EXPECT().Parse(gomock.Any()).Return(&x509.Certificate{}, &rsa.PrivateKey{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -2345,15 +2371,18 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockTLS:      tlsmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
-
+			resource.TLS = mocks.mockTLS
 			response := httptest.NewRecorder()
 
 			resource.SAMLLoginHandler(response, request, testCase.args)
+
 			mux.NewRouter().ServeHTTP(response, request)
 
 			status, header, _ := test.ProcessResponse(t, response)
@@ -2364,12 +2393,12 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 	}
 }
 
-// TODO: BED-5641 auth.NewServiceProvider - Need to look into a way to abstract the crypto?
 func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockTLS      *tlsmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2379,6 +2408,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 		name         string
 		args         model.SSOProvider
 		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
 		expected     expected
 	}
 
@@ -2403,6 +2433,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
@@ -2430,13 +2461,16 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockTLS.EXPECT().Parse(gomock.Any()).Return(&x509.Certificate{}, &rsa.PrivateKey{}, errors.New("error"))
+			},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 		{
-			name: "Error: Post Binding Also Fails - Redirect to Login with Error Message",
+			name: "Error: serviceProvider.ParseResponse, Failed to parse ACS response for provider - Redirect to Login with Error Message",
 			args: model.SSOProvider{
 				Name: "POST Provider",
 				Slug: "post-provider",
@@ -2458,6 +2492,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					URL: &url.URL{
 						Host: "www.example.com",
 					},
+					PostForm: url.Values{"SAMLResponse": []string{"test"}},
 				}
 
 				bhContext := &ctx.Context{
@@ -2465,26 +2500,30 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
+			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+				mock.mockTLS.EXPECT().Parse(gomock.Any()).Return(&x509.Certificate{}, &rsa.PrivateKey{}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
 			},
 		},
 	}
-
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
+				mockTLS:      tlsmocks.NewMockService(ctrl),
 				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
 
 			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks, request)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
-
+			resource.TLS = mocks.mockTLS
 			response := httptest.NewRecorder()
 
 			resource.SAMLCallbackHandler(response, request, testCase.args)
