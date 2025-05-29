@@ -160,7 +160,7 @@ func TestLoginResource_Logout(t *testing.T) {
 		{
 			name: "Success: Logout redirects to UI path - OK",
 			buildRequest: func() *http.Request {
-				request := http.Request{
+				request := &http.Request{
 					URL: &url.URL{
 						Host: "www.example.com",
 					},
@@ -184,7 +184,11 @@ func TestLoginResource_Logout(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockAuth.EXPECT().Logout(gomock.Any(), gomock.Any()).Times(1)
+				mock.mockAuth.EXPECT().Logout(req.Context(), model.UserSession{
+					BigSerial: model.BigSerial{
+						ID: 1,
+					},
+				}).Times(1)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
