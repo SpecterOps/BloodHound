@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -47,8 +48,9 @@ func Run() error {
 	now := time.Now()
 	err = filepath.Walk(wd, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
-			return err
+			// Log the error and continue walking
+			slog.Warn(fmt.Sprintf("error accessing path %q: %v", path, err))
+			return nil // Continue walking despite the error
 		}
 
 		// ignore directories
@@ -109,17 +111,17 @@ func Run() error {
 	// block main untill all the goroutines in done state
 	wg.Wait()
 	diff := time.Since(now)
-	fmt.Printf("running scans on bhce took %v\n", diff)
-
+	
+	slog.Info(fmt.Sprintf("running scans on bhce took %v", diff))
 	return errors.Join(errs...)
 }
 
 func processFile(path, ext string) error {
 	switch ext {
-	case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".cue", ".scss":
+	case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".jsx", ".cue", ".scss":
 		h := generateLicenseHeader("//")
 		return writeFile(path, h)
-	case ".jsx", ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
+	case ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
 		h := generateLicenseHeader("#")
 		return writeFile(path, h)
 	case ".sql":

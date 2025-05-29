@@ -40,8 +40,10 @@ func createLicenseFiles(path string) error {
 
 	// check if the file exists
 	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			s := strings.Contains(path, "header")
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to check file %s: %w", path, err) 
+		} else {
+			s := strings.HasSuffix(filepath.Base(path), ".header")
 			switch s {
 			case true:
 				formattedHeader := generateLicenseHeader("")

@@ -27,16 +27,7 @@ import (
 )
 
 func parseFileExtension(path string) string {
-	ext := ""
-	parts := strings.Split(path, ".")
-
-	if len(parts) >= 2 { // add support for files with multiple dots
-		ext = fmt.Sprintf(".%s", parts[len(parts)-1])
-	} else {
-		ext = filepath.Ext(path)
-	}
-
-	return ext
+	return filepath.Ext(path)
 }
 
 func generateLicenseHeader(commentPrefix string) []string {
@@ -53,12 +44,25 @@ func generateLicenseHeader(commentPrefix string) []string {
 	}
 
 	year := getCurrentYear()
-	formattedHeader[0] = fmt.Sprintf("%s  Copyright %s Specter Ops, Inc.\n", commentPrefix, year)
 
+	// Find and replace the copyright line instead of using hardcoded index
+	for i, line := range formattedHeader {
+		if strings.HasPrefix(line, "Copyright") {
+			formattedHeader[i] = fmt.Sprintf("Copyright %s Specter Ops, Inc.", year)
+			break
+		}
+	}
 	return formattedHeader
 }
 
 func writeFile(path string, formattedHeaderContent []string) error {
+	// Get original file info to preserve permissions
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	originalPerm := fileInfo.Mode().Perm()
+
 	var newContent []string
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -68,24 +72,39 @@ func writeFile(path string, formattedHeaderContent []string) error {
 	formattedHeaderContent = append(formattedHeaderContent, "\n")
 	newContent = append(formattedHeaderContent, string(data))
 
-	if err := os.WriteFile(path, []byte(strings.Join(newContent, "")), 0666); err != nil {
+	if err := os.WriteFile(path, []byte(strings.Join(newContent, "")), originalPerm); err != nil {
 		return err
 	}
 	return nil
 }
 
 func generateXMLLicenseHeader() []string {
-	s := fmt.Sprintf("<!-- %v-->", licenseHeader)
+	lines := strings.Split(licenseHeader, "\n")
+	var formattedHeaderContent []string
 
-	formattedHeaderContent := strings.Split(s, "\n")
+	formattedHeaderContent = append(formattedHeaderContent, "<!--")
+	formattedHeaderContent = append(formattedHeaderContent, lines...)
+	formattedHeaderContent = append(formattedHeaderContent, "-->")
 
 	year := getCurrentYear()
-	formattedHeaderContent[0] = fmt.Sprintf("<!-- \nCopyright %s Specter Ops, Inc.", year)
+	// Find and replace the copyright line instead of using hardcoded index
+	for i, line := range formattedHeaderContent {
+		if strings.HasPrefix(line, "Copyright") {
+			formattedHeaderContent[i] = fmt.Sprintf("Copyright %s Specter Ops, Inc.", year)
+			break
+		}
+	}
 
 	return formattedHeaderContent
 }
 
 func writeXMLFile(path string, formattedHeaderContent []string) error {
+	// Get original file info to preserve permissions
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	originalPerm := fileInfo.Mode().Perm()
 
 	var newContent []string
 	data, err := os.ReadFile(path)
@@ -95,7 +114,7 @@ func writeXMLFile(path string, formattedHeaderContent []string) error {
 
 	newContent = append(formattedHeaderContent, string(data))
 
-	if err := os.WriteFile(path, []byte(strings.Join(newContent, "\n")), 0666); err != nil {
+	if err := os.WriteFile(path, []byte(strings.Join(newContent, "\n")), originalPerm); err != nil {
 		return err
 	}
 	return nil
