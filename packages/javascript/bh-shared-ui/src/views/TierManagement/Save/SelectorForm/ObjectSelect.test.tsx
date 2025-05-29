@@ -89,7 +89,10 @@ describe('AssetGroupTagsSelectorObjectSelect', () => {
         await user.click(deleteBtn);
 
         waitFor(() => {
-            expect(dispatch).toHaveBeenCalledWith([]);
+            expect(dispatch).toHaveBeenCalledWith({
+                type: 'remove-selected-object',
+                node: { objectid: '1', type: 'User', name: 'Bob' },
+            });
         });
     });
 
