@@ -18,8 +18,8 @@ package license
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -27,7 +27,7 @@ func checkRootFiles(wd string) error {
 	rootFiles := []string{"LICENSE", "LICENSE.header"}
 
 	for _, file := range rootFiles {
-		if err := createLicenseFiles(wd + "/" + file); err != nil {
+		if err := createLicenseFiles(filepath.Join(wd, file)); err != nil {
 			return err
 		}
 	}
@@ -45,12 +45,12 @@ func createLicenseFiles(path string) error {
 			switch s {
 			case true:
 				formattedHeader := generateLicenseHeader("")
-				if err := os.WriteFile(path, []byte(strings.Join(formattedHeader, "")), 0777); err != nil {
-					log.Fatal(err)
+				if err := os.WriteFile(path, []byte(strings.Join(formattedHeader, "")), 0644); err != nil {
+					return err
 				}
 				fmt.Printf("creating %v\n", path)
 			default:
-				if err := os.WriteFile(path, []byte(licenseContent), 0777); err != nil {
+				if err := os.WriteFile(path, []byte(licenseContent), 0644); err != nil {
 					return err
 				}
 				fmt.Printf("creating %v\n", path)

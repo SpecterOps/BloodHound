@@ -19,7 +19,6 @@ package license
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -27,20 +26,19 @@ import (
 func dirCheck(path string) bool {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		fmt.Printf("failed getting file stat %v\n", err)
+		return false
 	}
 
 	return fileInfo.IsDir()
 }
 
-func ignorePathValidation(ignorPaths []string, wd, path string) bool {
+func shouldProcessPath(ignorPaths []string, wd, path string) bool {
 	for _, ig := range ignorPaths {
 		if strings.Contains(path, ig) {
-			return false
+			return false // Don't process ignored paths
 		}
 	}
-
-	return true
+	return true // Process non-ignored paths
 }
 
 func isHeaderPresent(path string) (bool, error) {
@@ -48,6 +46,7 @@ func isHeaderPresent(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer fileReader.Close()
 
 	// check for license header
 	fileScanner := bufio.NewScanner(fileReader)
@@ -56,10 +55,8 @@ func isHeaderPresent(path string) (bool, error) {
 	linestoRead := 3
 	linesRead := 0
 	for fileScanner.Scan() && linesRead < linestoRead {
-		if i := 0; i <= 2 {
-			lines = append(lines, fileScanner.Text())
-			linesRead++
-		}
+		lines = append(lines, fileScanner.Text())
+		linesRead++
 	}
 	data := strings.Join(lines, "\n")
 	return strings.Contains(data, "Copyright"), nil

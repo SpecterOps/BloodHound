@@ -32,10 +32,10 @@ func Run() error {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("checked failed license root files error: %v", err)
+		return fmt.Errorf("failed to get working directory: %w", err)
 	}
 	if err := checkRootFiles(wd); err != nil {
-		fmt.Printf("checked failed license root files error: %v", err)
+		return fmt.Errorf("failed to check root files: %w", err)
 	}
 
 	ignoreDir := []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".beagle", ".yarn", "sha256"}
@@ -59,82 +59,51 @@ func Run() error {
 		paths = append(paths, path)
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("error walking the path: %w", err)
+	}
 
 	// append all the errors from the goroutines
-	var errs []error
+	var (
+		errs   []error
+		errsMu sync.Mutex
+	)
 	var wg sync.WaitGroup
-	for _, path := range paths {
-		// buffered channel to process tasks in FIFO
-		task := make(chan string, len(paths))
 
+	// Use a worker pool pattern with limited concurrency
+	const maxWorkers = 10
+	sem := make(chan struct{}, maxWorkers)
+
+	for _, path := range paths {
 		// series of validations before processing all the paths against directories, disallowed extensions and paths
 		ext := parseFileExtension(path)
 		isDir := dirCheck(path)
-		scanPath := ignorePathValidation(ignorPaths, wd, path)
+		scanPath := shouldProcessPath(ignorPaths, wd, path)
 
 		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 && scanPath {
-			// worker updates the task channel with one of two values. "skip" when the header is present
-			// or a file path to be consumed by another worker to format the file
 			wg.Add(1)
-			go func() {
+			go func(filePath, fileExt string) {
 				defer wg.Done()
+				sem <- struct{}{}        // acquire semaphore
+				defer func() { <-sem }() // release semaphore
 
-				result, err := isHeaderPresent(path)
+				result, err := isHeaderPresent(filePath)
 				if err != nil {
-					err := fmt.Errorf("failed checking license header")
+					errsMu.Lock()
 					errs = append(errs, err)
+					errsMu.Unlock()
+					return
 				}
 
 				if !result {
-					task <- path
-				} else {
-					task <- "skip"
-				}
-			}()
-
-			// worker readings from the task channel and determines whether to format the file or skip the operation
-			wg.Add(1)
-			go func() {
-
-				defer wg.Done()
-				result := <-task
-
-				if result != "skip" {
-					switch ext {
-					case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".cue", ".scss":
-						h := generateLicenseHeader("//")
-						if err := writeFile(path, h); err != nil {
-							err := fmt.Errorf("failed to append license header: %s", path)
-							errs = append(errs, err)
-						}
-					case ".jsx", ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
-						h := generateLicenseHeader("#")
-						if err := writeFile(path, h); err != nil {
-							err := fmt.Errorf("failed to append license header: %s", path)
-							errs = append(errs, err)
-						}
-					case ".sql":
-						h := generateLicenseHeader("--")
-						if err := writeFile(path, h); err != nil {
-							err := fmt.Errorf("failed to append license header: %s", path)
-							errs = append(errs, err)
-						}
-					case ".xml", ".html":
-						h := generateXMLLicenseHeader()
-						if err := writeXMLFile(path, h); err != nil {
-							err := fmt.Errorf("failed to append license header: %s", path)
-							errs = append(errs, err)
-						}
-					default:
-						fmt.Printf("unknown extension file: %v\n", path)
+					if err := processFile(filePath, fileExt); err != nil {
+						errsMu.Lock()
+						errs = append(errs, err)
+						errsMu.Unlock()
 					}
 				}
-			}()
+			}(path, ext)
 		}
-	}
-
-	if err != nil {
-		fmt.Printf("error walking the path: %v\n", err)
 	}
 
 	// block main untill all the goroutines in done state
@@ -143,4 +112,24 @@ func Run() error {
 	fmt.Printf("running scans on bhce took %v\n", diff)
 
 	return errors.Join(errs...)
+}
+
+func processFile(path, ext string) error {
+	switch ext {
+	case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".cue", ".scss":
+		h := generateLicenseHeader("//")
+		return writeFile(path, h)
+	case ".jsx", ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
+		h := generateLicenseHeader("#")
+		return writeFile(path, h)
+	case ".sql":
+		h := generateLicenseHeader("--")
+		return writeFile(path, h)
+	case ".xml", ".html":
+		h := generateXMLLicenseHeader()
+		return writeXMLFile(path, h)
+	default:
+		fmt.Printf("unknown extension file: %v\n", path)
+		return nil
+	}
 }
