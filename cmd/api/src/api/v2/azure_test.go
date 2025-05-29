@@ -36,7 +36,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
+func TestResources_GetAZRelatedEntities(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -303,7 +303,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetAZEntityInformation(t *testing.T) {
+func Test_GetAZEntityInformation(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {

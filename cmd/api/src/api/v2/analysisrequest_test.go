@@ -82,7 +82,7 @@ func TestResources_GetAnalysisRequest(t *testing.T) {
 	})
 }
 
-func TestManagementResource_RequestAnalysis(t *testing.T) {
+func TestResources_RequestAnalysis(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {

@@ -490,7 +490,7 @@ func TestResources_ListADGPOAffectedTierZero(t *testing.T) {
 		Run(setupCases(mockGraph, mockDB))
 }
 
-func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
+func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {

@@ -700,7 +700,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 		})
 }
 
-func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
+func TestResources_GetBaseEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -895,7 +895,7 @@ func TestManagementResource_GetBaseEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
+func TestResources_GetContainerEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -1090,7 +1090,7 @@ func TestManagementResource_GetContainerEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
+func TestResources_GetAIACAEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -1285,7 +1285,7 @@ func TestManagementResource_GetAIACAEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
+func TestResources_GetRootCAEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -1481,7 +1481,7 @@ func TestManagementResource_GetRootCAEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
+func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -1676,7 +1676,7 @@ func TestManagementResource_GetEnterpriseCAEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
+func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -1871,7 +1871,7 @@ func TestManagementResource_GetNTAuthStoreEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
+func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -2066,7 +2066,7 @@ func TestManagementResource_GetCertTemplateEntityInfo(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetIssuancePolicyEntityInfo(t *testing.T) {
+func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {

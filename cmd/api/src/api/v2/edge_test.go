@@ -32,7 +32,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestManagementResource_GetEdgeComposition(t *testing.T) {
+func TestResources_GetEdgeComposition(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {

@@ -39,7 +39,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestManagementResource_CypherQuery(t *testing.T) {
+func TestResources_CypherQuery(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
