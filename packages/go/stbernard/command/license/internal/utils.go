@@ -79,12 +79,9 @@ func writeFile(path string, formattedHeaderContent []string) error {
 }
 
 func generateXMLLicenseHeader() []string {
-	lines := strings.Split(licenseHeader, "\n")
-	var formattedHeaderContent []string
+	s := fmt.Sprintf("<!-- %v-->", licenseHeader)
 
-	formattedHeaderContent = append(formattedHeaderContent, "<!--")
-	formattedHeaderContent = append(formattedHeaderContent, lines...)
-	formattedHeaderContent = append(formattedHeaderContent, "-->")
+	formattedHeaderContent := strings.Split(s, "\n")
 
 	year := getCurrentYear()
 	// Find and replace the copyright line instead of using hardcoded index
