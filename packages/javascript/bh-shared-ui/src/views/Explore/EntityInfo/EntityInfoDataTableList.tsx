@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box, Divider } from '@mui/material';
-import { ActiveDirectoryNodeKind, EntityKinds, allSections } from 'bh-shared-ui';
 import React from 'react';
+import { ActiveDirectoryNodeKind } from '../../../graphSchema';
+import { EntityKinds, allSections } from '../../../utils';
 import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
 

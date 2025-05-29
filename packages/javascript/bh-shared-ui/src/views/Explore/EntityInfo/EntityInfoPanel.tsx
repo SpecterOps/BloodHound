@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,16 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import {
-    NoEntitySelectedHeader,
-    NoEntitySelectedMessage,
-    ObjectInfoPanelContextProvider,
-    SelectedNode,
-    usePaneStyles,
-} from 'bh-shared-ui';
 import React, { useState } from 'react';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils';
+import { usePaneStyles } from '../InfoStyles';
+import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
+
+import { SelectedNode } from '../../../types';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 

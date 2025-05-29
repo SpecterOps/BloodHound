@@ -65,7 +65,7 @@ describe('AssetGroupSelectorObjectSelect', () => {
         rest.get(`/api/v2/search`, (_, res, ctx) => {
             return res(ctx.json(testSearchResults));
         }),
-        rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        rest.get(`/api/v2/customnode`, (req, res, ctx) => {
             return res(
                 ctx.json({
                     data: {},

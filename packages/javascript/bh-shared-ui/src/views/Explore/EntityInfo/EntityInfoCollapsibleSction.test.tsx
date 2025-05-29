@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,9 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor } from '../../../test-utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 describe('EntityInfoCollapsibleSection', () => {

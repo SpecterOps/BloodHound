@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,26 +13,24 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box, Divider, Typography, useTheme } from '@mui/material';
-import {
-    EdgeInfoComponents,
-    EdgeSections,
-    SelectedEdge,
-    useExploreParams,
-    useFetchEntityProperties,
-} from 'bh-shared-ui';
-import { FC, Fragment } from 'react';
-import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
-import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
+import { ElementType, FC, Fragment } from 'react';
+import EdgeInfoComponents from '../../../components/HelpTexts';
+import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
+import { EdgeSections, SelectedEdge } from '../../../store';
+import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
+import EdgeObjectInformation from './EdgeObjectInformation';
 
 const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ selectedEdge }) => {
     const theme = useTheme();
-    const { setExploreParams, selectedItem, expandedPanelSections } = useExploreParams();
+    const { setExploreParams, expandedPanelSections } = useExploreParams();
     const sections = EdgeInfoComponents[selectedEdge.name as keyof typeof EdgeInfoComponents];
     const { sourceNode, targetNode } = selectedEdge;
     const { objectId, type } = targetNode;
-    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({ objectId, nodeType: type });
+    const { entityProperties: targetNodeProperties } = useFetchEntityProperties({
+        objectId,
+        nodeType: type,
+    });
 
     return (
         <Box>
@@ -40,7 +38,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
             {sections ? (
                 <>
                     {Object.entries(sections).map((section, index) => {
-                        const Section = section[1];
+                        const Section = section[1] as ElementType;
                         const sectionKeyLabel = section[0] as keyof typeof EdgeSections;
 
                         const isExpandedPanelSection = (expandedPanelSections as string[]).includes(sectionKeyLabel);
@@ -50,7 +48,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
                                 expandedPanelSections: [sectionKeyLabel],
                                 ...(sectionKeyLabel === 'composition' && {
                                     searchType: 'composition',
-                                    relationshipQueryItemId: selectedItem,
+                                    relationshipQueryItemId: selectedEdge.id,
                                 }),
                             });
                         };

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import userEvent from '@testing-library/user-event';
-import { ActiveDirectoryNodeKind, AzureNodeKind, allSections } from 'bh-shared-ui';
 import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
+import { act, render, screen } from '../../../test-utils';
+import { allSections } from '../../../utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
 const objectId = 'fake-object-id';
@@ -50,7 +50,7 @@ const queryCount = {
         skip: 0,
         data: [],
     },
-    'tier-zero': {
+    ['tier-zero']: {
         count: 55,
         limit: 128,
         skip: 0,
@@ -170,9 +170,9 @@ describe('EntityInfoDataTable', () => {
 
     describe('Node count for Vault Readers nested table', () => {
         it('Verify Vault Reader count is the count returned by All Readers', async () => {
-            const user = userEvent.setup();
+            const url = `?expandedPanelSections=${azKeyVaultSections[0].label}`;
 
-            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />);
+            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />, { route: url });
 
             // wait for the total count to be available - this holds off all following tests until the counts have been returned
             const sum = await screen.findByText('1,998');
@@ -180,12 +180,9 @@ describe('EntityInfoDataTable', () => {
 
             // verify the vault reader count is as expected
             const vaultReadersHeader = await screen.findByText('Vault Readers');
+            await act(() => expect(vaultReadersHeader).toBeInTheDocument()); // verify accordion is open and showing all options
             const vaultReadersCount = vaultReadersHeader.nextElementSibling;
             expect(vaultReadersCount).toHaveTextContent('1,998');
-
-            // expand the Vault Readers accordian
-            const button = await screen.findByRole('button');
-            await user.click(button);
 
             // verify the key readers count is as expected
             const keyReadersHeader = await screen.findByText('Key Readers');

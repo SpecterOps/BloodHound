@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,11 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { ActiveDirectoryNodeKind, AzureNodeKind, EntityKinds, ObjectInfoPanelContextProvider } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitForElementToBeRemoved } from 'src/test-utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
+import { render, screen, waitForElementToBeRemoved } from '../../../test-utils';
+import { EntityKinds } from '../../../utils';
+import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
 import EntityInfoContent from './EntityInfoContent';
 
 const server = setupServer(

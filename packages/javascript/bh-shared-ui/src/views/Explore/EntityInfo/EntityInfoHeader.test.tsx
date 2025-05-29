@@ -13,16 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { act, render } from 'src/test-utils';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act, render } from '../../../test-utils';
 
 import userEvent from '@testing-library/user-event';
-import { ObjectInfoPanelContext } from 'bh-shared-ui';
-import EdgeInfoHeader, { HeaderProps } from './EdgeInfoHeader';
+import { AzureNodeKind } from '../../../graphSchema';
+import { ObjectInfoPanelContext } from '../providers/ObjectInfoPanelProvider';
+import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
 
 const testProps: HeaderProps = {
     expanded: true,
     name: 'testName',
     onToggleExpanded: vi.fn(),
+    nodeType: AzureNodeKind.Group,
 };
 
 const setIsObjectInfoPanelOpen = (newValue: boolean) => {
@@ -34,13 +38,27 @@ const mockContextValue = {
     setIsObjectInfoPanelOpen,
 };
 
+const server = setupServer(
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 const setup = async () => {
     const url = `?expandedPanelSections=['test','test1']`;
 
     const screen = await act(async () => {
         return render(
             <ObjectInfoPanelContext.Provider value={mockContextValue}>
-                <EdgeInfoHeader {...testProps} />
+                <EntityInfoHeader {...testProps} />
             </ObjectInfoPanelContext.Provider>,
             { route: url }
         );
@@ -51,17 +69,19 @@ const setup = async () => {
     return { screen, user };
 };
 
-describe('EdgeInfoHeader', async () => {
+describe('EntityInfoHeader', async () => {
     it('should render', async () => {
         const { screen } = await setup();
 
         const collapsePanelButton = screen.getByRole('button', { name: /minus/i });
-        const edgeTitle = screen.getByRole('heading');
+        const nodeIcon = screen.getByTitle(testProps.nodeType!);
+        const nodeTitle = screen.getByRole('heading');
         const collapseAllButton = screen.getByRole('button', { name: /collapse all/i });
 
         expect(collapsePanelButton).toBeInTheDocument();
-        expect(edgeTitle).toBeInTheDocument();
-        expect(edgeTitle).toHaveTextContent(testProps.name);
+        expect(nodeIcon).toBeInTheDocument();
+        expect(nodeTitle).toBeInTheDocument();
+        expect(nodeTitle).toHaveTextContent(testProps.name);
         expect(collapseAllButton).toBeInTheDocument();
     });
     it('should on clicking collapse all remove expandedPanelSections param from url and set isObjectInfoPanelOpen in context to false', async () => {

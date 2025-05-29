@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
@@ -47,10 +46,6 @@ describe('MembersList', () => {
     it('sorting the list updates the list by changing the call made to the API', async () => {
         const user = userEvent.setup();
 
-        const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/tier/1/selector/1'],
-        });
-
         render(
             <Routes>
                 <Route path={'/'} element={<MembersList selected='1' onClick={vi.fn()} />} />;
@@ -59,7 +54,7 @@ describe('MembersList', () => {
                     element={<MembersList selected='1' onClick={vi.fn()} itemCount={1} />}
                 />
             </Routes>,
-            { history }
+            { route: '/tier-management/details/tier/1/selector/1' }
         );
 
         waitFor(() => {

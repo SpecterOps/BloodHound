@@ -14,7 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods, this will clear them up
+/**
+ * Tests interacting with a codemirror editor can output unwanted errors relating to missing DOM methods; running this
+ * function in your test file will prevent those errors.
+ */
 export const mockCodemirrorLayoutMethods = () => {
     const getBoundingClientRect = (): DOMRect => {
         const rec = {
