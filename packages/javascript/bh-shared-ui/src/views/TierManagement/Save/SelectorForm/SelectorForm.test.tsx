@@ -22,8 +22,8 @@ import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import SelectorForm from '.';
 import { tierHandlers } from '../../../../mocks';
-import { act, longWait, render, screen } from '../../../../test-utils';
-import { mockCodemirrorLayoutMethods } from '../../../../utils';
+import { act, longWait, render, screen, waitFor } from '../../../../test-utils';
+import { apiClient, mockCodemirrorLayoutMethods } from '../../../../utils';
 
 const testSelector = {
     id: 777,
@@ -52,6 +52,21 @@ const testObjectIdSelector = {
     ],
 };
 
+const testNodes = [
+    {
+        name: 'bar',
+        objectid: '777',
+        type: 'Bat',
+    },
+];
+const testSearchResults = {
+    data: testNodes,
+};
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 const handlers = [
     ...tierHandlers,
     rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
@@ -60,6 +75,15 @@ const handlers = [
                 data: testSelector,
             })
         );
+    }),
+    rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+        return res(ctx.json({ data: { members: [] } }));
+    }),
+    rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
+        return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+    }),
+    rest.get(`/api/v2/search`, (_, res, ctx) => {
+        return res(ctx.json(testSearchResults));
     }),
 ];
 
@@ -72,10 +96,10 @@ afterAll(() => server.close());
 mockCodemirrorLayoutMethods();
 
 describe('Selector Form', () => {
-    const user = userEvent.setup();
-    const detailsPath = '/tier-management/details/tag/1/selector/777';
-    const createNewPath = '/tier-management/edit/tag/1/selector';
-    const editExistingPath = '/tier-management/edit/tag/1/selector/777';
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    const detailsPath = '/tier-management/details/tier/1/selector/777';
+    const createNewPath = '/tier-management/save/tier/1/selector';
+    const editExistingPath = '/tier-management/save/tier/1/selector/777';
 
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
@@ -88,10 +112,6 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-
         const nameInput = screen.getByLabelText('Name');
         expect(nameInput).toBeInTheDocument();
         expect(nameInput).toHaveValue('');
@@ -99,11 +119,6 @@ describe('Selector Form', () => {
         const descriptionInput = screen.getByLabelText('Description');
         expect(descriptionInput).toBeInTheDocument();
         expect(descriptionInput).toHaveValue('');
-
-        // This switch is technically hidden until certification is implemented but is still in the form
-        const autoCertifySwitch = screen.queryByLabelText('Automatic Certification');
-        expect(autoCertifySwitch).toBeInTheDocument();
-        expect(autoCertifySwitch).toHaveValue('on');
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
@@ -128,10 +143,10 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-        longWait(() => {
+        longWait(async () => {
+            const selectorStatusSwitch = await screen.findByLabelText('Selector Status');
+            expect(selectorStatusSwitch).toBeInTheDocument();
+            expect(selectorStatusSwitch).toHaveValue('on');
             expect(screen.getByText('Enabled')).toBeInTheDocument();
         });
 
@@ -146,11 +161,6 @@ describe('Selector Form', () => {
         longWait(() => {
             expect(descriptionInput).toHaveValue('bar');
         });
-
-        // This switch is technically hidden until certification is implemented but is still in the form
-        const autoCertifySwitch = screen.queryByLabelText('Automatic Certification');
-        expect(autoCertifySwitch).toBeInTheDocument();
-        expect(autoCertifySwitch).toHaveValue('on');
 
         expect(screen.getByText('Selector Type')).toBeInTheDocument();
 
@@ -177,11 +187,10 @@ describe('Selector Form', () => {
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
 
-        const selectorStatusSwitch = screen.getByLabelText('Selector Status');
-        expect(selectorStatusSwitch).toBeInTheDocument();
-        expect(selectorStatusSwitch).toHaveValue('on');
-
         longWait(async () => {
+            const selectorStatusSwitch = screen.getByLabelText('Selector Status');
+            expect(selectorStatusSwitch).toBeInTheDocument();
+            expect(selectorStatusSwitch).toHaveValue('on');
             expect(screen.getByText('Enabled')).toBeInTheDocument();
             await user.click(selectorStatusSwitch);
             expect(screen.getByText('Disabled')).toBeInTheDocument();
@@ -189,22 +198,23 @@ describe('Selector Form', () => {
     });
 
     it('shows an error message when unable to delete a selector', async () => {
-        const history = createMemoryHistory({ initialEntries: ['/tier-management/edit/tag/1/selector/777'] });
+        const history = createMemoryHistory({ initialEntries: ['/tier-management/save/tier/1/selector/777'] });
 
         console.error = vi.fn();
 
         render(
             <Routes>
-                <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />;
+                <Route path={'/'} element={<SelectorForm />} />
+                <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />
             </Routes>,
             { history }
         );
 
-        expect(await screen.findByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
-
-        await act(async () => {
-            await user.click(screen.getByRole('button', { name: /Delete Selector/ }));
+        longWait(async () => {
+            expect(await screen.findByRole('button', { name: /Delete Selector/ })).toBeInTheDocument();
+            await act(async () => {
+                user.click(screen.getByRole('button', { name: /Delete Selector/ }));
+            });
         });
 
         longWait(async () => {
@@ -246,7 +256,7 @@ describe('Selector Form', () => {
         });
     });
 
-    test('filling in the name value submits the form and navigates back to the details page', async () => {
+    test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
         const history = createMemoryHistory({
             initialEntries: [detailsPath, editExistingPath],
         });
@@ -254,21 +264,61 @@ describe('Selector Form', () => {
         render(
             <Routes>
                 <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/edit/tag/:tagId/selector/:selectorId'} element={<SelectorForm />} />;
+                <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />;
             </Routes>,
             { history }
         );
 
         const nameInput = await screen.findByLabelText('Name');
 
-        await user.type(nameInput, 'foo');
+        await user.click(nameInput);
+        await user.paste('foo');
 
-        await user.click(screen.getByRole('button', { name: /Save/ }));
+        longWait(async () => {
+            expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+            await user.click(screen.getByRole('button', { name: /Save/ }));
+        });
 
         expect(screen.queryByText('Please provide a name for the selector')).not.toBeInTheDocument();
 
         longWait(() => {
             expect(history.location.pathname).toBe(detailsPath);
+        });
+    });
+
+    it('handles creating a new selector', async () => {
+        // Because there is no selector id path parameter in the url, the form is a create form
+        // This means that none of the input fields should have any value aside from default values
+        const history = createMemoryHistory({ initialEntries: [createNewPath] });
+
+        await act(async () => {
+            render(<SelectorForm />, { history });
+        });
+
+        const nameInput = await screen.findByLabelText('Name');
+
+        await user.click(nameInput);
+        await user.paste('foo');
+
+        const createSelectorSpy = vi.spyOn(apiClient, 'createAssetGroupTagSelector');
+
+        const input = screen.getByLabelText('Search Objects To Add');
+
+        await user.click(input);
+        await user.paste('bar');
+
+        const options = await screen.findAllByRole('option');
+
+        await user.click(
+            options.find((option) => {
+                return option.innerText === 'bar';
+            })!
+        );
+
+        await user.click(await screen.findByRole('button', { name: /Save/ }));
+
+        waitFor(() => {
+            expect(createSelectorSpy).toBeCalled();
         });
     });
 

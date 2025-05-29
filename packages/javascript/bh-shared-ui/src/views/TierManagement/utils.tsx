@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as types from './types';
-
-export const setEntityInfoOpen = (open: boolean): types.EntityInfoActionTypes => {
-    return {
-        type: types.ENTITY_INFO_OPEN,
-        open: open,
-    };
+export const getTagUrlValue = (labelId: string | undefined) => {
+    return labelId === undefined ? 'tier' : 'label';
 };
 
-export const setSelectedNode = (selectedNode: types.SelectedNode): types.EntityInfoActionTypes => {
-    return {
-        type: types.SET_SELECTED_NODE,
-        selectedNode,
-    };
-};
+export const TIER_ZERO_ID = '1';
+export const OWNED_ID = '2';

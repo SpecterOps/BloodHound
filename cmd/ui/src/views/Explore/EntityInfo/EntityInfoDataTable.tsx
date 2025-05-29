@@ -18,11 +18,11 @@ import {
     EntityInfoDataTableProps,
     InfiniteScrollingTable,
     NODE_GRAPH_RENDER_LIMIT,
+    SelectedNode,
     entityRelationshipEndpoints,
     useExploreParams,
 } from 'bh-shared-ui';
 import { useQuery } from 'react-query';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
