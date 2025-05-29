@@ -75,7 +75,7 @@ func writeFile(path string, formattedHeaderContent []string) error {
 }
 
 func generateXMLLicenseHeader() []string {
-	s := fmt.Sprintf("<!-- %v -->", licenseHeader)
+	s := fmt.Sprintf("<!-- %v-->", licenseHeader)
 
 	formattedHeaderContent := strings.Split(s, "\n")
 
