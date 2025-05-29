@@ -69,7 +69,6 @@ func writeFile(path string, formattedHeaderContent []string) error {
 		return err
 	}
 
-	formattedHeaderContent = append(formattedHeaderContent, "\n")
 	newContent = append(formattedHeaderContent, string(data))
 
 	if err := os.WriteFile(path, []byte(strings.Join(newContent, "")), originalPerm); err != nil {
