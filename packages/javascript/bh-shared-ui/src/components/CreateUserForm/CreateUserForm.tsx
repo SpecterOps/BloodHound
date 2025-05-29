@@ -114,8 +114,8 @@ const CreateUserForm: React.FC<{
                                     rules={{
                                         required: 'Email Address is required',
                                         maxLength: {
-                                            value: 310,
-                                            message: 'Email address must be less than 310 characters',
+                                            value: 319,
+                                            message: 'Email address must be less than 319 characters',
                                         },
                                         pattern: {
                                             value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
@@ -150,11 +150,11 @@ const CreateUserForm: React.FC<{
                                         },
                                         minLength: {
                                             value: 2,
-                                            message: 'Principal name must be 2 letters or more',
+                                            message: 'Principal Name must be 2 letters or more',
                                         },
                                         pattern: {
                                             value: /^[A-Za-z]+$/,
-                                            message: 'No spaces or special characters are allowed',
+                                            message: 'Principal Name does not allow spaces or special characters',
                                         },
                                     }}
                                     render={({ field }) => (
@@ -187,7 +187,7 @@ const CreateUserForm: React.FC<{
                                         },
                                         pattern: {
                                             value: /^[A-Za-z]+$/,
-                                            message: 'No spaces or special characters are allowed',
+                                            message: 'First Name does not allow spaces or special characters',
                                         },
                                     }}
                                     render={({ field }) => (
@@ -220,7 +220,7 @@ const CreateUserForm: React.FC<{
                                         },
                                         pattern: {
                                             value: /^[A-Za-z]+$/,
-                                            message: 'No spaces or special characters are allowed',
+                                            message: 'Last Name does not allow spaces or special characters',
                                         },
                                     }}
                                     render={({ field }) => (
