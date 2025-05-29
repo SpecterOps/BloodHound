@@ -43,7 +43,8 @@ import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
-const layoutOptions = ['sequential', 'standard', 'table'];
+const layoutOptions = ['sequential', 'standard', 'table'] as const;
+type LayoutOption = (typeof layoutOptions)[number];
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -57,7 +58,7 @@ const GraphView: FC = () => {
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [selectedLayout, setSelectedLayout] = useState<(typeof layoutOptions)[number]>('sequential');
+    const [selectedLayout, setSelectedLayout] = useState<LayoutOption>('sequential');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
@@ -114,7 +115,7 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleLayoutChange = (layout: string) => {
+    const handleLayoutChange = (layout: LayoutOption) => {
         setSelectedLayout(layout);
         if (layout === 'standard') {
             sigmaChartRef.current?.runStandardLayout();
@@ -176,9 +177,6 @@ const GraphView: FC = () => {
 
 /**
  * TODO:
- * simplify graph controls and the layout options and the search nodes stuff
- * how are we going to hide this functionality temporarily
- *   fake out the response from a shared hook for auto detection, and comment out the table layout option
  *
  * show placeholder when no nodes are present and we are viewing the table
  * where do we throw in the empty node check?

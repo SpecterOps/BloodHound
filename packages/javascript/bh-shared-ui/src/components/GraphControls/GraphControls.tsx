@@ -6,14 +6,14 @@ import { capitalize, isEmpty } from 'lodash';
 import { useRef } from 'react';
 import { useExploreSelectedItem } from '../../hooks/useExploreSelectedItem';
 import useToggle from '../../hooks/useToggle';
-import { exportToJson } from '../../utils';
+import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes from '../SearchCurrentNodes';
 
-type LayoutOptions = readonly string[];
+const DEV_TABLE_VIEW = true;
 
-interface GraphControlsProps<T extends LayoutOptions = string[]> {
+interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
     layoutOptions: T;
     selectedLayout: T[number];
@@ -26,7 +26,7 @@ interface GraphControlsProps<T extends LayoutOptions = string[]> {
     currentNodes: GraphNodes;
 }
 
-const GraphControls: React.FC<GraphControlsProps> = (props) => {
+function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>) {
     const {
         onReset,
         onLayoutChange,
@@ -72,14 +72,21 @@ const GraphControls: React.FC<GraphControlsProps> = (props) => {
                 </GraphMenu>
 
                 <GraphMenu label='Layout'>
-                    {layoutOptions.map((layout) => (
-                        <MenuItem
-                            key={layout}
-                            selected={selectedLayout === layout}
-                            onClick={() => onLayoutChange(layout)}>
-                            {capitalize(layout)}
-                        </MenuItem>
-                    ))}
+                    {layoutOptions
+                        .filter((layout) => {
+                            if (!DEV_TABLE_VIEW) {
+                                return layout !== 'table';
+                            }
+                            return true;
+                        })
+                        .map((layout) => (
+                            <MenuItem
+                                key={layout}
+                                selected={selectedLayout === layout}
+                                onClick={() => onLayoutChange(layout)}>
+                                {capitalize(layout)}
+                            </MenuItem>
+                        ))}
                 </GraphMenu>
 
                 <GraphMenu label='Export'>
@@ -117,6 +124,6 @@ const GraphControls: React.FC<GraphControlsProps> = (props) => {
             </Popper>
         </>
     );
-};
+}
 
 export default GraphControls;
