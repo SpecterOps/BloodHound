@@ -723,11 +723,11 @@ func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *h
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if reqBody.Name == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if len(reqBody.Name) > 250 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if ok := validateTagRequest(&reqBody); !ok {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if tag, err := s.DB.CreateAssetGroupTag(request.Context(), reqBody.Type, user, reqBody.Name, reqBody.Description, reqBody.Position, reqBody.RequireCertify); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
