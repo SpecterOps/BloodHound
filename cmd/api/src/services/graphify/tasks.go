@@ -161,17 +161,18 @@ func processSingleFile(ctx context.Context, filePath string, batch *TimestampedB
 		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
 		return err
 	}
-	defer file.Close()
+
+	defer func() {
+		file.Close()
+		// Always remove the file after attempting to ingest it. Even if it failed
+		if err := os.Remove(filePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
+		}
+	}()
 
 	if err := ReadFileForIngest(batch, file, readOpts); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error reading ingest file %s: %v", filePath, err))
 		return err
-	}
-
-	if err := os.Remove(filePath); errors.Is(err, fs.ErrNotExist) {
-		slog.WarnContext(ctx, fmt.Sprintf("Removing ingest file %s: %v", filePath, err))
-	} else if err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error removing ingest file %s: %v", filePath, err))
 	}
 
 	return nil
