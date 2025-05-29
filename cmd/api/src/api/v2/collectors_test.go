@@ -110,7 +110,7 @@ func TestResources_GetCollectorManifest(t *testing.T) {
 	})
 }
 
-func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
+func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	type expected struct {
 		responseBody   string
 		responseCode   int
@@ -294,7 +294,7 @@ func TestManagementResource_DownloadCollectorByVersion(t *testing.T) {
 	}
 }
 
-func TestManagementResource_DownloadCollectorChecksumByVersion(t *testing.T) {
+func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	type expected struct {
 		responseBody   string
 		responseCode   int

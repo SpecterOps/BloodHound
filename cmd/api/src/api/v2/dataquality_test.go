@@ -912,7 +912,7 @@ func TestGetPlatformAggregateStats_Success(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetDatabaseCompleteness(t *testing.T) {
+func TestResources_GetDatabaseCompleteness(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
