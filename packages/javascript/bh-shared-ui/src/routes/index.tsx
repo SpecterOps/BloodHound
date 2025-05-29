@@ -25,10 +25,10 @@ export const ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/
 export const ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
 export const ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS =
     '/details/label/:labelId/selector/:selectorId/member/:memberId';
-export const ROUTE_TIER_MANAGEMENT_CREATE_TIER = '/save/tier';
-export const ROUTE_TIER_MANAGEMENT_CREATE_LABEL = '/save/label';
 export const ROUTE_TIER_MANAGEMENT_SAVE = '/save';
+export const ROUTE_TIER_MANAGEMENT_CREATE_TIER = '/save/tier';
 export const ROUTE_TIER_MANAGEMENT_UPDATE_TIER = '/save/tier/:tierId';
+export const ROUTE_TIER_MANAGEMENT_CREATE_LABEL = '/save/label';
 export const ROUTE_TIER_MANAGEMENT_UPDATE_LABEL = '/save/label/:labelId';
 export const ROUTE_TIER_MANAGEMENT_TIER_UPDATE_SELECTOR = '/save/tier/:tierId/selector/:selectorId';
 export const ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR = '/save/tier/:tierId/selector';
