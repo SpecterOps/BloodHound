@@ -133,11 +133,18 @@ func resetCache(cacher cache.Cache, _ bool) {
 func (s *Daemon) processGraphifyTasks() {
 	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-	} else {
-
-		defer s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false)
-		s.graphifyService.ProcessTasks()
+		return
 	}
+
+	// This needs to be defered outside of the else for the same reason files need to be closed explicitly.
+	// if the database change was made, but an error happened up the stack, we need to try to ALWAYS get
+	// ourselves unstuck from Ingesting status
+	defer func() {
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+			slog.ErrorContext(s.ctx, "failed to reset datapipe status", "error", err)
+		}
+	}()
+	s.graphifyService.ProcessTasks()
 }
 
 func (s *Daemon) Start(ctx context.Context) {

@@ -137,20 +137,21 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 
 		failedIngestion := 0
 
+		errs := util.NewErrorCollector()
 		return len(paths), failedIngestion, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
 
 			for _, filePath := range paths {
 				readOpts := ReadOptions{IngestSchema: s.schema, FileType: task.FileType, ADCSEnabled: adcsEnabled}
 
-				err := processSingleFile(ctx, filePath, timestampedBatch, readOpts)
-				if err != nil {
+				if err := processSingleFile(ctx, filePath, timestampedBatch, readOpts); err != nil {
 					failedIngestion++
-					return err
+					errs.Add(err) // util.NewErrorCollector at fn scope
+					continue      // keep ingesting the rest
 				}
 			}
 
-			return nil
+			return errs.Combined()
 		})
 	}
 }
@@ -211,7 +212,9 @@ func (s *GraphifyService) ProcessTasks() {
 				}
 			}
 
-			s.clearFileTask(task)
+			if err == nil {
+				s.clearFileTask(task)
+			}
 		}
 	}
 }

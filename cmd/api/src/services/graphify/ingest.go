@@ -88,6 +88,11 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 	if meta, err := upload_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
 		return err
 	} else {
+		// Because we gave the reader to ParseAndValidatePayload above, if they read the whole
+		// thing, we need to make sure we're starting at the front. Be kind, Rewind.
+		if _, err := reader.Seek(0, io.SeekStart); err != nil {
+			return fmt.Errorf("rewind failed: %w", err)
+		}
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}
 }
