@@ -14,22 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { useQuery } from 'react-query';
-import { vi } from 'vitest';
+import { render, screen } from '../../../test-utils';
 import ObjectCountPanel from './ObjectCountPanel';
-
-vi.mock('react-query', () => ({
-    useQuery: vi.fn(),
-}));
-
-vi.mock('../../../utils', () => ({
-    apiClient: {
-        getAssetGroupMembersCount: vi.fn(),
-    },
-}));
 
 const server = setupServer(
     rest.get(`/api/v2/asset-group-tags/*`, async (req, res, ctx) => {
@@ -49,26 +37,37 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('ObjectCountPanel', () => {
-    it('renders error message on error', () => {
-        (useQuery as jest.Mock).mockReturnValue({ isError: true });
+    it('renders error message on error', async () => {
+        console.error = vi.fn();
+        server.use(
+            rest.get('/api/v2/asset-group-tags/1/members/counts', async (_, res, ctx) => {
+                return res(ctx.status(403));
+            })
+        );
+
         render(<ObjectCountPanel tagId='1' />);
 
-        expect(screen.getByText('There was an error fetching this data')).toBeInTheDocument();
+        expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
 
-    it('renders the total count and object counts on success', () => {
-        (useQuery as jest.Mock).mockReturnValue({
-            isSuccess: true,
-            data: {
-                total_count: 100,
-                counts: { 'Object A': 50, 'Object B': 30, 'Object C': 20 },
-            },
-        });
+    it('renders the total count and object counts on success', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags/1/members/counts', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            total_count: 100,
+                            counts: { 'Object A': 50, 'Object B': 30, 'Object C': 20 },
+                        },
+                    })
+                );
+            })
+        );
 
         render(<ObjectCountPanel tagId='1' />);
 
         expect(screen.getByText('Total Count')).toBeInTheDocument();
-        expect(screen.getByText('100')).toBeInTheDocument();
+        expect(await screen.findByText('100')).toBeInTheDocument();
         expect(screen.getByText('Object A')).toBeInTheDocument();
         expect(screen.getByText('50')).toBeInTheDocument();
         expect(screen.getByText('Object B')).toBeInTheDocument();

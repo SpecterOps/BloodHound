@@ -15,14 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
-import { ISO_DATE_STRING } from '../../../../utils';
 
 export interface SelectorFormInputs {
     name: string;
     description: string;
-    autoCertify: boolean;
-    disabled_at: ISO_DATE_STRING | null;
     seeds: SelectorSeedRequest[];
+    disabled?: boolean | string;
 }
 
 export interface CreateSelectorParams {

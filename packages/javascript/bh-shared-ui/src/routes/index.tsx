@@ -16,13 +16,20 @@
 
 export const ROUTE_TIER_MANAGEMENT_ROOT = '/tier-management/*';
 export const ROUTE_TIER_MANAGEMENT_DETAILS = '/details';
-export const ROUTE_TIER_MANAGEMENT_TAG_DETAILS = '/details/tag/:tagId';
-export const ROUTE_TIER_MANAGEMENT_SELECTOR_DETAILS = '/details/tag/:tagId/selector/:selectorId';
-export const ROUTE_TIER_MANAGEMENT_OBJECT_DETAILS = '/details/tag/:tagId/selector/:selectorId/member/:memberId';
-export const ROUTE_TIER_MANAGEMENT_EDIT = '/edit';
-export const ROUTE_TIER_MANAGEMENT_EDIT_TAG = '/edit/tag/:tagId';
-export const ROUTE_TIER_MANAGEMENT_EDIT_SELECTOR = '/edit/tag/:tagId/selector/:selectorId';
-export const ROUTE_TIER_MANAGEMENT_CREATE_SELECTOR = '/edit/tag/:tagId/selector';
+export const ROUTE_TIER_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_DETAILS = '/details/label/:labelId';
+export const ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS = '/details/tier/:tierId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/selector/:selectorId/member/:memberId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS =
+    '/details/label/:labelId/selector/:selectorId/member/:memberId';
+export const ROUTE_TIER_MANAGEMENT_SAVE = '/save';
+export const ROUTE_TIER_MANAGEMENT_SAVE_TIER = '/save/tier/:tierId';
+export const ROUTE_TIER_MANAGEMENT_SAVE_LABEL = '/save/label/:labelId';
+export const ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR = '/save/tier/:tierId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR = '/save/tier/:tierId/selector';
+export const ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR = '/save/label/:labelId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR = '/save/label/:labelId/selector';
 export const ROUTE_TIER_MANAGEMENT_CREATE = '/create';
 
 export type Routable = {

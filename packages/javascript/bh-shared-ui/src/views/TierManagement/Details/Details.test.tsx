@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { setupServer } from 'msw/node';
 import { tierHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
@@ -134,9 +133,7 @@ describe('Details', async () => {
     });
 
     it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
-        const history = createMemoryHistory({ initialEntries: ['/tier-management/details/tag/1/selector/7/member/7'] });
-
-        render(<Details />, { history });
+        render(<Details />, { route: '/tier-management/details/tag/1/selector/7/member/7' });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         let selectorsListItems = await within(selectors).findAllByRole('listitem');

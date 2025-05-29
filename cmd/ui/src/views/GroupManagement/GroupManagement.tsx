@@ -17,11 +17,13 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
+    EntityInfoPanel,
     EntityKinds,
     ExploreQueryParams,
     GroupManagementContent,
     HIGH_VALUE_LABEL,
     Permission,
+    SelectedNode,
     TIER_ZERO_TAG,
     createTypedSearchParams,
     useAppNavigate,
@@ -32,9 +34,7 @@ import {
 } from 'bh-shared-ui';
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
-import { SelectedNode } from 'src/ducks/entityinfo/types';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
