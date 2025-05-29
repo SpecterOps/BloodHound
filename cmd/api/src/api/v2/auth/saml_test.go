@@ -22,7 +22,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -853,14 +852,14 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 
 				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", "bound"))
 
-				form := multipart.Form{
-					File: map[string][]*multipart.FileHeader{},
-				}
-				formBytes, err := json.Marshal(form)
-				if err != nil {
-					t.Fatalf("error occurred while marshalling form bytes, needed for test %s: %v", name, err)
-				}
-				request.Body = io.NopCloser(bytes.NewReader(formBytes))
+				// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
 
 				return request
 			},
@@ -1222,7 +1221,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 
 				err := writer.WriteField("name", "okta provider")
 				if err != nil {
-					t.Fatalf("error writing name field %v needed for ", err)
+					t.Fatalf("error writing name field needed for test %s: %v", testName, err)
 				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")
@@ -1392,14 +1391,14 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", "bound"))
 
-				form := multipart.Form{
-					File: map[string][]*multipart.FileHeader{},
-				}
-				formBytes, err := json.Marshal(form)
-				if err != nil {
-					t.Fatalf("error occurred while marshalling form bytes, needed for test %s: %v", name, err)
-				}
-				request.Body = io.NopCloser(bytes.NewReader(formBytes))
+								// Create in-memory multipart body
+				var body bytes.Buffer
+				writer := multipart.NewWriter(&body)
+
+				// Close the writer to finalize the body
+				writer.Close()
+
+				request.Body = io.NopCloser(&body)
 
 				return request
 			},
@@ -1828,7 +1827,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				err := writer.WriteField("name", "okta provider")
 				if err != nil {
-					t.Fatalf("error writing name field %v needed for ", err)
+					t.Fatalf("error writing name field needed for test %s: %v", testName, err)
 				}
 
 				metadataFile, err := writer.CreateFormFile("metadata", "metadata.xml")

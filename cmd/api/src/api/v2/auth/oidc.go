@@ -228,7 +228,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// State mismatch
 		slog.WarnContext(request.Context(), "[OIDC] state does not match")
 		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
-	} else if provider, err := oidc.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		// SSO misconfiguration scenario
 		slog.WarnContext(request.Context(), fmt.Sprintf("[OIDC] Failed to create OIDC provider: %v", err))
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
