@@ -708,18 +708,9 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 	}
 }
 
-type AssetGroupTagRequest struct {
-	Type           string                  `json:"type"`
-	TypeEnum       model.AssetGroupTagType `json:"-"`
-	Name           string                  `json:"name"`
-	Description    string                  `json:"description"`
-	RequireCertify null.Bool               `json:"require_certify"`
-	Position       null.Int32              `json:"position"`
-}
-
 func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		reqBody = AssetGroupTagRequest{
+		reqBody = model.AssetGroupTag{
 			RequireCertify: null.Bool{},  // default to false
 			Position:       null.Int32{}, // default to false
 		}
@@ -733,50 +724,25 @@ func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
 	} else if reqBody.Name == "" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
+	} else if len(reqBody.Name) > 250 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
 	} else if ok := validateTagRequest(&reqBody); !ok {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTypeRequired, request), response)
-	} else if tag, err := s.DB.CreateAssetGroupTag(request.Context(), reqBody.TypeEnum, user, reqBody.Name, reqBody.Description, reqBody.Position, reqBody.RequireCertify); err != nil {
+	} else if tag, err := s.DB.CreateAssetGroupTag(request.Context(), reqBody.Type, user, reqBody.Name, reqBody.Description, reqBody.Position, reqBody.RequireCertify); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), tag, http.StatusCreated, response)
 	}
 }
 
-func validateTagRequest(req *AssetGroupTagRequest) bool {
-	switch req.Type {
-	case "tier":
-		req.TypeEnum = model.AssetGroupTagTypeTier
-
+func validateTagRequest(req *model.AssetGroupTag) bool {
+	if req.Type == 1 {
 		if !req.RequireCertify.Valid {
 			req.RequireCertify = null.BoolFrom(true)
 		}
-		return true
-	case "label":
-		req.TypeEnum = model.AssetGroupTagTypeLabel
-		return true
-	default:
-		return false
+		if !req.Position.Valid {
+			req.Position = null.Int32From(0)
+		}
 	}
+	return true
 }
-
-// func handleTierPosition(ctx context.Context, req *AssetGroupTagRequest, db database.Database, user model.User) error {
-// 	if req.TypeEnum != model.AssetGroupTagTypeTier {
-// 		return nil
-// 	}
-
-// 	if !req.Position.Valid {
-// 		// if position is not provided, default to end
-// 		maxOrder, err := db.GetMaxTierPosition(ctx)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to get max tier order: %w", err)
-// 		}
-// 		req.Position = null.Int32From(maxOrder + 1)
-// 	} else {
-// 		// position is provided, shift existing tiers
-// 		err := db.ShiftTierOrder(ctx, req.TypeEnum, user, req.Name, req.Description, req.Position, req.RequireCertify)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to shift tiers: %w", err)
-// 		}
-// 	}
-// 	return nil
-// }

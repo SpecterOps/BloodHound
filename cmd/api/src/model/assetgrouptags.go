@@ -105,7 +105,11 @@ func (s AssetGroupTag) AuditData() AuditData {
 }
 
 func (s AssetGroupTag) ToKind() graph.Kind {
-	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+	return graph.StringKind(s.KindName())
+}
+
+func (s AssetGroupTag) KindName() string {
+	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
