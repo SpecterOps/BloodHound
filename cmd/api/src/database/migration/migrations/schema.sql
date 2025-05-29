@@ -716,11 +716,6 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at) V
     'Reconciliation', 
     'This configuration parameter enables / disables reconciliation during analysis.', '{"enabled": true}',
     current_timestamp, current_timestamp
-), (
-    'analysis.restrict_outbound_ntlm_default_value', 
-    'Restrict Outbound NTLM Default Value', 
-    'When enabled, any computer''s Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn''t exist on that computer for NTLM edge processing. When disabled, treat the missing registry as Not Restricting.', '{ "enabled": false }',
-    current_timestamp, current_timestamp
 );
 
 INSERT INTO permissions (authority, name, created_at, updated_at) VALUES 
