@@ -30,6 +30,12 @@ import { getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
+interface SigmaChartRef {
+    resetCamera: () => void;
+    runSequentialLayout: () => void;
+    runStandardLayout: () => void;
+}
+
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
     onClickNode?: (id: string) => void;
@@ -72,11 +78,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const prevent = useRef(false);
 
     const graph = sigma.getGraph();
-    const sigmaChartRef = ref as React.MutableRefObject<{
-        resetCamera: () => void;
-        runSequentialLayout: () => void;
-        runStandardLayout: () => void;
-    } | null>;
+    const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
     useImperativeHandle(
         sigmaChartRef,
