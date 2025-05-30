@@ -803,18 +803,18 @@ func (mr *MockDatabaseMockRecorder) GetADDataQualityStats(ctx, domainSid, start,
 }
 
 // GetAggregateADDataQualityStats mocks base method.
-func (m *MockDatabase) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start, end time.Time) (model.ADDataQualityStats, error) {
+func (m *MockDatabase) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, assetGroupTagId int, start, end time.Time) (model.ADDataQualityStats, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAggregateADDataQualityStats", ctx, domainSIDs, start, end)
+	ret := m.ctrl.Call(m, "GetAggregateADDataQualityStats", ctx, domainSIDs, assetGroupTagId, start, end)
 	ret0, _ := ret[0].(model.ADDataQualityStats)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAggregateADDataQualityStats indicates an expected call of GetAggregateADDataQualityStats.
-func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(ctx, domainSIDs, start, end any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAggregateADDataQualityStats(ctx, domainSIDs, assetGroupTagId, start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), ctx, domainSIDs, start, end)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregateADDataQualityStats", reflect.TypeOf((*MockDatabase)(nil).GetAggregateADDataQualityStats), ctx, domainSIDs, assetGroupTagId, start, end)
 }
 
 // GetAllAssetGroups mocks base method.
