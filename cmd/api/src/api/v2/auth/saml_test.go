@@ -644,23 +644,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 	}
 
 	tt := []testData{
-		// {
-		// 	name: "Error: Missing provider ID - Unauthorized",
-		// 	buildRequest: func() *http.Request {
-		// 		return &http.Request{
-		// 			URL: &url.URL{
-		// 				Path: "/api/v2/saml/providers/-",
-		// 			},
-		// 			Method: http.MethodGet,
-		// 		}
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusUnauthorized,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 		responseBody:   `{"http_status":401,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"authentication is invalid"}]}`,
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: Invalid provider ID format - Not Found",
 			buildRequest: func() *http.Request {

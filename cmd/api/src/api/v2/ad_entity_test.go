@@ -739,30 +739,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				Path:     "/api/v2/base/",
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 			Method: http.MethodGet,
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"object_id": "",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -917,29 +894,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				Path: "/api/v2/containers/",
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1093,28 +1048,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1263,28 +1197,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1434,28 +1347,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1610,28 +1502,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1786,28 +1657,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
@@ -1962,28 +1812,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Error: GetEntityObjectIDFromRequestPath - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "counts=true",
-		// 			},
-		// 		}
-
-		// 		param := map[string]string{
-		// 			"not_object_id": "id",
-		// 		}
-
-		// 		return mux.SetURLVars(request, param)
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"error reading objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: GetEntityByObjectId - Not Found",
 			buildRequest: func() *http.Request {
