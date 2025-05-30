@@ -90,6 +90,11 @@ const (
 	AuditLogActionCreateCustomNodeKind AuditLogAction = "CreateCustomNodeKind"
 	AuditLogActionUpdateCustomNodeKind AuditLogAction = "UpdateCustomNodeKind"
 	AuditLogActionDeleteCustomNodeKind AuditLogAction = "DeleteCustomNodeKind"
+
+	AuditLogActionToggleEarlyAccessFeatureFlag AuditLogAction = "ToggleEarlyAccessFeatureFlag"
+
+	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
+	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
