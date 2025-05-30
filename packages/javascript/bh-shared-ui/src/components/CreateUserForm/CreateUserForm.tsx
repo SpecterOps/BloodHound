@@ -113,6 +113,14 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Email Address is required',
+                                        maxLength: {
+                                            value: 319,
+                                            message: 'Email address must be less than 319 characters',
+                                        },
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: 'Please follow the example@domain.com format',
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -136,6 +144,21 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Principal Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'Principal Name must be less than 1000 characters',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'Principal Name must be 2 characters or more',
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Principal Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -157,6 +180,21 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'First Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'First Name must be less than 1000 characters',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'First Name must be 2 characters or more',
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'First Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -178,6 +216,21 @@ const CreateUserForm: React.FC<{
                                     control={control}
                                     rules={{
                                         required: 'Last Name is required',
+                                        maxLength: {
+                                            value: 1000,
+                                            message: 'Last Name must be less than 1000 characters',
+                                        },
+                                        minLength: {
+                                            value: 2,
+                                            message: 'Last Name must be 2 characters or more',
+                                        },
+                                        validate: (value) => {
+                                            const trimmed = value.trim();
+                                            if (value !== trimmed) {
+                                                return 'Last Name does not allow leading or trailing spaces';
+                                            }
+                                            return true;
+                                        },
                                     }}
                                     render={({ field }) => (
                                         <TextField
@@ -234,6 +287,10 @@ const CreateUserForm: React.FC<{
                                                         value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
                                                         message:
                                                             'Password must contain at least 1 lowercase character, 1 uppercase character, 1 number and 1 special character (!@#$%^&*)',
+                                                    },
+                                                    maxLength: {
+                                                        value: 1000,
+                                                        message: 'Password must be less than 1000 characters',
                                                     },
                                                 }}
                                                 render={({ field }) => (
