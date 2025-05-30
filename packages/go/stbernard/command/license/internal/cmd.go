@@ -55,20 +55,13 @@ func Run(env environment.Environment) error {
 
 	now := time.Now()
 	err = filepath.Walk(wrkPaths.Root, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			// Log the error and continue walking
-			slog.Warn(fmt.Sprintf("error accessing path %q: %v", path, err))
-			return nil // Continue walking despite the error
-		}
-
-		// ignore directories and paths that are in the ignore list 
+		// ignore directories and paths that are in the ignore list
 		scanPath := shouldProcessPath(ignorePaths, wrkPaths.Root, path)
 		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || !scanPath) {
 			return filepath.SkipDir
 		} else {
 			paths = append(paths, path)
 		}
-
 		return nil
 	})
 	if err != nil {
