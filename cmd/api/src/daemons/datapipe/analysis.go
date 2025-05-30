@@ -39,6 +39,7 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+// TODO Cleanup tieringEnabled after Tiering GA
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
 		collectedErrors      []error
