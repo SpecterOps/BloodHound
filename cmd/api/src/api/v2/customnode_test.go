@@ -85,7 +85,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
@@ -124,7 +124,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
@@ -170,7 +170,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
@@ -289,7 +289,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
