@@ -31,11 +31,6 @@ type GraphifyData interface {
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
 	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
-
-	// THESE ARE BAD AND SHOULD NOT BE HERE.
-	// we update the job in a bizzare place
-	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
-	GetIngestJob(ctx context.Context, id int64) (model.IngestJob, error)
 }
 
 type GraphifyService struct {

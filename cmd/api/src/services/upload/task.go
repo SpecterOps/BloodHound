@@ -34,7 +34,7 @@ func CreateIngestTask(ctx context.Context, db UploadData, params IngestTaskParam
 	newIngestTask := model.IngestTask{
 		FileName:    params.Filename,
 		RequestGUID: params.RequestID,
-		TaskID:      null.Int64From(params.JobID),
+		JobId:       null.Int64From(params.JobID),
 		FileType:    params.FileType,
 	}
 

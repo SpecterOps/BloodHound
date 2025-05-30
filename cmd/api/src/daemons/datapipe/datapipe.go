@@ -144,7 +144,23 @@ func (s *Daemon) processGraphifyTasks() {
 			slog.ErrorContext(s.ctx, "failed to reset datapipe status", "error", err)
 		}
 	}()
-	s.graphifyService.ProcessTasks()
+
+	// updateJobFunc is passed to the graphify service to let it tell us about the tasks as they go. The
+	// datapipe doesn't know or care about tasks, and the graphify service doesn't know or care about jobs.
+	// instead, this func is provided as an abstraction for graphify
+	updateJobFunc := func(jobId int64, totalFiles int, totalFailed int) {
+		if job, err := s.db.GetIngestJob(s.ctx, jobId); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobId, err))
+		} else {
+			job.TotalFiles += totalFiles
+			job.FailedFiles += totalFailed
+
+			if err = s.db.UpdateIngestJob(s.ctx, job); err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+			}
+		}
+	}
+	s.graphifyService.ProcessTasks(updateJobFunc)
 }
 
 func (s *Daemon) Start(ctx context.Context) {

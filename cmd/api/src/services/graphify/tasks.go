@@ -179,42 +179,41 @@ func processSingleFile(ctx context.Context, filePath string, batch *TimestampedB
 	return nil
 }
 
-// processIngestTasks covers the generic ingest case for ingested data.
-func (s *GraphifyService) ProcessTasks() {
-	if tasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
+func (s *GraphifyService) getAllTasks() model.IngestTasks {
+	tasks, err := s.db.GetAllIngestTasks(s.ctx)
+	if err != nil {
 		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		for _, task := range tasks {
-			// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
-			// handling assumes that all failures should be logged and not returned.
-			if s.ctx.Err() != nil {
-				return
-			}
+		return model.IngestTasks{}
+	}
+	return tasks
+}
 
-			if s.cfg.DisableIngest {
-				slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
-				return
-			}
-			total, failed, err := s.processIngestFile(s.ctx, task, time.Now().UTC())
+// processIngestTasks covers the generic ingest case for ingested data.
+func (s *GraphifyService) ProcessTasks(updateJob func(jobId int64, totalFiles int, totalFailed int)) {
 
-			if errors.Is(err, fs.ErrNotExist) {
-				slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))
-			} else if err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.FileName, err))
-			} else if job, err := s.db.GetIngestJob(s.ctx, task.TaskID.ValueOrZero()); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", task.ID, err))
-			} else {
-				job.TotalFiles += total
-				job.FailedFiles += failed
+	for _, task := range s.getAllTasks() {
+		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
+		// handling assumes that all failures should be logged and not returned.
+		if s.ctx.Err() != nil {
+			return
+		}
 
-				if err = s.db.UpdateIngestJob(s.ctx, job); err != nil {
-					slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
-				}
-			}
+		if s.cfg.DisableIngest {
+			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
+			return
+		}
+		total, failed, err := s.processIngestFile(s.ctx, task, time.Now().UTC())
 
-			if err == nil {
-				s.clearFileTask(task)
-			}
+		if errors.Is(err, fs.ErrNotExist) {
+			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))
+		} else if err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.FileName, err))
+		} else {
+			updateJob(task.JobId.ValueOrZero(), total, failed)
+		}
+
+		if err == nil {
+			s.clearFileTask(task)
 		}
 	}
 }
