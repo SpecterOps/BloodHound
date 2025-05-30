@@ -30,7 +30,7 @@ export const handleError = (
 
     const message = isAxiosError(error)
         ? `An unexpected error occurred while ${action} the selector. Message: ${error.response?.statusText}. Please try again.`
-        : `An unexpected error occurred while creating the selector. Please try again.`;
+        : `An unexpected error occurred while ${action} the selector. Please try again.`;
 
     addNotification(message, key, options);
 };

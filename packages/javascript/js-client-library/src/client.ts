@@ -29,6 +29,7 @@ import {
     CreateUserRequest,
     LoginRequest,
     PostureRequest,
+    PreviewSelectorsRequest,
     PutUserAuthSecretRequest,
     RequestOptions,
     UpdateAssetGroupRequest,
@@ -72,6 +73,7 @@ import {
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
     PostureResponse,
+    PreviewSelectorsResponse,
     SavedQuery,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -218,8 +220,8 @@ class BHEAPIClient {
             )
         );
 
-    getAssetGroupSelectorMembers = (
-        assetGroupId: number | string,
+    getAssetGroupTagSelectorMembers = (
+        tagId: number | string,
         selectorId: number | string,
         skip: number,
         limit: number,
@@ -227,7 +229,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${assetGroupId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
             Object.assign(
                 {
                     params: {
@@ -245,6 +247,14 @@ class BHEAPIClient {
             `/api/v2/asset-group-tags/${tagId}/members/counts`,
             options
         );
+
+    assetGroupTagsPreviewSelectors = (seeds: PreviewSelectorsRequest, options: RequestOptions) => {
+        return this.baseClient.post<PreviewSelectorsResponse>(
+            '/api/v2/asset-group-tags/preview-selectors',
+            { ...seeds },
+            options
+        );
+    };
 
     /* */
 

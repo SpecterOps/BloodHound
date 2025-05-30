@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, renderHook, waitFor } from '../../test-utils';
@@ -41,41 +40,37 @@ describe('useNodeSearch', () => {
     // Data returned from useSearch causes an effect to run that resets searchTerm before we can assert on it.
     // To resolve this, mock useSearch return value, or only enable that query if we have a term to search for.
     it.skip('stores the state of a search term without modifying the query params', async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => useNodeSearch(), { history });
+        const hook = renderHook(() => useNodeSearch());
 
-        expect(history.location.search).toBe('');
+        expect(window.location.search).toBe('');
 
         await act(async () => hook.result.current.editSourceNode(TEST_STRING_1));
 
         expect(hook.result.current.searchTerm).toBe(TEST_STRING_1);
-        expect(history.location.search).toBe('');
+        expect(window.location.search).toBe('');
     });
 
     it("upon selecting a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => useNodeSearch(), { history });
+        const hook = renderHook(() => useNodeSearch());
 
         await act(async () => hook.result.current.selectSourceNode({ name: TEST_STRING_1, objectid: TEST_STRING_2 }));
 
-        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
-        expect(history.location.search).toContain('searchType=node');
+        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(window.location.search).toContain('searchType=node');
     });
 
     it('does not add a query param if the search term is empty', async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => useNodeSearch(), { history });
+        const hook = renderHook(() => useNodeSearch());
 
         await act(async () => hook.result.current.selectSourceNode({ name: '', objectid: '' }));
 
-        expect(history.location.search).not.toContain('primarySearch');
+        expect(window.location.search).not.toContain('primarySearch');
     });
 
     it("populates the node search field when the 'primarySearch' query param is set", async () => {
         const url = `?primarySearch=${TEST_STRING_1}&searchType=node`;
-        const history = createMemoryHistory({ initialEntries: [url] });
 
-        const hook = renderHook(() => useNodeSearch(), { history });
+        const hook = renderHook(() => useNodeSearch(), { route: url });
 
         await waitFor(() => expect(hook.result.current.searchTerm).toEqual(TEST_STRING_1));
         await waitFor(() =>

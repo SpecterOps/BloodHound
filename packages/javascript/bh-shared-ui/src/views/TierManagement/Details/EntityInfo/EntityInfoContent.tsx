@@ -27,7 +27,8 @@ export interface EntityInfoContentProps {
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
-    const { tagId, memberId } = useParams();
+    const { tierId, labelId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     return (
         <Box>

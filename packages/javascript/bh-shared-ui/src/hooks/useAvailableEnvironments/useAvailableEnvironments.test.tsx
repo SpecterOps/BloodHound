@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import * as ReactQuery from 'react-query';
@@ -66,8 +65,8 @@ describe('useAvailableEnvironments', () => {
             await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
         });
         it('returns the full environment of the environmentId found in the search params', async () => {
-            const history = createMemoryHistory({ initialEntries: [`/test?environmentId=${fakeDomainA.id}`] });
-            const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id), { history });
+            const url = `/test?environmentId=${fakeDomainA.id}`;
+            const actual = renderHook(() => useSelectedEnvironment(fakeDomainA.id), { route: url });
 
             await waitFor(() => expect(actual.result.current.data).toEqual(fakeDomainA));
         });
@@ -77,8 +76,8 @@ describe('useAvailableEnvironments', () => {
 
             await waitFor(() => expect(actual.result.current.data).toBeUndefined());
 
-            const history = createMemoryHistory({ initialEntries: [`/test?environmentId=${fakeEnvId}`] });
-            const actual2 = renderHook(() => useSelectedEnvironment(), { history });
+            const url = `/test?environmentId=${fakeEnvId}`;
+            const actual2 = renderHook(() => useSelectedEnvironment(), { route: url });
 
             await waitFor(() => expect(actual2.result.current.data).toBeUndefined());
         });

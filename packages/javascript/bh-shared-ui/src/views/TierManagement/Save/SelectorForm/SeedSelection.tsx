@@ -15,20 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createBrowserHistory } from 'history';
-import { GraphNodes, SeedTypeObjectId, SeedTypes } from 'js-client-library';
-import { RequestOptions, SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
+import { RequestOptions } from 'js-client-library/dist/requests';
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn } from '../../../../utils';
-import { Cypher } from '../../Cypher';
+import { Cypher } from '../../Cypher/Cypher';
+import { getTagUrlValue } from '../../utils';
+import DeleteSelectorButton from './DeleteSelectorButton';
+import SelectorFormContext from './SelectorFormContext';
 import { DeleteSelectorParams, SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
@@ -51,14 +52,14 @@ const getListScalar = (windoHeight: number) => {
     return 8;
 };
 
-const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<SelectorFormInputs> }> = ({
-    selectorType,
-    onSubmit,
-}) => {
-    const { tagId = '', selectorId = '' } = useParams();
+const SeedSelection: FC<{
+    onSubmit: SubmitHandler<SelectorFormInputs>;
+}> = ({ onSubmit }) => {
+    const { tierId = '', labelId, selectorId = '' } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
-    const [results, setResults] = useState<GraphNodes | null>(null);
-    const [seeds, setSeeds] = useState<SelectorSeedRequest[]>([]);
+    const { seeds, setSeeds, results, setResults, selectorType, selectorQuery } = useContext(SelectorFormContext);
+
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const { handleSubmit, register } = useFormContext<SelectorFormInputs>();
@@ -81,15 +82,6 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
         return () => window.removeEventListener('resize', updateHeightScalar);
     }, []);
 
-    const selectorQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data['selector'];
-        },
-        enabled: selectorId !== '',
-    });
-
     const handleDeleteSelector = useCallback(async () => {
         try {
             if (!tagId || !selectorId)
@@ -97,7 +89,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
 
             await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
-            navigate(`/tier-management/details/tags/${tagId}`);
+            navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
         } catch (error) {
             handleError(error, 'deleting', addNotification);
         }
@@ -108,7 +100,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (selectorQuery.isLoading) return <Skeleton />;
-    if (selectorQuery.isError) throw new Error();
+    if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
 
     return (
         <>
@@ -121,27 +113,29 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         })}>
                         <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
-                            <AssetGroupSelectorObjectSelect setSeeds={setSeeds} />
+                            <AssetGroupSelectorObjectSelect
+                                seeds={seeds.filter((seed) => {
+                                    return seed.type === SeedTypeObjectId;
+                                })}
+                            />
                         ) : (
                             <Cypher
                                 preview={false}
-                                setCypherSearchResults={setResults}
+                                setSeedPreviewResults={setResults}
                                 setSeeds={setSeeds}
-                                initialInput={selectorQuery.data?.seeds[0].value}
+                                initialInput={
+                                    seeds.length > 0 && seeds[0].type === SeedTypeCypher ? seeds[0].value : ''
+                                }
                             />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
-                            {selectorId !== '' && (
-                                <Button
-                                    variant={'text'}
-                                    onClick={() => {
-                                        setDeleteDialogOpen(true);
-                                    }}>
-                                    <span>
-                                        <FontAwesomeIcon icon={faTrashCan} /> Delete Selector
-                                    </span>
-                                </Button>
-                            )}
+                            <DeleteSelectorButton
+                                selectorId={selectorId}
+                                selectorData={selectorQuery.data}
+                                onClick={() => {
+                                    setDeleteDialogOpen(true);
+                                }}
+                            />
                             <Button variant={'secondary'} onClick={history.back}>
                                 Cancel
                             </Button>
@@ -160,7 +154,7 @@ const SeedSelection: FC<{ selectorType: SeedTypes; onSubmit: SubmitHandler<Selec
                         <span className='ml-8'>Object Name</span>
                     </div>
                     <VirtualizedNodeList
-                        nodes={results ? Object.values(results) : []}
+                        nodes={results ? results : []}
                         itemSize={46}
                         heightScalar={heightScalar.current}
                     />

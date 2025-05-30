@@ -94,10 +94,6 @@ const useCollapsibleSectionStyles = makeStyles((theme: Theme) => ({
             listStyle: 'disc',
             padding: theme.spacing(0.5, 3),
         },
-        '& li': {
-            display: 'list-item',
-            padding: 0,
-        },
         '& span': {
             fontSize: '0.75rem',
         },

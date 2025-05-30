@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagsListItem } from 'js-client-library';
+import { AssetGroupTagTypeTier, AssetGroupTagsListItem } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
 import { DetailsList } from './DetailsList';
@@ -24,9 +24,45 @@ const testQuery = {
     isError: false,
     isSuccess: true,
     data: [
-        { name: 'a', id: 1, count: 1 },
-        { name: 'b', id: 2, count: 2 },
-        { name: 'c', id: 3, count: 3 },
+        {
+            name: 'a',
+            id: 1,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
+        {
+            name: 'b',
+            id: 2,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
+        {
+            name: 'c',
+            id: 3,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
     ],
 } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
 

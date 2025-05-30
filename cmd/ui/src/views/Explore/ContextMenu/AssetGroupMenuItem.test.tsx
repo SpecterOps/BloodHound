@@ -104,7 +104,6 @@ describe('AssetGroupMenuItem', async () => {
                     />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
                         route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -140,7 +139,6 @@ describe('AssetGroupMenuItem', async () => {
             await act(async () => {
                 render(<AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />, {
                     initialState: {
-                        ...getEntityInfoTestProps(),
                         ...getAssetGroupTestProps({ isTierZero: false }),
                     },
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -229,7 +227,6 @@ describe('AssetGroupMenuItem', async () => {
                     />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
                         route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -267,7 +264,6 @@ describe('AssetGroupMenuItem', async () => {
                     <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: false }),
                         },
                         route: ROUTE_WITH_SELECTED_ITEM_PARAM,

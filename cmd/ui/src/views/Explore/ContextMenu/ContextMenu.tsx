@@ -16,7 +16,14 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import { Permission, isNode, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
+import {
+    Permission,
+    isNode,
+    useExploreParams,
+    useExploreSelectedItem,
+    useFeatureFlag,
+    usePermissions,
+} from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
@@ -29,6 +36,7 @@ const ContextMenu: FC<{
 }> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { selectedItemQuery } = useExploreSelectedItem();
+    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
@@ -68,14 +76,19 @@ const ContextMenu: FC<{
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
 
-            {checkPermission(Permission.GRAPH_DB_WRITE) && [
-                <AssetGroupMenuItem
-                    key={tierZeroAssetGroupId}
-                    assetGroupId={tierZeroAssetGroupId}
-                    assetGroupName='High Value'
-                />,
-                <AssetGroupMenuItem key={ownedAssetGroupId} assetGroupId={ownedAssetGroupId} assetGroupName='Owned' />,
-            ]}
+            {!tierFlag?.enabled &&
+                checkPermission(Permission.GRAPH_DB_WRITE) && [
+                    <AssetGroupMenuItem
+                        key={tierZeroAssetGroupId}
+                        assetGroupId={tierZeroAssetGroupId}
+                        assetGroupName='High Value'
+                    />,
+                    <AssetGroupMenuItem
+                        key={ownedAssetGroupId}
+                        assetGroupId={ownedAssetGroupId}
+                        assetGroupName='Owned'
+                    />,
+                ]}
             <CopyMenuItem />
         </Menu>
     );

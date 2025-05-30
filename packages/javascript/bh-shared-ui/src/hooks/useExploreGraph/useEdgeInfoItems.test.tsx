@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
-import { renderHook, waitFor } from '../../test-utils';
+import { NormalizedNodeItem } from '../../components/VirtualizedNodeList';
+import { act, renderHook, waitFor } from '../../test-utils';
 import { EdgeInfoItems, EdgeInfoItemsProps, useEdgeInfoItems } from './useEdgeInfoItems';
 
 const testDataNodes = {
@@ -78,7 +77,7 @@ const testHookParams: EdgeInfoItemsProps = {
 
 const handleNodeClick = () => {};
 
-const testDataNodeArray: VirtualizedNodeListItem = {
+const testDataNodeArray: NormalizedNodeItem = {
     name: 'DUMPSTER.FIRE',
     objectId: 'S-1-5-21-2697957641-2271029196-387917394',
     graphId: '19699711',
@@ -128,17 +127,16 @@ describe('useEdgeInfoItems', () => {
         expect(JSON.stringify(nodesArray[0])).toBe(JSON.stringify(testDataNodeArray));
     });
     it('sets primarySearch, searchType, exploreSearchTab in URL params when the click handler is executed', async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => useEdgeInfoItems(testHookParams), { history });
+        const hook = renderHook(() => useEdgeInfoItems(testHookParams));
 
         await waitFor(async () => {
             expect(hook.result.current.isLoading).toBe(false);
         });
 
-        hook.result.current.nodesArray[0].onClick(0);
+        await act(() => hook.result.current.nodesArray[0].onClick(0));
 
-        expect(history.location.search).toContain('primarySearch');
-        expect(history.location.search).toContain('searchType');
-        expect(history.location.search).toContain('exploreSearchTab');
+        expect(window.location.search).toContain('primarySearch');
+        expect(window.location.search).toContain('searchType');
+        expect(window.location.search).toContain('exploreSearchTab');
     });
 });

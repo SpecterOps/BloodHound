@@ -39,7 +39,7 @@ type DomainSelector struct {
 	Name        string `json:"name"`
 	ObjectID    string `json:"id"`
 	Collected   bool   `json:"collected"`
-	ImpactValue int    `json:"impactValue,omitempty"`
+	ImpactValue *int   `json:"impactValue,omitempty"`
 }
 
 type DomainSelectors []DomainSelector

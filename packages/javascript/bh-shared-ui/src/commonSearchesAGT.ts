@@ -38,7 +38,7 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description: 'Map domain trusts',
-                cypher: `MATCH p = (:Domain)-[:TrustedBy]->(:Domain)\nRETURN p\nLIMIT 1000`,
+                cypher: `MATCH p = (:Domain)-[:SameForestTrust|CrossForestTrust]->(:Domain)\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'Locations of Tier Zero / High Value objects',
@@ -228,8 +228,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
             },
             {
-                description: 'Two-way forest trusts enabled for delegation',
-                cypher: `MATCH p=(n:Domain)-[r:TrustedBy]->(m:Domain)\nWHERE (m)-[:TrustedBy]->(n)\nAND r.trusttype = 'Forest'\nAND r.tgtdelegationenabled = true\nRETURN p`,
+                description: 'Cross-forest trusts with abusable configuration',
+                cypher: `MATCH p=(n:Domain)-[:CrossForestTrust|SpoofSIDHistory|AbuseTGTDelegation]-(m:Domain)\nWHERE (n)-[:SpoofSIDHistory|AbuseTGTDelegation]-(m)\nRETURN p`,
             },
             {
                 description: 'Computers with unsupported operating systems',

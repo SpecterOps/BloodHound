@@ -16,7 +16,7 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -24,7 +24,7 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import { ItemSkeleton, SelectedHighlight } from './utils';
+import { ItemSkeleton, SelectedHighlight, getListHeight } from './utils';
 
 const ITEM_SIZE = 40;
 
@@ -40,6 +40,7 @@ const Row = ({
 }>) => {
     const { items, onClick, selected, title } = data;
     const listItem = items[index];
+
     if (listItem === undefined) {
         return ItemSkeleton(title, index, { ...style, whiteSpace: 'nowrap', padding: '0 8px' });
     }
@@ -55,11 +56,12 @@ const Row = ({
             <Button
                 variant={'text'}
                 className='flex justify-start w-full'
+                title={`Type: ${listItem.primary_kind}; Name: ${listItem.name}`}
                 onClick={() => {
                     onClick(listItem.id?.toString());
                 }}>
                 <NodeIcon nodeType={listItem.primary_kind} />
-                <span className='text-base ml-2'>{listItem.name}</span>
+                <span className='text-base dark:text-white ml-2 truncate'>{listItem.name}</span>
             </Button>
         </li>
     );
@@ -77,14 +79,14 @@ const getFetchCallback = (
     selectedSelector: string | undefined,
     sortOrder: SortOrder
 ) => {
-    if (!selectedTag) return;
+    const tag = selectedTag || 1;
 
     const sort_by = sortOrder === 'asc' ? 'name' : '-name';
 
     if (selectedSelector) {
         return ({ skip, limit }: { skip: number; limit: number }) => {
             return apiClient
-                .getAssetGroupSelectorMembers(selectedTag, selectedSelector, skip, limit, sort_by)
+                .getAssetGroupTagSelectorMembers(tag, selectedSelector, skip, limit, sort_by)
                 .then((res) => {
                     const response = {
                         data: res.data.data['members'],
@@ -97,7 +99,7 @@ const getFetchCallback = (
         };
     } else {
         return ({ skip, limit }: { skip: number; limit: number }) => {
-            return apiClient.getAssetGroupTagMembers(selectedTag, skip, limit, sort_by).then((res) => {
+            return apiClient.getAssetGroupTagMembers(tag, skip, limit, sort_by).then((res) => {
                 const response = {
                     data: res.data.data['members'],
                     skip: res.data.skip,
@@ -108,13 +110,6 @@ const getFetchCallback = (
             });
         };
     }
-};
-
-const getListHeight = (windoHeight: number) => {
-    if (windoHeight > 1080) return 762;
-    if (1080 >= windoHeight && windoHeight > 900) return 642;
-    if (900 >= windoHeight) return 438;
-    return 438;
 };
 
 interface MembersListProps {
@@ -132,23 +127,30 @@ interface MembersListProps {
  * @returns The MembersList component for rendering in the Tier Management page.
  */
 export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, itemCount = 0 }) => {
-    const { tagId, selectorId } = useParams();
+    const { tierId, labelId, selectorId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
+
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
+    const heightRef = useRef(getListHeight(window.innerHeight));
+
     const previousSelector = usePreviousValue<string | undefined>(selectorId);
-    const previousTier = usePreviousValue<string | undefined>(tagId);
+    const previousTag = usePreviousValue<string | undefined>(tagId);
     const previousSortOrder = usePreviousValue<SortOrder>(sortOrder);
+
+    const clearCache =
+        (selectorId && selectorId !== previousSelector) ||
+        (tagId && tagId !== previousTag) ||
+        sortOrder !== previousSortOrder;
 
     const itemData = { onClick, selected, items, title: 'Members' };
 
-    const height = useRef(getListHeight(window.innerHeight));
-
     useEffect(() => {
         const updateListHeight = () => {
-            height.current = getListHeight(window.innerHeight);
+            heightRef.current = getListHeight(window.innerHeight);
         };
 
         window.addEventListener('resize', updateListHeight);
@@ -156,44 +158,37 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
         return () => window.removeEventListener('resize', updateListHeight);
     }, []);
 
-    const isItemLoaded = (index: number) => {
-        return !!items[index];
-    };
-
-    const loadMoreItems = useCallback(
-        async (startIndex: number, stopIndex: number) => {
-            if (isFetching || itemCount === 0) return;
-
-            setIsFetching(true);
-
-            const limit = stopIndex - startIndex;
-
-            const fetchData = getFetchCallback(tagId, selectorId, sortOrder);
-
-            if (fetchData)
-                return fetchData({ skip: startIndex, limit: limit })
-                    .then((data) => {
-                        const itemMap: any = {};
-
-                        for (let i = 0; i < limit; i++) {
-                            itemMap[i + startIndex] = data.data[i];
-                        }
-
-                        setItems(Object.assign({}, items, itemMap));
-                    })
-                    .finally(() => {
-                        setIsFetching(false);
-                    });
+    const isItemLoaded = useCallback(
+        (index: number) => {
+            if (clearCache) return false;
+            return !!items[index];
         },
-        [items, isFetching, selectorId, tagId, sortOrder, itemCount]
+        [items, clearCache]
     );
 
-    const resetAndLoadMore = useCallback(() => {
-        if (infiniteLoaderRef?.current?.resetloadMoreItemsCache) {
-            infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
-        }
-        loadMoreItems(0, 128);
-    }, [loadMoreItems]);
+    const fetchData = useMemo(() => getFetchCallback(tagId, selectorId, sortOrder), [tagId, selectorId, sortOrder]);
+
+    const loadMoreItems = async (startIndex: number, stopIndex: number) => {
+        if (isFetching) return;
+
+        setIsFetching(true);
+
+        const limit = stopIndex - startIndex + 1;
+
+        return fetchData({ skip: startIndex, limit: limit })
+            .then((data) => {
+                const itemMap: any = {};
+
+                for (let i = 0; i < limit; i++) {
+                    itemMap[i + startIndex] = data.data[i];
+                }
+
+                setItems(Object.assign({}, items, itemMap));
+            })
+            .finally(() => {
+                setIsFetching(false);
+            });
+    };
 
     // Because the endpoint that needs to be used to fetch the list of members is dynamic based on whether
     // a selector is selected or not, this useEffect is used so that the cache of the `InfiniteLoader`
@@ -201,13 +196,12 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
     // selector changes. Without this useEffect, the list of objects/members does not clear when new data
     // is fetched.
     useEffect(() => {
-        if (
-            itemCount !== 0 &&
-            (previousSelector !== selectorId || previousTier !== tagId || previousSortOrder !== sortOrder)
-        ) {
-            resetAndLoadMore();
+        if (!clearCache) return;
+
+        if (infiniteLoaderRef?.current?.resetloadMoreItemsCache) {
+            infiniteLoaderRef?.current?.resetloadMoreItemsCache(true);
         }
-    }, [selectorId, tagId, resetAndLoadMore, previousSelector, previousTier, sortOrder, previousSortOrder, itemCount]);
+    }, [clearCache, isItemLoaded]);
 
     return (
         <div data-testid={`tier-management_details_members-list`}>
@@ -230,14 +224,14 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
             />
             <InfiniteLoader
                 ref={infiniteLoaderRef}
-                threshold={32}
+                threshold={64}
                 minimumBatchSize={128}
                 isItemLoaded={isItemLoaded}
                 itemCount={itemCount}
                 loadMoreItems={loadMoreItems}>
                 {({ onItemsRendered, ref }) => (
                     <FixedSizeList
-                        height={height.current}
+                        height={heightRef.current}
                         itemCount={itemCount}
                         itemData={itemData}
                         itemSize={ITEM_SIZE}

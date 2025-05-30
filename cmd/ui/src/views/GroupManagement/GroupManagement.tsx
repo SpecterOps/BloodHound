@@ -17,6 +17,7 @@
 import { faGem } from '@fortawesome/free-solid-svg-icons';
 import {
     DropdownOption,
+    EntityInfoPanel,
     EntityKinds,
     ExploreQueryParams,
     GroupManagementContent,
@@ -34,7 +35,6 @@ import {
 import { AssetGroup, AssetGroupMember } from 'js-client-library';
 import { useState } from 'react';
 import { ROUTE_EXPLORE } from 'src/routes/constants';
-import EntityInfoPanel from '../Explore/EntityInfo/EntityInfoPanel';
 import { dataCollectionMessage } from '../QA/utils';
 
 const GroupManagement = () => {
