@@ -1,5 +1,4 @@
 import userEvent from '@testing-library/user-event';
-// import { QueryClient } from 'react-query';
 import { render, screen } from '../../test-utils';
 import { QueryTestWrapper } from '../QueryTestWrapper';
 import CreateUserForm from './CreateUserForm';
@@ -75,7 +74,7 @@ const MOCK_ROLES = [
 ];
 
 describe('CreateUserForm', () => {
-    it('should not allow leading empty spaces in the form', async () => {
+    it('should not have less characters than the minimum requirement', async () => {
         const mockState = [
             {
                 key: ['getRoles'],
@@ -93,17 +92,15 @@ describe('CreateUserForm', () => {
         const userInput = userEvent.type;
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
-        await userInput(screen.getByLabelText(/email/i), ' ');
         await userInput(screen.getByLabelText(/principal/i), ' ');
         await userInput(screen.getByLabelText(/first/i), ' ');
         await userInput(screen.getByLabelText(/last/i), ' ');
         await userInput(screen.getByLabelText(/Initial password/i), ' ');
         await user.click(button);
 
-        expect(await screen.findByText('Email Address is required'));
-        expect(await screen.findByText('Principal Name must be 2 letters or more'));
-        expect(await screen.findByText('First Name must be 2 letters or more'));
-        expect(await screen.findByText('Last Name must be 2 letters or more'));
+        expect(await screen.findByText('Principal Name must be 2 characters or more'));
+        expect(await screen.findByText('First Name must be 2 characters or more'));
+        expect(await screen.findByText('Last Name must be 2 characters or more'));
         expect(await screen.findByText('Password must be at least 12 characters long'));
     });
 
@@ -129,17 +126,17 @@ describe('CreateUserForm', () => {
         await userInput(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
         await userInput(screen.getByLabelText(/first/i), 'a'.repeat(1001));
         await userInput(screen.getByLabelText(/last/i), 'a'.repeat(1001));
-        await userInput(screen.getByLabelText(/Initial password/i), 'a');
+        await userInput(screen.getByLabelText(/Initial password/i), 'a'.repeat(1001));
         await user.click(button);
 
         expect(await screen.findByText('Email address must be less than 319 characters'));
         expect(await screen.findByText('Principal Name must be less than 1000 characters'));
         expect(await screen.findByText('First Name must be less than 1000 characters'));
         expect(await screen.findByText('Last Name must be less than 1000 characters'));
-        expect(await screen.findByText('Password must be at least 12 characters long'));
+        expect(await screen.findByText('Password must be less than 1000 characters'));
     });
 
-    it('should not allow empty spaces or special characters', async () => {
+    it('should not allow leading or trailing empty spaces', async () => {
         const mockState = [
             {
                 key: ['getRoles'],
@@ -157,17 +154,13 @@ describe('CreateUserForm', () => {
         const userInput = userEvent.type;
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
-        await userInput(screen.getByLabelText(/email/i), ' c$c@gmail.com');
-        await userInput(screen.getByLabelText(/principal/i), ' $$');
-        await userInput(screen.getByLabelText(/first/i), ' $$ad$!');
-        await userInput(screen.getByLabelText(/last/i), '@asd# ');
-        await userInput(screen.getByLabelText(/Initial password/i), 'a');
+        await userInput(screen.getByLabelText(/principal/i), ' dd');
+        await userInput(screen.getByLabelText(/first/i), ' bsg!');
+        await userInput(screen.getByLabelText(/last/i), 'asdfw ');
         await user.click(button);
 
-        expect(await screen.findByText('Please follow the example@domain.com format'));
-        expect(await screen.findByText('Principal Name does not allow spaces or special characters'));
-        expect(await screen.findByText('First Name does not allow spaces or special characters'));
-        expect(await screen.findByText('Last Name does not allow spaces or special characters'));
-        expect(await screen.findByText('Password must be at least 12 characters long'));
+        expect(await screen.findByText('Principal Name does not allow leading or trailing spaces'));
+        expect(await screen.findByText('First Name does not allow leading or trailing spaces'));
+        expect(await screen.findByText('Last Name does not allow leading or trailing spaces'));
     });
 });
