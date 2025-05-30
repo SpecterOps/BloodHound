@@ -31,7 +31,9 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/graphify"
+	"github.com/specterops/bloodhound/src/services/job"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 const (
@@ -46,14 +48,16 @@ type Daemon struct {
 	tickInterval        time.Duration
 	ctx                 context.Context
 	orphanedFileSweeper *OrphanFileSweeper
-	ingestSchema        ingest.IngestSchema
+	ingestSchema        upload.IngestSchema
+	jobService          job.JobService
+	graphifyService     graphify.GraphifyService
 }
 
 func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema ingest.IngestSchema) *Daemon {
+func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootstrap.DatabaseConnections[*database.BloodhoundDB, *graph.DatabaseSwitch], cache cache.Cache, tickInterval time.Duration, ingestSchema upload.IngestSchema) *Daemon {
 	return &Daemon{
 		db:                  connections.RDMS,
 		graphdb:             connections.Graph,
@@ -63,6 +67,8 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 		orphanedFileSweeper: NewOrphanFileSweeper(NewOSFileOperations(), cfg.TempDirectory()),
 		tickInterval:        tickInterval,
 		ingestSchema:        ingestSchema,
+		jobService:          job.NewJobService(ctx, connections.RDMS),
+		graphifyService:     graphify.NewGraphifyService(ctx, connections.RDMS, connections.Graph, cfg, ingestSchema),
 	}
 }
 
@@ -87,21 +93,21 @@ func (s *Daemon) analyze() {
 
 	if err := RunAnalysisOperations(s.ctx, s.db, s.graphdb, s.cfg); err != nil {
 		if errors.Is(err, ErrAnalysisFailed) {
-			FailAnalyzedIngestJobs(s.ctx, s.db)
+			s.jobService.FailAnalyzedIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 
 		} else if errors.Is(err, ErrAnalysisPartiallyCompleted) {
-			PartialCompleteIngestJobs(s.ctx, s.db)
+			s.jobService.PartialCompleteIngestJobs()
 			if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, true); err != nil {
 				slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
 				return
 			}
 		}
 	} else {
-		CompleteAnalyzedIngestJobs(s.ctx, s.db)
+		s.jobService.CompleteAnalyzedIngestJobs()
 
 		if entityPanelCachingFlag, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Error retrieving entity panel caching flag: %v", err))
@@ -124,12 +130,37 @@ func resetCache(cacher cache.Cache, _ bool) {
 	}
 }
 
-func (s *Daemon) ingestAvailableTasks() {
-	if ingestTasks, err := s.db.GetAllIngestTasks(s.ctx); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Failed fetching available ingest tasks: %v", err))
-	} else {
-		s.processIngestTasks(s.ctx, ingestTasks)
+func (s *Daemon) processGraphifyTasks() {
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
+		return
 	}
+
+	// This needs to be defered outside of the else for the same reason files need to be closed explicitly.
+	// if the database change was made, but an error happened up the stack, we need to try to ALWAYS get
+	// ourselves unstuck from Ingesting status
+	defer func() {
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+			slog.ErrorContext(s.ctx, "failed to reset datapipe status", "error", err)
+		}
+	}()
+
+	// updateJobFunc is passed to the graphify service to let it tell us about the tasks as they go. The
+	// datapipe doesn't know or care about tasks, and the graphify service doesn't know or care about jobs.
+	// instead, this func is provided as an abstraction for graphify
+	updateJobFunc := func(jobId int64, totalFiles int, totalFailed int) {
+		if job, err := s.db.GetIngestJob(s.ctx, jobId); err != nil {
+			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobId, err))
+		} else {
+			job.TotalFiles += totalFiles
+			job.FailedFiles += totalFailed
+
+			if err = s.db.UpdateIngestJob(s.ctx, job); err != nil {
+				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+			}
+		}
+	}
+	s.graphifyService.ProcessTasks(updateJobFunc)
 }
 
 func (s *Daemon) Start(ctx context.Context) {
@@ -154,16 +185,16 @@ func (s *Daemon) Start(ctx context.Context) {
 			}
 
 			// Ingest all available ingest tasks
-			s.ingestAvailableTasks()
+			s.processGraphifyTasks()
 
 			// Manage time-out state progression for ingest jobs
-			ingest.ProcessStaleIngestJobs(s.ctx, s.db)
+			s.jobService.ProcessStaleIngestJobs()
 
 			// Manage nominal state transitions for ingest jobs
-			ProcessFinishedIngestJobs(s.ctx, s.db)
+			s.jobService.ProcessFinishedIngestJobs()
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
-			if hasJobsWaitingForAnalysis, err := HasIngestJobsWaitingForAnalysis(s.ctx, s.db); err != nil {
+			if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed looking up jobs waiting for analysis: %v", err))
 			} else if hasJobsWaitingForAnalysis || s.db.HasAnalysisRequest(s.ctx) {
 				s.analyze()
