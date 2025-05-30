@@ -23,6 +23,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -48,7 +49,11 @@ func generateLicenseHeader(commentPrefix string) string {
 	for _, line := range strings.Split(licenseHeader, "\n") {
 		// We grab the copyright line and edit the year into it inline for efficiency
 		if strings.HasPrefix(line, "Copyright") {
-			line = fmt.Sprintf("%s %s", line, year)
+			explodedLine := strings.Split(line, " ")
+			idx := slices.Index(explodedLine, "XXXX")
+			explodedLine[idx] = year
+
+			line = strings.Join(explodedLine, " ")
 		}
 
 		// XML style comments should be indented, but not use the prefix

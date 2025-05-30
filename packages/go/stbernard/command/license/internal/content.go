@@ -221,7 +221,7 @@ const licenseContent = `     Apache License
 `
 
 // new file creation appends the current year
-const licenseHeader = `Copyright Specter Ops, Inc.
+const licenseHeader = `Copyright XXXX Specter Ops, Inc.
 
 Licensed under the Apache License, Version 2.0
 you may not use this file except in compliance with the License.
