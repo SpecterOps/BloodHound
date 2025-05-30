@@ -24,10 +24,15 @@ import "os"
 // path management to be abstracted.
 type Service interface {
 	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
+	ReadFile(name string) ([]byte, error)
 }
 
 type Client struct{}
 
 func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
 	return os.CreateTemp(dir, pattern)
+}
+
+func (c *Client) ReadFile(name string) ([]byte, error) {
+	return os.ReadFile(name)
 }

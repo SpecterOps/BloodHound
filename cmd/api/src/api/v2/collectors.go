@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"path/filepath"
 
 	"github.com/gorilla/mux"
@@ -82,6 +81,7 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
+		return
 	} else if releaseTag == "latest" {
 		if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
@@ -94,7 +94,7 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 		fileName = fmt.Sprintf(CollectorZipFileTemplate, collectorType, releaseTag)
 	}
 
-	if data, err := os.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
+	if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
@@ -113,7 +113,8 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
-	} else if releaseTag == "latest" {
+		return
+		} else if releaseTag == "latest" {
 		if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -125,7 +126,7 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 		fileName = fmt.Sprintf(CollectorSHA256FileTemplate, collectorType, releaseTag)
 	}
 
-	if data, err := os.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
+	if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {

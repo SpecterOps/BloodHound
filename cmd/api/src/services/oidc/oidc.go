@@ -14,16 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchResult } from '../../../hooks/useSearch';
-import { EntityKinds } from '../../../utils/content';
+package oidc
 
-export interface SearchNodeType {
-    objectid: string;
-    type?: EntityKinds;
-    name?: string;
+import (
+	"context"
+
+	"github.com/coreos/go-oidc/v3/oidc"
+)
+
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/oidc.go -package=mocks . Service
+
+// Serves as a lightweight wrapper around the oidc package which allows for
+// OpenID Connect client logic to be abstracted.
+type Service interface {
+	NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error)
 }
 
-//The search value usually aligns with the results from hitting the search endpoint but when
-//we are pulling the data from a different page and filling out the value ourselves it might
-//not conform to our expected type
-export type SearchValue = SearchNodeType | SearchResult;
+type Client struct{}
+
+func (c *Client) NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error) {
+	return oidc.NewProvider(ctx, issuer)
+}

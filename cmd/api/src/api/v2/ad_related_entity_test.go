@@ -18,6 +18,7 @@ package v2_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
@@ -490,7 +492,7 @@ func TestResources_ListADGPOAffectedTierZero(t *testing.T) {
 		Run(setupCases(mockGraph, mockDB))
 }
 
-func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
+func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -505,184 +507,140 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 
 	tt := []testData{
-		{
-			name: "Error: missing object ID parameter - Bad Request",
-			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{
-						RawQuery: "type=graph",
-					},
-				}
-
-				param := map[string]string{
-					"not_object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
-			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
-			expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameters: error getting objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
-			},
-		},
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: database error - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: grapy query error queries.ErrGraphUnsupported - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, queries.ErrGraphUnsupported)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("", 0, queries.ErrGraphUnsupported)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameters: type 'graph' is not supported for this endpoint"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: graph query error op.ErrGraphQueryMemoryLimit - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, ops.ErrGraphQueryMemoryLimit)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("", 0, ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: graph query error undefined error type - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 0, errors.New("error"))
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("", 0, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: Data type graph query without pagination - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("results", 1, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `"results"`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: Data type list query with pagination - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{},
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"object_id": "id",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(req.Context(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
-				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(req.Context(), gomock.Any(), true).Return("", 1, nil)
+				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), true).Return("", 1, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"count":1,"limit":10,"skip":0,"data":""}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -697,7 +655,7 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
@@ -706,8 +664,9 @@ func TestManagementResource_ListADIssuancePolicyLinkedCertTemplates(t *testing.T
 
 			response := httptest.NewRecorder()
 
-			resources.ListADIssuancePolicyLinkedCertTemplates(response, request)
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
