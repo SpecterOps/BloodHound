@@ -72,7 +72,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const prevent = useRef(false);
 
     const graph = sigma.getGraph();
-    const sigmaChartRef = ref as React.MutableRefObject<any>;
+    const sigmaChartRef = ref as React.MutableRefObject<{
+        resetCamera: () => void;
+        runSequentialLayout: () => void;
+        runStandardLayout: () => void;
+    } | null>;
 
     useImperativeHandle(
         sigmaChartRef,
