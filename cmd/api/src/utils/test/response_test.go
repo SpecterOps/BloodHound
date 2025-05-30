@@ -112,3 +112,74 @@ func TestModifyCookieAttribute(t *testing.T) {
 		})
 	}
 }
+
+func TestOverwriteQueryParamIfHeaderAndParamExist(t *testing.T) {
+	t.Parallel()
+	type args struct {
+		headers    http.Header
+		headerKey  string
+		paramKey   string
+		paramValue string
+	}
+	tests := []struct {
+		name string
+		args args
+		want http.Header
+	}{
+		{
+			name: "headers do not exist, no change",
+			args: args{
+				headers: http.Header{},
+			},
+			want: http.Header{},
+		},
+		{
+			name: "headers exists, param does not, no change",
+			args: args{
+				headers: http.Header{
+					"Location": []string{"xyz"},
+				},
+				headerKey:  "Location",
+				paramKey:   "key",
+				paramValue: "value",
+			},
+			want: http.Header{
+				"Location": []string{"xyz"},
+			},
+		},
+		{
+			name: "headers exists, invalid, no change",
+			args: args{
+				headers: http.Header{
+					"Location": []string{"xyz"},
+				},
+				headerKey:  "Location",
+				paramKey:   "key",
+				paramValue: "value",
+			},
+			want: http.Header{
+				"Location": []string{"xyz"},
+			},
+		},
+		{
+			name: "headers exists, param exists, change updated",
+			args: args{
+				headers: http.Header{
+					"Location": []string{"?key=test"},
+				},
+				headerKey:  "Location",
+				paramKey:   "key",
+				paramValue: "value",
+			},
+			want: http.Header{
+				"Location": []string{"?key=value"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := OverwriteQueryParamIfHeaderAndParamExist(tt.args.headers, tt.args.headerKey, tt.args.paramKey, tt.args.paramValue)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
