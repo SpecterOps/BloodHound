@@ -5,14 +5,13 @@ import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef } from 'react';
+import { DEV_TABLE_VIEW } from '../../constants';
 import { useExploreSelectedItem } from '../../hooks/useExploreSelectedItem';
 import useToggle from '../../hooks/useToggle';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
 import SearchCurrentNodes from '../SearchCurrentNodes';
-
-const DEV_TABLE_VIEW = true;
 
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
