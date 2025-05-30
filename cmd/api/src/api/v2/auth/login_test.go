@@ -153,7 +153,7 @@ func TestLoginResource_Logout(t *testing.T) {
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 	tt := []testData{
@@ -162,8 +162,9 @@ func TestLoginResource_Logout(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/logout",
 					},
+					Method: http.MethodPost,
 				}
 
 				userSession := model.UserSession{
@@ -183,8 +184,8 @@ func TestLoginResource_Logout(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockAuth.EXPECT().Logout(req.Context(), model.UserSession{
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockAuth.EXPECT().Logout(gomock.Any(), model.UserSession{
 					BigSerial: model.BigSerial{
 						ID: 1,
 					},
@@ -192,7 +193,7 @@ func TestLoginResource_Logout(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Location": []string{"//www.example.com/"}},
+				responseHeader: http.Header{"Location":[]string{"/api/v2/logout/ui"}},
 			},
 		},
 	}
@@ -207,14 +208,15 @@ func TestLoginResource_Logout(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resource := v2auth.NewLoginResource(config.Configuration{}, mocks.mockAuth, nil)
 
 			response := httptest.NewRecorder()
 
-			resource.Logout(response, request)
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc(request.URL.Path, resource.Logout).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, _ := test.ProcessResponse(t, response)
 
