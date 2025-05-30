@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -95,4 +96,33 @@ func ModifyCookieAttribute(headers http.Header, attrKey, value string) http.Head
 	}
 
 	return headers
+}
+
+// OverwriteQueryParamIfHeaderAndParamExist updates paramKey in the query string value
+// of headerKey only if both the header and the parameter exist.
+// Otherwise, it leaves the header untouched.
+func OverwriteQueryParamIfHeaderAndParamExist(headers http.Header, headerKey, paramKey, paramValue string) http.Header {
+    // Check if header exists and has at least one value
+    vals := headers.Values(headerKey)
+    if len(vals) == 0 {
+        return headers // header missing, no change
+    }
+
+    // Parse the first header value as query string (remove leading "?")
+    q, err := url.ParseQuery(strings.TrimPrefix(vals[0], "?"))
+    if err != nil {
+        return headers // parse error, no change
+    }
+
+    // Check if paramKey exists in the query parameters
+    if _, exists := q[paramKey]; !exists {
+        return headers // param missing, no change
+    }
+
+    // Param exists — overwrite its value
+    q.Set(paramKey, paramValue)
+
+    // Rebuild query string, preserve leading "?"
+    headers.Set(headerKey, "?"+q.Encode())
+    return headers
 }

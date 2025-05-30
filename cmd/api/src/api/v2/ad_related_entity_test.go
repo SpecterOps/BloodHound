@@ -512,27 +512,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 	}
 
 	tt := []testData{
-		// {
-		// 	name: "Error: missing object ID parameter - Bad Request",
-		// 	buildRequest: func() *http.Request {
-		// 		request := &http.Request{
-		// 			URL: &url.URL{
-		// 				RawQuery: "type=graph",
-		// 				Path: "/api/v2/issuancepolicies/+/linkedtemplates",
-		// 			},
-		// 			Method: http.MethodGet,
-		// 		}
-
-		// 		request.URL.Path = fmt.Sprintf("/api/v2/issuancepolicies/%s/linkedtemplates", "")
-		// 		return request
-		// 	},
-		// 	setupMocks: func(t *testing.T, mock *mock) {},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusBadRequest,
-		// 		responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameters: error getting objectid: no object ID found in request"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-		// 		responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-		// 	},
-		// },
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: database error - Internal Server Error",
 			buildRequest: func() *http.Request {
