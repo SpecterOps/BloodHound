@@ -5204,6 +5204,39 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "delete": {
+        "operationId": "DeleteAssetGroupTag",
+        "summary": "Delete an Asset Group Tag",
+        "description": "Deletes an asset group tag",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/asset-group-tags/{asset_group_tag_id}/members": {
