@@ -291,9 +291,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 sigmaChartRef?.current?.runSequentialLayout();
             } else if (exploreLayout === 'standard') {
                 sigmaChartRef?.current?.runStandardLayout();
+            } else {
+                resetCamera(sigma);
             }
-
-            resetCamera(sigma);
         } else {
             resetCamera(sigma);
         }
