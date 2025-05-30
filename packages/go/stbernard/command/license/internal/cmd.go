@@ -1,19 +1,18 @@
 // Copyright Specter Ops, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//     
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// 
+//
 // SPDX-License-Identifier: Apache-2.0
-// 
 package license
 
 import (
@@ -36,7 +35,7 @@ func Run(env environment.Environment) error {
 	var (
 		ignoreDir            = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".beagle", ".yarn", "sha256"}
 		ignorePaths          = []string{"tools/docker-compose/configs/pgadmin/pgpass", "justfile", "cmd/api/src/api/static/assets", "packages/python/beagle/beagle/semver", "cmd/api/src/cmd/testidp/samlidp"}
-		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".svg", ".sha256"}
+		disallowedExtensions = []string{".zip", ".example", ".git", ".gitignore", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".sha256"}
 		now                  = time.Now()
 
 		// Concurrency primitives
@@ -63,18 +62,21 @@ func Run(env environment.Environment) error {
 		return fmt.Errorf("failed to check for root license file: %w", err)
 	}
 
+	// worker pool pattern for handling files
 	for range numWorkers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
+			// Ranging over a channel will end when the channel is closed, so this is a nice simplification
 			for path := range pathChan {
 				result, err := isHeaderPresent(path)
 				if err != nil {
 					errsMu.Lock()
 					errs = append(errs, err)
 					errsMu.Unlock()
-					return
+					// explicitly continue to process files since we want to process as much as possible even if some errors occur
+					continue
 				}
 
 				if !result {
@@ -82,6 +84,8 @@ func Run(env environment.Environment) error {
 						errsMu.Lock()
 						errs = append(errs, err)
 						errsMu.Unlock()
+						// explicitly continue to process files since we want to process as much as possible even if some errors occur
+						continue
 					}
 				}
 			}
@@ -90,8 +94,7 @@ func Run(env environment.Environment) error {
 
 	err = filepath.Walk(wrkPaths.Root, func(path string, info fs.FileInfo, err error) error {
 		// ignore directories and paths that are in the ignore list
-		scanPath := shouldProcessPath(ignorePaths, path)
-		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || !scanPath) {
+		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || slices.Contains(ignorePaths, path)) {
 			return filepath.SkipDir
 		}
 
@@ -119,19 +122,15 @@ func Run(env environment.Environment) error {
 func processFile(path string) error {
 	switch filepath.Ext(path) {
 	case ".go", ".work", ".mod", ".ts", ".tsx", ".js", ".cjs", ".jsx", ".cue", ".scss":
-		h := generateLicenseHeader("//")
-		return writeFile(path, h)
+		return writeFile(path, generateLicenseHeader("//"))
 	case ".yaml", ".yml", ".py", ".ssh", ".Dockerfile", ".toml":
-		h := generateLicenseHeader("#")
-		return writeFile(path, h)
+		return writeFile(path, generateLicenseHeader("#"))
 	case ".sql":
-		h := generateLicenseHeader("--")
-		return writeFile(path, h)
-	case ".xml", ".html":
-		h := generateXMLLicenseHeader()
-		return writeXMLFile(path, h)
+		return writeFile(path, generateLicenseHeader("--"))
+	case ".xml", ".html", ".svg":
+		return writeFile(path, generateLicenseHeader("<!--"))
 	default:
-		fmt.Printf("unknown extension file: %v\n", path)
+		slog.Warn("unknown extension", slog.String("path", path))
 		return nil
 	}
 }
