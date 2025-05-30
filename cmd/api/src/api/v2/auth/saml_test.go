@@ -90,7 +90,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -115,7 +115,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"/api/%7Bversion%7D/login/saml/provider/api/v2/sso/okta/login"}},
+				responseHeader: http.Header{"Location": []string{"/api/%7Bversion%7D/login/saml/provider/api/v2/sso/okta/login"}},
 			},
 		},
 	}
@@ -186,7 +186,7 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -212,7 +212,7 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusTemporaryRedirect,
-				responseHeader: http.Header{"Location":[]string{"/api/%7Bversion%7D/login/saml/provider/acs/api/v2/sso/okta/callback"}},
+				responseHeader: http.Header{"Location": []string{"/api/%7Bversion%7D/login/saml/provider/acs/api/v2/sso/okta/callback"}},
 			},
 		},
 	}
@@ -283,7 +283,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -302,7 +302,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"data":{"endpoints":[]}}`,
 			},
 		},
@@ -347,7 +347,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"data":{"endpoints":[{"name":"Okta Provider","initiation_url":"Okta%20Provider/login"},{"name":"Azure Provider","initiation_url":"Azure%20Provider/login"}]}}`,
 			},
 		},
@@ -415,7 +415,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -441,7 +441,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"data":{"saml_providers":[]}}`,
 			},
 		},
@@ -545,7 +545,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody: `{
 					"data": {
 						"saml_providers": [
@@ -658,7 +658,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
@@ -677,7 +677,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -709,7 +709,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody: `{
 					"data": {
 						"name": "Okta Provider",
@@ -796,7 +796,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
 			},
 		},
@@ -827,7 +827,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"multipart: NextPart: EOF"}]}`,
 			},
 		},
@@ -862,7 +862,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"name\" parameter"}]}`,
 			},
 		},
@@ -897,7 +897,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"metadata\" parameter"}]}`,
 			},
 		},
@@ -941,7 +941,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"form is missing \"config.auto_provision.enabled\" parameter"}]}`,
 			},
 		},
@@ -1020,7 +1020,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"metadata does not have a SSO service that supports HTTP POST binding"}]}`,
 			},
 		},
@@ -1094,7 +1094,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusConflict,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":409,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"sso provider name must be unique"}]}`,
 			},
 		},
@@ -1168,7 +1168,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -1249,7 +1249,7 @@ func TestManagementResource_CreateSAMLProviderMultipart(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"display_name":"display","id":0,"idp_issuer_uri":"uri","idp_sso_uri":"uri","name":"name","principal_attribute_mappings":null,"root_uri_version":1,"sp_acs_uri":"","sp_issuer_uri":"","sp_metadata_uri":"","sp_sso_uri":"","sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
@@ -1320,7 +1320,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
@@ -1341,7 +1341,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
 			},
 		},
@@ -1374,7 +1374,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"multipart: NextPart: EOF"}]}`,
 			},
 		},
@@ -1415,7 +1415,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"expected only one \"name\" parameter"}]}`,
 			},
 		},
@@ -1470,7 +1470,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"errors":[{"context":"","message":"expected only one \"metadata\" parameter"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
@@ -1534,7 +1534,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"expected only one \"config.auto_provision.enabled\" parameter"}]}`,
 			},
 		},
@@ -1614,7 +1614,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"metadata does not have a SSO service that supports HTTP POST binding"}]}`,
 			},
 		},
@@ -1690,7 +1690,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusConflict,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":409,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"sso provider name must be unique"}]}`,
 			},
 		},
@@ -1766,7 +1766,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -1856,7 +1856,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"data":{"created_at":"0001-01-01T00:00:00Z","deleted_at":{"Time":"0001-01-01T00:00:00Z","Valid":false},"display_name":"display","id":0,"idp_issuer_uri":"uri","idp_sso_uri":"uri","name":"name","principal_attribute_mappings":null,"root_uri_version":1,"sp_acs_uri":"","sp_issuer_uri":"","sp_metadata_uri":"","sp_sso_uri":"","sso_provider_id":null,"updated_at":"0001-01-01T00:00:00Z"}}`,
 			},
 		},
@@ -1924,7 +1924,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -1948,7 +1948,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
@@ -1984,7 +1984,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"failed to parse service provider Okta Provider's cert pair: error"}]}`,
 			},
 		},
@@ -2020,7 +2020,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Type":[]string{"application/samlmetadata+xml"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/samlmetadata+xml"}},
 				responseBody:   string("<EntityDescriptor xmlns=\"urn:oasis:names:tc:SAML:2.0:metadata\" validUntil=\"XXX\" entityID=\"Okta%20Provider\">\n  <SPSSODescriptor xmlns=\"urn:oasis:names:tc:SAML:2.0:metadata\" validUntil=\"XXX\" protocolSupportEnumeration=\"urn:oasis:names:tc:SAML:2.0:protocol\" AuthnRequestsSigned=\"true\" WantAssertionsSigned=\"true\">\n    <KeyDescriptor use=\"encryption\">\n      <KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <X509Data xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n          <X509Certificate xmlns=\"http://www.w3.org/2000/09/xmldsig#\"></X509Certificate>\n        </X509Data>\n      </KeyInfo>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes128-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes192-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#aes256-cbc\"></EncryptionMethod>\n      <EncryptionMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p\"></EncryptionMethod>\n    </KeyDescriptor>\n    <KeyDescriptor use=\"signing\">\n      <KeyInfo xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <X509Data xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n          <X509Certificate xmlns=\"http://www.w3.org/2000/09/xmldsig#\"></X509Certificate>\n        </X509Data>\n      </KeyInfo>\n    </KeyDescriptor>\n    <NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</NameIDFormat>\n    <AssertionConsumerService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST\" Location=\"\" index=\"1\"></AssertionConsumerService>\n    <AssertionConsumerService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact\" Location=\"\" index=\"2\"></AssertionConsumerService>\n  </SPSSODescriptor>\n</EntityDescriptor>"),
 			},
 		},
@@ -2100,7 +2100,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
@@ -2119,7 +2119,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
@@ -2143,7 +2143,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":404,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"resource not found"}]}`,
 			},
 		},
@@ -2174,7 +2174,7 @@ func TestManagementResource_ServeSigningCertificate(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"oidc-provider-signing-certificate.pem\""}, "Content-Type":[]string{"text/plain; charset=utf-8"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"oidc-provider-signing-certificate.pem\""}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 				responseBody:   "-----BEGIN CERTIFICATE-----\n\n-----END CERTIFICATE-----",
 			},
 		},
@@ -2256,7 +2256,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -2286,7 +2286,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 	}
@@ -2361,7 +2361,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -2391,7 +2391,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -2430,7 +2430,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid+SSO+response%3A+Failed+to+parse+ACS+response+Authentication+failed"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+SSO+response%3A+Failed+to+parse+ACS+response+Authentication+failed"}},
 			},
 		},
 	}

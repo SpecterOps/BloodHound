@@ -193,7 +193,7 @@ func TestLoginResource_Logout(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Location":[]string{"/api/v2/logout/ui"}},
+				responseHeader: http.Header{"Location": []string{"/api/v2/logout/ui"}},
 			},
 		},
 	}

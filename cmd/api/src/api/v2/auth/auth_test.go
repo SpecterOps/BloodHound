@@ -3551,7 +3551,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/id/mfa",
 					},
-					Method: http.MethodPost,
+					Method:   http.MethodPost,
 					PostForm: url.Values{},
 				}
 
@@ -3575,8 +3575,8 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
+					Method:   http.MethodPost,
+					Header:   header,
 					PostForm: url.Values{},
 				}
 
@@ -3600,8 +3600,8 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
+					Method:   http.MethodPost,
+					Header:   header,
 					PostForm: url.Values{},
 				}
 
@@ -3625,9 +3625,9 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Body:   io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
-					Header: header,
+					Method:   http.MethodPost,
+					Body:     io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
+					Header:   header,
 					PostForm: url.Values{},
 				}
 
@@ -3687,9 +3687,9 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
-					Body:   io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
+					Method:   http.MethodPost,
+					Header:   header,
+					Body:     io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
 					PostForm: url.Values{},
 				}
 
@@ -3725,9 +3725,9 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
-					Body:   io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
+					Method:   http.MethodPost,
+					Header:   header,
+					Body:     io.NopCloser(bytes.NewReader([]byte(`{"secret":"valid"}`))),
 					PostForm: url.Values{},
 				}
 
@@ -3794,7 +3794,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody: `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
+				responseBody:   `{"http_status":500,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}]}`,
 			},
 		},
 		{
@@ -3811,9 +3811,9 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
-					Body:   io.NopCloser(bytes.NewReader(mfaBytes)),
+					Method:   http.MethodPost,
+					Header:   header,
+					Body:     io.NopCloser(bytes.NewReader(mfaBytes)),
 					PostForm: url.Values{},
 				}
 
@@ -3857,9 +3857,9 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/bloodhound-users/00000000-0000-0000-0000-000000000000/mfa",
 					},
-					Method: http.MethodPost,
-					Header: header,
-					Body:   io.NopCloser(bytes.NewReader(mfaBytes)),
+					Method:   http.MethodPost,
+					Header:   header,
+					Body:     io.NopCloser(bytes.NewReader(mfaBytes)),
 					PostForm: url.Values{},
 				}
 

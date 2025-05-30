@@ -943,7 +943,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id=&related_entity_type=bad",
 					},
 					Method: http.MethodGet,
@@ -953,7 +953,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"query parameter object_id is required"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -961,7 +961,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id=id&related_entity_type=bad",
 					},
 					Method: http.MethodGet,
@@ -971,7 +971,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for bad"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -979,7 +979,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id=id&counts=bad",
 					},
 					Method: http.MethodGet,
@@ -989,7 +989,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -997,7 +997,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/roles",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&counts=true",
 					},
 					Method: http.MethodGet,
@@ -1010,7 +1010,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -1018,7 +1018,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/unknown",
+						Path:     "/api/v2/azure/unknown",
 						RawQuery: "object_id=id&counts=true",
 					},
 					Method: http.MethodGet,
@@ -1028,7 +1028,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"db error: unknown azure entity unknown"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -1036,7 +1036,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/roles",
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&counts=true",
 					},
 					Method: http.MethodGet,
@@ -1049,7 +1049,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`,
-				responseHeader:http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}

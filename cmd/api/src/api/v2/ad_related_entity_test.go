@@ -519,7 +519,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
-						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
 					Method: http.MethodGet,
 				}
@@ -540,7 +540,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
-						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
 					Method: http.MethodGet,
 				}
@@ -562,7 +562,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
-						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
 					Method: http.MethodGet,
 				}
@@ -584,7 +584,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
-						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
 					Method: http.MethodGet,
 				}
@@ -602,11 +602,11 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 		},
 		{
 			name: "Success: Data type graph query without pagination - OK",
-buildRequest: func() *http.Request {
+			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
 						RawQuery: "type=graph",
-						Path: "/api/v2/issuancepolicies/id/linkedtemplates",
+						Path:     "/api/v2/issuancepolicies/id/linkedtemplates",
 					},
 					Method: http.MethodGet,
 				}
