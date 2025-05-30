@@ -23,6 +23,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
 import rootSaga from 'src/rootSaga';
+import { ExploreLayoutOptionsBHE } from './ducks/global/types';
 
 enableMapSet();
 
@@ -63,7 +64,7 @@ const loadState = (): PreloadedState<RootState> => {
 
 type PersistedState = {
     auth: { sessionToken: string | null };
-    global: { view: { darkMode: boolean; notifications: string[] } };
+    global: { view: { darkMode: boolean; notifications: string[]; exploreLayout: ExploreLayoutOptionsBHE } };
 };
 
 const saveState = (state: PersistedState) => {
@@ -106,6 +107,7 @@ store.subscribe(
                 view: {
                     darkMode: state.global.view.darkMode,
                     notifications: [],
+                    exploreLayout: state.global.view.exploreLayout || 'sequential',
                 },
             },
         });
