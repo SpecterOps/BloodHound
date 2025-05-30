@@ -20,17 +20,17 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
     const navigate = useAppNavigate();
     return (
         <Card className='w-full flex px-6 py-4 rounded-xl'>
-            <div className='text-xl flex-1 flex items-center justify-center font-bold truncate min-w-0'>
-                <div className='text-xl font-bold truncate min-w-0'>{title}</div>
+            <div className='flex-1 flex items-center justify-center truncate min-w-0'>
+                <div className='text-2xl font-bold truncate min-w-0'>JHFHGFGHFHGFJGFJHFGHJJHFGJGF</div>
             </div>
             <LargeRightArrow className='w-8 h-16' />
             <div className='flex-1 flex flex-col items-center justify-center'>
-                <p className='text-l font-semibold'>Selectors</p>
+                <p className='text-lg font-semibold'>Selectors</p>
                 <p className='text-2xl font-thin'>{abbreviatedNumber(selectorCount ?? 0)}</p>
             </div>
             <LargeRightArrow className='w-8 h-16' />
             <div className='flex-1 flex flex-col items-center justify-center'>
-                <p className='text-l font-semibold'>Members</p>
+                <p className='text-lg font-semibold'>Members</p>
                 <p className='text-2xl font-thin'>{abbreviatedNumber(memberCount ?? 0)}</p>
             </div>
 
