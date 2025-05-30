@@ -24,41 +24,16 @@
 import { Attributes } from 'graphology-types';
 import { Settings } from 'sigma/settings';
 import { Coordinates, NodeDisplayData, PartialButFor } from 'sigma/types';
-import { EdgeDistanceProperties, calculateEdgeDistanceForLabel, getEdgeLabelTextLength } from 'src/ducks/graph/utils';
+import { EdgeDistanceProperties, calculateEdgeDistanceForLabel } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { calculateLabelOpacity } from 'src/rendering/utils/utils';
+import { GraphItemData } from '../utils/utils';
 import { getControlPointsFromGroupSize } from './edge.self';
+import drawLabel from './node-label';
 
 const PADDING_SCALAR = 5;
 
 const getXPadding = (inverseSqrtZoomRatio: number) => {
     return PADDING_SCALAR * inverseSqrtZoomRatio;
-};
-
-const drawBackground = (
-    context: CanvasRenderingContext2D,
-    edgeData: Attributes,
-    settings: Settings,
-    fadeAlphaFromZoom: number,
-    textLength: number
-) => {
-    const inverseSqrtZoomRatio = edgeData.inverseSqrtZoomRatio || 1;
-    if (edgeData.selected) {
-        context.fillStyle = edgeData.highlightedBackground;
-        context.globalAlpha = fadeAlphaFromZoom;
-    } else {
-        context.fillStyle = edgeData.backgroundColor;
-        context.globalAlpha = fadeAlphaFromZoom * 0.8;
-    }
-
-    const { deltaX, deltaY, width, height } = getBackgroundBoundInfo(
-        inverseSqrtZoomRatio,
-        textLength,
-        edgeData.size,
-        settings.edgeLabelSize
-    );
-
-    context.fillRect(deltaX, deltaY, width, height);
 };
 
 export const getBackgroundBoundInfo = (
@@ -74,30 +49,6 @@ export const getBackgroundBoundInfo = (
     const height = edgeLabelSize * inverseSqrtZoomRatio * 1.4;
 
     return { deltaX: deltaX, deltaY: deltaY, width: width, height: height };
-};
-
-const drawText = (
-    context: CanvasRenderingContext2D,
-    edgeData: Attributes,
-    fadeAlphaFromZoom: number,
-    textLength: number
-) => {
-    const label = edgeData.label;
-    if (!label) return;
-
-    // Text should always be completely opaque, before factoring in fade from zoom level
-    context.globalAlpha = fadeAlphaFromZoom;
-    context.fillStyle = edgeData.selected ? edgeData.highlightedText : edgeData.labelColor;
-
-    context.fillText(label, -textLength / 2, (edgeData.size / 2) * (edgeData.inverseSqrtZoomRatio || 1));
-};
-
-const setContextFont = (context: CanvasRenderingContext2D, edgeData: Attributes, settings: Settings) => {
-    const font = settings.edgeLabelFont;
-    const weight = settings.edgeLabelWeight;
-    const size = settings.edgeLabelSize * (edgeData.inverseSqrtZoomRatio || 1);
-
-    context.font = `${weight} ${size}px ${font}`;
 };
 
 const getCurvedEdgeStartingPoint = (
@@ -157,23 +108,14 @@ export default function draw(
     settings: Settings
 ): void {
     const label = edgeData.label;
+
     if (!label) return;
-    const inverseSqrtZoomRatio = edgeData.inverseSqrtZoomRatio || 1;
-    setContextFont(context, edgeData, settings);
 
     const edgeDistance = calculateEdgeDistanceForLabel(sourceData, targetData);
-    const textLength = getEdgeLabelTextLength(context, label, edgeDistance.distance);
-    if (!textLength) return;
-
     const startingPoint = getStartingPoint(edgeData, sourceData, targetData, edgeDistance);
 
-    context.save();
-    context.translate(startingPoint.x, startingPoint.y);
+    // Overwrite edge positions with custom-calculated position since non-default edge renderer is used
+    const newData = { ...edgeData, ...startingPoint } as GraphItemData;
 
-    const fadeAlphaFromZoom = calculateLabelOpacity(inverseSqrtZoomRatio);
-
-    drawBackground(context, edgeData, settings, fadeAlphaFromZoom, textLength);
-    drawText(context, edgeData, fadeAlphaFromZoom, textLength);
-
-    context.restore();
+    drawLabel(context, newData, settings);
 }

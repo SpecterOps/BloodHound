@@ -18,7 +18,7 @@ import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
 import Graph, { MultiDirectedGraph } from 'graphology';
-import { AbstractGraph, Attributes } from 'graphology-types';
+import { Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { GraphEvents } from 'src/components/GraphEvents';
@@ -35,11 +35,9 @@ import GraphEdgeEvents from './GraphEdgeEvents';
 
 interface SigmaChartProps {
     graph: Graph<Attributes, Attributes, Attributes>;
-    onDoubleClickNode: (id: string) => void;
     onClickNode: (id: string) => void;
     onClickEdge: (id: string, relatedFindingType?: string | null) => void;
     onClickStage: () => void;
-    edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
@@ -48,11 +46,9 @@ interface SigmaChartProps {
 const SigmaChart = forwardRef(function SigmaChart(
     {
         graph,
-        onDoubleClickNode,
         onClickNode,
         onClickEdge,
         onClickStage,
-        edgeReducer,
         handleContextMenu,
         showNodeLabels = true,
         showEdgeLabels = true,
@@ -101,11 +97,9 @@ const SigmaChart = forwardRef(function SigmaChart(
                 <GraphEdgeEvents />
 
                 <GraphEvents
-                    onDoubleClickNode={onDoubleClickNode}
                     onClickNode={onClickNode}
                     onClickEdge={onClickEdge}
                     onClickStage={onClickStage}
-                    edgeReducer={edgeReducer}
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}
                     showEdgeLabels={showEdgeLabels}
