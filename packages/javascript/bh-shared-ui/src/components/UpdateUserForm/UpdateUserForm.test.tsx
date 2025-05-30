@@ -1,0 +1,388 @@
+import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '../../test-utils';
+import { QueryTestWrapper } from '../QueryTestWrapper';
+import UpdateUserForm from './UpdateUserForm';
+
+const DEFAULT_PROPS = {
+    onCancel: () => null,
+    onSubmit: () => vi.fn,
+    userId: '2d92f310-68fc-402a-915a-438a57f81342',
+    hasSelectedSelf: false,
+    isLoading: false,
+    error: false,
+};
+
+const MOCK_ROLES = [
+    {
+        name: 'Administrator',
+        description: 'Can manage users, clients, and application configuration',
+        permissions: [],
+        id: 1,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    {
+        name: 'User',
+        description: 'Can read data, modify asset group memberships',
+        permissions: [],
+        id: 2,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    {
+        name: 'Read-Only',
+        description: 'Used for integrations',
+        permissions: [],
+        id: 3,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    {
+        name: 'Upload-Only',
+        description: 'Used for data collection clients, can post data but cannot read data',
+        permissions: [],
+        id: 4,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    {
+        name: 'Power User',
+        description: 'Can upload data, manage clients, and perform any action a User can',
+        permissions: [],
+        id: 5,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+];
+
+const MOCK_USER = [
+    {
+        data: {
+            sso_provider_id: null,
+            AuthSecret: {
+                digest_method: 'argon2',
+                expires_at: '2025-08-17T22:14:58.489177Z',
+                totp_activated: false,
+                id: 1,
+                created_at: '2025-05-19T22:14:58.490455Z',
+                updated_at: '2025-05-19T22:14:58.490455Z',
+                deleted_at: {
+                    Time: '0001-01-01T00:00:00Z',
+                    Valid: false,
+                },
+            },
+            roles: [
+                {
+                    name: 'Administrator',
+                    description: 'Can manage users, clients, and application configuration',
+                    permissions: [
+                        {
+                            authority: 'app',
+                            name: 'ReadAppConfig',
+                            id: 1,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'app',
+                            name: 'WriteAppConfig',
+                            id: 2,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'risks',
+                            name: 'GenerateReport',
+                            id: 3,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'risks',
+                            name: 'ManageRisks',
+                            id: 4,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'auth',
+                            name: 'CreateToken',
+                            id: 5,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'auth',
+                            name: 'ManageAppConfig',
+                            id: 6,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'auth',
+                            name: 'ManageProviders',
+                            id: 7,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'auth',
+                            name: 'ManageSelf',
+                            id: 8,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'auth',
+                            name: 'ManageUsers',
+                            id: 9,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'clients',
+                            name: 'Manage',
+                            id: 10,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'clients',
+                            name: 'Tasking',
+                            id: 11,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'collection',
+                            name: 'ManageJobs',
+                            id: 12,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'graphdb',
+                            name: 'Read',
+                            id: 13,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'graphdb',
+                            name: 'Write',
+                            id: 14,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'saved_queries',
+                            name: 'Read',
+                            id: 15,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'saved_queries',
+                            name: 'Write',
+                            id: 16,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'clients',
+                            name: 'Read',
+                            id: 17,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'db',
+                            name: 'Wipe',
+                            id: 18,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'graphdb',
+                            name: 'Mutate',
+                            id: 19,
+                            created_at: '2025-05-19T22:14:58.188368Z',
+                            updated_at: '2025-05-19T22:14:58.188368Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                        {
+                            authority: 'graphdb',
+                            name: 'Ingest',
+                            id: 20,
+                            created_at: '2025-05-19T22:14:58.311151Z',
+                            updated_at: '2025-05-19T22:14:58.311151Z',
+                            deleted_at: {
+                                Time: '0001-01-01T00:00:00Z',
+                                Valid: false,
+                            },
+                        },
+                    ],
+                    id: 1,
+                    created_at: '2025-05-19T22:14:58.188368Z',
+                    updated_at: '2025-05-19T22:14:58.188368Z',
+                    deleted_at: {
+                        Time: '0001-01-01T00:00:00Z',
+                        Valid: false,
+                    },
+                },
+            ],
+            first_name: 'BloodHound',
+            last_name: 'Dev',
+            email_address: 'spam@example.com',
+            principal_name: 'admin',
+            last_login: '2025-05-30T15:00:41.511369Z',
+            is_disabled: false,
+            eula_accepted: true,
+            id: '2d92f310-68fc-402a-915a-438a57f81342',
+            created_at: '2025-05-19T22:14:58.489615Z',
+            updated_at: '2025-05-19T22:16:51.805983Z',
+            deleted_at: {
+                Time: '0001-01-01T00:00:00Z',
+                Valid: false,
+            },
+        },
+    },
+];
+
+describe('UpdateUserForm', () => {
+    it('should not allow the input to exceed the allowed length', async () => {
+        const mockState = [
+            {
+                key: ['getUser'],
+                data: MOCK_USER,
+            },
+            {
+                key: ['getRoles'],
+                data: MOCK_ROLES,
+            },
+            { key: ['listSSOProviders'], data: null },
+        ];
+
+        render(
+            <QueryTestWrapper stateMap={mockState}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </QueryTestWrapper>
+        );
+
+        const userInput = userEvent.type;
+        const user = userEvent.setup();
+
+        let button: HTMLElement;
+
+        await waitFor(() => {
+            button = screen.getByText('Save');
+            expect(button).toBeInTheDocument();
+        });
+
+        await userInput(screen.getByLabelText(/email/i), 'a'.repeat(320) + '@domain.com');
+        await userInput(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
+        await userInput(screen.getByLabelText(/first/i), 'a'.repeat(1001));
+        await userInput(screen.getByLabelText(/last/i), 'a'.repeat(1001));
+        await user.click(button!);
+
+        expect(await screen.findByText('Email address must be less than 319 characters'));
+        expect(await screen.findByText('Principal Name must be less than 1000 characters'));
+        expect(await screen.findByText('First Name must be less than 1000 characters'));
+        expect(await screen.findByText('Last Name must be less than 1000 characters'));
+    });
+});
