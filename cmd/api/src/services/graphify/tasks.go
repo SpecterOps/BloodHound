@@ -188,7 +188,6 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 	return tasks
 }
 
-// processIngestTasks covers the generic ingest case for ingested data.
 func (s *GraphifyService) ProcessTasks(updateJob func(jobId int64, totalFiles int, totalFailed int)) {
 
 	for _, task := range s.getAllTasks() {
