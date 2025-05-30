@@ -56,7 +56,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
 
-    console.log({ exploreLayout });
     const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
