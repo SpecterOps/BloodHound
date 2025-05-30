@@ -29,7 +29,7 @@ import (
 
 const (
 	Name  = "license"
-	Usage = "Run license cmd to append license headers on bhce files"
+	Usage = "Run license cmd to append license headers on files"
 )
 
 type command struct {
@@ -70,7 +70,7 @@ func (s *command) Parse(cmdIndex int) error {
 }
 
 func (s *command) Run() error {
-	if err := license.Run(); err != nil {
+	if err := license.Run(s.env); err != nil {
 		return fmt.Errorf("running license cmd: %w", err)
 	}
 	return nil

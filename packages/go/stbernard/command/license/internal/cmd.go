@@ -22,43 +22,53 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
-func Run() error {
+// capacity of paths slice
+// is set to 512 as a reasonable default for most projects, but can be adjusted
+// based on the expected number of files in the workspace.
+// This helps to avoid frequent reallocations and improves performance.
+// If the number of files exceeds this capacity, the slice will grow dynamically.
+var paths = make([]string, 0, 512)
 
-	wd, err := os.Getwd()
+func Run(env environment.Environment) error {
+
+	wrkPaths, err := workspace.FindPaths(env)
 	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
+		return fmt.Errorf("failed to find workspace paths: %w", err)
 	}
-	if err := checkRootFiles(wd); err != nil {
+
+	if err := checkRootFiles(wrkPaths.Root); err != nil {
 		return fmt.Errorf("failed to check root files: %w", err)
 	}
 
 	ignoreDir := []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".beagle", ".yarn", "sha256"}
-	ignorPaths := []string{"tools/docker-compose/configs/pgadmin/pgpass", "justfile", "cmd/api/src/api/static/assets", "packages/python/beagle/beagle/semver", "cmd/api/src/cmd/testidp/samlidp"}
+	ignorePaths := []string{"tools/docker-compose/configs/pgadmin/pgpass", "justfile", "cmd/api/src/api/static/assets", "packages/python/beagle/beagle/semver", "cmd/api/src/cmd/testidp/samlidp"}
 	disallowedExtensions := []string{".zip", ".example", ".git", ".gitignore", ".png", ".mdx", ".iml", ".g4", ".sum", ".bazel", ".bzl", ".typed", ".md", ".json", ".template", "sha256", ".pyc", ".gif", ".tiff", ".lock", ".txt", ".png", ".jpg", ".jpeg", ".ico", ".gz", ".tar", ".woff2", ".header", ".pro", ".cert", ".crt", ".key", ".example", ".svg", ".sha256"}
 
-	paths := []string{}
-
 	now := time.Now()
-	err = filepath.Walk(wd, func(path string, info fs.FileInfo, err error) error {
+	err = filepath.Walk(wrkPaths.Root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			// Log the error and continue walking
 			slog.Warn(fmt.Sprintf("error accessing path %q: %v", path, err))
 			return nil // Continue walking despite the error
 		}
 
-		// ignore directories
-		if info.IsDir() && slices.Contains(ignoreDir, info.Name()) {
+		// ignore directories and paths that are in the ignore list 
+		scanPath := shouldProcessPath(ignorePaths, wrkPaths.Root, path)
+		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || !scanPath) {
 			return filepath.SkipDir
+		} else {
+			paths = append(paths, path)
 		}
 
-		paths = append(paths, path)
 		return nil
 	})
 	if err != nil {
@@ -79,10 +89,11 @@ func Run() error {
 	for _, path := range paths {
 		// series of validations before processing all the paths against directories, disallowed extensions and paths
 		ext := parseFileExtension(path)
-		isDir := dirCheck(path)
-		scanPath := shouldProcessPath(ignorPaths, wd, path)
 
-		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 && scanPath {
+		// // check if the path is a directory ends with an extension eg. packages/cue/cue.mod
+		isDir := dirCheck(path)
+
+		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 {
 			wg.Add(1)
 			go func(filePath, fileExt string) {
 				defer wg.Done()
@@ -111,7 +122,7 @@ func Run() error {
 	// block main untill all the goroutines in done state
 	wg.Wait()
 	diff := time.Since(now)
-	
+
 	slog.Info(fmt.Sprintf("running scans on bhce took %v", diff))
 	return errors.Join(errs...)
 }
