@@ -70,3 +70,18 @@ func (mr *MockServiceMockRecorder) CreateTemporaryDirectory(dir, pattern any) *g
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTemporaryDirectory", reflect.TypeOf((*MockService)(nil).CreateTemporaryDirectory), dir, pattern)
 }
+
+// ReadFile mocks base method.
+func (m *MockService) ReadFile(name string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReadFile", name)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReadFile indicates an expected call of ReadFile.
+func (mr *MockServiceMockRecorder) ReadFile(name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadFile", reflect.TypeOf((*MockService)(nil).ReadFile), name)
+}
