@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { ObjectInfoPanelContextProvider, SelectedEdge } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen } from 'src/test-utils';
-import EdgeObjectInformation from 'src/views/Explore/EdgeInfo/EdgeObjectInformation';
+import { SelectedEdge } from '../../../store';
+import { render, screen } from '../../../test-utils';
+import { ObjectInfoPanelContextProvider } from '../providers';
+import EdgeObjectInformation from './EdgeObjectInformation';
 
 const server = setupServer();
 

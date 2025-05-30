@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Box, Paper, SxProps } from '@mui/material';
-import { ObjectInfoPanelContextProvider, SelectedEdge, usePaneStyles } from 'bh-shared-ui';
 import React, { useState } from 'react';
-
-import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
-import Header from 'src/views/Explore/EdgeInfo/EdgeInfoHeader';
+import { SelectedEdge } from '../../../store';
+import { usePaneStyles } from '../InfoStyles';
+import { ObjectInfoPanelContextProvider } from '../providers';
+import EdgeInfoContent from './EdgeInfoContent';
+import Header from './EdgeInfoHeader';
 
 interface EdgeInfoPaneProps {
     sx?: SxProps;
@@ -36,7 +36,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
                 <Header
                     name={selectedEdge?.name || 'None'}
                     expanded={expanded}
-                    onToggleExpanded={(expanded) => {
+                    onToggleExpanded={(expanded: boolean) => {
                         setExpanded(expanded);
                     }}
                 />
@@ -44,7 +44,7 @@ const EdgeInfoPane: React.FC<EdgeInfoPaneProps> = ({ sx, selectedEdge }) => {
             <Paper
                 elevation={0}
                 classes={{ root: styles.contentPaperRoot }}
-                sx={{
+                style={{
                     display: expanded ? 'initial' : 'none',
                 }}>
                 {selectedEdge === null ? 'No information to display.' : <EdgeInfoContent selectedEdge={selectedEdge} />}

@@ -162,6 +162,13 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
             })
         );
     }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
+    }),
 ];
 
 export default tierHandlers;

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,21 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { Skeleton } from '@mui/material';
-import {
-    EntityField,
-    FieldsContainer,
-    ObjectInfoFields,
-    SelectedEdge,
-    apiClient,
-    formatObjectInfoFields,
-    useObjectInfoPanelContext,
-} from 'bh-shared-ui';
 import { FC, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import usePreviousValue from 'src/hooks/usePreviousValue';
-import EdgeInfoCollapsibleSection from 'src/views/Explore/EdgeInfo/EdgeInfoCollapsibleSection';
+import { usePreviousValue } from '../../../hooks';
+import { SelectedEdge } from '../../../store';
+import { EntityField, apiClient, formatObjectInfoFields } from '../../../utils';
+import { FieldsContainer, ObjectInfoFields } from '../fragments';
+import { useObjectInfoPanelContext } from '../providers';
+import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 
 const selectedEdgeCypherQuery = (sourceId: string | number, targetId: string | number, edgeKind: string): string =>
     `MATCH (s)-[r:${edgeKind}]->(t) WHERE ID(s) = ${sourceId} AND ID(t) = ${targetId} RETURN r LIMIT 1`;
@@ -61,7 +55,7 @@ const EdgeObjectInformation: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = (
     });
 
     if (isLoading) {
-        return <Skeleton variant='rectangular' />;
+        return <Skeleton variant='rectangular' sx={{}} />;
     }
 
     const sourceNodeField: EntityField = {

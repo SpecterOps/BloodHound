@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,17 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import {
-    EntityInfoDataTableProps,
-    InfiniteScrollingTable,
-    NODE_GRAPH_RENDER_LIMIT,
-    SelectedNode,
-    entityRelationshipEndpoints,
-    useExploreParams,
-} from 'bh-shared-ui';
 import { useQuery } from 'react-query';
-
+import InfiniteScrollingTable from '../../../components/InfiniteScrollingTable';
+import { NODE_GRAPH_RENDER_LIMIT } from '../../../constants';
+import { useExploreParams } from '../../../hooks';
+import { SelectedNode } from '../../../types';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
@@ -47,7 +42,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             }
             if (sections)
                 return Promise.all(
-                    sections.map((section) => {
+                    sections.map((section: EntityInfoDataTableProps) => {
                         const endpoint = section.queryType ? entityRelationshipEndpoints[section.queryType] : undefined;
                         return endpoint ? endpoint({ id, skip: 0, limit: 128 }) : Promise.resolve();
                     })
@@ -89,7 +84,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         if (isOpen) handleSetGraph();
         else removeExpandedPanelSectionParams();
     };
-
     const handleSetGraph = async () => {
         if (!endpoint) {
             setParentExpandedSectionParam();
@@ -138,14 +132,14 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             {endpoint && (
                 <InfiniteScrollingTable
                     itemCount={count}
-                    fetchDataCallback={(params) => endpoint({ id, ...params })}
+                    fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
                     onClick={handleOnClick}
                 />
             )}
             {sections &&
-                sections.map((nestedSection, nestedSectionIndex) => (
+                sections.map((nestedSection: EntityInfoDataTableProps, nestedIndex: number) => (
                     <EntityInfoDataTable
-                        key={nestedSectionIndex}
+                        key={nestedIndex}
                         parentLabels={[...(parentLabels as string[]), label]}
                         {...nestedSection}
                     />

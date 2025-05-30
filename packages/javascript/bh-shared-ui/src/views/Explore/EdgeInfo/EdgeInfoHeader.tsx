@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,37 +13,35 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Typography } from '@mui/material';
-import { Icon, NodeIcon, useExploreParams, useHeaderStyles, useObjectInfoPanelContext } from 'bh-shared-ui';
+import { Typography } from '@mui/material';
 import React from 'react';
+import Icon from '../../../components/Icon';
+import { useExploreParams } from '../../../hooks';
+import { useHeaderStyles } from '../InfoStyles';
+import { useObjectInfoPanelContext } from '../providers';
 
 export interface HeaderProps {
-    expanded: boolean;
     name: string;
+    expanded: boolean;
     onToggleExpanded: (expanded: boolean) => void;
-    nodeType?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expanded }) => {
+const Header: React.FC<HeaderProps> = ({ name = 'None Selected', onToggleExpanded, expanded }) => {
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
-    const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { setExploreParams } = useExploreParams();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
-
-        if (expandedPanelSections?.length) {
-            setExploreParams({
-                expandedPanelSections: [],
-            });
-        }
+        setExploreParams({
+            expandedPanelSections: [],
+        });
     };
 
     return (
-        <Box className={styles.header}>
+        <div className={styles.header}>
             <Icon
                 className={styles.icon}
                 click={() => {
@@ -52,10 +50,8 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
                 <FontAwesomeIcon icon={expanded ? faMinus : faPlus} />
             </Icon>
 
-            {nodeType && <NodeIcon nodeType={nodeType} />}
-
             <Typography
-                data-testid='explore_entity-information-panel_header-text'
+                data-testid='explore_edge-information-pane_header-text'
                 variant='h6'
                 noWrap
                 className={styles.headerText}>
@@ -66,10 +62,10 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
                 tip='Collapse All'
                 click={handleCollapseAll}
                 className={styles.icon}
-                data-testid='explore_entity-information-panel_button-collapse-all'>
+                data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
             </Icon>
-        </Box>
+        </div>
     );
 };
 

@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import userEvent from '@testing-library/user-event';
-import * as bhSharedUi from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from 'src/test-utils';
-import EdgeInfoContent from 'src/views/Explore/EdgeInfo/EdgeInfoContent';
+import { SelectedEdge } from '../../../store';
+import { render, screen, waitFor } from '../../../test-utils';
+import { ObjectInfoPanelContextProvider } from '../providers';
+import EdgeInfoContent from './EdgeInfoContent';
 
 const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (req, res, ctx) => {
@@ -87,8 +87,8 @@ const server = setupServer(
     })
 );
 
-const selectedEdge: bhSharedUi.SelectedEdge = {
-    id: '1',
+const selectedEdge: SelectedEdge = {
+    id: 'rel_1',
     name: 'CustomEdge',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
     sourceNode: {
@@ -100,7 +100,7 @@ const selectedEdge: bhSharedUi.SelectedEdge = {
     targetNode: { name: 'target node', id: '2', objectId: '2', type: 'User' },
 };
 
-const selectedEdgeHasLapsEnabled: bhSharedUi.SelectedEdge = {
+const selectedEdgeHasLapsEnabled: SelectedEdge = {
     id: '2',
     name: 'GenericAll',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -113,7 +113,7 @@ const selectedEdgeHasLapsEnabled: bhSharedUi.SelectedEdge = {
     targetNode: { name: 'target node', id: '3', objectId: 'testing-node-123', type: 'Computer' },
 };
 
-const selectedEdgeHasLapsDisabled: bhSharedUi.SelectedEdge = {
+const selectedEdgeHasLapsDisabled: SelectedEdge = {
     id: '3',
     name: 'GenericAll',
     data: { isACL: false, lastseen: '2023-09-07T11:10:33.664596893Z' },
@@ -126,7 +126,7 @@ const selectedEdgeHasLapsDisabled: bhSharedUi.SelectedEdge = {
     targetNode: { name: 'target node', id: '4', objectId: 'testing-node-456', type: 'Computer' },
 };
 
-const selectedEdgeADCSESC4: bhSharedUi.SelectedEdge = {
+const selectedEdgeADCSESC4: SelectedEdge = {
     ...selectedEdge,
     name: 'ADCSESC4',
 };
@@ -144,10 +144,10 @@ const hasLapsDisabledTestText = windowsAbuseHasLapsText(
     selectedEdgeHasLapsDisabled.targetNode.name
 );
 
-const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: bhSharedUi.SelectedEdge }) => (
-    <bhSharedUi.ObjectInfoPanelContextProvider>
+const EdgeInfoContentWithProvider = ({ selectedEdge }: { selectedEdge: SelectedEdge }) => (
+    <ObjectInfoPanelContextProvider>
         <EdgeInfoContent selectedEdge={selectedEdge!} />
-    </bhSharedUi.ObjectInfoPanelContextProvider>
+    </ObjectInfoPanelContextProvider>
 );
 
 beforeAll(() => server.listen());
@@ -197,7 +197,6 @@ describe('EdgeInfoContent', () => {
 
         expect(screen.queryByText(hasLapsDisabledTestText, { exact: false })).not.toBeInTheDocument();
     });
-
     describe('EdgeInfoContent support for Deep Linking', () => {
         const test_id = selectedEdgeADCSESC4.id;
         const setup = () => {

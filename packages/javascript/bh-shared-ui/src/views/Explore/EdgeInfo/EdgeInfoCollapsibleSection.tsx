@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
-import { SubHeader, useCollapsibleSectionStyles } from 'bh-shared-ui';
 import React, { PropsWithChildren } from 'react';
+import { useCollapsibleSectionStyles } from '../InfoStyles';
+import { SubHeader } from '../fragments';
 
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{

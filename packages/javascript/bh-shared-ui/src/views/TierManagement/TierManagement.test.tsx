@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../mocks/handlers';
@@ -37,17 +36,12 @@ describe('Tier Management', async () => {
     const user = userEvent.setup();
 
     it('allows switching between the Tiers and Labels tabs', async () => {
-        const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/tier/1', '/tier-management/details/label/2'],
-            initialIndex: 0,
-        });
-
         render(
             <Routes>
-                <Route path='/tier-management/details/tier/:tierId' element={<TierManagement />} />
+                <Route path='/tier-management/details/tier/:tierId/*' element={<TierManagement />} />
                 <Route path='/' element={<TierManagement />} />
             </Routes>,
-            { history }
+            { route: '/tier-management/details/tier/1' }
         );
 
         const labelTab = await screen.findByRole('tab', { name: /Labels/i });
@@ -62,7 +56,7 @@ describe('Tier Management', async () => {
         waitFor(() => {
             expect(tierTab).not.toHaveAttribute('data-state', 'active');
             expect(labelTab).toHaveAttribute('data-state', 'active');
-            expect(history.location).toBe('/tier-management/details/label/2');
+            expect(window.location.pathname).toBe('/tier-management/details/label/2');
         });
 
         // Switch back to Tiers
@@ -71,7 +65,7 @@ describe('Tier Management', async () => {
         waitFor(() => {
             expect(tierTab).toHaveAttribute('data-state', 'active');
             expect(labelTab).not.toHaveAttribute('data-state', 'active');
-            expect(history.location).toBe('/tier-management/details/tier/1');
+            expect(window.location.pathname).toBe('/tier-management/details/tier/1');
         });
     });
 });

@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
@@ -85,6 +84,13 @@ const handlers = [
     rest.get(`/api/v2/search`, (_, res, ctx) => {
         return res(ctx.json(testSearchResults));
     }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: {},
+            })
+        );
+    }),
 ];
 
 const server = setupServer(...handlers);
@@ -104,10 +110,9 @@ describe('Selector Form', () => {
     it('renders the form for creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        const history = createMemoryHistory({ initialEntries: [createNewPath] });
 
         await act(async () => {
-            render(<SelectorForm />, { history });
+            render(<SelectorForm />, { route: createNewPath });
         });
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
@@ -135,10 +140,8 @@ describe('Selector Form', () => {
     it('renders the form for editing an existing selector', async () => {
         // This url has the selector id of 777 in the path
         // and so this selector's data is filled into the form for the user to edit
-        const history = createMemoryHistory({ initialEntries: [editExistingPath] });
-
         await act(async () => {
-            render(<SelectorForm />, { history });
+            render(<SelectorForm />, { route: editExistingPath });
         });
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
@@ -179,10 +182,8 @@ describe('Selector Form', () => {
     });
 
     it('changes the text from "Enabled" to "Disabled" when the Selector Status switch is toggled', async () => {
-        const history = createMemoryHistory({ initialEntries: [editExistingPath] });
-
         await act(async () => {
-            render(<SelectorForm />, { history });
+            render(<SelectorForm />, { route: editExistingPath });
         });
 
         expect(await screen.findByText('Defining Selector')).toBeInTheDocument();
@@ -198,8 +199,6 @@ describe('Selector Form', () => {
     });
 
     it('shows an error message when unable to delete a selector', async () => {
-        const history = createMemoryHistory({ initialEntries: ['/tier-management/save/tier/1/selector/777'] });
-
         console.error = vi.fn();
 
         render(
@@ -207,7 +206,7 @@ describe('Selector Form', () => {
                 <Route path={'/'} element={<SelectorForm />} />
                 <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />
             </Routes>,
-            { history }
+            { route: editExistingPath }
         );
 
         longWait(async () => {
@@ -228,26 +227,17 @@ describe('Selector Form', () => {
     });
 
     test('clicking cancel on the form takes the user back to the details page the user was on previously', async () => {
-        const initialEntries = [detailsPath, editExistingPath];
-        const history = createMemoryHistory({
-            initialEntries: initialEntries,
-        });
-
-        render(<SelectorForm />, { history });
+        render(<SelectorForm />, { route: editExistingPath });
 
         await user.click(screen.getByRole('button', { name: /Cancel/ }));
 
         longWait(() => {
-            expect(history.location.pathname).toBe(detailsPath);
+            expect(window.location.pathname).toBe(detailsPath);
         });
     });
 
     test('a name value is required to submit the form', async () => {
-        const history = createMemoryHistory({
-            initialEntries: [createNewPath],
-        });
-
-        render(<SelectorForm />, { history });
+        render(<SelectorForm />, { route: createNewPath });
 
         await user.click(screen.getByRole('button', { name: /Save/ }));
 
@@ -257,17 +247,18 @@ describe('Selector Form', () => {
     });
 
     test('filling in the name value allows updating the selector and navigates back to the details page', async () => {
-        const history = createMemoryHistory({
-            initialEntries: [detailsPath, editExistingPath],
+        await act(async () => {
+            render(
+                <Routes>
+                    <Route path={'/'} element={<SelectorForm />} />
+                    <Route
+                        path={'/tier-management/save/tier/:tierId/selector/:selectorId'}
+                        element={<SelectorForm />}
+                    />
+                </Routes>,
+                { route: editExistingPath }
+            );
         });
-
-        render(
-            <Routes>
-                <Route path={'/'} element={<SelectorForm />} />;
-                <Route path={'/tier-management/save/tier/:tierId/selector/:selectorId'} element={<SelectorForm />} />;
-            </Routes>,
-            { history }
-        );
 
         const nameInput = await screen.findByLabelText('Name');
 
@@ -282,17 +273,15 @@ describe('Selector Form', () => {
         expect(screen.queryByText('Please provide a name for the selector')).not.toBeInTheDocument();
 
         longWait(() => {
-            expect(history.location.pathname).toBe(detailsPath);
+            expect(window.location.pathname).toBe(detailsPath);
         });
     });
 
     it('handles creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
-        const history = createMemoryHistory({ initialEntries: [createNewPath] });
-
         await act(async () => {
-            render(<SelectorForm />, { history });
+            render(<SelectorForm />, { route: createNewPath });
         });
 
         const nameInput = await screen.findByLabelText('Name');
@@ -323,12 +312,8 @@ describe('Selector Form', () => {
     });
 
     test('the object selector list is prepopluated correctly according to the selector seeds', async () => {
-        const history = createMemoryHistory({
-            initialEntries: [detailsPath, editExistingPath],
-        });
-
         await act(async () => {
-            render(<SelectorForm />, { history });
+            render(<SelectorForm />, { route: editExistingPath });
         });
 
         testObjectIdSelector;
