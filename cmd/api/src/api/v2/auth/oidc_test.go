@@ -347,7 +347,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -388,7 +388,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			}, expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		// {
@@ -474,6 +474,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockOIDC     *oidcmock.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -520,7 +521,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -560,7 +561,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60code%60+parameter+is+missing"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60code%60+parameter+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -603,7 +604,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60state%60+parameter+is+missing"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60state%60+parameter+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -647,7 +648,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid+request%3A+%60pkce%60+is+missing"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+request%3A+%60pkce%60+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -701,7 +702,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid+request%3A+%60state%60+is+missing"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+request%3A+%60state%60+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -764,7 +765,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Invalid%3A+%60state%60+do+not+match"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid%3A+%60state%60+do+not+match"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 		{
@@ -824,10 +825,12 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
+			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}, "Set-Cookie":[]string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 	}
@@ -839,13 +842,14 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockOIDC:     oidcmock.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks, request)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
-
+			resource.OIDC = mocks.mockOIDC
 			response := httptest.NewRecorder()
 
 			resource.OIDCCallbackHandler(response, request, testCase.args)
