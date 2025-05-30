@@ -38,6 +38,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.notifications = draft.notifications.filter((notification) => notification.key !== action.key);
         } else if (action.type === types.GLOBAL_SET_DARK_MODE) {
             draft.darkMode = action.darkMode;
+        } else if (action.type === types.GLOBAL_SET_EXPLORE_LAYOUT) {
+            draft.exploreLayout = action.exploreLayout;
         }
     });
 };
