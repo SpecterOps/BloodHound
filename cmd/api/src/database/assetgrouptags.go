@@ -457,7 +457,7 @@ func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
 	}
 
 	if !max.Valid {
-		// No rows in table: treat max as 0
+		// no rows in table
 		return 0, nil
 	}
 
