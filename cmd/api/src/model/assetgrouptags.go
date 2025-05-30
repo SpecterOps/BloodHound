@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	AssetGroupActorSystem = "SYSTEM"
+	AssetGroupActorSystem      = "SYSTEM"
+	AssetGroupTierZeroPosition = 1
 )
 
 type SelectorType int
