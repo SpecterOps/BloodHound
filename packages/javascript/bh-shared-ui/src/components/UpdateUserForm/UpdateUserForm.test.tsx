@@ -1,5 +1,5 @@
 import userEvent from '@testing-library/user-event';
-import { render, screen, waitFor } from '../../test-utils';
+import { render, screen } from '../../test-utils';
 import { QueryTestWrapper } from '../QueryTestWrapper';
 import UpdateUserForm from './UpdateUserForm';
 
@@ -348,7 +348,7 @@ describe('UpdateUserForm', () => {
     it('should not allow the input to exceed the allowed length', async () => {
         const mockState = [
             {
-                key: ['getUser'],
+                key: ['getUser', DEFAULT_PROPS.userId],
                 data: MOCK_USER,
             },
             {
@@ -366,23 +366,83 @@ describe('UpdateUserForm', () => {
 
         const userInput = userEvent.type;
         const user = userEvent.setup();
-
-        let button: HTMLElement;
-
-        await waitFor(() => {
-            button = screen.getByText('Save');
-            expect(button).toBeInTheDocument();
-        });
+        const button = screen.getByRole('button', { name: 'Save' });
 
         await userInput(screen.getByLabelText(/email/i), 'a'.repeat(320) + '@domain.com');
         await userInput(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
         await userInput(screen.getByLabelText(/first/i), 'a'.repeat(1001));
         await userInput(screen.getByLabelText(/last/i), 'a'.repeat(1001));
-        await user.click(button!);
+        await user.click(button);
 
         expect(await screen.findByText('Email address must be less than 319 characters'));
         expect(await screen.findByText('Principal Name must be less than 1000 characters'));
         expect(await screen.findByText('First Name must be less than 1000 characters'));
         expect(await screen.findByText('Last Name must be less than 1000 characters'));
+    });
+
+    it('should not have less characters than the minimum requirement', async () => {
+        const mockState = [
+            {
+                key: ['getUser', DEFAULT_PROPS.userId],
+                data: MOCK_USER,
+            },
+            {
+                key: ['getRoles'],
+                data: MOCK_ROLES,
+            },
+            { key: ['listSSOProviders'], data: null },
+        ];
+
+        render(
+            <QueryTestWrapper stateMap={mockState}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </QueryTestWrapper>
+        );
+
+        const userInput = userEvent.type;
+        const user = userEvent.setup();
+        const button = screen.getByRole('button', { name: 'Save' });
+
+        await userInput(screen.getByLabelText(/principal/i), 'a');
+        await userInput(screen.getByLabelText(/first/i), 'a');
+        await userInput(screen.getByLabelText(/last/i), 'a');
+        await user.click(button);
+
+        expect(await screen.findByText('Principal Name must be 2 characters or more'));
+        expect(await screen.findByText('First Name must be 2 characters or more'));
+        expect(await screen.findByText('Last Name must be 2 characters or more'));
+    });
+
+    it('should not allow leading or trailing empty spaces', async () => {
+        const mockState = [
+            {
+                key: ['getUser', DEFAULT_PROPS.userId],
+                data: MOCK_USER,
+            },
+            {
+                key: ['getRoles'],
+                data: MOCK_ROLES,
+            },
+            { key: ['listSSOProviders'], data: null },
+        ];
+
+        render(
+            <QueryTestWrapper stateMap={mockState}>
+                <UpdateUserForm {...DEFAULT_PROPS} />
+            </QueryTestWrapper>
+        );
+
+        const userInput = userEvent.type;
+        const user = userEvent.setup();
+        const button = screen.getByRole('button', { name: 'Save' });
+
+        await userInput(screen.getByLabelText(/principal/i), ' dd');
+        await userInput(screen.getByLabelText(/first/i), ' bsg!');
+        await userInput(screen.getByLabelText(/last/i), 'asdfw ');
+        await user.click(button);
+
+        expect(await screen.findByText('Principal Name does not allow leading or trailing spaces'));
+        expect(await screen.findByText('First Name does not allow leading or trailing spaces'));
+        expect(await screen.findByText('Last Name does not allow leading or trailing spaces'));
     });
 });
