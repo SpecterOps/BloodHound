@@ -21,7 +21,7 @@ import { useParams } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NodeIcon, SortableHeader } from '../../../components';
-import { usePreviousValue } from '../../../hooks';
+import { useDebouncedValue, usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
 import { ItemSkeleton, SelectedHighlight, getListHeight } from './utils';
@@ -135,7 +135,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
     const [items, setItems] = useState<Record<number, AssetGroupTagMemberListItem>>({});
 
     const infiniteLoaderRef = useRef<InfiniteLoader | null>(null);
-    const heightRef = useRef(getListHeight(window.innerHeight));
+    const [height, setHeight] = useState(getListHeight(window.innerHeight));
 
     const previousSelector = usePreviousValue<string | undefined>(selectorId);
     const previousTag = usePreviousValue<string | undefined>(tagId);
@@ -148,15 +148,13 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
 
     const itemData = { onClick, selected, items, title: 'Members' };
 
-    useEffect(() => {
-        const updateListHeight = () => {
-            heightRef.current = getListHeight(window.innerHeight);
-        };
+    const updateListHeight = useDebouncedValue(() => setHeight(getListHeight(window.innerHeight)), 100);
 
+    useEffect(() => {
         window.addEventListener('resize', updateListHeight);
 
         return () => window.removeEventListener('resize', updateListHeight);
-    }, []);
+    }, [updateListHeight]);
 
     const isItemLoaded = useCallback(
         (index: number) => {
@@ -231,7 +229,7 @@ export const MembersList: React.FC<MembersListProps> = ({ selected, onClick, ite
                 loadMoreItems={loadMoreItems}>
                 {({ onItemsRendered, ref }) => (
                     <FixedSizeList
-                        height={heightRef.current}
+                        height={height}
                         itemCount={itemCount}
                         itemData={itemData}
                         itemSize={ITEM_SIZE}

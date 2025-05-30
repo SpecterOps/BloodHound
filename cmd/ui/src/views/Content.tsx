@@ -72,6 +72,21 @@ const Content: React.FC = () => {
                         </Box>
                     }>
                     <Routes>
+                        {mapTierRoutes && (
+                            <Route
+                                path={TIER_MANAGEMENT_ROUTE.path}
+                                element={
+                                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
+                                    <AuthenticatedRoute>
+                                        <div
+                                            className={`h-full ${TIER_MANAGEMENT_ROUTE.navigation && 'pl-nav-width'} `}>
+                                            <TIER_MANAGEMENT_ROUTE.component />
+                                        </div>
+                                    </AuthenticatedRoute>
+                                }
+                                key={TIER_MANAGEMENT_ROUTE.path}
+                            />
+                        )}
                         {ROUTES.map((route) => {
                             return route.authenticationRequired ? (
                                 <Route
@@ -90,21 +105,6 @@ const Content: React.FC = () => {
                                 <Route path={route.path} element={<route.component />} key={route.path} />
                             );
                         })}
-                        {mapTierRoutes && (
-                            <Route
-                                path={TIER_MANAGEMENT_ROUTE.path}
-                                element={
-                                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
-                                    <AuthenticatedRoute>
-                                        <div
-                                            className={`h-full ${TIER_MANAGEMENT_ROUTE.navigation && 'pl-nav-width'} `}>
-                                            <TIER_MANAGEMENT_ROUTE.component />
-                                        </div>
-                                    </AuthenticatedRoute>
-                                }
-                                key={TIER_MANAGEMENT_ROUTE.path}
-                            />
-                        )}
                     </Routes>
                 </Suspense>
             </ErrorBoundary>
