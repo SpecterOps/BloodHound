@@ -1,5 +1,5 @@
 import { AssetGroupTagsListItem } from 'js-client-library';
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import DownArrow from '../../../components/AppIcon/Icons/DownArrow';
 import { cn } from '../../../utils';
@@ -33,7 +33,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                             })
                             .map((listItem) => {
                                 return (
-                                    <>
+                                    <React.Fragment key={listItem.id}>
                                         <li
                                             key={listItem.id}
                                             onClick={() => {
@@ -52,11 +52,11 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                             />
                                         </li>
                                         {listItem.type === 1 ? (
-                                            <div className='flex justify-center mt-2 last:hidden'>
+                                            <div key={listItem.id} className='flex justify-center mt-2 last:hidden'>
                                                 <DownArrow className='w-8 h-6' />
                                             </div>
                                         ) : null}
-                                    </>
+                                    </React.Fragment>
                                 );
                             })
                     ) : null}
