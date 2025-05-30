@@ -1799,7 +1799,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/issuancepolicies/id",
+						Path:     "/api/v2/issuancepolicies/id",
 						RawQuery: "counts=`",
 					},
 					Method: http.MethodGet,
@@ -1818,7 +1818,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/issuancepolicies/id",
+						Path:     "/api/v2/issuancepolicies/id",
 						RawQuery: "counts=true",
 					},
 					Method: http.MethodGet,
@@ -1839,7 +1839,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/issuancepolicies/id",
+						Path:     "/api/v2/issuancepolicies/id",
 						RawQuery: "counts=true",
 					},
 					Method: http.MethodGet,
@@ -1860,7 +1860,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/issuancepolicies/id",
+						Path:     "/api/v2/issuancepolicies/id",
 						RawQuery: "counts=true",
 					},
 					Method: http.MethodGet,
@@ -1882,7 +1882,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/issuancepolicies/id",
+						Path:     "/api/v2/issuancepolicies/id",
 						RawQuery: "counts=false",
 					},
 					Method: http.MethodGet,
@@ -1891,7 +1891,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"props":null}}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
