@@ -59,7 +59,11 @@ func Run(env environment.Environment) error {
 		scanPath := shouldProcessPath(ignorePaths, wrkPaths.Root, path)
 		if info.IsDir() && (slices.Contains(ignoreDir, info.Name()) || !scanPath) {
 			return filepath.SkipDir
-		} else {
+		}
+
+		// ignore files that are in the ignore list
+		ext := filepath.Ext(path)
+		if !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
 			paths = append(paths, path)
 		}
 		return nil
@@ -80,36 +84,30 @@ func Run(env environment.Environment) error {
 	sem := make(chan struct{}, maxWorkers)
 
 	for _, path := range paths {
-		// series of validations before processing all the paths against directories, disallowed extensions and paths
-		ext := parseFileExtension(path)
+		wg.Add(1)
 
-		// // check if the path is a directory ends with an extension eg. packages/cue/cue.mod
-		isDir := dirCheck(path)
+		ext := filepath.Ext(path)
+		go func(filePath, fileExt string) {
+			defer wg.Done()
+			sem <- struct{}{}        // acquire semaphore
+			defer func() { <-sem }() // release semaphore
 
-		if !slices.Contains(disallowedExtensions, ext) && !isDir && len(ext) != 0 {
-			wg.Add(1)
-			go func(filePath, fileExt string) {
-				defer wg.Done()
-				sem <- struct{}{}        // acquire semaphore
-				defer func() { <-sem }() // release semaphore
+			result, err := isHeaderPresent(filePath)
+			if err != nil {
+				errsMu.Lock()
+				errs = append(errs, err)
+				errsMu.Unlock()
+				return
+			}
 
-				result, err := isHeaderPresent(filePath)
-				if err != nil {
+			if !result {
+				if err := processFile(filePath, fileExt); err != nil {
 					errsMu.Lock()
 					errs = append(errs, err)
 					errsMu.Unlock()
-					return
 				}
-
-				if !result {
-					if err := processFile(filePath, fileExt); err != nil {
-						errsMu.Lock()
-						errs = append(errs, err)
-						errsMu.Unlock()
-					}
-				}
-			}(path, ext)
-		}
+			}
+		}(path, ext)
 	}
 
 	// block main untill all the goroutines in done state

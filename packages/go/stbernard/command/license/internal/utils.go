@@ -18,15 +18,10 @@ package license
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
-
-func parseFileExtension(path string) string {
-	return filepath.Ext(path)
-}
 
 func generateLicenseHeader(commentPrefix string) []string {
 	if commentPrefix == "" {
