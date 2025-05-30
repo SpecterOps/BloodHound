@@ -252,7 +252,7 @@ func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
 		})
 }
 
-func TestResources_ProcessFileUpload(t *testing.T) {
+func TestResources_ProcessIngestTask(t *testing.T) {
 	type mock struct {
 		mockDatabase *dbmocks.MockDatabase
 	}
