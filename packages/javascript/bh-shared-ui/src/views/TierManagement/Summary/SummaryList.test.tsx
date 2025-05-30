@@ -100,8 +100,8 @@ describe('SummaryList', () => {
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
         const cards = await screen.findAllByTestId('tier-management_summary-list_card');
-        expect(cards[0]).toHaveTextContent('Zulu');
-        expect(cards[1]).toHaveTextContent('Alpha');
+        expect(cards[0]).toHaveTextContent('Mock Tier 1');
+        expect(cards[1]).toHaveTextContent('Mock Tier 2');
     });
 
     it('renders a down arrow only for items of type 1', async () => {
