@@ -259,7 +259,7 @@ const Users: FC = () => {
                     deleteUserMutation.mutate(selectedUserId!);
                     toggleDeleteUserDialog();
                 }}
-                onCancel={toggleCreateUserDialog}
+                onCancel={toggleDeleteUserDialog}
             />
             <ConfirmationDialog
                 open={expireUserPasswordDialogOpen}
