@@ -110,11 +110,6 @@ const Details: FC = () => {
         navigate(`/tier-management${route}`);
     };
 
-    const handleCreateSelector = () => {
-        const tagType = labelId ? 'label' : 'tier';
-        navigate(`/tier-management/save/${tagType}/${tagId}/selector`);
-    };
-
     return (
         <div>
             <div className='flex mt-6 gap-8'>
@@ -129,7 +124,9 @@ const Details: FC = () => {
                             <Button
                                 variant='secondary'
                                 disabled={!tagId}
-                                onClick={handleCreateSelector}>
+                                onClick={() => {
+                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
+                                }}>
                                 Create Selector
                             </Button>
                             <div className='hidden'>
