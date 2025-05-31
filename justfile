@@ -60,8 +60,8 @@ _prep-steps:
   @just analyze > tmp/analysis-report.txt
 
 # check license is applied to source files
-check-license:
-  python3 license_check.py
+check-license *ARGS:
+  @just stbernard license {{ARGS}}
 
 # run go commands in the context of the api project
 go *ARGS:
