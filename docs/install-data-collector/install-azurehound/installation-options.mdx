@@ -106,7 +106,7 @@ Instead of installing AzureHound as a service, it is also possible to run AzureH
 
 ### Run AzureHound Enterprise on Docker
 
-1.  Use the attached sample file: [docker-compose.yaml](/assets/docker-compose.yaml) 397 Bytes
+1.  Use the attached sample file: [docker-compose.yaml](https://github.com/SpecterOps/BloodHound/blob/main/docs/assets/docker-compose.yaml) 397 Bytes
 2.  Integrate the appropriate structure into your existing configuration or utilize it as a new configuration in Docker, moving the associated config.json, cert.pem, and key.pem files to the appropriate location, and updating config.json according to your assigned values.
 3.  In your docker directory, run:
 ```
@@ -140,7 +140,7 @@ Instead of installing AzureHound as a service, it is also possible to run AzureH
 ```
     kubectl create secret generic azurehound-secret --from-literal tokenId=&lt;bloodhound enterprise token id&gt; --from-literal token=&lt;bloodhound enterprise token&gt; --from-literal keypass=&lt;private key passphrase&gt;
 ```
-3.  A sample deployment.yaml file is attached to this article ([here](/assets/deployment.yaml)).
+3.  A sample deployment.yaml file is attached to this article ([here](https://github.com/SpecterOps/BloodHound/blob/main/docs/assets/deployment.yaml)).
 4.  Edit the provided deployment.yaml file. Read comments and replace instances of \[ INSERT HERE \] with appropriate values
 5.  Deploy AzureHound on k8s:
 ```
@@ -156,6 +156,6 @@ Instead of installing AzureHound as a service, it is also possible to run AzureH
 
 2.  Review the container logs and BloodHound Enterprise user interface to verify that AzureHound has successfully connected.
 
-* [docker-compose.yaml](/assets/docker-compose.yaml) 397 Bytes
-* [deployment.yaml](/assets/deployment.yaml) 2 KB
+* [docker-compose.yaml](https://github.com/SpecterOps/BloodHound/blob/main/docs/assets/docker-compose.yaml) 397 Bytes
+* [deployment.yaml](https://github.com/SpecterOps/BloodHound/blob/main/docs/assets/deployment.yaml) 2 KB
 
