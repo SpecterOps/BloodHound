@@ -19,8 +19,12 @@ import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-clien
 import { FC } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../../components';
-import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
+import { AppIcon } from '../../../components';
+import {
+    ROUTE_TIER_MANAGEMENT_CREATE_LABEL,
+    ROUTE_TIER_MANAGEMENT_CREATE_TIER,
+    ROUTE_TIER_MANAGEMENT_DETAILS,
+} from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
@@ -78,6 +82,7 @@ const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
+    const value = labelId ? 'Label' : 'Tier';
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
@@ -100,26 +105,30 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
+    const handleCreateTierOrLabel = () => {
+        const route = labelId ? ROUTE_TIER_MANAGEMENT_CREATE_LABEL : ROUTE_TIER_MANAGEMENT_CREATE_TIER;
+        navigate(`/tier-management${route}`);
+    };
+
     return (
         <div>
             <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
-                        <div className='flex items-center align-middle'>
-                            <CreateMenu
-                                createMenuTitle='Create Selector'
+                        <div className='flex items-center align-middle gap-4'>
+                            <Button
                                 disabled={!tagId}
-                                menuItems={[
-                                    {
-                                        title: 'Create Selector',
-                                        onClick: () => {
-                                            navigate(
-                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
-                                            );
-                                        },
-                                    },
-                                ]}
-                            />
+                                onClick={handleCreateTierOrLabel}>
+                                Create {value}
+                            </Button>
+                            <Button
+                                variant='secondary'
+                                disabled={!tagId}
+                                onClick={() => {
+                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
+                                }}>
+                                Create Selector
+                            </Button>
                             <div className='hidden'>
                                 <div>
                                     <AppIcon.Info className='mr-4 ml-2' size={24} />
