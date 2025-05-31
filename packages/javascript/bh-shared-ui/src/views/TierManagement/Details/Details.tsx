@@ -82,7 +82,7 @@ const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const value = getTagUrlValue(labelId) === 'label' ? 'Label' : 'Tier';
+    const value = labelId ? 'Label' : 'Tier';
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
@@ -105,6 +105,16 @@ const Details: FC = () => {
 
     const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
+    const handleCreateTierOrLabel = () => {
+        const route = labelId ? ROUTE_TIER_MANAGEMENT_CREATE_LABEL : ROUTE_TIER_MANAGEMENT_CREATE_TIER;
+        navigate(`/tier-management${route}`);
+    };
+
+    const handleCreateSelector = () => {
+        const tagType = labelId ? 'label' : 'tier';
+        navigate(`/tier-management/save/${tagType}/${tagId}/selector`);
+    };
+
     return (
         <div>
             <div className='flex mt-6 gap-8'>
@@ -112,20 +122,14 @@ const Details: FC = () => {
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
                         <div className='flex items-center align-middle gap-4'>
                             <Button
-                                onClick={() => {
-                                    if (getTagUrlValue(labelId) === 'label') {
-                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_LABEL}`);
-                                    } else if (getTagUrlValue(labelId) === 'tier') {
-                                        navigate(`/tier-management${ROUTE_TIER_MANAGEMENT_CREATE_TIER}`);
-                                    }
-                                }}>
+                                disabled={!tagId}
+                                onClick={handleCreateTierOrLabel}>
                                 Create {value}
                             </Button>
                             <Button
                                 variant='secondary'
-                                onClick={() => {
-                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
-                                }}>
+                                disabled={!tagId}
+                                onClick={handleCreateSelector}>
                                 Create Selector
                             </Button>
                             <div className='hidden'>
