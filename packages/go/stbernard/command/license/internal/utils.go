@@ -1,4 +1,4 @@
-// Copyright Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -36,35 +35,28 @@ func generateLicenseHeader(commentPrefix string) string {
 		year            = strconv.Itoa(time.Now().Year())
 	)
 
-	// There may be a valid reason to want the licenseHeader without a prefix, so we give back the header
-	if commentPrefix == "" {
-		return licenseHeader
-	}
-
-	// XML style comments require special rules, this first check handles creating the top of the comment
+	// XML and CSS style comments require special rules, this first check handles creating the top of the comment
 	if commentPrefix == "<!--" {
 		formattedHeader.WriteString("<!--\n")
+	} else if commentPrefix == "/*" {
+		formattedHeader.WriteString("/*\n")
 	}
 
 	for _, line := range strings.Split(licenseHeader, "\n") {
 		// We grab the copyright line and edit the year into it inline for efficiency
 		if strings.HasPrefix(line, "Copyright") {
-			explodedLine := strings.Split(line, " ")
-			idx := slices.Index(explodedLine, "XXXX")
-			explodedLine[idx] = year
-
-			line = strings.Join(explodedLine, " ")
+			line = strings.ReplaceAll(line, "XXXX", year)
 		}
 
-		// XML style comments should be indented, but not use the prefix
-		if commentPrefix == "<!--" {
+		// XML and CSS style comments should be indented, but not use the prefix
+		if commentPrefix == "<!--" || commentPrefix == "/*" {
 			formattedHeader.WriteString("    ")
 			formattedHeader.WriteString(line)
 			formattedHeader.WriteRune('\n')
 		} else {
 			formattedHeader.WriteString(commentPrefix)
-			// only add a space after the comment prefix if the line is non-empty
-			if len(line) > 0 {
+			// only add a space after the comment prefix if the line is non-empty and there's a non-empty prefix
+			if len(line) > 0 && len(commentPrefix) > 0 {
 				formattedHeader.WriteString(" ")
 			}
 			formattedHeader.WriteString(line)
@@ -75,6 +67,8 @@ func generateLicenseHeader(commentPrefix string) string {
 	// XML style comments must be properly ended on a new line
 	if commentPrefix == "<!--" {
 		formattedHeader.WriteString("-->\n")
+	} else if commentPrefix == "/*" {
+		formattedHeader.WriteString("*/\n")
 	}
 
 	return formattedHeader.String()
@@ -172,7 +166,7 @@ func writeFile(path string, formattedHeaderContent string) error {
 			}
 			linesBuffered = 0
 		} else {
-			linesBuffered += 1
+			linesBuffered++
 		}
 	}
 	// Handle any additional scanner errors
