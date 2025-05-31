@@ -37,9 +37,7 @@ func isHeaderPresent(path string) (bool, error) {
 	r := bufio.NewReader(file)
 
 	for range linesToRead {
-		if line, err := r.ReadString('\n'); errors.Is(err, io.EOF) {
-			return false, nil
-		} else if err != nil {
+		if line, err := r.ReadString('\n'); !errors.Is(err, io.EOF) && err != nil {
 			return false, fmt.Errorf("could not read line: %w", err)
 		} else if strings.Contains(line, "SPDX-License-Identifier: Apache-2.0") {
 			return true, nil

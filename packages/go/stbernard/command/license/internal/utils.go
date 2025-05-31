@@ -75,15 +75,8 @@ func generateLicenseHeader(commentPrefix string) string {
 }
 
 func writeFile(path string, formattedHeaderContent string) error {
-	// Get original file info to preserve permissions
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("could not stat file to write %s: %w", path, err)
-	}
-	originalPerm := fileInfo.Mode().Perm()
-
-	// Open file at path in read/write mode with original permissions
-	file, err := os.OpenFile(path, os.O_RDWR, originalPerm)
+	// Open file at path in read/write mode
+	file, err := os.OpenFile(path, os.O_RDWR, 0)
 	if err != nil {
 		return fmt.Errorf("could not open file %s: %w", path, err)
 	}
@@ -110,33 +103,28 @@ func writeFile(path string, formattedHeaderContent string) error {
 	tmpFileWriter := bufio.NewWriter(tmpFile)
 
 	// Get the first line
-	firstLine, err := fileReader.ReadString('\n')
 	// If there's only one line and it has a valid XML document start in it, we'll bail because we don't support that case
-	if errors.Is(err, io.EOF) && strings.Contains(firstLine, "<?xml") {
+	if firstLine, err := fileReader.ReadString('\n'); errors.Is(err, io.EOF) && strings.Contains(firstLine, "<?xml") {
 		return fmt.Errorf("file is single line and has xml, cannot write license for %s", path)
-	}
-	// If there's only one line, but we've already confirmed it's not a valid XML document, write the header and then the first line
-	if errors.Is(err, io.EOF) {
+	} else if errors.Is(err, io.EOF) {
+		// If there's only one line, but we've already confirmed it's not a valid XML document, write the header and then the first line
 		if _, err := tmpFileWriter.WriteString(formattedHeaderContent); err != nil {
 			return fmt.Errorf("could not write formatted header to temp file for path %s: %w", path, err)
 		} else if _, err := tmpFileWriter.WriteString(firstLine); err != nil {
 			return fmt.Errorf("could not write first line to temp file for path %s: %w", path, err)
 		}
-	}
-	// If there's an unknown error, bail
-	if err != nil {
+	} else if err != nil {
+		// If there's an unknown error, bail
 		return fmt.Errorf("could not read first line of file %s: %w", path, err)
-	}
-
-	// If we have the start of a valid XML document
-	if strings.Contains(firstLine, "<?xml") {
+	} else if strings.Contains(firstLine, "<?xml") {
+		// If we have the start of a valid XML document
 		// And if we can see the end of the valid XML starting tag in the same line
 		if strings.Contains(firstLine, "?>") {
 			// Then write the first line (the XML document tag) before writing the header
 			if _, err := tmpFileWriter.WriteString(firstLine); err != nil {
-				return fmt.Errorf("could not write formatted header to temp file for path %s: %w", path, err)
-			} else if _, err := tmpFileWriter.WriteString(formattedHeaderContent); err != nil {
 				return fmt.Errorf("could not write first line to temp file for path %s: %w", path, err)
+			} else if _, err := tmpFileWriter.WriteString(formattedHeaderContent); err != nil {
+				return fmt.Errorf("could not write formatted header to temp file for path %s: %w", path, err)
 			}
 		} else {
 			// Otherwise, bail out because we may end up writing inside of a multi-line tag
