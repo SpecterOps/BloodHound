@@ -74,7 +74,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"JSON malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -109,7 +109,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -147,7 +147,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusForbidden,
 				responseBody:   `{"errors":[{"context":"","message":"Permission denied: User may not modify the graph."}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -185,7 +185,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"Neo4jError:  ()"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -223,7 +223,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -272,7 +272,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"nodes":{"1":{"label":"label","kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}

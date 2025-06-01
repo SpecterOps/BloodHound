@@ -1,3 +1,19 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package v2_test
 
 import (
@@ -44,11 +60,13 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFS.EXPECT().ReadFile("InvalidCollectorType").Return([]byte{}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"\""}, "Content-Type":[]string{"application/octet-stream"}},
 			},
 		},
 		{
@@ -191,11 +209,12 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {},
-			expected: expected{
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockFS.EXPECT().ReadFile("InvalidCollectorType").Return([]byte{}, nil)
+			}, expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"\""}, "Content-Type":[]string{"application/octet-stream"}},
 			},
 		},
 		{
@@ -249,7 +268,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"sharphound-v1.0.0.zip.sha256\""}, "Content-Type":[]string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"sharphound-v1.0.0.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}},
 			},
 		},
 		{
@@ -267,7 +286,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"azurehound-latest.zip.sha256\""}, "Content-Type":[]string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-latest.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}},
 			},
 		},
 	}

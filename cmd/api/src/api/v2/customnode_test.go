@@ -62,7 +62,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			name: "Error: invalid icon type",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode",
 					},
 					Method: http.MethodPost,
@@ -94,14 +94,14 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid hex color string",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode",
 					},
 					Method: http.MethodPost,
@@ -133,14 +133,14 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: created custom node kinds",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode",
 					},
 					Method: http.MethodPost,
@@ -205,7 +205,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusCreated,
 				responseBody:   `{"data":[{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -264,7 +264,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			name: "Error: invalid icon type",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode/kind",
 					},
 					Method: http.MethodPut,
@@ -298,14 +298,14 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid hex color string",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode/kind",
 					},
 					Method: http.MethodPut,
@@ -339,14 +339,14 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: created custom node kinds",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{
+					URL: &url.URL{
 						Path: "/api/v2/customnode/kind",
 					},
 					Method: http.MethodPut,
@@ -393,7 +393,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}

@@ -81,7 +81,6 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
-		return
 	} else if releaseTag == "latest" {
 		if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
@@ -113,8 +112,7 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
-		return
-		} else if releaseTag == "latest" {
+	} else if releaseTag == "latest" {
 		if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
 			slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
