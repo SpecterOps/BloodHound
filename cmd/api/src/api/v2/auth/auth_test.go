@@ -2240,7 +2240,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/self",
 					},
-					Method: "GET",
+					Method: http.MethodGet,
 				}
 
 				userID := uuid.FromStringOrNil("id")
@@ -2280,7 +2280,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 					URL: &url.URL{
 						Path: "/api/v2/self",
 					},
-					Method: "GET",
+					Method: http.MethodGet,
 				}
 
 				userContext := context.WithValue(context.Background(), ctx.ValueKey, &ctx.Context{})
