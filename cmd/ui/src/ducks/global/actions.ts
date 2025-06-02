@@ -58,7 +58,7 @@ export const setDarkMode = (darkMode: boolean): types.GlobalViewActionTypes => {
     };
 };
 
-export const setExploreLayout = (exploreLayout: types.ExploreLayoutOptionsBHE): types.GlobalViewActionTypes => {
+export const setExploreLayout = (exploreLayout: types.ExploreLayoutOptions): types.GlobalViewActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPLORE_LAYOUT,
         exploreLayout,

@@ -44,12 +44,11 @@ export {
 };
 
 export type ExploreLayoutOptions = 'standard' | 'sequential';
-export type ExploreLayoutOptionsBHE = ExploreLayoutOptions | 'organic' | 'structural' | 'radial' | 'lens' | 'tweak';
 
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
-    exploreLayout?: ExploreLayoutOptionsBHE;
+    exploreLayout?: ExploreLayoutOptions;
 }
 
 export interface GlobalOptionsState {
@@ -84,7 +83,7 @@ export interface SetDarkModeAction {
 }
 export interface SetExploreLayoutAction {
     type: typeof GLOBAL_SET_EXPLORE_LAYOUT;
-    exploreLayout: ExploreLayoutOptionsBHE;
+    exploreLayout: ExploreLayoutOptions;
 }
 
 export type GlobalViewActionTypes =
