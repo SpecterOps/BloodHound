@@ -82,7 +82,6 @@ const Details: FC = () => {
     const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const value = labelId ? 'Label' : 'Tier';
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
@@ -119,7 +118,7 @@ const Details: FC = () => {
                             <Button
                                 disabled={!tagId}
                                 onClick={handleCreateTierOrLabel}>
-                                Create {value}
+                                {`Create ${labelId ? 'Label' : 'Tier'}`}
                             </Button>
                             <Button
                                 variant='secondary'
