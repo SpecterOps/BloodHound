@@ -1299,7 +1299,7 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 		name         string
 		args         model.SSOProvider
 		buildRequest func(testName string) *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 	tt := []testData{
@@ -1309,15 +1309,18 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 				SAMLProvider: nil,
 			},
 			buildRequest: func(string) *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type: model.SessionAuthProviderSAML,
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -1330,16 +1333,20 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 				SAMLProvider: &model.SAMLProvider{},
 			},
 			buildRequest: func(string) *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
+					Header: http.Header{},
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
-			expected: expected{
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+			}, expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
@@ -1353,8 +1360,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(name string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1371,7 +1379,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -1386,10 +1399,13 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
+
+				request.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", "bound"))
 
 				// Create in-memory multipart body
 				var body bytes.Buffer
@@ -1412,7 +1428,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -1427,8 +1448,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1467,7 +1489,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -1482,8 +1509,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1531,7 +1559,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
@@ -1546,8 +1579,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1608,8 +1642,12 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{}, nil)
 
 			},
 			expected: expected{
@@ -1626,8 +1664,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1684,9 +1723,13 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
-				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).Return(model.SAMLProvider{}, database.ErrDuplicateSSOProviderName)
 			},
 			expected: expected{
 				responseCode:   http.StatusConflict,
@@ -1702,8 +1745,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1760,9 +1804,13 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
-				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{}, errors.New("error"))
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).Return(model.SAMLProvider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1785,8 +1833,9 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			buildRequest: func(testName string) *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso-providers/1",
 					},
+					Method: http.MethodPatch,
 					Header: http.Header{},
 				}
 
@@ -1843,9 +1892,13 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 
 				return request
 			},
-			setupMocks: func(t *testing.T, mock *mock, req *http.Request) {
-				mock.mockDatabase.EXPECT().GetRole(req.Context(), int32(1)).Return(model.Role{}, nil)
-				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(req.Context(), gomock.Any()).Return(model.SAMLProvider{
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(model.SSOProvider{
+					Type:         model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(1)).Return(model.Role{}, nil)
+				mock.mockDatabase.EXPECT().UpdateSAMLIdentityProvider(gomock.Any(), gomock.Any()).Return(model.SAMLProvider{
 					Name:            "name",
 					DisplayName:     "display",
 					IssuerURI:       "uri",
@@ -1872,13 +1925,15 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 			}
 
 			request := testCase.buildRequest(t.Name())
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 
 			response := httptest.NewRecorder()
 
-			resource.UpdateSAMLProviderRequest(response, request, testCase.args)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), resource.UpdateSSOProvider).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
