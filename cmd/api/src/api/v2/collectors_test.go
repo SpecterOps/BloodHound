@@ -258,17 +258,17 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/collectors/sharphound/v1.0.0/checksum",
+						Path: "/api/v2/collectors/azurehound/v1.0.0/checksum",
 					},
 					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("sharphound/sharphound-v1.0.0.zip.sha256").Return([]byte{}, nil)
+				mock.mockFS.EXPECT().ReadFile("azurehound/azurehound-v1.0.0.zip.sha256").Return([]byte{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"sharphound-v1.0.0.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"azurehound-v1.0.0.zip.sha256\""}, "Content-Type": []string{"application/octet-stream"}},
 			},
 		},
 		{

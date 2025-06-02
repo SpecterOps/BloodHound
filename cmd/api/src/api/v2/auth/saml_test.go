@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
-	"database/sql"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -86,7 +85,7 @@ func TestManagementResource_SAMLLoginRedirect(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -182,7 +181,7 @@ func TestManagementResource_SAMLCallbackRedirect(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -279,7 +278,7 @@ func TestManagementResource_ListSAMLSignOnEndpoints(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetAllSAMLProviders(gomock.Any()).Return(model.SAMLProviders{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetAllSAMLProviders(gomock.Any()).Return(model.SAMLProviders{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -403,7 +402,7 @@ func TestManagementResource_ListSAMLProviders(t *testing.T) {
 		{
 			name: "Error: Database error db.GetAllSAMLProviders - Internal Server Error",
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetAllSAMLProviders(gomock.Any()).Return(model.SAMLProviders{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetAllSAMLProviders(gomock.Any()).Return(model.SAMLProviders{}, errors.New("error"))
 			},
 			buildRequest: func() *http.Request {
 				return &http.Request{
@@ -673,7 +672,7 @@ func TestManagementResource_GetSAMLProvider(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetSAMLProvider(gomock.Any(), int32(1)).Return(model.SAMLProvider{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetSAMLProvider(gomock.Any(), int32(1)).Return(model.SAMLProvider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1975,7 +1974,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider").Return(model.SSOProvider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,

@@ -549,7 +549,7 @@ func TestManagementResource_GetPermission(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetPermission(gomock.Any(), 123).Return(model.Permission{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetPermission(gomock.Any(), 123).Return(model.Permission{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -888,7 +888,7 @@ func TestManagementResource_GetRole(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(123)).Return(model.Role{}, sql.ErrNoRows)
+				mock.mockDatabase.EXPECT().GetRole(gomock.Any(), int32(123)).Return(model.Role{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
