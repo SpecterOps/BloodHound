@@ -22,14 +22,15 @@ import (
 
 //go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/saml.go -package=mocks . Service
 
-// Serves as a lightweight wrapper around the SAML package
+// Service serves as a lightweight wrapper around the SAML package.
 type Service interface {
 	MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error)
 }
 
 type Client struct{}
 
-// MakeAuthenticationRequest allows for the auth request to be abstracted.
-func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error){
+// MakeRedirectAuthenticationRequest abstracts creating an SAML authentication request using
+// the HTTP-Redirect binding. It returns a URL that we will redirect the user to in order to start the auth process.
+func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error) {
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)
 }

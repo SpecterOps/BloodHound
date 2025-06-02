@@ -19,21 +19,16 @@ package auth_test
 import (
 	"bytes"
 	"context"
-	"regexp"
-
-	// "crypto/rsa"
-	// "crypto/x509"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-
-	// "regexp"
-
+	"regexp"
 	"testing"
 
+	"github.com/crewjam/saml"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/auth"
@@ -1951,7 +1946,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
-		mockTLS      *samlmocks.MockService
+		mockSAML      *samlmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2088,7 +2083,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
-				mockTLS:      samlmocks.NewMockService(ctrl),
+				mockSAML:      samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -2277,7 +2272,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
-		mockTLS      *samlmocks.MockService
+		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2349,6 +2344,106 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
+		{
+			name: "Error: SAML.MakeAuthenticationRequest, redirect error - Found",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/login",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Slug: "test-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name: "name",
+						MetadataXML: []byte(validMetadataXML),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+			},
+		},
+		{
+			name: "Error: saml.HTTPRedirectBinding, redirect error - Found",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/login",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Slug: "test-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name: "name",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://okta.com/saml">
+		<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+			<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://okta.com/sso"/>
+		</IDPSSODescriptor>
+	</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location":[]string{"?SAMLRequest=fMuxqsJAEIXhVwnT3%2BtoORghYBPQRsXCbgkDBpKZdc8s%2BPiSVFbCXxw4fHukecrS1XjaRV9VEc17ngyyHC3VYuIJI8TSrJAY5NqdT7L7Z0mAlhjd6Ivk3yYXDx98oqY%2FtkTNXQtGt2X2QNXeEMmiJWbe%2Fq3dmGXtQZvDJwAA%2F%2F8%3D&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=y1tzz0uKcHIGTzUzyfo6wkJKJ7%2FLhD7vH6mmCV7W0eKlL58z6w3M%2BWCoGaBtXldzx4tSTB2RWEqCpYTw9gM%2BjoA9dBPLlzBxN0Sz97XxzgA9chdd4gTXyjcMHntNmsRqkrzcnLJmKJppL3LhIjmxt%2BDhya8MU0URHiZWGj%2BYxjFr0PQm5wOHHSjZH8J51r9lYPth4vO76XlYI64WefD1eH3RhRtskXC%2F7FQJ1KHpE6X1cbWjrGsPT7TdojDA8dJvV0nf9VUiO0CSgWFpIq%2BZZoYJDqsUiwvX0iR6z%2F3K4oNsbgp9NQ1lJD57tuNQVBx3YYvA6R52FQ64hSb2LjtpRQ%3D%3D"}},
+			},
+		},
+		{
+			name: "Success: saml.HTTPPostBinding, OK",
+			buildRequest: func() *http.Request {
+				request := http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/login",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Slug: "test-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name: "name",
+						MetadataXML: []byte(validMetadataXML),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Security-Policy":[]string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type":[]string{"text/html"}},
+			},
+		},
 	}
 
 	for _, testCase := range tt {
@@ -2358,7 +2453,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
-				mockTLS:      samlmocks.NewMockService(ctrl),
+				mockSAML: samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -2371,6 +2466,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					ServiceProviderCertificateCAChain: "",
 				},
 			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -2390,7 +2486,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
-		mockTLS      *samlmocks.MockService
+		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2507,8 +2603,8 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			mocks := &mock{
-				mockTLS:      samlmocks.NewMockService(ctrl),
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockSAML:     samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
