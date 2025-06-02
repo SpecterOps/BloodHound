@@ -7,10 +7,11 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
+import { AssetGroupTagTypes, AssetGroupTagTypeTier } from 'js-client-library';
 
 type SummaryCardProps = {
     title: string;
-    type: number;
+    type: AssetGroupTagTypes;
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;
@@ -41,7 +42,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                         // Prevent event bubbling for the view details action
                         e.stopPropagation();
                         navigate(
-                            `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${type === 1 ? 'tier' : 'label'}/${id}`
+                            `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${type === AssetGroupTagTypeTier ? 'tier' : 'label'}/${id}`
                         );
                     }}
                     className=' flex items-center space-x-2 hover:underline'>
