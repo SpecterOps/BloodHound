@@ -18,6 +18,7 @@ package auth_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -26,13 +27,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database/mocks"
 
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
-	bhceAuth "github.com/specterops/bloodhound/src/auth"
+	bhceauth "github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
@@ -207,7 +209,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	t.Run("error user cannot delete their own SSO provider", func(t *testing.T) {
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithContext(&ctx.Context{AuthCtx: bhceAuth.Context{
+			WithContext(&ctx.Context{AuthCtx: bhceauth.Context{
 				Owner: model.User{SSOProviderID: null.Int32From(1)},
 			}}).
 			WithURL(ssoDeleteURL, api.URIPathVariableSSOProviderID).
@@ -306,49 +308,84 @@ func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
 func TestManagementResource_SSOLoginHandler(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name            string
-		ssoProviderSlug string
-		setupMocks      func(*testing.T, *mocks.MockDatabase)
-		expected        expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name:            "Error: SSO Provider not found - Not Found",
-			ssoProviderSlug: "non-existent-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
+			name: "Error: SSO Provider not found - Not Found",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/non-existent-provider/login",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
 			},
 			expected: expected{
-				responseCode: http.StatusNotFound,
+				responseCode:   http.StatusNotFound,
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name:            "Error: Database error - Internal Server Error",
-			ssoProviderSlug: "provider-db-error",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
+			name: "Error: Database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/provider-db-error/login",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
 			},
 			expected: expected{
-				responseCode: http.StatusInternalServerError,
+				responseCode:   http.StatusInternalServerError,
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name:            "Error: Unsupported provider type - Not Implemented",
-			ssoProviderSlug: "unsupported-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
+			name: "Error: Unsupported provider type - Not Implemented",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/unsupported-provider/login",
+					},
+					Method: http.MethodGet,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
 					Type: 999,
 					Name: "Unsupported Provider",
 					Slug: "unsupported-provider",
 				}, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusNotImplemented,
+				responseCode:   http.StatusNotImplemented,
+				responseBody:   `{"errors":[{"context":"","message":"All good things to those who wait. Not implemented."}],"http_status":501,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -356,26 +393,31 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			req, err := http.NewRequest("GET", "/api/v2/auth/sso/"+testCase.ssoProviderSlug, nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableSSOProviderSlug: testCase.ssoProviderSlug,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
 
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 			response := httptest.NewRecorder()
-			resources.SSOLoginHandler(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), resources.SSOLoginHandler).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
@@ -383,49 +425,98 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 	t.Parallel()
 
+	type mock struct {
+		mockDatabase *mocks.MockDatabase
+	}
 	type expected struct {
-		responseCode int
+		responseBody   string
+		responseCode   int
+		responseHeader http.Header
 	}
 	type testData struct {
-		name            string
-		ssoProviderSlug string
-		setupMocks      func(*testing.T, *mocks.MockDatabase)
-		expected        expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name:            "Error: SSO Provider not found - Not Found",
-			ssoProviderSlug: "non-existent-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
+			name: "Error: SSO Provider not found - Not Found",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/non-existent-provider/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "non-existent-provider").Return(model.SSOProvider{}, database.ErrNotFound)
 			},
 			expected: expected{
-				responseCode: http.StatusNotFound,
+				responseCode:   http.StatusNotFound,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`},
+		},
+		{
+			name: "Error: Database error - Internal Server Error",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/provider-db-error/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusInternalServerError,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 		{
-			name:            "Error: Database error - Internal Server Error",
-			ssoProviderSlug: "provider-db-error",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "provider-db-error").Return(model.SSOProvider{}, errors.New("database error"))
+			name: "Error: Unsupported provider type - Not Implemented",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/unsupported-provider/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			expected: expected{
-				responseCode: http.StatusInternalServerError,
-			},
-		},
-		{
-			name:            "Error: Unsupported provider type - Not Implemented",
-			ssoProviderSlug: "unsupported-provider",
-			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase) {
-				mockDB.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "unsupported-provider").Return(model.SSOProvider{
 					Type: 999,
 					Name: "Unsupported Provider",
 					Slug: "unsupported-provider",
 				}, nil)
 			},
 			expected: expected{
-				responseCode: http.StatusNotImplemented,
+				responseCode:   http.StatusNotImplemented,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody:   `{"errors":[{"context":"","message":"All good things to those who wait. Not implemented."}],"http_status":501,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 			},
 		},
 	}
@@ -433,26 +524,31 @@ func TestManagementResource_SSOCallbackHandler(t *testing.T) {
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+			ctrl := gomock.NewController(t)
 
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
-
-			resources, mockDB := apitest.NewAuthManagementResource(mockCtrl)
-
-			testCase.setupMocks(t, mockDB)
-
-			req, err := http.NewRequest("POST", "/api/v2/auth/sso/"+testCase.ssoProviderSlug+"/callback", nil)
-			require.NoError(t, err)
-
-			vars := map[string]string{
-				api.URIPathVariableSSOProviderSlug: testCase.ssoProviderSlug,
+			mocks := &mock{
+				mockDatabase: mocks.NewMockDatabase(ctrl),
 			}
-			req = mux.SetURLVars(req, vars)
 
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resource := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 			response := httptest.NewRecorder()
-			resources.SSOCallbackHandler(response, req)
 
-			assert.Equal(t, testCase.expected.responseCode, response.Code)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/sso/{%s}/callback", api.URIPathVariableSSOProviderSlug), http.HandlerFunc(resource.SSOCallbackHandler)).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, body := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if body != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
+			}
 		})
 	}
 }
