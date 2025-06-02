@@ -245,9 +245,14 @@ func getTrustAccount(tx graph.Transaction, domainSid, netbios string) (*graph.No
 			query.Equals(query.NodeProperty(ad.SamAccountName.String()), netbios+"$"),
 		)
 	}).Limit(1))
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) == 0 {
+		return nil, graph.ErrNoResultsFound
+	}
 	return nodes[0], err
 }
-
 func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	var (
 		getChangesQuery         = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)
