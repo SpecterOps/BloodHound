@@ -75,7 +75,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		//
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: invalid type - Bad Request",
 			buildRequest: func() *http.Request {
