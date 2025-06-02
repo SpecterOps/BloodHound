@@ -25,10 +25,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/auth"
-
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/src/auth"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
