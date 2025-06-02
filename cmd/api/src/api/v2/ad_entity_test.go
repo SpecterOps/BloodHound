@@ -1039,6 +1039,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 						Path:     "/api/v2/aiacas/id",
 						RawQuery: "counts=`",
 					},
+					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {},
@@ -1057,6 +1058,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 						Path:     "/api/v2/aiacas/id",
 						RawQuery: "counts=true",
 					},
+					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1077,6 +1079,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 						Path:     "/api/v2/aiacas/id",
 						RawQuery: "counts=true",
 					},
+					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1097,6 +1100,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 						Path:     "/api/v2/aiacas/id",
 						RawQuery: "counts=true",
 					},
+					Method: http.MethodGet,
 				}
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
@@ -1118,6 +1122,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 						Path:     "/api/v2/aiacas/id",
 						RawQuery: "counts=false",
 					},
+					Method: http.MethodGet,
 				}
 			},
 			expected: expected{
