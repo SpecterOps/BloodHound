@@ -73,6 +73,7 @@ const (
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
 	ErrorResponseAssetGroupName                     = "asset group tag name is required and no more than 250 characters"
+	ErrorResponseAssetGroupTagEmpty                 = "tag type is required"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

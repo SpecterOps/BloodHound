@@ -2264,6 +2264,17 @@ func TestResources_CreateAssetGroupTag(t *testing.T) {
 				},
 			},
 			{
+				Name: "Bad Request - No Type Specified",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.BodyStruct(input, model.AssetGroupTag{Name: "New tier"})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "tag type is required")
+				},
+			},
+			{
 				Name: "Internal Server Error - DB Error",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)

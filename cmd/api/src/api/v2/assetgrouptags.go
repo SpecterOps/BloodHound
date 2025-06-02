@@ -711,8 +711,7 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *http.Request) {
 	var (
 		reqBody = model.AssetGroupTag{
-			RequireCertify: null.Bool{},  // default to false
-			Position:       null.Int32{}, // default to false
+			Position: null.Int32{}, // default to false
 		}
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Create Tier")()
@@ -726,8 +725,8 @@ func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if len(reqBody.Name) > 250 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
-	} else if ok := validateTagRequest(&reqBody); !ok {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
+	} else if !normalizeTagRequest(&reqBody) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagEmpty, request), response)
 	} else if tag, err := s.DB.CreateAssetGroupTag(request.Context(), reqBody.Type, user, reqBody.Name, reqBody.Description, reqBody.Position, reqBody.RequireCertify); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
@@ -735,11 +734,15 @@ func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *h
 	}
 }
 
-func validateTagRequest(req *model.AssetGroupTag) bool {
-	if req.Type == 1 {
-		if !req.RequireCertify.Valid {
-			req.RequireCertify = null.BoolFrom(true)
-		}
+func normalizeTagRequest(req *model.AssetGroupTag) bool {
+	switch req.Type {
+	case 1:
+		req.RequireCertify = null.BoolFrom(true)
+	case 2:
+		req.RequireCertify = null.Bool{}
+	default:
+		return false
 	}
+
 	return true
 }
