@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { setSelectedEdge } from 'bh-shared-ui';
+import { useExploreSelectedItem } from 'bh-shared-ui';
 import { AbstractGraph, Attributes } from 'graphology-types';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -27,7 +27,6 @@ import {
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
-import { useAppDispatch, useAppSelector } from 'src/store';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
 export interface GraphEventProps {
@@ -54,9 +53,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }: GraphEventProps,
     ref
 ) {
-    const dispatch = useAppDispatch();
-    const selectedEdge = useAppSelector((state) => state.edgeinfo.selectedEdge);
-    const selectedNode = useAppSelector((state) => state.entityinfo.selectedNode);
+    const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const registerEvents = useRegisterEvents();
@@ -64,7 +61,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [draggedNode, setDraggedNode] = useState<string | null>(null);
-    const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const isLongPress = useRef(false);
@@ -78,6 +74,25 @@ export const GraphEvents = forwardRef(function GraphEvents(
         ref,
         () => {
             return {
+                zoomTo: (id: string) => {
+                    const node = sigma.getNodeDisplayData(id);
+
+                    if (node) {
+                        sigma.getCamera().animate(
+                            {
+                                x: node?.x,
+                                y: node?.y,
+                                ratio: 1,
+                            },
+                            {
+                                easing: 'quadraticOut',
+                            },
+                            () => {
+                                sigma.scheduleRefresh();
+                            }
+                        );
+                    }
+                },
                 resetCamera: () => {
                     resetCamera(sigma);
                 },
@@ -206,8 +221,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     clickTimerRef.current = setTimeout(function () {
                         if (!prevent.current) {
                             onClickNode(event.node);
-                            setHighlightedNode(event.node);
-                            dispatch(setSelectedEdge(null));
                         }
                         prevent.current = false;
                     }, 200);
@@ -223,7 +236,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
             clickStage: () => onClickStage && onClickStage(),
         });
     }, [
-        dispatch,
         registerEvents,
         onDoubleClickNode,
         onClickNode,
@@ -233,7 +245,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigma,
         draggedNode,
         isDragging,
-        highlightedNode,
         sigmaContainer,
     ]);
 
@@ -247,7 +258,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (node === highlightedNode) {
+                if (node === selectedItem) {
                     newData.highlighted = true;
                 }
 
@@ -262,7 +273,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (edge === selectedEdge?.id) {
+                if (edge === selectedItem) {
                     newData.selected = true;
                 } else {
                     newData.selected = false;
@@ -277,17 +288,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 return newData;
             },
         });
-    }, [
-        hoveredNode,
-        draggedNode,
-        highlightedNode,
-        selectedEdge,
-        curvedEdgeReducer,
-        selfEdgeReducer,
-        edgeReducer,
-        setSettings,
-        sigma,
-    ]);
+    }, [hoveredNode, draggedNode, selectedItem, curvedEdgeReducer, selfEdgeReducer, edgeReducer, setSettings, sigma]);
 
     // Toggle off edge labels when dragging a node. Since these are rendered on a 2d canvas, dragging nodes with lots of edges
     // can tank performance
@@ -302,17 +303,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     useEffect(() => {
         resetCamera(sigma);
     }, [sigma]);
-
-    useEffect(() => {
-        if (selectedEdge) setHighlightedNode(null);
-    }, [selectedEdge]);
-
-    useEffect(() => {
-        if (selectedNode?.graphId) {
-            setSelectedEdge(null);
-            setHighlightedNode(selectedNode.graphId);
-        }
-    }, [selectedNode]);
 
     useEffect(() => {
         setSettings({

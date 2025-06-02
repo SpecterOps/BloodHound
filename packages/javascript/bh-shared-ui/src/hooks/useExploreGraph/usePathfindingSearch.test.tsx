@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act, renderHook, waitFor } from '../../test-utils';
@@ -37,47 +36,46 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('usePathfindingSearch', () => {
+    // Test is skipped here because of a race condition.
+    // Data returned from useSearch causes an effect to run that resets searchTerm before we can assert on it.
+    // To resolve this, mock useSearch return value, or only enable that query if we have a term to search for.
     it.skip('stores the state of source and destination terms without modifying query params', async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch());
 
-        expect(history.location.search).toBe('');
+        expect(window.location.search).toBe('');
 
         await act(async () => hook.result.current.handleSourceNodeEdited(TEST_STRING_1));
         await act(async () => hook.result.current.handleDestinationNodeEdited(TEST_STRING_2));
 
         expect(hook.result.current.sourceSearchTerm).toBe(TEST_STRING_1);
         expect(hook.result.current.destinationSearchTerm).toBe(TEST_STRING_2);
-        expect(history.location.search).toBe('');
+        expect(window.location.search).toBe('');
     });
 
     it("upon selecting just a source node, updates the URL with a searchType of 'node' and primarySearch of the node's objectid", async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch());
 
         await act(async () =>
             hook.result.current.handleSourceNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_2 })
         );
 
-        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
-        expect(history.location.search).toContain('searchType=node');
+        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(window.location.search).toContain('searchType=node');
     });
 
     it("upon selecting just a destination node, updates the URL with a searchType of 'node' and secondarySearch of the node's objectid", async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch());
 
         await act(async () =>
             hook.result.current.handleDestinationNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_2 })
         );
 
-        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
-        expect(history.location.search).toContain('searchType=node');
+        expect(window.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
+        expect(window.location.search).toContain('searchType=node');
     });
 
     it("upon selecting a source and destination node, updates the URL with a searchType of 'pathfinding' and the object ids for the source and destination nodes", async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch());
 
         await act(async () =>
             hook.result.current.handleSourceNodeSelected({ name: TEST_STRING_1, objectid: TEST_STRING_1 })
@@ -86,16 +84,15 @@ describe('usePathfindingSearch', () => {
             hook.result.current.handleDestinationNodeSelected({ name: TEST_STRING_2, objectid: TEST_STRING_2 })
         );
 
-        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_1}`);
-        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
-        expect(history.location.search).toContain('searchType=pathfinding');
+        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_1}`);
+        expect(window.location.search).toContain(`secondarySearch=${TEST_STRING_2}`);
+        expect(window.location.search).toContain('searchType=pathfinding');
     });
 
     it('populates the source and destination node fields when query params are passed', async () => {
         const url = `?primarySearch=${TEST_STRING_1}&secondarySearch=${TEST_STRING_2}&searchType=pathfinding`;
-        const history = createMemoryHistory({ initialEntries: [url] });
 
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch(), { route: url });
 
         await waitFor(() => expect(hook.result.current.sourceSearchTerm).toEqual(TEST_STRING_1));
         await waitFor(() => expect(hook.result.current.destinationSearchTerm).toEqual(TEST_STRING_2));
@@ -113,17 +110,16 @@ describe('usePathfindingSearch', () => {
 
     it('allows a consumer to swap the values of the two inputs and update the query params accordingly', async () => {
         const url = `?primarySearch=${TEST_STRING_1}&secondarySearch=${TEST_STRING_2}&searchType=pathfinding`;
-        const history = createMemoryHistory({ initialEntries: [url] });
 
-        const hook = renderHook(() => usePathfindingSearch(), { history });
+        const hook = renderHook(() => usePathfindingSearch(), { route: url });
 
         await waitFor(() => expect(hook.result.current.sourceSearchTerm).toEqual(TEST_STRING_1));
         await waitFor(() => expect(hook.result.current.destinationSearchTerm).toEqual(TEST_STRING_2));
 
         await act(async () => hook.result.current.handleSwapPathfindingInputs());
 
-        expect(history.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
-        expect(history.location.search).toContain(`secondarySearch=${TEST_STRING_1}`);
-        expect(history.location.search).toContain('searchType=pathfinding');
+        expect(window.location.search).toContain(`primarySearch=${TEST_STRING_2}`);
+        expect(window.location.search).toContain(`secondarySearch=${TEST_STRING_1}`);
+        expect(window.location.search).toContain('searchType=pathfinding');
     });
 });

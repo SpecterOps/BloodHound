@@ -42,34 +42,36 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode }) => {
     }, [setExpandedSections, previousSelectedNode, selectedNode]);
 
     return (
-        <Box className={styles.container} data-testid='explore_entity-information-panel'>
-            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                <Header
-                    name={selectedNode?.properties?.name || NoEntitySelectedHeader}
-                    nodeType={selectedNode?.primary_kind}
-                    expanded={expanded}
-                    onToggleExpanded={(expanded) => {
-                        setExpanded(expanded);
-                    }}
-                />
-            </Paper>
-            <Paper
-                elevation={0}
-                classes={{ root: styles.contentPaperRoot }}
-                style={{
-                    display: expanded ? 'initial' : 'none',
-                }}>
-                {selectedNode ? (
-                    <EntityInfoContent
-                        id={selectedNode.id}
-                        nodeType={selectedNode.primary_kind}
-                        properties={selectedNode.properties}
+        <div className='max-w-[400px]'>
+            <Box className={styles.container} data-testid='explore_entity-information-panel'>
+                <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
+                    <Header
+                        name={selectedNode?.properties?.name || NoEntitySelectedHeader}
+                        nodeType={selectedNode?.primary_kind}
+                        expanded={expanded}
+                        onToggleExpanded={(expanded) => {
+                            setExpanded(expanded);
+                        }}
                     />
-                ) : (
-                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
-                )}
-            </Paper>
-        </Box>
+                </Paper>
+                <Paper
+                    elevation={0}
+                    classes={{ root: styles.contentPaperRoot }}
+                    style={{
+                        display: expanded ? 'initial' : 'none',
+                    }}>
+                    {selectedNode ? (
+                        <EntityInfoContent
+                            id={selectedNode.id}
+                            nodeType={selectedNode.primary_kind}
+                            properties={selectedNode.properties}
+                        />
+                    ) : (
+                        <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
+                    )}
+                </Paper>
+            </Box>
+        </div>
     );
 };
 

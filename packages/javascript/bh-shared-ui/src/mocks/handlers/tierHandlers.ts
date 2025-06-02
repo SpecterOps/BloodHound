@@ -38,10 +38,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: false,
                     },
-                    {
-                        key: 'back_button_support',
-                        enabled: true,
-                    },
                 ],
             })
         );
@@ -99,7 +95,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Tag
-    rest.get('/api/v2/asset-group-tags/:assetGroupId/members', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/members', async (req, res, ctx) => {
         const total = 3000;
         const url = new URL(req.url);
         const { assetGroupId, selectorId } = req.params;
@@ -125,7 +121,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Selector
-    rest.get('/api/v2/asset-group-tags/:assetGroupId/selectors/:selectorId/members*', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members*', async (req, res, ctx) => {
         const total = 2000;
         const { assetGroupId, selectorId } = req.params;
         const url = new URL(req.url);
@@ -163,6 +159,13 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                 data: {
                     member: tierMocks.createAssetGroupMemberInfo(tagId as string, memberId as string),
                 },
+            })
+        );
+    }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
             })
         );
     }),

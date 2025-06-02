@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
@@ -62,6 +63,11 @@ type AssetGroupTagView struct {
 
 type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
+}
+
+type PatchAssetGroupTagSelectorRequest struct {
+	model.AssetGroupTagSelector
+	Disabled *bool `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -196,7 +202,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  model.AssetGroupTagSelector
+		selUpdateReq  PatchAssetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -219,18 +225,18 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else {
 		// we can update DisabledAt on a default selector
-		if selUpdateReq.DisabledAt.Valid {
-			if selector.AllowDisable {
-				selector.DisabledAt = selUpdateReq.DisabledAt
-				if selector.DisabledAt.Time.IsZero() {
-					// clear DisabledBy if DisabledAt is set to zero
-					selector.DisabledBy = null.String{}
-				} else {
+		if selUpdateReq.Disabled != nil {
+			if *selUpdateReq.Disabled {
+				if selector.AllowDisable {
+					selector.DisabledAt = null.TimeFrom(time.Now())
 					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				} else {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
+					return
 				}
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
-				return
+				selector.DisabledAt = null.Time{}
+				selector.DisabledBy = null.String{}
 			}
 		}
 

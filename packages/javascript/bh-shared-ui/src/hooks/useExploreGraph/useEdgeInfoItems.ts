@@ -16,10 +16,9 @@
 
 import { useQuery } from 'react-query';
 import { EdgeInfoProps } from '../../components';
-import { VirtualizedNodeListItem } from '../../components/VirtualizedNodeList';
+import { NormalizedNodeItem } from '../../components/VirtualizedNodeList';
 import { apiClient } from '../../utils';
 import { useExploreParams } from '../useExploreParams';
-import { useFeatureFlag } from '../useFeatureFlags';
 
 export enum EdgeInfoItems {
     relayTargets = 'relayTargets',
@@ -45,8 +44,7 @@ const queryConfig = {
     },
 };
 
-export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type, onNodeClick }: EdgeInfoItemsProps) => {
-    const { data: backButtonflag } = useFeatureFlag('back_button_support');
+export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type }: EdgeInfoItemsProps) => {
     const { setExploreParams } = useExploreParams();
     const { data, isLoading, isError } = useQuery(
         [type, sourceDBId, targetDBId, edgeName],
@@ -56,18 +54,15 @@ export const useEdgeInfoItems = ({ sourceDBId, targetDBId, edgeName, type, onNod
 
     const handleNodeClick = (item: number) => {
         const node = nodesArray[item];
-        if (backButtonflag?.enabled) {
-            setExploreParams({
-                primarySearch: node.objectId,
-                searchType: 'node',
-                exploreSearchTab: 'node',
-            });
-        } else {
-            onNodeClick?.(node);
-        }
+
+        setExploreParams({
+            primarySearch: node.objectId,
+            searchType: 'node',
+            exploreSearchTab: 'node',
+        });
     };
 
-    const nodesArray: VirtualizedNodeListItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
+    const nodesArray: NormalizedNodeItem[] = Object.entries(data?.data?.nodes || {}).map(([graphId, node]) => ({
         name: node.label,
         objectId: node.objectId,
         graphId,
