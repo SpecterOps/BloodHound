@@ -223,6 +223,7 @@ func (s *Daemon) processIngestFile(ctx context.Context, task model.IngestTask, i
 
 		return len(paths), failed, s.graphdb.BatchOperation(ctx, func(batch graph.Batch) error {
 			timestampedBatch := NewTimestampedBatch(batch, ingestTime)
+
 			for _, filePath := range paths {
 				file, err := os.Open(filePath)
 				if err != nil {
