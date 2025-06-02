@@ -288,7 +288,26 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-
+		{
+			name: "Error: invalid file_upload_job_id parameter - Bad Request",
+			buildRequest: func() *http.Request {
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/file-upload/id",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{
+						headers.ContentType.String(): []string{"application/json"},
+					},
+				}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"id is malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+			},
+		},
 		{
 			name: "Error: GetFileUploadJobByID database error - Internal Server Error",
 			buildRequest: func() *http.Request {
