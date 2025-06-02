@@ -174,6 +174,8 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
+
 export interface AssetGroupTagsListItem extends AssetGroupTag {
     counts?: AssetGroupTagCounts;
 }
