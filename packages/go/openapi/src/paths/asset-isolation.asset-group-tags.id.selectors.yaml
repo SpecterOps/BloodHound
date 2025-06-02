@@ -67,7 +67,7 @@ get:
     in: query
     required: false
     schema:
-      $ref: './../schemas/api.params.predicate.filter.boolean.yaml'  
+      $ref: './../schemas/api.params.predicate.filter.boolean.yaml'
   - name: name
     in: query
     required: false
@@ -107,7 +107,7 @@ get:
             properties:
               data:
                 type: object
-                properties: 
+                properties:
                   selectors:
                     type: array
                     items:
@@ -143,15 +143,15 @@ post:
     - Community
     - Enterprise
   requestBody:
-    description: The request body for creating an asset group tag selector. Only the name and seeds fields are required. 
+    description: The request body for creating an asset group tag selector. Only the name and seeds fields are required.
     required: true
     content:
       application/json:
         schema:
-          allOf: 
-            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
-            - type: object 
-              required: 
+          allOf:
+            - $ref: './../schemas/model.asset-group-tags-selector-create.yaml'
+            - type: object
+              required:
                 - name
                 - seeds
 
