@@ -8,6 +8,7 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../../test-utils';
 import SummaryCard from './SummaryCard';
+import { AssetGroupTagTypeTier } from 'js-client-library';
 
 // Mock icons
 vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
@@ -27,7 +28,7 @@ vi.mock('../../../utils', () => ({
 describe('SummaryCard', () => {
     const props = {
         title: 'Test Tier',
-        type: 1,
+        type: AssetGroupTagTypeTier,
         selectorCount: 7,
         memberCount: 13,
         id: 99,
