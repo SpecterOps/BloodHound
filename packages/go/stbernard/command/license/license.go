@@ -27,7 +27,7 @@ import (
 
 const (
 	Name  = "license"
-	Usage = "Run license cmd to append license headers on files"
+	Usage = "Check all supported files for expected license header and add one if missing"
 )
 
 type command struct {
