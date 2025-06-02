@@ -13,25 +13,36 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-package static
+package license
 
 import (
-	"embed"
-
-	"github.com/specterops/bloodhound/src/api"
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"strings"
 )
 
-const (
-	assetBasePath  = "assets"
-	indexAssetPath = "index.html"
-)
+func isHeaderPresent(path string) (bool, error) {
+	const linesToRead = 20
 
-//go:embed all:assets
-var assets embed.FS
+	file, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
 
-var AssetHandler = MakeAssetHandler(AssetConfig{
-	FS:         assets,
-	BasePath:   assetBasePath,
-	IndexPath:  indexAssetPath,
-	PrefixPath: api.UserInterfacePath,
-})
+	// check for license header
+	r := bufio.NewReader(file)
+
+	for range linesToRead {
+		if line, err := r.ReadString('\n'); !errors.Is(err, io.EOF) && err != nil {
+			return false, fmt.Errorf("could not read line: %w", err)
+		} else if strings.Contains(line, "SPDX-License-Identifier: Apache-2.0") {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
