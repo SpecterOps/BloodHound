@@ -77,6 +77,16 @@ var (
 
 	// EveryoneNodeNamePrefix represents the node name prefix for the "Everyone" group.
 	EveryoneNodeNamePrefix = NewNodeNamePrefix("EVERYONE")
+
+	GuestNodeNamePrefix                                   = NewNodeNamePrefix("GUEST")
+	NetworkNodeNamePrefix                                 = NewNodeNamePrefix("NETWORK")
+	ThisOrganizationNodeNamePrefix                        = NewNodeNamePrefix("THIS ORGANIZATION")
+	ThisOrganizationCertificateNodeNamePrefix             = NewNodeNamePrefix("THIS ORGANIZATION CERTIFICATE")
+	AuthenticationAuthorityAssertedIdentityNodeNamePrefix = NewNodeNamePrefix("AUTHENTICATION AUTHORITY ASSERTED IDENTITY")
+	KeyTrustNodeNamePrefix                                = NewNodeNamePrefix("KEY TRUST")
+	MFAKeyPropertyNodeNamePrefix                          = NewNodeNamePrefix("MFA KEY PROPERTY")
+	NTLMAuthenticationNodeNamePrefix                      = NewNodeNamePrefix("NTLM AUTHENTICATION")
+	SChannelAuthenticationNodeNamePrefix                  = NewNodeNamePrefix("SCHANNEL AUTHENTICATION")
 )
 
 // DefineNodeName creates a complete node name by combining a well-known node name prefix

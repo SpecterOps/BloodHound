@@ -21,9 +21,9 @@ These are the traversable AD edge types in BloodHound:
 
 |                      |                           |                          |
 |----------------------|---------------------------|--------------------------|
-| AbuseTGTDelegation   | AllowedToDelegate         | HasSIDHistory            |
-| ADCSESC1             | CanPSRemote               | HasSession               |
-| ADCSESC10a           | CanRDP                    | MemberOf                 |
+| AbuseTGTDelegation   | CanPSRemote               | HasSIDHistory            |
+| ADCSESC1             | CanRDP                    | HasSession               |
+| ADCSESC10a           | ClaimSpecialIdentity      | MemberOf                 |
 | ADCSESC10b           | CoerceAndRelayNTLMToADCS  | Owns                     |
 | ADCSESC13            | CoerceAndRelayNTLMToLDAP  | OwnsLimitedRights        |
 | ADCSESC3             | CoerceAndRelayNTLMToLDAPS | ReadGMSAPassword         |
@@ -39,6 +39,7 @@ These are the traversable AD edge types in BloodHound:
 | AdminTo              | GenericAll                | WriteOwner               |
 | AllExtendedRights    | GenericWrite              | WriteOwnerLimitedRights  |
 | AllowedToAct         | GoldenCert                | WriteSPN                 |
+| AllowedToDelegate    |                           |                          |
 
 These are the traversable Azure edge types in BloodHound:
 
