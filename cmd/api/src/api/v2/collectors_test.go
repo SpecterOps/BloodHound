@@ -66,7 +66,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"\""}, "Content-Type":[]string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"\""}, "Content-Type": []string{"application/octet-stream"}},
 			},
 		},
 		{
@@ -214,7 +214,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 			}, expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Disposition":[]string{"attachment; filename=\"\""}, "Content-Type":[]string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"\""}, "Content-Type": []string{"application/octet-stream"}},
 			},
 		},
 		{
