@@ -82,7 +82,7 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
-	} else if fileName, err := retrieveFileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
+	} else if fileName, err := retrieveCollectorZipFileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
@@ -93,7 +93,7 @@ func (s *Resources) DownloadCollectorByVersion(response http.ResponseWriter, req
 	}
 }
 
-func retrieveFileName(releaseTag string, collectorType string, collectorManifests map[string]config.CollectorManifest) (string, error) {
+func retrieveCollectorZipFileName(releaseTag string, collectorType string, collectorManifests map[string]config.CollectorManifest) (string, error) {
 	if releaseTag == "latest" {
 		if collectorManifest, ok := collectorManifests[collectorType]; !ok {
 			return "", errors.New("invalid collector manifests")
@@ -111,27 +111,29 @@ func (s *Resources) DownloadCollectorChecksumByVersion(response http.ResponseWri
 		requestVars   = mux.Vars(request)
 		collectorType = requestVars[CollectorTypePathParameterName]
 		releaseTag    = requestVars[CollectorReleaseTagPathParameterName]
-		fileName      string
 	)
 
 	if CollectorType(collectorType).String() == "InvalidCollectorType" {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid collector type: %s", collectorType), request), response)
-	} else if releaseTag == "latest" {
-		if collectorManifest, ok := s.CollectorManifests[collectorType]; !ok {
-			slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-			return
-		} else {
-			fileName = fmt.Sprintf(CollectorSHA256FileTemplate, collectorType, collectorManifest.Latest)
-		}
-	} else {
-		fileName = fmt.Sprintf(CollectorSHA256FileTemplate, collectorType, releaseTag)
-	}
-
-	if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
+	} else if fileName, err := retrieveCollectorSHA256FileName(releaseTag, collectorType, s.CollectorManifests); err != nil {
+		slog.ErrorContext(request.Context(), fmt.Sprintf("Manifest doesn't exist for %s collector", collectorType))
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if data, err := s.FileService.ReadFile(filepath.Join(s.Config.CollectorsDirectory(), collectorType, fileName)); err != nil {
 		slog.ErrorContext(request.Context(), fmt.Sprintf("Could not open collector file for download: %v", err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		api.WriteBinaryResponse(request.Context(), data, fileName, http.StatusOK, response)
+	}
+}
+
+func retrieveCollectorSHA256FileName(releaseTag string, collectorType string, collectorManifests map[string]config.CollectorManifest) (string, error) {
+	if releaseTag == "latest" {
+		if collectorManifest, ok := collectorManifests[collectorType]; !ok {
+			return "", errors.New("invalid collector manifests")
+		} else {
+			return fmt.Sprintf(CollectorSHA256FileTemplate, collectorType, collectorManifest.Latest), nil
+		}
+	} else {
+		return fmt.Sprintf(CollectorSHA256FileTemplate, collectorType, releaseTag), nil
 	}
 }

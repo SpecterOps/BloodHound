@@ -1946,7 +1946,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
-		mockSAML      *samlmocks.MockService
+		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
 		responseCode   int
@@ -2083,7 +2083,7 @@ func TestManagementResource_ServeMetadata(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
-				mockSAML:      samlmocks.NewMockService(ctrl),
+				mockSAML:     samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
@@ -2365,7 +2365,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Slug: "test-provider",
 					Type: model.SessionAuthProviderSAML,
 					SAMLProvider: &model.SAMLProvider{
-						Name: "name",
+						Name:        "name",
 						MetadataXML: []byte(validMetadataXML),
 					},
 				}, nil)
@@ -2373,7 +2373,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -2409,7 +2409,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"?SAMLRequest=fMuxqsJAEIXhVwnT3%2BtoORghYBPQRsXCbgkDBpKZdc8s%2BPiSVFbCXxw4fHukecrS1XjaRV9VEc17ngyyHC3VYuIJI8TSrJAY5NqdT7L7Z0mAlhjd6Ivk3yYXDx98oqY%2FtkTNXQtGt2X2QNXeEMmiJWbe%2Fq3dmGXtQZvDJwAA%2F%2F8%3D&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=y1tzz0uKcHIGTzUzyfo6wkJKJ7%2FLhD7vH6mmCV7W0eKlL58z6w3M%2BWCoGaBtXldzx4tSTB2RWEqCpYTw9gM%2BjoA9dBPLlzBxN0Sz97XxzgA9chdd4gTXyjcMHntNmsRqkrzcnLJmKJppL3LhIjmxt%2BDhya8MU0URHiZWGj%2BYxjFr0PQm5wOHHSjZH8J51r9lYPth4vO76XlYI64WefD1eH3RhRtskXC%2F7FQJ1KHpE6X1cbWjrGsPT7TdojDA8dJvV0nf9VUiO0CSgWFpIq%2BZZoYJDqsUiwvX0iR6z%2F3K4oNsbgp9NQ1lJD57tuNQVBx3YYvA6R52FQ64hSb2LjtpRQ%3D%3D"}},
+				responseHeader: http.Header{"Location": []string{"?SAMLRequest=fMuxqsJAEIXhVwnT3%2BtoORghYBPQRsXCbgkDBpKZdc8s%2BPiSVFbCXxw4fHukecrS1XjaRV9VEc17ngyyHC3VYuIJI8TSrJAY5NqdT7L7Z0mAlhjd6Ivk3yYXDx98oqY%2FtkTNXQtGt2X2QNXeEMmiJWbe%2Fq3dmGXtQZvDJwAA%2F%2F8%3D&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=y1tzz0uKcHIGTzUzyfo6wkJKJ7%2FLhD7vH6mmCV7W0eKlL58z6w3M%2BWCoGaBtXldzx4tSTB2RWEqCpYTw9gM%2BjoA9dBPLlzBxN0Sz97XxzgA9chdd4gTXyjcMHntNmsRqkrzcnLJmKJppL3LhIjmxt%2BDhya8MU0URHiZWGj%2BYxjFr0PQm5wOHHSjZH8J51r9lYPth4vO76XlYI64WefD1eH3RhRtskXC%2F7FQJ1KHpE6X1cbWjrGsPT7TdojDA8dJvV0nf9VUiO0CSgWFpIq%2BZZoYJDqsUiwvX0iR6z%2F3K4oNsbgp9NQ1lJD57tuNQVBx3YYvA6R52FQ64hSb2LjtpRQ%3D%3D"}},
 			},
 		},
 		{
@@ -2433,7 +2433,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 					Slug: "test-provider",
 					Type: model.SessionAuthProviderSAML,
 					SAMLProvider: &model.SAMLProvider{
-						Name: "name",
+						Name:        "name",
 						MetadataXML: []byte(validMetadataXML),
 					},
 				}, nil)
@@ -2441,7 +2441,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseHeader: http.Header{"Content-Security-Policy":[]string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type":[]string{"text/html"}},
+				responseHeader: http.Header{"Content-Security-Policy": []string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type": []string{"text/html"}},
 			},
 		},
 	}
@@ -2453,7 +2453,7 @@ func TestManagementResource_SAMLLoginHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
-				mockSAML: samlmocks.NewMockService(ctrl),
+				mockSAML:     samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()

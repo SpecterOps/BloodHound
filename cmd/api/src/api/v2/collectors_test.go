@@ -60,12 +60,11 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {
-			},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type":[]string{"application/json"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
@@ -208,12 +207,11 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 					Method: http.MethodGet,
 				}
 			},
-			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockFS.EXPECT().ReadFile("InvalidCollectorType").Return([]byte{}, nil)
-			}, expected: expected{
+			setupMocks: func(t *testing.T, mock *mock) {},
+			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"Invalid collector type: InvalidCollectorType"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Disposition": []string{"attachment; filename=\"\""}, "Content-Type": []string{"application/octet-stream"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
