@@ -20,12 +20,12 @@ import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useDebouncedValue } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
-import { apiClient, cn } from '../../../../utils';
+import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import { getTagUrlValue } from '../../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
@@ -46,7 +46,7 @@ const SeedSelection: FC<{
     onSubmit: SubmitHandler<SelectorFormInputs>;
 }> = ({ onSubmit }) => {
     const history = createBrowserHistory();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 

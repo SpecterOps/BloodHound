@@ -75,7 +75,7 @@ const BasicInfo: FC = () => {
     const { isLoading, isError } = queriesAreLoadingOrErrored(tagQuery, selectorQuery);
 
     if (isLoading) return <Skeleton />;
-    if (isError) throw new Error();
+    if (isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
         <Card className={'w-full max-w-[40rem] min-w-80 sm:w-80 md:w-96 lg:w-lg p-3 h-[30rem]'}>

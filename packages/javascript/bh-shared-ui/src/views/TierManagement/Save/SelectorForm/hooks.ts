@@ -68,8 +68,8 @@ export const useDeleteSelector = () => {
 export const useSelectorInfo = (tagId: string, selectorId: string) =>
     useQuery({
         queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
+        queryFn: async ({ signal }) => {
+            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId, { signal });
             return response.data.data['selector'];
         },
         enabled: tagId !== '' && selectorId !== '',

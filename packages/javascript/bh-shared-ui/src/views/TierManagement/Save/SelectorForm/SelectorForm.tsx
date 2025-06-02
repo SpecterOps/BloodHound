@@ -21,9 +21,9 @@ import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
-import { apiClient } from '../../../../utils';
+import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
@@ -113,7 +113,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 const SelectorForm: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const { addNotification } = useNotifications();
 
@@ -235,7 +235,7 @@ const SelectorForm: FC = () => {
 
     if (selectorQuery.isLoading) return <Skeleton />;
 
-    if (selectorQuery.isError) throw new Error();
+    if (selectorQuery.isError) return <div>There was an error fetching the selector information.</div>;
 
     return (
         <SelectorFormContext.Provider value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery }}>
