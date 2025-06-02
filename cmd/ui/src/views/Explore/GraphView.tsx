@@ -22,9 +22,9 @@ import {
     exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
-    useAvailableEnvironments,
     useCustomNodeKinds,
     useExploreSelectedItem,
+    useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -47,12 +47,11 @@ import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
+    const dispatch = useAppDispatch();
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
-    const dispatch = useAppDispatch();
-
-    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -196,7 +195,7 @@ const GraphView: FC = () => {
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataDialogWithLinks open={!data?.length} />
+            <NoDataDialogWithLinks open={!graphHasData} />
         </div>
     );
 };
