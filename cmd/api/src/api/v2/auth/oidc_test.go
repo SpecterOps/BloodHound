@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
@@ -307,35 +308,20 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 	}
 	type testData struct {
 		name         string
-		args         model.SSOProvider
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 
 	tt := []testData{
 		{
 			name: "Error: No OIDC Provider, Redirect to Login - Found",
-			args: model.SSOProvider{
-				Name: "Test Provider",
-				Type: model.SessionAuthProviderOIDC,
-				Slug: "test-provider",
-				Config: model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						RoleProvision: true,
-						DefaultRoleId: 1,
-					},
-				},
-				Serial: model.Serial{
-					ID: 1,
-				},
-			},
 			buildRequest: func() *http.Request {
 				request := http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso/slug/login",
 					},
+					Method: http.MethodGet,
 				}
 
 				bhContext := &ctx.Context{
@@ -344,38 +330,36 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Type: model.SessionAuthProviderOIDC,
+					Slug: "test-provider",
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: true,
+							DefaultRoleId: 1,
+						},
+					},
+					Serial: model.Serial{
+						ID: 1,
+					},
+				}, nil)
+			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
 			name: "Error: OIDC Provider Creation Fails oidc.NewProvider, Redirect to Login - Found",
-			args: model.SSOProvider{
-				Name: "Test Provider",
-				Type: model.SessionAuthProviderOIDC,
-				Slug: "test-provider",
-				Config: model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						RoleProvision: true,
-						DefaultRoleId: 1,
-					},
-				},
-				Serial: model.Serial{
-					ID: 1,
-				},
-				OIDCProvider: &model.OIDCProvider{
-					Issuer:   "https://test-issuer.com",
-					ClientID: "test-client-id",
-				},
-			},
 			buildRequest: func() *http.Request {
 				request := http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso/slug/login",
 					},
+					Method: http.MethodGet,
 				}
 
 				bhContext := &ctx.Context{
@@ -384,39 +368,40 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
+			setupMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Type: model.SessionAuthProviderOIDC,
+					Slug: "test-provider",
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: true,
+							DefaultRoleId: 1,
+						},
+					},
+					Serial: model.Serial{
+						ID: 1,
+					},
+					OIDCProvider: &model.OIDCProvider{
+						Issuer:   "https://test-issuer.com",
+						ClientID: "test-client-id",
+					},
+				}, nil)
+				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			}, expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
 			name: "Success: OIDC Login, Redirect to Provider - Found",
-			args: model.SSOProvider{
-				Name: "Test Provider",
-				Type: model.SessionAuthProviderOIDC,
-				Slug: "test-provider",
-				Config: model.SSOProviderConfig{
-					AutoProvision: model.SSOProviderAutoProvisionConfig{
-						Enabled:       true,
-						RoleProvision: true,
-						DefaultRoleId: 1,
-					},
-				},
-				Serial: model.Serial{
-					ID: 1,
-				},
-				OIDCProvider: &model.OIDCProvider{
-					Issuer:   "https://test-issuer.com",
-					ClientID: "test-client-id",
-				},
-			},
 			buildRequest: func() *http.Request {
 				request := http.Request{
 					URL: &url.URL{
-						Host: "www.example.com",
+						Path: "/api/v2/sso/slug/login",
 					},
+					Method: http.MethodGet,
 				}
 
 				bhContext := &ctx.Context{
@@ -425,12 +410,31 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
+			setupMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "Test Provider",
+					Type: model.SessionAuthProviderOIDC,
+					Slug: "test-provider",
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: true,
+							DefaultRoleId: 1,
+						},
+					},
+					Serial: model.Serial{
+						ID: 1,
+					},
+					OIDCProvider: &model.OIDCProvider{
+						Issuer:   "https://test-issuer.com",
+						ClientID: "test-client-id",
+					},
+				}, nil)
+				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2F%2Fwww.example.com%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie": []string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
+				responseHeader: http.Header{"Location":[]string{"?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2Fapi%2Fv2%2Fsso%2Fslug%2Flogin%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie":[]string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
 			},
 		},
 	}
@@ -446,14 +450,16 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 			resource.OIDC = mocks.mockOIDC
 
 			response := httptest.NewRecorder()
 
-			resource.OIDCLoginHandler(response, request, testCase.args)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/sso/{%s}/login", api.URIPathVariableSSOProviderSlug), resource.SSOLoginHandler).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, _ := test.ProcessResponse(t, response)
 
@@ -489,7 +495,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 		name         string
 		args         model.SSOProvider
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 	tt := []testData{
@@ -523,7 +529,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -563,7 +569,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60code%60+parameter+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -606,7 +612,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+SSO+Provider+response%3A+%60state%60+parameter+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -650,7 +656,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+request%3A+%60pkce%60+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -704,7 +710,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid+request%3A+%60state%60+is+missing"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -767,7 +773,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"//www.example.com/ui/login?error=Invalid%3A+%60state%60+do+not+match"}, "Set-Cookie": []string{"state=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT", "pkce=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
@@ -830,8 +836,8 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				mocks.mockOIDC.EXPECT().NewProvider(req.Context(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
+			setupMocks: func(t *testing.T, mocks *mock) {
+				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
@@ -851,7 +857,7 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resource := v2auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, auth.Authorizer{}, nil)
 			resource.OIDC = mocks.mockOIDC
