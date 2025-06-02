@@ -449,7 +449,7 @@ func (s *PathSegment) Descend(node *Node, relationship *Relationship) *PathSegme
 }
 
 // FormatPathSegment outputs a cypher-formatted path from the given PathSegment pointer
-func FormatPathSegment(segment *PathSegment) string {
+func FormatPathSegment(segment *PathSegment, direction Direction) string {
 	formatted := strings.Builder{}
 
 	segment.WalkReverse(func(nextSegment *PathSegment) bool {
@@ -460,9 +460,22 @@ func FormatPathSegment(segment *PathSegment) string {
 		formatted.WriteString(")")
 
 		if nextSegment.Trunk != nil {
-			formatted.WriteString("<-[")
-			formatted.WriteString(nextSegment.Edge.Kind.String())
-			formatted.WriteString("]-")
+			switch direction {
+			case DirectionInbound:
+				formatted.WriteString("-[")
+				formatted.WriteString(nextSegment.Edge.Kind.String())
+				formatted.WriteString("]->")
+
+			case DirectionOutbound:
+				formatted.WriteString("<-[")
+				formatted.WriteString(nextSegment.Edge.Kind.String())
+				formatted.WriteString("]-")
+
+			default:
+				formatted.WriteString("-[")
+				formatted.WriteString(nextSegment.Edge.Kind.String())
+				formatted.WriteString("]-")
+			}
 		}
 
 		return true

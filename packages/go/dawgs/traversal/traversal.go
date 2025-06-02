@@ -528,21 +528,21 @@ func FilteredSkipLimit(filter SkipLimitFilter, visitorFilter SegmentVisitor, ski
 			if skip == 0 || shouldCollect() {
 				// If we should collect this result, check to see if we're already at a limit for the number of results
 				if limit > 0 && atLimit() {
-					slog.Debug(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next)))
+					slog.Debug(fmt.Sprintf("At collection limit, rejecting path: %s", graph.FormatPathSegment(next, graph.DirectionInbound)))
 					return false
 				}
 
-				slog.Debug(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next)))
+				slog.Debug(fmt.Sprintf("Collected path: %s", graph.FormatPathSegment(next, graph.DirectionInbound)))
 				visitorFilter(next)
 			} else {
-				slog.Debug(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next)))
+				slog.Debug(fmt.Sprintf("Skipping path visit: %s", graph.FormatPathSegment(next, graph.DirectionInbound)))
 			}
 		}
 
 		if shouldDescend {
-			slog.Debug(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next)))
+			slog.Debug(fmt.Sprintf("Descending into path: %s", graph.FormatPathSegment(next, graph.DirectionInbound)))
 		} else {
-			slog.Debug(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next)))
+			slog.Debug(fmt.Sprintf("Rejecting further descent into path: %s", graph.FormatPathSegment(next, graph.DirectionInbound)))
 		}
 
 		return shouldDescend
