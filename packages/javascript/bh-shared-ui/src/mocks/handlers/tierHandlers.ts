@@ -38,10 +38,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: false,
                     },
-                    {
-                        key: 'back_button_support',
-                        enabled: true,
-                    },
                 ],
             })
         );
@@ -163,6 +159,13 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                 data: {
                     member: tierMocks.createAssetGroupMemberInfo(tagId as string, memberId as string),
                 },
+            })
+        );
+    }),
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
             })
         );
     }),

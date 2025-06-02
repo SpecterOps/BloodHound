@@ -102,7 +102,7 @@ func (s *BloodhoundDB) UpdateCustomNodeKind(ctx context.Context, customNodeKind 
 
 func (s *BloodhoundDB) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
 	var (
-		customNodeKind = model.CustomNodeKind{}
+		customNodeKind = model.CustomNodeKind{KindName: kindName}
 
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionDeleteCustomNodeKind,

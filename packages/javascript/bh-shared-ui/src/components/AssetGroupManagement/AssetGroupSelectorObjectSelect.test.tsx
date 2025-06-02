@@ -61,6 +61,24 @@ describe('AssetGroupSelectorObjectSelect', () => {
 
     const setSeeds = vi.fn();
 
+    const server = setupServer(
+        rest.get(`/api/v2/search`, (_, res, ctx) => {
+            return res(ctx.json(testSearchResults));
+        }),
+        rest.get(`/api/v2/customnode`, (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {},
+                })
+            );
+        })
+    );
+    beforeAll(() => server.listen());
+    afterEach(() => {
+        server.resetHandlers();
+    });
+    afterAll(() => server.close());
+
     beforeEach(async () => {
         await act(async () => {
             render(

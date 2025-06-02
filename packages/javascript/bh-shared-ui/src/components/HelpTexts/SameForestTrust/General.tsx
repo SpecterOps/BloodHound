@@ -22,7 +22,7 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The SameForestTrust edge represents a same-forest (intra-realm) trust relationship between two domains
+                The SameForestTrust edge represents a same-forest (intraforest) trust relationship between two domains
                 within the same AD forest. In this relationship, the {sourceName} domain has a same-forest trust with
                 the {targetName} domain, allowing principals (users and computers) from {targetName} to access resources
                 in {sourceName}.

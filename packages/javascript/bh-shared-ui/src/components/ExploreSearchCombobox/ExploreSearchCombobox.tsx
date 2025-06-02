@@ -17,7 +17,7 @@
 import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants, useTheme } from '@mui/material';
 import { useCombobox } from 'downshift';
 import { SearchResult, getEmptyResultsText, getKeywordAndTypeValues, useSearch } from '../../hooks';
-import { SearchValue } from '../../store';
+import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
 
