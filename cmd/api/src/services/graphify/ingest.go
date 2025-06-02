@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	upload_service "github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 const (
@@ -43,7 +43,7 @@ const (
 
 type ReadOptions struct {
 	FileType     model.FileType // JSON or ZIP
-	IngestSchema upload_service.IngestSchema
+	IngestSchema upload.IngestSchema
 	ADCSEnabled  bool
 }
 
@@ -85,7 +85,7 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 		shouldValidateGraph = true
 	}
 
-	if meta, err := upload_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
+	if meta, err := upload.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
 		return err
 	} else {
 		// Because we gave the reader to ParseAndValidatePayload above, if they read the whole
