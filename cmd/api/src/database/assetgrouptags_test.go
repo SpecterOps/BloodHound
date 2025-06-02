@@ -171,13 +171,16 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 
 func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	var (
-		dbInst              = integration.SetupDB(t)
-		testCtx             = context.Background()
-		tagTypeTier         = model.AssetGroupTagTypeTier
-		tagTypeLabel        = model.AssetGroupTagTypeLabel
-		testActor           = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
-		testName            = "test tag name"
-		testName2           = "test2 tag name"
+		dbInst       = integration.SetupDB(t)
+		testCtx      = context.Background()
+		tagTypeTier  = model.AssetGroupTagTypeTier
+		tagTypeLabel = model.AssetGroupTagTypeLabel
+		testActor    = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testName     = "test tag name"
+		testName2    = "test2 tag name"
+		// testName3           = "test3 tag name"
+		testName4           = "test4 tag name"
+		testName5           = "test5 tag name"
 		testDescription     = "test tag description"
 		position            = null.Int32{}
 		shiftedPosition     = null.Int32From(2)
@@ -222,7 +225,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("successfully creates label", func(t *testing.T) {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testActor, testName, testDescription, position, requireCertifyLabel)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testActor, testName2, testDescription, position, requireCertifyLabel)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeLabel, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
@@ -231,7 +234,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testName2, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
@@ -245,14 +248,14 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testName2, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
 	})
 
 	t.Run("successfully creates and shifts tiers", func(t *testing.T) {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName, testDescription, position, requireCertifyTier)
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName4, testDescription, position, requireCertifyTier)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeTier, tag.Type)
 		require.False(t, tag.CreatedAt.IsZero())
@@ -261,7 +264,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testName4, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
@@ -275,12 +278,12 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
 		require.Empty(t, tag.DeletedAt)
 		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName, tag.Name)
+		require.Equal(t, testName4, tag.Name)
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
 
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName2, testDescription, shiftedPosition, requireCertifyTier)
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName5, testDescription, shiftedPosition, requireCertifyTier)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeTier, tag2.Type)
 		require.False(t, tag2.CreatedAt.IsZero())
@@ -289,7 +292,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag2.UpdatedBy)
 		require.Empty(t, tag2.DeletedAt)
 		require.Empty(t, tag2.DeletedBy)
-		require.Equal(t, testName2, tag2.Name)
+		require.Equal(t, testName5, tag2.Name)
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32From(2), tag2.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
@@ -303,7 +306,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testActor.ID.String(), tag2.UpdatedBy)
 		require.Empty(t, tag2.DeletedAt)
 		require.Empty(t, tag2.DeletedBy)
-		require.Equal(t, testName2, tag2.Name)
+		require.Equal(t, testName5, tag2.Name)
 		require.Equal(t, testDescription, tag2.Description)
 		require.Equal(t, null.Int32From(2), tag2.Position)
 		require.Equal(t, null.BoolFrom(true), tag2.RequireCertify)
