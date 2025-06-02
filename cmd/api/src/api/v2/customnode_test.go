@@ -51,10 +51,10 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -90,7 +90,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -129,7 +129,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -175,7 +175,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(gomock.Any(), gomock.Any()).Return(model.CustomNodeKinds{
 					{
@@ -219,7 +219,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
@@ -253,10 +253,10 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -294,7 +294,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -335,7 +335,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -376,7 +376,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockDatabase.EXPECT().UpdateCustomNodeKind(gomock.Any(), gomock.Any()).Return(model.CustomNodeKind{
 					ID:       1,
@@ -407,7 +407,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
