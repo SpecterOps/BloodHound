@@ -185,6 +185,7 @@ const GraphView: FC = () => {
                             currentNodes={currentNodes || {}}
                             onSelect={(node) => {
                                 handleClickNode?.(node.id);
+                                sigmaChartRef?.current?.zoomTo(node.id);
                                 toggleCurrentSearch?.();
                             }}
                             onClose={toggleCurrentSearch}

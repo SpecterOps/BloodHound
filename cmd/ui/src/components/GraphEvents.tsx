@@ -84,6 +84,25 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaChartRef,
         () => {
             return {
+                zoomTo: (id: string) => {
+                    const node = sigma.getNodeDisplayData(id);
+
+                    if (node) {
+                        sigma.getCamera().animate(
+                            {
+                                x: node?.x,
+                                y: node?.y,
+                                ratio: 1,
+                            },
+                            {
+                                easing: 'quadraticOut',
+                            },
+                            () => {
+                                sigma.scheduleRefresh();
+                            }
+                        );
+                    }
+                },
                 resetCamera: () => {
                     resetCamera(sigma);
                 },
