@@ -153,7 +153,7 @@ const GraphView: FC = () => {
                     showEdgeLabels={showEdgeLabels}
                     onToggleEdgeLabels={toggleShowEdgeLabels}
                     jsonData={exportJsonData}
-                    onReset={sigmaChartRef.current?.resetCamera}
+                    onReset={() => sigmaChartRef.current?.resetCamera()}
                     currentNodes={currentNodes}
                 />
             </div>
@@ -174,12 +174,5 @@ const GraphView: FC = () => {
         </div>
     );
 };
-
-/**
- * TODO:
- * What should be the width of search current results? It changes as the parent element widens
- *   existing behavior
- *
- */
 
 export default GraphView;
