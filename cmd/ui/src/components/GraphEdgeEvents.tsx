@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { setEdgeInfoOpen, setSelectedEdge } from 'bh-shared-ui';
+import { useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
-import { setEntityInfoOpen } from 'src/ducks/entityinfo/actions';
 import {
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
@@ -27,11 +26,9 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
-import { useAppDispatch, useAppSelector } from 'src/store';
 
 const GraphEdgeEvents: FC = () => {
-    const dispatch = useAppDispatch();
-    const graphState = useAppSelector((state) => state.explore);
+    const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
@@ -39,37 +36,6 @@ const GraphEdgeEvents: FC = () => {
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
     const { height, width } = mouseCanvas.style;
-
-    const onClickEdge = useCallback(
-        (id: string) => {
-            const exploreGraphId = sigma.getGraph().getEdgeAttribute(id, 'exploreGraphId');
-            const selectedItem = graphState.chartProps.items?.[id] || graphState.chartProps.items?.[exploreGraphId];
-            if (!selectedItem) return;
-
-            dispatch(setEntityInfoOpen(false));
-            dispatch(setEdgeInfoOpen(true));
-            dispatch(
-                setSelectedEdge({
-                    id: id,
-                    name: selectedItem.label?.text || '',
-                    data: selectedItem.data || {},
-                    sourceNode: {
-                        name: graphState.chartProps.items?.[selectedItem.id1].data.name,
-                        id: selectedItem.id1,
-                        objectId: graphState.chartProps.items?.[selectedItem.id1].data.objectid,
-                        type: graphState.chartProps.items?.[selectedItem.id1].data.nodetype,
-                    },
-                    targetNode: {
-                        name: graphState.chartProps.items?.[selectedItem.id2].data.name,
-                        id: selectedItem.id2,
-                        objectId: graphState.chartProps.items?.[selectedItem.id2].data.objectid,
-                        type: graphState.chartProps.items?.[selectedItem.id2].data.nodetype,
-                    },
-                })
-            );
-        },
-        [graphState.chartProps.items, dispatch, sigma]
-    );
 
     const handleEdgeEvents = useCallback(
         (event: any) => {
@@ -168,7 +134,7 @@ const GraphEdgeEvents: FC = () => {
                     //Check if the click happened within the bounds of the label
                     if (viewportX > x1 && viewportX < x2 && viewportY > y1 && viewportY < y2) {
                         if (event.type === 'click') {
-                            onClickEdge(edge);
+                            setExploreSelectedItem(edge);
                         } else {
                             //Hover the edge label
                             if (sigmaContainer) sigmaContainer.style.cursor = 'pointer';
@@ -191,7 +157,7 @@ const GraphEdgeEvents: FC = () => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [sigma, mouseCanvas, edgeLabelsCanvas, onClickEdge, sigmaContainer]
+        [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
     return (

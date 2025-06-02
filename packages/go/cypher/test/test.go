@@ -20,10 +20,16 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
+	"github.com/specterops/bloodhound/cypher/analyzer"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	format2 "github.com/specterops/bloodhound/cypher/models/cypher/format"
 
@@ -32,7 +38,7 @@ import (
 )
 
 //go:embed cases
-var fixtureFS embed.FS
+var testCaseFiles embed.FS
 
 type Type = string
 
@@ -119,9 +125,9 @@ func CypherToCypher(ctx *frontend.Context, input string) (string, error) {
 }
 
 type StringMatchTest struct {
-	Query      string `json:"query"`
-	Matcher    string `json:"matcher"`
-	Complexity *int64 `json:"complexity"`
+	Query           string `json:"query"`
+	Matcher         string `json:"matcher,omitempty"`
+	ExpectedFitness *int64 `json:"fitness"`
 }
 
 func (s StringMatchTest) Run(t *testing.T, testCase Case) {
@@ -147,8 +153,8 @@ func (s StringMatchTest) Run(t *testing.T, testCase Case) {
 type Case struct {
 	Name     string          `json:"name"`
 	Type     Type            `json:"type"`
-	Targeted bool            `json:"targeted"`
-	Ignore   bool            `json:"ignore"`
+	Targeted bool            `json:"targeted,omitempty"`
+	Ignore   bool            `json:"ignore,omitempty"`
 	Details  json.RawMessage `json:"details"`
 }
 
@@ -156,14 +162,14 @@ func (s Case) MarshalDetails(target any) error {
 	return json.Unmarshal(s.Details, target)
 }
 
-func UnmarshallTestCaseDetails[T any](t *testing.T, testCase Case) T {
+func UnmarshallTestCaseDetails[T any](testCase Case) (T, error) {
 	var value T
 
 	if err := testCase.MarshalDetails(&value); err != nil {
-		t.Fatalf("Failed while unmarshaling details for test case %s: %v", testCase.Name, err)
+		return value, fmt.Errorf("failed while unmarshaling details for test case %s: %v", testCase.Name, err)
 	}
 
-	return value
+	return value, nil
 }
 
 type Cases struct {
@@ -202,7 +208,7 @@ func (s Cases) Run(t *testing.T) {
 func LoadFixture(t *testing.T, filename string) Cases {
 	var (
 		fixture   Cases
-		file, err = fixtureFS.Open(filename)
+		file, err = testCaseFiles.Open(filename)
 	)
 
 	if err != nil {
@@ -222,7 +228,11 @@ func testRunner[T Runner](testCase Case) func(t *testing.T) {
 	return func(t *testing.T) {
 		// Run the test case if it isn't ignored
 		if !testCase.Ignore {
-			UnmarshallTestCaseDetails[T](t, testCase).Run(t, testCase)
+			if typedTestCase, err := UnmarshallTestCaseDetails[T](testCase); err != nil {
+				t.Fatalf("Error unmarshalling test case details: %v", err)
+			} else {
+				typedTestCase.Run(t, testCase)
+			}
 		}
 	}
 }
@@ -240,4 +250,92 @@ func testCase(test Case) func(t *testing.T) {
 			t.Fatalf("Unknown test type: %s", test.Type)
 		}
 	}
+}
+
+func updatedCasesDir() (string, error) {
+	if workingDir, err := os.Getwd(); err != nil {
+		return "", err
+	} else {
+		path := filepath.Join(workingDir, "updated_cases")
+
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return "", err
+		}
+
+		return path, nil
+	}
+}
+
+func UpdatePositiveTestCasesFitness() error {
+	if updatedCasesPath, err := updatedCasesDir(); err != nil {
+		return err
+	} else if err := fs.WalkDir(testCaseFiles, "cases", func(path string, dir fs.DirEntry, err error) error {
+		if dir.IsDir() {
+			return nil
+		}
+
+		var (
+			caseFileName        = filepath.Base(path)
+			updatedCaseFilePath = filepath.Join(updatedCasesPath, caseFileName)
+		)
+
+		if strings.HasSuffix(path, ".json") {
+			if fin, err := testCaseFiles.Open(path); err != nil {
+				return err
+			} else {
+				defer fin.Close()
+
+				var (
+					cases        Cases
+					updatedCases Cases
+				)
+
+				if err := json.NewDecoder(fin).Decode(&cases); err != nil {
+					return fmt.Errorf("error decoding fixture: %v", err)
+				}
+
+				for _, nextCase := range cases.TestCases {
+					if nextCase.Type == TypeStringMatch {
+						parseContext := frontend.NewContext()
+
+						if details, err := UnmarshallTestCaseDetails[StringMatchTest](nextCase); err != nil {
+							return fmt.Errorf("error unmarshalling test case details: %v", err)
+						} else if queryModel, err := frontend.ParseCypher(parseContext, details.Query); err != nil {
+							return fmt.Errorf("parser errors: %s", err.Error())
+						} else if complexity, err := analyzer.QueryComplexity(queryModel); err != nil {
+							return fmt.Errorf("analyzer errors: %s", err.Error())
+						} else {
+							details.ExpectedFitness = &complexity.RelativeFitness
+
+							if updatedDetails, err := json.Marshal(details); err != nil {
+								return fmt.Errorf("error marshalling test case details: %v", err)
+							} else {
+								nextCase.Details = updatedDetails
+							}
+						}
+
+						updatedCases.TestCases = append(updatedCases.TestCases, nextCase)
+					} else {
+						updatedCases.TestCases = append(updatedCases.TestCases, nextCase)
+					}
+				}
+
+				if output, err := os.OpenFile(updatedCaseFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+					return err
+				} else {
+					defer output.Close()
+
+					if err := json.NewEncoder(output).Encode(updatedCases); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

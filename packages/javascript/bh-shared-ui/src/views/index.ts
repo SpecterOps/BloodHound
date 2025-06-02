@@ -20,12 +20,12 @@ export { default as UserProfile } from './UserProfile';
 
 export { default as SSOConfiguration } from './SSOConfiguration';
 
+export { default as TierManagement } from './TierManagement';
+
 export { default as Users } from './Users';
 
 export * from './Explore';
 
 export * from './DataQuality';
-
-export * as TierManagement from './TierManagement';
 
 export * from './Users';

@@ -92,47 +92,57 @@ var (
 	AZMGGrantAppRoles                    = graph.StringKind("AZMGGrantAppRoles")
 	AZMGGrantRole                        = graph.StringKind("AZMGGrantRole")
 	SyncedToADUser                       = graph.StringKind("SyncedToADUser")
+	AZRoleEligible                       = graph.StringKind("AZRoleEligible")
+	AZRoleApprover                       = graph.StringKind("AZRoleApprover")
 )
 
 type Property string
 
 const (
-	AppOwnerOrganizationID  Property = "appownerorganizationid"
-	AppDescription          Property = "appdescription"
-	AppDisplayName          Property = "appdisplayname"
-	ServicePrincipalType    Property = "serviceprincipaltype"
-	UserType                Property = "usertype"
-	TenantID                Property = "tenantid"
-	ServicePrincipalID      Property = "service_principal_id"
-	ServicePrincipalNames   Property = "service_principal_names"
-	OperatingSystemVersion  Property = "operatingsystemversion"
-	TrustType               Property = "trustype"
-	IsBuiltIn               Property = "isbuiltin"
-	AppID                   Property = "appid"
-	AppRoleID               Property = "approleid"
-	DeviceID                Property = "deviceid"
-	NodeResourceGroupID     Property = "noderesourcegroupid"
-	OnPremID                Property = "onpremid"
-	OnPremSyncEnabled       Property = "onpremsyncenabled"
-	SecurityEnabled         Property = "securityenabled"
-	SecurityIdentifier      Property = "securityidentifier"
-	EnableRBACAuthorization Property = "enablerbacauthorization"
-	Scope                   Property = "scope"
-	Offer                   Property = "offer"
-	MFAEnabled              Property = "mfaenabled"
-	License                 Property = "license"
-	Licenses                Property = "licenses"
-	LoginURL                Property = "loginurl"
-	MFAEnforced             Property = "mfaenforced"
-	UserPrincipalName       Property = "userprincipalname"
-	IsAssignableToRole      Property = "isassignabletorole"
-	PublisherDomain         Property = "publisherdomain"
-	SignInAudience          Property = "signinaudience"
-	RoleTemplateID          Property = "templateid"
+	AppOwnerOrganizationID                            Property = "appownerorganizationid"
+	AppDescription                                    Property = "appdescription"
+	AppDisplayName                                    Property = "appdisplayname"
+	ServicePrincipalType                              Property = "serviceprincipaltype"
+	UserType                                          Property = "usertype"
+	TenantID                                          Property = "tenantid"
+	ServicePrincipalID                                Property = "service_principal_id"
+	ServicePrincipalNames                             Property = "service_principal_names"
+	OperatingSystemVersion                            Property = "operatingsystemversion"
+	TrustType                                         Property = "trustype"
+	IsBuiltIn                                         Property = "isbuiltin"
+	AppID                                             Property = "appid"
+	AppRoleID                                         Property = "approleid"
+	DeviceID                                          Property = "deviceid"
+	NodeResourceGroupID                               Property = "noderesourcegroupid"
+	OnPremID                                          Property = "onpremid"
+	OnPremSyncEnabled                                 Property = "onpremsyncenabled"
+	SecurityEnabled                                   Property = "securityenabled"
+	SecurityIdentifier                                Property = "securityidentifier"
+	EnableRBACAuthorization                           Property = "enablerbacauthorization"
+	Scope                                             Property = "scope"
+	Offer                                             Property = "offer"
+	MFAEnabled                                        Property = "mfaenabled"
+	License                                           Property = "license"
+	Licenses                                          Property = "licenses"
+	LoginURL                                          Property = "loginurl"
+	MFAEnforced                                       Property = "mfaenforced"
+	UserPrincipalName                                 Property = "userprincipalname"
+	IsAssignableToRole                                Property = "isassignabletorole"
+	PublisherDomain                                   Property = "publisherdomain"
+	SignInAudience                                    Property = "signinaudience"
+	RoleTemplateID                                    Property = "templateid"
+	RoleDefinitionId                                  Property = "roledefinitionid"
+	EndUserAssignmentRequiresApproval                 Property = "enduserassignmentrequiresapproval"
+	EndUserAssignmentRequiresCAPAuthenticationContext Property = "enduserassignmentrequirescapauthenticationcontext"
+	EndUserAssignmentUserApprovers                    Property = "enduserassignmentuserapprovers"
+	EndUserAssignmentGroupApprovers                   Property = "enduserassignmentgroupapprovers"
+	EndUserAssignmentRequiresMFA                      Property = "enduserassignmentrequiresmfa"
+	EndUserAssignmentRequiresJustification            Property = "enduserassignmentrequiresjustification"
+	EndUserAssignmentRequiresTicketInformation        Property = "enduserassignmentrequiresticketinformation"
 )
 
 func AllProperties() []Property {
-	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID}
+	return []Property{AppOwnerOrganizationID, AppDescription, AppDisplayName, ServicePrincipalType, UserType, TenantID, ServicePrincipalID, ServicePrincipalNames, OperatingSystemVersion, TrustType, IsBuiltIn, AppID, AppRoleID, DeviceID, NodeResourceGroupID, OnPremID, OnPremSyncEnabled, SecurityEnabled, SecurityIdentifier, EnableRBACAuthorization, Scope, Offer, MFAEnabled, License, Licenses, LoginURL, MFAEnforced, UserPrincipalName, IsAssignableToRole, PublisherDomain, SignInAudience, RoleTemplateID, RoleDefinitionId, EndUserAssignmentRequiresApproval, EndUserAssignmentRequiresCAPAuthenticationContext, EndUserAssignmentUserApprovers, EndUserAssignmentGroupApprovers, EndUserAssignmentRequiresMFA, EndUserAssignmentRequiresJustification, EndUserAssignmentRequiresTicketInformation}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -200,6 +210,22 @@ func ParseProperty(source string) (Property, error) {
 		return SignInAudience, nil
 	case "templateid":
 		return RoleTemplateID, nil
+	case "roledefinitionid":
+		return RoleDefinitionId, nil
+	case "enduserassignmentrequiresapproval":
+		return EndUserAssignmentRequiresApproval, nil
+	case "enduserassignmentrequirescapauthenticationcontext":
+		return EndUserAssignmentRequiresCAPAuthenticationContext, nil
+	case "enduserassignmentuserapprovers":
+		return EndUserAssignmentUserApprovers, nil
+	case "enduserassignmentgroupapprovers":
+		return EndUserAssignmentGroupApprovers, nil
+	case "enduserassignmentrequiresmfa":
+		return EndUserAssignmentRequiresMFA, nil
+	case "enduserassignmentrequiresjustification":
+		return EndUserAssignmentRequiresJustification, nil
+	case "enduserassignmentrequiresticketinformation":
+		return EndUserAssignmentRequiresTicketInformation, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -270,6 +296,22 @@ func (s Property) String() string {
 		return string(SignInAudience)
 	case RoleTemplateID:
 		return string(RoleTemplateID)
+	case RoleDefinitionId:
+		return string(RoleDefinitionId)
+	case EndUserAssignmentRequiresApproval:
+		return string(EndUserAssignmentRequiresApproval)
+	case EndUserAssignmentRequiresCAPAuthenticationContext:
+		return string(EndUserAssignmentRequiresCAPAuthenticationContext)
+	case EndUserAssignmentUserApprovers:
+		return string(EndUserAssignmentUserApprovers)
+	case EndUserAssignmentGroupApprovers:
+		return string(EndUserAssignmentGroupApprovers)
+	case EndUserAssignmentRequiresMFA:
+		return string(EndUserAssignmentRequiresMFA)
+	case EndUserAssignmentRequiresJustification:
+		return string(EndUserAssignmentRequiresJustification)
+	case EndUserAssignmentRequiresTicketInformation:
+		return string(EndUserAssignmentRequiresTicketInformation)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -340,6 +382,22 @@ func (s Property) Name() string {
 		return "Sign In Audience"
 	case RoleTemplateID:
 		return "Role Template ID"
+	case RoleDefinitionId:
+		return "Role Definition Id"
+	case EndUserAssignmentRequiresApproval:
+		return "End User Assignment Requires Approval"
+	case EndUserAssignmentRequiresCAPAuthenticationContext:
+		return "End User Assignment Requires CAP AuthenticationContext"
+	case EndUserAssignmentUserApprovers:
+		return "End User Assignment User Approvers"
+	case EndUserAssignmentGroupApprovers:
+		return "End User Assignment Group Approvers"
+	case EndUserAssignmentRequiresMFA:
+		return "End User Assignment Requires MFA"
+	case EndUserAssignmentRequiresJustification:
+		return "End User Assignment Requires Justification"
+	case EndUserAssignmentRequiresTicketInformation:
+		return "End User Assignment Requires Ticket Information"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -353,7 +411,7 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser}
+	return []graph.Kind{AvereContributor, Contains, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, ScopedTo, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, ApplicationReadWriteAll, AppRoleAssignmentReadWriteAll, DirectoryReadWriteAll, GroupReadWriteAll, GroupMemberReadWriteAll, RoleManagementReadWriteDirectory, ServicePrincipalEndpointReadWriteAll, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, AZRoleApprover}
 }
 func AppRoleTransitRelationshipKinds() []graph.Kind {
 	return []graph.Kind{AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole}
@@ -368,7 +426,7 @@ func ExecutionPrivileges() []graph.Kind {
 	return []graph.Kind{VMAdminLogin, VMContributor, AvereContributor, WebsiteContributor, Contributor, ExecuteCommand}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, Contains}
+	return []graph.Kind{AvereContributor, Contributor, GetCertificates, GetKeys, GetSecrets, HasRole, MemberOf, Owner, RunsAs, VMContributor, AutomationContributor, KeyVaultContributor, VMAdminLogin, AddMembers, AddSecret, ExecuteCommand, GlobalAdmin, PrivilegedAuthAdmin, Grant, GrantSelf, PrivilegedRoleAdmin, ResetPassword, UserAccessAdministrator, Owns, CloudAppAdmin, AppAdmin, AddOwner, ManagedIdentity, AKSContributor, NodeResourceGroup, WebsiteContributor, LogicAppContributor, AZMGAddMember, AZMGAddOwner, AZMGAddSecret, AZMGGrantAppRoles, AZMGGrantRole, SyncedToADUser, AZRoleEligible, Contains}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{Entity, VMScaleSet, App, Role, Device, FunctionApp, Group, KeyVault, ManagementGroup, ResourceGroup, ServicePrincipal, Subscription, Tenant, User, VM, ManagedCluster, ContainerRegistry, WebApp, LogicApp, AutomationAccount}

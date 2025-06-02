@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -15,19 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import {
-    DeepPartial,
-    EntityKinds,
-    Permission,
-    searchbarActions as actions,
-    createAuthStateWithPermissions,
-} from 'bh-shared-ui';
+import * as bhSharedUi from 'bh-shared-ui';
+import { DeepPartial, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
 import ContextMenu from './ContextMenu';
+
+const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
+const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
+
+const fakeSelectedItemId = 'abc';
+mockSelectedItemQuery.mockReturnValue({
+    selectedItemQuery: {
+        data: {
+            objectId: fakeSelectedItemId,
+        },
+    },
+} as any);
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -45,6 +52,13 @@ const server = setupServer(
                 },
             })
         );
+    }),
+    rest.get('/api/v2/features', (req, res, ctx) => {
+        return res(
+            ctx.json({
+                data: [],
+            })
+        );
     })
 );
 
@@ -52,15 +66,8 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const setup = async (permissions?: Permission[]) => {
+const setup = async (permissions?: Permission[], primarySearch?: string, secondarySearch?: string) => {
     const initialState: DeepPartial<AppState> = {
-        entityinfo: {
-            selectedNode: {
-                name: 'foo',
-                id: '1234',
-                type: 'User' as EntityKinds,
-            },
-        },
         assetgroups: {
             assetGroups: [
                 { tag: 'owned', id: 1 },
@@ -73,11 +80,21 @@ const setup = async (permissions?: Permission[]) => {
         initialState.auth = createAuthStateWithPermissions(permissions);
     }
 
-    return await act(async () => {
+    const mockSetExploreParams = vi.fn();
+    mockUseExploreParams.mockReturnValue({
+        setExploreParams: mockSetExploreParams,
+        primarySearch,
+        secondarySearch,
+    } as any);
+
+    const screen = await act(async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
             initialState,
         });
     });
+
+    const user = userEvent.setup();
+    return { screen, user, mockSetExploreParams };
 };
 
 describe('ContextMenu', async () => {
@@ -107,40 +124,57 @@ describe('ContextMenu', async () => {
         expect(addToHighValueOption).toBeNull();
     });
 
-    it('handles setting a start node', async () => {
-        await setup();
-
-        const user = userEvent.setup();
-        const sourceNodeSelectedSpy = vi.spyOn(actions, 'sourceNodeSelected');
+    it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
+        const { user, mockSetExploreParams } = await setup(undefined);
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
 
-        expect(sourceNodeSelectedSpy).toBeCalledTimes(1);
-        expect(sourceNodeSelectedSpy).toHaveBeenCalledWith(
-            {
-                name: 'foo',
-                objectid: '1234',
-                type: 'User',
-            },
-            true
-        );
+        expect(mockSetExploreParams).toBeCalledWith({
+            primarySearch: fakeSelectedItemId,
+            exploreSearchTab: 'pathfinding',
+            searchType: 'node',
+        });
     });
 
-    it('handles setting an end node', async () => {
-        await setup();
+    it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
+        const secondarySearch = 'cdf';
+        const { user, mockSetExploreParams } = await setup(undefined, undefined, secondarySearch);
 
-        const user = userEvent.setup();
-        const destinationNodeSelectedSpy = vi.spyOn(actions, 'destinationNodeSelected');
-
-        const startNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
+        const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
 
-        expect(destinationNodeSelectedSpy).toBeCalledTimes(1);
-        expect(destinationNodeSelectedSpy).toHaveBeenCalledWith({
-            name: 'foo',
-            objectid: '1234',
-            type: 'User',
+        expect(mockSetExploreParams).toBeCalledWith({
+            primarySearch: fakeSelectedItemId,
+            exploreSearchTab: 'pathfinding',
+            searchType: 'pathfinding',
+        });
+    });
+
+    it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
+        const { user, mockSetExploreParams } = await setup(undefined);
+
+        const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
+        await user.click(endNodeOption);
+
+        expect(mockSetExploreParams).toBeCalledWith({
+            secondarySearch: fakeSelectedItemId,
+            exploreSearchTab: 'pathfinding',
+            searchType: 'node',
+        });
+    });
+
+    it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
+        const secondarySearch = 'cdf';
+        const { user, mockSetExploreParams } = await setup(undefined, secondarySearch);
+
+        const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
+        await user.click(endNodeOption);
+
+        expect(mockSetExploreParams).toBeCalledWith({
+            secondarySearch: fakeSelectedItemId,
+            exploreSearchTab: 'pathfinding',
+            searchType: 'pathfinding',
         });
     });
 

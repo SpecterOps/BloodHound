@@ -21,7 +21,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/bloodhoundad/azurehound/v2 v2.0.1
+	github.com/bloodhoundad/azurehound/v2 v2.4.1
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/crewjam/saml v0.4.14
@@ -45,7 +45,7 @@ require (
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/unrolled/secure v1.13.0
-	go.uber.org/mock v0.5.1
+	go.uber.org/mock v0.5.2
 	golang.org/x/oauth2 v0.23.0
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12

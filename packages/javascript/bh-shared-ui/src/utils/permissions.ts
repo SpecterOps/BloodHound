@@ -32,6 +32,7 @@ export enum Permission {
     GRAPH_DB_WRITE,
     SAVED_QUERIES_READ,
     SAVED_QUERIES_WRITE,
+    WIPE_DB,
 }
 
 export type PermissionDefinition = {
@@ -115,5 +116,9 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.SAVED_QUERIES_WRITE]: {
         authority: 'saved_queries',
         name: 'Write',
+    },
+    [Permission.WIPE_DB]: {
+        authority: 'db',
+        name: 'Wipe',
     },
 };

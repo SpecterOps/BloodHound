@@ -38,10 +38,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                         enabled: true,
                         user_updatable: false,
                     },
-                    {
-                        key: 'back_button_support',
-                        enabled: true,
-                    },
                 ],
             })
         );
@@ -55,19 +51,51 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         );
     }),
 
-    // GET Labels
-    rest.get('/api/v2/asset-group-labels', async (_req, res, ctx) => {
-        return res(ctx.json({ data: { asset_group_labels: tierMocks.createAssetGroupLabels() } }));
+    // GET Tags
+    rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tags: tierMocks.createAssetGroupTags(5) } }));
+    }),
+
+    // GET Tag
+    rest.get('/api/v2/asset-group-tags/:tagId', async (req, res, ctx) => {
+        const { tagId } = req.params;
+
+        return res(ctx.json({ data: { tag: tierMocks.createAssetGroupTag(parseInt(tagId as string)) } }));
     }),
 
     // GET Selectors
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/selectors', async (req, res, ctx) => {
-        const { assetGroupId } = req.params;
-        return res(ctx.json({ data: { selectors: tierMocks.createSelectors(10, parseInt(assetGroupId as string)) } }));
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors', async (req, res, ctx) => {
+        const { tagId } = req.params;
+        return res(ctx.json({ data: { selectors: tierMocks.createSelectors(10, parseInt(tagId as string)) } }));
     }),
 
-    // GET Members/Objects for Label
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/members', async (req, res, ctx) => {
+    // GET Selector
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (req, res, ctx) => {
+        const { tagId, selectorId } = req.params;
+        return res(
+            ctx.json({
+                data: { selector: tierMocks.createSelector(parseInt(tagId as string), parseInt(selectorId as string)) },
+            })
+        );
+    }),
+
+    // CREATE Selector
+    rest.post('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    // PATCH Selector
+    rest.patch('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    // DELETE Selector
+    rest.delete('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+        return res(ctx.status(500, 'get rekt'));
+    }),
+
+    // GET Members/Objects for Tag
+    rest.get('/api/v2/asset-group-tags/:tagId/members', async (req, res, ctx) => {
         const total = 3000;
         const url = new URL(req.url);
         const { assetGroupId, selectorId } = req.params;
@@ -93,7 +121,7 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
     }),
 
     // GET Members/Objects for Selector
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/selectors/:selectorId/members*', async (req, res, ctx) => {
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors/:selectorId/members*', async (req, res, ctx) => {
         const total = 2000;
         const { assetGroupId, selectorId } = req.params;
         const url = new URL(req.url);
@@ -117,29 +145,28 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         );
     }),
 
+    // GET Member counts
+    rest.get('/api/v2/asset-group-tags/:tagId/members/counts', async (_, res, ctx) => {
+        return res(ctx.json({ data: tierMocks.createAssetGroupMembersCount() }));
+    }),
+
     // GET Selectors for Object/Member
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/members/:memberId', async (req, res, ctx) => {
-        const total = 1057;
-        const { assetGroupId, memberId } = req.params;
+    rest.get('/api/v2/asset-group-tags/:tagId/members/:memberId', async (req, res, ctx) => {
+        const { tagId, memberId } = req.params;
 
         return res(
             ctx.json({
                 data: {
-                    member: tierMocks.createAssetGroupMemberInfo(
-                        parseInt(assetGroupId as string),
-                        parseInt(memberId as string)
-                    ),
+                    member: tierMocks.createAssetGroupMemberInfo(tagId as string, memberId as string),
                 },
-                count: total,
             })
         );
     }),
-
-    // GET object counts
-    rest.get('/api/v2/asset-group-labels/:assetGroupId/members/counts', async (req, res, ctx) => {
-        const { assetGroupId } = req.params;
+    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
         return res(
-            ctx.json({ data: { counts: tierMocks.createAssetGroupMembersCount(parseInt(assetGroupId as string)) } })
+            ctx.json({
+                data: [],
+            })
         );
     }),
 ];

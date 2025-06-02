@@ -268,6 +268,13 @@ paths:
   /api/v2/collectors/{collector_type}/{release_tag}/checksum:
     $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
 
+  /api/v2/kennel/manifest:
+    $ref: './paths/kennel.manifest.type.yaml'
+  /api/v2/kennel/enterprise-manifest:
+    $ref: './paths/kennel.enterprise-manifest.type.yaml'
+  /api/v2/kennel/download/{asset_name}:
+    $ref: './paths/kennel.download.type.yaml'
+
   # collection uploads
   /api/v2/file-upload:
     $ref: './paths/collection-uploads.file-upload.yaml'
@@ -327,16 +334,24 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/members/{asset_group_member_id}:
+    $ref: './paths/asset-isolation.asset-group-tags.id.members.id.yaml'
   /api/v2/asset-group-tags:
     $ref: './paths/asset-isolation.asset-group-tags.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.yaml'
-  /api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts:
+  /api/v2/asset-group-tags/{asset_group_tag_id}/members:
+    $ref: './paths/asset-isolation.asset-group-tags.id.members.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/members/counts:
     $ref: './paths/asset-isolation.asset-group-tags.id.members.counts.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members:
+    $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.members.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}:
     $ref: './paths/asset-isolation.asset-group-tags.id.selectors.id.yaml'
+  /api/v2/asset-group-tags/preview-selectors:
+    $ref: './paths/asset-isolation.preview-selectors.yaml'
 
   # graph
   /api/v2/graphs/kinds:

@@ -30,12 +30,10 @@ const Abuse: FC = () => {
                 removes SIDs with a RID below 1000, meaning built-in AD groups like Domain Admins and Enterprise Admins
                 cannot be used. Additionally, group memberships for global and universal groups are not applied based on
                 SID history, making accounts in groups like Domain Admins and Enterprise Admins ineffective as targets.
-                <br />
-                <br />
-                The attack target must be a user, computer, or a non-builtin group with permissions granted directly or
-                through built-in/domain local groups (NOT through membership of global/universal groups).
-                <br />
-                <br />
+                <p className='my-4'>
+                    The attack target must be a user, computer, or a non-builtin group with permissions granted directly
+                    or through built-in/domain local groups (NOT through membership of global/universal groups).
+                </p>
                 Common viable targets with indirect full control over the environment include:
                 <ul>
                     <li>The Exchange Windows Permissions group</li>
@@ -59,16 +57,15 @@ const Abuse: FC = () => {
                     <li>In the user's Kerberos TGT</li>
                     <li>In the user's Kerberos inter-realm TGT</li>
                 </ol>
-                <br />
-                The first option enables the attack over both Kerberos and NTLM, whereas the latter two only apply to
-                Kerberos authentication. However, modifying the SID History attribute is risky—it cannot be edited
-                directly via LDAP or built-in AD tools. Mimikatz supports modifying it with the command{' '}
-                <code>sid::patch</code> followed by <code>sid::add</code>, but <code>sid::patch</code> does not work on
-                Windows Server 2016 and later. It is possible to modify the SID History attribute using the DSInternals
-                command <code>Add-ADDBSidHistory</code>, but this requires stopping and restarting the NTDS service,
-                which is not recommended in a production environment.
-                <br />
-                <br />
+                <p className='my-4'>
+                    The first option enables the attack over both Kerberos and NTLM, whereas the latter two only apply
+                    to Kerberos authentication. However, modifying the SID History attribute is risky—it cannot be
+                    edited directly via LDAP or built-in AD tools. Mimikatz supports modifying it with the command{' '}
+                    <code>sid::patch</code> followed by <code>sid::add</code>, but <code>sid::patch</code> does not work
+                    on Windows Server 2016 and later. It is possible to modify the SID History attribute using the
+                    DSInternals command <code>Add-ADDBSidHistory</code>, but this requires stopping and restarting the
+                    NTDS service, which is not recommended in a production environment.
+                </p>
                 The second and third options are safer. The following example demonstrates the second option.
             </Typography>
 

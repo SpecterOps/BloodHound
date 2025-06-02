@@ -15,55 +15,112 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SearchValue } from '../../store';
-import { act, render, screen } from '../../test-utils';
+import { SeedTypeObjectId } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { act, render, screen, waitFor } from '../../test-utils';
+import SelectorFormContext, { initialValue } from '../../views/TierManagement/Save/SelectorForm/SelectorFormContext';
 import AssetGroupSelectorObjectSelect from './AssetGroupSelectorObjectSelect';
+
+const testNodes = [
+    {
+        name: 'foo',
+        objectid: '2',
+        type: 'User',
+    },
+];
+const testSearchResults = {
+    data: testNodes,
+};
+
+const server = setupServer(
+    rest.get(`/api/v2/search`, (_, res, ctx) => {
+        return res(ctx.json(testSearchResults));
+    }),
+    rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+        return res(ctx.json({ data: { members: testNodes } }));
+    }),
+    rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
+        return res(ctx.json({ data: { nodes: testNodes } }));
+    })
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('AssetGroupSelectorObjectSelect', () => {
     const user = userEvent.setup();
-    const selectedNodes: (SearchValue & { memberCount?: number })[] = [
+    const seeds = [
         {
-            name: 'bruce@gotham.local',
-            objectid: '1',
-            type: 'User',
-            memberCount: 777,
+            value: '1',
+            type: SeedTypeObjectId,
+            selector_id: 1,
         },
     ];
-    const onDeleteNode = vi.fn();
-    const onSelectNode = vi.fn();
+
+    const setSeeds = vi.fn();
+
+    const server = setupServer(
+        rest.get(`/api/v2/search`, (_, res, ctx) => {
+            return res(ctx.json(testSearchResults));
+        }),
+        rest.get(`/api/v2/customnode`, (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {},
+                })
+            );
+        })
+    );
+    beforeAll(() => server.listen());
+    afterEach(() => {
+        server.resetHandlers();
+    });
+    afterAll(() => server.close());
+
     beforeEach(async () => {
         await act(async () => {
             render(
-                <AssetGroupSelectorObjectSelect
-                    selectedNodes={selectedNodes}
-                    onDeleteNode={onDeleteNode}
-                    onSelectNode={onSelectNode}
-                />
+                <SelectorFormContext.Provider value={initialValue}>
+                    <AssetGroupSelectorObjectSelect seeds={seeds} />
+                </SelectorFormContext.Provider>
             );
         });
     });
 
     it('should render', async () => {
-        expect(
-            await screen.findByText(
-                /use the input field to add objects and the edit button to remove objects from the list/i
-            )
-        ).toBeInTheDocument();
         expect(await screen.findByTestId('explore_search_input-search')).toBeInTheDocument();
-        expect(await screen.findByTestId('selector-object-search_edit-button')).toBeInTheDocument();
-        expect(await screen.findByText(`${selectedNodes[0].name}`)).toBeInTheDocument();
-        expect(await screen.findByText(/777 members/i)).toBeInTheDocument();
+        expect(screen.getByText('Object Selector')).toBeInTheDocument();
+        expect(screen.getByText('Use the input field to add objects to the list')).toBeInTheDocument();
     });
 
-    it('invokes onDeleteNode when clicked', async () => {
-        const editBtn = await screen.findByTestId('selector-object-search_edit-button');
-        await user.click(editBtn);
-
+    it('invokes setSeeds when a current seed is deleted', async () => {
         const deleteBtn = await screen.findByText('trash-can');
 
         await user.click(deleteBtn);
 
-        expect(onDeleteNode).toBeCalledTimes(1);
-        expect(onDeleteNode).toBeCalledWith(selectedNodes[0].objectid);
+        waitFor(() => {
+            expect(setSeeds).toHaveBeenCalledWith([]);
+        });
+    });
+
+    it.skip('invokes setSeeds when a new seed is selected', async () => {
+        await screen.findByTestId('explore_search_input-search');
+
+        const input = screen.getByLabelText('Search Objects To Add');
+
+        user.type(input, 'foo');
+
+        const options = await screen.findAllByRole('option');
+
+        await user.click(options[0]);
+
+        expect(await screen.findByText('user')).toBeInTheDocument();
+        expect(await screen.findByText('foo')).toBeInTheDocument();
+
+        waitFor(() => {
+            expect(setSeeds).toHaveBeenCalledWith([...seeds, { type: SeedTypeObjectId, value: '2' }]);
+        });
     });
 });

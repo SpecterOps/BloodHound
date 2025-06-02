@@ -76,8 +76,8 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 Refer to "From DA to EA with ESC5" under References for more details.
-                <br />
-                <br />
+            </Typography>
+            <Typography variant='body2'>
                 If ADCS is not installed: An attacker can simply install ADCS in the environment and exploit it, as
                 detailed in the reference "Escalating from child domain’s admins to enterprise admins in 5 minutes by
                 abusing AD CS, a follow up".
@@ -153,8 +153,8 @@ const Abuse: FC = () => {
                 Note that you must specify the server to be the DC where you are running the command, as the command
                 defaults to execute the change on a root domain DC where the compromised DC does not have the
                 permissions to link the GPO.
-                <br />
-                <br />
+            </Typography>
+            <Typography variant='body2'>
                 Wait until replication has happened and the GPO has applied on the target DC, and log in with
                 Administrators access on the compromised DC. Replication within the same site happens within 15 seconds
                 but runs on 3 hour schedule by default across sites. GPOs are applied on a 90-120 min interval by

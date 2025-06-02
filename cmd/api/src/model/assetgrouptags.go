@@ -153,8 +153,10 @@ func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
 	}
 }
 
+type SelectorSeeds []SelectorSeed
+
 type SelectorSeed struct {
-	SelectorId int          `json:"selector_id"`
+	SelectorId int          `json:"-"`
 	Type       SelectorType `json:"type"`
 	Value      string       `json:"value"`
 }
@@ -191,7 +193,7 @@ type AssetGroupTagSelector struct {
 	IsDefault       bool        `json:"is_default"`
 	AllowDisable    bool        `json:"allow_disable"`
 
-	Seeds []SelectorSeed `json:"seeds" validate:"required" gorm:"-"`
+	Seeds []SelectorSeed `json:"seeds,omitempty" validate:"required" gorm:"-"`
 }
 
 func (AssetGroupTagSelector) TableName() string {
@@ -228,9 +230,7 @@ func (s AssetGroupTagSelector) ValidFilters() map[string][]FilterOperator {
 	}
 }
 
-type ListSelectorsResponse struct {
-	Selectors AssetGroupTagSelectors `json:"selectors"`
-}
+type AssetGroupSelectorNodes []AssetGroupSelectorNode
 
 type AssetGroupSelectorNode struct {
 	SelectorId  int                          `json:"selector_id"`

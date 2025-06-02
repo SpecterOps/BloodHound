@@ -77,6 +77,12 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
   <Note>
     **If you encounter Mac Error: “bloodhound-cli” Not Opened. Apple could not verify “bloodhound-cli” is free of malware that may harm your mac or compromise your privacy.**
     In case you get this error message, you need to allow bloodhound-cli to be executed.
+
+    Option 1: In the terminal
+      1. Clear the quarantine flag by typing `xattr -d com.apple.quarantine ./bloodhound-cli` in the CLI
+      2. Repeat the CLI command `./bloodhound-cli install`
+
+    Option 2: In the GUI
       1.	Go to **System Settings** (or System Preferences on older macOS versions)
       2. Navigate to **Privacy & Security**
       3. Scroll down to the **Security** section
@@ -157,13 +163,13 @@ BloodHound CE deploys in a traditional multi-tier container architecture consist
       </CodeGroup>
 
 
-6. 1.	Go to [http://localhost:8080/ui/login](http://localhost:8080/ui/login), and log in with `admin` and the randomly generated password from the last installation step.
+6. Go to [http://localhost:8080/ui/login](http://localhost:8080/ui/login), and log in with `admin` and the randomly generated password from the last installation step.
 
     <Note>
       The default `docker-compose.yml` example binds only to localhost (127.0.0.1). To access BloodHound outside of localhost, follow the instructions in [examples/docker-compose/README.md](https://github.com/SpecterOps/BloodHound/blob/main/examples/docker-compose/README.md) to configure host binding for the container.
     </Note>
 
-6. Reset the password as prompted.
+7. Reset the password as prompted.
 
 You're now logged in to a locally hosted BloodHound CE tenant running with Docker Compose.
 

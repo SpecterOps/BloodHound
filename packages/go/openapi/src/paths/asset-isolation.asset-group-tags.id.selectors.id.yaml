@@ -31,6 +31,40 @@ parameters:
       type: integer
       format: int32
 
+get:
+  operationId: GetAssetGroupTagSelector
+  summary: Get Asset Group Tag Selector
+  description: Retrieves an asset group tag selector by ID
+  tags:
+    - Asset Isolation
+    - Enterprise
+    - Community
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  selector:
+                    $ref: './../schemas/model.asset-group-tags-selector-response.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
 patch:
   operationId: UpdateAssetGroupTagSelector
   summary: Update Asset Group Tag Selector
@@ -46,12 +80,12 @@ patch:
     content:
       application/json:
         schema:
-          allOf: 
-            - $ref: './../schemas/model.asset-group-tags-selector-request.yaml'
-            - type: object 
+          allOf:
+            - $ref: './../schemas/model.asset-group-tags-selector-update.yaml'
+            - type: object
               properties:
-                disabled_at:
-                  $ref: './../schemas/null.time.yaml'
+                disabled:
+                  type: boolean
 
   responses:
     200:
@@ -88,7 +122,7 @@ delete:
 
   responses:
     204:
-      description: Successfully deleted. No content is returned. 
+      description: Successfully deleted. No content is returned.
     400:
       $ref: './../responses/bad-request.yaml'
     401:

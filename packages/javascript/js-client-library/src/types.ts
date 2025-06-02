@@ -14,36 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import * as axios from 'axios';
-import { ConfigurationPayload } from './utils';
-
-export type RequestOptions = axios.AxiosRequestConfig;
-
 export interface Serial {
     id: number;
     created_at: string;
     updated_at: string;
-}
-
-export interface CreateAssetGroupRequest {
-    name: string;
-    tag: string;
-}
-
-export interface UpdateAssetGroupRequest {
-    name: string;
-}
-
-export interface CreateAssetGroupSelectorRequest {
-    node_label: string;
-    selector_name: string;
-    sid: string;
-}
-
-export interface UpdateAssetGroupSelectorRequest {
-    selector_name: string;
-    sid: string;
-    action: 'add' | 'remove';
 }
 
 export interface AssetGroupMemberParams {
@@ -70,40 +44,58 @@ interface Updated {
 }
 
 interface Deleted {
-    deleted_at: ISO_DATE_STRING;
-    deleted_by: string;
+    deleted_at: ISO_DATE_STRING | null;
+    deleted_by: string | null;
 }
 
 interface Disabled {
-    disabled_at: ISO_DATE_STRING;
-    disabled_by: string;
+    disabled_at: ISO_DATE_STRING | null;
+    disabled_by: string | null;
 }
 
-export type AssetGroupTagTypeValues = 1 | 2;
+export const AssetGroupTagTypeTier = 1 as const;
+export const AssetGroupTagTypeLabel = 2 as const;
+export const AssetGroupTagTypeOwned = 3 as const;
 
-export const AssetGroupTagTypes: Record<AssetGroupTagTypeValues, string> = {
+export type AssetGroupTagTypes =
+    | typeof AssetGroupTagTypeTier
+    | typeof AssetGroupTagTypeLabel
+    | typeof AssetGroupTagTypeOwned;
+
+export const AssetGroupTagTypesMap = {
     1: 'tier',
     2: 'label',
+    3: 'owned',
 } as const;
+
+export interface AssetGroupTagCounts {
+    selectors: number;
+    members: number;
+}
 
 export interface AssetGroupTag extends Created, Updated, Deleted {
     id: number;
     name: string;
     kind_id: number;
-    type: AssetGroupTagTypeValues;
+    type: AssetGroupTagTypes;
     position: number | null;
     requireCertify: boolean | null;
     description: string;
-    count: number;
 }
 
-export type SeedTypeValues = 1 | 2;
+export const SeedTypeObjectId = 1 as const;
+export const SeedTypeCypher = 2 as const;
 
-export const SeedTypes: Record<SeedTypeValues, string> = {
-    1: 'objectId',
-    2: 'cypher',
+export type SeedTypes = typeof SeedTypeObjectId | typeof SeedTypeCypher;
+
+export const SeedTypesMap = {
+    [SeedTypeObjectId]: 'Object ID',
+    [SeedTypeCypher]: 'Cypher',
 } as const;
 
+export interface AssetGroupTagSelectorsCounts {
+    members: number;
+}
 export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     id: number;
     asset_group_tag_id: number | null;
@@ -112,135 +104,34 @@ export interface AssetGroupTagSelector extends Created, Updated, Disabled {
     is_default: boolean;
     allow_disable: boolean;
     auto_certify: boolean;
-    count: number;
     seeds: AssetGroupTagSelectorSeed[];
 }
 
 export interface AssetGroupTagSelectorSeed {
     selector_id: number;
-    type: SeedTypeValues;
+    type: SeedTypes;
     value: string;
 }
 
-export type AssetGroupTagCertifiedValues = -1 | 0 | 1 | 2;
-
-export const Certified: Record<AssetGroupTagCertifiedValues, string> = {
+export const AssetGroupTagCertifiedMap = {
     '-1': 'Manually not certified (revoked)',
     0: 'No certification (only automatically tagged if certify is enabled)',
     1: 'Manually certified',
     2: 'Auto certified (automatically tagged)',
 } as const;
 
-export interface AssetGroupTagSelectorNode {
-    selector_id: number;
-    node_id: string;
-    certified: AssetGroupTagCertifiedValues;
-    certified_by: string | System | null;
-    properties: Record<string, any>;
-    type: string;
-    id: number;
-}
+export type AssetGroupTagCertifiedValues = keyof typeof AssetGroupTagCertifiedMap;
 
-export interface AssetGroupTagMemberInfo {
-    node_id: string;
-    certified: AssetGroupTagCertifiedValues;
-    certified_by: string | System | null;
+export const NodeSourceSeed = 1 as const;
+export const NodeSourceChild = 2 as const;
+export const NodeSourceParent = 3 as const;
+
+export type NodeSourceTypes = typeof NodeSourceSeed | typeof NodeSourceChild | typeof NodeSourceParent;
+export interface AssetGroupTagNode {
+    id: number; // uint64 graphID
+    primary_kind: string;
+    object_id: string;
     name: string;
-    selectors: AssetGroupTagSelector[];
-}
-
-export interface CreateSharpHoundClientRequest {
-    domain_controller: string;
-    name: string;
-    events?: any[];
-    type: 'sharphound';
-}
-
-export interface CreateAzureHoundClientRequest {
-    name: string;
-    events?: any[];
-    type: 'azurehound';
-}
-
-export interface UpdateSharpHoundClientRequest {
-    domain_controller: string;
-    name: string;
-}
-
-export interface UpdateAzureHoundClientRequest {
-    name: string;
-}
-
-export interface CreateScheduledSharpHoundJobRequest {
-    session_collection: boolean;
-    ad_structure_collection: boolean;
-    local_group_collection: boolean;
-    cert_services_collection: boolean;
-    ca_registry_collection: boolean;
-    dc_registry_collection: boolean;
-    domain_controller?: string;
-    ous: string[];
-    domains: string[];
-    all_trusted_domains: boolean;
-}
-
-export type CreateScheduledAzureHoundJobRequest = Record<string, never>;
-
-export type CreateScheduledJobRequest = CreateScheduledSharpHoundJobRequest | CreateScheduledAzureHoundJobRequest;
-
-export interface ClientStartJobRequest {
-    id: number;
-    start_time: string;
-}
-
-export interface ClientEndJobRequest {
-    end_time: string;
-    id: number;
-    log: string;
-}
-
-export interface CreateSharpHoundEventRequest {
-    client_id: string;
-    rrule: string;
-    session_collection: boolean;
-    ad_structure_collection: boolean;
-    local_group_collection: boolean;
-    cert_services_collection: boolean;
-    ca_registry_collection: boolean;
-    dc_registry_collection: boolean;
-    ous: string[];
-    domains: string[];
-    all_trusted_domains: boolean;
-}
-
-export interface CreateAzureHoundEventRequest {
-    client_id: string;
-    rrule: string;
-}
-
-export interface UpdateSharpHoundEventRequest {
-    client_id: string;
-    rrule: string;
-    session_collection: boolean;
-    ad_structure_collection: boolean;
-    local_group_collection: boolean;
-    cert_services_collection: boolean;
-    ca_registry_collection: boolean;
-    dc_registry_collection: boolean;
-    ous: string[];
-    domains: string[];
-    all_trusted_domains: boolean;
-}
-
-export interface UpdateAzureHoundEventRequest {
-    client_id: string;
-    rrule: string;
-}
-
-export interface PutUserAuthSecretRequest {
-    currentSecret?: string;
-    secret: string;
-    needsPasswordReset: boolean;
 }
 
 export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
@@ -249,14 +140,6 @@ export interface CreateSAMLProviderFormInputs extends SSOProviderConfiguration {
 }
 export type UpdateSAMLProviderFormInputs = Partial<CreateSAMLProviderFormInputs>;
 export type UpsertSAMLProviderFormInputs = CreateSAMLProviderFormInputs | UpdateSAMLProviderFormInputs;
-
-export interface CreateOIDCProviderRequest extends SSOProviderConfiguration {
-    name: string;
-    client_id: string;
-    issuer: string;
-}
-export type UpdateOIDCProviderRequest = Partial<CreateOIDCProviderRequest>;
-export type UpsertOIDCProviderRequest = CreateOIDCProviderRequest | UpdateOIDCProviderRequest;
 
 export interface SAMLProviderInfo extends Serial {
     name: string;
@@ -341,13 +224,6 @@ export interface ListUsersResponse {
     };
 }
 
-export interface LoginRequest {
-    login_method: string;
-    secret: string;
-    username: string;
-    otp?: string;
-}
-
 export interface LoginResponse {
     data: {
         user_id: string;
@@ -383,21 +259,6 @@ interface CollectorAsset {
     os: string;
     arch: string;
 }
-
-export type PostureRequest = {
-    from: string;
-    to: string;
-    domain_sid?: string;
-    sort_by?: string;
-};
-
-export type RiskDetailsRequest = {
-    finding: string;
-    skip: number;
-    limit: number;
-    sort_by?: string;
-    Accepted?: string;
-};
 
 export type GraphNode = {
     label: string;
@@ -462,32 +323,14 @@ export type StyledGraphEdge = {
 
 export type FlatGraphResponse = Record<string, StyledGraphNode | StyledGraphEdge>;
 
-export interface CreateUserQueryRequest {
-    name: string;
-    query: string;
-}
-
-export interface ClearDatabaseRequest {
-    deleteCollectedGraphData: boolean;
-    deleteFileIngestHistory: boolean;
-    deleteDataQualityHistory: boolean;
-    deleteAssetGroupSelectors: number[];
-}
-
-export interface UpdateUserRequest {
-    firstName: string;
-    lastName: string;
-    emailAddress: string;
-    principal: string;
-    roles: number[];
-    SAMLProviderId?: string; // deprecated: this is left to maintain backwards compatability, please use SSOProviderId instead
-    SSOProviderId?: number;
-    is_disabled?: boolean;
-}
-
-export interface CreateUserRequest extends Omit<UpdateUserRequest, 'is_disabled'> {
-    password?: string;
-    needsPasswordReset?: boolean;
-}
-
-export type UpdateConfigurationRequest = ConfigurationPayload;
+export type CustomNodeKindType = {
+    id: number;
+    kindName: string;
+    config: {
+        icon: {
+            type: string;
+            name: string;
+            color: string;
+        };
+    };
+};

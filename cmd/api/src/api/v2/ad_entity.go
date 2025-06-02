@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
+	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -77,6 +78,9 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		results := s.GraphQuery.GetEntityCountResults(request.Context(), node, countQueries)
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	} else {
+		if tiering.IsTierZero(node) {
+			node.Properties.Map["isTierZero"] = true
+		}
 		results := map[string]any{"props": node.Properties.Map}
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	}

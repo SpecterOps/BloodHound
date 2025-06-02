@@ -16,13 +16,16 @@
 
 import {
     AssetGroupTag,
-    AssetGroupTagMemberInfo,
+    AssetGroupTagCounts,
+    AssetGroupTagNode,
     AssetGroupTagSelector,
-    AssetGroupTagSelectorNode,
+    AssetGroupTagSelectorsCounts,
     CollectorManifest,
     CommunityCollectorType,
+    CustomNodeKindType,
     EnterpriseCollectorType,
     GraphData,
+    NodeSourceTypes,
 } from './types';
 import { ConfigurationPayload } from './utils/config';
 
@@ -171,10 +174,33 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
-export type AssetGroupLabelResponse = BasicResponse<{ asset_group_labels: AssetGroupTag[] }>;
-export type AssetGroupSelectorResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
-export type AssetGroupMemberResponse = PaginatedResponse<{ members: AssetGroupTagSelectorNode[] }>;
-export type AssetGroupMemberInfoResponse = PaginatedResponse<{ member: AssetGroupTagMemberInfo }>;
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
+
+export interface AssetGroupTagsListItem extends AssetGroupTag {
+    counts?: AssetGroupTagCounts;
+}
+
+export interface AssetGroupTagSelectorsListItem extends AssetGroupTagSelector {
+    counts?: AssetGroupTagSelectorsCounts;
+}
+
+export interface AssetGroupTagMemberListItem extends AssetGroupTagNode {
+    source: NodeSourceTypes;
+}
+
+export interface AssetGroupTagMemberInfo extends AssetGroupTagNode {
+    properties: Record<string, any>;
+    selectors: AssetGroupTagSelector[];
+}
+
+export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
+export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTagsListItem[] }>;
+export type AssetGroupTagSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
+export type AssetGroupTagSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelectorsListItem[] }>;
+export type AssetGroupTagMembersResponse = PaginatedResponse<{ members: AssetGroupTagMemberListItem[] }>;
+export type AssetGroupTagMemberInfoResponse = BasicResponse<{
+    member: AssetGroupTagMemberInfo;
+}>;
 
 export type AssetGroupSelector = TimestampFields & {
     id: number;
@@ -266,3 +292,5 @@ export type GetCollectorsResponse = BasicResponse<{
 export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityCollectorType, CollectorManifest[]>>;
 
 export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
+
+export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;

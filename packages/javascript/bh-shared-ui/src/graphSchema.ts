@@ -912,6 +912,8 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    AZRoleEligible = 'AZRoleEligible',
+    AZRoleApprover = 'AZRoleApprover',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1009,6 +1011,10 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.AZRoleEligible:
+            return 'AZRoleEligible';
+        case AzureRelationshipKind.AZRoleApprover:
+            return 'AZRoleApprover';
         default:
             return undefined;
     }
@@ -1047,6 +1053,14 @@ export enum AzureKindProperties {
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
     RoleTemplateID = 'templateid',
+    RoleDefinitionId = 'roledefinitionid',
+    EndUserAssignmentRequiresApproval = 'enduserassignmentrequiresapproval',
+    EndUserAssignmentRequiresCAPAuthenticationContext = 'enduserassignmentrequirescapauthenticationcontext',
+    EndUserAssignmentUserApprovers = 'enduserassignmentuserapprovers',
+    EndUserAssignmentGroupApprovers = 'enduserassignmentgroupapprovers',
+    EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
+    EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
+    EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1114,6 +1128,22 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Sign In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
+        case AzureKindProperties.RoleDefinitionId:
+            return 'Role Definition Id';
+        case AzureKindProperties.EndUserAssignmentRequiresApproval:
+            return 'End User Assignment Requires Approval';
+        case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
+            return 'End User Assignment Requires CAP AuthenticationContext';
+        case AzureKindProperties.EndUserAssignmentUserApprovers:
+            return 'End User Assignment User Approvers';
+        case AzureKindProperties.EndUserAssignmentGroupApprovers:
+            return 'End User Assignment Group Approvers';
+        case AzureKindProperties.EndUserAssignmentRequiresMFA:
+            return 'End User Assignment Requires MFA';
+        case AzureKindProperties.EndUserAssignmentRequiresJustification:
+            return 'End User Assignment Requires Justification';
+        case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
+            return 'End User Assignment Requires Ticket Information';
         default:
             return undefined;
     }
@@ -1158,6 +1188,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.Contains,
     ];
 }
@@ -1191,6 +1222,7 @@ export enum CommonKindProperties {
     Email = 'email',
     IsInherited = 'isinherited',
     CompositionID = 'compositionid',
+    PrimaryKind = 'primarykind',
 }
 export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
@@ -1230,6 +1262,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Is Inherited';
         case CommonKindProperties.CompositionID:
             return 'Composition ID';
+        case CommonKindProperties.PrimaryKind:
+            return 'Primary Kind';
         default:
             return undefined;
     }

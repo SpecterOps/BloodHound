@@ -110,17 +110,12 @@ func SaveIngestFile(location string, request *http.Request, validator IngestVali
 		return IngestTaskParams{}, fmt.Errorf("invalid content type for ingest file")
 	}
 
-	if metadata, err := WriteAndValidateFile(fileData, tempFile, validationFn); err != nil {
+	if _, err := WriteAndValidateFile(fileData, tempFile, validationFn); err != nil {
 		return IngestTaskParams{}, err
 	} else {
-		isGeneric := false
-		if metadata.Type == ingest.DataTypeGeneric {
-			isGeneric = true
-		}
 		return IngestTaskParams{
-			Filename:  tempFile.Name(),
-			FileType:  fileType,
-			IsGeneric: isGeneric,
+			Filename: tempFile.Name(),
+			FileType: fileType,
 		}, nil
 	}
 

@@ -36,7 +36,6 @@ import (
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -53,10 +52,10 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -69,7 +68,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"JSON malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
@@ -98,9 +97,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(50)).Return(queries.PreparedQuery{}, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -130,9 +129,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(50)).Return(queries.PreparedQuery{
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: true,
 				}, nil)
 				mocks.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(errors.New("error"))
@@ -165,9 +164,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(50)).Return(queries.PreparedQuery{
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
@@ -200,9 +199,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(50)).Return(queries.PreparedQuery{
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
@@ -235,9 +234,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(50)).Return(queries.PreparedQuery{
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
@@ -271,7 +270,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks, request)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
@@ -285,8 +284,8 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			assert.JSONEq(t, testCase.expected.responseBody, body)
 		})
 	}

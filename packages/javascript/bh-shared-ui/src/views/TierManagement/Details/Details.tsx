@@ -15,160 +15,126 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector, AssetGroupTagSelectorNode } from 'js-client-library';
-import { FC, useState } from 'react';
-import { useQuery } from 'react-query';
+import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
+import { FC } from 'react';
+import { UseQueryResult, useQuery } from 'react-query';
+import { Link, useParams } from 'react-router-dom';
 import { AppIcon, CreateMenu } from '../../../components';
-import { ROUTE_TIER_MANAGEMENT_CREATE, ROUTE_TIER_MANAGEMENT_EDIT } from '../../../routes';
+import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { Cypher } from '../Cypher';
+import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
-import DynamicDetails from './DynamicDetails';
-import EntityInfoPanel from './EntityInfo/EntityInfoPanel';
 import { MembersList } from './MembersList';
-import ObjectCountPanel from './ObjectCountPanel';
+import { SelectedDetails } from './SelectedDetails';
 
-type SelectedDetailsProps = {
-    cypher?: boolean;
-    selectedTierId: number;
-    selectedSelectorId: number | null;
-    selectedObjectId: number | null;
-    selectedTier: AssetGroupTag | undefined;
-    selectedSelector: AssetGroupTagSelector | undefined;
-    selectedObject: AssetGroupTagSelectorNode | null;
+const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
+    const savePath = '/tier-management/save';
+
+    if (selectorId && labelId) return `/tier-management/save/label/${labelId}/selector/${selectorId}`;
+    if (selectorId && tierId) return `/tier-management/save/tier/${tierId}/selector/${selectorId}`;
+
+    if (!selectorId && labelId) return `/tier-management/save/label/${labelId}`;
+    if (!selectorId && tierId) return `/tier-management/save/tier/${tierId}`;
+
+    return savePath;
 };
 
-const isObject = (data: any): data is AssetGroupTagSelectorNode => {
-    const objectData = data || {};
-    return 'node_id' in objectData;
+const getItemCount = (
+    tagId: string | undefined,
+    tagsQuery: UseQueryResult<AssetGroupTagsListItem[]>,
+    selectorId: string | undefined,
+    selectorsQuery: UseQueryResult<AssetGroupTagSelectorsListItem[]>
+) => {
+    if (selectorId !== undefined) {
+        const selectedSelector = selectorsQuery.data?.find((selector) => {
+            return selectorId === selector.id.toString();
+        });
+        return selectedSelector?.counts?.members || 0;
+    } else if (tagId !== undefined) {
+        const selectedTag = tagsQuery.data?.find((tag) => {
+            return tagId === tag.id.toString();
+        });
+        return selectedTag?.counts?.members || 0;
+    } else {
+        return 0;
+    }
 };
 
-const SelectedDetails: FC<SelectedDetailsProps> = ({
-    cypher,
-    selectedTierId,
-    selectedSelectorId,
-    selectedObjectId,
-    selectedTier,
-    selectedSelector,
-    selectedObject,
-}) => {
-    if (selectedObjectId !== null) {
-        if (isObject(selectedObject)) {
-            return (
-                <EntityInfoPanel
-                    selectedNode={selectedObject}
-                    selectedTag={selectedTierId}
-                    selectedObject={selectedObjectId}
-                />
-            );
-        }
-    }
-
-    if (selectedSelectorId !== null) {
-        if (cypher)
-            return (
-                <>
-                    <DynamicDetails data={selectedSelector} isCypher={cypher} />
-                    <Cypher />
-                </>
-            );
-        else
-            return (
-                <>
-                    <DynamicDetails data={selectedSelector} />
-                    <ObjectCountPanel selectedTier={selectedTierId} />
-                </>
-            );
-    }
-
+export const getEditButtonState = (
+    memberId: string | undefined,
+    selectorId: string | undefined,
+    selectorsQuery: UseQueryResult,
+    tagsQuery: UseQueryResult
+) => {
     return (
-        <>
-            <DynamicDetails data={selectedTier} />
-            <ObjectCountPanel selectedTier={selectedTierId} />
-        </>
+        !!memberId ||
+        !selectorId ||
+        (selectorsQuery.isLoading && tagsQuery.isLoading) ||
+        (selectorsQuery.isError && tagsQuery.isError)
     );
 };
 
 const Details: FC = () => {
-    const [selectedTag, setSelectedTag] = useState(1);
-    const [selectedSelector, setSelectedSelector] = useState<number | null>(null);
-    const [selectedObject, setSelectedObject] = useState<number | null>(null);
-    const [selectedObjectData, setSelectedObjectData] = useState<AssetGroupTagSelectorNode | null>(null);
-    const [showCypher, setShowCypher] = useState(false);
     const navigate = useAppNavigate();
+    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
-    const labelsQuery = useQuery(['asset-group-labels'], () => {
-        return apiClient.getAssetGroupLabels().then((res) => {
-            return res.data.data['asset_group_labels'];
-        });
-    });
-
-    const selectorsQuery = useQuery(['asset-group-selectors', selectedTag], () => {
-        return apiClient.getAssetGroupSelectors(selectedTag).then((res) => {
-            return res.data.data['selectors'];
-        });
-    });
-
-    const objectsQuery = useQuery(['asset-group-members', selectedTag, selectedSelector], async () => {
-        if (selectedSelector === null)
-            return apiClient.getAssetGroupLabelMembers(selectedTag, 0, 1).then((res) => {
-                return res.data.count;
+    const tagsQuery = useQuery({
+        queryKey: ['tier-management', 'tags'],
+        queryFn: async () => {
+            return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
+                return res.data.data['tags'];
             });
-
-        return apiClient.getAssetGroupSelectorMembers(selectedTag, selectedSelector, 0, 1).then((res) => {
-            return res.data.count;
-        });
+        },
     });
 
-    const disableEditButton =
-        selectedObject !== null ||
-        (selectorsQuery.isLoading && labelsQuery.isLoading) ||
-        (selectorsQuery.isError && labelsQuery.isError);
+    const selectorsQuery = useQuery({
+        queryKey: ['tier-management', 'tags', tagId, 'selectors'],
+        queryFn: async () => {
+            if (!tagId) return [];
+            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
+                return res.data.data['selectors'];
+            });
+        },
+    });
+
+    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
     return (
         <div>
-            <div className='flex mt-6'>
+            <div className='flex mt-6 gap-8'>
                 <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3 invisible'>
-                        <CreateMenu
-                            createMenuTitle='Create'
-                            menuItems={[
-                                {
-                                    title: 'Tier',
-                                    onClick: () => {
-                                        navigate(ROUTE_TIER_MANAGEMENT_CREATE, { state: { type: 'Tier' } });
-                                    },
-                                },
-                                {
-                                    title: 'Label',
-                                    onClick: () => {
-                                        navigate(ROUTE_TIER_MANAGEMENT_CREATE, { state: { type: 'Label' } });
-                                    },
-                                },
-                                {
-                                    title: 'Selector',
-                                    onClick: () => {
-                                        navigate(ROUTE_TIER_MANAGEMENT_CREATE, {
-                                            state: { type: 'Selector', within: selectedTag },
-                                        });
-                                    },
-                                },
-                            ]}
-                        />
+                    <div className='flex justify-start gap-4 items-center basis-2/3'>
                         <div className='flex items-center align-middle'>
-                            <div>
-                                <AppIcon.Info className='mr-4 ml-2' size={24} />
+                            <CreateMenu
+                                createMenuTitle='Create Selector'
+                                disabled={!tagId}
+                                menuItems={[
+                                    {
+                                        title: 'Create Selector',
+                                        onClick: () => {
+                                            navigate(
+                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
+                                            );
+                                        },
+                                    },
+                                ]}
+                            />
+                            <div className='hidden'>
+                                <div>
+                                    <AppIcon.Info className='mr-4 ml-2' size={24} />
+                                </div>
+                                <span>
+                                    To create additional tiers{' '}
+                                    <Button
+                                        variant='text'
+                                        asChild
+                                        className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
+                                        <a href='#'>contact sales</a>
+                                    </Button>{' '}
+                                    in order to upgrade for multi-tier analysis.
+                                </span>
                             </div>
-                            <span>
-                                To create additional tiers{' '}
-                                <Button
-                                    variant='text'
-                                    asChild
-                                    className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
-                                    <a href='#'>contact sales</a>
-                                </Button>{' '}
-                                in order to upgrade for multi-tier analysis.
-                            </span>
                         </div>
                     </div>
                     <div className='flex justify-start basis-1/3'>
@@ -177,73 +143,47 @@ const Details: FC = () => {
                 </div>
 
                 <div className='basis-1/3'>
-                    <Button
-                        onClick={() => {
-                            navigate(ROUTE_TIER_MANAGEMENT_EDIT);
-                        }}
-                        variant={'secondary'}
-                        disabled={disableEditButton}>
-                        Edit
-                    </Button>
+                    {showEditButton && (
+                        <Button asChild variant={'secondary'} disabled={showEditButton}>
+                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                        </Button>
+                    )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4 grow-1'>
-                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg max-h-[560px] *:grow-0 *:basis-1/3 *:min-h-96'>
-                    <div className='max-h-[518px]'>
-                        <DetailsList
-                            title='Tiers'
-                            listQuery={labelsQuery}
-                            selected={selectedTag}
-                            onSelect={(id: number) => {
-                                setSelectedTag(id);
-                                setSelectedSelector(null);
-                                setSelectedObject(null);
-                                setShowCypher(false);
-                            }}
-                        />
-                    </div>
-                    <div className='border-neutral-light-3 dark:border-neutral-dark-3 max-h-[518px]'>
-                        <DetailsList
-                            title='Selectors'
-                            listQuery={selectorsQuery}
-                            selected={selectedSelector}
-                            onSelect={(id: number | null) => {
-                                setSelectedSelector(id);
-
-                                const selected = selectorsQuery.data?.find((item) => {
-                                    return item.id === id;
-                                });
-                                if (selected?.seeds?.[0].type === 1) setShowCypher(true);
-                                else setShowCypher(false);
-
-                                setSelectedObject(null);
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <MembersList
-                            itemCount={objectsQuery.data || 1000}
-                            onClick={(id, data) => {
-                                setSelectedObject(id);
-                                setShowCypher(false);
-                                setSelectedObjectData(data);
-                            }}
-                            selected={selectedObject}
-                            selectedSelector={selectedSelector}
-                            selectedTag={selectedTag}
-                        />
-                    </div>
-                </div>
-                <div className='flex flex-col basis-1/3'>
-                    <SelectedDetails
-                        cypher={showCypher}
-                        selectedTierId={selectedTag}
-                        selectedSelectorId={selectedSelector}
-                        selectedObjectId={selectedObject}
-                        selectedTier={labelsQuery.data?.find((tag) => tag.id === selectedTag)}
-                        selectedSelector={selectorsQuery.data?.find((selector) => selector.id === selectedSelector)}
-                        selectedObject={selectedObjectData}
+            <div className='flex gap-8 mt-4'>
+                <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
+                    <DetailsList
+                        title={labelId ? 'Labels' : 'Tiers'}
+                        listQuery={tagsQuery}
+                        selected={tagId}
+                        onSelect={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${id}`
+                            );
+                        }}
                     />
+                    <DetailsList
+                        title='Selectors'
+                        listQuery={selectorsQuery}
+                        selected={selectorId}
+                        onSelect={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`
+                            );
+                        }}
+                    />
+                    <MembersList
+                        itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
+                        onClick={(id) => {
+                            navigate(
+                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                            );
+                        }}
+                        selected={memberId}
+                    />
+                </div>
+                <div className='basis-1/3'>
+                    <SelectedDetails />
                 </div>
             </div>
         </div>

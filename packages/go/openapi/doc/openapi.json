@@ -2407,6 +2407,129 @@
         }
       }
     },
+    "/api/v2/kennel/manifest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelManifest",
+        "summary": "Get kennel manifest",
+        "description": "Retrieves a manifest of community collectors",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.kennel-manifest"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/kennel/enterprise-manifest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelEnterpriseManifest",
+        "summary": "Get kennel enterprise manifest",
+        "description": "Retrieves a manifest of enterprise collectors",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.kennel-enterprise-manifest"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/kennel/download/{asset_name}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_name",
+          "description": "Asset name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetKennelAsset",
+        "summary": "Download asset",
+        "description": "Downloads an enterprise asset (collector or checksum)",
+        "tags": [
+          "Collectors",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/binary-response"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/file-upload": {
       "parameters": [
         {
@@ -2767,7 +2890,27 @@
                       }
                     }
                   }
-                }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "kindName": "KindA",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "kindName": "KindB",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -2782,7 +2925,7 @@
       "post": {
         "operationId": "CreateCustomNodes",
         "summary": "Create custom nodes",
-        "description": "Create one or more custom node configurations.\nThis endpoint registers a new node kind with optional display metadata such as an icon. The configuration affects how nodes of this kind are displayed and interpreted on the UI. Batch input is supported\n",
+        "description": "This endpoint registers new node kinds along with optional display metadata such as icons and colors.\nThe provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.\nOnly free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.\nIf no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.\nBatch input is supported; you may submit multiple configuration objects in a single request.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2799,6 +2942,24 @@
                     "type": "object",
                     "additionalProperties": {
                       "$ref": "#/components/schemas/model.custom-node.config"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "custom_types": {
+                  "KindA": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  "KindB": {
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
                     }
                   }
                 }
@@ -2889,6 +3050,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/model.custom-node"
+                },
+                "example": {
+                  "id": 1,
+                  "kindName": "KindA",
+                  "config": {
+                    "type": "font-awesome",
+                    "name": "house",
+                    "color": "#FFFFFF"
+                  }
                 }
               }
             }
@@ -2907,7 +3077,7 @@
       "put": {
         "operationId": "UpdateCustomNode",
         "summary": "Update custom node",
-        "description": "Update the configuration for a specific custom node kind.\nReturns the updated configuration for the specific node kind.\n",
+        "description": "This endpoint updates an existing node kind along with optional display metadata such as icons and colors.\nThe provided configuration controls how nodes of the specified kinds are interpreted and rendered in the UI.\nOnly free, solid-style Font Awesome icons are supported. Hex color codes must follow the format #RGB or #RRGGBB.\nIf no valid icon or color is provided, the system will fall back to a question mark icon and a white background color.\n",
         "tags": [
           "Custom Node Management",
           "Community",
@@ -2922,6 +3092,15 @@
                 "properties": {
                   "config": {
                     "$ref": "#/components/schemas/model.custom-node.config"
+                  }
+                }
+              },
+              "example": {
+                "config": {
+                  "icon": {
+                    "type": "font-awesome",
+                    "name": "house",
+                    "color": "#333"
                   }
                 }
               }
@@ -4612,6 +4791,110 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/{asset_group_member_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of the asset_group_tag of a selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_member_id",
+          "description": "ID of member to list selectors",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupSelectorsByMemberId",
+        "summary": "Get asset group tag selectors of a specific object by member id",
+        "description": "Get a list of selectors for an object by member id.",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "member": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "properties": {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            "source": {
+                              "type": "integer"
+                            },
+                            "selectors": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-group-tags": {
       "parameters": [
         {
@@ -4857,7 +5140,118 @@
         }
       }
     },
-    "/api/v2/asset-groups-tags/{asset_group_tag_id}/members/counts": {
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ListAssetGroupTagMembersById",
+        "summary": "List asset group tag members by ID",
+        "description": "List members of an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "members": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "object_id": {
+                                    "type": "string"
+                                  },
+                                  "primary_kind": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/members/counts": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -4927,6 +5321,127 @@
         }
       }
     },
+    "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "asset_group_tag_id",
+          "description": "ID of an asset group tag",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        {
+          "name": "asset_group_tag_selector_id",
+          "description": "ID of an asset group selector",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ListAssetGroupTagMembersBySelector",
+        "summary": "List asset group tag members by selector",
+        "description": "List members of an asset group tag by selector",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `id`, `objectid`, and `name`.\n",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "members": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "object_id": {
+                                    "type": "string"
+                                  },
+                                  "primary_kind": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "source": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/asset-group-tags/{asset_group_tag_id}/selectors": {
       "parameters": [
         {
@@ -4954,12 +5469,106 @@
         ],
         "parameters": [
           {
-            "name": "type",
-            "description": "Type of selector. Either ObjectID = 1 or Cypher = 2",
+            "name": "auto_certify",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "created_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "disabled_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "disabled_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "is_default",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "updated_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "updated_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "type",
+            "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`. Valid values are either ObjectID = 1 or Cypher = 2.",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1,
+                2
+              ]
+            }
+          },
+          {
+            "name": "counts",
+            "description": "Whether to include counts of members for each selector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -4977,7 +5586,24 @@
                         "selectors": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "counts": {
+                                    "type": "object",
+                                    "properties": {
+                                      "members": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
                           }
                         }
                       }
@@ -5024,7 +5650,7 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
                   },
                   {
                     "type": "object",
@@ -5101,6 +5727,56 @@
           }
         }
       ],
+      "get": {
+        "operationId": "GetAssetGroupTagSelector",
+        "summary": "Get Asset Group Tag Selector",
+        "description": "Retrieves an asset group tag selector by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise",
+          "Community"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "selector": {
+                          "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
       "patch": {
         "operationId": "UpdateAssetGroupTagSelector",
         "summary": "Update Asset Group Tag Selector",
@@ -5118,13 +5794,13 @@
               "schema": {
                 "allOf": [
                   {
-                    "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+                    "$ref": "#/components/schemas/model.asset-group-tags-selector-update"
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "disabled_at": {
-                        "$ref": "#/components/schemas/null.time"
+                      "disabled": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -5181,6 +5857,103 @@
         "responses": {
           "204": {
             "description": "Successfully deleted. No content is returned."
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/asset-group-tags/preview-selectors": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "PreviewSelectors",
+        "summary": "Preview Selectors",
+        "description": "Sample preview of members selected by provided selector seeds.",
+        "tags": [
+          "Asset Isolation",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body of seeds for previewing what a selector will select.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "seeds": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "member": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "object_id": {
+                              "type": "string"
+                            },
+                            "primary_kind": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "properties": {
+                              "type": "object",
+                              "additionalProperties": true
+                            },
+                            "source": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -15983,6 +16756,98 @@
           }
         }
       },
+      "model.version-meta": {
+        "type": "object",
+        "properties": {
+          "major": {
+            "type": "integer"
+          },
+          "minor": {
+            "type": "integer"
+          },
+          "patch": {
+            "type": "integer"
+          },
+          "prerelease": {
+            "type": "string"
+          }
+        }
+      },
+      "model.kennel-asset": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "download_url": {
+            "type": "string"
+          },
+          "checksum_download_url": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "arch": {
+            "type": "string"
+          }
+        }
+      },
+      "model.kennel-version": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "version_meta": {
+            "$ref": "#/components/schemas/model.version-meta"
+          },
+          "release_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "release_assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-asset"
+            }
+          }
+        }
+      },
+      "model.kennel-manifest": {
+        "type": "object",
+        "properties": {
+          "sharphound": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          },
+          "azurehound": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          }
+        }
+      },
+      "model.kennel-enterprise-manifest": {
+        "type": "object",
+        "properties": {
+          "sharphound_enterprise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          },
+          "azurehound_enterprise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.kennel-version"
+            }
+          }
+        }
+      },
       "api.params.query.skip": {
         "type": "integer",
         "minimum": 0,
@@ -16060,6 +16925,9 @@
                 "type": "string"
               },
               "name": {
+                "type": "string"
+              },
+              "color": {
                 "type": "string"
               }
             }
@@ -16428,6 +17296,91 @@
           }
         }
       },
+      "model.asset-group-tags-selector-seed": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "model.asset-group-tags-selector-create": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "auto_certify": {
+            "type": "boolean"
+          },
+          "seeds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed"
+            }
+          }
+        }
+      },
+      "null.time.response": {
+        "type": "string",
+        "nullable": true,
+        "format": "date-time",
+        "description": "An RFC-3339 formatted string"
+      },
+      "null.string.response": {
+        "type": "string",
+        "nullable": true
+      },
+      "model.asset-group-tags-selector-response": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "asset_group_tag_id": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "created_by": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_by": {
+                "type": "string"
+              },
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time.response"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string.response"
+              },
+              "is_default": {
+                "type": "boolean"
+              },
+              "allow_disable": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
       "api.params.predicate.filter.integer-strict": {
         "type": "integer",
         "description": "Filter results by column integer value. Valid filter predicates are `eq`, `neq`.\n"
@@ -16484,12 +17437,6 @@
           "updated_by": {
             "type": "string"
           },
-          "deleted_at": {
-            "$ref": "#/components/schemas/null.time"
-          },
-          "deleted_by": {
-            "$ref": "#/components/schemas/null.string"
-          },
           "position": {
             "$ref": "#/components/schemas/null.int32"
           },
@@ -16498,97 +17445,17 @@
           }
         }
       },
-      "model.asset-group-tags-selector-seed-request": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "integer"
-          },
-          "value": {
-            "type": "string"
-          }
-        }
-      },
-      "model.asset-group-tags-selector-request": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "auto_certify": {
-            "type": "boolean"
-          },
-          "seeds": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
-            }
-          }
-        }
-      },
-      "model.asset-group-tags-selector-seed-response": {
+      "model.asset-group-tags-selector-update": {
         "type": "object",
         "allOf": [
           {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-request"
-          },
-          {
-            "properties": {
-              "selector_id": {
-                "type": "integer"
-              }
-            }
-          }
-        ]
-      },
-      "model.asset-group-tags-selector-response": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.asset-group-tags-selector-request"
+            "$ref": "#/components/schemas/model.asset-group-tags-selector-create"
           },
           {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "asset_group_tag_id": {
-                "type": "integer"
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "created_by": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_by": {
-                "type": "string"
-              },
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string"
-              },
-              "is_default": {
+              "disabled": {
                 "type": "boolean"
-              },
-              "allow_disable": {
-                "type": "boolean"
-              },
-              "seeds": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.asset-group-tags-selector-seed-response"
-                }
               }
             }
           }

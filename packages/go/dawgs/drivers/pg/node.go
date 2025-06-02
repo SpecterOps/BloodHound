@@ -103,25 +103,25 @@ func (s *nodeQuery) First() (*graph.Node, error) {
 	)
 }
 
-func (s *nodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error) error {
+func (s *nodeQuery) Fetch(delegate func(cursor graph.Cursor[*graph.Node]) error, finalCriteria ...graph.Criteria) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (*graph.Node, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (*graph.Node, error) {
 			var node graph.Node
-			return &node, scanner.Scan(&node)
+			return &node, result.Scan(&node)
 		})
 
 		defer cursor.Close()
 		return delegate(cursor)
-	}, query.Returning(
+	}, append([]graph.Criteria{query.Returning(
 		query.Node(),
-	))
+	)}, finalCriteria...)...)
 }
 
 func (s *nodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.ID, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.ID, error) {
 			var nodeID graph.ID
-			return nodeID, scanner.Scan(&nodeID)
+			return nodeID, result.Scan(&nodeID)
 		})
 
 		defer cursor.Close()
@@ -133,11 +133,11 @@ func (s *nodeQuery) FetchIDs(delegate func(cursor graph.Cursor[graph.ID]) error)
 
 func (s *nodeQuery) FetchKinds(delegate func(cursor graph.Cursor[graph.KindsResult]) error) error {
 	return s.Query(func(result graph.Result) error {
-		cursor := graph.NewResultIterator(s.ctx, result, func(scanner graph.Scanner) (graph.KindsResult, error) {
+		cursor := graph.NewResultIterator(s.ctx, result, func(result graph.Result) (graph.KindsResult, error) {
 			var (
 				nodeID    graph.ID
 				nodeKinds graph.Kinds
-				err       = scanner.Scan(&nodeID, &nodeKinds)
+				err       = result.Scan(&nodeID, &nodeKinds)
 			)
 
 			return graph.KindsResult{

@@ -14,13 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ErrorBoundary } from 'react-error-boundary';
-import { Route } from 'react-router-dom';
-import { GenericErrorBoundaryFallback } from '../components';
-
-export const ROUTE_TIER_MANAGEMENT = '/tier-management';
-export const ROUTE_TIER_MANAGEMENT_EDIT = '/tier-management/edit';
-export const ROUTE_TIER_MANAGEMENT_CREATE = '/tier-management/create';
+export const ROUTE_TIER_MANAGEMENT_ROOT = '/tier-management/*';
+export const ROUTE_TIER_MANAGEMENT_DETAILS = '/details';
+export const ROUTE_TIER_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_DETAILS = '/details/label/:labelId';
+export const ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS = '/details/tier/:tierId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/selector/:selectorId/member/:memberId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS =
+    '/details/label/:labelId/selector/:selectorId/member/:memberId';
+export const ROUTE_TIER_MANAGEMENT_SAVE = '/save';
+export const ROUTE_TIER_MANAGEMENT_SAVE_TIER = '/save/tier/:tierId';
+export const ROUTE_TIER_MANAGEMENT_SAVE_LABEL = '/save/label/:labelId';
+export const ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR = '/save/tier/:tierId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR = '/save/tier/:tierId/selector';
+export const ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR = '/save/label/:labelId/selector/:selectorId';
+export const ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR = '/save/label/:labelId/selector';
+export const ROUTE_TIER_MANAGEMENT_CREATE = '/create';
 
 export type Routable = {
     path: string;
@@ -28,35 +38,4 @@ export type Routable = {
     authenticationRequired: boolean;
     navigation: boolean;
     exact?: boolean;
-};
-
-export const mapRoutes = (routes: Routable[], AuthenticatedRoute: React.FC<{ children: React.ReactElement }>) => {
-    return routes.map((route) => {
-        return route.authenticationRequired ? (
-            <Route
-                path={route.path}
-                element={
-                    // Note: We add a left padding value to account for pages that have nav bar, h-full is because when adding the div it collapsed the views
-                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                        <AuthenticatedRoute>
-                            <div className={`h-full ${route.navigation && 'pl-nav-width'} `}>
-                                <route.component />
-                            </div>
-                        </AuthenticatedRoute>
-                    </ErrorBoundary>
-                }
-                key={route.path}
-            />
-        ) : (
-            <Route
-                path={route.path}
-                element={
-                    <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                        <route.component />
-                    </ErrorBoundary>
-                }
-                key={route.path}
-            />
-        );
-    });
 };
