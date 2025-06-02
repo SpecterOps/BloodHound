@@ -62,7 +62,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/{entity_type}",
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id&related_entity_type=",
 					},
 					Method: http.MethodGet,
@@ -81,7 +81,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/azure/invalid",
+						Path:     "/api/v2/azure/invalid",
 						RawQuery: "type=bad&object_id=id&related_entity_type=list",
 					},
 					Method: http.MethodGet,

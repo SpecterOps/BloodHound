@@ -349,7 +349,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -391,7 +391,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, errors.New("error"))
 			}, expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/login/ui/login?error=Your+SSO+connection+failed+due+to+misconfiguration%2C+please+contact+your+Administrator"}},
 			},
 		},
 		{
@@ -434,7 +434,7 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location":[]string{"?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2Fapi%2Fv2%2Fsso%2Fslug%2Flogin%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie":[]string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
+				responseHeader: http.Header{"Location": []string{"?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2Fapi%2Fv2%2Fsso%2Fslug%2Flogin%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie": []string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
 			},
 		},
 	}
