@@ -95,7 +95,7 @@ const SeedSelection: FC<{
         }
 
         setDeleteDialogOpen(false);
-    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"
@@ -31,6 +32,8 @@ import (
 const (
 	CustomNodeKindParameter = "kind_name"
 )
+
+var validColorString = regexp.MustCompile("^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")
 
 func (s *Resources) GetCustomNodeKinds(response http.ResponseWriter, request *http.Request) {
 	if kinds, err := s.DB.GetCustomNodeKinds(request.Context()); err != nil {
@@ -68,7 +71,9 @@ func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeReque
 
 func validateConfig(config model.CustomNodeKindConfig) error {
 	if config.Icon.Type != "font-awesome" {
-		return fmt.Errorf("custom node kind config type (%s) is not supported", config.Icon.Type)
+		return fmt.Errorf("invalid icon type. only Font Awesome icons are supported")
+	} else if !validColorString.MatchString(config.Icon.Color) && config.Icon.Color != "" {
+		return fmt.Errorf("icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits")
 	}
 
 	return nil
@@ -98,11 +103,19 @@ func convertCreateCustomNodeRequest(request CreateCustomNodeRequest) []model.Cus
 	for key, val := range request.CustomTypes {
 		customNodeKinds = append(customNodeKinds, model.CustomNodeKind{
 			KindName: key,
-			Config:   val,
+			Config:   assignColorDefault(val),
 		})
 	}
 
 	return customNodeKinds
+}
+
+func assignColorDefault(config model.CustomNodeKindConfig) model.CustomNodeKindConfig {
+	if config.Icon.Color == "" {
+		config.Icon.Color = "#FFFFFF"
+	}
+
+	return config
 }
 
 type UpdateCustomNodeKindRequest struct {
@@ -119,7 +132,7 @@ func (s *Resources) UpdateCustomNodeKind(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if err := validateConfig(customNodeKindRequest.Config); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseCodeBadRequest, err), request), response)
-	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: customNodeKindRequest.Config}); err != nil {
+	} else if kind, err := s.DB.UpdateCustomNodeKind(request.Context(), model.CustomNodeKind{KindName: paramId, Config: assignColorDefault(customNodeKindRequest.Config)}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		api.WriteBasicResponse(request.Context(), kind, http.StatusOK, response)

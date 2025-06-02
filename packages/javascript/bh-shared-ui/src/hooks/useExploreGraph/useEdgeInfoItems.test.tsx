@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { NormalizedNodeItem } from '../../components/VirtualizedNodeList';
-import { renderHook, waitFor } from '../../test-utils';
+import { act, renderHook, waitFor } from '../../test-utils';
 import { EdgeInfoItems, EdgeInfoItemsProps, useEdgeInfoItems } from './useEdgeInfoItems';
 
 const testDataNodes = {
@@ -86,11 +85,6 @@ const testDataNodeArray: NormalizedNodeItem = {
     onClick: handleNodeClick,
 };
 
-const backButtonSupportFF = {
-    key: 'back_button_support',
-    enabled: true,
-};
-
 const server = setupServer(
     rest.get('/api/v2/graphs/edge-composition', (_req, res, ctx) => {
         return res(
@@ -110,13 +104,6 @@ const server = setupServer(
         return res(
             ctx.json({
                 data: 0,
-            })
-        );
-    }),
-    rest.get('/api/v2/features', (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [backButtonSupportFF],
             })
         );
     })
@@ -140,17 +127,16 @@ describe('useEdgeInfoItems', () => {
         expect(JSON.stringify(nodesArray[0])).toBe(JSON.stringify(testDataNodeArray));
     });
     it('sets primarySearch, searchType, exploreSearchTab in URL params when the click handler is executed', async () => {
-        const history = createMemoryHistory();
-        const hook = renderHook(() => useEdgeInfoItems(testHookParams), { history });
+        const hook = renderHook(() => useEdgeInfoItems(testHookParams));
 
         await waitFor(async () => {
             expect(hook.result.current.isLoading).toBe(false);
         });
 
-        hook.result.current.nodesArray[0].onClick(0);
+        await act(() => hook.result.current.nodesArray[0].onClick(0));
 
-        expect(history.location.search).toContain('primarySearch');
-        expect(history.location.search).toContain('searchType');
-        expect(history.location.search).toContain('exploreSearchTab');
+        expect(window.location.search).toContain('primarySearch');
+        expect(window.location.search).toContain('searchType');
+        expect(window.location.search).toContain('exploreSearchTab');
     });
 });

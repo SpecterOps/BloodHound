@@ -101,6 +101,7 @@
                   "collect-data/ce-collection/overview",
                   "collect-data/ce-collection/sharphound",
                   "collect-data/ce-collection/sharphound-flags",
+                  "collect-data/ce-collection/create-gmsa-community-edition",
                   "collect-data/ce-collection/azurehound",
                   "collect-data/ce-collection/azurehound-flags"
                 ]
@@ -370,6 +371,8 @@
                 "pages": [
                   "resources/release-notes/overview",
                   "resources/release-notes/summary",
+                  "resources/release-notes/v7-4-1",
+                  "resources/release-notes/v7-4-0",
                   "resources/release-notes/v7-3-0",
                   "resources/release-notes/v7-2-1",
                   "resources/release-notes/v7-2-0",

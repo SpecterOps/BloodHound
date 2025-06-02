@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import ExploreSearchCombobox from '../../../components/ExploreSearchCombobox';
-import { SearchValue } from '../../../store';
+import { SearchValue } from './types';
 
 type NodeSearchState = {
     searchTerm: string;

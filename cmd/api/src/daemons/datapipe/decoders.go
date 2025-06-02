@@ -17,6 +17,7 @@
 package datapipe
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -27,19 +28,15 @@ import (
 	"github.com/specterops/bloodhound/ein"
 )
 
-/*
-ConversionFunc is responsible for turning an individual json object into the equivalent ingest object and storing the data into ConvertedData.
+type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
 
-T is any of the ingest types
-*/
-type ConversionFunc[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)
+// ConversionFunc is a function that transforms a decoded JSON object (of type T)
+// into its corresponding internal ingest representation, appending it to the provided ConvertedData.
+//
+// T represents a specific ingest type (e.g., User, Computer, Group, etc.).
+type ConversionFunc[T any] func(decoded T, converted *ConvertedData) error
 
-func decodeBasicData[T any](batch *TimestampedBatch, reader io.ReadSeeker, conversionFunc ConversionFunc[T]) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
-
+func decodeBasicData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFuncWithTime[T]) error {
 	var (
 		count         = 0
 		convertedData ConvertedData
@@ -61,7 +58,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, reader io.ReadSeeker, conve
 		}
 
 		if count == IngestCountThreshold {
-			if err = IngestBasicData(batch, convertedData); err != nil {
+			if err := IngestBasicData(batch, convertedData); err != nil {
 				errs.Add(err)
 			}
 			convertedData.Clear()
@@ -71,7 +68,7 @@ func decodeBasicData[T any](batch *TimestampedBatch, reader io.ReadSeeker, conve
 	}
 
 	if count > 0 {
-		if err = IngestBasicData(batch, convertedData); err != nil {
+		if err := IngestBasicData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -79,11 +76,49 @@ func decodeBasicData[T any](batch *TimestampedBatch, reader io.ReadSeeker, conve
 	return errs.Combined()
 }
 
-func decodeGroupData(batch *TimestampedBatch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
+func decodeGenericData[T any](batch *TimestampedBatch, decoder *json.Decoder, conversionFunc ConversionFunc[T]) error {
+	var (
+		count         = 0
+		convertedData ConvertedData
+		errs          = util.NewErrorCollector()
+	)
+
+	for decoder.More() {
+		// This variable needs to be initialized here, otherwise the marshaller will cache the map in the struct
+		var decodeTarget T
+		if err := decoder.Decode(&decodeTarget); err != nil {
+			slog.Error(fmt.Sprintf("Error decoding %T object: %v", decodeTarget, err))
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		} else {
+			count++
+			if err := conversionFunc(decodeTarget, &convertedData); err != nil {
+				errs.Add(err)
+			}
+		}
+
+		if count == IngestCountThreshold {
+			if err := IngestGenericData(batch, convertedData); err != nil {
+				errs.Add(err)
+			}
+			convertedData.Clear()
+			count = 0
+
+		}
 	}
+
+	if count > 0 {
+		if err := IngestGenericData(batch, convertedData); err != nil {
+			errs.Add(err)
+		}
+	}
+
+	return errs.Combined()
+}
+
+func decodeGroupData(batch *TimestampedBatch, decoder *json.Decoder) error {
 
 	var (
 		convertedData = ConvertedGroupData{}
@@ -93,7 +128,7 @@ func decodeGroupData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 
 	for decoder.More() {
 		var group ein.Group
-		if err = decoder.Decode(&group); err != nil {
+		if err := decoder.Decode(&group); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding group object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -114,7 +149,7 @@ func decodeGroupData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestGroupData(batch, convertedData); err != nil {
+		if err := IngestGroupData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -122,20 +157,16 @@ func decodeGroupData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeSessionData(batch *TimestampedBatch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
-
+func decodeSessionData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedSessionData{}
 		count         = 0
 		errs          = util.NewErrorCollector()
 	)
+
 	for decoder.More() {
 		var session ein.Session
-		if err = decoder.Decode(&session); err != nil {
+		if err := decoder.Decode(&session); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding session object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -155,7 +186,7 @@ func decodeSessionData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestSessions(batch, convertedData.SessionProps); err != nil {
+		if err := IngestSessions(batch, convertedData.SessionProps); err != nil {
 			errs.Add(err)
 		}
 	}
@@ -163,12 +194,7 @@ func decodeSessionData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	return errs.Combined()
 }
 
-func decodeAzureData(batch *TimestampedBatch, reader io.ReadSeeker) error {
-	decoder, err := CreateIngestDecoder(reader)
-	if err != nil {
-		return err
-	}
-
+func decodeAzureData(batch *TimestampedBatch, decoder *json.Decoder) error {
 	var (
 		convertedData = ConvertedAzureData{}
 		count         = 0
@@ -177,7 +203,7 @@ func decodeAzureData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 
 	for decoder.More() {
 		var data AzureBase
-		if err = decoder.Decode(&data); err != nil {
+		if err := decoder.Decode(&data); err != nil {
 			slog.Error(fmt.Sprintf("Error decoding azure object: %v", err))
 			if errors.Is(err, io.EOF) {
 				break
@@ -198,7 +224,7 @@ func decodeAzureData(batch *TimestampedBatch, reader io.ReadSeeker) error {
 	}
 
 	if count > 0 {
-		if err = IngestAzureData(batch, convertedData); err != nil {
+		if err := IngestAzureData(batch, convertedData); err != nil {
 			errs.Add(err)
 		}
 	}

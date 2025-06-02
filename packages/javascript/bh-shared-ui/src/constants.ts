@@ -42,6 +42,10 @@ export const TAG_OWNED_AGT = 'Tag_Owned';
 export const TIER_ZERO_LABEL = 'Admin Tier Zero';
 export const HIGH_VALUE_LABEL = 'High Value';
 
+// Snackbar duration values
+export const SNACKBAR_DURATION = 5000;
+export const SNACKBAR_DURATION_LONG = 15000;
+
 export const useStyles = makeStyles((theme: DefaultTheme) => ({
     applicationContainer: {
         display: 'flex',

@@ -37,21 +37,9 @@ const fakeEnvironmentB = {
 };
 const fakeEnvironments = [fakeEnvironmentA, fakeEnvironmentB];
 
-const backButtonSupportFF = {
-    key: 'back_button_support',
-    enabled: true,
-};
-
 const server = setupServer(
     rest.get('/api/v2/available-domains', (req, res, ctx) => {
         return res(ctx.json({ data: fakeEnvironments }));
-    }),
-    rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [backButtonSupportFF],
-            })
-        );
     })
 );
 

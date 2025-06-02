@@ -23,3 +23,5 @@ properties:
         type: string
       name:
         type: string
+      color:
+        type: string

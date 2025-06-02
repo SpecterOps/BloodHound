@@ -97,7 +97,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
-			meta, err := ValidateMetaTag(strings.NewReader(assertion.rawString), schema, false)
+			meta, err := ParseAndValidatePayload(strings.NewReader(assertion.rawString), schema, true, false)
 			assert.ErrorIs(t, err, assertion.err)
 			if assertion.err == nil {
 				assert.Equal(t, assertion.expectedType, meta.Type)
@@ -377,7 +377,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "nested object cannot be stored as property", "remove \"nested\""}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "objects are not allowed in the property bag"}},
 		},
 		{
 			name: "node cannot have objects inside an array in the property bag",
@@ -396,7 +396,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"nodes[0] schema validation", "nested object cannot be stored as property", "remove \"arr\""}},
+			validationErrContains: [][]string{{"nodes[0] schema validation", "Arrays must contain only primitive values"}},
 		},
 		{
 			name: "node cannot have an array with mixed types",
@@ -445,7 +445,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "nested object cannot be stored as property"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "objects are not allowed in the property bag"}},
 		},
 		{
 			name: "edge cannot have an array with a nested object",
@@ -461,7 +461,7 @@ func complexNestedPropertyCases() []genericIngestAssertion {
 					},
 				},
 			},
-			validationErrContains: [][]string{{"edges[0] schema validation", "nested object cannot be stored as property"}},
+			validationErrContains: [][]string{{"edges[0] schema validation", "Arrays must contain only primitive values"}},
 		},
 	}
 }
