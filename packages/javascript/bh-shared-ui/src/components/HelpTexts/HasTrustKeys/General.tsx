@@ -22,8 +22,8 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName }) => {
     return (
         <>
             <Typography variant='body2'>
-                The domain {sourceName} has the trust keys of the trust account {targetName}. The trust account exists as
-                the domain has an outbound trust to the domain of the trust account.
+                The domain {sourceName} has the trust keys of the trust account {targetName}. The trust account exists
+                because the source domain has an outbound trust to the domain of the trust account.
             </Typography>
             <Typography variant='body2'>
                 The trust keys can be leveraged to authenticate as the trust account and gain access to the trust

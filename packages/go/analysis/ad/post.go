@@ -147,6 +147,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 			for _, domain := range domainNodes {
 				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
 					// The property is new and may therefore not exist
+					slog.DebugContext(ctx, fmt.Sprintf("Skipping domain %d: missing NetBIOS property", domain.ID))
 					continue
 				} else if trustingDomains, err := getDirectOutboundTrustDomains(tx, domain); err != nil {
 					slog.ErrorContext(ctx, fmt.Sprintf("Error getting outbound trust edges from domain %d: %v", domain.ID, err))
@@ -155,9 +156,11 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 					for _, trustingDomain := range trustingDomains {
 						if trustingDomainSid, err := trustingDomain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
 							// DomainSID is only created after we have performed collection of the domain
+							slog.DebugContext(ctx, fmt.Sprintf("Skipping trusting domain %d: missing DomainSID property", trustingDomain.ID))
 							continue
 						} else if trustAccount, err := getTrustAccount(tx, trustingDomainSid, netbios); err != nil {
 							// The account may not exist if we have not collected it
+							slog.DebugContext(ctx, fmt.Sprintf("Trust account not found for domain SID %s and NetBIOS %s", trustingDomainSid, netbios))
 							continue
 						} else {
 							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
@@ -171,7 +174,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicP
 			}
 			return nil
 		}); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Error creating HasTrustKeys edges: %v", err))
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("error creating HasTrustKeys edges: %w", err)
 		}
 
 		return &operation.Stats, operation.Done()
