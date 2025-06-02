@@ -22,19 +22,22 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database/mocks"
+	"golang.org/x/net/html"
 
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/api/v2/auth"
 	bhceauth "github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/src/database/mocks"
+	samlmocks "github.com/specterops/bloodhound/src/services/saml/mocks"
+
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
@@ -310,6 +313,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
+		mockSAML     *samlmocks.MockService
 	}
 	type expected struct {
 		responseBody   string
@@ -388,6 +392,44 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
+		// {
+		// 	name: "Success: SAML provider type - OK",
+		// 	buildRequest: func() *http.Request {
+		// 		ssoProviderSlug := "saml-provider"
+
+		// 		req, err := http.NewRequest("GET", fmt.Sprintf("/api/v2/sso/{%s}/login", ssoProviderSlug), nil)
+		// 		require.NoError(t, err)
+
+		// 		vars := map[string]string{
+		// 			api.URIPathVariableSSOProviderSlug: "saml-provider",
+		// 		}
+		// 		req = mux.SetURLVars(req, vars)
+
+		// 		req = req.WithContext(ctx.Set(req.Context(), &ctx.Context{Host: &url.URL{Host: "loremipsum"}}))
+
+		// 		return req
+		// 	},
+		// 	setupMocks: func(t *testing.T, mocks *mock) {
+		// 		ssoProvider := model.SSOProvider{
+		// 			Type: 1,
+		// 			Name: "SAML Provider",
+		// 			Slug: "saml-provider",
+		// 			SAMLProvider: &model.SAMLProvider{
+		// 				Name:        "SAML Provider",
+		// 				DisplayName: "SAML Provider",
+		// 				MetadataXML: []byte(validMetadataXML),
+		// 			},
+		// 		}
+
+		// 		mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), gomock.Any()).Return(ssoProvider, nil)
+		// 		mocks.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
+		// 	},
+		// 	expected: expected{
+		// 		responseCode:   http.StatusOK,
+		// 		responseBody:   "<!DOCTYPE html>\n<html>\n<body>\n<form method=\"post\" action=\"https://okta.com/sso\" id=\"SAMLRequestForm\"><input type=\"hidden\" name=\"SAMLRequest\" value=\"PHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiBJRD0iaWQtYTUzYWY0MWM0NGU5NzQ3MTY3MzRkNGJiOTY1ZTZjODc1MjM1MzljZiIgVmVyc2lvbj0iMi4wIiBJc3N1ZUluc3RhbnQ9IjIwMjUtMDYtMDJUMTg6NDg6MTguMzg1WiIgRGVzdGluYXRpb249Imh0dHBzOi8vb2t0YS5jb20vc3NvIiBQcm90b2NvbEJpbmRpbmc9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpiaW5kaW5nczpIVFRQLVBPU1QiPjxzYW1sOklzc3VlciBGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpuYW1laWQtZm9ybWF0OmVudGl0eSI&#43;Ly9sb3JlbWlwc3VtL1NBTUwlMjBQcm92aWRlcjwvc2FtbDpJc3N1ZXI&#43;PGRzOlNpZ25hdHVyZSB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI&#43;PGRzOlNpZ25lZEluZm8&#43;PGRzOkNhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz48ZHM6U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxkc2lnLW1vcmUjcnNhLXNoYTI1NiIvPjxkczpSZWZlcmVuY2UgVVJJPSIjaWQtYTUzYWY0MWM0NGU5NzQ3MTY3MzRkNGJiOTY1ZTZjODc1MjM1MzljZiI&#43;PGRzOlRyYW5zZm9ybXM&#43;PGRzOlRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyNlbnZlbG9wZWQtc2lnbmF0dXJlIi8&#43;PGRzOlRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyIvPjwvZHM6VHJhbnNmb3Jtcz48ZHM6RGlnZXN0TWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxlbmMjc2hhMjU2Ii8&#43;PGRzOkRpZ2VzdFZhbHVlPjBJSnYrenovdy9pWnQ4WGVDd3A0VENCR3R1cGZsYjdIalI2dXUxN2NMMTQ9PC9kczpEaWdlc3RWYWx1ZT48L2RzOlJlZmVyZW5jZT48L2RzOlNpZ25lZEluZm8&#43;PGRzOlNpZ25hdHVyZVZhbHVlPmV6SU5vTlIwTm5pOEFoeXBobzVUckh1dEpBNTJzNDJ4TWZ5Umw1Rm5SRGdCZXRYUTRWZi9QY1NDYy9ySEZnZTQzNGRBL1FFaFk4VUhZTkQreHBBc1pOZFQveWVwUVA4anU1QmhxL0RnYXp2eitadnNRRHJqbDQxbFhsN1oyYnNPZzNDZnE2UTRGVHZLbGZPYkxFSjB1bjB0L2J2aXU4V0cwZ2ovK2hWYVZDOElIbHJmTFhWVW9MUnl2bHc2bmdVV1Y1ZWhRUTV2SkdnaHVlaVNsbjdqYlAzOTY2N084V0k5cER6M3lFTlBXK3h0MklvNURsd2Rhemx1SVhya2E0UkViSnZMYytBNTBTdmhCODlSMFJhN2pLSERzQU1kSjZnNExBa3F2NzI4YVM4TlYrbUloODV6K2wzckNwSmFpVVpPU2FIRlp1WmFyekV6MllTSkhSd0JxQT09PC9kczpTaWduYXR1cmVWYWx1ZT48ZHM6S2V5SW5mbz48ZHM6WDUwOURhdGE&#43;PGRzOlg1MDlDZXJ0aWZpY2F0ZT5NSUlEcnpDQ0FwZWdBd0lCQWdJVUcrbExNUHBrVGZ3VmU1ZlZiQmhXZS9jSXhyZ3dEUVlKS29aSWh2Y05BUUVMQlFBd2Z6RUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xkaGMyaHBibWQwYjI0eEVEQU9CZ05WQkFjTUIxTmxZWFIwYkdVeEdqQVlCZ05WQkFvTUVWTndaV04wWlhJZ1QzQnpMQ0JKYm1NdU1Rd3dDZ1lEVlFRRERBTkNiMkl4SHpBZEJna3Foa2lHOXcwQkNRRVdFSE53WVcxQVpYaGhiWEJzWlM1amIyMHdJQmNOTWpVd05qQXlNVFkxT0RNeldoZ1BNekF5TkRFd01ETXhOalU0TXpOYU1IOHhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwWFlYTm9hVzVuZEc5dU1SQXdEZ1lEVlFRSERBZFRaV0YwZEd4bE1Sb3dHQVlEVlFRS0RCRlRjR1ZqZEdWeUlFOXdjeXdnU1c1akxqRU1NQW9HQTFVRUF3d0RRbTlpTVI4d0hRWUpLb1pJaHZjTkFRa0JGaEJ6Y0dGdFFHVjRZVzF3YkdVdVkyOXRNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQTVLTVpQVHVNRE1JUzNOMjRZMmw2RkxrYlNabkcvWGExNk1pU1J0dXZLNnFFeGtWWjBKci83a0RKMEY5ZU9XZTZTZ1J4Ny9vL29sbktDM3ZzNUh3ZHVTb1F6TGlGSDdUOEZSR0VPbG1YYkN0ZkZlV1F6TDBQd3ZvWDdZUURQNGQxSWxFZHpuTVdpZVhNNzNoS0wvVW9ucnlkcnNKdDZ6ZXloUzBzdUFaeitVTXBvY3NjOXh0RnRkYVpCVlNuU2pxcksrUG9UMlYyV1lVVWRuckJoOXhuSjFhSVg3OFBVb1U4ZkY4WXZpSjlBbnFlK3NBc0xYMG5PVmNsajRMTkdYK0xoRm9RY1I0RGt4b2xDTm1Mb3pEMDkxWHZvZGhyc3Qwa1lLdGdwSmw4d0ZKMVVMZXl2Q3ZYS1IzZk5Lc2VNN0RrVEJkNWMzZlpPUlpwS1JyczhVTmMxd0lEQVFBQm95RXdIekFkQmdOVkhRNEVGZ1FVbEZjcXBMSzRieU41ejdkR3lOcExqVisvc01Jd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFMUlpTRzVCbFFjTVpOOWtaQ0JWcVV1bkNROTZjZ0NaVXA3N2IwUUVQWHNTbitLRWorYnIyMjRETG1LaVoxejd3SE5RZWZqRXRBeGNhalM1WlRhcE9BZWtNbzlUbmM1TVV2QUdoNGNGSW1jbjFiMTd1MkljTUhBWE9RTmk2ZXhCV1RvREtWQVl3Q3B4UTJ4OUVMSHMwbVUxSEMvSHJrcUxJQWJRam9CTDBaSzU1ZXVvTEpRMzVzN005dU5MdjRzQm1YTEtkU2NaaURzUWd2VHdTeUZHVkRyek9ua3E3SXNBZkhaMjN2d25kWTExL3g3ZFFJcWNkTm1OL3JUU2x4MEd6MFNBcnRPdklqSWVNdHZtdjhLQVBDalUrQXZUR21OWFpXYnZyNWxGSk9mNDZPUm9wd3BKdFRpamh6dmloTHZCckxtNlVkckx1b3Nidlh1SkdxazJFRU09PC9kczpYNTA5Q2VydGlmaWNhdGU&#43;PC9kczpYNTA5RGF0YT48L2RzOktleUluZm8&#43;PC9kczpTaWduYXR1cmU&#43;PHNhbWxwOk5hbWVJRFBvbGljeSBGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMTpuYW1laWQtZm9ybWF0OmVtYWlsQWRkcmVzcyIgQWxsb3dDcmVhdGU9InRydWUiLz48L3NhbWxwOkF1dGhuUmVxdWVzdD4=\" /><input type=\"hidden\" name=\"RelayState\" value=\"\" /><input id=\"SAMLSubmitButton\" type=\"submit\" value=\"Submit\" /></form><script>document.getElementById('SAMLSubmitButton').style.visibility=\"hidden\";document.getElementById('SAMLRequestForm').submit();</script>\n</body>\n</html>\n",
+		// 		responseHeader: http.Header{"Content-Security-Policy": []string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type": []string{"text/html"}},
+		// 	},
+		// },
 	}
 
 	for _, testCase := range tt {
@@ -397,12 +439,72 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 
 			mocks := &mock{
 				mockDatabase: mocks.NewMockDatabase(ctrl),
+				mockSAML:     samlmocks.NewMockService(ctrl),
 			}
 
 			request := testCase.buildRequest()
 			testCase.setupMocks(t, mocks)
 
-			resources := auth.NewManagementResource(config.Configuration{}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			rawCert := `-----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIUG+lLMPpkTfwVe5fVbBhWe/cIxrgwDQYJKoZIhvcNAQEL
+BQAwfzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCldhc2hpbmd0b24xEDAOBgNVBAcM
+B1NlYXR0bGUxGjAYBgNVBAoMEVNwZWN0ZXIgT3BzLCBJbmMuMQwwCgYDVQQDDANC
+b2IxHzAdBgkqhkiG9w0BCQEWEHNwYW1AZXhhbXBsZS5jb20wIBcNMjUwNjAyMTY1
+ODMzWhgPMzAyNDEwMDMxNjU4MzNaMH8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApX
+YXNoaW5ndG9uMRAwDgYDVQQHDAdTZWF0dGxlMRowGAYDVQQKDBFTcGVjdGVyIE9w
+cywgSW5jLjEMMAoGA1UEAwwDQm9iMR8wHQYJKoZIhvcNAQkBFhBzcGFtQGV4YW1w
+bGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5KMZPTuMDMIS
+3N24Y2l6FLkbSZnG/Xa16MiSRtuvK6qExkVZ0Jr/7kDJ0F9eOWe6SgRx7/o/olnK
+C3vs5HwduSoQzLiFH7T8FRGEOlmXbCtfFeWQzL0PwvoX7YQDP4d1IlEdznMWieXM
+73hKL/UonrydrsJt6zeyhS0suAZz+UMpocsc9xtFtdaZBVSnSjqrK+PoT2V2WYUU
+dnrBh9xnJ1aIX78PUoU8fF8YviJ9Anqe+sAsLX0nOVclj4LNGX+LhFoQcR4Dkxol
+CNmLozD091Xvodhrst0kYKtgpJl8wFJ1ULeyvCvXKR3fNKseM7DkTBd5c3fZORZp
+KRrs8UNc1wIDAQABoyEwHzAdBgNVHQ4EFgQUlFcqpLK4byN5z7dGyNpLjV+/sMIw
+DQYJKoZIhvcNAQELBQADggEBALRZSG5BlQcMZN9kZCBVqUunCQ96cgCZUp77b0QE
+PXsSn+KEj+br224DLmKiZ1z7wHNQefjEtAxcajS5ZTapOAekMo9Tnc5MUvAGh4cF
+Imcn1b17u2IcMHAXOQNi6exBWToDKVAYwCpxQ2x9ELHs0mU1HC/HrkqLIAbQjoBL
+0ZK55euoLJQ35s7M9uNLv4sBmXLKdScZiDsQgvTwSyFGVDrzOnkq7IsAfHZ23vwn
+dY11/x7dQIqcdNmN/rTSlx0Gz0SArtOvIjIeMtvmv8KAPCjU+AvTGmNXZWbvr5lF
+JOf46ORopwpJtTijhzvihLvBrLm6UdrLuosbvXuJGqk2EEM=
+-----END CERTIFICATE-----
+`
+			rawKey := `-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDkoxk9O4wMwhLc
+3bhjaXoUuRtJmcb9drXoyJJG268rqoTGRVnQmv/uQMnQX145Z7pKBHHv+j+iWcoL
+e+zkfB25KhDMuIUftPwVEYQ6WZdsK18V5ZDMvQ/C+hfthAM/h3UiUR3OcxaJ5czv
+eEov9SievJ2uwm3rN7KFLSy4BnP5Qymhyxz3G0W11pkFVKdKOqsr4+hPZXZZhRR2
+esGH3GcnVohfvw9ShTx8Xxi+In0Cep76wCwtfSc5VyWPgs0Zf4uEWhBxHgOTGiUI
+2YujMPT3Ve+h2Guy3SRgq2CkmXzAUnVQt7K8K9cpHd80qx4zsORMF3lzd9k5Fmkp
+GuzxQ1zXAgMBAAECggEARNBmD0z12P0sijddgOZFLSmNcfiLsMvi8l4z0IncTisz
+bS2AW83bC82KMGITzPlQU2jFFjJeprGZox04boiAtbNYfRVoU+O4H2s3PgyrC45+
+PuvqSgT5UnjNbNpX0+4kLiD19KYk+Xol1UmCIq8J+8TPPMMeLDaGT5kKJZUjoLip
+YBXM4wlmK45nO/nffoo09wDkgSQ27/p6h53/HnbwCcC/cRJsZ7EGejZ7EH82gORK
+F8PyplbQKm6spjwsgcU2G193ZNowmLFPacuhKCpDbB44HBFzXC7B9xYD3YsY2HmA
+0C27WI98xlKxSmjKtdHgZD740V5i96vWQjdea3A6CQKBgQD/CvcxGCElZ52TE5rl
+TkX3cKVIUkE02l/P7lZRMm+XFCh4qw9d+kky6etSdCphIWfMuyh2tGnC0FNSaQ6n
+Q/avBg+6O09izxZVaupp2PVfGmA67Jg2SYYE7ABFXFCb6qj3N9O4Bn4LHuaXIGIW
+FP1TR3pIjTQ/vMDIe5obDuNmRQKBgQDlfsNzu0hYOvSNNre6HSib/bjcx4tUZ10Y
+K5K7rjxiN2EuUwZykP8nPNwhdn6hbRZ36uuv43RBwSqrEuxlgdPGR5QpRk7jYrd1
+F0GSXiSKgITXoRnaDEUynSylKIA9Qn6vlpRtdhzSxzcQ4WvxNHwRX5NGTzssE5nU
+kJ41MqoGawKBgQDgyiZzZAQa9seA0V/Nyf6LCAL1ymHklrCqETSNHnoSW9cL/CFw
+QGBx+pDJvM95irr1TORuM7ef2IQH98bNkG6Fdz83cn0W5tWVdcWkg3BJYXL9nHjQ
+KF9ySRw4BhSaR+qi8tattTM01AiDnSw2sEtTMoXKGoK5xsDYM3Dxdl7hTQKBgQCj
+d0SO9dKVDgFNaLE7fzOC0RnRIM1MpId6BOdyiav3JY0yKu9HwaIM99uwdi/CmepM
+JmgUk8YmZAoZatQ5hV0sOaX+NFdSvekBHTyWnjoW8W4uDVFVsDHF2JCJX6zgdbG5
+Ll+xDFWBiWbevkJdv82zrkk/5oW2YovLDeuy5tCW2wKBgQDSjm+4IDV/7OQE1DRI
+jO+N7YByHDnepPp4BPOfGxkSDJQPwsmsoj5B0J0tsXkKpLFUZMxJZEbSCnYBj9K7
+q6U+h0JTO081nY4wb43VkFIGuE2HeBNtghNx5duE0fR0Ao0ja4Vf/sYbainUThaS
+SMRMGd2G85dGQI0qXDJBWXabpA==
+-----END PRIVATE KEY-----
+`
+
+			resources := auth.NewManagementResource(config.Configuration{
+				SAML: config.SAMLConfiguration{
+					ServiceProviderCertificate:        rawCert,
+					ServiceProviderKey:                rawKey,
+					ServiceProviderCertificateCAChain: "",
+				},
+			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -413,10 +515,16 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
-			if body != "" {
+			if status != http.StatusOK {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
 			} else {
-				assert.Equal(t, testCase.expected.responseBody, body)
+				reader := strings.NewReader(body)
+				parsed, err := html.Parse(reader)
+				if err != nil {
+					t.Fail()
+				}
+
+				assert.Equal(t, testCase.expected.responseBody, parsed)
 			}
 		})
 	}

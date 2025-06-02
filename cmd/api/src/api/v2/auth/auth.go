@@ -43,7 +43,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/services/oidc"
-	tls "github.com/specterops/bloodhound/src/services/tls"
+	"github.com/specterops/bloodhound/src/services/saml"
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
@@ -62,7 +62,7 @@ type ManagementResource struct {
 	authorizer                 auth.Authorizer   // Used for Permissions
 	authenticator              api.Authenticator // Used for secrets
 	OIDC                       oidc.Service
-	TLS                        tls.Service
+	SAML                       saml.Service
 }
 
 func NewManagementResource(authConfig config.Configuration, db database.Database, authorizer auth.Authorizer, authenticator api.Authenticator) ManagementResource {
@@ -74,7 +74,7 @@ func NewManagementResource(authConfig config.Configuration, db database.Database
 		authorizer:                 authorizer,
 		authenticator:              authenticator,
 		OIDC:                       &oidc.Client{},
-		TLS:                        &tls.Client{},
+		SAML:                       &saml.Client{},
 	}
 }
 

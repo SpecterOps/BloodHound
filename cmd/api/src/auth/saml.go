@@ -24,9 +24,9 @@ import (
 	"github.com/crewjam/saml/samlsp"
 	dsig "github.com/russellhaering/goxmldsig"
 
+	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/services/tls"
 )
 
 func getIDPSingleSignOnDescriptor(metadata *saml.EntityDescriptor, bindingType string) (saml.IDPSSODescriptor, error) {
@@ -67,8 +67,8 @@ func GetAssertionConsumerServiceURL(metadata *saml.EntityDescriptor, bindingType
 	return "", fmt.Errorf("no SAML ascertion consumer service url defined in metadata xml")
 }
 
-func NewServiceProvider(hostUrl url.URL, cfg config.Configuration, samlProvider model.SAMLProvider, tls tls.Service) (saml.ServiceProvider, error) {
-	if spCert, spKey, err := tls.Parse(cfg.SAML); err != nil {
+func NewServiceProvider(hostUrl url.URL, cfg config.Configuration, samlProvider model.SAMLProvider) (saml.ServiceProvider, error) {
+	if spCert, spKey, err := crypto.X509ParsePair(cfg.SAML.ServiceProviderCertificate, cfg.SAML.ServiceProviderKey); err != nil {
 		return saml.ServiceProvider{}, fmt.Errorf("failed to parse service provider %s's cert pair: %w", samlProvider.Name, err)
 	} else if idpMetadata, err := samlsp.ParseMetadata(samlProvider.MetadataXML); err != nil {
 		return saml.ServiceProvider{}, fmt.Errorf("failed to parse metadata XML for service provider %s: %w", samlProvider.Name, err)

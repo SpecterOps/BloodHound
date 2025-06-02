@@ -340,7 +340,7 @@ func (s ManagementResource) ServeMetadata(response http.ResponseWriter, request 
 		api.HandleDatabaseError(request, response, err)
 	} else if ssoProvider.SAMLProvider == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider, s.TLS); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
 	} else {
 		// Note: This is the samlsp metadata tied to authenticate flow and will not be the same as the XML metadata used to import the SAML provider initially
@@ -380,7 +380,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider, s.TLS); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
@@ -395,7 +395,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		}
 
 		// TODO: add actual relay state support - BED-5071
-		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
+		if authReq, err := s.SAML.MakeAuthenticationRequest(serviceProvider, bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed creating SAML authentication request: %v", err))
 			// SAML misconfiguration or technical issue
 			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
@@ -437,7 +437,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 	if ssoProvider.SAMLProvider == nil {
 		// SAML misconfiguration
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
-	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider, s.TLS); err != nil {
+	} else if serviceProvider, err := auth.NewServiceProvider(*ctx.Get(request.Context()).Host, s.config, *ssoProvider.SAMLProvider); err != nil {
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Service provider creation failed: %v", err))
 		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
 	} else if err := request.ParseForm(); err != nil {
