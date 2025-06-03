@@ -2,6 +2,8 @@
 title: BloodHound Community Edition Quickstart
 ---
 
+import SampleData from '/snippets/sample-data.mdx';
+
   <img noZoom src="/assets/community-edition-pill-tag.svg"/>
 
 Set up BloodHound Community Edition (BloodHound CE) with Docker Compose and start identifying and visualizing security risks..
@@ -179,26 +181,7 @@ To get data into BloodHound, ingest sample data or run a data collector.
 
 ## Option 1: Ingest sample data
 
-Sample collection data helps you explore and test BloodHound CE functionality before using your own data.
-
-To ingest the BloodHound sample data:
-
-1. Download sample data for [Active Directory](https://github.com/user-attachments/files/17799530/ad_example_data.zip) or [Azure](https://github.com/user-attachments/files/17799516/azurehound_example.zip)
-
-    Active Directory Sample Data generated with SharpHound includes:
-    * 3 collected domains with trusts between them
-    * Additional, visible, trusted domains without collections
-    * Coverage for local permissions
-    * Multiple ADCS escalation paths
-
-    Azure Sample Data generated with AzureHound includes:
-    * Full collection of an Azure environment
-    * Support for user-sync hybrid paths when ingested alongside the example AD data
-
-
-2. From the BloodHound CE UI, go to settings (⚙️) → **Administration** → **Upload Files**.
-
-  <Note> The default admin email address is spam@example.com. You may notice this show up as the user who's ingesting the data.</Note>
+<SampleData/>
 
 ## Option 2: Ingest your data with data collectors
 
