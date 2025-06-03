@@ -31,8 +31,9 @@ const GraphEdgeEvents: FC = () => {
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
-    const canvases = sigma.getCanvases();
-    const edgeEventsRef = useRef<HTMLCanvasElement>()
+
+gsv    const canvases = sigma.getCanvases();
+    const edgeEventsRef = useRef<HTMLCanvasElement>(null);
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
@@ -53,7 +54,6 @@ const GraphEdgeEvents: FC = () => {
                 for (let i = 0; i < edges.length; i++) {
                     const edge: string = edges[i];
                     const attributes = graph.getEdgeAttributes(edge);
-
                     const edgeData = getEdgeDataFromKey(edge);
                     if (edgeData === null) continue;
                     const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
@@ -162,11 +162,14 @@ const GraphEdgeEvents: FC = () => {
     );
 
     useEffect(() => {
-        edgeEventsRef?.current?.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            handleEdgeEvents(e);
-        }, { passive: false });
-
+        edgeEventsRef?.current?.addEventListener(
+            'wheel',
+            (e) => {
+                e.preventDefault();
+                handleEdgeEvents(e);
+            },
+            { passive: false }
+        );
     }, [edgeEventsRef]);
 
     return (
