@@ -16,19 +16,20 @@
 
 import isEmpty from 'lodash/isEmpty';
 import { useEffect } from 'react';
-import { DEV_TABLE_VIEW } from '../../constants';
+import { useFeatureFlag } from '..';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
 
 export const useExploreTableAutoDisplay = (setSelectedLayout: (layout: 'table') => void) => {
     const { data: graphData } = useExploreGraph();
     const { searchType } = useExploreParams();
+    const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
     const isCypherSearch = searchType === 'cypher';
     const autoDisplayTableQueryCandidate = isCypherSearch && graphData && isGraphResponse(graphData);
 
     useEffect(() => {
-        if (DEV_TABLE_VIEW && autoDisplayTableQueryCandidate) {
+        if (featureFlag?.enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
             const containsNodes = !isEmpty(graphData.data.nodes);
 
@@ -36,5 +37,5 @@ export const useExploreTableAutoDisplay = (setSelectedLayout: (layout: 'table') 
                 setSelectedLayout('table');
             }
         }
-    }, [autoDisplayTableQueryCandidate, graphData, setSelectedLayout]);
+    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData, setSelectedLayout]);
 };

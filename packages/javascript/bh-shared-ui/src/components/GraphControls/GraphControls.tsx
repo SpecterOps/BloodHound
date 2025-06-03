@@ -21,7 +21,7 @@ import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef } from 'react';
-import { DEV_TABLE_VIEW } from '../../constants';
+import { useFeatureFlag } from '../..';
 import { useExploreSelectedItem } from '../../hooks/useExploreSelectedItem';
 import useToggle from '../../hooks/useToggle';
 import { exportToJson } from '../../utils/exportGraphData';
@@ -57,6 +57,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     } = props;
 
     const { setSelectedItem } = useExploreSelectedItem();
+    const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
     const [isCurrentSearchOpen, toggleCurrentSearch] = useToggle(false);
 
@@ -90,7 +91,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 <GraphMenu label='Layout'>
                     {layoutOptions
                         .filter((layout) => {
-                            if (!DEV_TABLE_VIEW) {
+                            if (!featureFlag?.enabled) {
                                 return layout !== 'table';
                             }
                             return true;

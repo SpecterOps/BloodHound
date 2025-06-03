@@ -446,5 +446,3 @@ export const graphSchema = (labels: string[] | undefined) => {
 
     return schema;
 };
-
-export const DEV_TABLE_VIEW = true;
