@@ -16,9 +16,8 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../../mocks/handlers';
-import { longWait, render, screen, within } from '../../../test-utils';
+import { act, longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
 const server = setupServer(...tierHandlers);
@@ -36,7 +35,10 @@ describe('Details', async () => {
     const user = userEvent.setup();
 
     it('renders', async () => {
-        render(<Details />);
+
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1' });
+        });
 
         expect(await screen.findByText(/To create additional tiers/)).toBeInTheDocument();
 
@@ -46,7 +48,9 @@ describe('Details', async () => {
     });
 
     it('has Tier Zero tier selected by default and no selectors or objects are selected', async () => {
-        render(<Details />);
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1' });
+        });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         const selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -72,7 +76,9 @@ describe('Details', async () => {
     });
 
     it('handles object selection when a tier is already selected', async () => {
-        render(<Details />);
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1' });
+        });
 
         longWait(async () => {
             const object5 = await screen.findByText('tier-0-object-5');
@@ -101,7 +107,9 @@ describe('Details', async () => {
     });
 
     it('handles selector selection when a tier and object are already selected', async () => {
-        render(<Details />);
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1/member/7' });
+        });
 
         const selector7 = await screen.findByText('tier-0-selector-7');
 
@@ -134,7 +142,9 @@ describe('Details', async () => {
     });
 
     it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
-        render(<Details />, { route: '/tier-management/details/tag/1/selector/7/member/7' });
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1/selector/7/member/7' });
+        });
 
         const selectors = await screen.findByTestId('tier-management_details_selectors-list');
         let selectorsListItems = await within(selectors).findAllByRole('listitem');
@@ -167,12 +177,9 @@ describe('Details', async () => {
     });
 
     it('will display "Create Tier" button when "Tiers" tab is selected', async () => {
-        render(
-            <Routes>
-                <Route path='/tier-management/details/tier/:tierId' element={<Details />} />
-            </Routes>,
-            { route: '/tier-management/details/tier/1' }
-        );
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/tier/1' });
+        });
 
         const createTierButton = await screen.findByRole('button', { name: /Create Tier/ });
         const createLabelButton = await screen.queryByRole('button', { name: /Create Label/ });
@@ -188,12 +195,9 @@ describe('Details', async () => {
     });
 
     it('will display "Create Label" button when "Label" tab is selected', async () => {
-        render(
-            <Routes>
-                <Route path='/tier-management/details/label/:labelId' element={<Details />} />
-            </Routes>,
-            { route: '/tier-management/details/label/2' }
-        );
+        await act(async () => {
+            render(<Details />, { route: '/tier-management/details/label/2' });
+        });
 
         const createLabelButton = await screen.findByRole('button', { name: /Create Label/ });
         const createTierButton = await screen.queryByRole('button', { name: /Create Tier/ });

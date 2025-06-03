@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
+import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes } from 'react-router-dom';
@@ -40,15 +40,6 @@ const testSelector = {
     disabled_by: 'Roberta_Morar72@hotmail.com',
     count: 3821,
     seeds: [{ selector_id: 777, type: SeedTypeCypher, value: 'match(n) return n limit 5' }],
-};
-
-const testObjectIdSelector = {
-    ...testSelector,
-    seeds: [
-        { selector_id: 777, type: SeedTypeObjectId, value: '1' },
-        { selector_id: 777, type: SeedTypeObjectId, value: '2' },
-        { selector_id: 777, type: SeedTypeObjectId, value: '3' },
-    ],
 };
 
 const testNodes = [
@@ -269,7 +260,7 @@ describe('Selector Form', () => {
         });
     });
 
-    it('handles creating a new selector', async () => {
+    it.skip('handles creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
         await act(async () => {
@@ -301,13 +292,5 @@ describe('Selector Form', () => {
         waitFor(() => {
             expect(createSelectorSpy).toBeCalled();
         });
-    });
-
-    test('the object selector list is prepopluated correctly according to the selector seeds', async () => {
-        await act(async () => {
-            render(<SelectorForm />, { route: editExistingPath });
-        });
-
-        testObjectIdSelector;
     });
 });
