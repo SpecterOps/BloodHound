@@ -16,8 +16,8 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { tierHandlers } from '../../../mocks/handlers';
 import { Route, Routes } from 'react-router-dom';
+import { tierHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
 
@@ -167,17 +167,12 @@ describe('Details', async () => {
     });
 
     it('will display "Create Tier" button when "Tiers" tab is selected', async () => {
-        const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/tier/1', '/tier-management/save/tier'],
-            initialIndex: 0,
-        });
-
         render(
             <Routes>
                 <Route path='/tier-management/details/tier/:tierId' element={<Details />} />
                 <Route path='/tier-management/save/tier' element={<Details />} />
             </Routes>,
-            { history }
+            { route: '/tier-management/details/tier/1' }
         );
 
         const createTierButton = await screen.findByRole('button', { name: /Create Tier/ });
@@ -187,23 +182,17 @@ describe('Details', async () => {
         await user.click(createTierButton);
 
         longWait(async () => {
-            expect(history.location.pathname).toBe('/tier-management/save/tier')
-        })
-
+            expect(window.location.pathname).toBe('/tier-management/save/tier');
+        });
     });
 
     it('will display "Create Label" button when "Label" tab is selected', async () => {
-        const history = createMemoryHistory({
-            initialEntries: ['/tier-management/details/label/2', '/tier-management/save/label'],
-            initialIndex: 0,
-        });
-
         render(
             <Routes>
                 <Route path='/tier-management/details/label/:labelId' element={<Details />} />
                 <Route path='/tier-management/save/label' element={<Details />} />
             </Routes>,
-            { history }
+            { route: '/tier-management/details/label/2' }
         );
 
         const createLabelButton = await screen.findByRole('button', { name: /Create Label/ });
@@ -213,7 +202,7 @@ describe('Details', async () => {
         await user.click(createLabelButton);
 
         longWait(async () => {
-            expect(history.location.pathname).toBe('/tier-management/save/label')
-        })
+            expect(window.location.pathname).toBe('/tier-management/save/label');
+        });
     });
 });

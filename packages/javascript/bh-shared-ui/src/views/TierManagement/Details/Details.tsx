@@ -115,9 +115,7 @@ const Details: FC = () => {
                 <div className='flex justify-around basis-2/3'>
                     <div className='flex justify-start gap-4 items-center basis-2/3'>
                         <div className='flex items-center align-middle gap-4'>
-                            <Button
-                                disabled={!tagId}
-                                onClick={handleCreateTierOrLabel}>
+                            <Button disabled={!tagId} onClick={handleCreateTierOrLabel}>
                                 {`Create ${labelId ? 'Label' : 'Tier'}`}
                             </Button>
                             <Button
