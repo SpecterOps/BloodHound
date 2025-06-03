@@ -32,7 +32,7 @@ const GraphEdgeEvents: FC = () => {
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
-    const egdeEventsRef = useRef<HTMLCanvasElement>()
+    const edgeEventsRef = useRef<HTMLCanvasElement>()
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
@@ -162,16 +162,16 @@ const GraphEdgeEvents: FC = () => {
     );
 
     useEffect(() => {
-        egdeEventsRef?.current?.addEventListener('wheel', (e) => {
+        edgeEventsRef?.current?.addEventListener('wheel', (e) => {
             e.preventDefault();
             handleEdgeEvents(e);
         }, { passive: false });
 
-    }, [egdeEventsRef]);
+    }, [edgeEventsRef]);
 
     return (
         <canvas
-            ref={egdeEventsRef}
+            ref={edgeEventsRef}
             id='edge-events'
             width={width.slice(0, width.length - 2)}
             height={height.slice(0, height.length - 2)}
