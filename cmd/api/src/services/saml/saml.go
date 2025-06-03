@@ -32,7 +32,7 @@ type Service interface {
 
 type Client struct{}
 
-// MakeRedirectAuthenticationRequest abstracts creating an SAML authentication request using
+// MakeAuthenticationRequest abstracts creating an SAML authentication request using
 // the HTTP-Redirect binding. It returns a URL that we will redirect the user to in order to start the auth process.
 func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error) {
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)

@@ -2891,7 +2891,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
-				{
+		{
 			name: "Success: jit saml user updated + session created w/ auto provision config enabled - Redirect to Login with Error Message",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
