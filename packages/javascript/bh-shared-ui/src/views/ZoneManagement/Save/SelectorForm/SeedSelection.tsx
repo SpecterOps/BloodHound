@@ -28,12 +28,12 @@ import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../../../utils/tagUrlValue';
 import { Cypher } from '../../Cypher/Cypher';
+import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { useDeleteSelector } from './hooks';
 import { SelectorFormInputs } from './types';
-import { handleError } from './utils';
 
 const getListScalar = (windowHeight: number) => {
     if (windowHeight > 1080) return 18;
@@ -78,11 +78,15 @@ const SeedSelection: FC<{
 
             await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
+            addNotification('Selector was deleted successfully!', undefined, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+
             setDeleteDialogOpen(false);
 
             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
         } catch (error) {
-            handleError(error, 'deleting', addNotification);
+            handleError(error, 'deleting', 'selector', addNotification);
         }
     }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
 

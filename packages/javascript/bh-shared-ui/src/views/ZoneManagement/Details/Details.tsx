@@ -62,15 +62,11 @@ const getItemCount = (
 
 export const getEditButtonState = (
     memberId: string | undefined,
-    selectorId: string | undefined,
     selectorsQuery: UseQueryResult,
     tagsQuery: UseQueryResult
 ) => {
     return (
-        !!memberId ||
-        !selectorId ||
-        (selectorsQuery.isLoading && tagsQuery.isLoading) ||
-        (selectorsQuery.isError && tagsQuery.isError)
+        !!memberId || (selectorsQuery.isLoading && tagsQuery.isLoading) || (selectorsQuery.isError && tagsQuery.isError)
     );
 };
 
@@ -104,7 +100,7 @@ const Details: FC = () => {
         },
     });
 
-    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
 
     return (
         <>
