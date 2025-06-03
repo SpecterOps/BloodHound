@@ -22,9 +22,9 @@ import {
     exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
-    useAvailableEnvironments,
     useCustomNodeKinds,
     useExploreSelectedItem,
+    useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -36,8 +36,9 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
+import { setExploreLayout } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
@@ -46,10 +47,11 @@ import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
     /* Hooks */
+    const dispatch = useAppDispatch();
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
-    const { data, isLoading, isError } = useAvailableEnvironments();
+    const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
@@ -139,9 +141,11 @@ const GraphView: FC = () => {
                             sigmaChartRef.current?.resetCamera();
                         }}
                         onRunSequentialLayout={() => {
+                            dispatch(setExploreLayout('sequential'));
                             sigmaChartRef.current?.runSequentialLayout();
                         }}
                         onRunStandardLayout={() => {
+                            dispatch(setExploreLayout('standard'));
                             sigmaChartRef.current?.runStandardLayout();
                         }}
                         onSearchCurrentResults={() => {
@@ -180,6 +184,7 @@ const GraphView: FC = () => {
                             currentNodes={currentNodes || {}}
                             onSelect={(node) => {
                                 handleClickNode?.(node.id);
+                                sigmaChartRef?.current?.zoomTo(node.id);
                                 toggleCurrentSearch?.();
                             }}
                             onClose={toggleCurrentSearch}
@@ -190,7 +195,7 @@ const GraphView: FC = () => {
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
-            <NoDataDialogWithLinks open={!data?.length} />
+            <NoDataDialogWithLinks open={!graphHasData} />
         </div>
     );
 };
