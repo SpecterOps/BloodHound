@@ -207,12 +207,9 @@ func (s *GraphifyService) ProcessTasks(updateJob func(jobId int64, totalFiles in
 			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))
 		} else if err != nil {
 			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed processing ingest task %d with file %s: %v", task.ID, task.FileName, err))
-		} else {
-			updateJob(task.JobId.ValueOrZero(), total, failed)
 		}
 
-		if err == nil {
-			s.clearFileTask(task)
-		}
+		updateJob(task.JobId.ValueOrZero(), total, failed)
+		s.clearFileTask(task)
 	}
 }
