@@ -84,7 +84,7 @@ func convertGenericEdge(entity ein.GenericEdge, converted *ConvertedData) error 
 
 func convertComputerData(computer ein.Computer, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertComputerToNode(computer, ingestTime)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, computer.Aces, computer.ObjectIdentifier, ad.Computer, make([]ein.TypedPrincipal, 0))...)
 	if primaryGroupRel := ein.ParsePrimaryGroup(computer.IngestBase, ad.Computer, computer.PrimaryGroupSID); primaryGroupRel.IsValid() {
 		converted.RelProps = append(converted.RelProps, primaryGroupRel)
 	}
@@ -124,7 +124,7 @@ func convertComputerData(computer ein.Computer, converted *ConvertedData, ingest
 func convertUserData(user ein.User, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(user.IngestBase, ad.User, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, user.Aces, user.ObjectIdentifier, ad.User)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, user.Aces, user.ObjectIdentifier, ad.User, make([]ein.TypedPrincipal, 0))...)
 	if rel := ein.ParseObjectContainer(user.IngestBase, ad.User); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
@@ -138,7 +138,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 	if rel := ein.ParseObjectContainer(group.IngestBase, ad.Group); rel.Source.Value != "" && rel.Target.Value != "" {
 		converted.RelProps = append(converted.RelProps, rel)
 	}
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, group.Aces, group.ObjectIdentifier, ad.Group)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, group.Aces, group.ObjectIdentifier, ad.Group, group.Members)...)
 
 	groupMembershipData := ein.ParseGroupMembershipData(group)
 	converted.RelProps = append(converted.RelProps, groupMembershipData.RegularMembers...)
@@ -148,7 +148,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(domain.IngestBase, ad.Domain, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, domain.Aces, domain.ObjectIdentifier, ad.Domain, make([]ein.TypedPrincipal, 0))...)
 	if len(domain.ChildObjects) > 0 {
 		converted.RelProps = append(converted.RelProps, ein.ParseChildObjects(domain.ChildObjects, domain.ObjectIdentifier, ad.Domain)...)
 	}
@@ -169,13 +169,13 @@ func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime t
 func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(gpo), ad.GPO, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, gpo.Aces, gpo.ObjectIdentifier, ad.GPO, make([]ein.TypedPrincipal, 0))...)
 }
 
 func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ou.IngestBase, ad.OU, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ou.Aces, ou.ObjectIdentifier, ad.OU)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ou.Aces, ou.ObjectIdentifier, ad.OU, make([]ein.TypedPrincipal, 0))...)
 	if container := ein.ParseObjectContainer(ou.IngestBase, ad.OU); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)
 	}
@@ -203,7 +203,7 @@ func CreateConvertedSessionData(count int) ConvertedSessionData {
 func convertContainerData(container ein.Container, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(container.IngestBase, ad.Container, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, container.Aces, container.ObjectIdentifier, ad.Container)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, container.Aces, container.ObjectIdentifier, ad.Container, make([]ein.TypedPrincipal, 0))...)
 
 	if rel := ein.ParseObjectContainer(container.IngestBase, ad.Container); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
@@ -217,7 +217,7 @@ func convertContainerData(container ein.Container, converted *ConvertedData, ing
 func convertAIACAData(aiaca ein.AIACA, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(aiaca), ad.AIACA, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, aiaca.Aces, aiaca.ObjectIdentifier, ad.AIACA, make([]ein.TypedPrincipal, 0))...)
 
 	if rel := ein.ParseObjectContainer(ein.IngestBase(aiaca), ad.AIACA); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
@@ -227,7 +227,7 @@ func convertAIACAData(aiaca ein.AIACA, converted *ConvertedData, ingestTime time
 func convertRootCAData(rootca ein.RootCA, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(rootca.IngestBase, ad.RootCA, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, rootca.Aces, rootca.ObjectIdentifier, ad.RootCA)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, rootca.Aces, rootca.ObjectIdentifier, ad.RootCA, make([]ein.TypedPrincipal, 0))...)
 	converted.RelProps = append(converted.RelProps, ein.ParseRootCAMiscData(rootca)...)
 
 	if rel := ein.ParseObjectContainer(rootca.IngestBase, ad.RootCA); rel.IsValid() {
@@ -239,7 +239,7 @@ func convertEnterpriseCAData(enterpriseca ein.EnterpriseCA, converted *Converted
 	baseNodeProps := ein.ConvertEnterpriseCAToNode(enterpriseca, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProps)
 	converted.NodeProps = append(converted.NodeProps, ein.ParseCARegistryProperties(enterpriseca))
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProps, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProps, enterpriseca.Aces, enterpriseca.ObjectIdentifier, ad.EnterpriseCA, make([]ein.TypedPrincipal, 0))...)
 	converted.RelProps = append(converted.RelProps, ein.ParseEnterpriseCAMiscData(enterpriseca)...)
 
 	if rel := ein.ParseObjectContainer(enterpriseca.IngestBase, ad.EnterpriseCA); rel.IsValid() {
@@ -251,7 +251,7 @@ func convertNTAuthStoreData(ntauthstore ein.NTAuthStore, converted *ConvertedDat
 	baseNodeProp := ein.ConvertObjectToNode(ntauthstore.IngestBase, ad.NTAuthStore, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseNTAuthStoreData(ntauthstore)...)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ntauthstore.Aces, ntauthstore.ObjectIdentifier, ad.NTAuthStore, make([]ein.TypedPrincipal, 0))...)
 
 	if rel := ein.ParseObjectContainer(ntauthstore.IngestBase, ad.NTAuthStore); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
@@ -261,7 +261,7 @@ func convertNTAuthStoreData(ntauthstore ein.NTAuthStore, converted *ConvertedDat
 func convertCertTemplateData(certtemplate ein.CertTemplate, converted *ConvertedData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(ein.IngestBase(certtemplate), ad.CertTemplate, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, certtemplate.Aces, certtemplate.ObjectIdentifier, ad.CertTemplate)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, certtemplate.Aces, certtemplate.ObjectIdentifier, ad.CertTemplate, make([]ein.TypedPrincipal, 0))...)
 
 	if rel := ein.ParseObjectContainer(ein.IngestBase(certtemplate), ad.CertTemplate); rel.IsValid() {
 		converted.RelProps = append(converted.RelProps, rel)
@@ -289,7 +289,7 @@ func convertIssuancePolicy(issuancePolicy ein.IssuancePolicy, converted *Convert
 	}
 
 	converted.NodeProps = append(converted.NodeProps, props)
-	converted.RelProps = append(converted.RelProps, ein.ParseACEData(props, issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy)...)
+	converted.RelProps = append(converted.RelProps, ein.ParseACEData(props, issuancePolicy.Aces, issuancePolicy.ObjectIdentifier, ad.IssuancePolicy, make([]ein.TypedPrincipal, 0))...)
 
 	if container := ein.ParseObjectContainer(issuancePolicy.IngestBase, ad.IssuancePolicy); container.IsValid() {
 		converted.RelProps = append(converted.RelProps, container)

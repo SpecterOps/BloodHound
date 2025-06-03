@@ -343,7 +343,7 @@ func getFromPropertyMap[T any](props map[string]any, keyName string) (T, bool) {
 //
 // Part of the goal of this function was to make it backwards compatible with older collectors (or third-party
 // collectors). As such, this function will attempt to translate data as it comes in.
-func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
+func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, targetType graph.Kind, groupMembers []TypedPrincipal) []IngestibleRelationship {
 	var (
 		ownerPrincipalInfo                   IngestibleEndpoint
 		ownerLimitedPrivs                    = make([]string, 0)
@@ -354,6 +354,30 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 	for _, ace := range aces {
 		if ace.PrincipalSID == targetID {
+			if ace.Kind().Is(ad.Group) {
+
+				if rightKind, err := analysis.ParseKind(ace.RightName); err != nil {
+					slog.Error(fmt.Sprintf("Error during ParseACEData: %v", err))
+					continue
+				} else {
+					for _, member := range groupMembers {
+						converted = append(converted, NewIngestibleRelationship(
+							IngestibleEndpoint{
+								Value: member.ObjectIdentifier,
+								Kind:  member.Kind(),
+							},
+							IngestibleEndpoint{
+								Value: targetID,
+								Kind:  targetType,
+							},
+							IngestibleRel{
+								RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
+								RelType:  rightKind,
+							},
+						))
+					}
+				}
+			}
 			continue
 		}
 
@@ -1284,10 +1308,10 @@ func handleEnterpriseCASecurity(enterpriseCA EnterpriseCA, relationships []Inges
 		})
 
 		combinedData := append(caSecurityData, filteredACES...)
-		relationships = append(relationships, ParseACEData(baseNodeProp, combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, combinedData, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA, make([]TypedPrincipal, 0))...)
 
 	} else {
-		relationships = append(relationships, ParseACEData(baseNodeProp, enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA)...)
+		relationships = append(relationships, ParseACEData(baseNodeProp, enterpriseCA.Aces, enterpriseCA.ObjectIdentifier, ad.EnterpriseCA, make([]TypedPrincipal, 0))...)
 	}
 
 	return relationships
