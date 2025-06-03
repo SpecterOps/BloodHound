@@ -32,7 +32,7 @@ const GraphEdgeEvents: FC = () => {
 
     const sigma = useSigma();
 
-gsv    const canvases = sigma.getCanvases();
+    const canvases = sigma.getCanvases();
     const edgeEventsRef = useRef<HTMLCanvasElement>(null);
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
