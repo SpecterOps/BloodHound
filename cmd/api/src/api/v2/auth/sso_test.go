@@ -22,12 +22,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
+	"regexp"
 	"testing"
 
+	"github.com/crewjam/saml"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/html"
 
 	"github.com/pkg/errors"
 	"github.com/specterops/bloodhound/src/api"
@@ -447,44 +447,44 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
-		// {
-		// 	name: "Success: SAML provider type - OK",
-		// 	buildRequest: func() *http.Request {
-		// 		ssoProviderSlug := "saml-provider"
+		{
+			name: "Success: SAML provider type - OK",
+			buildRequest: func() *http.Request {
+				ssoProviderSlug := "saml-provider"
 
-		// 		req, err := http.NewRequest("GET", fmt.Sprintf("/api/v2/sso/{%s}/login", ssoProviderSlug), nil)
-		// 		require.NoError(t, err)
+				req, err := http.NewRequest("GET", fmt.Sprintf("/api/v2/sso/{%s}/login", ssoProviderSlug), nil)
+				require.NoError(t, err)
 
-		// 		vars := map[string]string{
-		// 			api.URIPathVariableSSOProviderSlug: "saml-provider",
-		// 		}
-		// 		req = mux.SetURLVars(req, vars)
+				vars := map[string]string{
+					api.URIPathVariableSSOProviderSlug: "saml-provider",
+				}
+				req = mux.SetURLVars(req, vars)
 
-		// 		req = req.WithContext(ctx.Set(req.Context(), &ctx.Context{Host: &url.URL{Host: "loremipsum"}}))
+				req = req.WithContext(ctx.Set(req.Context(), &ctx.Context{Host: &url.URL{Host: "loremipsum"}}))
 
-		// 		return req
-		// 	},
-		// 	setupMocks: func(t *testing.T, mocks *mock) {
-		// 		ssoProvider := model.SSOProvider{
-		// 			Type: 1,
-		// 			Name: "SAML Provider",
-		// 			Slug: "saml-provider",
-		// 			SAMLProvider: &model.SAMLProvider{
-		// 				Name:        "SAML Provider",
-		// 				DisplayName: "SAML Provider",
-		// 				MetadataXML: []byte(validMetadataXML),
-		// 			},
-		// 		}
+				return req
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				ssoProvider := model.SSOProvider{
+					Type: 1,
+					Name: "SAML Provider",
+					Slug: "saml-provider",
+					SAMLProvider: &model.SAMLProvider{
+						Name:        "SAML Provider",
+						DisplayName: "SAML Provider",
+						MetadataXML: []byte(validMetadataXML),
+					},
+				}
 
-		// 		mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), gomock.Any()).Return(ssoProvider, nil)
-		// 		mocks.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
-		// 	},
-		// 	expected: expected{
-		// 		responseCode:   http.StatusOK,
-		// 		responseBody:   "<!DOCTYPE html>\n<html>\n<body>\n<form method=\"post\" action=\"https://okta.com/sso\" id=\"SAMLRequestForm\"><input type=\"hidden\" name=\"SAMLRequest\" value=\"PHNhbWxwOkF1dGhuUmVxdWVzdCB4bWxuczpzYW1sPSJ1cm46b2FzaXM6bmFtZXM6dGM6U0FNTDoyLjA6YXNzZXJ0aW9uIiB4bWxuczpzYW1scD0idXJuOm9hc2lzOm5hbWVzOnRjOlNBTUw6Mi4wOnByb3RvY29sIiBJRD0iaWQtYTUzYWY0MWM0NGU5NzQ3MTY3MzRkNGJiOTY1ZTZjODc1MjM1MzljZiIgVmVyc2lvbj0iMi4wIiBJc3N1ZUluc3RhbnQ9IjIwMjUtMDYtMDJUMTg6NDg6MTguMzg1WiIgRGVzdGluYXRpb249Imh0dHBzOi8vb2t0YS5jb20vc3NvIiBQcm90b2NvbEJpbmRpbmc9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpiaW5kaW5nczpIVFRQLVBPU1QiPjxzYW1sOklzc3VlciBGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjIuMDpuYW1laWQtZm9ybWF0OmVudGl0eSI&#43;Ly9sb3JlbWlwc3VtL1NBTUwlMjBQcm92aWRlcjwvc2FtbDpJc3N1ZXI&#43;PGRzOlNpZ25hdHVyZSB4bWxuczpkcz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI&#43;PGRzOlNpZ25lZEluZm8&#43;PGRzOkNhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiLz48ZHM6U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxkc2lnLW1vcmUjcnNhLXNoYTI1NiIvPjxkczpSZWZlcmVuY2UgVVJJPSIjaWQtYTUzYWY0MWM0NGU5NzQ3MTY3MzRkNGJiOTY1ZTZjODc1MjM1MzljZiI&#43;PGRzOlRyYW5zZm9ybXM&#43;PGRzOlRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvMDkveG1sZHNpZyNlbnZlbG9wZWQtc2lnbmF0dXJlIi8&#43;PGRzOlRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyIvPjwvZHM6VHJhbnNmb3Jtcz48ZHM6RGlnZXN0TWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS8wNC94bWxlbmMjc2hhMjU2Ii8&#43;PGRzOkRpZ2VzdFZhbHVlPjBJSnYrenovdy9pWnQ4WGVDd3A0VENCR3R1cGZsYjdIalI2dXUxN2NMMTQ9PC9kczpEaWdlc3RWYWx1ZT48L2RzOlJlZmVyZW5jZT48L2RzOlNpZ25lZEluZm8&#43;PGRzOlNpZ25hdHVyZVZhbHVlPmV6SU5vTlIwTm5pOEFoeXBobzVUckh1dEpBNTJzNDJ4TWZ5Umw1Rm5SRGdCZXRYUTRWZi9QY1NDYy9ySEZnZTQzNGRBL1FFaFk4VUhZTkQreHBBc1pOZFQveWVwUVA4anU1QmhxL0RnYXp2eitadnNRRHJqbDQxbFhsN1oyYnNPZzNDZnE2UTRGVHZLbGZPYkxFSjB1bjB0L2J2aXU4V0cwZ2ovK2hWYVZDOElIbHJmTFhWVW9MUnl2bHc2bmdVV1Y1ZWhRUTV2SkdnaHVlaVNsbjdqYlAzOTY2N084V0k5cER6M3lFTlBXK3h0MklvNURsd2Rhemx1SVhya2E0UkViSnZMYytBNTBTdmhCODlSMFJhN2pLSERzQU1kSjZnNExBa3F2NzI4YVM4TlYrbUloODV6K2wzckNwSmFpVVpPU2FIRlp1WmFyekV6MllTSkhSd0JxQT09PC9kczpTaWduYXR1cmVWYWx1ZT48ZHM6S2V5SW5mbz48ZHM6WDUwOURhdGE&#43;PGRzOlg1MDlDZXJ0aWZpY2F0ZT5NSUlEcnpDQ0FwZWdBd0lCQWdJVUcrbExNUHBrVGZ3VmU1ZlZiQmhXZS9jSXhyZ3dEUVlKS29aSWh2Y05BUUVMQlFBd2Z6RUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xkaGMyaHBibWQwYjI0eEVEQU9CZ05WQkFjTUIxTmxZWFIwYkdVeEdqQVlCZ05WQkFvTUVWTndaV04wWlhJZ1QzQnpMQ0JKYm1NdU1Rd3dDZ1lEVlFRRERBTkNiMkl4SHpBZEJna3Foa2lHOXcwQkNRRVdFSE53WVcxQVpYaGhiWEJzWlM1amIyMHdJQmNOTWpVd05qQXlNVFkxT0RNeldoZ1BNekF5TkRFd01ETXhOalU0TXpOYU1IOHhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwWFlYTm9hVzVuZEc5dU1SQXdEZ1lEVlFRSERBZFRaV0YwZEd4bE1Sb3dHQVlEVlFRS0RCRlRjR1ZqZEdWeUlFOXdjeXdnU1c1akxqRU1NQW9HQTFVRUF3d0RRbTlpTVI4d0hRWUpLb1pJaHZjTkFRa0JGaEJ6Y0dGdFFHVjRZVzF3YkdVdVkyOXRNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQTVLTVpQVHVNRE1JUzNOMjRZMmw2RkxrYlNabkcvWGExNk1pU1J0dXZLNnFFeGtWWjBKci83a0RKMEY5ZU9XZTZTZ1J4Ny9vL29sbktDM3ZzNUh3ZHVTb1F6TGlGSDdUOEZSR0VPbG1YYkN0ZkZlV1F6TDBQd3ZvWDdZUURQNGQxSWxFZHpuTVdpZVhNNzNoS0wvVW9ucnlkcnNKdDZ6ZXloUzBzdUFaeitVTXBvY3NjOXh0RnRkYVpCVlNuU2pxcksrUG9UMlYyV1lVVWRuckJoOXhuSjFhSVg3OFBVb1U4ZkY4WXZpSjlBbnFlK3NBc0xYMG5PVmNsajRMTkdYK0xoRm9RY1I0RGt4b2xDTm1Mb3pEMDkxWHZvZGhyc3Qwa1lLdGdwSmw4d0ZKMVVMZXl2Q3ZYS1IzZk5Lc2VNN0RrVEJkNWMzZlpPUlpwS1JyczhVTmMxd0lEQVFBQm95RXdIekFkQmdOVkhRNEVGZ1FVbEZjcXBMSzRieU41ejdkR3lOcExqVisvc01Jd0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFMUlpTRzVCbFFjTVpOOWtaQ0JWcVV1bkNROTZjZ0NaVXA3N2IwUUVQWHNTbitLRWorYnIyMjRETG1LaVoxejd3SE5RZWZqRXRBeGNhalM1WlRhcE9BZWtNbzlUbmM1TVV2QUdoNGNGSW1jbjFiMTd1MkljTUhBWE9RTmk2ZXhCV1RvREtWQVl3Q3B4UTJ4OUVMSHMwbVUxSEMvSHJrcUxJQWJRam9CTDBaSzU1ZXVvTEpRMzVzN005dU5MdjRzQm1YTEtkU2NaaURzUWd2VHdTeUZHVkRyek9ua3E3SXNBZkhaMjN2d25kWTExL3g3ZFFJcWNkTm1OL3JUU2x4MEd6MFNBcnRPdklqSWVNdHZtdjhLQVBDalUrQXZUR21OWFpXYnZyNWxGSk9mNDZPUm9wd3BKdFRpamh6dmloTHZCckxtNlVkckx1b3Nidlh1SkdxazJFRU09PC9kczpYNTA5Q2VydGlmaWNhdGU&#43;PC9kczpYNTA5RGF0YT48L2RzOktleUluZm8&#43;PC9kczpTaWduYXR1cmU&#43;PHNhbWxwOk5hbWVJRFBvbGljeSBGb3JtYXQ9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMTpuYW1laWQtZm9ybWF0OmVtYWlsQWRkcmVzcyIgQWxsb3dDcmVhdGU9InRydWUiLz48L3NhbWxwOkF1dGhuUmVxdWVzdD4=\" /><input type=\"hidden\" name=\"RelayState\" value=\"\" /><input id=\"SAMLSubmitButton\" type=\"submit\" value=\"Submit\" /></form><script>document.getElementById('SAMLSubmitButton').style.visibility=\"hidden\";document.getElementById('SAMLRequestForm').submit();</script>\n</body>\n</html>\n",
-		// 		responseHeader: http.Header{"Content-Security-Policy": []string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type": []string{"text/html"}},
-		// 	},
-		// },
+				mocks.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), gomock.Any()).Return(ssoProvider, nil)
+				mocks.mockSAML.EXPECT().MakeAuthenticationRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&saml.AuthnRequest{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   "<!DOCTYPE html>\n<html>\n<body>\n<form method=\"post\" action=\"\" id=\"SAMLRequestForm\"><input type=\"hidden\" name=\"SAMLRequest\" value=\"value\" /><input type=\"hidden\" name=\"RelayState\" value=\"\" /><input id=\"SAMLSubmitButton\" type=\"submit\" value=\"Submit\" /></form><script>document.getElementById('SAMLSubmitButton').style.visibility=\"hidden\";document.getElementById('SAMLRequestForm').submit();</script>\n</body>\n</html>\n",
+				responseHeader: http.Header{"Content-Security-Policy": []string{"default-src; script-src 'sha256-AjPdJSbZmeWHnEc5ykvJFay8FTWeTeRbs9dutfZ0HqE='; reflected-xss block; referrer no-referrer;"}, "Content-Type": []string{"text/html"}},
+			},
+		},
 	}
 
 	for _, testCase := range tt {
@@ -507,6 +507,7 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 					ServiceProviderCertificateCAChain: "",
 				},
 			}, mocks.mockDatabase, bhceauth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -520,13 +521,11 @@ func TestManagementResource_SSOLoginHandler(t *testing.T) {
 			if status != http.StatusOK {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
 			} else {
-				reader := strings.NewReader(body)
-				parsed, err := html.Parse(reader)
-				if err != nil {
-					t.Fail()
-				}
-
-				assert.Equal(t, testCase.expected.responseBody, parsed)
+				re := regexp.MustCompile(`(<input[^>]+name=["']SAMLRequest["'][^>]*value=["'])[^\"]*(")`)
+				// Value in html response is regenerated every time therefore it
+				// needed to be overwritten to test the contract.
+				updatedBody := re.ReplaceAllString(body, fmt.Sprintf(`${1}%s$2`, "value"))
+				assert.Equal(t, testCase.expected.responseBody, updatedBody)
 			}
 		})
 	}
