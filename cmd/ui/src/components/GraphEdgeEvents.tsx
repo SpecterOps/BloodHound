@@ -162,12 +162,12 @@ const GraphEdgeEvents: FC = () => {
     );
 
     useEffect(() => {
-        console.log(egdeEventsRef.current)
-        egdeEventsRef.current?.addEventListener('wheel', (e) => {
+        egdeEventsRef?.current?.addEventListener('wheel', (e) => {
             e.preventDefault();
             handleEdgeEvents(e);
         }, { passive: false });
-    }, []);
+
+    }, [egdeEventsRef]);
 
     return (
         <canvas
