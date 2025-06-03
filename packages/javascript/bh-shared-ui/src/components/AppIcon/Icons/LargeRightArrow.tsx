@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,21 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './api';
-export * from './colors';
-export * from './compatibility';
-export * from './content';
-export * from './copyToClipboard';
-export * from './datetime';
-export * from './entityInfoDisplay';
-export * from './exportGraphData';
-export * from './icons';
-export * from './parseItemId';
-export * from './passwd';
-export * from './permissions';
-export * from './queries';
-export * from './searchParams';
-export * from './testHelpers';
-export * from './theme';
-export * from './user';
-export * from './abbreviatedNumber';
+import React from 'react';
+import { BasePath, BaseSVG, BaseSVGProps } from './utils';
+
+export const LargeRightArrow: React.FC<BaseSVGProps> = (props) => {
+    return (
+        <BaseSVG
+            name='large-right-arrow'
+            width='7'
+            height='60'
+            viewBox='0 0 7 60'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            {...props}>
+            <BasePath d='M6 30.2522L1 1V59L6 30.2522Z' strokeLinejoin='round' />
+        </BaseSVG>
+    );
+};
+
+export default LargeRightArrow;
