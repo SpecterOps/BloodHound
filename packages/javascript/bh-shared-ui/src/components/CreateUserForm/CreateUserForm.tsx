@@ -118,7 +118,7 @@ const CreateUserForm: React.FC<{
                                             message: 'Email address must be less than 319 characters',
                                         },
                                         pattern: {
-                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                                             message: 'Please follow the example@domain.com format',
                                         },
                                     }}

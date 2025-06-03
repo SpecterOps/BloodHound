@@ -364,20 +364,19 @@ describe('UpdateUserForm', () => {
             </QueryTestWrapper>
         );
 
-        const userInput = userEvent.type;
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
 
-        await userInput(screen.getByLabelText(/email/i), 'a'.repeat(320) + '@domain.com');
-        await userInput(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
-        await userInput(screen.getByLabelText(/first/i), 'a'.repeat(1001));
-        await userInput(screen.getByLabelText(/last/i), 'a'.repeat(1001));
+        await user.type(screen.getByLabelText(/email/i), 'a'.repeat(309) + '@domain.com');
+        await user.type(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
+        await user.type(screen.getByLabelText(/first/i), 'a'.repeat(1001));
+        await user.type(screen.getByLabelText(/last/i), 'a'.repeat(1001));
         await user.click(button);
 
-        expect(await screen.findByText('Email address must be less than 319 characters'));
-        expect(await screen.findByText('Principal Name must be less than 1000 characters'));
-        expect(await screen.findByText('First Name must be less than 1000 characters'));
-        expect(await screen.findByText('Last Name must be less than 1000 characters'));
+        expect(await screen.findByText('Email address must be less than 319 characters')).toBeInTheDocument;
+        expect(await screen.findByText('Principal Name must be less than 1000 characters')).toBeInTheDocument;
+        expect(await screen.findByText('First Name must be less than 1000 characters')).toBeInTheDocument;
+        expect(await screen.findByText('Last Name must be less than 1000 characters')).toBeInTheDocument;
     });
 
     it('should not have less characters than the minimum requirement', async () => {
@@ -399,18 +398,17 @@ describe('UpdateUserForm', () => {
             </QueryTestWrapper>
         );
 
-        const userInput = userEvent.type;
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
 
-        await userInput(screen.getByLabelText(/principal/i), 'a');
-        await userInput(screen.getByLabelText(/first/i), 'a');
-        await userInput(screen.getByLabelText(/last/i), 'a');
+        await user.type(screen.getByLabelText(/principal/i), 'a');
+        await user.type(screen.getByLabelText(/first/i), 'a');
+        await user.type(screen.getByLabelText(/last/i), 'a');
         await user.click(button);
 
-        expect(await screen.findByText('Principal Name must be 2 characters or more'));
-        expect(await screen.findByText('First Name must be 2 characters or more'));
-        expect(await screen.findByText('Last Name must be 2 characters or more'));
+        expect(await screen.findByText('Principal Name must be 2 characters or more')).toBeInTheDocument;
+        expect(await screen.findByText('First Name must be 2 characters or more')).toBeInTheDocument;
+        expect(await screen.findByText('Last Name must be 2 characters or more')).toBeInTheDocument;
     });
 
     it('should not allow leading or trailing empty spaces', async () => {
@@ -432,17 +430,16 @@ describe('UpdateUserForm', () => {
             </QueryTestWrapper>
         );
 
-        const userInput = userEvent.type;
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
 
-        await userInput(screen.getByLabelText(/principal/i), ' dd');
-        await userInput(screen.getByLabelText(/first/i), ' bsg!');
-        await userInput(screen.getByLabelText(/last/i), 'asdfw ');
+        await user.type(screen.getByLabelText(/principal/i), ' dd');
+        await user.type(screen.getByLabelText(/first/i), ' bsg!');
+        await user.type(screen.getByLabelText(/last/i), 'asdfw ');
         await user.click(button);
 
-        expect(await screen.findByText('Principal Name does not allow leading or trailing spaces'));
-        expect(await screen.findByText('First Name does not allow leading or trailing spaces'));
-        expect(await screen.findByText('Last Name does not allow leading or trailing spaces'));
+        expect(await screen.findByText('Principal Name does not allow leading or trailing spaces')).toBeInTheDocument;
+        expect(await screen.findByText('First Name does not allow leading or trailing spaces')).toBeInTheDocument;
+        expect(await screen.findByText('Last Name does not allow leading or trailing spaces')).toBeInTheDocument;
     });
 });
