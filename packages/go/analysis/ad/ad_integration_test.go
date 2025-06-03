@@ -120,8 +120,8 @@ func TestLinkWellKnownNodes(t *testing.T) {
 			kind:           ad.Group,
 		},
 		{
-			sidSuffix:      wellknown.SChannelAuthenticationSIDSuffix,
-			nodeNamePrefix: wellknown.SChannelAuthenticationNodeNamePrefix,
+			sidSuffix:      wellknown.SchannelAuthenticationSIDSuffix,
+			nodeNamePrefix: wellknown.SchannelAuthenticationNodeNamePrefix,
 			kind:           ad.Group,
 		},
 	}
@@ -263,11 +263,11 @@ func TestLinkWellKnownNodes(t *testing.T) {
 			) {
 				// assert that the relationships exist
 				expectationsMemberOfDomain1 := map[string][]*graph.Node{
-					"domain user node is linked to authenticated users node": {
+					"domain users node is linked to authenticated users node": {
 						wellKnownNodesDomain1[wellknown.DomainUsersNodeNamePrefix],
 						wellKnownNodesDomain1[wellknown.AuthenticatedUsersNodeNamePrefix],
 					},
-					"domain computer node is linked to authenticated users node": {
+					"domain computers node is linked to authenticated users node": {
 						wellKnownNodesDomain1[wellknown.DomainComputerNodeNamePrefix],
 						wellKnownNodesDomain1[wellknown.AuthenticatedUsersNodeNamePrefix],
 					},
@@ -329,7 +329,7 @@ func TestLinkWellKnownNodes(t *testing.T) {
 					},
 					"everyone node is linked to schannel authentication node": {
 						wellKnownNodesDomain1[wellknown.EveryoneNodeNamePrefix],
-						wellKnownNodesDomain1[wellknown.SChannelAuthenticationNodeNamePrefix],
+						wellKnownNodesDomain1[wellknown.SchannelAuthenticationNodeNamePrefix],
 					},
 				}
 
@@ -558,7 +558,13 @@ func generateWellKnownNode(
 	domainSID, domainName, err := nodeprops.ReadDomainIDandNameAsString(domainNode)
 	require.NoError(t, err)
 
-	var wellKnownSID = sidSuffix.PrependPrefix(domainSID)
+	var wellKnownSID string
+	switch sidSuffix.String() {
+	case wellknown.DomainUsersSIDSuffix.String(), wellknown.DomainComputersSIDSuffix.String(), wellknown.GuestSIDSuffix.String():
+		wellKnownSID = sidSuffix.PrependPrefix(domainSID)
+	default:
+		wellKnownSID = sidSuffix.PrependPrefix(domainName)
+	}
 
 	return &graph.Node{
 		Kinds: graph.Kinds{

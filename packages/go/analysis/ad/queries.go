@@ -24,6 +24,7 @@ import (
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
@@ -1827,8 +1828,8 @@ func FetchAuthUsersAndEveryoneGroups(tx graph.Transaction) (graph.NodeSet, error
 		return query.And(
 			query.Kind(query.Node(), ad.Group),
 			query.Or(
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EveryoneSuffix),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String()),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.EveryoneSIDSuffix.String()),
 			),
 		)
 	}))

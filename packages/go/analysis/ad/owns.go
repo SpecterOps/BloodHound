@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/util/channels"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -232,8 +233,8 @@ func FetchAdminGroupIds(ctx context.Context, db graph.Database, groupExpansions 
 	return adminIds, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(
 			query.Or(
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), DomainAdminsGroupSIDSuffix),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), EnterpriseAdminsGroupSIDSuffix),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.DomainAdminsGroupSIDSuffix.String()),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.EnterpriseAdminsGroupSIDSuffix.String()),
 			),
 		).FetchIDs(func(cursor graph.Cursor[graph.ID]) error {
 			for id := range cursor.Chan() {

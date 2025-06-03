@@ -86,7 +86,7 @@ var (
 	KeyTrustNodeNamePrefix                                = NewNodeNamePrefix("KEY TRUST")
 	MFAKeyPropertyNodeNamePrefix                          = NewNodeNamePrefix("MFA KEY PROPERTY")
 	NTLMAuthenticationNodeNamePrefix                      = NewNodeNamePrefix("NTLM AUTHENTICATION")
-	SChannelAuthenticationNodeNamePrefix                  = NewNodeNamePrefix("SCHANNEL AUTHENTICATION")
+	SchannelAuthenticationNodeNamePrefix                  = NewNodeNamePrefix("SCHANNEL AUTHENTICATION")
 )
 
 // DefineNodeName creates a complete node name by combining a well-known node name prefix

@@ -24,6 +24,7 @@ import (
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -489,8 +490,8 @@ func ExpandAllRDPLocalGroups(ctx context.Context, db graph.Database) (impact.Pat
 
 	return ResolveAllGroupMemberships(ctx, db, query.Not(
 		query.Or(
-			query.StringEndsWith(query.StartProperty(common.ObjectID.String()), AdminGroupSuffix),
-			query.StringEndsWith(query.EndProperty(common.ObjectID.String()), AdminGroupSuffix),
+			query.StringEndsWith(query.StartProperty(common.ObjectID.String()), wellknown.AdministratorsSIDSuffix.String()),
+			query.StringEndsWith(query.EndProperty(common.ObjectID.String()), wellknown.AdministratorsSIDSuffix.String()),
 		),
 	))
 }
@@ -521,7 +522,7 @@ func FetchCanRDPEntityBitmapForComputer(tx graph.Transaction, computer graph.ID,
 
 // returns a bitmap containing the ID's of all entities that have RDP privileges to the specified computer via membership to the "Remote Desktop Users" AD group
 func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer graph.ID, localGroupExpansions impact.PathAggregator, enforceURA bool) (cardinality.Duplex[uint64], error) {
-	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, RDPGroupSuffix); err != nil {
+	if rdpLocalGroup, err := FetchComputerLocalGroupBySIDSuffix(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String()); err != nil {
 		if graph.IsErrNotFound(err) {
 			return cardinality.NewBitmap64(), nil
 		}
@@ -529,7 +530,7 @@ func FetchRemoteDesktopUsersBitmapForComputer(tx graph.Transaction, computer gra
 		return nil, err
 	} else if enforceURA || ComputerHasURACollection(tx, computer) {
 		return ProcessRDPWithUra(tx, rdpLocalGroup, computer, localGroupExpansions)
-	} else if bitmap, err := FetchLocalGroupBitmapForComputer(tx, computer, RDPGroupSuffix); err != nil {
+	} else if bitmap, err := FetchLocalGroupBitmapForComputer(tx, computer, wellknown.RemoteDesktopUsersSIDSuffix.String()); err != nil {
 		return nil, err
 	} else {
 		return bitmap, nil

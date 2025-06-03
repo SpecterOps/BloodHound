@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/dawgs/traversal"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -809,7 +810,7 @@ func FetchAuthUsersMappedToDomains(tx graph.Transaction) (map[string]graph.ID, e
 	err := tx.Nodes().Filter(
 		query.And(
 			query.Kind(query.Node(), ad.Group),
-			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), AuthenticatedUsersSuffix)),
+			query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.AuthenticatedUsersSIDSuffix.String())),
 	).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 		for authenticatedUser := range cursor.Chan() {
 			if domain, err := authenticatedUser.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -834,7 +835,7 @@ func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, 
 		return tx.Nodes().Filter(
 			query.And(
 				query.Kind(query.Node(), ad.Group),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), ProtectedUsersSuffix)),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.ProctectedUsersSIDSuffix.String())),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for protectedUserGroup := range cursor.Chan() {
 				if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {

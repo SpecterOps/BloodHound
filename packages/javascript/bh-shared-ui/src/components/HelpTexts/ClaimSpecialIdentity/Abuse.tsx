@@ -59,14 +59,14 @@ const Abuse: FC = () => {
             <Typography variant='body2'>
                 Included in an access token when authentication occurs via NTLM protocol.
                 <br />
-                Any AD account can obtain NTLM authentication identity access assuming NTLM is available.
+                Any AD account can obtain NTLM authentication identity access, assuming NTLM is available.
             </Typography>
 
-            <Typography variant='body1'>SChannel Authentication</Typography>
+            <Typography variant='body1'>Schannel Authentication</Typography>
             <Typography variant='body2'>
-                Included in an access token when authentication occurs via SChannel protocol.
+                Included in an access token when authentication occurs via Schannel protocol.
                 <br />
-                Any AD account can obtain the SChannel Authentication identity for example by performing certificate
+                Any AD account can obtain the Schannel Authentication identity, for example by performing certificate
                 authentication over Schannel.
             </Typography>
 

@@ -26,6 +26,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
+	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -467,7 +468,7 @@ func (s *RDPHarness2) Setup(testCtx *GraphTestContext) {
 
 	s.RDPLocalGroup.Properties.Set(
 		common.ObjectID.String(),
-		rdpLocalGroupObjectID+adAnalysis.RDPGroupSuffix,
+		rdpLocalGroupObjectID+wellknown.RemoteDesktopUsersSIDSuffix.String(),
 	)
 	testCtx.UpdateNode(s.RDPLocalGroup)
 
@@ -513,7 +514,7 @@ func (s *RDPHarness) Setup(testCtx *GraphTestContext) {
 
 	s.RDPLocalGroup.Properties.Set(
 		common.ObjectID.String(),
-		rdpLocalGroupObjectID+adAnalysis.RDPGroupSuffix,
+		rdpLocalGroupObjectID+wellknown.RemoteDesktopUsersSIDSuffix.String(),
 	)
 	testCtx.UpdateNode(s.RDPLocalGroup)
 
@@ -609,7 +610,7 @@ func (s *RDPHarnessWithCitrix) Setup(testCtx *GraphTestContext) {
 
 	s.RDPLocalGroup.Properties.Set(
 		common.ObjectID.String(),
-		rdpLocalGroupObjectID+adAnalysis.RDPGroupSuffix,
+		rdpLocalGroupObjectID+wellknown.RemoteDesktopUsersSIDSuffix.String(),
 	)
 	testCtx.UpdateNode(s.RDPLocalGroup)
 
@@ -8869,7 +8870,7 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Computer)
 	s.CAHost.Properties.Set(common.Enabled.String(), true)
 	graphTestContext.UpdateNode(s.CAHost)
-	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
 
@@ -8946,24 +8947,24 @@ func (s *CoerceAndRelayNTLMToSMB) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.Domain2)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain2Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
 
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
-	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4%s", wellknown.ProctectedUsersSIDSuffix.String()))
 	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
 	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
-	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6%s", wellknown.ProctectedUsersSIDSuffix.String()))
 	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
 	graphTestContext.UpdateNode(s.Group6)
 
@@ -9000,11 +9001,11 @@ func (s *CoerceAndRelayNTLMToSMBSelfRelay) Setup(graphTestContext *GraphTestCont
 	graphTestContext.UpdateNode(s.Computer1)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", adAnalysis.ProtectedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1%s", wellknown.ProctectedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	s.Domain1 = graphTestContext.NewActiveDirectoryDomain("Domain1", domain1Sid, false, true)
@@ -9517,25 +9518,25 @@ func (s *CoerceAndRelayNTLMToLDAP) Setup(graphTestContext *GraphTestContext) {
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain3Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain3Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain3Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
 
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
-	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group4-%s%s", domain1Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
-	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group5-%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group5-%s%s", domain2Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group5)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
-	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6-%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group6-%s%s", domain2Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group6)
 
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
@@ -9569,11 +9570,11 @@ func (s *CoerceAndRelayNTLMToLDAPSelfRelay) Setup(graphTestContext *GraphTestCon
 	graphTestContext.UpdateNode(s.Domain1)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
@@ -9685,26 +9686,26 @@ func (s *CoerceAndRelayNTLMToLDAPS) Setup(graphTestContext *GraphTestContext) {
 	s.Domain3 = graphTestContext.NewActiveDirectoryDomain("Domain3", domain3Sid, false, true)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-1%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-1%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain3Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-2%s", adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group-2%s", wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domain1Sid)
 
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domain1Sid)
-	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group4.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain1Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	s.Group4.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN1")
 	graphTestContext.UpdateNode(s.Group4)
 
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domain2Sid)
-	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group5.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group5)
 
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domain2Sid)
-	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group6.Properties.Set(common.ObjectID.String(), fmt.Sprintf("%s%s", domain2Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	s.Group6.Properties.Set(common.Name.String(), "PROTECTED USERS@DOMAIN2")
 	graphTestContext.UpdateNode(s.Group6)
 
@@ -9742,11 +9743,11 @@ func (s *CoerceAndRelayNTLMToLDAPSSelfRelay) Setup(graphTestContext *GraphTestCo
 	graphTestContext.UpdateNode(s.Domain1)
 
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1Sid)
-	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, adAnalysis.ProtectedUsersSuffix))
+	s.Group1.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group1-%s%s", domain1Sid, wellknown.ProctectedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group1)
 
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain1Sid)
-	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, adAnalysis.AuthenticatedUsersSuffix))
+	s.Group2.Properties.Set(common.ObjectID.String(), fmt.Sprintf("group2-%s%s", domain1Sid, wellknown.AuthenticatedUsersSIDSuffix.String()))
 	graphTestContext.UpdateNode(s.Group2)
 
 	graphTestContext.NewRelationship(s.Computer1, s.Domain1, ad.DCFor)
