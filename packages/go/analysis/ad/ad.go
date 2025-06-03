@@ -256,7 +256,7 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 						domainName,
 						wellknown.DefineNodeName(wellknown.DomainComputerNodeNamePrefix, domainName),
 					); err != nil {
-						return fmt.Errorf("error getting domain computers for domain %d: %w", domain.ID, err)
+						return fmt.Errorf("error getting domain computers node for domain %d: %w", domain.ID, err)
 					} else if networkNode, err := getOrCreateWellKnownGroup(
 						tx,
 						wellknown.NetworkSIDSuffix,
@@ -499,7 +499,7 @@ func LinkWellKnownNodes(ctx context.Context, db graph.Database) error {
 									); err != nil {
 										return err
 									} else if err := createOrUpdateWellKnownLink(
-										// Everyone (trusted domain) - MemberOf -> Auth Everyone (trusting domain)
+										// Everyone (trusted domain) - MemberOf -> Everyone (trusting domain)
 										tx,
 										everyoneNode,
 										everyoneNodeTrustingDomain,

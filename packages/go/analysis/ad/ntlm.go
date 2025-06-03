@@ -835,7 +835,7 @@ func FetchProtectedUsersMappedToDomains(ctx context.Context, db graph.Database, 
 		return tx.Nodes().Filter(
 			query.And(
 				query.Kind(query.Node(), ad.Group),
-				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.ProctectedUsersSIDSuffix.String())),
+				query.StringEndsWith(query.NodeProperty(common.ObjectID.String()), wellknown.ProtectedUsersSIDSuffix.String())),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for protectedUserGroup := range cursor.Chan() {
 				if domain, err := protectedUserGroup.Properties.Get(ad.DomainSID.String()).String(); err != nil {

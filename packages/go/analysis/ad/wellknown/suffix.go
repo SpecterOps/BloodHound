@@ -75,7 +75,7 @@ var (
 	DomainControllersGroupSIDSuffix                  = NewSIDSuffix("-516")
 	SchemaAdminsGroupSIDSuffix                       = NewSIDSuffix("-518")
 	EnterpriseAdminsGroupSIDSuffix                   = NewSIDSuffix("-519")
-	ProctectedUsersSIDSuffix                         = NewSIDSuffix("-525")
+	ProtectedUsersSIDSuffix                          = NewSIDSuffix("-525")
 	KeyAdminsGroupSIDSuffix                          = NewSIDSuffix("-526")
 	EnterpriseKeyAdminsGroupSIDSuffix                = NewSIDSuffix("-527")
 	AdministratorsSIDSuffix                          = NewSIDSuffix("-544")
