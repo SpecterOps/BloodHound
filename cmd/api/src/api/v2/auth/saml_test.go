@@ -19,6 +19,7 @@ package auth_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -2559,7 +2560,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: serviceProvider.ParseResponse, Failed to parse ACS response for provider - Redirect to Login with Error Message",
+			name: "Error: parseResponse typed error, Failed to parse ACS response for provider - Redirect to Login with Error Message",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
@@ -2590,10 +2591,464 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					</EntityDescriptor>`),
 					},
 				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, &saml.InvalidResponseError{
+					PrivateErr: errors.New("error"),
+				})
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
 				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+SSO+response%3A+Failed+to+parse+ACS+response+Authentication+failed"}},
+			},
+		},
+		{
+			name: "Error: parseResponse, Failed to parse ACS response for provider - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+SSO+response%3A+Failed+to+parse+ACS+response+error"}},
+			},
+		},
+		{
+			name: "Error: SAMLProvider.GetSAMLUserPrincipalNameFromAssertion - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Invalid+assertion%3A+no+valid+email+address+found"}},
+			},
+		},
+		{
+			name: "Error: CreateSSOSession Invalid User - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=Your+user+is+not+allowed%2C+please+contact+your+Administrator"}},
+			},
+		},
+		{
+			name: "Error: error creating user session - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32{
+						NullInt32: sql.NullInt32{
+							Int32: int32(1),
+							Valid: true,
+						},
+					},
+					SSOProvider: &model.SSOProvider{
+						Name:   "name",
+						Slug:   "slug",
+						Serial: model.Serial{ID: int32(1)},
+						SAMLProvider: &model.SAMLProvider{
+							Serial:        model.Serial{ID: 1234},
+							SSOProviderID: null.Int32From(int32(1)),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, errors.New("error"))
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui/login?error=We%E2%80%99re+having+trouble+connecting.+Please+check+your+internet+and+try+again."}},
+			},
+		},
+		{
+			name: "Success: jit saml user created + session created w/ auto provision config enabled - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: true,
+							DefaultRoleId: int32(1),
+						},
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
+					{
+						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, database.ErrNotFound)
+				mock.mockDatabase.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).AnyTimes()
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32{
+						NullInt32: sql.NullInt32{
+							Int32: int32(1),
+							Valid: true,
+						},
+					},
+					SSOProvider: &model.SSOProvider{
+						Name:   "name",
+						Slug:   "slug",
+						Serial: model.Serial{ID: int32(1)},
+						SAMLProvider: &model.SAMLProvider{
+							Serial:        model.Serial{ID: 1234},
+							SSOProviderID: null.Int32From(int32(1)),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
+				{
+			name: "Success: jit saml user updated + session created w/ auto provision config enabled - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+					Config: model.SSOProviderConfig{
+						AutoProvision: model.SSOProviderAutoProvisionConfig{
+							Enabled:       true,
+							RoleProvision: true,
+							DefaultRoleId: int32(1),
+						},
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().GetAllRoles(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.Roles{
+					{
+						Permissions: model.Permissions{model.NewPermission("auth", "ManageUsers")},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{}, nil)
+				mock.mockDatabase.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).AnyTimes()
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32{
+						NullInt32: sql.NullInt32{
+							Int32: int32(1),
+							Valid: true,
+						},
+					},
+					SSOProvider: &model.SSOProvider{
+						Name:   "name",
+						Slug:   "slug",
+						Serial: model.Serial{ID: int32(1)},
+						SAMLProvider: &model.SAMLProvider{
+							Serial:        model.Serial{ID: 1234},
+							SSOProviderID: null.Int32From(int32(1)),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
+			},
+		},
+		{
+			name: "Success: session created - Redirect to Login with Error Message",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/sso/slug/callback",
+					},
+					Method: http.MethodGet,
+				}
+
+				bhContext := &ctx.Context{
+					Host: request.URL,
+				}
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
+					Name: "POST Provider",
+					Slug: "post-provider",
+					Type: model.SessionAuthProviderSAML,
+					SAMLProvider: &model.SAMLProvider{
+						Name:            "POST SAML Provider",
+						DisplayName:     "POST SAML SSO",
+						IssuerURI:       "https://post-provider.com/saml",
+						SingleSignOnURI: "https://post-provider.com/sso",
+						MetadataXML: []byte(`<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://post-provider.com/saml">
+						<IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+							<SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://post-provider.com/sso"/>
+						</IDPSSODescriptor>
+					</EntityDescriptor>`),
+					},
+					Serial: model.Serial{
+						ID: int32(1),
+					},
+				}, nil)
+				mock.mockSAML.EXPECT().ParseResponse(gomock.Any(), gomock.Any(), nil).Return(&saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{{
+							FriendlyName: "uid",
+							Name:         model.XMLSOAPClaimsEmailAddress,
+							NameFormat:   model.ObjectIDAttributeNameFormat,
+							Values: []saml.AttributeValue{{
+								Type:  model.XMLTypeString,
+								Value: "username",
+							}},
+						}},
+					}},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateAuditLog(gomock.Any(), gomock.Any()).Times(2)
+				mock.mockDatabase.EXPECT().LookupUser(gomock.Any(), "username").Return(model.User{
+					SSOProviderID: null.Int32{
+						NullInt32: sql.NullInt32{
+							Int32: int32(1),
+							Valid: true,
+						},
+					},
+					SSOProvider: &model.SSOProvider{
+						Name:   "name",
+						Slug:   "slug",
+						Serial: model.Serial{ID: int32(1)},
+						SAMLProvider: &model.SAMLProvider{
+							Serial:        model.Serial{ID: 1234},
+							SSOProviderID: null.Int32From(int32(1)),
+						},
+					},
+				}, nil)
+				mock.mockDatabase.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusFound,
+				responseHeader: http.Header{"Location": []string{"/api/v2/sso/slug/callback/ui"}, "Set-Cookie": []string{"token=token; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT"}},
 			},
 		},
 	}
@@ -2617,6 +3072,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					ServiceProviderCertificateCAChain: "",
 				},
 			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil))
+			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -2624,6 +3080,11 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 			router.ServeHTTP(response, request)
 
 			status, header, _ := test.ProcessResponse(t, response)
+
+			// Cookies are regenerated in every response therefore the
+			// the cookie attributes needed to be overwritten.
+			header = test.ModifyCookieAttribute(header, "Expires", "Thu, 01 Jan 1970 00:00:00 GMT")
+			header = test.ModifyCookieAttribute(header, "token", "token")
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)

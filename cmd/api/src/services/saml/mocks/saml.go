@@ -26,6 +26,7 @@
 package mocks
 
 import (
+	http "net/http"
 	reflect "reflect"
 
 	saml "github.com/crewjam/saml"
@@ -69,4 +70,19 @@ func (m *MockService) MakeAuthenticationRequest(serviceProvider saml.ServiceProv
 func (mr *MockServiceMockRecorder) MakeAuthenticationRequest(serviceProvider, idpURL, binding, resultBinding any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeAuthenticationRequest", reflect.TypeOf((*MockService)(nil).MakeAuthenticationRequest), serviceProvider, idpURL, binding, resultBinding)
+}
+
+// ParseResponse mocks base method.
+func (m *MockService) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ParseResponse", serviceProvider, req, possibleRequestIDs)
+	ret0, _ := ret[0].(*saml.Assertion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ParseResponse indicates an expected call of ParseResponse.
+func (mr *MockServiceMockRecorder) ParseResponse(serviceProvider, req, possibleRequestIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseResponse", reflect.TypeOf((*MockService)(nil).ParseResponse), serviceProvider, req, possibleRequestIDs)
 }

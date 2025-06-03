@@ -444,7 +444,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse form POST: %v", err))
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
-	} else if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
+	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):

@@ -17,6 +17,8 @@
 package saml
 
 import (
+	"net/http"
+
 	"github.com/crewjam/saml"
 )
 
@@ -25,6 +27,7 @@ import (
 // Service serves as a lightweight wrapper around the SAML package.
 type Service interface {
 	MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error)
+	ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error)
 }
 
 type Client struct{}
@@ -33,4 +36,11 @@ type Client struct{}
 // the HTTP-Redirect binding. It returns a URL that we will redirect the user to in order to start the auth process.
 func (c *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider, idpURL string, binding string, resultBinding string) (*saml.AuthnRequest, error) {
 	return serviceProvider.MakeAuthenticationRequest(idpURL, binding, resultBinding)
+}
+
+// ParseResponse abstracts the handling/validation of the IDP response.
+// The purpose is to extract the SAML IDP response received in req, resolves
+// artifacts when necessary, validates it, and returns the verified assertion.
+func (c *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*saml.Assertion, error) {
+	return serviceProvider.ParseResponse(req, possibleRequestIDs)
 }
