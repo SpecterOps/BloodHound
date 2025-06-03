@@ -23,6 +23,32 @@ export const GROUP_SPREAD = 0.06;
 export const MIN_CAMERA_RATIO = 0.5;
 export const MAX_CAMERA_RATIO = 15;
 
+/**
+ * Value of primary mouse button click events
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
+ */
+export const MOUSE_BUTTON_PRIMARY = 0;
+
+/** Distance cursor must move before drag starts */
+export const DRAG_DISTANCE_THRESHOLD = 10;
+
+export const getDistanceFromNode = (node: Attributes, position: Coordinates): number => {
+    const { x, y } = getNodeOffset(node, position);
+    return Math.sqrt(x * x + y * y);
+};
+
+/**
+ * Return coordinates representing the offset between a node's location and a position.
+ *
+ * @param node A node on a graph
+ * @param position A position on a graph
+ * @returns x and y offset from node to position
+ */
+export const getNodeOffset = (node: Attributes, position: Coordinates): Coordinates => ({
+    x: position.x - node.x,
+    y: position.y - node.y,
+});
+
 export const getEdgeDataFromKey = (edgeKey: string): null | { source: string; target: string; label: string } => {
     const keyChunks = edgeKey.split('_');
     const source = keyChunks.shift();
