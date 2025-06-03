@@ -27,7 +27,14 @@ import {
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
 import { getNodeRadius } from 'src/rendering/utils/utils';
+import { useAppSelector } from 'src/store';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
+
+interface SigmaChartRef {
+    resetCamera: () => void;
+    runSequentialLayout: () => void;
+    runStandardLayout: () => void;
+}
 
 export interface GraphEventProps {
     onDoubleClickNode?: (id: string) => void;
@@ -53,6 +60,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }: GraphEventProps,
     ref
 ) {
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+
     const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
@@ -69,9 +78,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const prevent = useRef(false);
 
     const graph = sigma.getGraph();
+    const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
     useImperativeHandle(
-        ref,
+        sigmaChartRef,
         () => {
             return {
                 zoomTo: (id: string) => {
@@ -301,8 +311,18 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }, [draggedNode, setSettings, showEdgeLabels]);
 
     useEffect(() => {
-        resetCamera(sigma);
-    }, [sigma]);
+        if (sigmaChartRef?.current) {
+            if (exploreLayout === 'sequential') {
+                sigmaChartRef?.current?.runSequentialLayout();
+            } else if (exploreLayout === 'standard') {
+                sigmaChartRef?.current?.runStandardLayout();
+            } else {
+                resetCamera(sigma);
+            }
+        } else {
+            resetCamera(sigma);
+        }
+    }, [sigma, exploreLayout, sigmaChartRef]);
 
     useEffect(() => {
         setSettings({
