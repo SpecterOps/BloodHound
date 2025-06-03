@@ -46,7 +46,6 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 	github.com/unrolled/secure v1.13.0
 	go.uber.org/mock v0.5.2
-	golang.org/x/net v0.33.0
 	golang.org/x/oauth2 v0.23.0
 	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
