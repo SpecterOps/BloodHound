@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"slices"
 	"sync"
 	"sync/atomic"
 
@@ -518,18 +517,16 @@ func selectAssetGroupNodes(ctx context.Context, db database.Database, graphDb gr
 }
 
 // tagAssetGroupNodesForTag - tags all nodes for a given tag and diffs previous db state for minimal db updates
-func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, additionalFilters ...graph.Criteria) error {
+func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb graph.Database, tag model.AssetGroupTag, nodesSeen cardinality.Duplex[uint64], additionalFilters ...graph.Criteria) error {
 	if selectors, err := db.GetAssetGroupTagSelectorsByTagId(ctx, tag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
 		return err
 	} else {
 		var (
-			countTagged, countUntagged, countTotal int
-			selectorIds                            []int
-			selectedNodes                          []model.AssetGroupSelectorNode
+			selectorIds   []int
+			selectedNodes []model.AssetGroupSelectorNode
 
 			tagKind = tag.ToKind()
 
-			nodesSeen      = cardinality.NewBitmap64()
 			oldTaggedNodes = cardinality.NewBitmap64()
 			newTaggedNodes = cardinality.NewBitmap64()
 		)
@@ -571,16 +568,14 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 					}
 					// Once a node is processed, we can skip future duplicates that might be selected by other selectors
 					nodesSeen.Add(nodeDb.NodeId.Uint64())
-					countTotal++
 				}
 			}
 
 			// 4. Tag the new nodes
 			newTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: &graph.Properties{}}
+				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 				node.AddKinds(tagKind)
 				err = tx.UpdateNode(node)
-				countTagged++
 				return err == nil
 			})
 			if err != nil {
@@ -589,10 +584,9 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 			// 5. Remove the old nodes
 			oldTaggedNodes.Each(func(nodeId uint64) bool {
-				node := &graph.Node{ID: graph.ID(nodeId), Properties: &graph.Properties{}}
+				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
 				node.DeleteKinds(tagKind)
 				err = tx.UpdateNode(node)
-				countUntagged++
 				return err == nil
 			})
 			if err != nil {
@@ -604,7 +598,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			return err
 		}
 
-		slog.Info("AGT: Completed tagging", tag.ToType(), tag.Name, "total", countTotal, "tagged", countTagged, "untagged", countUntagged)
+		slog.Info("AGT: Completed tagging", tag.ToType(), tag.Name, "total", nodesSeen.Cardinality(), "tagged", newTaggedNodes.Cardinality(), "untagged", oldTaggedNodes.Cardinality())
 	}
 	return nil
 }
@@ -632,11 +626,6 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			}
 		}
 
-		// Order the tiers by position
-		slices.SortFunc(tiersOrdered, func(i, j model.AssetGroupTag) int {
-			return int(i.Position.Int32 - j.Position.Int32)
-		})
-
 		// Fire off the label tagging
 		wg := sync.WaitGroup{}
 		for _, tag := range labelsOrOwned {
@@ -644,15 +633,16 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag, additionalFilters...); err != nil {
+				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
 					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
 				}
 			}()
 		}
 
 		// Process the tier tagging synchronously
+		nodesSeen := cardinality.NewBitmap64()
 		for _, tier := range tiersOrdered {
-			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, additionalFilters...); err != nil {
+			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
 				slog.Error("AGT: Error tagging nodes", "tier", tier, "err", err)
 			}
 		}
