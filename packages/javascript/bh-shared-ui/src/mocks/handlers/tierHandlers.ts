@@ -67,6 +67,21 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         return res(ctx.json({ data: { tag: tierMocks.createAssetGroupTag(parseInt(tagId as string)) } }));
     }),
 
+    // POST Tag
+    rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    // PATCH Tag
+    rest.patch('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+        return res(ctx.status(200));
+    }),
+
+    // DELETE Tag
+    rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+        return res(ctx.status(500, 'get rekt'));
+    }),
+
     // GET Selectors
     rest.get('/api/v2/asset-group-tags/:tagId/selectors', async (req, res, ctx) => {
         const { tagId } = req.params;
@@ -83,8 +98,8 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         );
     }),
 
-    // CREATE Selector
-    rest.post('/api/v2/asset-group-tags/:tagId/selectors/:selectorId', async (_, res, ctx) => {
+    // POST Selector
+    rest.post('/api/v2/asset-group-tags/:tagId/selectors', async (_, res, ctx) => {
         return res(ctx.status(200));
     }),
 
@@ -163,13 +178,6 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
                 data: {
                     member: tierMocks.createAssetGroupMemberInfo(tagId as string, memberId as string),
                 },
-            })
-        );
-    }),
-    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
             })
         );
     }),

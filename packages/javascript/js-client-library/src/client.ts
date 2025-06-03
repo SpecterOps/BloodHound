@@ -18,6 +18,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
+    CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateOIDCProviderRequest,
@@ -34,6 +35,7 @@ import {
     RequestOptions,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
+    UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateConfigurationRequest,
@@ -168,6 +170,18 @@ class BHEAPIClient {
     getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 
+    createAssetGroupTag = (values: CreateAssetGroupTagRequest, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/asset-group-tags`, values, options);
+
+    updateAssetGroupTag = (
+        tagId: number | string,
+        updatedValues: UpdateAssetGroupTagRequest,
+        options?: RequestOptions
+    ) => this.baseClient.patch(`/api/v2/asset-group-tags/${tagId}`, updatedValues, options);
+
+    deleteAssetGroupTag = (tagId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}`, options);
+
     getAssetGroupTagMemberInfo = (tagId: number | string, memberId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagMemberInfoResponse>(
             `/api/v2/asset-group-tags/${tagId}/members/${memberId}`,
@@ -183,11 +197,8 @@ class BHEAPIClient {
             options
         );
 
-    createAssetGroupTagSelector = (
-        tagId: number | string,
-        updatedValues: CreateSelectorRequest,
-        options?: RequestOptions
-    ) => this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, updatedValues, options);
+    createAssetGroupTagSelector = (tagId: number | string, values: CreateSelectorRequest, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, values, options);
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
