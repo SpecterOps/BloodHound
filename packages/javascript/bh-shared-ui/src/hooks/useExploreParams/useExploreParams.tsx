@@ -31,6 +31,7 @@ export type ExploreQueryParams = {
     searchType: SearchType | null;
     expandedPanelSections: string[] | null;
     selectedItem: string | null;
+    highlightedItem: string | null;
     relationshipQueryType: EntityRelationshipQueryTypes | null;
     relationshipQueryItemId: string | null;
     pathFilters: EdgeCheckboxType['edgeType'][] | null;
@@ -84,6 +85,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
         searchType: parseSearchType(searchParams.get('searchType')),
         expandedPanelSections: searchParams.getAll('expandedPanelSections'),
         selectedItem: searchParams.get('selectedItem'),
+        highlightedItem: searchParams.get('highlightedItem'),
         relationshipQueryType: parseRelationshipQueryType(searchParams.get('relationshipQueryType')),
         relationshipQueryItemId: searchParams.get('relationshipQueryItemId'),
         pathFilters: searchParams.getAll('pathFilters'),
@@ -99,6 +101,7 @@ export const useExploreParams = (): UseExploreParamsReturn => {
                         'searchType',
                         'expandedPanelSections',
                         'selectedItem',
+                        'highlightedItem',
                         'relationshipQueryType',
                         'relationshipQueryItemId',
                         'pathFilters',

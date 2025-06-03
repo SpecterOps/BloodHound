@@ -16,17 +16,20 @@
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
 import { useExploreSelectedItem } from 'bh-shared-ui';
-import { AbstractGraph, Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { Attributes } from 'graphology-types';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
+import type { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { Coordinates } from 'sigma/types';
 import {
+    MOUSE_BUTTON_PRIMARY,
     getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
+    getNodeOffset,
     graphToFramedGraph,
     resetCamera,
 } from 'src/ducks/graph/utils';
 import { bezier } from 'src/rendering/utils/bezier';
-import { getNodeRadius } from 'src/rendering/utils/utils';
+import { getNodeRadius, preventAllDefaults } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
@@ -36,48 +39,50 @@ interface SigmaChartRef {
     runStandardLayout: () => void;
 }
 
-export interface GraphEventProps {
-    onDoubleClickNode?: (id: string) => void;
+interface GraphEventProps {
     onClickNode?: (id: string) => void;
     onClickEdge?: (id: string, relatedFindingType?: string | null) => void;
     onClickStage?: () => void;
-    edgeReducer?: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
 }
 
+/** Meta info about the currently dragged node */
+type DragMetadata = {
+    /** Id of the dragged graph node. */
+    id: string;
+
+    /**
+     * Vector from node's center to cusor position at mouse down. Used to
+     * prevent the node from jumping to the cursor at drag start.
+     */
+    offset: Coordinates;
+};
+
 export const GraphEvents = forwardRef(function GraphEvents(
     {
-        onDoubleClickNode,
         onClickNode,
         onClickEdge,
         onClickStage,
         onRightClickNode,
-        edgeReducer,
         showNodeLabels = true,
         showEdgeLabels = true,
     }: GraphEventProps,
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-
-    const { selectedItem } = useExploreSelectedItem();
+    const { cancelHighlight, highlightedItem, selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
+    const graph = sigma.getGraph();
+
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
 
-    const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-    const [draggedNode, setDraggedNode] = useState<string | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
+    const [draggedMeta, setDraggedMeta] = useState<DragMetadata | null>(null);
+    const draggedNode = draggedMeta && graph.getNodeAttributes(draggedMeta.id);
 
-    const isLongPress = useRef(false);
-    const dragTimerRef = useRef<ReturnType<typeof setTimeout>>();
-    const clickTimerRef = useRef<ReturnType<typeof setTimeout>>();
-    const prevent = useRef(false);
-
-    const graph = sigma.getGraph();
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
     useImperativeHandle(
@@ -123,13 +128,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const sigmaContainer = document.getElementById('sigma-container');
     const { getControlAtMidpoint, getLineLength, calculateCurveHeight } = bezier;
 
-    const clearDraggedNode = () => {
-        setDraggedNode(null);
-        setIsDragging(false);
-        clearTimeout(dragTimerRef.current);
-        isLongPress.current = false;
-    };
-
     const curvedEdgeReducer = useCallback(
         (edge: string, data: Attributes, newData: Attributes) => {
             // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
@@ -174,87 +172,72 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     useEffect(() => {
         registerEvents({
-            enterNode: (event) => {
+            enterNode: () => {
                 if (sigmaContainer) sigmaContainer.style.cursor = 'grab';
-                setHoveredNode(event.node);
             },
             leaveNode: () => {
                 if (sigmaContainer) sigmaContainer.style.cursor = 'default';
-                setHoveredNode(null);
             },
             downNode: (event) => {
-                // a button value of `0` indicates that the main button of the mouse device was pressed
-                // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button#value
-                if (event.event.original.button === 0) {
-                    setDraggedNode(event.node);
-
-                    dragTimerRef.current = setTimeout(() => {
-                        isLongPress.current = true;
-                    }, 150);
+                if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    setDraggedMeta({
+                        id: event.node,
+                        offset: getNodeOffset(graph.getNodeAttributes(event.node), sigma.viewportToGraph(event.event)),
+                    });
                 }
             },
-            mouseup: () => clearDraggedNode(),
+            mouseup: (event) => {
+                if (!draggedNode) {
+                    return;
+                }
+
+                setDraggedMeta(null);
+            },
             mousemovebody: (event) => {
                 if (draggedNode) {
-                    setIsDragging(true);
-                    // Prevent sigma to move camera:
-                    event.preventSigmaDefault();
-                    event.original.preventDefault();
-                    event.original.stopPropagation();
-
                     // Get new position of node
                     const position = sigma.viewportToGraph(event);
-                    sigma.getGraph().setNodeAttribute(draggedNode, 'x', position.x);
-                    sigma.getGraph().setNodeAttribute(draggedNode, 'y', position.y);
+
+                    // Prevent Sigma from moving camera
+                    preventAllDefaults(event);
+
+                    graph.setNodeAttribute(draggedMeta.id, 'x', position.x - draggedMeta.offset.x);
+                    graph.setNodeAttribute(draggedMeta.id, 'y', position.y - draggedMeta.offset.y);
                 }
             },
             mousemove: (event) => {
                 if (draggedNode) {
-                    // Prevent sigma to move camera:
-                    event.preventSigmaDefault();
-                    event.original.preventDefault();
-                    event.original.stopPropagation();
+                    // Prevent Sigma from moving camera
+                    preventAllDefaults(event);
                 }
             },
             doubleClickNode: (event) => {
-                if (!onDoubleClickNode) return;
-                event.preventSigmaDefault();
-                clearDraggedNode();
-                clearTimeout(clickTimerRef.current);
-                prevent.current = true;
-                onDoubleClickNode(event.node);
+                // Prevent zoom when node is double clicked
+                preventAllDefaults(event);
             },
-            clickNode: (event) => {
-                if (onClickNode && !isLongPress.current && !isDragging) {
-                    clearDraggedNode();
-
-                    clickTimerRef.current = setTimeout(function () {
-                        if (!prevent.current) {
-                            onClickNode(event.node);
-                        }
-                        prevent.current = false;
-                    }, 200);
-                }
-            },
+            clickNode: (event) => onClickNode?.(event.node),
             rightClickNode: (event) => {
-                event.preventSigmaDefault();
+                preventAllDefaults(event);
                 onRightClickNode?.(event);
             },
-            // We need our reducers to run again when the camera state gets updated to position edge labels correctly.
-            // Despite its name, this event only triggers on camera update, not any Sigma update
+            // Reducers must run again on camera state update to position edge labels correctly
+            // Despite the name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
-            clickStage: () => onClickStage && onClickStage(),
+            clickStage: () => {
+                cancelHighlight();
+                onClickStage?.();
+            },
         });
     }, [
-        registerEvents,
-        onDoubleClickNode,
-        onClickNode,
-        onRightClickNode,
-        onClickEdge,
-        onClickStage,
-        sigma,
+        cancelHighlight,
         draggedNode,
-        isDragging,
+        onClickEdge,
+        onClickNode,
+        onClickStage,
+        onRightClickNode,
+        registerEvents,
+        selectedItem,
+        sigma,
         sigmaContainer,
     ]);
 
@@ -262,53 +245,41 @@ export const GraphEvents = forwardRef(function GraphEvents(
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
-                const newData: Attributes = {
+                return {
                     ...data,
-                    highlighted: data.highlighted || false,
+                    highlighted: node === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
-
-                if (node === selectedItem) {
-                    newData.highlighted = true;
-                }
-
-                return newData;
             },
             edgeReducer: (edge, data) => {
-                const graph = sigma.getGraph();
                 const camera = sigma.getCamera();
                 const newData: Attributes = {
                     ...data,
                     hidden: false,
+                    highlighted: edge === highlightedItem,
                     inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
                 };
 
-                if (edge === selectedItem) {
-                    newData.selected = true;
-                } else {
-                    newData.selected = false;
+                if (data.type === 'curved') {
+                    curvedEdgeReducer(edge, data, newData);
+                } else if (data.type === 'self') {
+                    selfEdgeReducer(edge, newData);
                 }
-
-                if (data.type === 'curved') curvedEdgeReducer(edge, data, newData);
-
-                if (data.type === 'self') selfEdgeReducer(edge, newData);
-
-                if (edgeReducer) return edgeReducer(edge, newData, graph);
 
                 return newData;
             },
         });
-    }, [hoveredNode, draggedNode, selectedItem, curvedEdgeReducer, selfEdgeReducer, edgeReducer, setSettings, sigma]);
+    }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
 
-    // Toggle off edge labels when dragging a node. Since these are rendered on a 2d canvas, dragging nodes with lots of edges
-    // can tank performance
+    // Toggle off edge labels when dragging a node to avoid performance hit
     useEffect(() => {
-        if (draggedNode) {
-            setSettings({ renderEdgeLabels: false });
+        // setTimeouts are needed to overcome race condition between mouseup and draggedNode update
+        if (draggedNode !== null) {
+            setTimeout(() => setSettings({ renderEdgeLabels: false }), 50);
         } else {
-            setSettings({ renderEdgeLabels: showEdgeLabels });
+            setTimeout(() => setSettings({ renderEdgeLabels: showEdgeLabels }), 50);
         }
-    }, [draggedNode, setSettings, showEdgeLabels]);
+    }, [draggedNode]);
 
     useEffect(() => {
         if (sigmaChartRef?.current) {
