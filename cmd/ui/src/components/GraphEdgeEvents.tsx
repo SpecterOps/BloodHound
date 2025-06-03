@@ -16,7 +16,7 @@
 
 import { useSigma } from '@react-sigma/core';
 import { useExploreSelectedItem } from 'bh-shared-ui';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 import {
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
@@ -32,6 +32,7 @@ const GraphEdgeEvents: FC = () => {
 
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
+    const egdeEventsRef = useRef<HTMLCanvasElement>()
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
@@ -160,8 +161,17 @@ const GraphEdgeEvents: FC = () => {
         [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
+    useEffect(() => {
+        console.log(egdeEventsRef.current)
+        egdeEventsRef.current?.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            handleEdgeEvents(e);
+        }, { passive: false });
+    }, []);
+
     return (
         <canvas
+            ref={egdeEventsRef}
             id='edge-events'
             width={width.slice(0, width.length - 2)}
             height={height.slice(0, height.length - 2)}
