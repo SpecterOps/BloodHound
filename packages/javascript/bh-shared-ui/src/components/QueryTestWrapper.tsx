@@ -6,7 +6,16 @@ interface WrapperComponentProps {
 }
 
 export const QueryTestWrapper: React.FC<WrapperComponentProps> = ({ children, stateMap }) => {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                retry: false,
+                refetchOnMount: false,
+                refetchOnWindowFocus: false,
+                staleTime: Infinity,
+            },
+        },
+    });
 
     stateMap.forEach(({ key, data }) => {
         queryClient.setQueryData(key, data);
