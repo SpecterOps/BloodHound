@@ -72,9 +72,9 @@ const (
 
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
-	Type           AssetGroupTagType `json:"type"`
+	Type           AssetGroupTagType `json:"type" validate:"required"`
 	KindId         int               `json:"kind_id"`
-	Name           string            `json:"name"`
+	Name           string            `json:"name" validate:"required"`
 	Description    string            `json:"description"`
 	CreatedAt      time.Time         `json:"created_at"`
 	CreatedBy      string            `json:"created_by"`

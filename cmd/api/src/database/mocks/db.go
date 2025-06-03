@@ -37,6 +37,7 @@ import (
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
 	gomock "go.uber.org/mock/gomock"
+	gorm "gorm.io/gorm"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -92,17 +93,17 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 }
 
 // CascadeShiftTierPositions mocks base method.
-func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction database.ShiftDirection) error {
+func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction database.ShiftDirection) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, user, position, direction)
+	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, tx, user, position, direction)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CascadeShiftTierPositions indicates an expected call of CascadeShiftTierPositions.
-func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, user, position, direction any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, tx, user, position, direction any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, user, position, direction)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, tx, user, position, direction)
 }
 
 // Close mocks base method.

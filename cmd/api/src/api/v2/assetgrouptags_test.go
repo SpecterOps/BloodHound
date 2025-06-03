@@ -2197,6 +2197,7 @@ func TestResources_PreviewSelectors(t *testing.T) {
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockGraphDb.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Times(1)
+					mockGraphDb.EXPECT().WriteTransaction(gomock.Any(), gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)

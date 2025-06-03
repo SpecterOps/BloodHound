@@ -31,8 +31,8 @@ type ShiftDirection int
 
 const (
 	kindTable                = "kind"
-	ShiftUp   ShiftDirection = iota
-	ShiftDown
+	ShiftUp   ShiftDirection = 1
+	ShiftDown ShiftDirection = -1
 )
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
@@ -42,7 +42,7 @@ type AssetGroupTagData interface {
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetMaxTierPosition(ctx context.Context) (int32, error)
-	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error
+	CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction ShiftDirection) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -276,9 +276,14 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			RequireCertify: requireCertify,
 		}
 
+		// shouldAudit = false
+
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupTag,
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+			// ShouldAudit: func() bool {
+			// 	return shouldAudit
+			// },
 		}
 	)
 
@@ -306,7 +311,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			}
 
 			if positionProvided {
-				if err := bhdb.CascadeShiftTierPositions(ctx, user, tag.Position, ShiftUp); err != nil {
+				if err := bhdb.CascadeShiftTierPositions(ctx, tx, user, tag.Position, ShiftUp); err != nil {
 					return err
 				}
 			}
@@ -464,7 +469,7 @@ func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
 	return max.Int32, nil
 }
 
-func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
+func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction ShiftDirection) error {
 	var (
 		positionOp string
 	)
@@ -501,6 +506,17 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 
 		if err := s.db.WithContext(ctx).Save(&tag).Error; err != nil {
 			return fmt.Errorf("failed to update tag position: %w", err)
+		}
+
+		updateEntry := model.AuditEntry{
+			Action: model.AuditLogActionUpdateAssetGroup,
+			Model:  &tag,
+			Status: model.AuditLogStatusSuccess,
+		}
+
+		if err := s.AppendAuditLog(ctx, updateEntry); err != nil {
+			fmt.Printf("err: %v", err)
+			return fmt.Errorf("could not append intent to audit log: %w", err)
 		}
 
 		if err := s.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.StringFrom(fmt.Sprintf("%d", originalPosition)), null.StringFrom(fmt.Sprintf("%d", tag.Position.Int32))); err != nil {

@@ -716,19 +716,17 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 
 func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *http.Request) {
 	var (
-		reqBody = model.AssetGroupTag{
-			Position: null.Int32{}, // default to false
-		}
+		reqBody = model.AssetGroupTag{}
 	)
 	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Create Tier")()
 
 	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if errs := validation.Validate(reqBody); len(errs) > 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
 		slog.Error("Unable to get user from auth context")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if reqBody.Name == "" {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if len(reqBody.Name) > 250 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupName, request), response)
 	} else if !normalizeTagRequest(&reqBody) {
@@ -742,9 +740,9 @@ func (s *Resources) CreateAssetGroupTag(response http.ResponseWriter, request *h
 
 func normalizeTagRequest(req *model.AssetGroupTag) bool {
 	switch req.Type {
-	case 1:
+	case model.AssetGroupTagTypeTier:
 		req.RequireCertify = null.BoolFrom(true)
-	case 2:
+	case model.AssetGroupTagTypeLabel:
 		req.RequireCertify = null.Bool{}
 	default:
 		return false
