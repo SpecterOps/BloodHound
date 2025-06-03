@@ -62,10 +62,6 @@ const testSearchResults = {
     data: testNodes,
 };
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-
 const handlers = [
     ...tierHandlers,
     rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
@@ -84,12 +80,8 @@ const handlers = [
     rest.get(`/api/v2/search`, (_, res, ctx) => {
         return res(ctx.json(testSearchResults));
     }),
-    rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {},
-            })
-        );
+    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
     }),
 ];
 
