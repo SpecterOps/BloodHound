@@ -78,7 +78,10 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     return (
         <>
             <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
-                <GraphButton onClick={onReset} displayText={<FontAwesomeIcon icon={faCropAlt} />} />
+                <GraphButton
+                    onClick={onReset}
+                    displayText={<FontAwesomeIcon aria-label='reset graph view' icon={faCropAlt} />}
+                />
 
                 <GraphMenu label={'Hide Labels'}>
                     <MenuItem onClick={handleToggleAllLabels}>
@@ -99,7 +102,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         .map((layout) => (
                             <MenuItem
                                 key={layout}
-                                selected={selectedLayout === layout}
+                                selected={featureFlag?.enabled ? selectedLayout === layout : undefined}
                                 onClick={() => onLayoutChange(layout)}>
                                 {capitalize(layout)}
                             </MenuItem>

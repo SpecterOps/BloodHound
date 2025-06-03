@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useTheme } from '@mui/material';
-import { usePinch } from '@use-gesture/react';
 import {
     ExploreTable,
     GraphControls,
@@ -43,7 +42,7 @@ import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
-console.log('usePinch', usePinch);
+
 const layoutOptions = ['sequential', 'standard', 'table'] as const;
 type LayoutOption = (typeof layoutOptions)[number];
 

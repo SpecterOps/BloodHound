@@ -16,9 +16,9 @@
 
 import isEmpty from 'lodash/isEmpty';
 import { useEffect } from 'react';
-import { useFeatureFlag } from '..';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
+import { useFeatureFlag } from '../useFeatureFlags';
 
 export const useExploreTableAutoDisplay = (setSelectedLayout: (layout: 'table') => void) => {
     const { data: graphData } = useExploreGraph();
