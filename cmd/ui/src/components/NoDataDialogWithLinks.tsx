@@ -39,7 +39,7 @@ const sampleCollectionLinkProps = {
     className: linkStyles,
     target: '_blank',
     rel: 'noreferrer',
-    href: 'https://bloodhound.specterops.io/get-started/quickstart/community-edition-quickstart#option-1%3A-ingest-sample-data',
+    href: 'http://localhost:3000/get-started/quickstart/community-edition-quickstart#get-data-into-bloodhound',
 };
 
 export const NoDataDialogWithLinks: React.FC<NoDataDialogWithLinksProps> = ({ open }) => {
