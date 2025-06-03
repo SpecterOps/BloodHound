@@ -54,6 +54,7 @@ const GraphEdgeEvents: FC = () => {
                 for (let i = 0; i < edges.length; i++) {
                     const edge: string = edges[i];
                     const attributes = graph.getEdgeAttributes(edge);
+
                     const edgeData = getEdgeDataFromKey(edge);
                     if (edgeData === null) continue;
                     const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
