@@ -84,6 +84,7 @@ export default defineConfig(({ mode }) => {
             port: 3000,
         },
         test: {
+            env: 'development',
             globals: true,
             environment: 'jsdom',
             setupFiles: ['./src/setupTests.tsx'],

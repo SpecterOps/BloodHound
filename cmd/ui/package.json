@@ -32,6 +32,7 @@
         "@mui/x-date-pickers": "^5.0.20",
         "@react-sigma/core": "^3.4.1",
         "@reduxjs/toolkit": "^1.8.5",
+        "@use-gesture/react": "^10.3.1",
         "bh-shared-ui": "workspace:*",
         "dagrejs": "git@github.com:BloodHoundAD/dagre.git",
         "downshift": "^6.1.7",

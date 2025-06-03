@@ -44,10 +44,3 @@ const ExploreTable: React.FC<ExploreTableProps> = (props) => {
 };
 
 export default ExploreTable;
-
-/**
- * TODO:
- * not required for initial PR:
- *   search container should overlap table -- not required in initial p
- *   entity panel shouldnt intersect
- */
