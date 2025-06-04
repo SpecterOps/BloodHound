@@ -61,14 +61,13 @@ func (s *BloodhoundDB) GetADDataQualityStats(ctx context.Context, domainSid stri
 // summing the maximum asset counts per environment per day. Due to
 // session and group completeness being percentages, it will return
 // the single maximum value of all environments per day.
-func (s *BloodhoundDB) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, assetGroupTagId int, start time.Time, end time.Time) (model.ADDataQualityStats, error) {
+func (s *BloodhoundDB) GetAggregateADDataQualityStats(ctx context.Context, domainSIDs []string, start time.Time, end time.Time) (model.ADDataQualityStats, error) {
 	var (
 		adDataQualityStats model.ADDataQualityStats
 		params             = map[string]any{
-			"ids":             domainSIDs,
-			"start":           start,
-			"end":             end,
-			"assetGroupTagId": assetGroupTagId,
+			"ids":   domainSIDs,
+			"start": start,
+			"end":   end,
 		}
 	)
 
@@ -94,7 +93,7 @@ WITH aggregated_quality_stats AS (
         MAX(session_completeness) AS max_session_completeness,
         MAX(local_group_completeness) AS max_local_group_completeness
     FROM ad_data_quality_stats
-    WHERE domain_sid IN @ids AND asset_group_tag_id = @assetGroupTagId
+    WHERE domain_sid IN @ids
     AND created_at BETWEEN @start AND @end
     GROUP BY domain_sid, created_date
 	)
