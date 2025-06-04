@@ -34,6 +34,7 @@ import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 
 interface SigmaChartRef {
     resetCamera: () => void;
+    zoomTo: (id: string) => void;
     runSequentialLayout: () => void;
     runStandardLayout: () => void;
 }

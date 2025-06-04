@@ -41,7 +41,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
         inverseSqrtZoomRatio,
         label: data.label,
         position: data,
-        size: data.size,
+        size: data.size ?? 0, // fallback prevents NaN
     };
 
     const labelbounds = getLabelBoundsFromContext(context, labelParams);
