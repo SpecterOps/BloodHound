@@ -86,6 +86,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                         self: SelfEdgeArrowProgram,
                         arrow: EdgeArrowProgram,
                     },
+                    zoomingRatio: 1.1,
                     renderEdgeLabels: showEdgeLabels,
                     renderLabels: showNodeLabels,
                     hoverRenderer: drawHover,

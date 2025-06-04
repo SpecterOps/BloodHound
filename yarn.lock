@@ -4394,13 +4394,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yomguithereal/helpers@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@yomguithereal/helpers@npm:1.1.1"
-  checksum: 901aa14a232d56a99c423ac5968dd7915954a4bb3e570169cb450f1f3d328456025977c9812df3a34b061c74757b4bbd673bd467b2449c660a2dea347dda402a
-  languageName: node
-  linkType: hard
-
 "@zxing/text-encoding@npm:0.9.0":
   version: 0.9.0
   resolution: "@zxing/text-encoding@npm:0.9.0"
@@ -5100,7 +5093,7 @@ __metadata:
     redux-saga: ^1.1.3
     redux-saga-test-plan: ^4.0.3
     sass: ^1.62.1
-    sigma: ^2.4.0
+    sigma: ^3.0.2
     tailwindcss: ^3.4.17
     typescript: ^5.1.6
     vite: ^5.4.12
@@ -7444,7 +7437,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphology-utils@npm:^2.1.0, graphology-utils@npm:^2.3.0, graphology-utils@npm:^2.5.0":
+"graphology-utils@npm:^2.1.0, graphology-utils@npm:^2.3.0, graphology-utils@npm:^2.5.2":
   version: 2.5.2
   resolution: "graphology-utils@npm:2.5.2"
   peerDependencies:
@@ -11465,14 +11458,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sigma@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "sigma@npm:2.4.0"
+"sigma@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "sigma@npm:3.0.2"
   dependencies:
-    "@yomguithereal/helpers": ^1.1.1
     events: ^3.3.0
-    graphology-utils: ^2.5.0
-  checksum: c9161859bb3dc2dbff8a918e6a400cec1f75e60de9fe7fb42ecf16ddc9d3f1e8a10a372f9876c674bb9e973006e0e852cdb9b4a0e525bc08eb3a959f475f99ce
+    graphology-utils: ^2.5.2
+  checksum: 58c1dbcbbfb44930b8a4b90605a47a4654cc8960aeb634e4130fce32879a691da645374521b247f4ac5f3529cc79a220eb48d878cd916d58111128af80af0d69
   languageName: node
   linkType: hard
 
