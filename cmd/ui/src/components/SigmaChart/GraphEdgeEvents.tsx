@@ -164,8 +164,8 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
     return (
         <canvas
             id='edge-events'
-            width={width.slice(0, width.length - 2)}
-            height={height.slice(0, height.length - 2)}
+            width={parseInt(width)}
+            height={parseInt(height)}
             style={{ position: 'absolute', height: height, width: width, inset: 0 }}
             onClick={handleEdgeEvents}
             onContextMenu={handleEdgeEvents}

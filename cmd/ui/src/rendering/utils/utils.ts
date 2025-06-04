@@ -100,7 +100,7 @@ export const getLabelBoundsFromContext = (
     const labelWidth = labelBounds.width;
     // Add the space above the text baseline plus the space below it
     const labelHeight = labelBounds.actualBoundingBoxAscent + labelBounds.actualBoundingBoxDescent;
-    const labelOffsetX = (params.size + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
+    const labelOffsetX = ((params.size ?? 0) + LABEL_PADDING / 2) * params.inverseSqrtZoomRatio;
     const labelOffsetY = labelHeight / 2;
 
     return [
@@ -137,7 +137,9 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
  * @param event Sigma or mouse event object used to cancel defaults
  */
 export const preventAllDefaults = (event: SigmaNodeEventPayload | MouseCoords) => {
-    event.preventSigmaDefault();
+    if ('preventSigmaDefault' in event && typeof event.preventSigmaDefault === 'function') {
+        event.preventSigmaDefault();
+    }
 
     // Prevent events for MouseCoords type
     if ('original' in event && event.original instanceof MouseEvent) {

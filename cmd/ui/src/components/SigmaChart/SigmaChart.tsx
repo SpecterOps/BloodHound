@@ -17,7 +17,7 @@
 import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
-import Graph, { MultiDirectedGraph } from 'graphology';
+import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -34,7 +34,7 @@ import { GraphEdgeEvents } from './GraphEdgeEvents';
 import { GraphEvents } from './GraphEvents';
 
 interface SigmaChartProps {
-    graph: Graph<Attributes, Attributes, Attributes>;
+    graph: MultiDirectedGraph<Attributes, Attributes, Attributes>;
     highlightedItem: string | null;
     onClickNode: (id: string) => void;
     onClickEdge: (id: string) => void;
@@ -54,7 +54,7 @@ const SigmaChart = forwardRef(function SigmaChart(
         handleContextMenu,
         showNodeLabels = true,
         showEdgeLabels = true,
-    }: Partial<SigmaChartProps>,
+    }: SigmaChartProps,
     ref
 ) {
     const theme = useTheme();
@@ -73,7 +73,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                     width: '100%',
                     background: theme.palette.neutral.primary,
                 }}
-                graph={graph || MultiDirectedGraph}
+                graph={graph}
                 settings={{
                     nodeProgramClasses: {
                         combined: getNodeCombinedProgram(),
