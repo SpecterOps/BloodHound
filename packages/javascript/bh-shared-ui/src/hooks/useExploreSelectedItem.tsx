@@ -27,12 +27,14 @@ export const useExploreSelectedItem = () => {
     /** Set the selected node or edge. The most recently selected item will stay highlighted */
     const setSelectedItem = useCallback(
         (itemId: string) => {
-            setExploreParams({
-                expandedPanelSections: null,
-                selectedItem: itemId,
-            });
+            if (itemId !== selectedItem) {
+                setExploreParams({
+                    expandedPanelSections: null,
+                    selectedItem: itemId,
+                });
+            }
         },
-        [setExploreParams]
+        [selectedItem, setExploreParams]
     );
 
     const selectedItemType = useMemo(

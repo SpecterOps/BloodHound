@@ -56,7 +56,7 @@ export default function drawLabel(context: CanvasRenderingContext2D, data: Graph
     context.fillRect(...labelbounds);
 
     context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
-    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, data.y + size / 3);
+    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
 
     context.globalAlpha = 1;
 }
