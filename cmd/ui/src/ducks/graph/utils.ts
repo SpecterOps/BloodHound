@@ -29,14 +29,6 @@ export const MAX_CAMERA_RATIO = 15;
  */
 export const MOUSE_BUTTON_PRIMARY = 0;
 
-/** Distance cursor must move before drag starts */
-export const DRAG_DISTANCE_THRESHOLD = 10;
-
-export const getDistanceFromNode = (node: Attributes, position: Coordinates): number => {
-    const { x, y } = getNodeOffset(node, position);
-    return Math.sqrt(x * x + y * y);
-};
-
 /**
  * Return coordinates representing the offset between a node's location and a position.
  *

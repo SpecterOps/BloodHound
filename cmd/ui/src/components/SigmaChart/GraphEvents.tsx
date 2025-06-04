@@ -15,9 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRegisterEvents, useSetSettings, useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
 import type { Attributes } from 'graphology-types';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useState } from 'react';
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
@@ -72,7 +71,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -186,12 +184,10 @@ export const GraphEvents = forwardRef(function GraphEvents(
                     });
                 }
             },
-            mouseup: (event) => {
-                if (!draggedNode) {
-                    return;
+            mouseup: () => {
+                if (draggedNode) {
+                    setDraggedMeta(null);
                 }
-
-                setDraggedMeta(null);
             },
             mousemovebody: (event) => {
                 if (draggedNode) {
@@ -225,9 +221,26 @@ export const GraphEvents = forwardRef(function GraphEvents(
             updated: () => sigma.refresh(),
             clickStage: () => onClickStage?.(),
         });
-    }, [draggedNode, onClickNode, onClickStage, onRightClickNode, registerEvents, selectedItem, sigma, sigmaContainer]);
+    }, [
+        draggedMeta?.id,
+        draggedMeta?.offset.x,
+        draggedMeta?.offset.y,
+        draggedNode,
+        graph,
+        onClickNode,
+        onClickStage,
+        onRightClickNode,
+        registerEvents,
+        sigma,
+        sigmaContainer,
+    ]);
 
-    useEffect(() => {
+    // Toggle off edge labels when dragging a node to avoid performance hit
+    useLayoutEffect(() => {
+        setSettings({ renderEdgeLabels: draggedNode ? false : showEdgeLabels });
+    }, [draggedNode, setSettings, showEdgeLabels]);
+
+    useLayoutEffect(() => {
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
@@ -257,17 +270,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         });
     }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
 
-    // Toggle off edge labels when dragging a node to avoid performance hit
-    useEffect(() => {
-        // setTimeouts are needed to overcome race condition between mouseup and draggedNode update
-        if (draggedNode !== null) {
-            setTimeout(() => setSettings({ renderEdgeLabels: false }), 50);
-        } else {
-            setTimeout(() => setSettings({ renderEdgeLabels: showEdgeLabels }), 50);
-        }
-    }, [draggedNode]);
-
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (sigmaChartRef?.current) {
             if (exploreLayout === 'sequential') {
                 sigmaChartRef?.current?.runSequentialLayout();
@@ -281,7 +284,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         }
     }, [sigma, exploreLayout, sigmaChartRef]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setSettings({
             renderLabels: showNodeLabels,
             renderEdgeLabels: showEdgeLabels,
