@@ -35,19 +35,19 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
+import { setExploreLayout } from 'src/ducks/global/actions';
+import { ExploreLayoutOptions } from 'src/ducks/global/types';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
-import { useAppSelector } from 'src/store';
+import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
-const layoutOptions = ['sequential', 'standard', 'table'] as const;
-type LayoutOption = (typeof layoutOptions)[number];
-
 const GraphView: FC = () => {
     /* Hooks */
+    const dispatch = useAppDispatch();
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
@@ -55,10 +55,10 @@ const GraphView: FC = () => {
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout) || 'sequential';
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-    const [selectedLayout, setSelectedLayout] = useState<LayoutOption>('sequential');
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
@@ -115,8 +115,9 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleLayoutChange = (layout: LayoutOption) => {
-        setSelectedLayout(layout);
+    const handleLayoutChange = (layout: ExploreLayoutOptions) => {
+        dispatch(setExploreLayout(layout));
+
         if (layout === 'standard') {
             sigmaChartRef.current?.runStandardLayout();
         } else if (layout === 'sequential') {
@@ -145,8 +146,8 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
-                    layoutOptions={layoutOptions}
-                    selectedLayout={selectedLayout}
+                    layoutOptions={['standard', 'sequential', 'table'] as const}
+                    selectedLayout={exploreLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
                     onToggleNodeLabels={toggleShowNodeLabels}
@@ -155,6 +156,10 @@ const GraphView: FC = () => {
                     jsonData={exportJsonData}
                     onReset={() => sigmaChartRef.current?.resetCamera()}
                     currentNodes={currentNodes}
+                    onSearchedNodeClick={(node) => {
+                        setSelectedItem(node.id);
+                        sigmaChartRef?.current?.zoomTo(node.id);
+                    }}
                 />
             </div>
             <GraphItemInformationPanel />
@@ -162,7 +167,7 @@ const GraphView: FC = () => {
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
             <ExploreTable
-                open={selectedLayout === 'table'}
+                open={exploreLayout === 'table'}
                 onClose={() => {
                     handleLayoutChange('sequential');
 
