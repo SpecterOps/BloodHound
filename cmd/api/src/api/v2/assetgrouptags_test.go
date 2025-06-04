@@ -2204,3 +2204,101 @@ func TestResources_PreviewSelectors(t *testing.T) {
 			},
 		})
 }
+
+func TestResources_DeleteAssetGroupTag(t *testing.T) {
+	var (
+		mockCtrl       = gomock.NewController(t)
+		mockDB         = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphQuery = mocks_graph.NewMockGraph(mockCtrl)
+		mockGraphDB    = graphmocks.NewMockDatabase(mockCtrl)
+		resourcesInst  = v2.Resources{
+			DB:         mockDB,
+			Graph:      mockGraphDB,
+			GraphQuery: mockGraphQuery,
+		}
+		user    = setupUser()
+		userCtx = setupUserCtx(user)
+	)
+
+	defer mockCtrl.Finish()
+
+	apitest.
+		NewHarness(t, resourcesInst.DeleteAssetGroupTag).
+		Run([]apitest.Case{
+			{
+				Name: "UnableToGetUser",
+				Input: func(input *apitest.Input) {
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "unknown user")
+				},
+			},
+			{
+				Name: "InvalidAssetGroupTagID",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "non-numeric")
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, api.ErrorResponseDetailsIDMalformed)
+				},
+			},
+			{
+				Name: "NonExistentAssetGroupTagId",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1234")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{ID: 1}, database.ErrNotFound).Times(1)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNotFound)
+					apitest.BodyContains(output, api.ErrorResponseDetailsResourceNotFound)
+				},
+			},
+			{
+				Name: "DatabaseError",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{ID: 1}, nil)
+					mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any())
+					mockDB.EXPECT().DeleteAssetGroupTag(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(errors.New("failure"))
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, api.ErrorResponseDetailsInternalServerError)
+				},
+			},
+			{
+				Name: "Success",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.SetURLVar(input, api.URIPathVariableAssetGroupTagID, "1")
+				},
+				Setup: func() {
+					value, _ := types.NewJSONBObject(map[string]any{"enabled": true})
+					mockDB.EXPECT().
+						GetConfigurationParameter(gomock.Any(), gomock.Any()).
+						Return(appcfg.Parameter{Key: appcfg.ScheduledAnalysis, Value: value}, nil).Times(1)
+					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
+						Return(model.AssetGroupTag{ID: 1}, nil).Times(1)
+					mockGraphDB.EXPECT().WriteTransaction(gomock.Any(), gomock.Any())
+					mockDB.EXPECT().
+						DeleteAssetGroupTag(gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusNoContent)
+				},
+			},
+		})
+}
