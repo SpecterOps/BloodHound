@@ -24,11 +24,11 @@ import (
 )
 
 type SearchTierNodesCriteria struct {
-	PrimaryTierKind          graph.Kind
-	SearchTierNodes          graph.Criteria
-	SearchTierNodesRel       graph.Criteria
-	SearchPrimaryTierNode    graph.Criteria
-	SearchPrimaryTierNodeRel graph.Criteria
+	PrimaryTierKind           graph.Kind
+	SearchTierNodes           graph.Criteria
+	SearchTierNodesRel        graph.Criteria
+	SearchPrimaryTierNodes    graph.Criteria
+	SearchPrimaryTierNodesRel graph.Criteria
 }
 
 func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
