@@ -17,9 +17,9 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/doodleui';
 import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppIcon } from '../../../../components/AppIcon';
-import { apiClient, cn } from '../../../../utils';
+import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../utils';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
@@ -30,7 +30,7 @@ type SelectorListProps = {
 };
 
 const SelectorList: React.FC<SelectorListProps> = ({ tagId, memberId }) => {
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
     const { labelId } = useParams();
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
 

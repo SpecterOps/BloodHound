@@ -963,6 +963,13 @@ GroupScope: types.#StringEnum & {
 	representation: "groupscope"
 }
 
+NetBIOS: types.#StringEnum & {
+	symbol:         "NetBIOS"
+	schema:         "ad"
+	name:           "NetBIOS"
+	representation: "netbios"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1093,7 +1100,8 @@ Properties: [
 	UseMachineID,
 	ClientAllowedNTLMServers,
 	Transitive,
-	GroupScope
+	GroupScope,
+	NetBIOS,
 ]
 
 // Kinds
@@ -1600,6 +1608,12 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+
+HasTrustKeys: types.#Kind & {
+	symbol: "HasTrustKeys"
+	schema: "active_directory"
+}
+
 ClaimSpecialIdentity: types.#Kind & {
 	symbol: "ClaimSpecialIdentity"
 	schema: "active_directory"
@@ -1686,7 +1700,8 @@ RelationshipKinds: [
 	OwnsRaw,
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS
+	CoerceAndRelayNTLMToLDAPS,
+	HasTrustKeys,
 ]
 
 // ACL Relationships
@@ -1772,7 +1787,8 @@ SharedRelationshipKinds: [
 	OwnsLimitedRights,
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS
+	CoerceAndRelayNTLMToLDAPS,
+	HasTrustKeys,
 ]
 
 // Edges that are used during inbound traversal

@@ -150,6 +150,7 @@ export enum ActiveDirectoryRelationshipKind {
     ClaimSpecialIdentity = 'ClaimSpecialIdentity',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
+    HasTrustKeys = 'HasTrustKeys',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -313,6 +314,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
+        case ActiveDirectoryRelationshipKind.HasTrustKeys:
+            return 'HasTrustKeys';
         default:
             return undefined;
     }
@@ -466,6 +469,7 @@ export enum ActiveDirectoryKindProperties {
     ClientAllowedNTLMServers = 'clientallowedntlmservers',
     Transitive = 'transitive',
     GroupScope = 'groupscope',
+    NetBIOS = 'netbios',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -729,6 +733,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Transitive';
         case ActiveDirectoryKindProperties.GroupScope:
             return 'Group Scope';
+        case ActiveDirectoryKindProperties.NetBIOS:
+            return 'NetBIOS';
         default:
             return undefined;
     }
@@ -785,6 +791,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

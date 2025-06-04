@@ -104,6 +104,7 @@ import GetChangesAll from './GetChangesAll/GetChangesAll';
 import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HasTrustKeys from './HasTrustKeys/HasTrustKeys';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import ManageCA from './ManageCA/ManageCA';
@@ -266,6 +267,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
+    HasTrustKeys: HasTrustKeys,
 };
 
 export default EdgeInfoComponents;
