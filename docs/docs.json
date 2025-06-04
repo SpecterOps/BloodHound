@@ -32,7 +32,8 @@
                 "group": "Quickstart",
                 "pages": [
                   "get-started/quickstart/enterprise-quickstart",
-                  "get-started/quickstart/community-edition-quickstart"
+                  "get-started/quickstart/community-edition-quickstart",
+                  "get-started/quickstart/ce-ingest-sample-data"
                 ]
               },
               {
@@ -321,6 +322,7 @@
                   "resources/edges/gp-link",
                   "resources/edges/has-session",
                   "resources/edges/has-sid-history",
+                  "resources/edges/has-trust-keys",
                   "resources/edges/hosts-ca-service",
                   "resources/edges/issued-signed-by",
                   "resources/edges/local-to-computer",
