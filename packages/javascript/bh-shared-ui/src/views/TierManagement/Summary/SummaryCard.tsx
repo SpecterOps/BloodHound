@@ -18,12 +18,12 @@ import { Button, Card } from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { AssetGroupTagTypes, AssetGroupTagTypeTier } from 'js-client-library';
 
 type SummaryCardProps = {
     title: string;

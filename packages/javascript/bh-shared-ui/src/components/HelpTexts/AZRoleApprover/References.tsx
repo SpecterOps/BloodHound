@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,21 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './abbreviatedNumber';
-export * from './api';
-export * from './colors';
-export * from './compatibility';
-export * from './content';
-export * from './copyToClipboard';
-export * from './datetime';
-export * from './entityInfoDisplay';
-export * from './exportGraphData';
-export * from './icons';
-export * from './parseItemId';
-export * from './passwd';
-export * from './permissions';
-export * from './queries';
-export * from './searchParams';
-export * from './testHelpers';
-export * from './theme';
-export * from './user';
+import { Box, Link } from '@mui/material';
+import { FC } from 'react';
+
+const References: FC = () => {
+    return (
+        <Box sx={{ overflowX: 'auto' }}>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/graph/api/unifiedrolemanagementpolicyassignment-get?view=graph-rest-1.0&tabs=http'>
+                Unified Role Management Policy Assignment - Get - REST API (Azure Authorization)
+            </Link>
+        </Box>
+    );
+};
+
+export default References;
