@@ -40,8 +40,8 @@ interface SigmaChartRef {
 }
 
 interface GraphEventProps {
+    highlightedItem: string | null;
     onClickNode?: (id: string) => void;
-    onClickEdge?: (id: string, relatedFindingType?: string | null) => void;
     onClickStage?: () => void;
     onRightClickNode?: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
@@ -62,8 +62,8 @@ type DragMetadata = {
 
 export const GraphEvents = forwardRef(function GraphEvents(
     {
+        highlightedItem,
         onClickNode,
-        onClickEdge,
         onClickStage,
         onRightClickNode,
         showNodeLabels = true,
@@ -72,7 +72,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ref
 ) {
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    const { cancelHighlight, highlightedItem, selectedItem } = useExploreSelectedItem();
+    const { selectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
@@ -223,23 +223,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
             // Reducers must run again on camera state update to position edge labels correctly
             // Despite the name, this event only triggers on camera update, not any Sigma update
             updated: () => sigma.refresh(),
-            clickStage: () => {
-                cancelHighlight();
-                onClickStage?.();
-            },
+            clickStage: () => onClickStage?.(),
         });
-    }, [
-        cancelHighlight,
-        draggedNode,
-        onClickEdge,
-        onClickNode,
-        onClickStage,
-        onRightClickNode,
-        registerEvents,
-        selectedItem,
-        sigma,
-        sigmaContainer,
-    ]);
+    }, [draggedNode, onClickNode, onClickStage, onRightClickNode, registerEvents, selectedItem, sigma, sigmaContainer]);
 
     useEffect(() => {
         setSettings({
