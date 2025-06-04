@@ -22,9 +22,10 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@bloodhoundenterprise/doodleui';
+import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { getTagUrlValue } from '../utils';
+import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -33,15 +34,20 @@ const Save: FC = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const showSelectorForm = location.pathname.includes('selector');
+    const tagValue = getTagUrlValue(labelId);
+    const capitalizedTagValue = capitalize(tagValue);
+    const captitalizedPluralTagValue = capitalizedTagValue + 's';
 
     return (
         <div>
-            {/* TODO: REMOVE HIDDEN CLASS WHEN TAG FORM IS FUNCTIONAL */}
-            <Breadcrumb className='mb-2 hidden'>
+            <Breadcrumb className='my-6'>
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
-                            <Link to={`/zone-management/details`}>Tiers</Link>
+                            <Link
+                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`}>
+                                {captitalizedPluralTagValue}
+                            </Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
@@ -49,8 +55,8 @@ const Save: FC = () => {
                         <>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}`}>
-                                        Tier Details
+                                    <Link to={`/zone-management/save/${tagValue}/${tagId}`}>
+                                        {`${capitalizedTagValue} Details`}
                                     </Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
@@ -62,7 +68,7 @@ const Save: FC = () => {
                     ) : (
                         <>
                             <BreadcrumbItem>
-                                <BreadcrumbPage>Tier Details</BreadcrumbPage>
+                                <BreadcrumbPage>{`${capitalizedTagValue} Details`}</BreadcrumbPage>
                             </BreadcrumbItem>
                         </>
                     )}

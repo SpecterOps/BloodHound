@@ -61,8 +61,8 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                             `/zone-management/${ROUTE_ZONE_MANAGEMENT_DETAILS}/${type === AssetGroupTagTypeTier ? 'tier' : 'label'}/${id}`
                         );
                     }}
-                    className=' flex items-center space-x-2 hover:underline'>
-                    <FontAwesomeIcon icon={faSquarePlus as IconProp} />
+                    className='flex items-center space-x-2 hover:underline'>
+                    <FontAwesomeIcon icon={faSquarePlus as IconProp} size='xl' />
                     <p>View Details</p>
                 </Button>
             </div>

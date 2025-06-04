@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { createBrowserHistory } from 'history';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
@@ -45,7 +44,6 @@ const getListScalar = (windowHeight: number) => {
 const SeedSelection: FC<{
     onSubmit: SubmitHandler<SelectorFormInputs>;
 }> = ({ onSubmit }) => {
-    const history = createBrowserHistory();
     const navigate = useAppNavigate();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
@@ -129,7 +127,7 @@ const SeedSelection: FC<{
                                     setDeleteDialogOpen(true);
                                 }}
                             />
-                            <Button variant={'secondary'} onClick={history.back}>
+                            <Button variant={'secondary'} onClick={() => navigate(-1)}>
                                 Cancel
                             </Button>
                             <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
