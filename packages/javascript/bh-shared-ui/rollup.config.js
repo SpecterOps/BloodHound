@@ -40,6 +40,7 @@ export default {
         '@emotion/styled',
         '@faker-js/faker',
         '@fortawesome/fontawesome-svg-core',
+        '@fortawesome/free-regular-svg-icons',
         '@fortawesome/free-solid-svg-icons',
         '@fortawesome/react-fontawesome',
         '@mui/material',
