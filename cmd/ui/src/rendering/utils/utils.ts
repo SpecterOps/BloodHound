@@ -134,7 +134,7 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
 /**
  * Reusable method to prevent defaults for mouse move, right click, and double click
  *
- * @param event event used to cancel defaults
+ * @param event Sigma or mouse event object used to cancel defaults
  */
 export const preventAllDefaults = (event: SigmaNodeEventPayload | MouseCoords) => {
     event.preventSigmaDefault();
