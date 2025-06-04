@@ -124,7 +124,6 @@ export type NodeParams = {
     label?: string;
     glyphs?: Glyph[];
     forceLabel?: boolean;
-    hidden?: boolean;
 } & ThemedLabels;
 
 export interface Index<T> {
