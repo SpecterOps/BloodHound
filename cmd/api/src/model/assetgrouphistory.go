@@ -67,3 +67,16 @@ func (s AssetGroupHistory) AuditData() AuditData {
 		"note":               s.Note,
 	}
 }
+
+func (s AssetGroupHistory) ValidFilters() map[string][]FilterOperator {
+	return map[string][]FilterOperator{
+		"created_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"actor":              {Equals, NotEquals, ApproximatelyEquals},
+		"email":              {Equals, NotEquals, ApproximatelyEquals},
+		"action":             {Equals, NotEquals, ApproximatelyEquals},
+		"target":             {Equals, NotEquals, ApproximatelyEquals},
+		"asset_group_tag_id": {Equals, NotEquals},
+		"environment_id":     {Equals, NotEquals, ApproximatelyEquals},
+		"note":               {Equals, NotEquals, ApproximatelyEquals},
+	}
+}

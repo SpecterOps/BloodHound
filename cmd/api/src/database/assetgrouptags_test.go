@@ -71,7 +71,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		require.Equal(t, seed.Value, selector.Seeds[idx].Value)
 	}
 
-	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{})
 	require.NoError(t, err)
 	require.Len(t, history, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
@@ -224,7 +224,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
 
 		// verify history record was also created
-		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{})
 		require.NoError(t, err)
 		require.Len(t, history, 1)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -1000,7 +1000,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	history, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{})
 	require.NoError(t, err)
 	require.Len(t, history, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
@@ -1014,7 +1014,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		require.EqualError(t, err, "entity not found")
 
 		// verify a history record was created for the delete action
-		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{})
 		require.NoError(t, err)
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)

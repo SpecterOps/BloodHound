@@ -1072,18 +1072,18 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(ctx, assetGroupID, 
 }
 
 // GetAssetGroupHistoryRecords mocks base method.
-func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
+func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupHistory, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", ctx)
+	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", ctx, sqlFilter)
 	ret0, _ := ret[0].([]model.AssetGroupHistory)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupHistoryRecords indicates an expected call of GetAssetGroupHistoryRecords.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(ctx any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupHistoryRecords(ctx, sqlFilter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupHistoryRecords", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupHistoryRecords), ctx, sqlFilter)
 }
 
 // GetAssetGroupSelector mocks base method.

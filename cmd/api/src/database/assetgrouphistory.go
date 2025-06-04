@@ -27,7 +27,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupHistory, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,7 +35,22 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
-	var result []model.AssetGroupHistory
-	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s ORDER BY id ASC", (model.AssetGroupHistory{}).TableName())).Find(&result))
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupHistory, error) {
+	var historyRecs []model.AssetGroupHistory
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = " AND " + sqlFilter.SQLString
+	}
+
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY id ASC",
+			(model.AssetGroupHistory{}).TableName(),
+			sqlFilter.SQLString,
+		),
+		sqlFilter.Params...,
+	).Find(&historyRecs); result.Error != nil {
+		return []model.AssetGroupHistory{{}}, CheckError(result)
+	}
+	return historyRecs, nil
 }

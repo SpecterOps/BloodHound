@@ -41,18 +41,21 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
-	require.NoError(t, err)
+	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
+		err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+		require.NoError(t, err)
 
-	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
-	require.NoError(t, err)
-	require.Len(t, record, 1)
-	require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
-	require.Equal(t, testActor.ID.String(), record[0].Actor)
-	require.Equal(t, testActor.EmailAddress, record[0].Email)
-	require.Equal(t, testTarget, record[0].Target)
-	require.Equal(t, testAssetGroupTag, record[0].AssetGroupTagId)
-	require.Equal(t, null.String{}, record[0].EnvironmentId)
-	require.Equal(t, null.String{}, record[0].Note)
-	require.False(t, record[0].CreatedAt.IsZero())
+		record, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{})
+		require.NoError(t, err)
+		require.Len(t, record, 1)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
+		require.Equal(t, testActor.ID.String(), record[0].Actor)
+		require.Equal(t, testActor.EmailAddress, record[0].Email)
+		require.Equal(t, testTarget, record[0].Target)
+		require.Equal(t, testAssetGroupTag, record[0].AssetGroupTagId)
+		require.Equal(t, null.String{}, record[0].EnvironmentId)
+		require.Equal(t, null.String{}, record[0].Note)
+		require.False(t, record[0].CreatedAt.IsZero())
+	})
+
 }
