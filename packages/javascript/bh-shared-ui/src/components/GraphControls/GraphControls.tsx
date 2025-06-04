@@ -64,14 +64,14 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
     const currentSearchAnchorElement = useRef(null);
 
     const handleToggleAllLabels = () => {
-        if (!showNodeLabels || !showEdgeLabels) {
-            // Show All
-            if (!showNodeLabels) onToggleNodeLabels();
-            if (!showEdgeLabels) onToggleEdgeLabels();
-        } else {
+        if (showNodeLabels && showEdgeLabels) {
             // Hide All
             onToggleNodeLabels();
             onToggleEdgeLabels();
+        } else {
+            // Show All
+            if (!showNodeLabels) onToggleNodeLabels();
+            if (!showEdgeLabels) onToggleEdgeLabels();
         }
     };
 
