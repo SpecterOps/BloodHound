@@ -236,12 +236,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         sigmaContainer,
     ]);
 
-    // Toggle off edge labels when dragging a node to avoid performance hit
-    useLayoutEffect(() => {
-        setSettings({ renderEdgeLabels: draggedNode ? false : showEdgeLabels });
-    }, [draggedNode, setSettings, showEdgeLabels]);
-
-    useLayoutEffect(() => {
+    useEffect(() => {
         setSettings({
             nodeReducer: (node, data) => {
                 const camera = sigma.getCamera();
@@ -270,6 +265,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
         });
     }, [curvedEdgeReducer, highlightedItem, selfEdgeReducer, setSettings, sigma]);
+
+    // Toggle off edge labels when dragging a node to avoid performance hit
+    useLayoutEffect(() => {
+        setSettings({ renderEdgeLabels: draggedNode ? false : showEdgeLabels });
+    }, [draggedNode, setSettings, showEdgeLabels]);
 
     useLayoutEffect(() => {
         if (sigmaChartRef?.current) {

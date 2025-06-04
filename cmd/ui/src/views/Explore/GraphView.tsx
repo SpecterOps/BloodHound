@@ -94,9 +94,11 @@ const GraphView: FC = () => {
         if (selectedItem && selectedItem !== highlightedItem) {
             setHighlightedItem(selectedItem);
         }
-    }, [highlightedItem, selectedItem]);
+        // NOTE: Do not include `highlightedItem` as it will override ability to unselect highlights
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItem]);
 
-    if (isLoading) {
+    if (isLoading || !graphologyGraph) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />
