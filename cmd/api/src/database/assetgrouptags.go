@@ -510,7 +510,6 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.D
 		}
 
 		if err := s.AppendAuditLog(ctx, updateEntry); err != nil {
-			fmt.Printf("err: %v", err)
 			return fmt.Errorf("could not append intent to audit log: %w", err)
 		}
 
