@@ -68,6 +68,8 @@ const mockData: AssetGroupTagsListItem[] = [
     },
 ];
 
+const expectedCount = mockData.filter((item) => item.type === 1).length;
+
 describe('SummaryList', () => {
     it('shows skeletons when loading', () => {
         const query = {
@@ -77,7 +79,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('tier-management_summary-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('tier-management_tiers-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('shows an error message when query fails', async () => {
@@ -100,8 +102,8 @@ describe('SummaryList', () => {
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
         const cards = await screen.findAllByTestId('tier-management_summary-list_card');
-        expect(cards[0]).toHaveTextContent('Mock Tier 1');
-        expect(cards[1]).toHaveTextContent('Mock Tier 2');
+        expect(cards[0]).toHaveTextContent('Mock Tier 2');
+        expect(cards[1]).toHaveTextContent('Mock Tier 1');
     });
 
     it('renders a down arrow only for items of type 1', async () => {
@@ -112,7 +114,8 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Labels' selected='' listQuery={query} onSelect={() => {}} />);
 
-        expect(await screen.findByTestId('tier-management_summary-list_down-arrow')).toBeInTheDocument();
+        const arrows = await screen.findAllByTestId('tier-management_summary-list_down-arrow');
+        expect(arrows).toHaveLength(expectedCount);
     });
 
     it('calls onSelect when a card is clicked', async () => {

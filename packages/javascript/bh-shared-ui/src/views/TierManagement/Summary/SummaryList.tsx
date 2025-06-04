@@ -1,9 +1,9 @@
 import { AssetGroupTagsListItem } from 'js-client-library';
-import React, { FC } from 'react';
+import React, { CSSProperties, FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import DownArrow from '../../../components/AppIcon/Icons/DownArrow';
 import { cn } from '../../../utils';
-import { itemSkeletons } from '../Details/utils';
+import { itemSkeletons } from '../utils';
 import SummaryCard from './SummaryCard';
 
 type SummaryListProps = {
@@ -20,7 +20,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                 <ul>
                     {listQuery.isLoading ? (
                         itemSkeletons.map((skeleton, index) => {
-                            return skeleton(title, index);
+                            return skeleton(title, index, 'h-32');
                         })
                     ) : listQuery.isError ? (
                         <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
