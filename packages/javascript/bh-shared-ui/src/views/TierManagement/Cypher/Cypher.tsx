@@ -17,65 +17,41 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@bloodhoundenterprise/doodleui';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { AssetGroupTagNode, SeedTypeCypher } from 'js-client-library';
-import { SelectorSeedRequest } from 'js-client-library/dist/requests';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SeedTypeCypher } from 'js-client-library';
+import { FC, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
-import { useLocation, useParams } from 'react-router-dom';
 import { graphSchema } from '../../../constants';
 import { encodeCypherQuery } from '../../../hooks';
 import { apiClient, cn } from '../../../utils';
+import SelectorFormContext from '../Save/SelectorForm/SelectorFormContext';
+
+const emptyFunction = () => {};
 
 export const Cypher: FC<{
     preview?: boolean;
     initialInput?: string;
-    setSeedPreviewResults?: (nodes: AssetGroupTagNode[] | null) => void;
-    setSeeds?: (seeds: SelectorSeedRequest[]) => void;
-}> = ({ preview = true, initialInput = '', setSeedPreviewResults, setSeeds }) => {
-    const { selectorId } = useParams();
-    const location = useLocation();
+}> = ({ preview = true, initialInput = '' }) => {
     const [cypherQuery, setCypherQuery] = useState(initialInput);
     const [stalePreview, setStalePreview] = useState(false);
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
-    const previewQuery = useQuery({
-        queryKey: ['tier-management', 'preview-selectors', SeedTypeCypher],
-        queryFn: ({ signal }) =>
-            apiClient
-                .assetGroupTagsPreviewSelectors({ seeds: [{ type: SeedTypeCypher, value: cypherQuery }] }, { signal })
-                .then((res) => res.data.data['members']),
-        retry: false,
-        enabled: selectorId !== undefined && location.pathname.includes('save'),
-        refetchOnWindowFocus: false,
-    });
+    const dispatch = useContext(SelectorFormContext).dispatch || emptyFunction;
 
     const kindsQuery = useQuery({
         queryKey: ['graph-kinds'],
         queryFn: ({ signal }) => apiClient.getKinds({ signal }).then((res) => res.data.data.kinds),
     });
 
-    useEffect(() => {
-        if (!setSeedPreviewResults) {
-            return;
-        }
-
-        setSeedPreviewResults(previewQuery.data ?? null);
-    }, [previewQuery.data, setSeedPreviewResults]);
-
     const schema = useCallback(() => graphSchema(kindsQuery.data), [kindsQuery.data]);
 
     const handleCypherSearch = useCallback(() => {
-        if (preview) {
-            return;
-        }
-        if (setSeeds) {
-            setSeeds([{ type: SeedTypeCypher, value: cypherQuery }]);
-        }
+        if (preview) return;
+
         if (cypherQuery) {
-            previewQuery.refetch();
             setStalePreview(false);
+            dispatch({ type: 'set-seeds', seeds: [{ type: SeedTypeCypher, value: cypherQuery }] });
         }
-    }, [previewQuery, cypherQuery, preview, setSeeds]);
+    }, [cypherQuery, preview, dispatch]);
 
     const onValueChanged = useCallback(
         (value: string) => {

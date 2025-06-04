@@ -16,71 +16,60 @@
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
 import { createBrowserHistory } from 'history';
-import { SeedTypeCypher, SeedTypeObjectId } from 'js-client-library';
-import { RequestOptions } from 'js-client-library/dist/requests';
-import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { SeedTypeObjectId } from 'js-client-library';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
-import { useMutation, useQueryClient } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
-import { AssetGroupSelectorObjectSelect, DeleteConfirmationDialog } from '../../../../components';
+import { useQuery } from 'react-query';
+import { useParams } from 'react-router-dom';
+import { DeleteConfirmationDialog } from '../../../../components';
 import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
+import { useDebouncedValue } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
-import { apiClient, cn } from '../../../../utils';
+import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import { getTagUrlValue } from '../../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
+import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
-import { DeleteSelectorParams, SelectorFormInputs } from './types';
+import { useDeleteSelector } from './hooks';
+import { SelectorFormInputs } from './types';
 import { handleError } from './utils';
 
-const deleteSelector = async (ids: DeleteSelectorParams, options?: RequestOptions) =>
-    await apiClient.deleteAssetGroupTagSelector(ids.tagId, ids.selectorId, options).then((res) => res.data.data);
-
-const useDeleteSelector = (tagId: string | number | undefined) => {
-    const queryClient = useQueryClient();
-    return useMutation(deleteSelector, {
-        onSettled: () => {
-            queryClient.invalidateQueries(['tier-management', 'tags', tagId, 'selectors']);
-        },
-    });
-};
-
-const getListScalar = (windoHeight: number) => {
-    if (windoHeight > 1080) return 18;
-    if (1080 >= windoHeight && windoHeight > 900) return 14;
-    if (900 >= windoHeight) return 10;
+const getListScalar = (windowHeight: number) => {
+    if (windowHeight > 1080) return 18;
+    if (1080 >= windowHeight && windowHeight > 900) return 14;
+    if (900 >= windowHeight) return 10;
     return 8;
 };
 
 const SeedSelection: FC<{
     onSubmit: SubmitHandler<SelectorFormInputs>;
 }> = ({ onSubmit }) => {
+    const history = createBrowserHistory();
+    const navigate = useAppNavigate();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
-    const { seeds, setSeeds, results, setResults, selectorType, selectorQuery } = useContext(SelectorFormContext);
+    const { addNotification } = useNotifications();
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+    const { seeds, selectorType, selectorQuery } = useContext(SelectorFormContext);
     const { handleSubmit, register } = useFormContext<SelectorFormInputs>();
 
-    const history = createBrowserHistory();
-    const navigate = useNavigate();
+    const previewQuery = useQuery({
+        queryKey: ['tier-management', 'preview-selectors', selectorType, seeds],
+        queryFn: async ({ signal }) => {
+            return apiClient
+                .assetGroupTagsPreviewSelectors({ seeds: seeds }, { signal })
+                .then((res) => res.data.data['members']);
+        },
+        retry: false,
+        refetchOnWindowFocus: false,
+        enabled: seeds.length > 0,
+    });
 
-    const { addNotification } = useNotifications();
-
-    const deleteSelectorMutation = useDeleteSelector(tagId);
-
-    const heightScalar = useRef(getListScalar(window.innerHeight));
-
-    useEffect(() => {
-        const updateHeightScalar = () => {
-            heightScalar.current = getListScalar(window.innerHeight);
-        };
-
-        window.addEventListener('resize', updateHeightScalar);
-        return () => window.removeEventListener('resize', updateHeightScalar);
-    }, []);
+    const deleteSelectorMutation = useDeleteSelector();
 
     const handleDeleteSelector = useCallback(async () => {
         try {
@@ -89,18 +78,29 @@ const SeedSelection: FC<{
 
             await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
+            setDeleteDialogOpen(false);
+
             navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
         } catch (error) {
             handleError(error, 'deleting', addNotification);
         }
-
-        setDeleteDialogOpen(false);
-    }, [tagId, selectorId, navigate, deleteSelectorMutation, addNotification]);
+    }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
+    const [heightScalar, setHeightScalar] = useState(getListScalar(window.innerHeight));
+
+    const updateHeightScalar = useDebouncedValue(() => setHeightScalar(getListScalar(window.innerHeight)), 100);
+
+    useEffect(() => {
+        window.addEventListener('resize', updateHeightScalar);
+        return () => window.removeEventListener('resize', updateHeightScalar);
+    }, [updateHeightScalar]);
+
     if (selectorQuery.isLoading) return <Skeleton />;
     if (selectorQuery.isError) return <div>There was an error fetching the selector data</div>;
+
+    const firstSeed = seeds.values().next().value;
 
     return (
         <>
@@ -111,22 +111,11 @@ const SeedSelection: FC<{
                             'max-w-[42rem] max-md:w-96 max-lg:w-[28rem] max-xl:w-[36rem]':
                                 selectorType === SeedTypeObjectId,
                         })}>
-                        <Input {...register('seeds', { value: seeds })} className='hidden w-0' />
+                        <Input {...register('seeds', { value: Array.from(seeds) })} className='hidden w-0' />
                         {selectorType === SeedTypeObjectId ? (
-                            <AssetGroupSelectorObjectSelect
-                                seeds={seeds.filter((seed) => {
-                                    return seed.type === SeedTypeObjectId;
-                                })}
-                            />
+                            <ObjectSelect />
                         ) : (
-                            <Cypher
-                                preview={false}
-                                setSeedPreviewResults={setResults}
-                                setSeeds={setSeeds}
-                                initialInput={
-                                    seeds.length > 0 && seeds[0].type === SeedTypeCypher ? seeds[0].value : ''
-                                }
-                            />
+                            <Cypher preview={false} initialInput={firstSeed?.value} />
                         )}
                         <div className={cn('flex justify-end gap-6 mt-6 w-full')}>
                             <DeleteSelectorButton
@@ -153,11 +142,7 @@ const SeedSelection: FC<{
                         <span>Type</span>
                         <span className='ml-8'>Object Name</span>
                     </div>
-                    <VirtualizedNodeList
-                        nodes={results ? results : []}
-                        itemSize={46}
-                        heightScalar={heightScalar.current}
-                    />
+                    <VirtualizedNodeList nodes={previewQuery.data ?? []} itemSize={46} heightScalar={heightScalar} />
                 </CardContent>
             </Card>
             <DeleteConfirmationDialog
