@@ -25,6 +25,7 @@ import {
     AzureRelationshipKind,
     CommonKindProperties,
 } from './graphSchema';
+import { BaseGraphLayoutOptions, MappedStringLiteral } from './types';
 import { addOpacityToHex } from './utils/colors';
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
@@ -446,3 +447,15 @@ export const graphSchema = (labels: string[] | undefined) => {
 
     return schema;
 };
+
+export const baseGraphLayoutOptions = {
+    sequential: 'sequential',
+    standard: 'standard',
+    table: 'table',
+} satisfies MappedStringLiteral<BaseGraphLayoutOptions, BaseGraphLayoutOptions>;
+
+export const baseGraphLayouts = [
+    baseGraphLayoutOptions.sequential,
+    baseGraphLayoutOptions.standard,
+    baseGraphLayoutOptions.table,
+] as const;

@@ -16,10 +16,12 @@
 
 import { useTheme } from '@mui/material';
 import {
+    BaseGraphLayoutOptions,
     ExploreTable,
     GraphControls,
     GraphProgress,
     WebGLDisabledAlert,
+    baseGraphLayouts,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
@@ -36,7 +38,6 @@ import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout } from 'src/ducks/global/actions';
-import { ExploreLayoutOptions } from 'src/ducks/global/types';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -55,7 +56,7 @@ const GraphView: FC = () => {
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout) || 'sequential';
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -115,7 +116,13 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleLayoutChange = (layout: ExploreLayoutOptions) => {
+    const setAllNodesToHidden = (hidden: boolean) => {
+        graphologyGraph?.updateEachNodeAttributes((node, attr) => {
+            return { ...attr, hidden };
+        });
+    };
+
+    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
         dispatch(setExploreLayout(layout));
 
         if (layout === 'standard') {
@@ -123,9 +130,7 @@ const GraphView: FC = () => {
         } else if (layout === 'sequential') {
             sigmaChartRef.current?.runSequentialLayout();
         } else if (layout === 'table') {
-            graphologyGraph?.updateEachNodeAttributes((node, attr) => {
-                return { ...attr, hidden: true };
-            });
+            setAllNodesToHidden(true);
         }
     };
 
@@ -146,7 +151,7 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
-                    layoutOptions={['standard', 'sequential', 'table'] as const}
+                    layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
@@ -170,10 +175,7 @@ const GraphView: FC = () => {
                 open={exploreLayout === 'table'}
                 onClose={() => {
                     handleLayoutChange('sequential');
-
-                    graphologyGraph?.updateEachNodeAttributes((node, attr) => {
-                        return { ...attr, hidden: false };
-                    });
+                    setAllNodesToHidden(false);
                 }}
             />
         </div>

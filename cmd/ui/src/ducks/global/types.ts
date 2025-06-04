@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Notification } from 'bh-shared-ui';
+import { BaseGraphLayoutOptions, Notification } from 'bh-shared-ui';
 import { Environment } from 'js-client-library';
 import { SnackbarKey } from 'notistack';
 
@@ -43,12 +43,10 @@ export {
     GLOBAL_SET_EXPLORE_LAYOUT,
 };
 
-export type ExploreLayoutOptions = 'standard' | 'sequential' | 'table';
-
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
-    exploreLayout?: ExploreLayoutOptions;
+    exploreLayout: BaseGraphLayoutOptions;
 }
 
 export interface GlobalOptionsState {
@@ -83,7 +81,7 @@ export interface SetDarkModeAction {
 }
 export interface SetExploreLayoutAction {
     type: typeof GLOBAL_SET_EXPLORE_LAYOUT;
-    exploreLayout: ExploreLayoutOptions;
+    exploreLayout: BaseGraphLayoutOptions;
 }
 
 export type GlobalViewActionTypes =
