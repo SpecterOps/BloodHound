@@ -135,9 +135,15 @@ const Details: FC = () => {
                     <MembersList
                         itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
                         onClick={(id) => {
-                            navigate(
-                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
-                            );
+                            if (selectorId) {
+                                navigate(
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                );
+                            } else {
+                                navigate(
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/member/${id}`
+                                );
+                            }
                         }}
                         selected={memberId}
                     />

@@ -23,14 +23,18 @@ import {
     Input,
     Label,
     Skeleton,
-    Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagTypeLabel, AssetGroupTagTypeTier } from 'js-client-library';
+import {
+    AssetGroupTag,
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeTier,
+    UpdateAssetGroupTagRequest,
+} from 'js-client-library';
 import { FC, useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { Location, useLocation, useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
@@ -44,10 +48,44 @@ type TagFormInputs = {
     certificationRequired: boolean;
 };
 
+const MAX_NAME_LENGTH = 250;
+
+const formTitleFromPath = (labelId: string | undefined, tierId: string, location: Location): string => {
+    if (location.pathname.includes('save/label') && !labelId) return 'Create new Label';
+    if (location.pathname.includes('save/tier') && tierId === '') return 'Create new Tier';
+    if (location.pathname.includes('save/label') && labelId) return 'Edit Label Details';
+    if (location.pathname.includes('save/tier') && tierId !== '') return 'Edit Tier Details';
+
+    // We should never reach this default return
+    return 'Tag Details';
+};
+
+const showDeleteButton = (labelId: string | undefined, tierId: string) => {
+    if (tierId === '' && !labelId) return false;
+    if (labelId === OWNED_ID) return false;
+    if (tierId === TIER_ZERO_ID) return false;
+    return true;
+};
+
+const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
+    if (data === undefined) return formValues;
+
+    const workingCopy = { ...formValues };
+
+    const diffed: UpdateAssetGroupTagRequest = {};
+
+    if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
+    if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+    if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+
+    return diffed;
+};
+
 export const TagForm: FC = () => {
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
+    const location = useLocation();
 
     const { addNotification } = useNotifications();
 
@@ -57,6 +95,8 @@ export const TagForm: FC = () => {
         formState: { errors },
     } = useForm<TagFormInputs>();
 
+    const tagQuery = useAssetGroupTagInfo(tagId);
+
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
@@ -64,7 +104,7 @@ export const TagForm: FC = () => {
     const handleCreateTag = useCallback(
         async (formData: TagFormInputs) => {
             try {
-                await createTagMutation.mutateAsync({
+                const response = await createTagMutation.mutateAsync({
                     values: { ...formData, type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier },
                 });
 
@@ -72,20 +112,29 @@ export const TagForm: FC = () => {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
 
-                navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+                // The desired flow for the creation form is somewhat involved
+                // Upon creation of this tag the user should be moved to creating a selector for the newly created tag, e.g., /save/tier/<NEW_TIER_ID>/selector
+                // This means that we have to await for the ID of the new tag in order to go to the URL for creating a new selector associated with this tag
+                // In addition, once at the create selector form, the cancel button needs go back to the form for the newly created tag
+                // but the URL for creating a new tag does not have the recently created tag ID in the path, i.e., /save/tier vs /save/tier/<NEW_TIER_ID>
+                // that means the location history needs to be manipulated (replaced) in order to have that available once at the selector form
+                navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${response.tag.id}`, { replace: true });
+                navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${response.tag.id}/selector`);
             } catch (error) {
                 handleError(error, 'creating', getTagUrlValue(labelId), addNotification);
             }
         },
-        [labelId, tagId, navigate, createTagMutation, addNotification]
+        [labelId, navigate, createTagMutation, addNotification]
     );
 
     const handleUpdateTag = useCallback(
         async (formData: TagFormInputs) => {
             try {
+                const diffedValues = diffValues(tagQuery.data, formData);
+
                 await updateTagMutation.mutateAsync({
                     updatedValues: {
-                        ...formData,
+                        ...diffedValues,
                         type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
                     },
                     tagId,
@@ -104,7 +153,7 @@ export const TagForm: FC = () => {
                 handleError(error, 'updating', getTagUrlValue(labelId), addNotification);
             }
         },
-        [labelId, tagId, navigate, addNotification, updateTagMutation]
+        [labelId, tagId, navigate, addNotification, updateTagMutation, tagQuery.data]
     );
 
     const handleDeleteTag = useCallback(async () => {
@@ -119,7 +168,9 @@ export const TagForm: FC = () => {
                 }
             );
 
-            navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+            const tagValue = getTagUrlValue(labelId);
+
+            navigate(`/tier-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -136,22 +187,18 @@ export const TagForm: FC = () => {
         [tagId, handleCreateTag, handleUpdateTag]
     );
 
-    const tagQuery = useAssetGroupTagInfo(tagId);
-
     if (tagQuery.isLoading) return <Skeleton />;
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
-
-    const showDeleteButton = tagId && labelId ? tagId !== OWNED_ID : tagId !== TIER_ZERO_ID;
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Card className='min-w-96 w-[672px] p-3 mt-6'>
                 <CardHeader>
-                    <CardTitle>Tier Details</CardTitle>
+                    <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className='flex justify-between'>
-                        <span>Tier Information</span>
+                        <span>{`${labelId ? 'Label' : 'Tier'} Information`}</span>
                     </div>
                     <div onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6 mt-6'>
                         <div>
@@ -159,13 +206,20 @@ export const TagForm: FC = () => {
                             <Input
                                 id='name'
                                 type='text'
-                                {...register('name', { required: true, value: tagQuery.data?.name, maxLength: 250 })}
+                                {...register('name', {
+                                    required: `Please provide a name for the ${labelId ? 'Label' : 'Tier'}`,
+                                    value: tagQuery.data?.name,
+                                    maxLength: {
+                                        value: MAX_NAME_LENGTH,
+                                        message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
+                                    },
+                                })}
                                 className={
                                     'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
                                 }
                             />
                             {errors.name && (
-                                <p className='text-sm text-rose-700'>Please provide a name value for your tag</p>
+                                <p className='text-sm text-[#B44641] dark:text-[#E9827C]'>{errors.name.message}</p>
                             )}
                         </div>
                         <div>
@@ -181,28 +235,18 @@ export const TagForm: FC = () => {
                             />
                         </div>
                         <div className='hidden'>
-                            <Label htmlFor='certificationRequired'>Required Certificaiton</Label>
-                            <Switch
-                                id='certificationRequired'
-                                {...register('certificationRequired', {
-                                    value: tagQuery.data?.requireCertify || true,
-                                })}
-                                label='Enable this to mandate certification for all objects within this tier'
-                                defaultChecked></Switch>
-                        </div>
-                        <div className='hidden'>
                             <Label htmlFor='position'>Required Certificaiton</Label>
                             <Input
                                 id='position'
                                 type='number'
-                                {...register('position', { value: tagQuery.data?.position })}
+                                {...register('position', { value: tagQuery.data?.position || null })}
                             />
                         </div>
                     </div>
                 </CardContent>
             </Card>
             <div className='flex justify-end gap-6 mt-6 w-[672px]'>
-                {showDeleteButton && (
+                {showDeleteButton(labelId, tierId) && (
                     <Button variant={'text'} onClick={handleDeleteTag}>
                         <span>
                             <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
@@ -218,7 +262,7 @@ export const TagForm: FC = () => {
                     Cancel
                 </Button>
                 <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
-                    Save
+                    {tagId === '' ? 'Define Selector' : 'Save'}
                 </Button>
             </div>
         </form>

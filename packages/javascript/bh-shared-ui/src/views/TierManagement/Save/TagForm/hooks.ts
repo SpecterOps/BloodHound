@@ -26,7 +26,7 @@ interface CreateAssetGroupTagParams {
     values: CreateAssetGroupTagRequest;
 }
 
-interface UpdateAssetGroupTagParams {
+export interface UpdateAssetGroupTagParams {
     tagId: number | string;
     updatedValues: UpdateAssetGroupTagRequest;
 }
@@ -50,7 +50,6 @@ export const useCreateAssetGroupTag = () => {
 
 const patchAssetGroupTag = async (params: UpdateAssetGroupTagParams, options?: RequestOptions) => {
     const { tagId, updatedValues } = params;
-    console.log('here');
 
     const res = await apiClient.updateAssetGroupTag(tagId, updatedValues, options);
 

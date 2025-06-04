@@ -69,12 +69,12 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
 
     // POST Tag
     rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: { tag: { id: 777 } } }));
     }),
 
     // PATCH Tag
     rest.patch('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
-        return res(ctx.status(200));
+        return res(ctx.json({ data: { tag: { id: 777 } } }));
     }),
 
     // DELETE Tag
