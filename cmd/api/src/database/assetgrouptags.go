@@ -504,7 +504,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.D
 		}
 
 		updateEntry := model.AuditEntry{
-			Action: model.AuditLogActionUpdateAssetGroup,
+			Action: model.AuditLogActionUpdateAssetGroupTag,
 			Model:  &tag,
 			Status: model.AuditLogStatusSuccess,
 		}
