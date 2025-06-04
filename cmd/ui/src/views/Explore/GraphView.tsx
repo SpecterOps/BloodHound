@@ -98,7 +98,7 @@ const GraphView: FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedItem]);
 
-    if (isLoading || !graphologyGraph) {
+    if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 <GraphProgress loading={isLoading} />

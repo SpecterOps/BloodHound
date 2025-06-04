@@ -34,7 +34,7 @@ import { GraphEdgeEvents } from './GraphEdgeEvents';
 import { GraphEvents } from './GraphEvents';
 
 interface SigmaChartProps {
-    graph: MultiDirectedGraph<Attributes, Attributes, Attributes>;
+    graph?: MultiDirectedGraph<Attributes, Attributes, Attributes>;
     highlightedItem: string | null;
     onClickNode: (id: string) => void;
     onClickEdge: (id: string) => void;
