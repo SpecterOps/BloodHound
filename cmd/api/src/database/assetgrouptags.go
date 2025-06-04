@@ -276,14 +276,9 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			RequireCertify: requireCertify,
 		}
 
-		// shouldAudit = false
-
 		auditEntry = model.AuditEntry{
 			Action: model.AuditLogActionCreateAssetGroupTag,
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
-			// ShouldAudit: func() bool {
-			// 	return shouldAudit
-			// },
 		}
 	)
 
