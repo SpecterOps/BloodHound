@@ -158,7 +158,7 @@ export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [sigma, mouseCanvas, edgeLabelsCanvas, sigmaContainer]
+        [edgeLabelsCanvas, sigmaContainer, mouseCanvas, sigma, onClickEdge]
     );
 
     return (
