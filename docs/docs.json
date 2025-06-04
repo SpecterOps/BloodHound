@@ -32,7 +32,8 @@
                 "group": "Quickstart",
                 "pages": [
                   "get-started/quickstart/enterprise-quickstart",
-                  "get-started/quickstart/community-edition-quickstart"
+                  "get-started/quickstart/community-edition-quickstart",
+                  "get-started/quickstart/ce-ingest-sample-data"
                 ]
               },
               {
