@@ -48,6 +48,10 @@ const (
 	ScheduledAnalysis = "analysis.scheduled" //This key is not intended to be user updateable, so should not be added to IsValidKey
 
 	TrustedProxiesConfig = "http.trusted_proxies"
+
+	TierManagementParameterKey = "analysis.tiering" //This key is not intended to be user updateable, so should not be added to IsValidKey
+	DefaultTierLimit           = 1
+	DefaultLabelLimit          = 0
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -103,6 +107,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &CitrixRDPSupport{}
 	case ReconciliationKey:
 		v = &ReconciliationParameter{}
+	case TierManagementParameterKey:
+		v = &TieringParameters{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -321,4 +327,26 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 	}
 
 	return result.TrustedProxies
+}
+
+type TieringParameters struct {
+	TierLimit                int  `json:"tier_limit,omitempty"`
+	LabelLimit               int  `json:"label_limit,omitempty"`
+	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
+}
+
+func GetTieringParameters(ctx context.Context, service ParameterService) TieringParameters {
+	result := TieringParameters{
+		TierLimit:                DefaultTierLimit,
+		LabelLimit:               DefaultLabelLimit,
+		MultiTierAnalysisEnabled: false,
+	}
+
+	if tieringParametersCfg, err := service.GetConfigurationParameter(ctx, TierManagementParameterKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch tiering configuration; returning default values")
+	} else if err = tieringParametersCfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid tiering configuration supplied; returning default values %+v", err))
+	}
+
+	return result
 }
