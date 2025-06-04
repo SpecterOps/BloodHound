@@ -17,7 +17,7 @@
 //go:build serial_integration
 // +build serial_integration
 
-package datapipe
+package graphify
 
 import (
 	"testing"

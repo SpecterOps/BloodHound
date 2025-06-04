@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe_test
+package graphify_test
 
 import (
 	"encoding/json"
@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +42,7 @@ func TestSeekToKey(t *testing.T) {
 			r := strings.NewReader(assertion.rawString)
 			j := json.NewDecoder(r)
 
-			err := datapipe.SeekToKey(j, key, 1)
+			err := graphify.SeekToKey(j, key, 1)
 			assert.ErrorIs(t, err, assertion.err)
 		}
 	})
@@ -51,7 +51,7 @@ func TestSeekToKey(t *testing.T) {
 		r := strings.NewReader(`{"graph":{"nodes":[]}}`)
 		j := json.NewDecoder(r)
 
-		err := datapipe.SeekToKey(j, "nodes", 2)
+		err := graphify.SeekToKey(j, "nodes", 2)
 		require.Nil(t, err)
 	})
 }

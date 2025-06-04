@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package datapipe
+package graphify
 
 import (
 	"encoding/json"
@@ -33,7 +33,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
-	ingest_service "github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 const (
@@ -43,8 +43,20 @@ const (
 
 type ReadOptions struct {
 	FileType     model.FileType // JSON or ZIP
-	IngestSchema ingest_service.IngestSchema
+	IngestSchema upload.IngestSchema
 	ADCSEnabled  bool
+}
+
+type TimestampedBatch struct {
+	Batch      graph.Batch
+	IngestTime time.Time
+}
+
+func NewTimestampedBatch(batch graph.Batch, ingestTime time.Time) *TimestampedBatch {
+	return &TimestampedBatch{
+		Batch:      batch,
+		IngestTime: ingestTime,
+	}
 }
 
 // ReadFileForIngest orchestrates the ingestion of a file into the graph database,
@@ -64,6 +76,8 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 		shouldValidateGraph = false
 	)
 
+	// TODO: Should this be moved into the upload service. The comment here is helpful, but more
+	// discovery required.
 	// if filetype == ZIP, we need to validate against jsonschema because
 	// the archive bypassed validation controls at file upload time, as opposed to JSON files,
 	// which were validated at file upload time
@@ -71,9 +85,14 @@ func ReadFileForIngest(batch *TimestampedBatch, reader io.ReadSeeker, options Re
 		shouldValidateGraph = true
 	}
 
-	if meta, err := ingest_service.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
+	if meta, err := upload.ParseAndValidatePayload(reader, options.IngestSchema, shouldValidateGraph, shouldValidateGraph); err != nil {
 		return err
 	} else {
+		// Because we gave the reader to ParseAndValidatePayload above, if they read the whole
+		// thing, we need to make sure we're starting at the front. Be kind, Rewind.
+		if _, err := reader.Seek(0, io.SeekStart); err != nil {
+			return fmt.Errorf("rewind failed: %w", err)
+		}
 		return IngestWrapper(batch, reader, meta, options.ADCSEnabled)
 	}
 }

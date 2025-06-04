@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/mock.go -package=mocks . IngestData
-package ingest
+package job
 
 import (
 	"context"
@@ -23,13 +21,14 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-// The IngestData interface is designed to manage the lifecycle of ingestion tasks and jobs in a system that processes graph-based data
-type IngestData interface {
+// The JobData interface is designed to manage the lifecycle of jobs in a system that processes graph-based data
+type JobData interface {
 	// Task handlers
 	CreateIngestTask(ctx context.Context, task model.IngestTask) (model.IngestTask, error)
 	DeleteAllIngestTasks(ctx context.Context) error
 	CreateCompositionInfo(ctx context.Context, nodes model.EdgeCompositionNodes, edges model.EdgeCompositionEdges) (model.EdgeCompositionNodes, model.EdgeCompositionEdges, error)
 
+	GetIngestTasksForJob(ctx context.Context, jobID int64) (model.IngestTasks, error)
 	// Job handlers
 	CreateIngestJob(ctx context.Context, job model.IngestJob) (model.IngestJob, error)
 	UpdateIngestJob(ctx context.Context, job model.IngestJob) error
@@ -38,4 +37,16 @@ type IngestData interface {
 	GetIngestJobsWithStatus(ctx context.Context, status model.JobStatus) ([]model.IngestJob, error)
 	DeleteAllIngestJobs(ctx context.Context) error
 	CancelAllIngestJobs(ctx context.Context) error
+}
+
+type JobService struct {
+	ctx context.Context
+	db  JobData
+}
+
+func NewJobService(ctx context.Context, db JobData) JobService {
+	return JobService{
+		ctx: ctx,
+		db:  db,
+	}
 }
