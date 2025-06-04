@@ -130,39 +130,6 @@ func resetCache(cacher cache.Cache, _ bool) {
 	}
 }
 
-func (s *Daemon) processGraphifyTasks() {
-	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
-		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
-		return
-	}
-
-	// This needs to be defered outside of the else for the same reason files need to be closed explicitly.
-	// if the database change was made, but an error happened up the stack, we need to try to ALWAYS get
-	// ourselves unstuck from Ingesting status
-	defer func() {
-		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
-			slog.ErrorContext(s.ctx, "failed to reset datapipe status", "error", err)
-		}
-	}()
-
-	// updateJobFunc is passed to the graphify service to let it tell us about the tasks as they go. The
-	// datapipe doesn't know or care about tasks, and the graphify service doesn't know or care about jobs.
-	// instead, this func is provided as an abstraction for graphify
-	updateJobFunc := func(jobId int64, totalFiles int, totalFailed int) {
-		if job, err := s.db.GetIngestJob(s.ctx, jobId); err != nil {
-			slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobId, err))
-		} else {
-			job.TotalFiles += totalFiles
-			job.FailedFiles += totalFailed
-
-			if err = s.db.UpdateIngestJob(s.ctx, job); err != nil {
-				slog.ErrorContext(s.ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
-			}
-		}
-	}
-	s.graphifyService.ProcessTasks(updateJobFunc)
-}
-
 func (s *Daemon) Start(ctx context.Context) {
 	var (
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
@@ -184,14 +151,7 @@ func (s *Daemon) Start(ctx context.Context) {
 				s.deleteData()
 			}
 
-			// Ingest all available ingest tasks
-			s.processGraphifyTasks()
-
-			// Manage time-out state progression for ingest jobs
-			s.jobService.ProcessStaleIngestJobs()
-
-			// Manage nominal state transitions for ingest jobs
-			s.jobService.ProcessFinishedIngestJobs()
+			s.IngestTasks()
 
 			// If there are completed ingest jobs or if analysis was user-requested, perform analysis.
 			if hasJobsWaitingForAnalysis, err := s.jobService.HasIngestJobsWaitingForAnalysis(); err != nil {
@@ -247,5 +207,50 @@ func (s *Daemon) clearOrphanedData() {
 		}
 
 		go s.orphanedFileSweeper.Clear(s.ctx, expectedFiles)
+	}
+}
+
+// IngestTasks handles the task ingestion workflow from start to end
+//
+// This is currently public to support as a first class testing seam, but with some refactoring may be split away from the
+// Daemon object enough to be self standing and pulled to an internal package namespace
+func (s *Daemon) IngestTasks() {
+	if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIngesting, false); err != nil {
+		slog.ErrorContext(s.ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
+		return
+	}
+
+	// This needs to be defered outside of the else for the same reason files need to be closed explicitly.
+	// if the database change was made, but an error happened up the stack, we need to try to ALWAYS get
+	// ourselves unstuck from Ingesting status
+	defer func() {
+		if err := s.db.SetDatapipeStatus(s.ctx, model.DatapipeStatusIdle, false); err != nil {
+			slog.ErrorContext(s.ctx, "failed to reset datapipe status", "error", err)
+		}
+	}()
+
+	// Ingest all available ingest tasks
+	s.graphifyService.ProcessTasks(updateJobFunc(s.ctx, s.db))
+
+	// Manage time-out state progression for ingest jobs
+	s.jobService.ProcessStaleIngestJobs()
+
+	// Manage nominal state transitions for ingest jobs
+	s.jobService.ProcessFinishedIngestJobs()
+}
+
+// updateJobFunc generates a valid graphify.UpdateJobFunc by injecting the parent context and database interface
+func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJobFunc {
+	return func(jobID int64, totalFiles int, totalFailed int) {
+		if job, err := db.GetIngestJob(ctx, jobID); err != nil {
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed to fetch job for ingest task %d: %v", jobID, err))
+		} else {
+			job.TotalFiles += totalFiles
+			job.FailedFiles += totalFailed
+
+			if err = db.UpdateIngestJob(ctx, job); err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed to update number of failed files for ingest job ID %d: %v", job.ID, err))
+			}
+		}
 	}
 }

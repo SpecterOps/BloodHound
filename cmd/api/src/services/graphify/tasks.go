@@ -34,6 +34,12 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )
 
+// UpdateJobFunc is passed to the graphify service to let it tell us about the tasks as they are processed
+//
+// The datapipe doesn't know or care about tasks, and the graphify service doesn't know or care about jobs.
+// Instead, this func is provided as an abstraction for graphify.
+type UpdateJobFunc func(jobId int64, totalFiles int, totalFailed int)
+
 // clearFileTask removes a generic ingest task for ingested data.
 func (s *GraphifyService) clearFileTask(ingestTask model.IngestTask) {
 	if err := s.db.DeleteIngestTask(s.ctx, ingestTask); err != nil {
@@ -188,7 +194,7 @@ func (s *GraphifyService) getAllTasks() model.IngestTasks {
 	return tasks
 }
 
-func (s *GraphifyService) ProcessTasks(updateJob func(jobId int64, totalFiles int, totalFailed int)) {
+func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	for _, task := range s.getAllTasks() {
 		// Check the context to see if we should continue processing ingest tasks. This has to be explicit since error
