@@ -2197,7 +2197,6 @@ func TestResources_PreviewSelectors(t *testing.T) {
 						PrepareCypherQuery(gomock.Any(), gomock.Any()).
 						Return(queries.PreparedQuery{}, nil).Times(1)
 					mockGraphDb.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Times(1)
-					mockGraphDb.EXPECT().WriteTransaction(gomock.Any(), gomock.Any())
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2233,16 +2232,6 @@ func TestResources_CreateAssetGroupTag(t *testing.T) {
 				},
 			},
 			{
-				Name: "Internal Server Error - Bad User ",
-				Input: func(input *apitest.Input) {
-					apitest.BodyStruct(input, model.AssetGroupTag{Name: "New Tier"})
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusInternalServerError)
-					apitest.BodyContains(output, "unknown user")
-				},
-			},
-			{
 				Name: "Bad Request - No Name",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
@@ -2250,29 +2239,39 @@ func TestResources_CreateAssetGroupTag(t *testing.T) {
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "asset group tag name is required and no more than 250 characters")
+					apitest.BodyContains(output, "Name: property is required")
+				},
+			},
+			{
+				Name: "Bad Request - No Type",
+				Input: func(input *apitest.Input) {
+					apitest.SetContext(input, userCtx)
+					apitest.BodyStruct(input, model.AssetGroupTag{Name: "new tier"})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusBadRequest)
+					apitest.BodyContains(output, "Type: property is required")
+				},
+			},
+			{
+				Name: "Internal Server Error - Bad User ",
+				Input: func(input *apitest.Input) {
+					apitest.BodyStruct(input, model.AssetGroupTag{Name: "New Tier", Type: 1})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusInternalServerError)
+					apitest.BodyContains(output, "unknown user")
 				},
 			},
 			{
 				Name: "Bad Request - Too long of name",
 				Input: func(input *apitest.Input) {
 					apitest.SetContext(input, userCtx)
-					apitest.BodyStruct(input, model.AssetGroupTag{Name: "SirFluffingtonMcSillypantsWobblebottomGigglefritzNoodleSnickerdoodleVonQuacklebirdFizzlepopSparklefartMcWigglewaggleBumblefluffSnortlepuffTickletushBananahammockDingleberryTwinkletoesFizzlebottomSassypantsWiggledoodleMcGigglywigFlibbertigibbetSnickerdoodleWobblewaggleFuzzlebumSassafrassTickletoesBumblesnortGigglepantsDinglehopperSnazzlefrazzleWigglebuttBananapantsFlufferwump"})
+					apitest.BodyStruct(input, model.AssetGroupTag{Type: 1, Name: "SirFluffingtonMcSillypantsWobblebottomGigglefritzNoodleSnickerdoodleVonQuacklebirdFizzlepopSparklefartMcWigglewaggleBumblefluffSnortlepuffTickletushBananahammockDingleberryTwinkletoesFizzlebottomSassypantsWiggledoodleMcGigglywigFlibbertigibbetSnickerdoodleWobblewaggleFuzzlebumSassafrassTickletoesBumblesnortGigglepantsDinglehopperSnazzlefrazzleWigglebuttBananapantsFlufferwump"})
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusBadRequest)
 					apitest.BodyContains(output, "asset group tag name is required and no more than 250 characters")
-				},
-			},
-			{
-				Name: "Bad Request - No Type Specified",
-				Input: func(input *apitest.Input) {
-					apitest.SetContext(input, userCtx)
-					apitest.BodyStruct(input, model.AssetGroupTag{Name: "New tier"})
-				},
-				Test: func(output apitest.Output) {
-					apitest.StatusCode(output, http.StatusBadRequest)
-					apitest.BodyContains(output, "tag type is required")
 				},
 			},
 			{
