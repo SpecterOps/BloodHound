@@ -84,7 +84,7 @@ const (
 
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
 	AuditLogActionUpdateAssetGroupTag         AuditLogAction = "UpdateAssetGroupTag"
-	AuditLogActionSoftDeleteAssetGroupTag     AuditLogAction = "SoftDeleteAssetGroupTag"
+	AuditLogActionDeleteAssetGroupTag         AuditLogAction = "DeleteAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
 	AuditLogActionDeleteAssetGroupTagSelector AuditLogAction = "DeleteAssetGroupTagSelector"

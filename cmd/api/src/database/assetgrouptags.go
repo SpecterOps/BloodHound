@@ -353,7 +353,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
 	var (
 		auditEntry = model.AuditEntry{
-			Action: model.AuditLogActionSoftDeleteAssetGroupTag,
+			Action: model.AuditLogActionDeleteAssetGroupTag,
 			Model:  &assetGroupTag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
 	)

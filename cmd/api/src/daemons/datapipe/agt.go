@@ -690,27 +690,24 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 	return nil
 }
 
-func ClearAssetGroupTagNodeSet(ctx context.Context, db database.Database, graphDb graph.Database, assetGroupTagId int) error {
-	if tag, err := db.GetAssetGroupTag(ctx, assetGroupTagId); err != nil {
-		return err
-	} else {
-		tagKind := tag.ToKind()
-		if err = graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
-			if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
-				return err
-			} else {
-				for _, node := range taggedNodeSet {
-					node.DeleteKinds(tagKind)
-					return tx.UpdateNode(node)
-				}
-			}
+func ClearAssetGroupTagNodeSet(ctx context.Context, db database.Database, graphDb graph.Database, assetGroupTag model.AssetGroupTag) error {
+	tagKind := assetGroupTag.ToKind()
 
-			return nil
-		}); err != nil {
+	if err := graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
 			return err
+		} else {
+			for _, node := range taggedNodeSet {
+				node.DeleteKinds(tagKind)
+				return tx.UpdateNode(node)
+			}
 		}
 
+		return nil
+	}); err != nil {
+		return err
 	}
+
 	return nil
 }
 
