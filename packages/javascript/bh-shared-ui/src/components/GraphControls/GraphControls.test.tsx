@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, fireEvent, render, waitFor } from '../../test-utils';
+import { act, fireEvent, render } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
 import GraphControls from './GraphControls';
 
@@ -43,12 +43,14 @@ describe('GraphControls', () => {
     const onLayoutChangeFn = vi.fn();
     const onToggleNodeLabelsFn = vi.fn();
     const onToggleEdgeLabelsFn = vi.fn();
+    const onSearchedNodeClickFn = vi.fn();
 
     afterEach(() => {
         onResetFn.mockClear();
         onLayoutChangeFn.mockClear();
         onToggleNodeLabelsFn.mockClear();
         onToggleEdgeLabelsFn.mockClear();
+        onSearchedNodeClickFn.mockClear();
     });
 
     const setup = ({ showNodeLabels = true, showEdgeLabels = true, json = mockJsonData } = {}) => {
@@ -58,6 +60,7 @@ describe('GraphControls', () => {
                 onLayoutChange={onLayoutChangeFn}
                 onToggleNodeLabels={onToggleNodeLabelsFn}
                 onToggleEdgeLabels={onToggleEdgeLabelsFn}
+                onSearchedNodeClick={onSearchedNodeClickFn}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
                 jsonData={json}
@@ -229,7 +232,7 @@ describe('GraphControls', () => {
             // This is a known issue in downshift and seems to be resolved in newer versions
             act(() => fireEvent.click(searchedNode));
 
-            await waitFor(() => expect(window.location.search).toContain('selectedItem=1'));
+            expect(onSearchedNodeClickFn).toBeCalled();
             expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
         });
     });

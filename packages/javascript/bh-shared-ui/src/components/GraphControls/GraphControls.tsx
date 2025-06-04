@@ -21,21 +21,21 @@ import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { useRef } from 'react';
-import { useExploreSelectedItem } from '../../hooks/useExploreSelectedItem';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import useToggle from '../../hooks/useToggle';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
-import SearchCurrentNodes from '../SearchCurrentNodes';
+import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
 
 interface GraphControlsProps<T extends readonly string[]> {
     onReset: () => void;
-    layoutOptions: T;
-    selectedLayout: T[number];
     onLayoutChange: (layout: T[number]) => void;
     onToggleNodeLabels: () => void;
     onToggleEdgeLabels: () => void;
+    onSearchedNodeClick: (node: FlatNode) => void;
+    layoutOptions: T;
+    selectedLayout: T[number];
     showNodeLabels: boolean;
     showEdgeLabels: boolean;
     jsonData: Record<string, any> | undefined;
@@ -48,15 +48,15 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         onLayoutChange,
         onToggleNodeLabels,
         onToggleEdgeLabels,
+        onSearchedNodeClick,
+        layoutOptions,
+        selectedLayout,
         showNodeLabels,
         showEdgeLabels,
         jsonData,
-        layoutOptions,
-        selectedLayout,
         currentNodes,
     } = props;
 
-    const { setSelectedItem } = useExploreSelectedItem();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
     const [isCurrentSearchOpen, toggleCurrentSearch] = useToggle(false);
@@ -135,7 +135,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         }}
                         currentNodes={currentNodes}
                         onSelect={(node) => {
-                            setSelectedItem(node.id);
+                            onSearchedNodeClick(node);
                             toggleCurrentSearch();
                         }}
                         onClose={toggleCurrentSearch}
