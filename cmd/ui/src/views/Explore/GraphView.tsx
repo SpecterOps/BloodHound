@@ -94,7 +94,7 @@ const GraphView: FC = () => {
         if (selectedItem && selectedItem !== highlightedItem) {
             setHighlightedItem(selectedItem);
         }
-    }, [selectedItem]);
+    }, [highlightedItem, selectedItem]);
 
     if (isLoading) {
         return (
