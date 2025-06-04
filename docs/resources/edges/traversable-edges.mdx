@@ -21,24 +21,25 @@ These are the traversable AD edge types in BloodHound:
 
 |                      |                           |                          |
 |----------------------|---------------------------|--------------------------|
-| AbuseTGTDelegation   | AllowedToDelegate         | HasSIDHistory            |
-| ADCSESC1             | CanPSRemote               | HasSession               |
-| ADCSESC10a           | CanRDP                    | MemberOf                 |
-| ADCSESC10b           | CoerceAndRelayNTLMToADCS  | Owns                     |
-| ADCSESC13            | CoerceAndRelayNTLMToLDAP  | OwnsLimitedRights        |
-| ADCSESC3             | CoerceAndRelayNTLMToLDAPS | ReadGMSAPassword         |
-| ADCSESC4             | CoerceAndRelayNTLMToSMB   | ReadLAPSPassword         |
-| ADCSESC6a            | CoerceToTGT               | SameForestTrust          |
-| ADCSESC6b            | Contains                  | SpoofSIDHistory          |
-| ADCSESC9a            | DCFor                     | SQLAdmin                 |
-| ADCSESC9b            | DCSync                    | SyncedToEntraUser        |
-| AddAllowedToAct      | DumpSMSAPassword          | SyncLAPSPassword         |
-| AddKeyCredentialLink | ExecuteDCOM               | WriteAccountRestrictions |
-| AddMember            | ForceChangePassword       | WriteDacl                |
-| AddSelf              | GPLink                    | WriteGPLink              |
-| AdminTo              | GenericAll                | WriteOwner               |
-| AllExtendedRights    | GenericWrite              | WriteOwnerLimitedRights  |
-| AllowedToAct         | GoldenCert                | WriteSPN                 |
+| AbuseTGTDelegation   | CanPSRemote               | HasSession               |
+| ADCSESC1             | CanRDP                    | HasTrustKeys             |
+| ADCSESC10a           | CoerceAndRelayNTLMToADCS  | MemberOf                 |
+| ADCSESC10b           | CoerceAndRelayNTLMToLDAP  | Owns                     |
+| ADCSESC13            | CoerceAndRelayNTLMToLDAPS | OwnsLimitedRights        |
+| ADCSESC3             | CoerceAndRelayNTLMToSMB   | ReadGMSAPassword         |
+| ADCSESC4             | CoerceToTGT               | ReadLAPSPassword         |
+| ADCSESC6a            | Contains                  | SameForestTrust          |
+| ADCSESC6b            | DCFor                     | SpoofSIDHistory          |
+| ADCSESC9a            | DCSync                    | SQLAdmin                 |
+| ADCSESC9b            | DumpSMSAPassword          | SyncedToEntraUser        |
+| AddAllowedToAct      | ExecuteDCOM               | SyncLAPSPassword         |
+| AddKeyCredentialLink | ForceChangePassword       | WriteAccountRestrictions |
+| AddMember            | GPLink                    | WriteDacl                |
+| AddSelf              | GenericAll                | WriteGPLink              |
+| AdminTo              | GenericWrite              | WriteOwner               |
+| AllExtendedRights    | GoldenCert                | WriteOwnerLimitedRights  |
+| AllowedToAct         | HasSIDHistory             | WriteSPN                 |
+| AllowedToDelegate    |                           |                          |
 
 These are the traversable Azure edge types in BloodHound:
 
