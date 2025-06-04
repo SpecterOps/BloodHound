@@ -20,7 +20,7 @@ import { useExploreParams } from './useExploreParams';
 import { useGraphItem } from './useGraphItem';
 
 export const useExploreSelectedItem = () => {
-    const { highlightedItem, selectedItem, setExploreParams } = useExploreParams();
+    const { selectedItem, setExploreParams } = useExploreParams();
 
     const selectedItemQuery = useGraphItem(selectedItem!);
 
@@ -29,18 +29,11 @@ export const useExploreSelectedItem = () => {
         (itemId: string) => {
             setExploreParams({
                 expandedPanelSections: null,
-                highlightedItem: itemId,
                 selectedItem: itemId,
             });
         },
         [setExploreParams]
     );
-
-    const cancelHighlight = useCallback(() => {
-        setExploreParams({
-            highlightedItem: null,
-        });
-    }, [setExploreParams]);
 
     const selectedItemType = useMemo(
         () => (selectedItem ? parseItemId(selectedItem).itemType : undefined),
@@ -48,8 +41,6 @@ export const useExploreSelectedItem = () => {
     );
 
     return {
-        cancelHighlight,
-        highlightedItem,
         selectedItem,
         selectedItemQuery,
         setSelectedItem,

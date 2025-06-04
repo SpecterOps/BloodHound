@@ -21,7 +21,6 @@ import Graph, { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphEvents } from 'src/components/GraphEvents';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
 import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
@@ -31,12 +30,14 @@ import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
-import GraphEdgeEvents from './GraphEdgeEvents';
+import { GraphEdgeEvents } from './GraphEdgeEvents';
+import { GraphEvents } from './GraphEvents';
 
 interface SigmaChartProps {
     graph: Graph<Attributes, Attributes, Attributes>;
+    highlightedItem: string | null;
     onClickNode: (id: string) => void;
-    onClickEdge: (id: string, relatedFindingType?: string | null) => void;
+    onClickEdge: (id: string) => void;
     onClickStage: () => void;
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
@@ -46,6 +47,7 @@ interface SigmaChartProps {
 const SigmaChart = forwardRef(function SigmaChart(
     {
         graph,
+        highlightedItem,
         onClickNode,
         onClickEdge,
         onClickStage,
@@ -94,11 +96,11 @@ const SigmaChart = forwardRef(function SigmaChart(
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,
                 }}>
-                <GraphEdgeEvents />
+                <GraphEdgeEvents onClickEdge={onClickEdge} />
 
                 <GraphEvents
+                    highlightedItem={highlightedItem ?? null}
                     onClickNode={onClickNode}
-                    onClickEdge={onClickEdge}
                     onClickStage={onClickStage}
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}
