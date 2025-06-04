@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { SearchResult } from '../../../hooks/useSearch';
 import { EntityKinds } from '../../../utils/content';
 

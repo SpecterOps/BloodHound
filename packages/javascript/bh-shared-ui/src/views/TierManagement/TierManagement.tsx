@@ -19,20 +19,20 @@ import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
+    DEFAULT_TIER_MANAGEMENT_ROUTE,
     ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_LABEL_DETAILS,
     ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
-    ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_UPDATE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_SAVE,
-    ROUTE_TIER_MANAGEMENT_SAVE_LABEL,
-    ROUTE_TIER_MANAGEMENT_SAVE_TIER,
     ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_TIER_DETAILS,
     ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
-    ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
-    // ROUTE_TIER_MANAGEMENT_TAG_DETAILS,
+    ROUTE_TIER_MANAGEMENT_TIER_UPDATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_UPDATE_LABEL,
+    ROUTE_TIER_MANAGEMENT_UPDATE_TIER,
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
@@ -41,60 +41,32 @@ import { OWNED_ID, TIER_ZERO_ID } from './utils';
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 
+const detailsPaths = [
+    ROUTE_TIER_MANAGEMENT_TIER_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_DETAILS,
+    ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
+    ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
+    ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
+];
+
+const savePaths = [
+    ROUTE_TIER_MANAGEMENT_SAVE,
+    ROUTE_TIER_MANAGEMENT_UPDATE_TIER,
+    ROUTE_TIER_MANAGEMENT_UPDATE_LABEL,
+    ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_TIER_UPDATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_LABEL_UPDATE_SELECTOR,
+];
+
 const childRoutes: Routable[] = [
-    { path: ROUTE_TIER_MANAGEMENT_TIER_DETAILS, component: Details, authenticationRequired: true, navigation: true },
-    { path: ROUTE_TIER_MANAGEMENT_LABEL_DETAILS, component: Details, authenticationRequired: true, navigation: true },
-    {
-        path: ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
-        component: Details,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
-        component: Details,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
-        component: Details,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
-        component: Details,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    { path: ROUTE_TIER_MANAGEMENT_SAVE, component: Save, authenticationRequired: true, navigation: true },
-    { path: ROUTE_TIER_MANAGEMENT_SAVE_TIER, component: Save, authenticationRequired: true, navigation: true },
-    { path: ROUTE_TIER_MANAGEMENT_SAVE_LABEL, component: Save, authenticationRequired: true, navigation: true },
-    {
-        path: ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
-        component: Save,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
-        component: Save,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_TIER_SAVE_SELECTOR,
-        component: Save,
-        authenticationRequired: true,
-        navigation: true,
-    },
-    {
-        path: ROUTE_TIER_MANAGEMENT_LABEL_SAVE_SELECTOR,
-        component: Save,
-        authenticationRequired: true,
-        navigation: true,
-    },
+    ...detailsPaths.map((path) => {
+        return { path, component: Details, authenticationRequired: true, navigation: true };
+    }),
+    ...savePaths.map((path) => {
+        return { path, component: Save, authenticationRequired: true, navigation: true };
+    }),
 ];
 
 const TierManagement: FC = () => {
@@ -139,7 +111,7 @@ const TierManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to='details/tier/1' replace />} />
+                            <Route path='*' element={<Navigate to={DEFAULT_TIER_MANAGEMENT_ROUTE} replace />} />
                         </Routes>
                     </Suspense>
                 </div>

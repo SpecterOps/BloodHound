@@ -15,10 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor } from '../../../test-utils';
+import { act, render, screen, waitFor } from '../../../test-utils';
 import { mockCodemirrorLayoutMethods } from '../../../utils';
+import SelectorFormContext, { initialValue } from '../Save/SelectorForm/SelectorFormContext';
 import { Cypher } from './Cypher';
 
 const testNodes = {
@@ -87,25 +89,32 @@ describe('Cypher Search component for Tier Management', () => {
         expect(screen.getByRole('button', { name: 'Update Sample Results' })).toBeInTheDocument();
     });
 
-    it('runs the query and uses the passed in callback to set the node results', async () => {
+    it('runs the query and calls dispatch to set the node results', async () => {
         const user = userEvent.setup();
-        const setResultsCallback = vi.fn();
+        const dispatch = vi.fn();
         mockCodemirrorLayoutMethods();
 
-        render(
-            <Cypher
-                preview={false}
-                initialInput='match(n) return n limit 5'
-                setSeedPreviewResults={setResultsCallback}
-            />
-        );
+        await act(async () => {
+            render(
+                <SelectorFormContext.Provider
+                    value={{
+                        ...initialValue,
+                        dispatch,
+                    }}>
+                    <Cypher preview={false} initialInput='match(n) return n limit 5' />
+                </SelectorFormContext.Provider>
+            );
+        });
 
         const runButton = screen.getByRole('button', { name: 'Update Sample Results' });
 
-        user.click(runButton);
+        await user.click(runButton);
 
-        await waitFor(() => {
-            expect(setResultsCallback).toHaveBeenCalled();
+        waitFor(() => {
+            expect(dispatch).toHaveBeenCalledWith({
+                type: 'set-seeds',
+                seeds: [{ type: SeedTypeCypher, value: 'match(n) return n limit 5' }],
+            });
         });
     });
 });

@@ -66,6 +66,7 @@ describe('AppNotifications', () => {
                 autoHideDuration: SNACKBAR_DURATION,
             })
         );
+
         expect(await screen.findByText('test message')).toBeInTheDocument();
 
         await act(async () => {
@@ -81,11 +82,13 @@ describe('AppNotifications', () => {
     it('renders a snackbar notification in the dom and tests the long autoHideDuration', async () => {
         const snack = renderHook(() => useSnackbar());
         vi.useFakeTimers();
+
         await act(() =>
             snack.result.current.enqueueSnackbar('test message', {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             })
         );
+
         expect(await screen.findByText('test message')).toBeInTheDocument();
 
         await act(async () => {
