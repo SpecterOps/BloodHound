@@ -84,7 +84,7 @@ var (
 	UsersSIDSuffix                                   = NewSIDSuffix("-545")
 	BackupOperatorsGroupSIDSuffix                    = NewSIDSuffix("-551")
 	RemoteDesktopUsersSIDSuffix                      = NewSIDSuffix("-555")
-	EnterpriseDomainControllersGroupSIDSuffix        = NewSIDSuffix("1-5-9")
+	EnterpriseDomainControllersGroupSIDSuffix        = NewSIDSuffix("-S-1-5-9")
 	EveryoneSIDSuffix                                = NewSIDSuffix("-S-1-1-0")
 	DialupSIDSuffix                                  = NewSIDSuffix("-S-1-5-1")
 	NetworkSIDSuffix                                 = NewSIDSuffix("-S-1-5-2")
