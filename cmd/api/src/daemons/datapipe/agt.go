@@ -522,6 +522,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 		return err
 	} else {
 		var (
+			countTotal    int
 			selectorIds   []int
 			selectedNodes []model.AssetGroupSelectorNode
 
@@ -568,6 +569,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 					}
 					// Once a node is processed, we can skip future duplicates that might be selected by other selectors
 					nodesSeen.Add(nodeDb.NodeId.Uint64())
+					countTotal++
 				}
 			}
 
@@ -598,7 +600,7 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			return err
 		}
 
-		slog.Info("AGT: Completed tagging", tag.ToType(), tag.Name, "total", nodesSeen.Cardinality(), "tagged", newTaggedNodes.Cardinality(), "untagged", oldTaggedNodes.Cardinality())
+		slog.Info("AGT: Completed tagging", tag.ToType(), tag.Name, "total", countTotal, "tagged", newTaggedNodes.Cardinality(), "untagged", oldTaggedNodes.Cardinality())
 	}
 	return nil
 }
