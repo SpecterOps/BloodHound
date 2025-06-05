@@ -52,6 +52,13 @@ const MainNavPrimaryListData: MainNavDataListItem[] = [
         testId: 'global_nav-test-link',
         supportedSearchParams: GloballySupportedSearchParams,
     },
+    {
+        label: 'Link Item 2',
+        icon: <AppIcon.LineChart size={24} />,
+        route: '/secondroute',
+        testId: 'global_nav-test-link',
+        supportedSearchParams: GloballySupportedSearchParams,
+    },
 ];
 
 const handleClick = vi.fn();
@@ -111,8 +118,8 @@ describe('MainNav', () => {
         const testLinkItem = MainNavPrimaryListData[0];
 
         const primaryList = await screen.findByTestId('global_nav-primary-list');
-        const linkItem = await within(primaryList).findByRole('link');
-        const linkItemIcon = await within(primaryList).findByTestId('global_nav-item-label-icon');
+        const linkItem = await within(primaryList).getAllByTestId('global_nav-test-link')[0];
+        const linkItemIcon = await within(primaryList).getAllByTestId('global_nav-item-label-icon')[0];
         const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
 
         expect(linkItem).toBeInTheDocument();
@@ -162,7 +169,7 @@ describe('MainNav', () => {
         expect(MainNavBar).toHaveClass('group');
 
         const primaryList = await within(MainNavBar).findByTestId('global_nav-primary-list');
-        const linkItemIcon = await within(primaryList).findByTestId('global_nav-item-label-icon');
+        const linkItemIcon = await within(primaryList).getAllByTestId('global_nav-item-label-icon')[0];
         const linkItemText = await within(primaryList).findByText(testLinkItem.label as string);
 
         expect(linkItemIcon).toBeInTheDocument();
@@ -198,5 +205,25 @@ describe('MainNav', () => {
     it('should have a .z-nav class', () => {
         const navbarElement = screen.getByRole('navigation');
         expect(navbarElement).toHaveClass('z-nav');
+    });
+});
+
+describe('Main Nav Route Highlighting', () => {
+    it('should highlight selected route', () => {
+        render(<MainNav mainNavData={mainNavData} />, {
+            route: '/test',
+        });
+        expect(window.location.pathname).toBe('/test');
+        const elem = screen.getAllByTestId('global_nav-test-link')[0].closest('li');
+        expect(elem).toHaveClass('bg-neutral-light-4');
+    });
+    it('should highlight main nav route when navigating to child route', () => {
+        render(<MainNav mainNavData={mainNavData} />, {
+            route: '/secondroute/child',
+        });
+        const selected = screen.getAllByTestId('global_nav-test-link')[1].closest('li');
+        const unselected = screen.getAllByTestId('global_nav-test-link')[0].closest('li');
+        expect(selected).toHaveClass('bg-neutral-light-4');
+        expect(unselected).not.toHaveClass('bg-neutral-light-4');
     });
 });
