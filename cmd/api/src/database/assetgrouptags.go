@@ -46,7 +46,7 @@ type AssetGroupTagData interface {
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
-	CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction ShiftDirection) error
+	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
