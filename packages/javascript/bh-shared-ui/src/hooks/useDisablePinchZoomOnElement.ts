@@ -5,7 +5,7 @@ import { useCallback } from 'react';
  *  which you want to disable browzer magnifying zoom (in our case, the explore graph).
  *  This function accepts a callback to be applied to the wheel handler.
  */
-const useDisablePinchZoomOnElement = <T extends HTMLElement>(cb?: (e: WheelEvent) => void) => {
+const useCreateDisableZoomRef = <T extends HTMLElement>(onWheel?: (e: WheelEvent) => void) => {
     return useCallback(
         (ref: T) => {
             ref?.addEventListener(
@@ -13,15 +13,15 @@ const useDisablePinchZoomOnElement = <T extends HTMLElement>(cb?: (e: WheelEvent
                 (e) => {
                     e.preventDefault();
 
-                    if (typeof cb === 'function') {
-                        cb(e);
+                    if (typeof onWheel === 'function') {
+                        onWheel(e);
                     }
                 },
                 { passive: false }
             );
         },
-        [cb]
+        [onWheel]
     );
 };
 
-export default useDisablePinchZoomOnElement;
+export default useCreateDisableZoomRef;

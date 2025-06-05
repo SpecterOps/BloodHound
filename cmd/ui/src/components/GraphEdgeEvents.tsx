@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useDisablePinchZoomOnElement, useExploreSelectedItem } from 'bh-shared-ui';
+import { useCreateDisableZoomRef, useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
@@ -162,7 +162,7 @@ const GraphEdgeEvents: FC = () => {
         [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
-    const edgeEventsRef = useDisablePinchZoomOnElement<HTMLCanvasElement>((e) => {
+    const edgeEventsRef = useCreateDisableZoomRef<HTMLCanvasElement>((e) => {
         handleWheelFromSigma.call(sigma.getMouseCaptor(), e);
     });
 

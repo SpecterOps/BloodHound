@@ -22,7 +22,7 @@ export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
 
-export { default as useDisablePinchZoomOnElement } from './useDisablePinchZoomOnElement';
+export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
 
 export * from './useAvailableEnvironments';
 
