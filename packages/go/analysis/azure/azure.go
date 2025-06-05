@@ -34,6 +34,7 @@ func GetDescendentKinds(kind graph.Kind) []graph.Kind {
 		return []graph.Kind{
 			azure.User,
 			azure.Group,
+			azure.Group365,
 			azure.ManagementGroup,
 			azure.Subscription,
 			azure.ResourceGroup,

@@ -20,6 +20,7 @@ type AzureStatKinds struct {
 	Relationships       int `json:"relationships"`
 	Users               int `json:"users"`
 	Groups              int `json:"groups"`
+	Groups365           int `json:"groups365"`
 	Apps                int `json:"apps"`
 	ServicePrincipals   int `json:"service_principals"`
 	Devices             int `json:"devices"`

@@ -55,12 +55,18 @@ func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData
 		return convertAzureFunctionAppRoleAssignment
 	case enums.KindAZGroup:
 		return convertAzureGroup
+	case enums.KindAZGroup365:
+		return convertAzureGroup365
 	case enums.KindAZGroupMember:
 		return convertAzureGroupMember
 	case enums.KindAZUserInteraction:
 		return convertAzureUserInteractions
+	case enums.KindAZGroup365Member:
+		return convertAzureGroup365Member
 	case enums.KindAZGroupOwner:
 		return convertAzureGroupOwner
+	case enums.KindAZGroup365Owner:
+		return convertAzureGroup365Owner
 	case enums.KindAZKeyVault:
 		return convertAzureKeyVault
 	case enums.KindAZKeyVaultAccessPolicy:
@@ -284,6 +290,24 @@ func convertAzureGroup(raw json.RawMessage, converted *ConvertedAzureData) {
 	}
 }
 
+func convertAzureGroup365(raw json.RawMessage, converted *ConvertedAzureData) {
+
+	var data models.Group365
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+
+		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 36 group", err))
+
+	} else {
+
+		converted.NodeProps = append(converted.NodeProps, ein.ConvertAzureGroup365ToNode(data))
+
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365ToRel(data))
+
+	}
+
+}
+
 func convertAzureGroupMember(raw json.RawMessage, converted *ConvertedAzureData) {
 	var (
 		data models.GroupMembers
@@ -310,6 +334,18 @@ func convertAzureUserInteractions(raw json.RawMessage, converted *ConvertedAzure
 	}
 }
 
+func convertAzureGroup365Member(raw json.RawMessage, converted *ConvertedAzureData) {
+	var (
+		data models.Group365Members
+	)
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group members", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365MembersToRels(data)...)
+	}
+}
+
 func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) {
 	var (
 		data models.GroupOwners
@@ -318,6 +354,17 @@ func convertAzureGroupOwner(raw json.RawMessage, converted *ConvertedAzureData) 
 		slog.Error(fmt.Sprintf(SerialError, "azure group owners", err))
 	} else {
 		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroupOwnerToRels(data)...)
+	}
+}
+
+func convertAzureGroup365Owner(raw json.RawMessage, converted *ConvertedAzureData) {
+	var (
+		data models.Group365Owners
+	)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Error(fmt.Sprintf(SerialError, "azure Microsoft 365 group owners", err))
+	} else {
+		converted.RelProps = append(converted.RelProps, ein.ConvertAzureGroup365OwnerToRels(data)...)
 	}
 }
 

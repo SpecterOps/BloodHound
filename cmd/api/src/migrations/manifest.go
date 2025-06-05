@@ -155,7 +155,7 @@ func Version_508_Migration(ctx context.Context, db graph.Database) error {
 			return query.And(
 				query.Kind(query.Start(), azure.Entity),
 				// Not all of these node types are being changed, but there's no harm in adding them to the migration
-				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault, azure.AutomationAccount, azure.ContainerRegistry, azure.LogicApp, azure.VMScaleSet, azure.WebApp, azure.FunctionApp, azure.ManagedCluster, azure.VM),
+				query.KindIn(query.End(), azure.ManagementGroup, azure.ResourceGroup, azure.Subscription, azure.KeyVault, azure.AutomationAccount, azure.ContainerRegistry, azure.LogicApp, azure.VMScaleSet, azure.WebApp, azure.FunctionApp, azure.ManagedCluster, azure.VM, azure.Group365),
 				query.Kind(query.Relationship(), azure.Owns),
 			)
 		}).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {

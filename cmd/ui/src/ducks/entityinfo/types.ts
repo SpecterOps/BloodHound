@@ -305,6 +305,11 @@ export interface AZGroupInfo extends AZEntityInfo {
     roles: number;
 }
 
+export interface AZGroup365Info extends AZEntityInfo {
+    props: BasicInfo;
+    inbound_object_control: number;
+}
+
 export interface AZKeyVaultInfo extends AZEntityInfo {
     props: BasicInfo;
     Readers: {

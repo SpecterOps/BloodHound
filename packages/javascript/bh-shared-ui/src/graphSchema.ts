@@ -780,6 +780,7 @@ export enum AzureNodeKind {
     Device = 'AZDevice',
     FunctionApp = 'AZFunctionApp',
     Group = 'AZGroup',
+    Group365 = 'AZGroup365',
     KeyVault = 'AZKeyVault',
     ManagementGroup = 'AZManagementGroup',
     ResourceGroup = 'AZResourceGroup',
@@ -810,6 +811,8 @@ export function AzureNodeKindToDisplay(value: AzureNodeKind): string | undefined
             return 'FunctionApp';
         case AzureNodeKind.Group:
             return 'Group';
+        case AzureNodeKind.Group365:
+            return 'Group365';
         case AzureNodeKind.KeyVault:
             return 'KeyVault';
         case AzureNodeKind.ManagementGroup:
@@ -1027,6 +1030,8 @@ export enum AzureKindProperties {
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
     RoleTemplateID = 'templateid',
+    Visibility = 'visibility',
+    Mail = 'mail',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1096,6 +1101,10 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Sign In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
+        case AzureKindProperties.Visibility:
+            return 'Visibility';
+        case AzureKindProperties.Mail:
+            return 'M365 Group Mail';
         default:
             return undefined;
     }

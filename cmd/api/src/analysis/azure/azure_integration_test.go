@@ -127,7 +127,7 @@ func TestAzureEntityGroupMembership(t *testing.T) {
 		if groupPaths, err := azureanalysis.FetchEntityGroupMembershipPaths(tx, harness.AZBaseHarness.User); err != nil {
 			t.Fatal(err)
 		} else {
-			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ContainingNodeKinds(azure.Group).IDs())
+			assert.ElementsMatch(t, harness.AZBaseHarness.UserFirstDegreeGroups.IDs(), groupPaths.AllNodes().ContainingNodeKinds(azure.Group, azure.Group365).IDs())
 		}
 	})
 }
@@ -554,6 +554,31 @@ func TestGroupEntityDetails(t *testing.T) {
 	})
 }
 
+func TestGroup365EntityDetails(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.AZEntityPanelHarness.Setup(testContext)
+		return nil
+
+	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+
+		groupObjectID, err := harness.AZEntityPanelHarness.Group365.Properties.Get(common.ObjectID.String()).String()
+		require.Nil(t, err)
+
+		assert.NotEqual(t, "", groupObjectID)
+
+		group, err := azureanalysis.Group365EntityDetails(testContext.Graph.Database, groupObjectID, false)
+
+		require.Nil(t, err)
+		assert.Equal(t, harness.AZEntityPanelHarness.Group365.Properties.Get(common.ObjectID.String()).Any(), group.Properties[common.ObjectID.String()])
+		assert.Equal(t, 0, group.InboundObjectControl)
+
+		group, err = azureanalysis.Group365EntityDetails(testContext.Graph.Database, groupObjectID, true)
+		require.Nil(t, err)
+		assert.NotEqual(t, 0, group.InboundObjectControl)
+	})
+}
+
 func TestManagementGroupEntityDetails(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -807,11 +832,13 @@ func TestFetchInboundEntityObjectControlPaths(t *testing.T) {
 		paths, err := azureanalysis.FetchInboundEntityObjectControlPaths(tx, harness.AZInboundControlHarness.ControlledAZUser)
 		require.Nil(t, err)
 		nodes := paths.AllNodes().IDs()
-		require.Equal(t, 8, len(nodes))
+		require.Equal(t, 10, len(nodes))
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroup365A.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroup365B.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)
@@ -830,11 +857,13 @@ func TestFetchInboundEntityObjectControllers(t *testing.T) {
 		control, err := azureanalysis.FetchInboundEntityObjectControllers(tx, harness.AZInboundControlHarness.ControlledAZUser, 0, 0)
 		require.Nil(t, err)
 		nodes := control.IDs()
-		require.Equal(t, 7, len(nodes))
+		require.Equal(t, 9, len(nodes))
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.ControlledAZUser.ID)
 		require.NotContains(t, nodes, harness.AZInboundControlHarness.AZAppA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroupB.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroup365A.ID)
+		require.Contains(t, nodes, harness.AZInboundControlHarness.AZGroup365B.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalA.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZServicePrincipalB.ID)
 		require.Contains(t, nodes, harness.AZInboundControlHarness.AZUserA.ID)

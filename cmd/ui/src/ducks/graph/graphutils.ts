@@ -227,6 +227,7 @@ const ICONS: { [id in GraphNodeTypes]: string } = {
     [GraphNodeTypes.Domain]: 'fa-globe',
     [GraphNodeTypes.GPO]: 'fa-th-list',
     [GraphNodeTypes.Group]: 'fa-users',
+    [GraphNodeTypes.AZGroup365]: 'fa-users',
     [GraphNodeTypes.OU]: 'fa-sitemap',
     [GraphNodeTypes.User]: 'fa-user',
     [GraphNodeTypes.Container]: 'fa-box',
