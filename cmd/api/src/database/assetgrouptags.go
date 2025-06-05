@@ -395,7 +395,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 
 		if assetGroupTag.Type == 1 {
 			if assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
-				if err := bhdb.CascadeShiftTierPositions(ctx, tx, user, assetGroupTag.Position, ShiftDown); err != nil {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, assetGroupTag.Position, ShiftDown); err != nil {
 					return err
 				}
 			}
@@ -409,7 +409,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction ShiftDirection) error {
+func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
 	var (
 		positionOp string
 	)
@@ -454,7 +454,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.D
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()
 
-			if err := s.db.WithContext(ctx).Save(&tag).Error; err != nil {
+			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
