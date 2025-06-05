@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '../../test-utils';
-import { QueryTestWrapper } from '../QueryTestWrapper';
+import { SetUpQueryClient } from '../SetupQueryClient';
 import CreateUserForm from './CreateUserForm';
 
 const DEFAULT_PROPS = {
@@ -83,11 +83,9 @@ describe('CreateUserForm', () => {
             { key: ['listSSOProviders'], data: null },
         ];
 
-        render(
-            <QueryTestWrapper stateMap={mockState}>
-                <CreateUserForm {...DEFAULT_PROPS} />
-            </QueryTestWrapper>
-        );
+        const queryClient = SetUpQueryClient(mockState);
+
+        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -111,12 +109,9 @@ describe('CreateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
+        const queryClient = SetUpQueryClient(mockState);
 
-        render(
-            <QueryTestWrapper stateMap={mockState}>
-                <CreateUserForm {...DEFAULT_PROPS} />
-            </QueryTestWrapper>
-        );
+        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
@@ -142,12 +137,9 @@ describe('CreateUserForm', () => {
             },
             { key: ['listSSOProviders'], data: null },
         ];
+        const queryClient = SetUpQueryClient(mockState);
 
-        render(
-            <QueryTestWrapper stateMap={mockState}>
-                <CreateUserForm {...DEFAULT_PROPS} />
-            </QueryTestWrapper>
-        );
+        render(<CreateUserForm {...DEFAULT_PROPS} />, { queryClient });
 
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
