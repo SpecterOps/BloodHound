@@ -116,11 +116,9 @@ describe('Details', async () => {
     });
 
     it.skip('handles selector selection when a tier and object are already selected', async () => {
-        // render(<Details />, { route: '/tier-management/details/tier/1/member/7' });
-
         render(
             <Routes>
-                <Route path='/tier-management/details/tier/:tierId/selector/:selectorId' element={<Details />} />
+                <Route path='/tier-management/details/tier/:tierId/member/:memberId' element={<Details />} />
             </Routes>,
             { route: '/tier-management/details/tier/1/member/7' }
         );
@@ -156,11 +154,9 @@ describe('Details', async () => {
     });
 
     it.skip('will deselect both the selected selector and selected object when a different tier is selected', async () => {
-        // render(<Details />, { route: '/tier-management/details/tier/1/selector/7/member/7' });
-
         render(
             <Routes>
-                <Route path='/tier-management/details/tier/:tierId/selector/:selectorId/*' element={<Details />} />
+                <Route path='/tier-management/details/tier/:tierId/selector/:selectorId/member/:memberId' element={<Details />} />
             </Routes>,
             { route: '/tier-management/details/tier/1/selector/7/member/7' }
         );
