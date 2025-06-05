@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/services/upload"
 	"github.com/specterops/bloodhound/src/services/fs"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 type ListPermissionsResponse struct {
