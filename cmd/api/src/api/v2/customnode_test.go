@@ -19,15 +19,18 @@ package v2_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/src/auth"
+
 	"github.com/gorilla/mux"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/auth"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -48,10 +51,10 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -59,7 +62,10 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			name: "Error: invalid icon type",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode",
+					},
+					Method: http.MethodPost,
 					Header: http.Header{},
 				}
 
@@ -79,25 +85,26 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				t.Helper()
-			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid hex color string",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode",
+					},
+					Method: http.MethodPost,
 					Header: http.Header{},
 				}
 
@@ -117,25 +124,26 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				t.Helper()
-			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: created custom node kinds",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode",
+					},
+					Method: http.MethodPost,
 					Header: http.Header{},
 				}
 
@@ -162,14 +170,14 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(req.Context(), gomock.Any()).Return(model.CustomNodeKinds{
+				mocks.mockDatabase.EXPECT().CreateCustomNodeKinds(gomock.Any(), gomock.Any()).Return(model.CustomNodeKinds{
 					{
 						ID:       1,
 						KindName: "KindA",
@@ -197,7 +205,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusCreated,
 				responseBody:   `{"data":[{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}},{"id":2,"kindName":"KindB","config":{"icon":{"type":"font-awesome","name":"house","color":"#000"}}}]}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -211,7 +219,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
@@ -219,9 +227,10 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			response := httptest.NewRecorder()
-			resources.CreateCustomNodeKind(response, request)
 
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/customnode", resources.CreateCustomNodeKind).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -244,10 +253,10 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -255,8 +264,15 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			name: "Error: invalid icon type",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode/kind",
+					},
+					Method: http.MethodPut,
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
 				}
 
 				payload := &v2.UpdateCustomNodeKindRequest{
@@ -273,26 +289,31 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
+				request.Header.Add(headers.ContentType.String(), "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				t.Helper()
-			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: invalid icon type. only Font Awesome icons are supported"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid hex color string",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode/kind",
+					},
+					Method: http.MethodPut,
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
 				}
 
 				payload := &v2.UpdateCustomNodeKindRequest{
@@ -310,26 +331,30 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
-				t.Helper()
-			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"BadRequest: icon color must be a valid hexadecimal color string starting with '#' followed by 3 or 6 hex digits"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: created custom node kinds",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
+					URL: &url.URL{
+						Path: "/api/v2/customnode/kind",
+					},
+					Method: http.MethodPut,
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
 				}
 
 				payload := &v2.UpdateCustomNodeKindRequest{
@@ -347,14 +372,13 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
 				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
 
 				return request
 			},
-			emulateWithMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDatabase.EXPECT().UpdateCustomNodeKind(req.Context(), gomock.Any()).Return(model.CustomNodeKind{
+				mocks.mockDatabase.EXPECT().UpdateCustomNodeKind(gomock.Any(), gomock.Any()).Return(model.CustomNodeKind{
 					ID:       1,
 					KindName: "KindA",
 					Config: model.CustomNodeKindConfig{
@@ -369,7 +393,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"id":1,"kindName":"KindA","config":{"icon":{"type":"font-awesome","name":"coffee","color":"#FFFFFF"}}}}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -383,7 +407,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB:         mocks.mockDatabase,
@@ -391,9 +415,9 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			}
 
 			response := httptest.NewRecorder()
-			resources.UpdateCustomNodeKind(response, request)
-
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 

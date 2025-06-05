@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package auth
+package auth_test
 
 import (
 	"bytes"
@@ -22,9 +22,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/specterops/bloodhound/src/utils/test"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/specterops/bloodhound/src/database/mocks"
 
@@ -35,7 +40,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/specterops/bloodhound/src/api"
-	api_mocks "github.com/specterops/bloodhound/src/api/mocks"
+	apimocks "github.com/specterops/bloodhound/src/api/mocks"
+	v2auth "github.com/specterops/bloodhound/src/api/v2/auth"
+
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -59,13 +66,13 @@ func TestLoginExpiry(t *testing.T) {
 
 	req2 := api.LoginRequest{LoginMethod: auth.ProviderTypeSecret, Username: "abc", Secret: "123"}
 
-	mockAuthenticator := api_mocks.NewMockAuthenticator(mockCtrl)
+	mockAuthenticator := apimocks.NewMockAuthenticator(mockCtrl)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req1).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockAuthenticator.EXPECT().LoginWithSecret(gomock.Any(), req2).Return(api.LoginDetails{User: model.User{AuthSecret: &model.AuthSecret{ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * -1)}, EULAAccepted: true}, SessionToken: "imasession"}, nil)
 	mockDB.EXPECT().LookupUser(gomock.Any(), gomock.Any()).Return(model.User{EULAAccepted: false}, nil).Times(2)
 	mockDB.EXPECT().UpdateUser(gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
-	resources := NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
+	resources := v2auth.NewLoginResource(config.Configuration{}, mockAuthenticator, mockDB)
 
 	type Input struct {
 		Payload api.LoginRequest
@@ -130,5 +137,91 @@ func TestLoginExpiry(t *testing.T) {
 				t.Errorf("For input: %v, got %v, want %v", tc.Input, body["data"], tc.Expected.Body)
 			}
 		}
+	}
+}
+
+func TestLoginResource_Logout(t *testing.T) {
+	t.Parallel()
+
+	type mock struct {
+		mockAuth *apimocks.MockAuthenticator
+	}
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+	}
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
+	}
+	tt := []testData{
+		{
+			name: "Success: Logout redirects to UI path - OK",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/logout",
+					},
+					Method: http.MethodPost,
+				}
+
+				userSession := model.UserSession{
+					BigSerial: model.BigSerial{
+						ID: 1,
+					},
+				}
+
+				authContext := auth.Context{
+					Session: userSession,
+				}
+
+				bhContext := &ctx.Context{
+					AuthCtx: authContext,
+					Host:    request.URL,
+				}
+
+				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockAuth.EXPECT().Logout(gomock.Any(), model.UserSession{
+					BigSerial: model.BigSerial{
+						ID: 1,
+					},
+				}).Times(1)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Location": []string{"/api/v2/logout/ui"}},
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+
+			mocks := &mock{
+				mockAuth: apimocks.NewMockAuthenticator(ctrl),
+			}
+
+			request := testCase.buildRequest()
+			testCase.setupMocks(t, mocks)
+
+			resource := v2auth.NewLoginResource(config.Configuration{}, mocks.mockAuth, nil)
+
+			response := httptest.NewRecorder()
+
+			router := mux.NewRouter()
+			router.HandleFunc(request.URL.Path, resource.Logout).Methods(request.Method)
+			router.ServeHTTP(response, request)
+
+			status, header, _ := test.ProcessResponse(t, response)
+
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+		})
 	}
 }

@@ -14,25 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package fs
+package oidc
 
-import "os"
+import (
+	"context"
 
-//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/fs.go -package=mocks . Service
+	"github.com/coreos/go-oidc/v3/oidc"
+)
 
-// Serves as a lightweight wrapper around the os package which allows for
-// path management to be abstracted.
+//go:generate go run go.uber.org/mock/mockgen -copyright_file=../../../../../LICENSE.header -destination=./mocks/oidc.go -package=mocks . Service
+
+// Serves as a lightweight wrapper around the oidc package which allows for
+// OpenID Connect client logic to be abstracted.
 type Service interface {
-	CreateTemporaryDirectory(dir, pattern string) (*os.File, error)
-	ReadFile(name string) ([]byte, error)
+	NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error)
 }
 
 type Client struct{}
 
-func (c *Client) CreateTemporaryDirectory(dir, pattern string) (*os.File, error) {
-	return os.CreateTemp(dir, pattern)
-}
-
-func (c *Client) ReadFile(name string) ([]byte, error) {
-	return os.ReadFile(name)
+func (c *Client) NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error) {
+	return oidc.NewProvider(ctx, issuer)
 }
