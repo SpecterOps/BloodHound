@@ -13,9 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { TierManagement } from 'bh-shared-ui';
+import TierManagementProvider from './TierManagementProvider';
 
-import TierManagement from './TierManagement';
+import { FC } from 'react';
 
-export * from './TierManagementContext';
-export * from './utils';
-export default TierManagement;
+const BHCETierManagement: FC = () => {
+    return (
+        <TierManagementProvider>
+            <TierManagement />
+        </TierManagementProvider>
+    );
+};
+
+export default BHCETierManagement;
