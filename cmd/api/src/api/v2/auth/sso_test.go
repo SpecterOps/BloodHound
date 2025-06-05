@@ -185,8 +185,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 	t.Run("successfully list auth providers with filtering", func(t *testing.T) {
 		// filtering by name
 		mockDB.EXPECT().GetAllSSOProviders(gomock.Any(), "created_at", model.SQLFilter{
-			SQLString: "name = ?",
-			Params:    []interface{}{"OIDC Provider 1"},
+			SQLString: "name = 'OIDC Provider 1'",
 		}).Return([]model.SSOProvider{ssoProviders[0]}, nil)
 		const reqUrl = endpoint + "?name=eq:OIDC Provider 1"
 

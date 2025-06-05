@@ -19,6 +19,15 @@ properties:
   findings:
     type: array
     description: List of unified findings.
+    items:
+      $ref: './../schemas/model.unified-finding.yaml'
+
   finding_assets:
     type: object
     description: Directory structure of Base64 encoded assets related to each finding organized by finding name.
+    additionalProperties:
+      type: object
+
+required:
+  - findings
+  - finding_assets

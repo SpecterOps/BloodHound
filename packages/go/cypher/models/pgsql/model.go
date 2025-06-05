@@ -178,6 +178,15 @@ type Literal struct {
 	CastType DataType
 }
 
+// NullLiteral returns a literal that represents SQL NULL.
+func NullLiteral() Literal {
+	return Literal{
+		Value:    nil,
+		Null:     true,
+		CastType: Null,
+	}
+}
+
 func NewLiteral(value any, dataType DataType) Literal {
 	return Literal{
 		Value:    value,
