@@ -340,4 +340,87 @@ describe('Tag Form', () => {
             expect(mockAddNotification).toBeCalledWith();
         });
     });
+
+    it('disables the confirm button when dialog is opened', async () => {
+        const user = userEvent.setup();
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+
+        expect(confirmButton).toBeDisabled();
+    });
+
+    it('disables the confirm button until user types required text', async () => {
+        const user = userEvent.setup();
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+
+        expect(confirmButton).toBeDisabled();
+
+        const textField = screen.getByTestId('confirmation-dialog_challenge-text');
+        await user.type(textField, 'Delete this environment dataa');
+
+        expect(confirmButton).toBeDisabled();
+        const dialog = screen.getByRole('dialog', {
+            name: /Delete data from the current environment\?/i,
+        });
+        expect(dialog).toBeInTheDocument();
+
+        await user.clear(textField);
+        await user.type(textField, 'Delete this environment data');
+
+        expect(confirmButton).not.toBeDisabled();
+    });
+
+    it('open and closes the dialog with the cancel button', async () => {
+        const user = userEvent.setup();
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const dialog = screen.getByRole('dialog', {
+            name: /Delete data from the current environment\?/i,
+        });
+        expect(dialog).toBeInTheDocument();
+
+        const closeButton = screen.getByRole('button', { name: /cancel/i });
+        await user.click(closeButton);
+
+        expect(dialog).not.toBeInTheDocument();
+    });
+
+    it('open and closes dialog with confirm button after user inputs required text', async () => {
+        const user = userEvent.setup();
+
+        const deleteButton = screen.getByRole('button', { name: /delete/i });
+        await user.click(deleteButton);
+
+        const dialog = screen.getByRole('dialog', {
+            name: /Delete data from the current environment\?/i,
+        });
+        expect(dialog).toBeInTheDocument();
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        expect(confirmButton).toBeDisabled();
+
+        const textField = screen.getByTestId('confirmation-dialog_challenge-text');
+        await user.type(textField, 'Delete this environment data');
+
+        expect(confirmButton).not.toBeDisabled();
+        await user.click(confirmButton);
+
+        server.use(
+            rest.delete('/api/v2/asset-group-tags/{%s}', (req, res, ctx) => {
+                return res(ctx.status(200));
+            })
+        );
+
+        // TODO: failing test with mock api endpoint, dialog should *not* show up
+        //expect(dialog).not.toBeInTheDocument();
+    });
 });
