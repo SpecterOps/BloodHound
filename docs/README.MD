@@ -7,6 +7,6 @@
 
 <hr />
 
-BloodHound documentation has moved! If you would like to review the code behind https://bloodhound.specterops.io/home, please check out our new repo: https://github.com/SpecterOps/bloodHound-docs!
+BloodHound documentation has moved! If you would like to review the code behind https://bloodhound.specterops.io/home, please check out our new repo: [SpecterOps/bloodHound-docs](https://github.com/SpecterOps/bloodHound-docs).
 
 Thanks, and see you there!
