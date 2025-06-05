@@ -32,7 +32,6 @@ const GraphEdgeEvents: FC = () => {
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
 
     const sigma = useSigma();
-
     const canvases = sigma.getCanvases();
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;

@@ -158,7 +158,7 @@ const centerCameraOnGraph = (sigma: Sigma<AbstractGraph<Attributes, Attributes, 
         let ratio =
             currentRatio *
             Math.max(graphHypotenuse / frameHypotenuse, graphHeight / frameHeight, graphWidth / frameWidth) *
-            1.05;
+            1.1;
 
         if (ratio < MIN_CAMERA_RATIO) ratio = MIN_CAMERA_RATIO;
         if (ratio > MAX_CAMERA_RATIO) ratio = MAX_CAMERA_RATIO;
