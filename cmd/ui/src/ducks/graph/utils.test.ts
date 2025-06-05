@@ -14,13 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { getEdgeDataFromKey, getNodeOffset } from 'src/ducks/graph/utils';
-
-describe('getNodeOffset', () => {
-    it('returns the difference between the node and the position', () => {
-        expect(getNodeOffset({ x: 2, y: 1 }, { x: 3, y: 2 })).toEqual({ x: 1, y: 1 });
-    });
-});
+import { getDistanceBetween, getEdgeDataFromKey, getNodeOffset } from 'src/ducks/graph/utils';
 
 describe('getEdgeDataFromKey', () => {
     it('should return null if the edge key does not have enough information', () => {
@@ -40,5 +34,17 @@ describe('getEdgeDataFromKey', () => {
             target: 'b',
             label: 'AZMGGroup_ReadWrite_All',
         });
+    });
+});
+
+describe('getDistanceBetween', () => {
+    it('returns the distance between two coordinates', () => {
+        expect(getDistanceBetween({ x: 3, y: 0 }, { x: 0, y: 4 })).toEqual(5);
+    });
+});
+
+describe('getNodeOffset', () => {
+    it('returns the difference between the node and the position', () => {
+        expect(getNodeOffset({ x: 2, y: 1 }, { x: 3, y: 2 })).toEqual({ x: 1, y: 1 });
     });
 });

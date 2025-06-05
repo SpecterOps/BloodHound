@@ -20,7 +20,9 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffec
 import type { SigmaNodeEventPayload } from 'sigma/sigma';
 import type { Coordinates } from 'sigma/types';
 import {
+    DRAG_THRESHOLD,
     MOUSE_BUTTON_PRIMARY,
+    getDistanceBetween,
     getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
     getNodeOffset,
@@ -50,14 +52,30 @@ interface GraphEventProps {
 
 /** Meta info about the currently dragged node */
 type DragMetadata = {
+    /**
+     * If node has been dragged outside of threshold, then click is cancelled
+     * so node is not selected.
+     */
+    cancelNextClick: boolean;
+
     /** Id of the dragged graph node. */
-    id: string;
+    id: string | null;
 
     /**
      * Vector from node's center to cusor position at mouse down. Used to
      * prevent the node from jumping to the cursor at drag start.
      */
-    offset: Coordinates;
+    offset: Coordinates | null;
+
+    /** Node's original position, for determining how far it's been dragged. */
+    origin: Coordinates | null;
+};
+
+const DEFAULT_DRAGGED_META = {
+    id: null,
+    cancelNextClick: false,
+    offset: null,
+    origin: null,
 };
 
 export const GraphEvents = forwardRef(function GraphEvents(
@@ -79,8 +97,8 @@ export const GraphEvents = forwardRef(function GraphEvents(
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
 
-    const [draggedMeta, setDraggedMeta] = useState<DragMetadata | null>(null);
-    const draggedNode = draggedMeta && graph.getNodeAttributes(draggedMeta.id);
+    const [draggedMeta, setDraggedMeta] = useState<DragMetadata>(DEFAULT_DRAGGED_META);
+    const draggedNode = draggedMeta.id && graph.getNodeAttributes(draggedMeta.id);
 
     const sigmaChartRef = ref as React.MutableRefObject<SigmaChartRef | null>;
 
@@ -179,40 +197,59 @@ export const GraphEvents = forwardRef(function GraphEvents(
             },
             downNode: (event) => {
                 if (event.event.original.button === MOUSE_BUTTON_PRIMARY) {
+                    const node = graph.getNodeAttributes(event.node);
                     setDraggedMeta({
+                        cancelNextClick: false,
                         id: event.node,
-                        offset: getNodeOffset(graph.getNodeAttributes(event.node), sigma.viewportToGraph(event.event)),
+                        offset: getNodeOffset(node, sigma.viewportToGraph(event.event)),
+                        origin: { x: node.x, y: node.y },
                     });
                 }
             },
             mouseup: () => {
                 if (draggedNode) {
-                    setDraggedMeta(null);
+                    // Timeout prevents state update race conditions between this an mousemovebody.
+                    setTimeout(() => setDraggedMeta(DEFAULT_DRAGGED_META), 10);
                 }
             },
             mousemovebody: (event) => {
-                if (draggedNode) {
+                if (draggedNode && draggedMeta.offset) {
                     // Get new position of node
                     const position = sigma.viewportToGraph(event);
 
                     // Prevent Sigma from moving camera
                     preventAllDefaults(event);
 
-                    graph.setNodeAttribute(draggedMeta.id, 'x', position.x - draggedMeta.offset.x);
-                    graph.setNodeAttribute(draggedMeta.id, 'y', position.y - draggedMeta.offset.y);
-                }
-            },
-            mousemove: (event) => {
-                if (draggedNode) {
-                    // Prevent Sigma from moving camera
-                    preventAllDefaults(event);
+                    // DRAG_THRESHOLD
+                    const newPosition = {
+                        x: position.x - draggedMeta.offset.x,
+                        y: position.y - draggedMeta.offset.y,
+                    };
+
+                    // Determine if node has been dragged past click-cancel threshold
+                    if (!draggedMeta.cancelNextClick && draggedMeta.origin) {
+                        const dragDistance = getDistanceBetween(draggedMeta.origin, newPosition);
+                        if (dragDistance > DRAG_THRESHOLD) {
+                            setDraggedMeta({ ...draggedMeta, cancelNextClick: true });
+                        }
+                    }
+
+                    graph.setNodeAttribute(draggedMeta.id, 'x', newPosition.x);
+                    graph.setNodeAttribute(draggedMeta.id, 'y', newPosition.y);
                 }
             },
             doubleClickNode: (event) => {
                 // Prevent zoom when node is double clicked
                 preventAllDefaults(event);
             },
-            clickNode: (event) => onClickNode?.(event.node),
+            clickNode: (event) => {
+                if (draggedMeta.cancelNextClick) {
+                    // Click handler is skipped, canceling the click. State is unset
+                    setDraggedMeta({ ...draggedMeta, cancelNextClick: false });
+                } else {
+                    onClickNode?.(event.node);
+                }
+            },
             rightClickNode: (event) => {
                 preventAllDefaults(event);
                 onRightClickNode?.(event);
@@ -223,9 +260,9 @@ export const GraphEvents = forwardRef(function GraphEvents(
             clickStage: () => onClickStage?.(),
         });
     }, [
-        draggedMeta?.id,
-        draggedMeta?.offset.x,
-        draggedMeta?.offset.y,
+        draggedMeta,
+        draggedMeta.id,
+        draggedMeta.offset,
         draggedNode,
         graph,
         onClickNode,
