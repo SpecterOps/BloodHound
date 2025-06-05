@@ -33,6 +33,7 @@ const (
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
+	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
@@ -303,6 +304,78 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	}); err != nil {
 		return model.AssetGroupTag{}, err
 	}
+	return tag, nil
+}
+
+func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error) {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionUpdateAssetGroupTag,
+			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if tag.Type == model.AssetGroupTagTypeTier {
+		if !tag.Position.Valid {
+			return model.AssetGroupTag{}, fmt.Errorf("position is required for an existing tier")
+		}
+	} else if tag.Position.Valid || tag.RequireCertify.Valid {
+		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
+	}
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		var (
+			origPos     null.Int32
+			newPosition = tag.Position // only set for tiers
+		)
+
+		if tag.Type == model.AssetGroupTagTypeTier {
+			if res := tx.Raw(
+				fmt.Sprintf("SELECT position FROM %s WHERE id = ?", tag.TableName()),
+				tag.ID,
+			).Scan(&origPos); res.Error != nil {
+				return CheckError(res)
+			}
+
+			if !origPos.Equal(tag.Position) {
+				if err := bhdb.CascadeShiftTierPositions(ctx, tx, user, newPosition, ShiftUp); err != nil {
+					return err
+				}
+			}
+		}
+
+		if result := tx.Exec(
+			fmt.Sprintf(
+				`UPDATE %s
+				SET
+					name = ?,
+					description = ?,
+					position = ?,
+					require_certify = ?
+					updated_at = NOW(),
+					updated_by = ?,
+				WHERE id = ?`,
+				tag.TableName(),
+			),
+			tag.Name,
+			tag.Description,
+			newPosition,
+			tag.RequireCertify,
+			user.ID.String(),
+			tag.ID,
+		); result.Error != nil {
+			return CheckError(result)
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return model.AssetGroupTag{}, err
+	}
+
 	return tag, nil
 }
 
