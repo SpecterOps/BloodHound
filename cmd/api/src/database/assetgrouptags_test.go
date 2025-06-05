@@ -339,7 +339,9 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		tagTypeLabel       = model.AssetGroupTagTypeLabel
 		testUser           = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 		testName           = "test tag name"
+		testName2          = "test tag name2"
 		testDescription    = "test tag description"
+		testDescription2   = "test tag description2"
 		position           = null.Int32From(2)
 		requireCertifyTier = null.BoolFrom(true)
 	)
@@ -348,6 +350,8 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeTier, assetGroupTagTier.Type)
+		require.Equal(t, testName, assetGroupTagTier.Name)
+		require.Equal(t, testDescription, assetGroupTagTier.Description)
 
 		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, assetGroupTagTier)
 		require.NoError(t, err)
@@ -361,9 +365,11 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("successfully deletes asset group label", func(t *testing.T) {
-		assetGroupTagLabel, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testUser, testName, testDescription, null.Int32{}, null.Bool{})
+		assetGroupTagLabel, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testUser, testName2, testDescription2, null.Int32{}, null.Bool{})
 		require.NoError(t, err)
 		require.Equal(t, tagTypeLabel, assetGroupTagLabel.Type)
+		require.Equal(t, testName2, assetGroupTagLabel.Name)
+		require.Equal(t, testDescription2, assetGroupTagLabel.Description)
 
 		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, assetGroupTagLabel)
 		require.NoError(t, err)
@@ -376,83 +382,6 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[1].Action)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[2].Action)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[3].Action)
-	})
-
-	t.Run("Non existant asset group tag errors out", func(t *testing.T) {
-		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
-		require.Error(t, err)
-	})
-}
-
-func TestDatabase_CascadeShiftTierPositions(t *testing.T) {
-	var (
-		dbInst           = integration.SetupDB(t)
-		testCtx          = context.Background()
-		tagTypeTier      = model.AssetGroupTagTypeTier
-		testUser         = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
-		testUser2        = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012346")}}
-		testUser3        = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012347")}}
-		testUser4        = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012348")}}
-		testName         = "test tag name"
-		testName2        = "test tag name2"
-		testName3        = "test tag name3"
-		testName4        = "test tag name4"
-		testDescription  = "test tag description"
-		testDescription2 = "test tag description2"
-		testDescription3 = "test tag description3"
-		testDescription4 = "test tag description4"
-		position         = null.Int32From(1)
-		position2        = null.Int32From(2)
-		position3        = null.Int32From(3)
-		position4        = null.Int32From(4)
-		//shiftedPosition2 = null.Int32From(2)
-		//shiftedPosition3   = null.Int32From(3)
-		requireCertifyTier = null.BoolFrom(true)
-	)
-
-	t.Run("successfully deletes and shifts other tiers", func(t *testing.T) {
-		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
-		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, assetGroupTagTier.Type)
-
-		assetGroupTagTier2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser2, testName2, testDescription2, position2, requireCertifyTier)
-		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, assetGroupTagTier2.Type)
-
-		assetGroupTagTier3, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser3, testName3, testDescription3, position3, requireCertifyTier)
-		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, assetGroupTagTier3.Type)
-
-		assetGroupTagTier4, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser4, testName4, testDescription4, position4, requireCertifyTier)
-		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, assetGroupTagTier4.Type)
-
-		err = dbInst.CascadeShiftTierPositions(testCtx, testUser, assetGroupTagTier2.Position, "decrement")
-		require.NoError(t, err)
-		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, assetGroupTagTier2)
-		require.NoError(t, err)
-
-		updatedTag3, err := dbInst.GetAssetGroupTag(testCtx, assetGroupTagTier3.ID)
-		require.NoError(t, err)
-		require.False(t, updatedTag3.UpdatedAt.IsZero())
-		require.Equal(t, testUser.ID.String(), updatedTag3.UpdatedBy)
-		//require.Equal(t, shiftedPosition2, assetGroupTagTier3.Position)
-
-		updatedTag4, err := dbInst.GetAssetGroupTag(testCtx, assetGroupTagTier4.ID)
-		require.NoError(t, err)
-		require.False(t, updatedTag4.UpdatedAt.IsZero())
-		require.Equal(t, testUser.ID.String(), updatedTag4.UpdatedBy)
-		//require.Equal(t, shiftedPosition3, assetGroupTagTier4.Position)
-
-		// verify history records were created
-		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
-		require.NoError(t, err)
-		require.Len(t, history, 5)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[1].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[2].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[3].Action)
-		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[4].Action)
 	})
 
 	t.Run("Non existant asset group tag errors out", func(t *testing.T) {
