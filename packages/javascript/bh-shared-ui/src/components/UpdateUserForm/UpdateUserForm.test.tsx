@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '../../test-utils';
-import { SetUpQueryClient } from '../SetupQueryClient';
+import { render, screen, SetUpQueryClient } from '../../test-utils';
+
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
