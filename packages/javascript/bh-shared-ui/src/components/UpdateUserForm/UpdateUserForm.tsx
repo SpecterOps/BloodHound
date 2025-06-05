@@ -34,6 +34,7 @@ import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
+import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
@@ -199,7 +200,7 @@ const UpdateUserFormInner: React.FC<{
                             rules={{
                                 required: 'Email Address is required',
                                 maxLength: {
-                                    value: 319,
+                                    value: MAX_EMAIL_LENGTH,
                                     message: 'Email address must be less than 319 characters',
                                 },
                                 pattern: {
@@ -230,11 +231,11 @@ const UpdateUserFormInner: React.FC<{
                             rules={{
                                 required: 'Principal Name is required',
                                 maxLength: {
-                                    value: 1000,
+                                    value: MAX_NAME_LENGTH,
                                     message: 'Principal Name must be less than 1000 characters',
                                 },
                                 minLength: {
-                                    value: 2,
+                                    value: MIN_NAME_LENGTH,
                                     message: 'Principal Name must be 2 characters or more',
                                 },
                                 validate: (value) => {
@@ -266,11 +267,11 @@ const UpdateUserFormInner: React.FC<{
                             rules={{
                                 required: 'First Name is required',
                                 maxLength: {
-                                    value: 1000,
+                                    value: MAX_NAME_LENGTH,
                                     message: 'First Name must be less than 1000 characters',
                                 },
                                 minLength: {
-                                    value: 2,
+                                    value: MIN_NAME_LENGTH,
                                     message: 'First Name must be 2 characters or more',
                                 },
                                 validate: (value) => {
@@ -302,11 +303,11 @@ const UpdateUserFormInner: React.FC<{
                             rules={{
                                 required: 'Last Name is required',
                                 maxLength: {
-                                    value: 1000,
+                                    value: MAX_NAME_LENGTH,
                                     message: 'Last Name must be less than 1000 characters',
                                 },
                                 minLength: {
-                                    value: 2,
+                                    value: MIN_NAME_LENGTH,
                                     message: 'Last Name must be 2 characters or more',
                                 },
                                 validate: (value) => {
