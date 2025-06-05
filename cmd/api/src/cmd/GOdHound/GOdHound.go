@@ -17,11 +17,11 @@
 package main
 
 import (
-	"fmt"
-	"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
-	"os"
+	//"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
+	"github.com/specterops/bloodhound/src/cmd/GOdHound/config"
 )
 
+/*
 func fatal(value any) {
 	fmt.Printf("%v", value)
 	os.Exit(1)
@@ -30,6 +30,7 @@ func fatal(value any) {
 func fatalf(format string, args ...any) {
 	fatal(fmt.Sprintf(format, args...))
 }
+*/
 
 /*
 Example Ingest File Format for Generic Ingest
@@ -83,38 +84,42 @@ Example Ingest File Format for Generic Ingest
 */
 
 func main() {
-	var (
-		token = &client.TokenCredentialsHandler{
-			TokenID:  "ffa20bcd-5600-4e68-9c8e-49b5a0186a90",
-			TokenKey: "iGd9tuDAEYEWp6YGyiYV6/e+mt1QmuV9S2s8ld///IMQyKsvmRcTLw==",
-		}
-	)
+	/*
+		var (
+			token = &client.TokenCredentialsHandler{
+				TokenID:  "ffa20bcd-5600-4e68-9c8e-49b5a0186a90",
+				TokenKey: "iGd9tuDAEYEWp6YGyiYV6/e+mt1QmuV9S2s8ld///IMQyKsvmRcTLw==",
+			}
+		)
 
-	if apiClient, err := client.NewClient("http://localhost:8080", token); err != nil {
-		fatalf("Failed to create client: %v", err)
-	} else {
-		if version, err := apiClient.Version(); err != nil {
-			fatalf("Failed to get version: %v", err)
+		if apiClient, err := client.NewClient("http://localhost:8080", token); err != nil {
+			fatalf("Failed to create client: %v", err)
 		} else {
-			fmt.Printf("Version: %s\n", version)
-		}
+			if version, err := apiClient.Version(); err != nil {
+				fatalf("Failed to get version: %v", err)
+			} else {
+				fmt.Printf("Version: %s\n", version)
+			}
 
-		if newFileUploadJob, err := apiClient.StartFileUploadJob(); err != nil {
-			fatal(err)
-		} else {
-			if fin, err := os.Open("/home/zinic/test.json"); err != nil {
+			if newFileUploadJob, err := apiClient.StartFileUploadJob(); err != nil {
 				fatal(err)
 			} else {
-				if err := apiClient.SendFileUploadPart(newFileUploadJob, fin); err != nil {
+				if fin, err := os.Open("/home/zinic/test.json"); err != nil {
 					fatal(err)
+				} else {
+					if err := apiClient.SendFileUploadPart(newFileUploadJob, fin); err != nil {
+						fatal(err)
+					}
+
+					fin.Close()
 				}
 
-				fin.Close()
-			}
-
-			if err := apiClient.EndFileUploadJob(newFileUploadJob); err != nil {
-				fatal(err)
+				if err := apiClient.EndFileUploadJob(newFileUploadJob); err != nil {
+					fatal(err)
+				}
 			}
 		}
-	}
+	*/
+
+	config.Validate()
 }

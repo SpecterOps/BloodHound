@@ -16,7 +16,10 @@
 
 module github.com/specterops/bloodhound/src
 
+
 go 1.23.0
+
+replace github.com/specterops/bloodhound/src/cmd/GOdHound => ./cmd/GOdHound
 
 toolchain go1.23.8
 
