@@ -83,6 +83,7 @@ const (
 	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
+	AuditLogActionUpdateAssetGroupTag         AuditLogAction = "UpdateAssetGroupTag"
 	AuditLogActionDeleteAssetGroupTag         AuditLogAction = "DeleteAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
@@ -208,11 +209,12 @@ type Auditable interface {
 }
 
 type AuditEntry struct {
-	CommitID uuid.UUID
-	Action   AuditLogAction
-	Model    Auditable
-	Status   AuditLogEntryStatus
-	ErrorMsg string
+	CommitID    uuid.UUID
+	Action      AuditLogAction
+	Model       Auditable
+	Status      AuditLogEntryStatus
+	ErrorMsg    string
+	ShouldAudit func() bool
 }
 
 // Necessary function for testing. Ensures all fields except CommitID match so mocking checks pass.
