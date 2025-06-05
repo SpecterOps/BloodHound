@@ -28,6 +28,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/specterops/bloodhound/headers"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
@@ -39,7 +40,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestManagementResource_CypherQuery(t *testing.T) {
+func TestResources_CypherQuery(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -54,7 +55,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 
@@ -62,27 +63,23 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 		{
 			name: "Error: empty request body - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{},
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Method: http.MethodPost,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"JSON malformed."}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: GraphQuery.PrepareCypherQuery error - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
-				}
-
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
 					IncludeProperties: true,
@@ -92,29 +89,32 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
-				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
-
-				return request
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{}, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"error"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: HasMutation auth error - Forbidden",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
-				}
-
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
 					IncludeProperties: true,
@@ -124,32 +124,35 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
-				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
-
-				return request
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: true,
 				}, nil)
-				mocks.mockDatabase.EXPECT().AppendAuditLog(req.Context(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusForbidden,
 				responseBody:   `{"errors":[{"context":"","message":"Permission denied: User may not modify the graph."}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: NeoTimeoutError - InternalServerError",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
-				}
-
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
 					IncludeProperties: true,
@@ -159,32 +162,35 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
-				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
-
-				return request
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, &neo4j.Neo4jError{})
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"Neo4jError:  ()"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: empty nodes and edges - Not Found",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
-				}
-
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
 					IncludeProperties: true,
@@ -194,32 +200,35 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
-				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
-
-				return request
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{}, nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: nodes and edges returned valid - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL:    &url.URL{},
-					Header: http.Header{},
-				}
-
 				payload := &v2.CypherQueryPayload{
 					Query:             "query",
 					IncludeProperties: true,
@@ -229,17 +238,25 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
 				}
 
-				request.Header.Add("Content-type", "application/json")
-				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
-
-				return request
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
 				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
 					HasMutation: false,
 				}, nil)
-				mocks.mockGraphQuery.EXPECT().RawCypherQuery(req.Context(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
 						"1": {
 							Label: "label",
@@ -255,7 +272,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"data":{"nodes":{"1":{"label":"label","kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -270,7 +287,7 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				GraphQuery: mocks.mockGraphQuery,
@@ -279,8 +296,9 @@ func TestManagementResource_CypherQuery(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources.CypherQuery(response, request)
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/graphs/cypher", resources.CypherQuery).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
