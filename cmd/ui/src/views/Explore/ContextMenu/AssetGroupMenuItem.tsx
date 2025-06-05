@@ -16,34 +16,44 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, apiClient, useAppNavigate, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { selectTierZeroAssetGroupId, selectOwnedAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 
 const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
     const { addNotification } = useNotifications();
     const { refetch } = useExploreGraph();
+    const navigate = useAppNavigate();
+    const queryClient = useQueryClient();
 
     const [open, setOpen] = useState(false);
 
-    const { selectedItemQuery } = useExploreSelectedItem();
+    const selectedNode = useExploreSelectedItem().selectedItemQuery.data as NodeResponse;
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
 
     const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
 
+    const assetGroupTag = new Map([
+        [tierZeroAssetGroupId, 'Tag_Tier_Zero'],
+        [ownedAssetGroupId, 'Tag_Owned'],
+    ]).get(assetGroupId);
+
     const mutation = useMutation({
-        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
-            return apiClient.updateAssetGroupSelector(assetGroupId, [
-                {
-                    selector_name: nodeId,
-                    sid: nodeId,
-                    action,
-                },
-            ]);
+        mutationFn: (node: NodeResponse) => {
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                seeds: [{
+                    type: SeedTypeObjectId,
+                    value: node.objectId,
+                }],
+            });
         },
-        onSuccess: () => {
+        onSuccess: (data: any, node: NodeResponse) => {
+            queryClient.invalidateQueries(['check-tier-node', assetGroupTag, node.objectId]);
             refetch();
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
@@ -53,25 +63,21 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         },
     });
 
-    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
+    const { data: taggedNode } = useQuery(['check-tier-node', assetGroupTag, selectedNode?.objectId], () =>
         apiClient
-            .listAssetGroupMembers(assetGroupId, undefined, {
-                params: {
-                    object_id: `object_id=eq:${(selectedItemQuery.data as NodeResponse)?.objectId}`,
-                },
-            })
-            .then((res) => res.data.data?.members)
+            .cypherSearch(`MATCH (n:${assetGroupTag}) WHERE n.objectid = '${selectedNode?.objectId}' RETURN n LIMIT 1`)
+            .then((res) => { let r = res.data.data?.nodes; for (let n in r) return r[n]; })
     );
 
     const handleAddToAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
+        if (selectedNode && 'objectId' in selectedNode) {
+            mutation.mutate(selectedNode);
         }
     };
 
     const handleRemoveFromAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
+        if (selectedNode && 'objectId' in selectedNode) {
+            navigate(`/tier-management/details/tag/${assetGroupId}`);
         }
     };
 
@@ -84,13 +90,13 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
         setOpen(false);
     };
 
-    // error state, data didn't load
-    if (!assetGroupMembers) {
+    // unsupported type
+    if (!assetGroupTag) {
         return null;
     }
 
     // selected node is not a member of the group
-    if (assetGroupMembers.length === 0) {
+    if (!taggedNode) {
         return (
             <>
                 <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
@@ -106,24 +112,11 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
                 ) : null}
             </>
         );
-    }
-
-    // selected node is a custom member of the group
-    if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
+    } else {
         return (
-            <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
-                    Remove from {assetGroupName}
-                </MenuItem>
-                {isMenuItemForTierZero ? (
-                    <ConfirmNodeChangesDialog
-                        handleCancel={() => setOpen(false)}
-                        handleApply={handleRemoveFromAssetGroup}
-                        open={open}
-                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
-                    />
-                ) : null}
-            </>
+            <MenuItem onClick={handleRemoveFromAssetGroup}>
+                Remove from {assetGroupName}
+            </MenuItem>
         );
     }
 };
