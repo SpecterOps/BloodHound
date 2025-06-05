@@ -713,36 +713,3 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 		api.WriteBasicResponse(request.Context(), GetAssetGroupMembersResponse{Members: members}, http.StatusOK, response)
 	}
 }
-
-// This is a soft delete
-func (s *Resources) DeleteAssetGroupTag(response http.ResponseWriter, request *http.Request) {
-	defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Delete")()
-
-	if user, isUser := auth.GetUserFromAuthCtx(ctx.FromRequest(request).AuthCtx); !isUser {
-		slog.Error("Unable to get user from auth context")
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "unknown user", request), response)
-	} else if tagId, err := strconv.Atoi(mux.Vars(request)[api.URIPathVariableAssetGroupTagID]); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if assetGroupTag.Position.Int32 == 1 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
-	} else if err := datapipe.ClearAssetGroupTagNodeSet(request.Context(), s.DB, s.Graph, assetGroupTag); err != nil {
-		// Should this be a warning instead???
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("AGT: clearing the tag's node set failed: %v", err), request), response)
-	} else if err := s.DB.DeleteAssetGroupTag(request.Context(), user, assetGroupTag); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		// Request analysis if scheduled analysis isn't enabled
-		if config, err := appcfg.GetScheduledAnalysisParameter(request.Context(), s.DB); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		} else if !config.Enabled {
-			if err := s.DB.RequestAnalysis(request.Context(), user.ID.String()); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			}
-		}
-		api.WriteBasicResponse(request.Context(), assetGroupTag, http.StatusNoContent, response)
-	}
-}
