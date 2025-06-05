@@ -1,5 +1,5 @@
 import { AssetGroupTagsListItem } from 'js-client-library';
-import React, { CSSProperties, FC } from 'react';
+import React, { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import DownArrow from '../../../components/AppIcon/Icons/DownArrow';
 import { cn } from '../../../utils';
@@ -26,7 +26,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                         <li className='border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10 pl-2'>
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
-                    ) : listQuery.isSuccess ? (
+                    ) : (
                         listQuery.data
                             ?.sort((a, b) => {
                                 return b.name.localeCompare(a.name);
@@ -59,7 +59,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                     </React.Fragment>
                                 );
                             })
-                    ) : null}
+                    )}
                 </ul>
             </div>
         </div>
