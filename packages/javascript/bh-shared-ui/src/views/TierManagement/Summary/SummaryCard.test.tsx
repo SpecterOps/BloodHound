@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { AssetGroupTagTypeTier } from 'js-client-library';
 import { render, screen } from '../../../test-utils';
 import SummaryCard from './SummaryCard';
-import { AssetGroupTagTypeTier } from 'js-client-library';
 
 // Mock icons
 vi.mock('../../../components/AppIcon/Icons/LargeRightArrow', () => ({
