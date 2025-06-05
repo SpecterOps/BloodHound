@@ -22,7 +22,7 @@ import { apiClient, useAppNavigate } from '../../../utils';
 import { SelectedDetails } from '../Details/SelectedDetails';
 import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
-import SummaryList from './SummaryList';
+// import SummaryList from './SummaryList';
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
@@ -43,7 +43,7 @@ const Summary: FC = () => {
             <TierActionBar tierId={tagId} labelId={labelId} selectorId={selectorId} />
             <div className='flex gap-8 mt-4 w-full'>
                 <div className='flex-1'>
-                    <SummaryList
+                    {/* <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
                         selected={tagId}
@@ -52,7 +52,7 @@ const Summary: FC = () => {
                                 `/tier-management/${ROUTE_TIER_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
                             );
                         }}
-                    />
+                    /> */}
                 </div>
                 <div className='basis-1/3'>
                     <SelectedDetails />
