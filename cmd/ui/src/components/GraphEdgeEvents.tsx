@@ -15,10 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
-import { FC, useCallback, useEffect, useRef } from 'react';
-import { MouseCaptor } from 'sigma';
-import { Coordinates, MouseCoords, WheelCoords } from 'sigma/types';
+import { useDisablePinchZoomOnElement, useExploreSelectedItem } from 'bh-shared-ui';
+import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
     getEdgeDataFromKey,
@@ -28,92 +26,7 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
-
-const MOUSE_ZOOM_DURATION = 250;
-const ZOOMING_RATIO = 1.4;
-
-function getPositionFromSigma(e: MouseEvent | Touch, dom: HTMLElement): Coordinates {
-    const bbox = dom.getBoundingClientRect();
-
-    return {
-        x: e.clientX - bbox.left,
-        y: e.clientY - bbox.top,
-    };
-}
-
-function getMouseCoordsFromSigma(e: MouseEvent, dom: HTMLElement): MouseCoords {
-    const res: MouseCoords = {
-        ...getPositionFromSigma(e, dom),
-        sigmaDefaultPrevented: false,
-        preventSigmaDefault(): void {
-            res.sigmaDefaultPrevented = true;
-        },
-        original: e,
-    };
-
-    return res;
-}
-function getWheelCoordsFromSigma(e: WheelEvent, dom: HTMLElement): WheelCoords {
-    return {
-        ...getMouseCoordsFromSigma(e, dom),
-        delta: getWheelDeltaFromSigma(e),
-    };
-}
-
-function getWheelDeltaFromSigma(e: WheelEvent): number {
-    // TODO: check those ratios again to ensure a clean Chrome/Firefox compat
-    if (typeof e.deltaY !== 'undefined') return (e.deltaY * -3) / 360;
-
-    if (typeof e.detail !== 'undefined') return e.detail / -9;
-
-    throw new Error('Captor: could not extract delta from event.');
-}
-
-function handleWheelFromSigma(this: MouseCaptor, e: WheelEvent): void {
-    if (!this.enabled) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const delta = getWheelDeltaFromSigma(e);
-
-    if (!delta) return;
-
-    const wheelCoords = getWheelCoordsFromSigma(e, this.container);
-    this.emit('wheel', wheelCoords);
-
-    if (wheelCoords.sigmaDefaultPrevented) return;
-
-    // Default behavior
-    const ratioDiff = delta > 0 ? 1 / ZOOMING_RATIO : ZOOMING_RATIO;
-    const camera = this.renderer.getCamera();
-    const newRatio = camera.getBoundedRatio(camera.getState().ratio * ratioDiff);
-    const wheelDirection = delta > 0 ? 1 : -1;
-    const now = Date.now();
-
-    // Cancel events that are too close too each other and in the same direction:
-    if (
-        this.currentWheelDirection === wheelDirection &&
-        this.lastWheelTriggerTime &&
-        now - this.lastWheelTriggerTime < MOUSE_ZOOM_DURATION / 5
-    ) {
-        return;
-    }
-
-    camera.animate(
-        this.renderer.getViewportZoomedState(getPositionFromSigma(e, this.container), newRatio),
-        {
-            easing: 'quadraticOut',
-            duration: MOUSE_ZOOM_DURATION,
-        },
-        () => {
-            this.currentWheelDirection = 0;
-        }
-    );
-
-    this.currentWheelDirection = wheelDirection;
-    this.lastWheelTriggerTime = now;
-}
+import handleWheelFromSigma from './sigma-functions';
 
 const GraphEdgeEvents: FC = () => {
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
@@ -121,7 +34,6 @@ const GraphEdgeEvents: FC = () => {
     const sigma = useSigma();
 
     const canvases = sigma.getCanvases();
-    const edgeEventsRef = useRef<HTMLCanvasElement>(null);
     const sigmaContainer = document.getElementById('sigma-container');
     const mouseCanvas = canvases.mouse;
     const edgeLabelsCanvas = canvases.edgeLabels;
@@ -251,17 +163,9 @@ const GraphEdgeEvents: FC = () => {
         [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
-    useEffect(() => {
-        // sigma.getMouseCaptor().container.removeEventListener('wheel', sigma.getMouseCaptor().handleWheel);
-        edgeEventsRef?.current?.addEventListener(
-            'wheel',
-            (e) => {
-                e.preventDefault();
-                handleWheelFromSigma.call(sigma.getMouseCaptor(), e);
-            },
-            { passive: false }
-        );
-    }, [edgeEventsRef, sigma]);
+    const edgeEventsRef = useDisablePinchZoomOnElement<HTMLCanvasElement>((e) => {
+        handleWheelFromSigma.call(sigma.getMouseCaptor(), e);
+    });
 
     return (
         <canvas

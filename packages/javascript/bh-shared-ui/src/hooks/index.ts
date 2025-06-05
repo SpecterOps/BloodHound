@@ -22,6 +22,8 @@ export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
 
+export { default as useDisablePinchZoomOnElement } from './useDisablePinchZoomOnElement';
+
 export * from './useAvailableEnvironments';
 
 export * from './useConfiguration';
