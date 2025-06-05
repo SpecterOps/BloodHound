@@ -7,7 +7,7 @@ import { useCallback } from 'react';
  */
 const useCreateDisableZoomRef = <T extends HTMLElement>(onWheel?: (e: WheelEvent) => void) => {
     return useCallback(
-        (ref?: T) => {
+        (ref: T) => {
             // Clean up existing listener if any
             ref?.removeEventListener('wheel', (ref as any)._wheelHandler as any);
 
