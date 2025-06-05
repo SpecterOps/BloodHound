@@ -164,6 +164,7 @@ const GraphEdgeEvents: FC = () => {
 
     const edgeEventsRef = useCreateDisableZoomRef<HTMLCanvasElement>((e) => {
         handleWheelFromSigma.call(sigma.getMouseCaptor(), e);
+        handleEdgeEvents(e);
     });
 
     return (
