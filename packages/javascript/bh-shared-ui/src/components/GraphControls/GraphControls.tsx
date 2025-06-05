@@ -20,9 +20,8 @@ import { MenuItem, Popper } from '@mui/material';
 import { GraphNodes } from 'js-client-library';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
-import useToggle from '../../hooks/useToggle';
 import { exportToJson } from '../../utils/exportGraphData';
 import GraphButton from '../GraphButton';
 import GraphMenu from '../GraphMenu';
@@ -59,7 +58,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
 
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
-    const [isCurrentSearchOpen, toggleCurrentSearch] = useToggle(false);
+    const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
 
     const currentSearchAnchorElement = useRef(null);
 
@@ -116,7 +115,7 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphButton
-                    onClick={toggleCurrentSearch}
+                    onClick={() => setIsCurrentSearchOpen(true)}
                     displayText={'Search Current Results'}
                     disabled={isCurrentSearchOpen}
                 />
@@ -136,9 +135,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         currentNodes={currentNodes}
                         onSelect={(node) => {
                             onSearchedNodeClick(node);
-                            toggleCurrentSearch();
+                            setIsCurrentSearchOpen(false);
                         }}
-                        onClose={toggleCurrentSearch}
+                        onClose={() => setIsCurrentSearchOpen(false)}
                     />
                 </div>
             </Popper>
