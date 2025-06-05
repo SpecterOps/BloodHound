@@ -24,13 +24,6 @@ const References: FC = () => {
                 https://github.com/GhostPack/Rubeus#s4u
             </Link>
             <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://labs.mwrinfosecurity.com/blog/trust-years-to-earn-seconds-to-break/'>
-                https://labs.mwrinfosecurity.com/blog/trust-years-to-earn-seconds-to-break/
-            </Link>
-            <br />
             <Link target='_blank' rel='noopener' href='https://blog.harmj0y.net/activedirectory/s4u2pwnage/'>
                 https://blog.harmj0y.net/activedirectory/s4u2pwnage/
             </Link>
