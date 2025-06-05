@@ -31,13 +31,15 @@ export const TierActionBar: React.FC<{
 }> = ({ tierId, labelId, selectorId, showEditButton, getSavePath }) => {
     const navigate = useAppNavigate();
     const tagId = labelId === undefined ? tierId : labelId;
+    const buttonTitle = location.pathname.includes('label') ? 'Label' : 'Tier';
+    const viewButtonTitle = location.pathname.includes('details') ? 'Details' : 'Summary';
     return (
         <div className='flex mt-6 gap-8'>
             <div className='flex justify-around basis-2/3'>
                 <div className='flex justify-start gap-4 items-center basis-2/3'>
-                    <div className='flex items-center align-middle'>
+                    <div className='flex items-center align-middle gap-4'>
                         <CreateMenu
-                            createMenuTitle='View'
+                            createMenuTitle={`${viewButtonTitle} View`}
                             disabled={!tierId}
                             menuItems={[
                                 {
@@ -57,13 +59,15 @@ export const TierActionBar: React.FC<{
                             ]}
                         />
                         <CreateMenu
-                            createMenuTitle='Create Selector'
-                            disabled={!tierId}
+                            createMenuTitle={`Create ${buttonTitle}`}
+                            disabled={!tierId || !labelId}
                             menuItems={[
                                 {
-                                    title: 'Create Selector',
+                                    title: `Create ${buttonTitle}`,
                                     onClick: () => {
-                                        navigate(`/tier-management/edit/tag/${tierId}/selector`);
+                                        navigate(
+                                            `/tier-management/save/${buttonTitle.toLowerCase()}/${location.pathname.includes('label') ? labelId : tierId}`
+                                        );
                                     },
                                 },
                             ]}
