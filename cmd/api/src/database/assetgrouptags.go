@@ -19,11 +19,19 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
+)
+
+type ShiftDirection int
+
+const (
+	ShiftUp   ShiftDirection = 1
+	ShiftDown ShiftDirection = -1
 )
 
 const (
@@ -340,7 +348,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			}
 
 			if !origPos.Equal(tag.Position) {
-				if err := bhdb.CascadeShiftTierPositions(ctx, tx, user, newPosition, ShiftUp); err != nil {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, newPosition, ShiftUp); err != nil {
 					return err
 				}
 			}
@@ -480,4 +488,66 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
+}
+
+func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
+	var (
+		positionOp string
+	)
+
+	switch direction {
+	case ShiftUp:
+		positionOp = ">="
+	case ShiftDown:
+		positionOp = ">"
+	default:
+		return fmt.Errorf("invalid shift direction")
+	}
+
+	// get affected rows
+	var tags []model.AssetGroupTag
+	if err := s.db.WithContext(ctx).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), 1, position.Int32).
+		Order("position ASC").
+		Find(&tags).Error; err != nil {
+		return fmt.Errorf("failed to fetch tags to shift: %w", err)
+	}
+
+	// update each and create history record
+	for _, tag := range tags {
+		var (
+			auditEntry = model.AuditEntry{
+				Action: model.AuditLogActionUpdateAssetGroupTag,
+				Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+			}
+		)
+
+		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+			originalPosition := tag.Position.Int32
+			if direction == ShiftUp {
+				tag.Position.Int32++
+			} else {
+				tag.Position.Int32--
+			}
+
+			tag.UpdatedAt = time.Now()
+			tag.UpdatedBy = user.ID.String()
+
+			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
+				return fmt.Errorf("failed to update tag position: %w", err)
+			}
+
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated positon %d", originalPosition, tag.Position.Int32))); err != nil {
+				return fmt.Errorf("failed to create history record: %w", err)
+			}
+
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
