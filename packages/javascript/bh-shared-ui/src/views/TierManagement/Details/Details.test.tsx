@@ -114,7 +114,7 @@ describe('Details', async () => {
             expect(await screen.findByTestId('tier-management_details_members-list_active-members-item-5'));
         });
     });
-
+    // TODO fix failing test
     it.skip('handles selector selection when a tier and object are already selected', async () => {
         render(
             <Routes>
@@ -153,6 +153,7 @@ describe('Details', async () => {
         });
     });
 
+    // TODO fix failing test
     it.skip('will deselect both the selected selector and selected object when a different tier is selected', async () => {
         render(
             <Routes>
