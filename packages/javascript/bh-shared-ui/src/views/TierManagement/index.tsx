@@ -17,5 +17,5 @@
 import TierManagement from './TierManagement';
 
 export * from './TierManagementContext';
-export * from './utils';
+export * from '../../utils/tagUrlValue';
 export default TierManagement;

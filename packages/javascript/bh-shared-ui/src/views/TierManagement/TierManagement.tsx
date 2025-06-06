@@ -30,7 +30,7 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { TierManagementContext } from './TierManagementContext';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
+import { OWNED_ID, TIER_ZERO_ID } from '../../utils/tagUrlValue';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));

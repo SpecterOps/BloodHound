@@ -22,7 +22,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { TierManagementContext } from '../TierManagementContext';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { TIER_ZERO_ID, getTagUrlValue } from '../../../utils/tagUrlValue';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -103,7 +103,7 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
     return (
-        <div>
+        <>
             <div className='flex mt-6 gap-8'>
                 <InfoHeader />
                 <div className='basis-1/3'>
@@ -150,7 +150,7 @@ const Details: FC = () => {
                     <SelectedDetails />
                 </div>
             </div>
-        </div>
+        </ >
     );
 };
 

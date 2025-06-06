@@ -27,7 +27,7 @@ import { useDebouncedValue } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { Cypher } from '../../Cypher/Cypher';
-import { getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../../../utils/tagUrlValue';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';

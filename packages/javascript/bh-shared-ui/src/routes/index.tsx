@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { TIER_ZERO_ID } from '../views/TierManagement/utils';
+import { TIER_ZERO_ID } from '../utils/tagUrlValue';
 
 export const DEFAULT_TIER_MANAGEMENT_ROUTE = 'details/tier/' + TIER_ZERO_ID;
 

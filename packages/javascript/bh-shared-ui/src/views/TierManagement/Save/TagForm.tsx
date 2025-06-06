@@ -31,7 +31,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { apiClient, cn, useAppNavigate } from '../../../utils';
-import { getTagUrlValue } from '../utils';
+import { getTagUrlValue } from '../../../utils/tagUrlValue';
 
 type TagFormInputs = {
     name: string;
