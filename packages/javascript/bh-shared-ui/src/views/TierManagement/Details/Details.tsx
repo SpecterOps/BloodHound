@@ -79,7 +79,11 @@ const Details: FC = () => {
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
-    const { InfoHeader } = useContext(TierManagementContext);
+    const context = useContext(TierManagementContext);
+    if (!context) {
+        throw new Error('Details must be used within a TierManagementContext.Provider');
+    }
+    const { InfoHeader } = context;
 
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
