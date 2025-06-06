@@ -33,28 +33,34 @@ import (
 	"github.com/specterops/bloodhound/src/utils/validation"
 )
 
+type ParameterKey string
+
 const (
-	PasswordExpirationWindow        = "auth.password_expiration_window"
+	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs             ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                 ParameterKey = "prune.ttl"
+	ReconciliationKey        ParameterKey = "analysis.reconciliation"
+
+	// The below keys are not intended to be user updateable, so should not be added to IsValidKey
+	ScheduledAnalysis    ParameterKey = "analysis.scheduled"
+	TrustedProxiesConfig ParameterKey = "http.trusted_proxies"
+	FedEULACustomTextKey ParameterKey = "eula.custom_text"
+)
+
+const (
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
-
-	Neo4jConfigs        = "neo4j.configuration"
-	CitrixRDPSupportKey = "analysis.citrix_rdp_support"
-
-	PruneTTL                      = "prune.ttl"
-	DefaultPruneBaseTTL           = time.Hour * 24 * 7
-	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
-
-	ReconciliationKey = "analysis.reconciliation"
-	ScheduledAnalysis = "analysis.scheduled" //This key is not intended to be user updateable, so should not be added to IsValidKey
-
-	TrustedProxiesConfig = "http.trusted_proxies"
+	DefaultSessionTTLHours          = 8
+	DefaultPruneBaseTTL             = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL   = time.Hour * 24 * 3
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
 // Value member is a DB-safe JSON type wrapper that can store arbitrary JSON objects and map them to golang struct
 // definitions.
 type Parameter struct {
-	Key         string            `json:"key" gorm:"unique"`
+	Key         ParameterKey      `json:"key" gorm:"unique"`
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Value       types.JSONBObject `json:"value"`
@@ -68,18 +74,26 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
-func (s *Parameter) IsValidKey(parameterKey string) bool {
-	validKeys := map[string]bool{
-		PasswordExpirationWindow: true,
-		Neo4jConfigs:             true,
-		PruneTTL:                 true,
-		CitrixRDPSupportKey:      true,
-		ReconciliationKey:        true,
+func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
+	switch parameterKey {
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey:
+		return true
+	default:
+		return false
 	}
-
-	return validKeys[parameterKey]
 }
 
+// IsProtectedKey These keys should not be updatable by users
+func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
+	switch parameterKey {
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, SessionTTLHours:
+		return true
+	default:
+		return false
+	}
+}
+
+// Validate WARNING - This will not protect the protected keys, use IsValidKey for that, this validates the json payload matches the intended parameter values
 func (s *Parameter) Validate() utils.Errors {
 	// validate the base parameter
 	var (
@@ -103,6 +117,14 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &CitrixRDPSupport{}
 	case ReconciliationKey:
 		v = &ReconciliationParameter{}
+	case ScheduledAnalysis:
+		v = &ScheduledAnalysisParameter{}
+	case TrustedProxiesConfig:
+		v = &TrustedProxiesParameters{}
+	case FedEULACustomTextKey:
+		v = &FedEULACustomTextParameter{}
+	case SessionTTLHours:
+		v = &SessionTTLHoursParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -126,6 +148,22 @@ func (s *Parameter) AuditData() model.AuditData {
 	}
 }
 
+type AppConfigUpdateRequest struct {
+	Key   string         `json:"key"`
+	Value map[string]any `json:"value"`
+}
+
+func ConvertAppConfigUpdateRequestToParameter(appConfigUpdateRequest AppConfigUpdateRequest) (Parameter, error) {
+	if value, err := types.NewJSONBObject(appConfigUpdateRequest.Value); err != nil {
+		return Parameter{}, fmt.Errorf("failed to convert value to JSONBObject: %w", err)
+	} else {
+		return Parameter{
+			Key:   ParameterKey(appConfigUpdateRequest.Key),
+			Value: value,
+		}, nil
+	}
+}
+
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
 
@@ -136,7 +174,7 @@ type ParameterService interface {
 	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
 
 	// GetConfigurationParameter attempts to fetch a Parameter struct by its parameter name.
-	GetConfigurationParameter(ctx context.Context, parameter string) (Parameter, error)
+	GetConfigurationParameter(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
 
 	// SetConfigurationParameter attempts to store or update the given Parameter.
 	SetConfigurationParameter(ctx context.Context, configurationParameter Parameter) error
@@ -290,7 +328,7 @@ func GetReconciliationParameter(ctx context.Context, service ParameterService) b
 
 type ScheduledAnalysisParameter struct {
 	Enabled bool   `json:"enabled,omitempty"`
-	RRule   string `json:"rrule,omitempty"`
+	RRule   string `json:"rrule,omitempty" validate:"rrule"`
 }
 
 func GetScheduledAnalysisParameter(ctx context.Context, service ParameterService) (ScheduledAnalysisParameter, error) {
@@ -321,4 +359,42 @@ func GetTrustedProxiesParameters(ctx context.Context, service ParameterService) 
 	}
 
 	return result.TrustedProxies
+}
+
+type FedEULACustomTextParameter struct {
+	CustomText string `json:"custom_text,omitempty"`
+}
+
+// GetFedRAMPCustomEULA Note this is not gated by the FedEULA FF and that should be checked alongside this
+func GetFedRAMPCustomEULA(ctx context.Context, service ParameterService) string {
+	var result FedEULACustomTextParameter
+
+	if fedEulaCustomText, err := service.GetConfigurationParameter(ctx, FedEULACustomTextKey); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch eula custom text; returning default value")
+	} else if err = fedEulaCustomText.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid eula custom text supplied; returning default value")
+	}
+
+	return result.CustomText
+}
+
+type SessionTTLHoursParameter struct {
+	Hours int `json:"hours,omitempty"`
+}
+
+func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
+	var result = SessionTTLHoursParameter{
+		Hours: DefaultSessionTTLHours, // Default to a logged in auth session time to live of 8 hours
+	}
+
+	if sessionTTLHours, err := service.GetConfigurationParameter(ctx, SessionTTLHours); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch auth session ttl hours; returning default values")
+	} else if err = sessionTTLHours.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
+	} else if result.Hours <= 0 {
+		slog.WarnContext(ctx, "auth session ttl hours ≤ 0; returning default values")
+		result.Hours = DefaultSessionTTLHours
+	}
+
+	return time.Hour * time.Duration(result.Hours)
 }
