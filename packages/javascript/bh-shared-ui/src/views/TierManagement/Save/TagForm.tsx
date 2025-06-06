@@ -29,8 +29,8 @@ import { createBrowserHistory } from 'history';
 import { FC } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
-import { apiClient, cn } from '../../../utils';
+import { useParams } from 'react-router-dom';
+import { apiClient, cn, useAppNavigate } from '../../../utils';
 import { getTagUrlValue } from '../utils';
 
 type TagFormInputs = {
@@ -51,7 +51,7 @@ export const TagForm: FC = () => {
     // TODO: REMOVE THIS ONCE THIS FORM HAS ENDPOINTS THAT IT CAN POST TO
     const inputsDisabled = true;
 
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const onSubmit: SubmitHandler<TagFormInputs> = (data) => {
         console.log(data);
@@ -70,7 +70,7 @@ export const TagForm: FC = () => {
     });
 
     if (tagQuery.isLoading) return <Skeleton />;
-    if (tagQuery.isError) throw new Error();
+    if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>

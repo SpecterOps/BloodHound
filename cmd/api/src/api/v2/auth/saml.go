@@ -395,7 +395,7 @@ func (s ManagementResource) SAMLLoginHandler(response http.ResponseWriter, reque
 		}
 
 		// TODO: add actual relay state support - BED-5071
-		if authReq, err := serviceProvider.MakeAuthenticationRequest(bindingLocation, binding, saml.HTTPPostBinding); err != nil {
+		if authReq, err := s.SAML.MakeAuthenticationRequest(serviceProvider, bindingLocation, binding, saml.HTTPPostBinding); err != nil {
 			slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed creating SAML authentication request: %v", err))
 			// SAML misconfiguration or technical issue
 			// Since this likely indicates a configuration problem, we treat it as a misconfiguration scenario
@@ -444,7 +444,7 @@ func (s ManagementResource) SAMLCallbackHandler(response http.ResponseWriter, re
 		slog.WarnContext(request.Context(), fmt.Sprintf("[SAML] Failed to parse form POST: %v", err))
 		// Technical issues or invalid form data
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Invalid SSO response %s", err.Error()))
-	} else if assertion, err := serviceProvider.ParseResponse(request, nil); err != nil {
+	} else if assertion, err := s.SAML.ParseResponse(serviceProvider, request, nil); err != nil {
 		var typedErr *saml.InvalidResponseError
 		switch {
 		case errors.As(err, &typedErr):

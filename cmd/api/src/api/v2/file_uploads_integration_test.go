@@ -30,7 +30,7 @@ import (
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 	"github.com/specterops/bloodhound/src/test/fixtures/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -274,5 +274,5 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) { //***
 func Test_BadFileUploadError(t *testing.T) {
 	testCtx := integration.NewFOSSContext(t)
 
-	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", ingest.ErrInvalidJSON)
+	testCtx.SendInvalidFileIngest("v6/ingest/jker.jpg", upload.ErrInvalidJSON)
 }

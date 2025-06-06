@@ -14,61 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { createBrowserHistory } from 'history';
-import { AssetGroupTagNode, AssetGroupTagSelector, SeedTypeObjectId, SeedTypes } from 'js-client-library';
-import {
-    CreateSelectorRequest,
-    RequestOptions,
-    SelectorSeedRequest,
-    UpdateSelectorRequest,
-} from 'js-client-library/dist/requests';
+import { Skeleton } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTagSelector, GraphNode, SeedTypeObjectId, SeedTypes } from 'js-client-library';
+import { CreateSelectorRequest, SelectorSeedRequest, UpdateSelectorRequest } from 'js-client-library/dist/requests';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useReducer } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
-import { apiClient } from '../../../../utils';
+import { apiClient, useAppNavigate } from '../../../../utils';
+import { SearchValue } from '../../../Explore';
 import BasicInfo from './BasicInfo';
 import SeedSelection from './SeedSelection';
 import SelectorFormContext from './SelectorFormContext';
-import { CreateSelectorParams, PatchSelectorParams, SelectorFormInputs } from './types';
+import { useCreateSelector, usePatchSelector, useSelectorInfo } from './hooks';
+import { SelectorFormInputs } from './types';
 import { handleError } from './utils';
-
-const patchSelector = async (params: PatchSelectorParams, options?: RequestOptions) => {
-    const { tagId, selectorId, updatedValues } = params;
-
-    const res = await apiClient.updateAssetGroupTagSelector(tagId, selectorId, updatedValues, options);
-
-    return res.data.data;
-};
-
-const usePatchSelector = (tagId: string | number | undefined) => {
-    const queryClient = useQueryClient();
-    return useMutation(patchSelector, {
-        onSettled: () => {
-            queryClient.invalidateQueries(['tier-management', 'tags', tagId, 'selectors']);
-        },
-    });
-};
-
-const createSelector = async (params: CreateSelectorParams, options?: RequestOptions) => {
-    const { tagId, values } = params;
-
-    const res = await apiClient.createAssetGroupTagSelector(tagId, values, options);
-
-    return res.data.data;
-};
-
-const useCreateSelector = (tagId: string | number | undefined) => {
-    const queryClient = useQueryClient();
-    return useMutation(createSelector, {
-        onSettled: () => {
-            queryClient.invalidateQueries(['tier-management', 'tags', tagId, 'selectors']);
-        },
-    });
-};
 
 const diffValues = (
     data: AssetGroupTagSelector | undefined,
@@ -76,42 +38,88 @@ const diffValues = (
 ): UpdateSelectorRequest => {
     if (data === undefined) return formValues;
 
+    const workingCopy = { ...formValues };
+
     const diffed: UpdateSelectorRequest = {};
     const disabled = data.disabled_at !== null;
 
     // 'on' means the switch hasn't been touched yet which means default to current disabled state
-    if (formValues.disabled === 'on') {
-        formValues.disabled = disabled;
+    if (workingCopy.disabled === 'on') {
+        workingCopy.disabled = disabled;
     }
 
-    if (data.name !== formValues.name) diffed.name = formValues.name;
-    if (data.description !== formValues.description) diffed.description = formValues.description;
-    if (formValues.disabled !== disabled) diffed.disabled = formValues.disabled;
-    if (!isEqual(formValues.seeds, data.seeds)) diffed.seeds = formValues.seeds;
+    if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
+    if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
+    if (workingCopy.disabled !== disabled) diffed.disabled = workingCopy.disabled;
+    if (!isEqual(workingCopy.seeds, data.seeds)) diffed.seeds = workingCopy.seeds;
 
     return diffed;
+};
+
+export type AssetGroupSelectedNode = SearchValue & { memberCount?: number };
+export type AssetGroupSelectedNodes = AssetGroupSelectedNode[];
+
+type SelectorFormState = {
+    selectorType: SeedTypes;
+    seeds: SelectorSeedRequest[];
+    selectedObjects: AssetGroupSelectedNodes;
+};
+
+const initialState: SelectorFormState = {
+    selectorType: SeedTypeObjectId,
+    seeds: [],
+    selectedObjects: [],
+};
+
+export type Action =
+    | { type: 'add-selected-object'; node: SearchValue }
+    | { type: 'remove-selected-object'; node: SearchValue }
+    | { type: 'set-selected-objects'; nodes: AssetGroupSelectedNodes }
+    | { type: 'set-selector-type'; selectorType: SeedTypes }
+    | { type: 'set-seeds'; seeds: SelectorSeedRequest[] };
+
+const reducer = (state: SelectorFormState, action: Action): SelectorFormState => {
+    switch (action.type) {
+        case 'add-selected-object':
+            return {
+                ...state,
+                seeds: [...state.seeds, { type: SeedTypeObjectId, value: action.node.objectid }],
+                selectedObjects: [
+                    ...state.selectedObjects,
+                    {
+                        objectid: action.node.objectid,
+                        name: action.node.name || action.node.objectid,
+                        type: action.node.type,
+                    },
+                ],
+            };
+        case 'remove-selected-object':
+            return {
+                ...state,
+                seeds: state.seeds.filter((seed) => seed.value !== action.node.objectid),
+                selectedObjects: state.selectedObjects.filter((node) => node.objectid !== action.node.objectid),
+            };
+        case 'set-selected-objects':
+            return { ...state, selectedObjects: action.nodes };
+        case 'set-selector-type':
+            return { ...state, selectorType: action.selectorType, seeds: [], selectedObjects: [] };
+        case 'set-seeds':
+            return { ...state, seeds: action.seeds };
+        default:
+            return state;
+    }
 };
 
 const SelectorForm: FC = () => {
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-    const history = createBrowserHistory();
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const { addNotification } = useNotifications();
 
-    const selectorQuery = useQuery({
-        queryKey: ['tier-management', 'tags', tagId, 'selectors', selectorId],
-        queryFn: async () => {
-            const response = await apiClient.getAssetGroupTagSelector(tagId, selectorId);
-            return response.data.data['selector'];
-        },
-        enabled: selectorId !== '',
-    });
+    const [{ selectorType, seeds, selectedObjects }, dispatch] = useReducer(reducer, initialState);
 
-    const [selectorType, setSelectorType] = useState<SeedTypes>(SeedTypeObjectId);
-    const [results, setResults] = useState<AssetGroupTagNode[] | null>(null);
-    const [seeds, setSeeds] = useState<SelectorSeedRequest[]>(selectorQuery.data?.seeds || []);
+    const selectorQuery = useSelectorInfo(tagId, selectorId);
 
     const formMethods = useForm<SelectorFormInputs>();
 
@@ -147,12 +155,12 @@ const SelectorForm: FC = () => {
                     }
                 );
 
-                history.back();
+                navigate(-1);
             } catch (error) {
                 handleError(error, 'updating', addNotification);
             }
         },
-        [tagId, selectorId, patchSelectorMutation, addNotification, history, selectorQuery.data]
+        [tagId, selectorId, patchSelectorMutation, addNotification, selectorQuery.data, navigate]
     );
 
     const handleCreateSelector = useCallback(
@@ -181,18 +189,56 @@ const SelectorForm: FC = () => {
             } else {
                 handleCreateSelector(data);
             }
-            setResults([]);
         },
-        [selectorId, handleCreateSelector, handlePatchSelector, setResults]
+        [selectorId, handleCreateSelector, handlePatchSelector]
     );
 
     useEffect(() => {
-        if (selectorQuery.data) setSeeds(selectorQuery.data.seeds);
+        const abortController = new AbortController();
+        if (selectorQuery.data) {
+            const seedsToSelectedObjects = async () => {
+                const nodesByObjectId = new Map<string, GraphNode>();
+
+                const seedsList = selectorQuery.data.seeds.map((seed) => {
+                    return `"${seed.value}"`;
+                });
+
+                const query = `match(n) where n.objectid in [${seedsList?.join(',')}] return n`;
+
+                await apiClient
+                    .cypherSearch(query, { signal: abortController.signal })
+                    .then((res) => {
+                        Object.values(res.data.data.nodes).forEach((node) => {
+                            nodesByObjectId.set(node.objectId, node);
+                        });
+                    })
+                    .catch((err) => console.error('Failed to resolve seed nodes', err));
+
+                const selectedObjects = selectorQuery.data.seeds.map((seed) => {
+                    const node = nodesByObjectId.get(seed.value);
+                    if (node !== undefined) {
+                        return { objectid: node.objectId, name: node.label, type: node.kind };
+                    }
+                    return { objectid: seed.value };
+                });
+
+                dispatch({ type: 'set-selected-objects', nodes: selectedObjects });
+            };
+
+            if (selectorQuery.data.seeds.length > 0)
+                dispatch({ type: 'set-selector-type', selectorType: selectorQuery.data.seeds[0].type });
+            dispatch({ type: 'set-seeds', seeds: selectorQuery.data.seeds });
+            seedsToSelectedObjects();
+        }
+        return () => abortController.abort();
     }, [selectorQuery.data]);
 
+    if (selectorQuery.isLoading) return <Skeleton />;
+
+    if (selectorQuery.isError) return <div>There was an error fetching the selector information.</div>;
+
     return (
-        <SelectorFormContext.Provider
-            value={{ seeds, setSeeds, results, setResults, selectorType, setSelectorType, selectorQuery }}>
+        <SelectorFormContext.Provider value={{ dispatch, seeds, selectorType, selectedObjects, selectorQuery }}>
             <FormProvider {...formMethods}>
                 <form
                     onSubmit={formMethods.handleSubmit(onSubmit)}

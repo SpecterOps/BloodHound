@@ -26,6 +26,7 @@ Commands:
   test        Run tests for entire workspace
   build       Build commands in current workspace
   cover       Collect coverage reports
+  license     Check all supported files for expected license header and add one if missing
 ```
 
 ### Usage

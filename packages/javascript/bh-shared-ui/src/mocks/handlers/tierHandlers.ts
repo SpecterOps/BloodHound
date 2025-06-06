@@ -51,6 +51,10 @@ const tierHandlers: RestHandler<MockedRequest<DefaultBodyType>>[] = [
         );
     }),
 
+    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+        return res(ctx.json({ data: [] }));
+    }),
+
     // GET Tags
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tags: tierMocks.createAssetGroupTags(5) } }));

@@ -23,6 +23,7 @@ import (
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 	dsig "github.com/russellhaering/goxmldsig"
+
 	"github.com/specterops/bloodhound/crypto"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model"

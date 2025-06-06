@@ -24,9 +24,6 @@ on:
     types:
       - opened
       - synchronize
-    paths-ignore:
-      - 'docs/**'
-      - 'rfc/**'
 
 jobs:
   run-analysis:

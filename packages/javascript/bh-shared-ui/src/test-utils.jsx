@@ -66,12 +66,7 @@ const createProviders = ({ queryClient, route, theme, children }) => {
 
 const customRender = (
     ui,
-    {
-        theme = defaultTheme,
-        route = '/', 
-        queryClient = createDefaultQueryClient(),
-        ...renderOptions
-    } = {}
+    { theme = defaultTheme, route = '/', queryClient = createDefaultQueryClient(), ...renderOptions } = {}
 ) => {
     const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
@@ -79,12 +74,7 @@ const customRender = (
 
 const customRenderHook = (
     hook,
-    {
-        queryClient = createDefaultQueryClient(),
-        theme = defaultTheme,
-        route = '/',
-        ...renderOptions
-    } = {}
+    { queryClient = createDefaultQueryClient(), theme = defaultTheme, route = '/', ...renderOptions } = {}
 ) => {
     const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, children });
     return renderHook(hook, { wrapper: AllTheProviders, ...renderOptions });

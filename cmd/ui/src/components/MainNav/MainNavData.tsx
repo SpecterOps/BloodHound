@@ -108,7 +108,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
         {
             label: 'Administration',
             icon: <AppIcon.UserCog size={24} />,
-            route: routes.DEFAULT_ADMINISTRATION_ROUTE,
+            route: routes.ROUTE_ADMINISTRATION_ROOT,
             testId: 'global_nav-administration',
         },
         {
