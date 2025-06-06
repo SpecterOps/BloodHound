@@ -17,11 +17,10 @@
 import { useTheme } from '@mui/material';
 import { SigmaContainer } from '@react-sigma/core';
 import '@react-sigma/core/lib/react-sigma.min.css';
-import Graph, { MultiDirectedGraph } from 'graphology';
-import { AbstractGraph, Attributes } from 'graphology-types';
+import { MultiDirectedGraph } from 'graphology';
+import { Attributes } from 'graphology-types';
 import { forwardRef } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { GraphEvents } from 'src/components/GraphEvents';
 import { MAX_CAMERA_RATIO, MIN_CAMERA_RATIO } from 'src/ducks/graph/utils';
 import drawEdgeLabel from 'src/rendering/programs/edge-label';
 import EdgeArrowProgram from 'src/rendering/programs/edge.arrow';
@@ -31,15 +30,15 @@ import drawHover from 'src/rendering/programs/node-hover';
 import drawLabel from 'src/rendering/programs/node-label';
 import getNodeCombinedProgram from 'src/rendering/programs/node.combined';
 import getNodeGlyphsProgram from 'src/rendering/programs/node.glyphs';
-import GraphEdgeEvents from './GraphEdgeEvents';
+import { GraphEdgeEvents } from './GraphEdgeEvents';
+import { GraphEvents } from './GraphEvents';
 
 interface SigmaChartProps {
-    graph: Graph<Attributes, Attributes, Attributes>;
-    onDoubleClickNode: (id: string) => void;
+    graph?: MultiDirectedGraph<Attributes, Attributes, Attributes>;
+    highlightedItem: string | null;
     onClickNode: (id: string) => void;
-    onClickEdge: (id: string, relatedFindingType?: string | null) => void;
+    onClickEdge: (id: string) => void;
     onClickStage: () => void;
-    edgeReducer: (edge: string, data: Attributes, graph: AbstractGraph) => Attributes;
     handleContextMenu: (event: SigmaNodeEventPayload) => void;
     showNodeLabels?: boolean;
     showEdgeLabels?: boolean;
@@ -48,15 +47,14 @@ interface SigmaChartProps {
 const SigmaChart = forwardRef(function SigmaChart(
     {
         graph,
-        onDoubleClickNode,
+        highlightedItem,
         onClickNode,
         onClickEdge,
         onClickStage,
-        edgeReducer,
         handleContextMenu,
         showNodeLabels = true,
         showEdgeLabels = true,
-    }: Partial<SigmaChartProps>,
+    }: SigmaChartProps,
     ref
 ) {
     const theme = useTheme();
@@ -75,7 +73,7 @@ const SigmaChart = forwardRef(function SigmaChart(
                     width: '100%',
                     background: theme.palette.neutral.primary,
                 }}
-                graph={graph || MultiDirectedGraph}
+                graph={graph}
                 settings={{
                     nodeProgramClasses: {
                         combined: getNodeCombinedProgram(),
@@ -98,14 +96,12 @@ const SigmaChart = forwardRef(function SigmaChart(
                     maxCameraRatio: MAX_CAMERA_RATIO,
                     minCameraRatio: MIN_CAMERA_RATIO,
                 }}>
-                <GraphEdgeEvents />
+                <GraphEdgeEvents onClickEdge={onClickEdge} />
 
                 <GraphEvents
-                    onDoubleClickNode={onDoubleClickNode}
+                    highlightedItem={highlightedItem ?? null}
                     onClickNode={onClickNode}
-                    onClickEdge={onClickEdge}
                     onClickStage={onClickStage}
-                    edgeReducer={edgeReducer}
                     onRightClickNode={handleContextMenu}
                     showNodeLabels={showNodeLabels}
                     showEdgeLabels={showEdgeLabels}

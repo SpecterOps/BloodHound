@@ -20,6 +20,7 @@ export { default as UserProfile } from './UserProfile';
 
 export { default as SSOConfiguration } from './SSOConfiguration';
 
+export * from './TierManagement';
 export { default as TierManagement } from './TierManagement';
 
 export { default as Users } from './Users';

@@ -15,15 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Settings } from 'sigma/settings';
-import { NodeDisplayData, PartialButFor } from 'sigma/types';
-import { calculateLabelOpacity } from '../utils/utils';
+import {
+    EDGE_MIDDLE_ALIGN_OFFSET,
+    EDGE_TYPES,
+    GraphItemData,
+    LABEL_PADDING,
+    LabelBoundsParams,
+    calculateLabelOpacity,
+    getLabelBoundsFromContext,
+} from '../utils/utils';
 
-export default function drawLabel(
-    context: CanvasRenderingContext2D,
-    data: PartialButFor<NodeDisplayData & { inverseSqrtZoomRatio: number }, 'x' | 'y' | 'size' | 'label' | 'color'>,
-    settings: Settings
-): void {
+export default function drawLabel(context: CanvasRenderingContext2D, data: GraphItemData, settings: Settings): void {
     if (!data.label || !settings.labelColor.color) return;
+
     const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
 
     const size = settings.labelSize * inverseSqrtZoomRatio,
@@ -31,15 +35,28 @@ export default function drawLabel(
         weight = settings.labelWeight;
 
     context.globalAlpha = calculateLabelOpacity(inverseSqrtZoomRatio);
-
-    context.fillStyle = settings.labelColor.color;
     context.font = `${weight} ${size}px ${font}`;
 
-    context.fillText(
-        data.label,
-        data.x + data.size * inverseSqrtZoomRatio + 3 * inverseSqrtZoomRatio,
-        data.y + size / 3
-    );
+    const labelParams: LabelBoundsParams = {
+        inverseSqrtZoomRatio,
+        label: data.label,
+        position: data,
+        size: data.size ?? 0, // fallback prevents NaN
+    };
+
+    const labelbounds = getLabelBoundsFromContext(context, labelParams);
+
+    // This method is reused to draw edge labels as well, however, edge labels
+    // must be offset to middle to align with unrendered edge label mouse target
+    if (EDGE_TYPES.includes(data.type ?? '')) {
+        labelbounds[0] = labelbounds[0] - labelbounds[2] / 2 - EDGE_MIDDLE_ALIGN_OFFSET;
+    }
+
+    context.fillStyle = data.highlighted ? data.highlightedBackground : data.backgroundColor;
+    context.fillRect(...labelbounds);
+
+    context.fillStyle = data.highlighted ? data.highlightedText : settings.labelColor.color;
+    context.fillText(data.label, labelbounds[0] + LABEL_PADDING, labelbounds[1] + labelbounds[3] - LABEL_PADDING);
 
     context.globalAlpha = 1;
 }
