@@ -21,8 +21,8 @@ import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { TierManagementContext } from '../TierManagementContext';
 import { TIER_ZERO_ID, getTagUrlValue } from '../../../utils/tagUrlValue';
+import { TierManagementContext } from '../TierManagementContext';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -150,7 +150,7 @@ const Details: FC = () => {
                     <SelectedDetails />
                 </div>
             </div>
-        </ >
+        </>
     );
 };
 

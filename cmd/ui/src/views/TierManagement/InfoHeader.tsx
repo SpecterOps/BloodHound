@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    TIER_ZERO_ID,
-    getTagUrlValue,
     ROUTE_TIER_MANAGEMENT_CREATE_LABEL,
     ROUTE_TIER_MANAGEMENT_CREATE_TIER,
-    ROUTE_TIER_MANAGEMENT_SAVE
+    ROUTE_TIER_MANAGEMENT_SAVE,
+    TIER_ZERO_ID,
+    getTagUrlValue,
 } from 'bh-shared-ui';
 import { FC } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -34,16 +34,11 @@ const InfoHeader: FC = () => {
             <div className='flex justify-start gap-4 items-center basis-2/3'>
                 <div className='flex items-center align-middle'>
                     <Button disabled={!tagId} asChild>
-                        <Link to={`/tier-management${route}`}>
-                            {`Create ${labelId ? 'Label' : 'Tier'}`}
-                        </Link>
+                        <Link to={`/tier-management${route}`}>{`Create ${labelId ? 'Label' : 'Tier'}`}</Link>
                     </Button>
-                    <Button
-                        variant='secondary'
-                        disabled={!tagId}
-                        asChild
-                    >
-                        <Link to={`/tier-management${ROUTE_TIER_MANAGEMENT_SAVE}/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                    <Button variant='secondary' disabled={!tagId} asChild>
+                        <Link
+                            to={`/tier-management${ROUTE_TIER_MANAGEMENT_SAVE}/${getTagUrlValue(labelId)}/${tagId}/selector`}>
                             Create Selector
                         </Link>
                     </Button>

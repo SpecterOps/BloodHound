@@ -16,10 +16,10 @@
 
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
+import { Route, Routes } from 'react-router-dom';
 import { tierHandlers } from '../../../mocks/handlers';
 import { longWait, render, screen, within } from '../../../test-utils';
 import Details from './Details';
-import { Route, Routes } from 'react-router-dom';
 
 const server = setupServer(...tierHandlers);
 
@@ -157,7 +157,10 @@ describe('Details', async () => {
     it.skip('will deselect both the selected selector and selected object when a different tier is selected', async () => {
         render(
             <Routes>
-                <Route path='/tier-management/details/tier/:tierId/selector/:selectorId/member/:memberId' element={<Details />} />
+                <Route
+                    path='/tier-management/details/tier/:tierId/selector/:selectorId/member/:memberId'
+                    element={<Details />}
+                />
             </Routes>,
             { route: '/tier-management/details/tier/1/selector/7/member/7' }
         );

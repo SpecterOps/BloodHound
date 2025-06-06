@@ -29,8 +29,8 @@ import {
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
-import { TierManagementContext } from './TierManagementContext';
 import { OWNED_ID, TIER_ZERO_ID } from '../../utils/tagUrlValue';
+import { TierManagementContext } from './TierManagementContext';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
