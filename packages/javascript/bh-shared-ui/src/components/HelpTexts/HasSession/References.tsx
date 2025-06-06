@@ -41,8 +41,8 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
-                href='https://labs.mwrinfosecurity.com/assets/BlogFiles/mwri-security-implications-of-windows-access-tokens-2008-04-14.pdf'>
-                https://labs.mwrinfosecurity.com/assets/BlogFiles/mwri-security-implications-of-windows-access-tokens-2008-04-14.pdf
+                href='https://www.exploit-db.com/docs/english/13054-security-implications-of-windows-access-tokens.pdf'>
+                https://www.exploit-db.com/docs/english/13054-security-implications-of-windows-access-tokens.pdf
             </Link>
             <br />
             <Link

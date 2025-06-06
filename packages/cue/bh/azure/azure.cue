@@ -955,6 +955,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantRole,
 	SyncedToADUser,
 	AZRoleEligible,
+	AZRoleApprover
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])

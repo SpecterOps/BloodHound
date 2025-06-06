@@ -52,7 +52,8 @@ const GraphView: FC = () => {
 
     const graphQuery = useSigmaExploreGraph();
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { setSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+    const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
@@ -88,6 +89,15 @@ const GraphView: FC = () => {
         setGraphologyGraph(graph);
     }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
 
+    // Changes highlighted item when browser back/forward is used
+    useEffect(() => {
+        if (selectedItem && selectedItem !== highlightedItem) {
+            setHighlightedItem(selectedItem);
+        }
+        // NOTE: Do not include `highlightedItem` as it will override ability to unselect highlights
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItem]);
+
     if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -103,13 +113,18 @@ const GraphView: FC = () => {
     }
 
     /* Event Handlers */
-    const handleClickNode = (id: string) => {
+    const selectItem = (id: string) => {
         setSelectedItem(id);
+        setHighlightedItem(id);
+    };
+
+    const cancelHighlight = () => {
+        setHighlightedItem(null);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        setSelectedItem(event.node);
+        selectItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
@@ -123,7 +138,10 @@ const GraphView: FC = () => {
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
-                onClickNode={handleClickNode}
+                highlightedItem={highlightedItem}
+                onClickEdge={selectItem}
+                onClickNode={selectItem}
+                onClickStage={cancelHighlight}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
@@ -183,7 +201,7 @@ const GraphView: FC = () => {
                             sx={{ padding: 1, marginBottom: 1 }}
                             currentNodes={currentNodes || {}}
                             onSelect={(node) => {
-                                handleClickNode?.(node.id);
+                                selectItem(node.id);
                                 sigmaChartRef?.current?.zoomTo(node.id);
                                 toggleCurrentSearch?.();
                             }}
