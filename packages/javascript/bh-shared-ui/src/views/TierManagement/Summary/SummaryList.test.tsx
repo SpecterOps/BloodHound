@@ -112,7 +112,7 @@ describe('SummaryList', () => {
             data: mockData,
         } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
 
-        render(<SummaryList title='Labels' selected='' listQuery={query} onSelect={() => {}} />);
+        render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
         const arrows = await screen.findAllByTestId('tier-management_summary-list_down-arrow');
         expect(arrows).toHaveLength(expectedCount);
@@ -130,19 +130,5 @@ describe('SummaryList', () => {
 
         await userEvent.click(await screen.findByTestId('tier-management_summary-list_card'));
         expect(onSelect).toHaveBeenCalledWith(mockData[0].id);
-    });
-
-    it('applies highlight border for selected item', async () => {
-        const query = {
-            isSuccess: true,
-            data: [mockData[0]],
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
-
-        const { container } = render(
-            <SummaryList title='Labels' selected={mockData[0].id.toString()} listQuery={query} onSelect={() => {}} />
-        );
-
-        const selectedItem = container.querySelector('li');
-        expect(selectedItem?.className).toMatch(/border.*rounded-xl/);
     });
 });

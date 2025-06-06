@@ -61,7 +61,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                                 memberCount={listItem.counts?.members}
                                             />
                                         </li>
-                                        {listItem.type === 1 ? (
+                                        {listItem.type === AssetGroupTagTypeTier ? (
                                             <div key={listItem.id} className='flex justify-center mt-2 last:hidden'>
                                                 <DownArrow className='w-8 h-6' />
                                             </div>
