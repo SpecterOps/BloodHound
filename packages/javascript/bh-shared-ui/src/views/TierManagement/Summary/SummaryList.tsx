@@ -1,4 +1,10 @@
-import { AssetGroupTagsListItem } from 'js-client-library';
+import {
+    AssetGroupTagsListItem,
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeOwned,
+    AssetGroupTagTypes,
+    AssetGroupTagTypeTier,
+} from 'js-client-library';
 import React, { FC } from 'react';
 import { UseQueryResult } from 'react-query';
 import DownArrow from '../../../components/AppIcon/Icons/DownArrow';
@@ -14,6 +20,9 @@ type SummaryListProps = {
 };
 
 const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, title }) => {
+    const targetTypes: AssetGroupTagTypes[] =
+        title === 'Tiers' ? [AssetGroupTagTypeTier] : [AssetGroupTagTypeLabel, AssetGroupTagTypeOwned];
+
     return (
         <div className='flex flex-col w-full h-full space-y-4'>
             <div className='flex flex-col flex-1 space-y-4'>
@@ -28,7 +37,8 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                         </li>
                     ) : (
                         listQuery.data
-                            ?.sort((a, b) => {
+                            ?.filter((listItem) => targetTypes.includes(listItem.type))
+                            .sort((a, b) => {
                                 return b.name.localeCompare(a.name);
                             })
                             .map((listItem) => {
