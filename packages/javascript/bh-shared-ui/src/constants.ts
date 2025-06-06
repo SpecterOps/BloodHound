@@ -27,6 +27,11 @@ import {
 } from './graphSchema';
 import { addOpacityToHex } from './utils/colors';
 
+// Max and min length requirements for creating/updating a user
+export const MAX_NAME_LENGTH = 1000;
+export const MIN_NAME_LENGTH = 2;
+export const MAX_EMAIL_LENGTH = 319;
+
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
 export const ZERO_VALUE_API_DATE = '0001-01-01T00:00:00Z';

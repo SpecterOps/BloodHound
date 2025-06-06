@@ -25,6 +25,31 @@ import { NotificationsProvider } from './providers';
 import { darkPalette } from './constants';
 import { SnackbarProvider } from 'notistack';
 
+/**
+ * @description SetUpQueryClient takes in stateMaps in the form of an array of objects where each object has a "key" key and a "data" key
+ *
+ * @param  stateMaps These maps are looped over for hydrating the queryClient with the state that is required for the test(s) the queryClient is being used for
+ *
+ */
+export const SetUpQueryClient = (stateMaps) => {
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                retry: false,
+                refetchOnMount: false,
+                refetchOnWindowFocus: false,
+                staleTime: Infinity,
+            },
+        },
+    });
+
+    stateMaps.forEach(({ key, data }) => {
+        queryClient.setQueryData(key, data);
+    });
+
+    return queryClient;
+};
+
 const theme = createTheme(darkPalette);
 const defaultTheme = {
     ...theme,
