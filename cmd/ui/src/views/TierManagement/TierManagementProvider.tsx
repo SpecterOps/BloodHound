@@ -13,9 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { TierManagementContext, defaultTierMgmtCtxValue } from 'bh-shared-ui';
+import InfoHeader from './InfoHeader';
 
-import TierManagement from './TierManagement';
+const TierManagementProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <TierManagementContext.Provider value={{ ...defaultTierMgmtCtxValue, InfoHeader }}>
+            {children}
+        </TierManagementContext.Provider>
+    );
+};
 
-export * from './TierManagementContext';
-export * from './utils';
-export default TierManagement;
+export default TierManagementProvider;

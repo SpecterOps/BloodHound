@@ -13,9 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import TierManagement from './TierManagement';
-
-export * from './TierManagementContext';
-export * from './utils';
-export default TierManagement;
+export { default } from './TierManagement';
