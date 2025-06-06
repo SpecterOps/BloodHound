@@ -26,7 +26,7 @@ const InfoHeader: FC = () => {
         <div className='flex justify-around basis-2/3'>
             <div className='flex justify-start gap-4 items-center basis-2/3'>
                 <div className='flex items-center align-middle'>
-                    <Button variant='secondary' disabled={!tagId} asChild>
+                    <Button variant='primary' disabled={!tagId} asChild>
                         <Link to={`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
                             Create Selector
                         </Link>
