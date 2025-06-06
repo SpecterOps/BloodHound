@@ -62,15 +62,11 @@ const getItemCount = (
 
 export const getEditButtonState = (
     memberId: string | undefined,
-    selectorId: string | undefined,
     selectorsQuery: UseQueryResult,
     tagsQuery: UseQueryResult
 ) => {
     return (
-        !!memberId ||
-        !selectorId ||
-        (selectorsQuery.isLoading && tagsQuery.isLoading) ||
-        (selectorsQuery.isError && tagsQuery.isError)
+        !!memberId || (selectorsQuery.isLoading && tagsQuery.isLoading) || (selectorsQuery.isError && tagsQuery.isError)
     );
 };
 
@@ -100,7 +96,7 @@ const Details: FC = () => {
         },
     });
 
-    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
 
     return (
         <div>
@@ -139,9 +135,15 @@ const Details: FC = () => {
                     <MembersList
                         itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
                         onClick={(id) => {
-                            navigate(
-                                `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
-                            );
+                            if (selectorId) {
+                                navigate(
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                );
+                            } else {
+                                navigate(
+                                    `/tier-management/${ROUTE_TIER_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/member/${id}`
+                                );
+                            }
                         }}
                         selected={memberId}
                     />

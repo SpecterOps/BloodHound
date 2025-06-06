@@ -14,6 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import Save from './Save';
+import { TagForm } from './TagForm';
 
-export default Save;
+export default TagForm;

@@ -123,7 +123,9 @@ const BasicInfo: FC = () => {
                                 }
                             />
                             {errors.name && (
-                                <p className='text-sm text-rose-700'>Please provide a name for the selector</p>
+                                <p className='text-sm text-[#B44641] dark:text-[#E9827C]'>
+                                    Please provide a name for the selector
+                                </p>
                             )}
                         </div>
                         <div>
