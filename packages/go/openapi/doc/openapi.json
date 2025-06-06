@@ -5078,7 +5078,6 @@
         "description": "Creates an asset group tag ie. a tier or label",
         "tags": [
           "Asset Isolation",
-          "Community",
           "Enterprise"
         ],
         "requestBody": {

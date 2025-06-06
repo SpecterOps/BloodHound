@@ -41,7 +41,7 @@ type AssetGroupTagData interface {
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
-	GetMaxTierPosition(ctx context.Context) (int32, error)
+	GetMaxTierPosition(ctx context.Context, tx *gorm.DB) (int32, error)
 	CascadeShiftTierPositions(ctx context.Context, tx *gorm.DB, user model.User, position null.Int32, direction ShiftDirection) error
 }
 
@@ -280,6 +280,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Action: model.AuditLogActionCreateAssetGroupTag,
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
+
+		positionProvided = tag.Position.Valid
 	)
 
 	if tag.ToType() == "unknown" {
@@ -293,16 +295,19 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		if tag.Type == 1 {
-
-			positionProvided := tag.Position.Valid
+		if tag.Type == model.AssetGroupTagTypeTier {
+			// positionProvided := tag.Position.Valid
 
 			if !positionProvided {
-				if position, err := bhdb.GetMaxTierPosition(ctx); err != nil {
+				if position, err := bhdb.GetMaxTierPosition(ctx, tx); err != nil {
 					return err
 				} else {
 					tag.Position = null.Int32From(position + 1)
 				}
+			}
+
+			if positionProvided && tag.Position == null.Int32From(1) {
+				return fmt.Errorf("cannot create a new tier 0")
 			}
 
 			if positionProvided {
@@ -310,6 +315,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 					return err
 				}
 			}
+
 		}
 
 		query := fmt.Sprintf(`
@@ -335,11 +341,11 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
 			return err
 		}
-
 		return nil
 	}); err != nil {
 		return model.AssetGroupTag{}, err
 	}
+
 	return tag, nil
 }
 
@@ -446,19 +452,14 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
 
-func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
+func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context, tx *gorm.DB) (int32, error) {
 	var max null.Int32
 	var tag model.AssetGroupTag
 
-	if result := s.db.WithContext(ctx).
+	if result := tx.WithContext(ctx).
 		Raw(fmt.Sprintf("SELECT MAX(position) FROM %s", tag.TableName())).
 		Scan(&max); result.Error != nil {
 		return 0, CheckError(result)
-	}
-
-	if !max.Valid {
-		// no rows in table
-		return 0, nil
 	}
 
 	return max.Int32, nil
@@ -481,7 +482,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.D
 	// get affected rows
 	var tags []model.AssetGroupTag
 	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), 1, position.Int32).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
 		Order("position ASC").
 		Find(&tags).Error; err != nil {
 		return fmt.Errorf("failed to fetch tags to shift: %w", err)
@@ -489,32 +490,37 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, tx *gorm.D
 
 	// update each and create history record
 	for _, tag := range tags {
-		originalPosition := tag.Position.Int32
-		if direction == ShiftUp {
-			tag.Position.Int32++
-		} else {
-			tag.Position.Int32--
-		}
+		var (
+			auditEntry = model.AuditEntry{
+				Action: model.AuditLogActionUpdateAssetGroupTag,
+				Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+			}
+		)
 
-		tag.UpdatedAt = time.Now()
-		tag.UpdatedBy = user.ID.String()
+		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		if err := s.db.WithContext(ctx).Save(&tag).Error; err != nil {
-			return fmt.Errorf("failed to update tag position: %w", err)
-		}
+			originalPosition := tag.Position.Int32
+			if direction == ShiftUp {
+				tag.Position.Int32++
+			} else {
+				tag.Position.Int32--
+			}
 
-		updateEntry := model.AuditEntry{
-			Action: model.AuditLogActionUpdateAssetGroupTag,
-			Model:  &tag,
-			Status: model.AuditLogStatusSuccess,
-		}
+			tag.UpdatedAt = time.Now()
+			tag.UpdatedBy = user.ID.String()
 
-		if err := s.AppendAuditLog(ctx, updateEntry); err != nil {
-			return fmt.Errorf("could not append intent to audit log: %w", err)
-		}
+			if err := s.db.WithContext(ctx).Save(&tag).Error; err != nil {
+				return fmt.Errorf("failed to update tag position: %w", err)
+			}
 
-		if err := s.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.StringFrom(fmt.Sprintf("%d", originalPosition)), null.StringFrom(fmt.Sprintf("%d", tag.Position.Int32))); err != nil {
-			return fmt.Errorf("failed to create history record: %w", err)
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated positon %d", originalPosition, tag.Position.Int32))); err != nil {
+				return fmt.Errorf("failed to create history record: %w", err)
+			}
+
+			return nil
+		}); err != nil {
+			return err
 		}
 	}
 

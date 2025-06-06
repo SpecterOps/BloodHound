@@ -1391,18 +1391,18 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 }
 
 // GetMaxTierPosition mocks base method.
-func (m *MockDatabase) GetMaxTierPosition(ctx context.Context) (int32, error) {
+func (m *MockDatabase) GetMaxTierPosition(ctx context.Context, tx *gorm.DB) (int32, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxTierPosition", ctx)
+	ret := m.ctrl.Call(m, "GetMaxTierPosition", ctx, tx)
 	ret0, _ := ret[0].(int32)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetMaxTierPosition indicates an expected call of GetMaxTierPosition.
-func (mr *MockDatabaseMockRecorder) GetMaxTierPosition(ctx any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetMaxTierPosition(ctx, tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxTierPosition", reflect.TypeOf((*MockDatabase)(nil).GetMaxTierPosition), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxTierPosition", reflect.TypeOf((*MockDatabase)(nil).GetMaxTierPosition), ctx, tx)
 }
 
 // GetPermission mocks base method.
