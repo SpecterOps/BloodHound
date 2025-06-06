@@ -44,6 +44,8 @@ const (
 	QueryParameterHydrateDomains = "hydrate_domains"
 	QueryParameterHydrateOUs     = "hydrate_ous"
 	QueryParameterScope          = "scope"
+	QueryParameterFindingType    = "finding"
+	QueryParameterTierId         = "tier_id"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"
