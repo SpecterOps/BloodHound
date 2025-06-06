@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/schemagen
 
-go 1.23
+go 1.23.0
 
 require (
 	cuelang.org/go v0.11.1
@@ -38,7 +38,7 @@ require (
 	github.com/stretchr/testify v1.10.0 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
