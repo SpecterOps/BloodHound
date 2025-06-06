@@ -21,11 +21,14 @@ import {
     GraphControls,
     GraphProgress,
     WebGLDisabledAlert,
+    baseGraphLayoutOptions,
     baseGraphLayouts,
+    defaultGraphLayout,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreSelectedItem,
+    useExploreTableAutoDisplay,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -56,7 +59,7 @@ const GraphView: FC = () => {
     const { setSelectedItem } = useExploreSelectedItem();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout) ?? defaultGraphLayout;
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -80,13 +83,36 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode, customIcons.data ?? {});
+        const hideNodes = exploreLayout === 'table';
+        initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, exploreLayout]);
+
+    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
+        dispatch(setExploreLayout(layout));
+
+        if (layout === 'standard') {
+            sigmaChartRef.current?.runStandardLayout();
+        } else if (layout === 'sequential') {
+            sigmaChartRef.current?.runSequentialLayout();
+        }
+    };
+
+    const handleAutoDisplay = (shouldAutoDisplay: boolean) => {
+        if (shouldAutoDisplay) {
+            handleLayoutChange(baseGraphLayoutOptions.table);
+        } else {
+            handleLayoutChange(defaultGraphLayout);
+        }
+    };
+
+    useExploreTableAutoDisplay({
+        onAutoDisplayChange: handleAutoDisplay,
+    });
 
     if (isLoading) {
         return (
@@ -114,24 +140,6 @@ const GraphView: FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
-    };
-
-    const setAllNodesToHidden = (hidden: boolean) => {
-        graphologyGraph?.updateEachNodeAttributes((node, attr) => {
-            return { ...attr, hidden };
-        });
-    };
-
-    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
-        dispatch(setExploreLayout(layout));
-
-        if (layout === 'standard') {
-            sigmaChartRef.current?.runStandardLayout();
-        } else if (layout === 'sequential') {
-            sigmaChartRef.current?.runSequentialLayout();
-        } else if (layout === 'table') {
-            setAllNodesToHidden(true);
-        }
     };
 
     return (
@@ -174,8 +182,7 @@ const GraphView: FC = () => {
             <ExploreTable
                 open={exploreLayout === 'table'}
                 onClose={() => {
-                    handleLayoutChange('sequential');
-                    setAllNodesToHidden(false);
+                    handleLayoutChange(defaultGraphLayout);
                 }}
             />
         </div>

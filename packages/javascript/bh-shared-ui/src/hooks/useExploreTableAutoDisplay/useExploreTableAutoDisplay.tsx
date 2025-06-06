@@ -15,27 +15,62 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import isEmpty from 'lodash/isEmpty';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
 import { useFeatureFlag } from '../useFeatureFlags';
 
-export const useExploreTableAutoDisplay = (setSelectedLayout: (layout: 'table') => void) => {
-    const { data: graphData } = useExploreGraph();
+interface UseExploreTableAutoDisplayParams {
+    /**
+     * Event handler for when a query could've displayed the table, but either did or didnt depending on if nodes were present.
+     */
+    onAutoDisplayChange: (shouldAutoDisplay: boolean) => void;
+}
+
+// This should be able to detect when the Explore Table should display automatically and when NOT to display it.
+// Auto display when current search is cypher and returned data contains nodes but not edges.
+// And dont auto display if the auto display has been closed.
+export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTableAutoDisplayParams) => {
+    const { data: graphData, isFetching } = useExploreGraph();
     const { searchType } = useExploreParams();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
-    const isCypherSearch = searchType === 'cypher';
-    const autoDisplayTableQueryCandidate = isCypherSearch && graphData && isGraphResponse(graphData);
+    // Tracks if the current query has triggered the table.
+    // Resets when the query fetches, which includes initial fetch and fetches from the cache
+    const [hasTriggered, setHasTriggered] = useState(false);
 
+    // memoize the passed in cb so we dont have to memoize it on the other side.
+    const memoizedOnAutoDisplayChange = useCallback(onAutoDisplayChange, [onAutoDisplayChange]);
+
+    const isCypherSearch = searchType === 'cypher';
+    const autoDisplayTableQueryCandidate = !!(
+        isCypherSearch && // auto display only on cypher search
+        !hasTriggered && // check that it hasnt already triggered for this query
+        graphData && // type check the response for type safety
+        isGraphResponse(graphData)
+    );
+
+    // Resets the trigger on every fetch of a query, even fetches from the cache.
+    useEffect(() => {
+        if (isFetching) {
+            setHasTriggered(false);
+        }
+    }, [isFetching]);
+
+    // checks if current query is a candidate to auto display the table
+    // if it is, and the query is nodes only and call onAutoDisplayChange.
     useEffect(() => {
         if (featureFlag?.enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
             const containsNodes = !isEmpty(graphData.data.nodes);
 
-            if (emptyEdges && containsNodes) {
-                setSelectedLayout('table');
+            const shouldAutoDisplay = emptyEdges && containsNodes;
+            if (shouldAutoDisplay) {
+                // set triggered to true so that we dont try to reopen the table after closing it.
+                setHasTriggered(true);
             }
+
+            memoizedOnAutoDisplayChange(shouldAutoDisplay);
         }
-    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData, setSelectedLayout]);
+    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData, memoizedOnAutoDisplayChange]);
 };

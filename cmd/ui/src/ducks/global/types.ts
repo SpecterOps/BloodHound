@@ -46,7 +46,7 @@ export {
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
-    exploreLayout: BaseGraphLayoutOptions;
+    exploreLayout?: BaseGraphLayoutOptions;
 }
 
 export interface GlobalOptionsState {
