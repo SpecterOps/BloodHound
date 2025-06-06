@@ -15,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
+import { TierManagementContext } from '../TierManagementContext';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
@@ -78,6 +79,8 @@ const Details: FC = () => {
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
+    const { InfoHeader } = useContext(TierManagementContext);
+
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
         queryFn: async () => {
@@ -108,6 +111,9 @@ const Details: FC = () => {
                 showEditButton={showEditButton}
                 getSavePath={getSavePath}
             />
+            <div className='flex mt-6 gap-8'>
+                <InfoHeader />
+            </div>
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
                     <DetailsList

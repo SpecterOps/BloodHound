@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
@@ -27,9 +26,11 @@ import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
 
-const GraphEdgeEvents: FC = () => {
-    const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
+interface GraphEdgeEventProps {
+    onClickEdge?: (id: string) => void;
+}
 
+export const GraphEdgeEvents: FC<GraphEdgeEventProps> = ({ onClickEdge }) => {
     const sigma = useSigma();
     const canvases = sigma.getCanvases();
     const sigmaContainer = document.getElementById('sigma-container');
@@ -134,7 +135,7 @@ const GraphEdgeEvents: FC = () => {
                     //Check if the click happened within the bounds of the label
                     if (viewportX > x1 && viewportX < x2 && viewportY > y1 && viewportY < y2) {
                         if (event.type === 'click') {
-                            setExploreSelectedItem(edge);
+                            onClickEdge?.(edge);
                         } else {
                             //Hover the edge label
                             if (sigmaContainer) sigmaContainer.style.cursor = 'pointer';
@@ -157,14 +158,14 @@ const GraphEdgeEvents: FC = () => {
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
-        [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
+        [edgeLabelsCanvas, sigmaContainer, mouseCanvas, sigma, onClickEdge]
     );
 
     return (
         <canvas
             id='edge-events'
-            width={width.slice(0, width.length - 2)}
-            height={height.slice(0, height.length - 2)}
+            width={parseInt(width)}
+            height={parseInt(height)}
             style={{ position: 'absolute', height: height, width: width, inset: 0 }}
             onClick={handleEdgeEvents}
             onContextMenu={handleEdgeEvents}
@@ -175,5 +176,3 @@ const GraphEdgeEvents: FC = () => {
             onMouseUp={handleEdgeEvents}></canvas>
     );
 };
-
-export default GraphEdgeEvents;
