@@ -18,6 +18,7 @@ package translate
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/specterops/bloodhound/cypher/models"
 	"github.com/specterops/bloodhound/cypher/models/cypher"
@@ -66,7 +67,8 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 		*cypher.Negation, *cypher.Create, *cypher.Where, *cypher.ListLiteral,
 		*cypher.FunctionInvocation, *cypher.Order, *cypher.RemoveItem, *cypher.SetItem,
 		*cypher.MapItem, *cypher.UpdatingClause, *cypher.Delete, *cypher.With,
-		*cypher.Return, *cypher.MultiPartQuery, *cypher.Properties, *cypher.KindMatcher:
+		*cypher.Return, *cypher.MultiPartQuery, *cypher.Properties, *cypher.KindMatcher,
+		*cypher.Quantifier, *cypher.IDInCollection:
 
 	case *cypher.MultiPartQueryPart:
 		if err := s.prepareMultiPartQueryPart(typedExpression); err != nil {
@@ -183,6 +185,19 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 			s.treeTranslator.VisitOperator(pgsql.OperatorAnd)
 		}
 
+
+	case *cypher.FilterExpression:
+		// TODO: Bind Pattern Expression
+		// Is this correct?
+		// When/How to use the bounded identifier
+		if _, err := s.bindPatternExpression(typedExpression.Specifier.Variable, pgsql.Scope); err != nil {
+			s.SetError(err)
+		}
+
+		if _, err := s.scope.PushFrame(); err != nil {
+			s.SetError(err)
+		}
+
 	default:
 		s.SetErrorf("unable to translate cypher type: %T", expression)
 	}
@@ -190,6 +205,102 @@ func (s *Translator) Enter(expression cypher.SyntaxNode) {
 
 func (s *Translator) Exit(expression cypher.SyntaxNode) {
 	switch typedExpression := expression.(type) {
+
+	case *cypher.IDInCollection:
+		if propertylookup, err := s.treeTranslator.PopOperand(); err != nil {
+			s.SetError(err)
+		} else {
+
+			fmt.Printf("\nlookup property: %v\n", propertylookup)
+
+			// TODO: determine how to stash an expression for use without it getting popped of the stack during WHERE
+			// s.treeTranslator.PushOperand(fromExpression) // PROBABLY GETTING POPPED OFF IN THE WHERE
+		}
+
+	case *cypher.FilterExpression:
+		/*
+			if fromStatement, err := s.treeTranslator.PopOperand(); err != nil {
+				s.SetError(err)
+				fmt.Printf(fromStatement.NodeType())
+			}
+		*/
+
+		// BUILD SUBQUERY
+		// Push subquery on translation tree stack
+		// quantifier will pop off of stack
+
+		// Pop remaining user expressions as constraints for WHERE?
+		// If scoped correctly we should only get the user constraints marked as dependencies
+
+		// Add the filter expression nested query to stack
+		// s.treeTranslator.PushOperand(filterExpressionSubquery.AsExpression())
+
+		if err := s.scope.PopFrame(); err != nil {
+			s.SetError(err)
+		}
+
+	case *cypher.Quantifier:
+
+		/*
+			// if filterExpression, err := s.treeTranslator.PopOperand(); err != nil {
+			if false {
+				// s.SetError(err)
+			}
+			else {
+		*/
+		var quantifierComparison pgsql.BinaryExpression
+		switch typedExpression.Type {
+		case cypher.QuantifierTypeAny:
+			quantifierComparison = pgsql.BinaryExpression{
+				Operator: pgsql.OperatorGreaterThanOrEqualTo,
+				LOperand: pgsql.Select{
+					Projection: []pgsql.SelectItem{
+						pgsql.FunctionCall{
+							Function:   pgsql.FunctionCount,
+							Parameters: []pgsql.Expression{pgsql.WildcardIdentifier},
+						},
+					},
+					From: []pgsql.FromClause{
+						{
+							Source: pgsql.AliasedExpression{
+								Expression: pgsql.FunctionCall{
+									Function: pgsql.FunctionUnnest,
+									Parameters: []pgsql.Expression{
+										pgsql.FunctionCall{
+											Function: pgsql.FunctionJSONBToTextArray,
+											Parameters: []pgsql.Expression{
+												pgsql.BinaryExpression{
+													Operator: pgsql.OperatorJSONField,
+													LOperand: pgsql.CompoundIdentifier{
+														pgsql.Identifier("n0"),
+														pgsql.ColumnProperties,
+													},
+													ROperand: pgsql.Literal{
+														Value: "supportedencryptiontypes",
+													},
+												},
+											},
+										},
+									},
+								},
+								Alias: models.Optional[pgsql.Identifier]{
+									Value: "t",
+									Set:   true,
+								},
+							},
+						},
+					},
+					Where: nil,
+				},
+				ROperand: pgsql.Literal{
+					Value: 1,
+				},
+			}
+		default:
+			s.SetError(fmt.Errorf("unknown quantifier type: %v", typedExpression.Type))
+		}
+		s.treeTranslator.PushOperand(quantifierComparison)
+
 	case *cypher.NodePattern:
 		if err := s.translateNodePattern(typedExpression); err != nil {
 			s.SetError(err)
