@@ -19,8 +19,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
-import { tierHandlers } from '../../../../mocks';
-import { longWait, render, screen } from '../../../../test-utils';
+import { longWait, render, screen, waitFor } from '../../../../test-utils';
 
 const testTierZero = {
     id: 1,
@@ -55,7 +54,15 @@ const testOwned = {
 };
 
 const handlers = [
-    ...tierHandlers,
+    rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tag: { id: 777 } } }));
+    }),
+    rest.patch('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tag: { id: 777 } } }));
+    }),
+    rest.delete('/api/v2/asset-group-tags/:tagId', async (_, res, ctx) => {
+        return res(ctx.status(500, 'get rekt'));
+    }),
     rest.get('/api/v2/asset-group-tags/1', async (_, res, ctx) => {
         return res(
             ctx.json({
@@ -67,6 +74,13 @@ const handlers = [
         return res(
             ctx.json({
                 data: testOwned,
+            })
+        );
+    }),
+    rest.get('/api/v2/asset-group-tags/3', async (_, res, ctx) => {
+        return res(
+            ctx.json({
+                data: { ...testOwned, name: 'myTestLabel', id: 3, type: 2 },
             })
         );
     }),
@@ -110,6 +124,7 @@ describe('Tag Form', () => {
     const createNewLabelPath = '/tier-management/save/label/';
     const editExistingTierPath = '/tier-management/save/tier/1';
     const editExistingLabelPath = '/tier-management/save/label/2';
+    const deletionTestsPath = '/tier-management/save/label/3';
 
     it('renders the form for creating a new tier', async () => {
         // Because there is no id path parameter in the url, the form is a create form
@@ -338,6 +353,107 @@ describe('Tag Form', () => {
         longWait(() => {
             expect(mockNavigate).toBeCalled();
             expect(mockAddNotification).toBeCalledWith();
+        });
+    });
+
+    it('disables the confirm button when dialog is opened', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+
+        render(
+            <Routes>
+                <Route path={deletionTestsPath} element={<TagForm />} />
+            </Routes>,
+            { route: deletionTestsPath }
+        );
+
+        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await user.click(deleteButton);
+
+        const confirmButton = await screen.findByRole('button', { name: 'Confirm' });
+
+        expect(confirmButton).toBeDisabled();
+    });
+
+    it('disables the confirm button until user types required text', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+
+        render(
+            <Routes>
+                <Route path={deletionTestsPath} element={<TagForm />} />
+            </Routes>,
+            { route: deletionTestsPath }
+        );
+
+        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await user.click(deleteButton);
+
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toBeInTheDocument();
+
+        const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+        expect(confirmButton).toBeDisabled();
+
+        const textField = screen.getByTestId('confirmation-dialog_challenge-text');
+        await user.type(textField, 'incorrect text');
+
+        expect(confirmButton).toBeDisabled();
+
+        await user.clear(textField);
+        await user.type(textField, 'Delete this label');
+
+        expect(confirmButton).not.toBeDisabled();
+    });
+
+    it('open and closes the dialog with the cancel button', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+
+        render(
+            <Routes>
+                <Route path={deletionTestsPath} element={<TagForm />} />
+            </Routes>,
+            { route: deletionTestsPath }
+        );
+
+        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await user.click(deleteButton);
+
+        const dialog = screen.getByRole('dialog');
+        expect(dialog).toBeInTheDocument();
+
+        const closeButton = screen.getByRole('button', { name: /cancel/i });
+        await user.click(closeButton);
+
+        expect(dialog).not.toBeInTheDocument();
+    });
+
+    it('open and closes dialog with confirm button after user inputs required text', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: '3' });
+        console.error = vi.fn();
+
+        render(
+            <Routes>
+                <Route path={deletionTestsPath} element={<TagForm />} />
+            </Routes>,
+            { route: deletionTestsPath }
+        );
+
+        const deleteButton = await screen.findByRole('button', { name: /Delete Label/i });
+        await user.click(deleteButton);
+
+        const dialog = await screen.findByRole('dialog');
+        expect(dialog).toBeInTheDocument();
+
+        const confirmButton = screen.getByRole('button', { name: /confirm/i });
+        expect(confirmButton).toBeDisabled();
+
+        const textField = screen.getByTestId('confirmation-dialog_challenge-text');
+        await user.type(textField, 'Delete this label');
+
+        expect(confirmButton).not.toBeDisabled();
+        await user.click(confirmButton);
+
+        waitFor(() => {
+            expect(dialog).not.toBeInTheDocument();
         });
     });
 });

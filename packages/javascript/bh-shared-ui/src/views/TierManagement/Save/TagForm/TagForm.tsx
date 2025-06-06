@@ -32,9 +32,10 @@ import {
     AssetGroupTagTypeTier,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
+import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
@@ -88,6 +89,7 @@ export const TagForm: FC = () => {
     const location = useLocation();
 
     const { addNotification } = useNotifications();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const {
         register,
@@ -170,6 +172,7 @@ export const TagForm: FC = () => {
 
             const tagValue = getTagUrlValue(labelId);
 
+            setDeleteDialogOpen(false);
             navigate(`/tier-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
@@ -186,6 +189,8 @@ export const TagForm: FC = () => {
         },
         [tagId, handleCreateTag, handleUpdateTag]
     );
+
+    const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
     if (tagQuery.isLoading) return <Skeleton />;
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
@@ -247,7 +252,11 @@ export const TagForm: FC = () => {
             </Card>
             <div className='flex justify-end gap-6 mt-6 w-[672px]'>
                 {showDeleteButton(labelId, tierId) && (
-                    <Button variant={'text'} onClick={handleDeleteTag}>
+                    <Button
+                        variant={'text'}
+                        onClick={() => {
+                            setDeleteDialogOpen(true);
+                        }}>
                         <span>
                             <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
                             {`Delete ${labelId ? 'Label' : 'Tier'}`}
@@ -265,6 +274,14 @@ export const TagForm: FC = () => {
                     {tagId === '' ? 'Define Selector' : 'Save'}
                 </Button>
             </div>
+            <DeleteConfirmationDialog
+                isLoading={tagQuery.isLoading}
+                itemName={tagQuery.data?.name || getTagUrlValue(labelId)}
+                itemType={getTagUrlValue(labelId)}
+                onCancel={handleCancel}
+                onConfirm={handleDeleteTag}
+                open={deleteDialogOpen}
+            />
         </form>
     );
 };
