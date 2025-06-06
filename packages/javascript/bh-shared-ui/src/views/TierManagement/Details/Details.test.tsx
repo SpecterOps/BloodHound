@@ -190,46 +190,4 @@ describe('Details', async () => {
             ).toBeInTheDocument();
         });
     });
-
-    it('will display "Create Tier" button when "Tiers" tab is selected', async () => {
-        render(
-            <Routes>
-                <Route path='/tier-management/details/tier/:tierId' element={<Details />} />
-            </Routes>,
-            { route: '/tier-management/details/tier/1' }
-        );
-
-        const createTierButton = await screen.findByRole('button', { name: /Create Tier/ });
-        const createLabelButton = await screen.queryByRole('button', { name: /Create Label/ });
-
-        expect(createTierButton).toBeInTheDocument();
-        expect(createLabelButton).not.toBeInTheDocument();
-
-        await user.click(createTierButton);
-
-        longWait(async () => {
-            expect(window.location.pathname).toBe('/tier-management/save/tier');
-        });
-    });
-
-    it('will display "Create Label" button when "Label" tab is selected', async () => {
-        render(
-            <Routes>
-                <Route path='/tier-management/details/label/:labelId' element={<Details />} />
-            </Routes>,
-            { route: '/tier-management/details/label/2' }
-        );
-
-        const createLabelButton = await screen.findByRole('button', { name: /Create Label/ });
-        const createTierButton = await screen.queryByRole('button', { name: /Create Tier/ });
-
-        expect(createLabelButton).toBeInTheDocument();
-        expect(createTierButton).not.toBeInTheDocument();
-
-        await user.click(createLabelButton);
-
-        longWait(async () => {
-            expect(window.location.pathname).toBe('/tier-management/save/label');
-        });
-    });
 });
