@@ -375,9 +375,9 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			}
 		}
 
-		if assetGroupTag.Type == 1 {
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier {
 			if assetGroupTag.Position.Int32 == 1 && assetGroupTag.Position.Valid {
-				return fmt.Errorf("you cannot delete tier 0 or a tier in the 1st position")
+				return fmt.Errorf("you cannot delete a tier in the 1st position")
 			}
 		}
 
@@ -393,7 +393,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			return err
 		}
 
-		if assetGroupTag.Type == 1 {
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier {
 			if assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
 				if err := bhdb.CascadeShiftTierPositions(ctx, user, assetGroupTag.Position, ShiftDown); err != nil {
 					return err
@@ -426,7 +426,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	// get affected rows
 	var tags []model.AssetGroupTag
 	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), 1, position.Int32).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
 		Order("position ASC").
 		Find(&tags).Error; err != nil {
 		return fmt.Errorf("failed to fetch tags to shift: %w", err)
