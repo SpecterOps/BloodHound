@@ -5211,7 +5211,6 @@
         "description": "Deletes an asset group tag",
         "tags": [
           "Asset Isolation",
-          "Community",
           "Enterprise"
         ],
         "responses": {
