@@ -21,7 +21,7 @@ package azure
 import (
 	"errors"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	graph "github.com/specterops/bloodhound/dawgs/graph"
 )
 
 var (

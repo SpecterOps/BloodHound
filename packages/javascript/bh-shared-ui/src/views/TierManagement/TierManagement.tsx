@@ -54,20 +54,23 @@ const TierManagement: FC = () => {
     }
     const { savePaths } = context;
 
-    const childRoutes: Routable[] = useMemo(() => [
-        ...detailsPaths.map((path) => ({
-            path,
-            component: Details,
-            authenticationRequired: true,
-            navigation: true,
-        })),
-        ...savePaths.map((path) => ({
-            path,
-            component: Save,
-            authenticationRequired: true,
-            navigation: true,
-        })),
-    ], [savePaths]);
+    const childRoutes: Routable[] = useMemo(
+        () => [
+            ...detailsPaths.map((path) => ({
+                path,
+                component: Details,
+                authenticationRequired: true,
+                navigation: true,
+            })),
+            ...savePaths.map((path) => ({
+                path,
+                component: Save,
+                authenticationRequired: true,
+                navigation: true,
+            })),
+        ],
+        [savePaths]
+    );
 
     return (
         <main>
