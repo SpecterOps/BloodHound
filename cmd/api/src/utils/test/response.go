@@ -22,6 +22,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/src/utils"
@@ -49,4 +51,78 @@ func ProcessResponse(t *testing.T, response *httptest.ResponseRecorder) (int, ht
 	}
 
 	return response.Code, response.Header(), ""
+}
+
+// ModifyCookieAttribute searches the provided HTTP headers and updates the specified cookie
+// attribute (e.g., "Secure", "SameSite", "Path") to a new value.
+// If the attribute is found in a cookie string, its value is replaced with the provided value.
+// Cookies that do not contain the specified attribute are left unchanged.
+func ModifyCookieAttribute(headers http.Header, attrKey, value string) http.Header {
+	cookies := headers["Set-Cookie"]
+	if len(cookies) == 0 {
+		// No cookies to modify, return unchanged.
+		return headers
+	}
+
+	attrPrefix := attrKey + "="
+	var newCookies []string
+	modified := false
+
+	for _, cookie := range cookies {
+		start := strings.Index(cookie, attrPrefix)
+		if start == -1 {
+			// Attribute not found, keep original.
+			newCookies = append(newCookies, cookie)
+			continue
+		}
+
+		// Find end of the attribute (next semicolon or end of string)
+		end := strings.Index(cookie[start:], ";")
+		var newCookie string
+		if end == -1 {
+			// Attribute is last; replace till end
+			newCookie = cookie[:start] + attrPrefix + value
+		} else {
+			end += start // Adjust to full string index
+			newCookie = cookie[:start] + attrPrefix + value + cookie[end:]
+		}
+
+		newCookies = append(newCookies, newCookie)
+		modified = true
+	}
+
+	if modified {
+		headers["Set-Cookie"] = newCookies
+	}
+
+	return headers
+}
+
+// OverwriteQueryParamIfHeaderAndParamExist updates paramKey in the query string value
+// of headerKey only if both the header and the parameter exist.
+// Otherwise, it leaves the header untouched.
+func OverwriteQueryParamIfHeaderAndParamExist(headers http.Header, headerKey, paramKey, paramValue string) http.Header {
+	// Check if header exists and has at least one value
+	vals := headers.Values(headerKey)
+	if len(vals) == 0 {
+		return headers // header missing, no change
+	}
+
+	// Parse the first header value as query string (remove leading "?")
+	q, err := url.ParseQuery(strings.TrimPrefix(vals[0], "?"))
+	if err != nil {
+		return headers // parse error, no change
+	}
+
+	// Check if paramKey exists in the query parameters
+	if _, exists := q[paramKey]; !exists {
+		return headers // param missing, no change
+	}
+
+	// Param exists — overwrite its value
+	q.Set(paramKey, paramValue)
+
+	// Rebuild query string, preserve leading "?"
+	headers.Set(headerKey, "?"+q.Encode())
+	return headers
 }

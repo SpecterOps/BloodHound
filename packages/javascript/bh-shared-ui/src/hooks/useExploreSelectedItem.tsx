@@ -24,13 +24,15 @@ export const useExploreSelectedItem = () => {
 
     const selectedItemQuery = useGraphItem(selectedItem!);
 
+    /** Set the selected node or edge. The most recently selected item will stay highlighted */
     const setSelectedItem = useCallback(
         (itemId: string) => {
-            if (itemId !== selectedItem)
+            if (itemId !== selectedItem) {
                 setExploreParams({
-                    selectedItem: itemId,
                     expandedPanelSections: null,
+                    selectedItem: itemId,
                 });
+            }
         },
         [selectedItem, setExploreParams]
     );
