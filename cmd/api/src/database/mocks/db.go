@@ -91,6 +91,20 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
 }
 
+// CascadeShiftTierPositions mocks base method.
+func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction database.ShiftDirection) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, user, position, direction)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CascadeShiftTierPositions indicates an expected call of CascadeShiftTierPositions.
+func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, user, position, direction any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, user, position, direction)
+}
+
 // Close mocks base method.
 func (m *MockDatabase) Close(ctx context.Context) {
 	m.ctrl.T.Helper()
@@ -1373,6 +1387,21 @@ func (m *MockDatabase) GetLatestAssetGroupCollection(ctx context.Context, assetG
 func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGroupID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), ctx, assetGroupID)
+}
+
+// GetMaxTierPosition mocks base method.
+func (m *MockDatabase) GetMaxTierPosition(ctx context.Context) (int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxTierPosition", ctx)
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMaxTierPosition indicates an expected call of GetMaxTierPosition.
+func (mr *MockDatabaseMockRecorder) GetMaxTierPosition(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxTierPosition", reflect.TypeOf((*MockDatabase)(nil).GetMaxTierPosition), ctx)
 }
 
 // GetPermission mocks base method.

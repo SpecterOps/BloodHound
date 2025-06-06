@@ -122,3 +122,47 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+post:
+  operationId: CreateAssetGroupTag
+  summary: Create Asset Group Tag
+  description: Creates an asset group tag ie. a tier or label
+  tags:
+    - Asset Isolation
+    - Enterprise
+  requestBody:
+    description: The request body for creating an asset group tag. Name and type fields are required. 
+    required: true
+    content:
+      application/json:
+        schema:
+          allOf: 
+            - $ref: './../schemas/model.asset-group-tag-request.yaml'
+            - type: object 
+              required: 
+                - name
+                - type
+
+  responses:
+    201:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.asset-group-tag.yaml'
+
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

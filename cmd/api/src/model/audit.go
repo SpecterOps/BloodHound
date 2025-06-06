@@ -83,6 +83,7 @@ const (
 	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
+	AuditLogActionUpdateAssetGroupTag         AuditLogAction = "UpdateAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
 	AuditLogActionDeleteAssetGroupTagSelector AuditLogAction = "DeleteAssetGroupTagSelector"
