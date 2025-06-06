@@ -260,7 +260,7 @@ describe('Selector Form', () => {
         });
     });
 
-    it.skip('handles creating a new selector', async () => {
+    it('handles creating a new selector', async () => {
         // Because there is no selector id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
         await act(async () => {
