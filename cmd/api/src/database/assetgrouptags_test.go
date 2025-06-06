@@ -173,18 +173,19 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	var (
 		dbInst = integration.SetupDB(t)
 
-		testCtx             = context.Background()
-		tagTypeTier         = model.AssetGroupTagTypeTier
-		tagTypeLabel        = model.AssetGroupTagTypeLabel
-		testActor           = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
-		testName            = "test tag name"
-		testName2           = "test2 tag name"
-		testName3           = "test3 tag name"
-		testName4           = "test4 tag name"
-		testDescription     = "test tag description"
-		position            = null.Int32{}
-		shiftedPosition     = null.Int32From(2)
-		shiftedPosition2    = null.Int32From(3)
+		testCtx          = context.Background()
+		tagTypeTier      = model.AssetGroupTagTypeTier
+		tagTypeLabel     = model.AssetGroupTagTypeLabel
+		testActor        = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testName         = "test tag name"
+		testName2        = "test2 tag name"
+		testName3        = "test3 tag name"
+		testName4        = "test4 tag name"
+		testDescription  = "test tag description"
+		position         = null.Int32{}
+		shiftedPosition  = null.Int32From(2)
+		shiftedPosition2 = null.Int32From(3)
+		// shiftedPosition3    = null.Int32From(4)
 		requireCertifyTier  = null.BoolFrom(true)
 		requireCertifyLabel = null.Bool{}
 	)
@@ -321,7 +322,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[2].Action)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[3].Action)
 		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[4].Action)
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[4].Action)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[5].Action)
 	})
 
 	t.Run("Non existant tag errors out", func(t *testing.T) {
