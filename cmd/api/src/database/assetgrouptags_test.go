@@ -347,9 +347,9 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 	require.NoError(t, err)
 	label2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, model.User{}, "label 2", testDescription, null.Int32{}, null.Bool{})
 	require.NoError(t, err)
-	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(1), null.BoolFrom(false))
+	tier1, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 1", testDescription, null.Int32From(2), null.BoolFrom(false))
 	require.NoError(t, err)
-	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 2", testDescription, null.Int32From(2), null.BoolFrom(false))
+	tier2, err = dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, model.User{}, "tier 2", testDescription, null.Int32From(3), null.BoolFrom(false))
 	require.NoError(t, err)
 
 	t.Run("filtering for Label returns labels", func(t *testing.T) {
