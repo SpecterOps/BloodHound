@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useSigma } from '@react-sigma/core';
-import { useExploreSelectedItem } from 'bh-shared-ui';
+import { useCreateDisableZoomRef, useExploreSelectedItem } from 'bh-shared-ui';
 import { FC, useCallback } from 'react';
 import {
     calculateEdgeDistanceForLabel,
@@ -26,6 +26,7 @@ import {
 import { getBackgroundBoundInfo, getSelfEdgeStartingPoint } from 'src/rendering/programs/edge-label';
 import { getControlPointsFromGroupSize } from 'src/rendering/programs/edge.self';
 import { bezier } from 'src/rendering/utils/bezier';
+import handleWheelFromSigma from './sigma-functions';
 
 const GraphEdgeEvents: FC = () => {
     const { setSelectedItem: setExploreSelectedItem } = useExploreSelectedItem();
@@ -154,14 +155,21 @@ const GraphEdgeEvents: FC = () => {
                 deltaY: event.deltaY, // Needed for wheel events
                 button: event.button, // Needed for mousedown/dragging events
             });
+
             mouseCanvas.dispatchEvent(customEvent);
             sigma.scheduleRefresh();
         },
         [sigma, mouseCanvas, edgeLabelsCanvas, setExploreSelectedItem, sigmaContainer]
     );
 
+    const edgeEventsRef = useCreateDisableZoomRef<HTMLCanvasElement>((e) => {
+        handleWheelFromSigma.call(sigma.getMouseCaptor(), e);
+        handleEdgeEvents(e);
+    });
+
     return (
         <canvas
+            ref={edgeEventsRef}
             id='edge-events'
             width={width.slice(0, width.length - 2)}
             height={height.slice(0, height.length - 2)}
