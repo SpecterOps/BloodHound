@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/src/services/fs"
 )
 
 type ListPermissionsResponse struct {
@@ -110,6 +111,7 @@ type Resources struct {
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
 	IngestSchema               upload.IngestSchema
+	FileService                fs.Service
 }
 
 func NewResources(
@@ -135,5 +137,6 @@ func NewResources(
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
+		FileService:                &fs.Client{},
 	}
 }
