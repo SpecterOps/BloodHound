@@ -13,17 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { TierManagement } from 'bh-shared-ui';
+import TierManagementProvider from './TierManagementProvider';
 
-import { SearchResult } from '../../../hooks/useSearch';
-import { EntityKinds } from '../../../utils/content';
+import { FC } from 'react';
 
-export interface SearchNodeType {
-    objectid: string;
-    type?: EntityKinds;
-    name?: string;
-}
+const BHCETierManagement: FC = () => {
+    return (
+        <TierManagementProvider>
+            <TierManagement />
+        </TierManagementProvider>
+    );
+};
 
-//The search value usually aligns with the results from hitting the search endpoint but when
-//we are pulling the data from a different page and filling out the value ourselves it might
-//not conform to our expected type
-export type SearchValue = SearchNodeType | SearchResult;
+export default BHCETierManagement;

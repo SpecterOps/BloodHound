@@ -675,7 +675,9 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 				} else {
 					for _, node := range taggedNodeSet {
 						node.DeleteKinds(tagKind)
-						return tx.UpdateNode(node)
+						if err := tx.UpdateNode(node); err != nil {
+							slog.WarnContext(ctx, "AGT: Error cleaning node", slog.String("nodeId", node.ID.String()), slog.String("err", err.Error()))
+						}
 					}
 				}
 
