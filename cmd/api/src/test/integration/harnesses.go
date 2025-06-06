@@ -8824,7 +8824,7 @@ type CoerceAndRelayNTLMtoADCS struct {
 	RootCA                  *graph.Node
 }
 
-func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
+func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext, restrictOutboundNTLMComputerProperty *bool) {
 	domainSid := RandomDomainSID()
 	s.AuthenticatedUsersGroup = graphTestContext.NewActiveDirectoryGroup("Authenticated Users Group", domainSid)
 	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
@@ -8864,7 +8864,9 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	s.EnterpriseCA1.Properties.Set(ad.HTTPEnrollmentEndpoints.String(), endpoints)
 	s.EnterpriseCA1.Properties.Set(ad.HasVulnerableEndpoint.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
-	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	if restrictOutboundNTLMComputerProperty != nil {
+		s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), *restrictOutboundNTLMComputerProperty)
+	}
 	s.Computer.Properties.Set(ad.WebClientRunning.String(), true)
 	graphTestContext.UpdateNode(s.Computer)
 	s.CAHost.Properties.Set(common.Enabled.String(), true)
