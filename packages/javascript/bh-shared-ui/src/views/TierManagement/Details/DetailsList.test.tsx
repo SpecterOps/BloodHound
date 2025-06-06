@@ -74,7 +74,7 @@ describe('List', async () => {
 
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('tier-management_details_selectors-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('tier-management_selectors-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('handles data fetching errors', async () => {
