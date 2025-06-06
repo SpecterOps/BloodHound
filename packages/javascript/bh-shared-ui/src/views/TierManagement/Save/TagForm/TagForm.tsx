@@ -252,7 +252,11 @@ export const TagForm: FC = () => {
             </Card>
             <div className='flex justify-end gap-6 mt-6 w-[672px]'>
                 {showDeleteButton(labelId, tierId) && (
-                    <Button variant={'text'} onClick={handleDeleteTag}>
+                    <Button
+                        variant={'text'}
+                        onClick={() => {
+                            setDeleteDialogOpen(true);
+                        }}>
                         <span>
                             <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
                             {`Delete ${labelId ? 'Label' : 'Tier'}`}
@@ -271,8 +275,9 @@ export const TagForm: FC = () => {
                 </Button>
             </div>
             <DeleteConfirmationDialog
-                itemName='data from the current environment'
-                itemType='environment data'
+                isLoading={tagQuery.isLoading}
+                itemName={tagQuery.data?.name || getTagUrlValue(labelId)}
+                itemType={getTagUrlValue(labelId)}
                 onCancel={handleCancel}
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}
