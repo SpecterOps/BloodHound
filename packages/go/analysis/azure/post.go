@@ -930,3 +930,33 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		return &operation.Stats, operation.Done()
 	}
 }
+
+// CreateAZRoleApproverEdge ... TBD
+func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var nodeSet graph.NodeSet
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.And(
+				query.Kind(query.Node(), azure.Tenant),
+				query.Kind(query.Node(), azure.Role),
+				query.Equals(
+					query.NodeProperty(azure.EndUserAssignmentRequiresApproval.String()),
+					true,
+				),
+				query.IsNotNull(
+					query.NodeProperty(azure.EndUserAssignmentUserApprovers.String()),
+				),
+			)
+		})); err != nil {
+			return err
+		}
+		// TODO: create edge for AZRoleApprover from the nodeSet
+
+		return nil
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodeSet, nil
+	}
+}
