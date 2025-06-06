@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
+import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen, SetUpQueryClient } from '../../test-utils';
 import CreateUserForm from './CreateUserForm';
-
 const DEFAULT_PROPS = {
     onCancel: () => null,
     onSubmit: () => vi.fn,
@@ -94,9 +94,10 @@ describe('CreateUserForm', () => {
         await user.type(screen.getByLabelText(/Initial password/i), ' ');
         await user.click(button);
 
-        expect(await screen.findByText('Principal Name must be 2 characters or more')).toBeInTheDocument;
-        expect(await screen.findByText('First Name must be 2 characters or more')).toBeInTheDocument;
-        expect(await screen.findByText('Last Name must be 2 characters or more')).toBeInTheDocument;
+        expect(await screen.findByText(`Principal Name must be ${MIN_NAME_LENGTH} characters or more`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`First Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument;
+        expect(await screen.findByText(`Last Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument;
         expect(await screen.findByText('Password must be at least 12 characters long')).toBeInTheDocument;
     });
 
@@ -121,10 +122,12 @@ describe('CreateUserForm', () => {
         await user.type(screen.getByLabelText(/Initial password/i), 'a'.repeat(1001));
         await user.click(button);
 
-        expect(await screen.findByText('Email address must be less than 319 characters')).toBeInTheDocument;
-        expect(await screen.findByText('Principal Name must be less than 1000 characters')).toBeInTheDocument;
-        expect(await screen.findByText('First Name must be less than 1000 characters')).toBeInTheDocument;
-        expect(await screen.findByText('Last Name must be less than 1000 characters')).toBeInTheDocument;
+        expect(await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`Principal Name must be less than ${MAX_NAME_LENGTH} characters`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`First Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument;
+        expect(await screen.findByText(`Last Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument;
         expect(await screen.findByText('Password must be less than 1000 characters')).toBeInTheDocument;
     });
 

@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
+import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { render, screen, SetUpQueryClient } from '../../test-utils';
-
 import UpdateUserForm from './UpdateUserForm';
 
 const DEFAULT_PROPS = {
@@ -370,10 +370,12 @@ describe('UpdateUserForm', () => {
         await user.type(screen.getByLabelText(/last/i), 'a'.repeat(1001));
         await user.click(button);
 
-        expect(await screen.findByText('Email address must be less than 319 characters')).toBeInTheDocument;
-        expect(await screen.findByText('Principal Name must be less than 1000 characters')).toBeInTheDocument;
-        expect(await screen.findByText('First Name must be less than 1000 characters')).toBeInTheDocument;
-        expect(await screen.findByText('Last Name must be less than 1000 characters')).toBeInTheDocument;
+        expect(await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`Principal Name must be less than ${MAX_NAME_LENGTH} characters`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`First Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument;
+        expect(await screen.findByText(`Last Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument;
     });
 
     it('should not have less characters than the minimum requirement', async () => {
@@ -400,9 +402,10 @@ describe('UpdateUserForm', () => {
         await user.type(screen.getByLabelText(/last/i), 'a');
         await user.click(button);
 
-        expect(await screen.findByText('Principal Name must be 2 characters or more')).toBeInTheDocument;
-        expect(await screen.findByText('First Name must be 2 characters or more')).toBeInTheDocument;
-        expect(await screen.findByText('Last Name must be 2 characters or more')).toBeInTheDocument;
+        expect(await screen.findByText(`Principal Name must be ${MIN_NAME_LENGTH} characters or more`))
+            .toBeInTheDocument;
+        expect(await screen.findByText(`First Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument;
+        expect(await screen.findByText(`Last Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument;
     });
 
     it('should not allow leading or trailing empty spaces', async () => {
