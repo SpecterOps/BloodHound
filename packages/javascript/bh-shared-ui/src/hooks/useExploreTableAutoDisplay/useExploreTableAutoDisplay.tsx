@@ -20,17 +20,10 @@ import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
 import { useFeatureFlag } from '../useFeatureFlags';
 
-interface UseExploreTableAutoDisplayParams {
-    /**
-     * Event handler for when a query could've displayed the table, but either did or didnt depending on if nodes were present.
-     */
-    onAutoDisplayChange: (shouldAutoDisplay: boolean) => void;
-}
-
 // This should be able to detect when the Explore Table should display automatically and when NOT to display it.
 // Auto display when current search is cypher and returned data contains nodes but not edges.
 // And dont auto display if the auto display has been closed.
-export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTableAutoDisplayParams) => {
+export const useExploreTableAutoDisplay = () => {
     const { data: graphData, isFetching } = useExploreGraph();
     const { searchType } = useExploreParams();
     const { data: featureFlag } = useFeatureFlag('explore_table_view');
@@ -38,6 +31,7 @@ export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTa
     // Tracks if the current query has triggered the table.
     // Resets when the query fetches, which includes initial fetch and fetches from the cache
     const [hasTriggered, setHasTriggered] = useState(false);
+    const [autoDisplayTable, setAutoDisplayTable] = useState(false);
 
     const isCypherSearch = searchType === 'cypher';
     const autoDisplayTableQueryCandidate = !!(
@@ -66,7 +60,10 @@ export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTa
                 // set triggered to true so that we dont try to reopen the table after closing it.
                 setHasTriggered(true);
             }
-            onAutoDisplayChange(shouldAutoDisplay);
+            // This will automatically open/close the table
+            setAutoDisplayTable(shouldAutoDisplay);
         }
-    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData?.data, onAutoDisplayChange]);
+    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData?.data]);
+
+    return [autoDisplayTable, setAutoDisplayTable] as const;
 };

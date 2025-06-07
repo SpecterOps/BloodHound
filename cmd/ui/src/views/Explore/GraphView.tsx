@@ -35,7 +35,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -67,16 +67,12 @@ const GraphView: FC = () => {
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
-    const [autoDisplayTable, setAutoDisplayTable] = useState(false);
 
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
-    const handleAutoDisplayChange = useCallback((shouldAutoDisplay: boolean) => {
-        setAutoDisplayTable(shouldAutoDisplay);
-    }, []);
-    useExploreTableAutoDisplay({ onAutoDisplayChange: handleAutoDisplayChange });
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay();
     const displayTable = autoDisplayTable || exploreLayout === 'table';
 
     useEffect(() => {
