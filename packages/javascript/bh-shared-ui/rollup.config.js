@@ -55,6 +55,7 @@ export default {
         'immutable',
         'js-client-library',
         'js-file-download',
+        'lodash/capitalize',
         'lodash/cloneDeep',
         'lodash/find',
         'lodash/isEmpty',

@@ -22,6 +22,7 @@ import * as types from './types';
 const initialGlobalState: types.GlobalViewState = {
     notifications: [],
     darkMode: false,
+    exploreLayout: 'sequential',
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
