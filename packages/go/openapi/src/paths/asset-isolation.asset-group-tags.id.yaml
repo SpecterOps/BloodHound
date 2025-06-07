@@ -57,3 +57,26 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+delete:
+  operationId: DeleteAssetGroupTag
+  summary: Delete an Asset Group Tag
+  description: Deletes an asset group tag
+  tags:
+    - Asset Isolation
+    - Enterprise
+  responses:
+    204:
+      $ref: './../responses/no-content.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
@@ -26,8 +27,12 @@ import (
 	"gorm.io/gorm"
 )
 
+type ShiftDirection int
+
 const (
-	kindTable = "kind"
+	kindTable                = "kind"
+	ShiftUp   ShiftDirection = 1
+	ShiftDown ShiftDirection = -1
 )
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
@@ -36,6 +41,8 @@ type AssetGroupTagData interface {
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
+	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
+	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -304,6 +311,123 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 		return model.AssetGroupTag{}, err
 	}
 	return tag, nil
+}
+
+func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionDeleteAssetGroupTag,
+			Model:  &assetGroupTag, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		if selectors, err := bhdb.GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
+			return err
+		} else {
+			for _, selector := range selectors {
+				if err := bhdb.DeleteAssetGroupTagSelector(ctx, user, selector); err != nil {
+					return err
+				}
+			}
+		}
+
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier {
+			if assetGroupTag.Position.Int32 == 1 && assetGroupTag.Position.Valid {
+				return fmt.Errorf("you cannot delete a tier in the 1st position")
+			}
+		}
+
+		if result := tx.Exec(fmt.Sprintf(`
+			UPDATE %s SET kind_id = null, updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?, position = null
+			WHERE id = ?`,
+			assetGroupTag.TableName()),
+			user.ID.String(), user.ID.String(), assetGroupTag.ID); result.Error != nil {
+			return CheckError(result)
+		} else if result := tx.Exec("DELETE FROM kind WHERE id = ?", assetGroupTag.KindId); result.Error != nil {
+			return CheckError(result)
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
+			return err
+		}
+
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier {
+			if assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, assetGroupTag.Position, ShiftDown); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
+	var (
+		positionOp string
+	)
+
+	switch direction {
+	case ShiftUp:
+		positionOp = ">="
+	case ShiftDown:
+		positionOp = ">"
+	default:
+		return fmt.Errorf("invalid shift direction")
+	}
+
+	// get affected rows
+	var tags []model.AssetGroupTag
+	if err := s.db.WithContext(ctx).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
+		Order("position ASC").
+		Find(&tags).Error; err != nil {
+		return fmt.Errorf("failed to fetch tags to shift: %w", err)
+	}
+
+	// update each and create history record
+	for _, tag := range tags {
+		var (
+			auditEntry = model.AuditEntry{
+				Action: model.AuditLogActionUpdateAssetGroupTag,
+				Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
+			}
+		)
+
+		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+			bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+			originalPosition := tag.Position.Int32
+			if direction == ShiftUp {
+				tag.Position.Int32++
+			} else {
+				tag.Position.Int32--
+			}
+
+			tag.UpdatedAt = time.Now()
+			tag.UpdatedBy = user.ID.String()
+
+			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
+				return fmt.Errorf("failed to update tag position: %w", err)
+			}
+
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated positon %d", originalPosition, tag.Position.Int32))); err != nil {
+				return fmt.Errorf("failed to create history record: %w", err)
+			}
+
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {

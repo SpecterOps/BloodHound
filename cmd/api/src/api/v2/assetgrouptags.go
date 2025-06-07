@@ -329,7 +329,7 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 				return
 			}
 		}
-		api.WriteBasicResponse(request.Context(), selector, http.StatusNoContent, response)
+		response.WriteHeader(http.StatusNoContent)
 	}
 }
 

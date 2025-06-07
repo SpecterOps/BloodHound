@@ -91,6 +91,20 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
 }
 
+// CascadeShiftTierPositions mocks base method.
+func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction database.ShiftDirection) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, user, position, direction)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CascadeShiftTierPositions indicates an expected call of CascadeShiftTierPositions.
+func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, user, position, direction any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, user, position, direction)
+}
+
 // Close mocks base method.
 func (m *MockDatabase) Close(ctx context.Context) {
 	m.ctrl.T.Helper()
@@ -592,6 +606,20 @@ func (m *MockDatabase) DeleteAssetGroupSelectorsForAssetGroups(ctx context.Conte
 func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(ctx, assetGroupIds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), ctx, assetGroupIds)
+}
+
+// DeleteAssetGroupTag mocks base method.
+func (m *MockDatabase) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupTag", ctx, user, assetGroupTag)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupTag indicates an expected call of DeleteAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupTag(ctx, user, assetGroupTag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupTag), ctx, user, assetGroupTag)
 }
 
 // DeleteAssetGroupTagSelector mocks base method.

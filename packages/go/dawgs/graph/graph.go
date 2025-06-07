@@ -431,4 +431,7 @@ type Database interface {
 
 	// FetchKinds retrieves the complete list of kinds available to the database.
 	FetchKinds(ctx context.Context) (Kinds, error)
+
+	// RefreshKinds refreshes the in memory kinds maps
+	RefreshKinds(ctx context.Context) error
 }
