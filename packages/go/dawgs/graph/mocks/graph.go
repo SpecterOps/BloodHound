@@ -766,6 +766,20 @@ func (mr *MockDatabaseMockRecorder) ReadTransaction(ctx, txDelegate any, options
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadTransaction", reflect.TypeOf((*MockDatabase)(nil).ReadTransaction), varargs...)
 }
 
+// RefreshKinds mocks base method.
+func (m *MockDatabase) RefreshKinds(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshKinds", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RefreshKinds indicates an expected call of RefreshKinds.
+func (mr *MockDatabaseMockRecorder) RefreshKinds(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshKinds", reflect.TypeOf((*MockDatabase)(nil).RefreshKinds), ctx)
+}
+
 // Run mocks base method.
 func (m *MockDatabase) Run(ctx context.Context, query string, parameters map[string]any) error {
 	m.ctrl.T.Helper()
