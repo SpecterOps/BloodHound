@@ -14,28 +14,30 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import isEmpty from 'lodash/isEmpty';
 import { useEffect } from 'react';
-import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
-import { useExploreParams } from '../useExploreParams';
-import { useFeatureFlag } from '../useFeatureFlags';
+// import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
+// import { useExploreParams } from '../useExploreParams';
+// import { useFeatureFlag } from '../useFeatureFlags';
 
 export const useExploreTableAutoDisplay = (setSelectedLayout: (layout: 'table') => void) => {
-    const { data: graphData } = useExploreGraph();
-    const { searchType } = useExploreParams();
-    const { data: featureFlag } = useFeatureFlag('explore_table_view');
+    // const { data: graphData } = useExploreGraph();
+    // const { searchType } = useExploreParams();
+    // const { data: featureFlag } = useFeatureFlag('explore_table_view');
 
-    const isCypherSearch = searchType === 'cypher';
-    const autoDisplayTableQueryCandidate = isCypherSearch && graphData && isGraphResponse(graphData);
+    // const isCypherSearch = searchType === 'cypher';
+    // const autoDisplayTableQueryCandidate = isCypherSearch && graphData && isGraphResponse(graphData);
 
     useEffect(() => {
-        if (featureFlag?.enabled && autoDisplayTableQueryCandidate) {
-            const emptyEdges = isEmpty(graphData.data.edges);
-            const containsNodes = !isEmpty(graphData.data.nodes);
+        // if (autoDisplayTableQueryCandidate) {
+        // const emptyEdges = isEmpty(graphData.data.edges);
+        // const containsNodes = !isEmpty(graphData.data.nodes);
 
-            if (emptyEdges && containsNodes) {
-                setSelectedLayout('table');
-            }
-        }
-    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData, setSelectedLayout]);
+        // if (emptyEdges && containsNodes) {
+        setSelectedLayout('table');
+        // }
+        // }
+    }, [
+        /* autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData */
+        setSelectedLayout,
+    ]);
 };

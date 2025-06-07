@@ -24,6 +24,8 @@ export type GraphNode = {
     isTierZero: boolean;
     isOwnedObject: boolean;
     descendent_count?: number | null;
+    // TODO: maybe use BaseItemResponse with cypherSearch
+    properties?: Record<any, any>;
 };
 
 export type GraphNodes = Record<string, GraphNode>;

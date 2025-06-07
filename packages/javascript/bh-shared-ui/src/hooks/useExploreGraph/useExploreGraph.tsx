@@ -18,6 +18,7 @@ import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
+    CypherExploreGraphQuery,
     ExploreGraphQuery,
     compositionSearchQuery,
     cypherSearchQuery,
@@ -33,8 +34,6 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return nodeSearchQuery;
         case 'pathfinding':
             return pathfindingSearchQuery;
-        case 'cypher':
-            return cypherSearchQuery;
         case 'relationship':
             return relationshipSearchQuery;
         case 'composition':
@@ -45,14 +44,24 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = () => {
-    const params = useExploreParams();
+// TODO: Proposal to make this an explicit optional param in the hook? To overrwrite for table view?
+export const useExploreGraph = (paramOptions?: Partial<ExploreQueryParams>, includeProperties?: boolean) => {
+    let params = useExploreParams() as Partial<ExploreQueryParams>;
+
+    if (paramOptions) {
+        params = paramOptions as Partial<ExploreQueryParams>;
+    }
     const { addNotification } = useNotifications();
 
-    const query = exploreGraphQueryFactory(params);
+    const query =
+        paramOptions?.searchType === 'cypher' ? cypherSearchQuery : exploreGraphQueryFactory(paramOptions || params);
 
+    const queryConfig =
+        paramOptions?.searchType === 'cypher'
+            ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
+            : query.getQueryConfig(params);
     return useQuery({
-        ...query.getQueryConfig(params),
+        ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
             addNotification(message, key, {
