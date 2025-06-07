@@ -21,7 +21,6 @@ import {
     GraphControls,
     GraphProgress,
     WebGLDisabledAlert,
-    baseGraphLayoutOptions,
     baseGraphLayouts,
     defaultGraphLayout,
     isWebGLEnabled,
@@ -36,7 +35,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -68,10 +67,17 @@ const GraphView: FC = () => {
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
+    const [autoDisplayTable, setAutoDisplayTable] = useState(false);
 
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+
+    const handleAutoDisplayChange = useCallback((shouldAutoDisplay: boolean) => {
+        setAutoDisplayTable(shouldAutoDisplay);
+    }, []);
+    useExploreTableAutoDisplay({ onAutoDisplayChange: handleAutoDisplayChange });
+    const displayTable = autoDisplayTable || exploreLayout === 'table';
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -84,36 +90,14 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        const hideNodes = exploreLayout === 'table';
+        const hideNodes = displayTable;
         initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, exploreLayout]);
-
-    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
-        dispatch(setExploreLayout(layout));
-
-        if (layout === 'standard') {
-            sigmaChartRef.current?.runStandardLayout();
-        } else if (layout === 'sequential') {
-            sigmaChartRef.current?.runSequentialLayout();
-        }
-    };
-
-    const handleAutoDisplay = (shouldAutoDisplay: boolean) => {
-        if (shouldAutoDisplay) {
-            handleLayoutChange(baseGraphLayoutOptions.table);
-        } else {
-            handleLayoutChange(defaultGraphLayout);
-        }
-    };
-
-    useExploreTableAutoDisplay({
-        onAutoDisplayChange: handleAutoDisplay,
-    });
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -157,6 +141,16 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
+    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
+        dispatch(setExploreLayout(layout));
+
+        if (layout === 'standard') {
+            sigmaChartRef.current?.runStandardLayout();
+        } else if (layout === 'sequential') {
+            sigmaChartRef.current?.runSequentialLayout();
+        }
+    };
+
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -198,8 +192,9 @@ const GraphView: FC = () => {
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
             <ExploreTable
-                open={exploreLayout === 'table'}
+                open={displayTable}
                 onClose={() => {
+                    setAutoDisplayTable(false);
                     handleLayoutChange(defaultGraphLayout);
                 }}
             />

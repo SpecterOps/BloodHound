@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import isEmpty from 'lodash/isEmpty';
-import { useCallback, useEffect, useState } from 'react';
+import { isEmpty } from 'lodash';
+import { useEffect, useState } from 'react';
 import { isGraphResponse, useExploreGraph } from '../useExploreGraph';
 import { useExploreParams } from '../useExploreParams';
 import { useFeatureFlag } from '../useFeatureFlags';
@@ -39,9 +39,6 @@ export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTa
     // Resets when the query fetches, which includes initial fetch and fetches from the cache
     const [hasTriggered, setHasTriggered] = useState(false);
 
-    // memoize the passed in cb so we dont have to memoize it on the other side.
-    const memoizedOnAutoDisplayChange = useCallback(onAutoDisplayChange, [onAutoDisplayChange]);
-
     const isCypherSearch = searchType === 'cypher';
     const autoDisplayTableQueryCandidate = !!(
         isCypherSearch && // auto display only on cypher search
@@ -58,7 +55,7 @@ export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTa
     }, [isFetching]);
 
     // checks if current query is a candidate to auto display the table
-    // if it is, and the query is nodes only and call onAutoDisplayChange.
+    // if it is, and the query is nodes only then call onAutoDisplayChange.
     useEffect(() => {
         if (featureFlag?.enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
@@ -69,8 +66,7 @@ export const useExploreTableAutoDisplay = ({ onAutoDisplayChange }: UseExploreTa
                 // set triggered to true so that we dont try to reopen the table after closing it.
                 setHasTriggered(true);
             }
-
-            memoizedOnAutoDisplayChange(shouldAutoDisplay);
+            onAutoDisplayChange(shouldAutoDisplay);
         }
-    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData, memoizedOnAutoDisplayChange]);
+    }, [autoDisplayTableQueryCandidate, featureFlag?.enabled, graphData?.data, onAutoDisplayChange]);
 };
