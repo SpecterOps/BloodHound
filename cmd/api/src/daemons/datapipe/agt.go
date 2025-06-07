@@ -690,16 +690,17 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 	return nil
 }
 
-func ClearAssetGroupTagNodeSet(ctx context.Context, db database.Database, graphDb graph.Database, assetGroupTag model.AssetGroupTag) error {
+func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, assetGroupTag model.AssetGroupTag) error {
 	tagKind := assetGroupTag.ToKind()
-
 	if err := graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
 			return err
 		} else {
 			for _, node := range taggedNodeSet {
 				node.DeleteKinds(tagKind)
-				return tx.UpdateNode(node)
+				if err = tx.UpdateNode(node); err != nil {
+					return err
+				}
 			}
 		}
 
