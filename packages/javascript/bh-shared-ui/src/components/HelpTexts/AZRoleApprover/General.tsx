@@ -14,16 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchResult } from '../../../hooks/useSearch';
-import { EntityKinds } from '../../../utils/content';
+import { Typography } from '@mui/material';
+import { FC } from 'react';
 
-export interface SearchNodeType {
-    objectid: string;
-    type?: EntityKinds;
-    name?: string;
-}
+const General: FC = () => {
+    return (
+        <Typography variant='body2'>
+            The Entra user is an approver for the role. If an account which can approve role assignments is compromised,
+            an attacker could approve the assignment or activation of a role and escalate privileges in a tenant. The
+            list of approvers is attached to a role policy and will be the designated principals for any approval
+            requirements on the role.{' '}
+        </Typography>
+    );
+};
 
-//The search value usually aligns with the results from hitting the search endpoint but when
-//we are pulling the data from a different page and filling out the value ourselves it might
-//not conform to our expected type
-export type SearchValue = SearchNodeType | SearchResult;
+export default General;

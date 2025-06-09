@@ -14,16 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SearchResult } from '../../../hooks/useSearch';
-import { EntityKinds } from '../../../utils/content';
+import { Box, Link } from '@mui/material';
+import { FC } from 'react';
 
-export interface SearchNodeType {
-    objectid: string;
-    type?: EntityKinds;
-    name?: string;
-}
+const References: FC = () => {
+    return (
+        <Box sx={{ overflowX: 'auto' }}>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/graph/api/unifiedrolemanagementpolicyassignment-get?view=graph-rest-1.0&tabs=http'>
+                Unified Role Management Policy Assignment - Get - REST API (Azure Authorization)
+            </Link>
+        </Box>
+    );
+};
 
-//The search value usually aligns with the results from hitting the search endpoint but when
-//we are pulling the data from a different page and filling out the value ourselves it might
-//not conform to our expected type
-export type SearchValue = SearchNodeType | SearchResult;
+export default References;

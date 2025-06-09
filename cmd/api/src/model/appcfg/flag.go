@@ -98,3 +98,11 @@ func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
 		return tierFlag.Enabled
 	}
 }
+
+func (s FeatureFlag) AuditData() model.AuditData {
+	return model.AuditData{
+		"name":    s.Name,
+		"key":     s.Key,
+		"enabled": s.Enabled,
+	}
+}
