@@ -17,11 +17,15 @@
 package main
 
 import (
-	//"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
 	"github.com/specterops/bloodhound/src/cmd/GOdHound/config"
 )
 
-/*
 func fatal(value any) {
 	fmt.Printf("%v", value)
 	os.Exit(1)
@@ -30,81 +34,55 @@ func fatal(value any) {
 func fatalf(format string, args ...any) {
 	fatal(fmt.Sprintf(format, args...))
 }
-*/
-
-/*
-Example Ingest File Format for Generic Ingest
-
-{
-  "graph": {
-    "nodes": [
-      {
-        "kinds": [
-          "User",
-          "Base"
-        ],
-        "id": "1234-4567-13456-5120",
-        "properties": {
-          "name": "A User",
-          "objectid": "1234-4567-13456-5120"
-        }
-      },
-      {
-        "kinds": [
-          "Group",
-          "Base"
-        ],
-        "id": "1234-4567-13456-5121",
-        "properties": {
-          "name": "A Group",
-          "objectid": "1234-4567-13456-5121"
-        }
-      }
-    ],
-    "edges": [
-      {
-        "kind": "MemberOf",
-        "start": {
-          "match_by": "id",
-          "value": "1234-4567-13456-5120",
-          "kind": "Base"
-        },
-        "end": {
-          "match_by": "id",
-          "value": "1234-4567-13456-5121",
-          "kind": "Base"
-        },
-        "properties": {
-          "thing": "that thing I sent you"
-        }
-      }
-    ]
-  }
-}
-*/
 
 func main() {
-	/*
-		var (
-			token = &client.TokenCredentialsHandler{
-				TokenID:  "ffa20bcd-5600-4e68-9c8e-49b5a0186a90",
-				TokenKey: "iGd9tuDAEYEWp6YGyiYV6/e+mt1QmuV9S2s8ld///IMQyKsvmRcTLw==",
-			}
-		)
 
-		if apiClient, err := client.NewClient("http://localhost:8080", token); err != nil {
-			fatalf("Failed to create client: %v", err)
+	config.Validate()
+
+	var (
+		token = &client.TokenCredentialsHandler{
+			TokenID:  config.Server.APIID,
+			TokenKey: config.Server.APIKey,
+		}
+	)
+
+	if apiClient, err := client.NewClient(config.Server.URL, token); err != nil {
+		fatalf("Failed to create client: %v", err)
+	} else {
+		if version, err := apiClient.Version(); err != nil {
+			fatalf("Failed to get version: %v", err)
 		} else {
-			if version, err := apiClient.Version(); err != nil {
-				fatalf("Failed to get version: %v", err)
-			} else {
-				fmt.Printf("Version: %s\n", version)
-			}
+			fmt.Printf("Version: %s\n", version)
+		}
 
-			if newFileUploadJob, err := apiClient.StartFileUploadJob(); err != nil {
-				fatal(err)
-			} else {
-				if fin, err := os.Open("/home/zinic/test.json"); err != nil {
+		if err != nil {
+			fatal(err)
+		}
+
+		if newFileUploadJob, err := apiClient.StartFileUploadJob(); err != nil {
+			fatal(err)
+		} else {
+			dir := ("./output/ad_sample/")
+
+			entries, err := os.ReadDir(dir)
+			if err != nil {
+				log.Fatalf("❌ Failed to read directory: %v", err)
+			}
+			for _, entry := range entries {
+				if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+					continue
+				}
+
+				fullPath := filepath.Join(dir, entry.Name())
+				fmt.Printf("File: %s\n", fullPath)
+				// Open and process the file
+				file, err := os.Open(fullPath)
+				if err != nil {
+					log.Printf("⚠️  Skipping file %s due to error: %v", fullPath, err)
+					continue
+				}
+
+				if fin, err := os.Open(fullPath); err != nil {
 					fatal(err)
 				} else {
 					if err := apiClient.SendFileUploadPart(newFileUploadJob, fin); err != nil {
@@ -117,9 +95,8 @@ func main() {
 				if err := apiClient.EndFileUploadJob(newFileUploadJob); err != nil {
 					fatal(err)
 				}
-			}
+				file.Close()
+			} // FOR
 		}
-	*/
-
-	config.Validate()
+	}
 }

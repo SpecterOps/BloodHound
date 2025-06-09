@@ -13,6 +13,11 @@ var Server = ServerConfig{
 	APIID:  "8229c6eb-630f-4dc7-86a2-7626a8acbcf3",                     // TODO: Insert API ID
 }
 
+var Directory = DirectoryConfig{
+	BaseDir: "./output/",
+	RunDir:  "", // this could be a prefix for your file. GOdHound will also prepend data & time of the run to the folder
+}
+
 var Generator = GeneratorConfig{
 	User: GeneratorUserFiles{
 		First: "resources/firstname.yml",
@@ -28,6 +33,11 @@ type ServerConfig struct {
 	URL    string
 	APIKey string
 	APIID  string
+}
+
+type DirectoryConfig struct {
+	BaseDir string
+	RunDir  string
 }
 
 type GeneratorUserFiles struct {
