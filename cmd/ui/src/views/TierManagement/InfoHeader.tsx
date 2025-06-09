@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { CreateMenu, TIER_ZERO_ID, getTagUrlValue, useAppNavigate } from 'bh-shared-ui';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import { TIER_ZERO_ID, getTagUrlValue } from 'bh-shared-ui';
 import { FC } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 const InfoHeader: FC = () => {
-    const navigate = useAppNavigate();
     const { tierId = TIER_ZERO_ID, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
@@ -26,18 +26,11 @@ const InfoHeader: FC = () => {
         <div className='flex justify-around basis-2/3'>
             <div className='flex justify-start gap-4 items-center basis-2/3'>
                 <div className='flex items-center align-middle'>
-                    <CreateMenu
-                        createMenuTitle='Create Selector'
-                        disabled={!tagId}
-                        menuItems={[
-                            {
-                                title: 'Create Selector',
-                                onClick: () => {
-                                    navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
-                                },
-                            },
-                        ]}
-                    />
+                    <Button variant='primary' disabled={!tagId} asChild>
+                        <Link to={`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`}>
+                            Create Selector
+                        </Link>
+                    </Button>
                 </div>
             </div>
             <div className='flex justify-start basis-1/3'>
