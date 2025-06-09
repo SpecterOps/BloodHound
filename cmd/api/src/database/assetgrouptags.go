@@ -313,8 +313,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 					return fmt.Errorf("cannot insert tier at position %d — must be next in sequence (position %d)", tag.Position.Int32, newMax)
 				}
 
-				if tag.Position.Int32 == 1 {
-					return fmt.Errorf("cannot explicitly create a tier at position 1")
+				if tag.Position.Int32 <= 1 {
+					return fmt.Errorf("cannot explicitly create a tier at or below position 1")
 				}
 			}
 
@@ -488,7 +488,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	// get affected rows
 	var tags []model.AssetGroupTag
 	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1 AND deleted_at IS NULL", positionOp), model.AssetGroupTagTypeTier, position.Int32).
 		Order("position ASC").
 		Find(&tags).Error; err != nil {
 		return fmt.Errorf("failed to fetch tags to shift: %w", err)
@@ -506,7 +506,6 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-			originalPosition := tag.Position.Int32
 			if direction == shiftUp {
 				tag.Position.Int32++
 			} else {
@@ -520,7 +519,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated positon %d", originalPosition, tag.Position.Int32))); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 				return fmt.Errorf("failed to create history record: %w", err)
 			}
 
