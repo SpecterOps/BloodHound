@@ -64,6 +64,15 @@
             "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/start",
             "outFiles": ["${workspaceFolder}/**/*.js"]
+        },
+        {
+            "name": "St Bernard Graph Translation",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "packages/go/stbernard",
+            "cwd": "${workspaceFolder}",
+            "args": ["graph"]
         }
     ]
 }

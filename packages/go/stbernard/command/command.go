@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/graph"
 )
 
 // CommandRunner is an interface for commands, allowing commands to implement the minimum
@@ -95,6 +96,7 @@ func ParseCLI(env environment.Environment) (CommandRunner, error) {
 			cover.Create(env),
 			goimports.Create(env),
 			license.Create(env),
+			graph.Create(env),
 		}
 	)
 
