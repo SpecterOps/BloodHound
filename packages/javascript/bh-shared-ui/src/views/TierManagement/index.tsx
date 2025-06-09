@@ -16,4 +16,6 @@
 
 import TierManagement from './TierManagement';
 
+export * from './TierManagementContext';
+export * from './utils';
 export default TierManagement;
