@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/specterops/bloodhound/dawgs/graph"
@@ -343,6 +344,9 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			tag.Position,
 			requireCertify,
 		).Scan(&tag); result.Error != nil {
+			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"asset_group_tags_name_key\"") {
+				return fmt.Errorf("%w: %v", ErrDuplicateAssetGroupTagName, tx.Error)
+			}
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
 			return err

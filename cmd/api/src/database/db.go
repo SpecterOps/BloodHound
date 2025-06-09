@@ -48,6 +48,7 @@ var (
 	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
 	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
+	ErrDuplicateAssetGroupTagName  = errors.New("duplicate asset group tag name")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
