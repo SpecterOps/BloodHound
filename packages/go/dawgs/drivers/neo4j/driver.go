@@ -177,3 +177,8 @@ func (s *driver) FetchKinds(ctx context.Context) (graph.Kinds, error) {
 
 	return kinds, nil
 }
+
+func (s *driver) RefreshKinds(_ context.Context) error {
+	// This isn't needed for neo4j
+	return nil
+}
