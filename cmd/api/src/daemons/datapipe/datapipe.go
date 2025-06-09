@@ -22,8 +22,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
-	"pkg.specterops.io/bloodhoundad/bhe/database"
 )
 
 const (
