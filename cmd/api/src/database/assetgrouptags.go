@@ -516,7 +516,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()
 
-			if err := s.db.WithContext(ctx).Save(&tag).Error; err != nil {
+			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
