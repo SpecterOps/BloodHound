@@ -352,7 +352,7 @@ describe('Tag Form', () => {
 
         longWait(() => {
             expect(mockNavigate).toBeCalled();
-            expect(mockAddNotification).toBeCalledWith();
+            expect(mockAddNotification).toBeCalled();
         });
     });
 

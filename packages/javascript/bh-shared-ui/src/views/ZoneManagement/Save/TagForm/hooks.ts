@@ -65,7 +65,7 @@ export const usePatchAssetGroupTag = (tagId: string | number) => {
     });
 };
 
-const deleteAssetGroupTag = async (tagId: number | string, options?: RequestOptions) =>
+const deleteAssetGroupTag = async (tagId: string | number, options?: RequestOptions) =>
     await apiClient.deleteAssetGroupTag(tagId, options).then((res) => res.data.data);
 
 export const useDeleteAssetGroupTag = () => {
@@ -77,7 +77,7 @@ export const useDeleteAssetGroupTag = () => {
     });
 };
 
-export const useAssetGroupTagInfo = (tagId: string) =>
+export const useAssetGroupTagInfo = (tagId: string | number) =>
     useQuery({
         queryKey: ['tier-management', 'tags', tagId],
         queryFn: async ({ signal }) => {

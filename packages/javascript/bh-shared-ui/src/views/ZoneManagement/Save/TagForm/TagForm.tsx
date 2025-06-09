@@ -205,7 +205,7 @@ export const TagForm: FC = () => {
                     <div className='flex justify-between'>
                         <span>{`${labelId ? 'Label' : 'Tier'} Information`}</span>
                     </div>
-                    <div onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6 mt-6'>
+                    <div className='flex flex-col gap-6 mt-6'>
                         <div>
                             <Label htmlFor='name'>Name</Label>
                             <Input
@@ -240,7 +240,7 @@ export const TagForm: FC = () => {
                             />
                         </div>
                         <div className='hidden'>
-                            <Label htmlFor='position'>Required Certificaiton</Label>
+                            <Label htmlFor='position'>Position</Label>
                             <Input
                                 id='position'
                                 type='number'
@@ -270,7 +270,7 @@ export const TagForm: FC = () => {
                     }}>
                     Cancel
                 </Button>
-                <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                <Button variant={'primary'} type='submit'>
                     {tagId === '' ? 'Define Selector' : 'Save'}
                 </Button>
             </div>
