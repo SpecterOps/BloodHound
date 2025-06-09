@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
+import { useFeatureFlag } from '../../hooks';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
@@ -47,6 +48,7 @@ const detailsPaths = [
 const TierManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
+    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const { savePaths } = useContext(TierManagementContext);
 
@@ -64,9 +66,21 @@ const TierManagement: FC = () => {
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Tier Management</h1>
                 <p className='mt-6'>
-                    <span>Define and manage selectors to dynamically gather objects based on criteria.</span>
-                    <br />
-                    <span>Ensure selectors capture the right assets for groups assignments or review.</span>
+                    Manage asset groups organized by security tiers, assigning assets to specific tiers such as Tier 0.
+                    Adjust memberships or move groups between tiers to maintain organization security.
+                    {tierFlag ? (
+                        <span>
+                            To create additional tiers,{' '}
+                            <a
+                                href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'
+                                target='_blank'
+                                rel='noreferrer'
+                                className='text-[#1A30FF] underline cursor-pointer'>
+                                contact sales
+                            </a>{' '}
+                            in order to upgrade for multi-tier analysis.
+                        </span>
+                    ) : null}
                 </p>
 
                 <div className='flex flex-col'>
