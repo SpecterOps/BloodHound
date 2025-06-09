@@ -40,11 +40,12 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'Active Directory Structure',
                 edgeTypes: [
+                    ActiveDirectoryRelationshipKind.DCFor,
+                    ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.Contains,
                     ActiveDirectoryRelationshipKind.GPLink,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
-                    ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.SameForestTrust,
                 ],
             },
