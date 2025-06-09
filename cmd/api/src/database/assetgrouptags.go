@@ -30,8 +30,8 @@ import (
 type ShiftDirection int
 
 const (
-	ShiftUp   ShiftDirection = 1
-	ShiftDown ShiftDirection = -1
+	shiftUp   ShiftDirection = 1
+	shiftDown ShiftDirection = -1
 )
 
 const (
@@ -348,7 +348,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			}
 
 			if !origPos.Equal(tag.Position) {
-				if err := bhdb.CascadeShiftTierPositions(ctx, user, newPosition, ShiftUp); err != nil {
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, newPosition, shiftUp); err != nil {
 					return err
 				}
 			}
@@ -496,9 +496,9 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	)
 
 	switch direction {
-	case ShiftUp:
+	case shiftUp:
 		positionOp = ">="
-	case ShiftDown:
+	case shiftDown:
 		positionOp = ">"
 	default:
 		return fmt.Errorf("invalid shift direction")
@@ -507,7 +507,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	// get affected rows
 	var tags []model.AssetGroupTag
 	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), 1, position.Int32).
+		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
 		Order("position ASC").
 		Find(&tags).Error; err != nil {
 		return fmt.Errorf("failed to fetch tags to shift: %w", err)
@@ -526,7 +526,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 			originalPosition := tag.Position.Int32
-			if direction == ShiftUp {
+			if direction == shiftUp {
 				tag.Position.Int32++
 			} else {
 				tag.Position.Int32--
