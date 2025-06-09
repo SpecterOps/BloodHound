@@ -1,4 +1,3 @@
-
 // Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0

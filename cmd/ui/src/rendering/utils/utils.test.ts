@@ -14,9 +14,36 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { getNodeRadius } from 'src/rendering/utils/utils';
+import type { SigmaNodeEventPayload } from 'sigma/sigma';
+import { MouseCoords } from 'sigma/types';
+import {
+    getLabelBoundsFromContext,
+    getNodeRadius,
+    LabelBoundsParams,
+    preventAllDefaults,
+} from 'src/rendering/utils/utils';
 
-describe('Getting the node radius for use in our rendering programs', () => {
+describe('getLabelBoundsFromContext', () => {
+    it('returns bounds for text rendered to canvas', () => {
+        const mockMetric = {
+            actualBoundingBoxAscent: 10,
+            actualBoundingBoxDescent: 15,
+            width: 20,
+        } as TextMetrics;
+        const mockContext = new CanvasRenderingContext2D();
+        mockContext.measureText = vi.fn(() => mockMetric);
+        const mockParams: LabelBoundsParams = {
+            inverseSqrtZoomRatio: 0.75,
+            label: 'Test string',
+            position: { x: 50, y: 75 },
+            size: 10,
+        };
+
+        expect(getLabelBoundsFromContext(mockContext, mockParams)).toEqual([57.625, 59.5, 26, 31]);
+    });
+});
+
+describe('getNodeRadius', () => {
     const inverseSqrtZoomRatio = 1;
     test('If for some reason the node size is not defined return 1 as a default', () => {
         const nodeSize = undefined;
@@ -39,5 +66,36 @@ describe('Getting the node radius for use in our rendering programs', () => {
 
         expect(getNodeRadius(true, 1, nodeSize)).not.toEqual(getNodeRadius(true, 0.5, nodeSize));
         expect(getNodeRadius(false, 1, nodeSize)).not.toEqual(getNodeRadius(false, 0.5, nodeSize));
+    });
+});
+
+describe('preventAllDefaults', () => {
+    it('prevents Sigma defaults events', () => {
+        const mockEvent: SigmaNodeEventPayload = {
+            event: { x: 10, y: 20 } as MouseCoords,
+            preventSigmaDefault: vi.fn(),
+            node: 'node-id',
+        };
+
+        preventAllDefaults(mockEvent);
+        expect(mockEvent.preventSigmaDefault).toHaveBeenCalled();
+    });
+
+    it('prevents MouseCoords events', () => {
+        const mockEvent = new MouseEvent('click');
+        mockEvent.preventDefault = vi.fn();
+        mockEvent.stopPropagation = vi.fn();
+        const mockMouseCoords: MouseCoords = {
+            sigmaDefaultPrevented: false,
+            preventSigmaDefault: vi.fn(),
+            original: mockEvent,
+            x: 10,
+            y: 20,
+        };
+
+        preventAllDefaults(mockMouseCoords);
+        expect(mockMouseCoords.preventSigmaDefault).toHaveBeenCalled();
+        expect(mockMouseCoords.original.preventDefault).toHaveBeenCalled();
+        expect(mockMouseCoords.original.stopPropagation).toHaveBeenCalled();
     });
 });
