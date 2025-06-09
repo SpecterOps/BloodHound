@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { AssetGroupTagTypeTier, AssetGroupTagsListItem } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
 import { DetailsList } from './DetailsList';
@@ -23,17 +24,52 @@ const testQuery = {
     isError: false,
     isSuccess: true,
     data: [
-        { name: 'a', id: 1, count: 1 },
-        { name: 'b', id: 2, count: 2 },
-        { name: 'c', id: 3, count: 3 },
+        {
+            name: 'a',
+            id: 1,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
+        {
+            name: 'b',
+            id: 2,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
+        {
+            name: 'c',
+            id: 3,
+            counts: { selectors: 3, members: 2 },
+            type: AssetGroupTagTypeTier,
+            kind_id: 1,
+            position: 1,
+            requireCertify: false,
+            description: '',
+            created: '',
+            updated: '',
+            deleted: false,
+        },
     ],
-} as unknown as UseQueryResult<{ name: string; id: number; counts: { members: number } }[], unknown>;
+} as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<
-            { name: string; id: number; counts: { members: number } }[],
-            unknown
+            AssetGroupTagsListItem[]
         >;
 
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
@@ -43,8 +79,7 @@ describe('List', async () => {
 
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<
-            { name: string; id: number; counts: { members: number } }[],
-            unknown
+            AssetGroupTagsListItem[]
         >;
 
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);

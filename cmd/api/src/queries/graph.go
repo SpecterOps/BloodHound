@@ -427,6 +427,8 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	return graphQuery, nil
 }
 
+// RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
+// query execution.
 func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
 	var (
 		err error
@@ -445,6 +447,13 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		}
 	)
 
+	slog.InfoContext(
+		ctx,
+		"Preparing user cypher query",
+		slog.String("query", pQuery.StrippedQuery),
+		slog.Int64("fitness", pQuery.complexity.RelativeFitness),
+	)
+
 	if pQuery.HasMutation {
 		// If the mutation is complex it is still worth spinning it into a write transaction in case it fails,
 		// deadlocks or otherwise rolls back
@@ -453,12 +462,12 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		err = s.Graph.ReadTransaction(ctx, txDelegate)
 	}
 
-	runtime := time.Since(start)
-
-	slog.Info(
-		fmt.Sprintf("Executed user cypher query with cost %d in %.2f seconds", pQuery.complexity.RelativeFitness, runtime.Seconds()),
-		"query", pQuery.StrippedQuery,
-		"query cost", fmt.Sprintf("%d", pQuery.complexity.RelativeFitness),
+	slog.InfoContext(
+		ctx,
+		"Executed user cypher query",
+		slog.String("query", pQuery.StrippedQuery),
+		slog.Int64("fitness", pQuery.complexity.RelativeFitness),
+		slog.Duration("elapsed", time.Since(start)),
 	)
 
 	if err != nil {
@@ -471,10 +480,9 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 		} else {
 			slog.WarnContext(ctx, fmt.Sprintf("RawCypherQuery failed: %v", err))
 		}
-		return graphResponse, err
 	}
 
-	return graphResponse, nil
+	return graphResponse, err
 }
 
 func applyTimeoutReduction(queryWeight int64, availableRuntime time.Duration) (time.Duration, int64) {

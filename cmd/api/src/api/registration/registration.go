@@ -31,7 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 )
 
 func RegisterFossGlobalMiddleware(routerInst *router.Router, cfg config.Configuration, identityResolver auth.IdentityResolver, authenticator api.Authenticator) {
@@ -61,7 +61,7 @@ func RegisterFossRoutes(
 	collectorManifests config.CollectorManifests,
 	authenticator api.Authenticator,
 	authorizer auth.Authorizer,
-	ingestSchema ingest.IngestSchema,
+	ingestSchema upload.IngestSchema,
 ) {
 	router.With(func() mux.MiddlewareFunc {
 		return middleware.DefaultRateLimitMiddleware(rdms)

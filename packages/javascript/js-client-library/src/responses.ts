@@ -22,6 +22,7 @@ import {
     AssetGroupTagSelectorsCounts,
     CollectorManifest,
     CommunityCollectorType,
+    CustomNodeKindType,
     EnterpriseCollectorType,
     GraphData,
     NodeSourceTypes,
@@ -173,6 +174,8 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
+
 export interface AssetGroupTagsListItem extends AssetGroupTag {
     counts?: AssetGroupTagCounts;
 }
@@ -289,3 +292,5 @@ export type GetCollectorsResponse = BasicResponse<{
 export type GetCommunityCollectorsResponse = BasicResponse<Record<CommunityCollectorType, CollectorManifest[]>>;
 
 export type GetEnterpriseCollectorsResponse = BasicResponse<Record<EnterpriseCollectorType, CollectorManifest[]>>;
+
+export type GetCustomNodeKindsResponse = BasicResponse<CustomNodeKindType[]>;

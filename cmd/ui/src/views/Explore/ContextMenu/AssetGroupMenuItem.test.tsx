@@ -22,28 +22,30 @@ import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 
+const tierZeroAssetGroup = { id: 1, name: 'high value' };
+const ownedAssetGroup = { id: 2, name: 'owned' };
+
+const getEntityInfoTestProps = () => ({
+    entityinfo: {
+        selectedNode: {
+            name: 'foo',
+            id: '1234',
+            type: 'User',
+        },
+    },
+});
+
+const ROUTE_WITH_SELECTED_ITEM_PARAM = `?selectedItem=${getEntityInfoTestProps().entityinfo.selectedNode.id}&searchType=node&primarySearch=${getEntityInfoTestProps().entityinfo.selectedNode.id}`;
+
+const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
+    assetgroups: {
+        assetGroups: isTierZero
+            ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
+            : [{ tag: 'owned', id: ownedAssetGroup.id }],
+    },
+});
+
 describe('AssetGroupMenuItem', async () => {
-    const tierZeroAssetGroup = { id: 1, name: 'high value' };
-    const ownedAssetGroup = { id: 2, name: 'owned' };
-
-    const getEntityInfoTestProps = () => ({
-        entityinfo: {
-            selectedNode: {
-                name: 'foo',
-                id: '1234',
-                type: 'User',
-            },
-        },
-    });
-
-    const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
-        assetgroups: {
-            assetGroups: isTierZero
-                ? [{ tag: 'admin_tier_0', id: tierZeroAssetGroup.id }]
-                : [{ tag: 'owned', id: ownedAssetGroup.id }],
-        },
-    });
-
     describe('adding to an asset group', () => {
         const server = setupServer(
             rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
@@ -72,6 +74,16 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
+            }),
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
+                    })
+                );
+            }),
+            rest.get('/api/v2/graph-search', (req, res, ctx) => {
+                return res(ctx.json({}));
             })
         );
 
@@ -92,9 +104,9 @@ describe('AssetGroupMenuItem', async () => {
                     />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });
@@ -127,9 +139,9 @@ describe('AssetGroupMenuItem', async () => {
             await act(async () => {
                 render(<AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />, {
                     initialState: {
-                        ...getEntityInfoTestProps(),
                         ...getAssetGroupTestProps({ isTierZero: false }),
                     },
+                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                 });
             });
 
@@ -185,6 +197,16 @@ describe('AssetGroupMenuItem', async () => {
             }),
             rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
+            }),
+            rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
+                    })
+                );
+            }),
+            rest.get('/api/v2/graph-search', (req, res, ctx) => {
+                return res(ctx.json({}));
             })
         );
 
@@ -205,9 +227,9 @@ describe('AssetGroupMenuItem', async () => {
                     />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: true }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });
@@ -242,9 +264,9 @@ describe('AssetGroupMenuItem', async () => {
                     <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />,
                     {
                         initialState: {
-                            ...getEntityInfoTestProps(),
                             ...getAssetGroupTestProps({ isTierZero: false }),
                         },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
                     }
                 );
             });

@@ -15,59 +15,52 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTagCounts, AssetGroupTagSelectorsCounts } from 'js-client-library';
+import {
+    AssetGroupTagSelectorsListItem,
+    AssetGroupTagTypeLabel,
+    AssetGroupTagTypeOwned,
+    AssetGroupTagTypeTier,
+    AssetGroupTagsListItem,
+} from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, itemSkeletons } from './utils';
+import { SelectedHighlight, getListHeight, itemSkeletons } from './utils';
 
-type TagsListItem = {
-    name: string;
-    id: number;
-    counts?: AssetGroupTagCounts;
-};
-
-type SelectorsListItem = {
-    name: string;
-    id: number;
-    counts?: AssetGroupTagSelectorsCounts;
-};
-
-type DetailsList = TagsListItem[] | SelectorsListItem[];
-
-type ListQuery = UseQueryResult<DetailsList, unknown>;
-
-type DetailsListProps = {
-    title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: ListQuery;
-    selected: string | undefined;
-    onSelect: (id: number) => void;
-};
-
-const isTagListItem = (listItem: TagsListItem | SelectorsListItem): listItem is TagsListItem => {
+const isTagListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagsListItem => {
     if (listItem.counts === undefined) return false;
     return 'selectors' in listItem.counts;
 };
 
-const isSelectorsListItem = (listItem: TagsListItem | SelectorsListItem): listItem is SelectorsListItem => {
+const isSelectorsListItem = (
+    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
+): listItem is AssetGroupTagSelectorsListItem => {
     if (listItem.counts === undefined) return false;
     return !('selectors' in listItem.counts);
 };
 
-const getCountElement = (listItem: TagsListItem | SelectorsListItem): React.ReactNode => {
+const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem): React.ReactNode => {
     if (listItem.counts === undefined) {
         return null;
     } else if (isTagListItem(listItem)) {
-        return <span className='text-base'>{listItem.counts.selectors.toLocaleString()}</span>;
+        return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
     } else if (isSelectorsListItem(listItem)) {
-        return <span className='text-base'>{listItem.counts.members.toLocaleString()}</span>;
+        return <span className='text-base ml-4'>{listItem.counts.members.toLocaleString()}</span>;
     } else {
         return null;
     }
 };
 
+type DetailsListProps = {
+    title: 'Selectors' | 'Tiers' | 'Labels';
+    listQuery: UseQueryResult<AssetGroupTagsListItem[]> | UseQueryResult<AssetGroupTagSelectorsListItem[]>;
+    selected: string | undefined;
+    onSelect: (id: number) => void;
+};
 /**
  * @description This component is meant to display the lists for either Tiers, Labels, or Selectors but not the Members list since that is a paginated list that loads more data as a user scrolls.
  * @param {object} props
@@ -81,7 +74,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
     return (
-        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`} className='h-full max-h-full'>
+        <div data-testid={`tier-management_details_${title.toLowerCase()}-list`}>
             {title !== 'Tiers' ? (
                 <SortableHeader
                     title={title}
@@ -104,8 +97,11 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                 </div>
             )}
             <div
-                className={cn('h-[calc(100%-42px)] overflow-y-auto', {
+                className={cn(`overflow-y-auto`, {
                     'border-x-2 border-neutral-light-5 dark:border-neutral-dark-5': title === 'Selectors',
+                    'h-[762px]': getListHeight(window.innerHeight) === 762,
+                    'h-[642px]': getListHeight(window.innerHeight) === 642,
+                    'h-[438px]': getListHeight(window.innerHeight) === 438,
                 })}>
                 <ul>
                     {listQuery.isLoading ? (
@@ -117,6 +113,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
+                        // getFilteredList(listQuery.data)
                         listQuery.data
                             ?.sort((a, b) => {
                                 switch (sortOrder) {
@@ -129,6 +126,27 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                 }
                             })
                             .map((listItem) => {
+                                // Filters out Tier Tags when the active tab is 'Labels'
+                                if (
+                                    isTagListItem(listItem) &&
+                                    listItem.type === AssetGroupTagTypeTier &&
+                                    title !== 'Tiers'
+                                ) {
+                                    return null;
+                                }
+
+                                // Filters out Label and Owned Tags when the active tab is 'Tiers'
+                                if (
+                                    isTagListItem(listItem) &&
+                                    (listItem.type === AssetGroupTagTypeLabel ||
+                                        listItem.type === AssetGroupTagTypeOwned) &&
+                                    title === 'Tiers'
+                                ) {
+                                    return null;
+                                }
+
+                                const isDisabled = isSelectorsListItem(listItem) && listItem.disabled_at;
+
                                 return (
                                     <li
                                         key={listItem.id}
@@ -142,11 +160,22 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                         <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
                                         <Button
                                             variant={'text'}
-                                            className='flex justify-between w-full'
+                                            className='flex justify-between w-full overflow-hidden'
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}>
-                                            <span className='text-base'>{listItem.name}</span>
+                                            <div className='flex items-center'>
+                                                <div
+                                                    className={cn(
+                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
+                                                        {
+                                                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
+                                                        }
+                                                    )}
+                                                    title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
+                                                    {listItem.name}
+                                                </div>
+                                            </div>
                                             {getCountElement(listItem)}
                                         </Button>
                                     </li>

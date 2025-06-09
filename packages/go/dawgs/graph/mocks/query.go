@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -31,190 +31,6 @@ import (
 	graph "github.com/specterops/bloodhound/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
-
-// MockValueMapper is a mock of ValueMapper interface.
-type MockValueMapper struct {
-	ctrl     *gomock.Controller
-	recorder *MockValueMapperMockRecorder
-	isgomock struct{}
-}
-
-// MockValueMapperMockRecorder is the mock recorder for MockValueMapper.
-type MockValueMapperMockRecorder struct {
-	mock *MockValueMapper
-}
-
-// NewMockValueMapper creates a new mock instance.
-func NewMockValueMapper(ctrl *gomock.Controller) *MockValueMapper {
-	mock := &MockValueMapper{ctrl: ctrl}
-	mock.recorder = &MockValueMapperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockValueMapper) EXPECT() *MockValueMapperMockRecorder {
-	return m.recorder
-}
-
-// HasNext mocks base method.
-func (m *MockValueMapper) HasNext() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasNext")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// HasNext indicates an expected call of HasNext.
-func (mr *MockValueMapperMockRecorder) HasNext() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasNext", reflect.TypeOf((*MockValueMapper)(nil).HasNext))
-}
-
-// MapNext mocks base method.
-func (m *MockValueMapper) MapNext(target any) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MapNext", target)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// MapNext indicates an expected call of MapNext.
-func (mr *MockValueMapperMockRecorder) MapNext(target any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MapNext", reflect.TypeOf((*MockValueMapper)(nil).MapNext), target)
-}
-
-// Next mocks base method.
-func (m *MockValueMapper) Next() (any, bool) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Next")
-	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(bool)
-	return ret0, ret1
-}
-
-// Next indicates an expected call of Next.
-func (mr *MockValueMapperMockRecorder) Next() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockValueMapper)(nil).Next))
-}
-
-// Remaining mocks base method.
-func (m *MockValueMapper) Remaining() []any {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Remaining")
-	ret0, _ := ret[0].([]any)
-	return ret0
-}
-
-// Remaining indicates an expected call of Remaining.
-func (mr *MockValueMapperMockRecorder) Remaining() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remaining", reflect.TypeOf((*MockValueMapper)(nil).Remaining))
-}
-
-// Scan mocks base method.
-func (m *MockValueMapper) Scan(targets ...any) error {
-	m.ctrl.T.Helper()
-	varargs := []any{}
-	for _, a := range targets {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Scan", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Scan indicates an expected call of Scan.
-func (mr *MockValueMapperMockRecorder) Scan(targets ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockValueMapper)(nil).Scan), targets...)
-}
-
-// TryMapNext mocks base method.
-func (m *MockValueMapper) TryMapNext(target any) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TryMapNext", target)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// TryMapNext indicates an expected call of TryMapNext.
-func (mr *MockValueMapperMockRecorder) TryMapNext(target any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryMapNext", reflect.TypeOf((*MockValueMapper)(nil).TryMapNext), target)
-}
-
-// MockScanner is a mock of Scanner interface.
-type MockScanner struct {
-	ctrl     *gomock.Controller
-	recorder *MockScannerMockRecorder
-	isgomock struct{}
-}
-
-// MockScannerMockRecorder is the mock recorder for MockScanner.
-type MockScannerMockRecorder struct {
-	mock *MockScanner
-}
-
-// NewMockScanner creates a new mock instance.
-func NewMockScanner(ctrl *gomock.Controller) *MockScanner {
-	mock := &MockScanner{ctrl: ctrl}
-	mock.recorder = &MockScannerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockScanner) EXPECT() *MockScannerMockRecorder {
-	return m.recorder
-}
-
-// Mapper mocks base method.
-func (m *MockScanner) Mapper() (graph.ValueMapper, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mapper")
-	ret0, _ := ret[0].(graph.ValueMapper)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Mapper indicates an expected call of Mapper.
-func (mr *MockScannerMockRecorder) Mapper() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mapper", reflect.TypeOf((*MockScanner)(nil).Mapper))
-}
-
-// Next mocks base method.
-func (m *MockScanner) Next() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Next")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// Next indicates an expected call of Next.
-func (mr *MockScannerMockRecorder) Next() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockScanner)(nil).Next))
-}
-
-// Scan mocks base method.
-func (m *MockScanner) Scan(targets ...any) error {
-	m.ctrl.T.Helper()
-	varargs := []any{}
-	for _, a := range targets {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Scan", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Scan indicates an expected call of Scan.
-func (mr *MockScannerMockRecorder) Scan(targets ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockScanner)(nil).Scan), targets...)
-}
 
 // MockResult is a mock of Result interface.
 type MockResult struct {
@@ -267,12 +83,11 @@ func (mr *MockResultMockRecorder) Error() *gomock.Call {
 }
 
 // Mapper mocks base method.
-func (m *MockResult) Mapper() (graph.ValueMapper, error) {
+func (m *MockResult) Mapper() graph.ValueMapper {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Mapper")
 	ret0, _ := ret[0].(graph.ValueMapper)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // Mapper indicates an expected call of Mapper.
@@ -311,6 +126,20 @@ func (m *MockResult) Scan(targets ...any) error {
 func (mr *MockResultMockRecorder) Scan(targets ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scan", reflect.TypeOf((*MockResult)(nil).Scan), targets...)
+}
+
+// Values mocks base method.
+func (m *MockResult) Values() []any {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Values")
+	ret0, _ := ret[0].([]any)
+	return ret0
+}
+
+// Values indicates an expected call of Values.
+func (mr *MockResultMockRecorder) Values() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Values", reflect.TypeOf((*MockResult)(nil).Values))
 }
 
 // MockNodeQuery is a mock of NodeQuery interface.

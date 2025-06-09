@@ -29,11 +29,6 @@ generate *FLAGS:
   @just stbernard generate {{FLAGS}}
   @just check-license
 
-# run the code generation from the cue schema
-schemagen: yarn-local && check-license (yarn "format") goimports
-  go run github.com/specterops/bloodhound/schemagen
-
-
 # Show repository status
 show *FLAGS:
   @just stbernard show {{FLAGS}}
@@ -61,17 +56,12 @@ _prep-steps:
   @just ensure-deps
   @just modsync
   @just generate
-  @just goimports
   @just show > tmp/repo-status.txt
   @just analyze > tmp/analysis-report.txt
 
-goimports:
-  @ echo "Running goimports, check for file drift"
-  @ find . -name \*.go -exec goimports -w {} \;
-
 # check license is applied to source files
-check-license:
-  python3 license_check.py
+check-license *ARGS:
+  @just stbernard license {{ARGS}}
 
 # run go commands in the context of the api project
 go *ARGS:

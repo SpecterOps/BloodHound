@@ -29,8 +29,9 @@ import { createBrowserHistory } from 'history';
 import { FC } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useNavigate, useParams } from 'react-router-dom';
-import { apiClient, cn } from '../../../utils';
+import { useParams } from 'react-router-dom';
+import { apiClient, cn, useAppNavigate } from '../../../utils';
+import { getTagUrlValue } from '../utils';
 
 type TagFormInputs = {
     name: string;
@@ -39,7 +40,8 @@ type TagFormInputs = {
 };
 
 export const TagForm: FC = () => {
-    const { tagId = '' } = useParams();
+    const { tierId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
     const history = createBrowserHistory();
     const {
         register,
@@ -49,13 +51,13 @@ export const TagForm: FC = () => {
     // TODO: REMOVE THIS ONCE THIS FORM HAS ENDPOINTS THAT IT CAN POST TO
     const inputsDisabled = true;
 
-    const navigate = useNavigate();
+    const navigate = useAppNavigate();
 
     const onSubmit: SubmitHandler<TagFormInputs> = (data) => {
         console.log(data);
         console.log(errors);
 
-        navigate(`/tier-management/details/tag/${tagId}`);
+        navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
     };
 
     const tagQuery = useQuery({
@@ -68,7 +70,7 @@ export const TagForm: FC = () => {
     });
 
     if (tagQuery.isLoading) return <Skeleton />;
-    if (tagQuery.isError) throw new Error();
+    if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -130,7 +132,7 @@ export const TagForm: FC = () => {
                 <Button
                     variant={'primary'}
                     onClick={() => {
-                        navigate(`/tier-management/edit/tag/${tagId}/selector`);
+                        navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`);
                     }}>
                     Define Selector
                 </Button>

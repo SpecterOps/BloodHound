@@ -168,3 +168,8 @@ SELECT
 	2,
 	d.cypher
 FROM inserted_selectors s JOIN src_data d ON d.name = s.name;
+
+-- Enable `back_button_support` feature flag and block users from updating it.
+UPDATE feature_flags SET user_updatable = false, enabled = true WHERE key = 'back_button_support';
+
+UPDATE feature_flags SET "user_updatable" = true WHERE "key" = 'tier_management_engine';

@@ -150,6 +150,15 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else {
 				out.Set(kLowercase, boolVal)
 			}
+		case strings.HasPrefix(v, "BOOL:"):
+			_, val, found := strings.Cut(v, "BOOL:")
+			if !found {
+				return nil, fmt.Errorf("could not process bool value `%s`", v)
+			} else if boolVal, err := strconv.ParseBool(val); err != nil {
+				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
+			} else {
+				out.Set(k, boolVal)
+			}
 		default:
 			out.Set(kLowercase, v)
 		}

@@ -61,3 +61,7 @@ export * from './useMatchingPaths';
 export * from './useInitialEnvironment';
 
 export * from './usePreviousValue';
+
+export * from './useCustomNodeKinds';
+
+export * from './useGraphHasData';

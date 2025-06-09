@@ -14,19 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SeedTypeCypher } from 'js-client-library';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../../../utils';
-import { Cypher } from '../Cypher';
 import DynamicDetails from './DynamicDetails';
 import WrappedEntityInfoPanel from './EntityInfo/EntityInfoPanel';
-import ObjectCountPanel from './ObjectCountPanel';
-import { getSelectorSeedType } from './utils';
 
 export const SelectedDetails: FC = () => {
-    const { selectorId, memberId, tagId } = useParams();
+    const { tierId, labelId, selectorId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
 
     const tagQuery = useQuery({
         queryKey: ['tier-management', 'tag', tagId],
@@ -61,28 +58,12 @@ export const SelectedDetails: FC = () => {
         enabled: tagId !== undefined && memberId !== undefined,
     });
 
-    if (tagId !== undefined && memberId !== undefined && memberQuery.data !== undefined) {
-        return <WrappedEntityInfoPanel selectedNode={memberQuery.data} />;
-    }
-
-    if (selectorId !== undefined && selectorQuery.data !== undefined) {
-        return (
-            <div className='max-h-full flex flex-col gap-8'>
-                <DynamicDetails data={selectorQuery.data} />
-                {getSelectorSeedType(selectorQuery.data) === SeedTypeCypher && (
-                    <Cypher preview initialInput={selectorQuery.data.seeds[0].value} />
-                )}
-            </div>
-        );
-    }
-
-    if (tagId !== undefined && tagQuery.data !== undefined) {
-        return (
-            <div className='max-h-full flex flex-col gap-8'>
-                <DynamicDetails data={tagQuery.data} />
-                <ObjectCountPanel tagId={tagId} />
-            </div>
-        );
+    if (memberId !== undefined) {
+        return <WrappedEntityInfoPanel selectedNode={memberQuery.data ?? null} />;
+    } else if (selectorId !== undefined) {
+        return <DynamicDetails queryResult={selectorQuery} />;
+    } else if (tagId !== undefined) {
+        return <DynamicDetails queryResult={tagQuery} />;
     }
 
     return null;

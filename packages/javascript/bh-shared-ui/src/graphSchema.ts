@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -154,6 +153,7 @@ export enum ActiveDirectoryRelationshipKind {
     PropagatesACEsTo = 'PropagatesACEsTo',
     GPOAppliesTo = 'GPOAppliesTo',
     CanApplyGPO = 'CanApplyGPO',
+    HasTrustKeys = 'HasTrustKeys',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -323,6 +323,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'GPOAppliesTo';
         case ActiveDirectoryRelationshipKind.CanApplyGPO:
             return 'CanApplyGPO';
+        case ActiveDirectoryRelationshipKind.HasTrustKeys:
+            return 'HasTrustKeys';
         default:
             return undefined;
     }
@@ -478,6 +480,7 @@ export enum ActiveDirectoryKindProperties {
     ClientAllowedNTLMServers = 'clientallowedntlmservers',
     Transitive = 'transitive',
     GroupScope = 'groupscope',
+    NetBIOS = 'netbios',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -741,6 +744,8 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Transitive';
         case ActiveDirectoryKindProperties.GroupScope:
             return 'Group Scope';
+        case ActiveDirectoryKindProperties.NetBIOS:
+            return 'NetBIOS';
         default:
             return undefined;
     }
@@ -799,6 +804,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.PropagatesACEsTo,
         ActiveDirectoryRelationshipKind.GPOAppliesTo,
         ActiveDirectoryRelationshipKind.CanApplyGPO,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
@@ -921,6 +927,8 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToADUser = 'SyncedToADUser',
+    AZRoleEligible = 'AZRoleEligible',
+    AZRoleApprover = 'AZRoleApprover',
 }
 export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): string | undefined {
     switch (value) {
@@ -1018,6 +1026,10 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
+        case AzureRelationshipKind.AZRoleEligible:
+            return 'AZRoleEligible';
+        case AzureRelationshipKind.AZRoleApprover:
+            return 'AZRoleApprover';
         default:
             return undefined;
     }
@@ -1056,6 +1068,14 @@ export enum AzureKindProperties {
     PublisherDomain = 'publisherdomain',
     SignInAudience = 'signinaudience',
     RoleTemplateID = 'templateid',
+    RoleDefinitionId = 'roledefinitionid',
+    EndUserAssignmentRequiresApproval = 'enduserassignmentrequiresapproval',
+    EndUserAssignmentRequiresCAPAuthenticationContext = 'enduserassignmentrequirescapauthenticationcontext',
+    EndUserAssignmentUserApprovers = 'enduserassignmentuserapprovers',
+    EndUserAssignmentGroupApprovers = 'enduserassignmentgroupapprovers',
+    EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
+    EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
+    EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1123,6 +1143,22 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Sign In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
+        case AzureKindProperties.RoleDefinitionId:
+            return 'Role Definition Id';
+        case AzureKindProperties.EndUserAssignmentRequiresApproval:
+            return 'End User Assignment Requires Approval';
+        case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
+            return 'End User Assignment Requires CAP AuthenticationContext';
+        case AzureKindProperties.EndUserAssignmentUserApprovers:
+            return 'End User Assignment User Approvers';
+        case AzureKindProperties.EndUserAssignmentGroupApprovers:
+            return 'End User Assignment Group Approvers';
+        case AzureKindProperties.EndUserAssignmentRequiresMFA:
+            return 'End User Assignment Requires MFA';
+        case AzureKindProperties.EndUserAssignmentRequiresJustification:
+            return 'End User Assignment Requires Justification';
+        case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
+            return 'End User Assignment Requires Ticket Information';
         default:
             return undefined;
     }
@@ -1167,6 +1203,8 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToADUser,
+        AzureRelationshipKind.AZRoleEligible,
+        AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
     ];
 }
@@ -1200,6 +1238,7 @@ export enum CommonKindProperties {
     Email = 'email',
     IsInherited = 'isinherited',
     CompositionID = 'compositionid',
+    PrimaryKind = 'primarykind',
 }
 export function CommonKindPropertiesToDisplay(value: CommonKindProperties): string | undefined {
     switch (value) {
@@ -1239,6 +1278,8 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
             return 'Is Inherited';
         case CommonKindProperties.CompositionID:
             return 'Composition ID';
+        case CommonKindProperties.PrimaryKind:
+            return 'Primary Kind';
         default:
             return undefined;
     }

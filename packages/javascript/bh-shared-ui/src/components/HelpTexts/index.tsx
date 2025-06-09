@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { VirtualizedNodeListItem } from '../VirtualizedNodeList';
+import { NormalizedNodeItem } from '../VirtualizedNodeList';
 import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
@@ -62,6 +62,7 @@ import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
 import AZResetPassword from './AZResetPassword/AZResetPassword';
+import AZRoleApprover from './AZRoleApprover/AZRoleApprover';
 import AZRunsAs from './AZRunsAs/AZRunsAs';
 import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessAdministrator';
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
@@ -106,6 +107,7 @@ import GetChangesAll from './GetChangesAll/GetChangesAll';
 import GoldenCert from './GoldenCert/GoldenCert';
 import HasSIDHistory from './HasSIDHistory/HasSIDHistory';
 import HasSession from './HasSession/HasSession';
+import HasTrustKeys from './HasTrustKeys/HasTrustKeys';
 import HostsCAService from './HostsCAService/HostsCAService';
 import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import ManageCA from './ManageCA/ManageCA';
@@ -146,7 +148,7 @@ export type EdgeInfoProps = {
     targetDBId?: number;
     targetName?: string;
     targetType?: string;
-    onNodeClick?: (selectedNode: VirtualizedNodeListItem) => void;
+    onNodeClick?: (selectedNode: NormalizedNodeItem) => void;
 };
 
 const EdgeInfoComponents = {
@@ -234,6 +236,7 @@ const EdgeInfoComponents = {
     AZKeyVaultKVContributor: AZKeyVaultKVContributor,
     AZLogicAppContributor: AZLogicAppContributor,
     AZNodeResourceGroup: AZNodeResourceGroup,
+    AZRoleApprover: AZRoleApprover,
     Enroll: Enroll,
     EnterpriseCAFor: EnterpriseCAFor,
     RootCAFor: RootCAFor,
@@ -272,6 +275,7 @@ const EdgeInfoComponents = {
     PropagatesACEsTo: PropagatesACEsTo,
     CanApplyGPO: CanApplyGPO,
     GPOAppliesTo: GPOAppliesTo,
+    HasTrustKeys: HasTrustKeys,
 };
 
 export default EdgeInfoComponents;

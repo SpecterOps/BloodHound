@@ -20,8 +20,7 @@ import { createTheme } from '@mui/material/styles';
 import { CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Router } from 'react-router-dom';
-import { createMemoryHistory } from 'history';
+import { BrowserRouter } from 'react-router-dom';
 import { NotificationsProvider } from './providers';
 import { darkPalette } from './constants';
 import { SnackbarProvider } from 'notistack';
@@ -47,16 +46,17 @@ const createDefaultQueryClient = () => {
     });
 };
 
-const createProviders = ({ queryClient, history, theme, children }) => {
+const createProviders = ({ queryClient, route, theme, children }) => {
+    window.history.pushState({}, 'Initialize', route);
     return (
         <QueryClientProvider client={queryClient}>
             <StyledEngineProvider injectFirst>
                 <ThemeProvider theme={theme}>
                     <NotificationsProvider>
                         <CssBaseline />
-                        <Router location={history.location} navigator={history}>
+                        <BrowserRouter>
                             <SnackbarProvider>{children}</SnackbarProvider>
-                        </Router>
+                        </BrowserRouter>
                     </NotificationsProvider>
                 </ThemeProvider>
             </StyledEngineProvider>
@@ -66,27 +66,17 @@ const createProviders = ({ queryClient, history, theme, children }) => {
 
 const customRender = (
     ui,
-    {
-        theme = defaultTheme,
-        history = createMemoryHistory(),
-        queryClient = createDefaultQueryClient(),
-        ...renderOptions
-    } = {}
+    { theme = defaultTheme, route = '/', queryClient = createDefaultQueryClient(), ...renderOptions } = {}
 ) => {
-    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, children });
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, children });
     return render(ui, { wrapper: AllTheProviders, ...renderOptions });
 };
 
 const customRenderHook = (
     hook,
-    {
-        queryClient = createDefaultQueryClient(),
-        theme = defaultTheme,
-        history = createMemoryHistory(),
-        ...renderOptions
-    } = {}
+    { queryClient = createDefaultQueryClient(), theme = defaultTheme, route = '/', ...renderOptions } = {}
 ) => {
-    const AllTheProviders = ({ children }) => createProviders({ queryClient, history, theme, children });
+    const AllTheProviders = ({ children }) => createProviders({ queryClient, route, theme, children });
     return renderHook(hook, { wrapper: AllTheProviders, ...renderOptions });
 };
 

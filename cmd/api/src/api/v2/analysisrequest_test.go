@@ -37,7 +37,6 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -83,7 +82,7 @@ func TestResources_GetAnalysisRequest(t *testing.T) {
 	})
 }
 
-func TestManagementResource_RequestAnalysis(t *testing.T) {
+func TestResources_RequestAnalysis(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -95,10 +94,10 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 		responseHeader http.Header
 	}
 	type testData struct {
-		name             string
-		buildRequest     func() *http.Request
-		emulateWithMocks func(t *testing.T, mock *mock, req *http.Request)
-		expected         expected
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(t *testing.T, mock *mock)
+		expected     expected
 	}
 
 	tt := []testData{
@@ -106,7 +105,10 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			name: "Error: error finding scheduled analysis parameter - Status Not Found",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -124,21 +126,24 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, database.ErrNotFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"resource not found"}],"http_status":404,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: GetConfigurationParameter database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -156,21 +161,24 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{}, context.DeadlineExceeded)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"request timed out"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: scheduled analysis parameter enabled - Bad Request",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -188,9 +196,9 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
 						Object: &appcfg.ScheduledAnalysisParameter{Enabled: true, RRule: "rule"},
@@ -200,14 +208,17 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"analysis is configured to run on a schedule, unable to run just in time"}],"http_status":400,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: RequestAnalysis database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -225,27 +236,30 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
 						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
 					},
 				}, nil)
-				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(errors.New("error"))
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"an internal error has occurred that is preventing the service from servicing this request"}],"http_status":500,"request_id":"id","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: analysis request accepted - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -263,26 +277,29 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
 						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
 					},
 				}, nil)
-				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseHeader: http.Header{"Location": []string{"/"}},
+				responseHeader: http.Header{},
 			},
 		},
 		{
 			name: "Success: user - analysis request accepted - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -300,26 +317,29 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 				request = mux.SetURLVars(request, param)
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, requestCtx.WithRequestID("id")))
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
 						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
 					},
 				}, nil)
-				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "00000000-0000-0000-0000-000000000000").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "00000000-0000-0000-0000-000000000000").Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
-				responseHeader: http.Header{"Location": []string{"/"}},
+				responseHeader: http.Header{},
 			},
 		},
 		{
 			name: "Success: unknown user - analysis request accepted - OK",
 			buildRequest: func() *http.Request {
 				request := &http.Request{
-					URL: &url.URL{},
+					URL: &url.URL{
+						Path: "/api/v2/analysis",
+					},
+					Method: http.MethodPut,
 				}
 
 				param := map[string]string{
@@ -328,20 +348,20 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 
 				return mux.SetURLVars(request, param)
 			},
-			emulateWithMocks: func(t *testing.T, mock *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetConfigurationParameter(req.Context(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.ScheduledAnalysis).Return(appcfg.Parameter{
 					Key: "key",
 					Value: types.JSONBObject{
 						Object: &appcfg.ScheduledAnalysisParameter{Enabled: false, RRule: "rule"},
 					},
 				}, nil)
-				mock.mockDatabase.EXPECT().RequestAnalysis(req.Context(), "unknown-user").Return(nil)
+				mock.mockDatabase.EXPECT().RequestAnalysis(gomock.Any(), "unknown-user").Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusAccepted,
 				responseBody:   ``,
-				responseHeader: http.Header{"Location": []string{"/"}},
+				responseHeader: http.Header{},
 			},
 		},
 	}
@@ -355,7 +375,7 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.emulateWithMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				DB: mocks.mockDatabase,
@@ -363,15 +383,18 @@ func TestManagementResource_RequestAnalysis(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources.RequestAnalysis(response, request)
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/analysis", resources.RequestAnalysis).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
-			require.Equal(t, testCase.expected.responseCode, status)
-			require.Equal(t, testCase.expected.responseHeader, header)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
 			if body != "" {
 				assert.JSONEq(t, testCase.expected.responseBody, body)
+			} else {
+				assert.Equal(t, testCase.expected.responseBody, body)
 			}
 		})
 	}

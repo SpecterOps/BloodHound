@@ -47,7 +47,7 @@ func MakeAssetHandler(cfg AssetConfig) http.Handler {
 // fetchAsset will attempt to find a static asset at the given path. If the asset does not exist, fetchAsset will instead
 // return the index.html asset. This is done because the UI will change with the browser URI depending on the UI view.
 // This results in the browser asking for assets that do not exist upon browser refresh.
-func fetchAsset(cfg AssetConfig, assetPath string) (io.ReadCloser, error) {
+func fetchAsset(cfg AssetConfig, assetPath string) (fs.File, error) {
 	if fin, err := cfg.FS.Open(filepath.Join(cfg.BasePath, assetPath)); err != nil {
 		if cfg.IndexPath != "" {
 			return cfg.FS.Open(filepath.Join(cfg.BasePath, cfg.IndexPath))
@@ -72,11 +72,13 @@ func serve(cfg AssetConfig, response http.ResponseWriter, request *http.Request)
 
 	if fin, err := fetchAsset(cfg, assetPath); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
+	} else if fileInfo, err := fin.Stat(); err != nil || fileInfo == nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
 		defer fin.Close()
 
 		var (
-			assetExtension = filepath.Ext(assetPath)
+			assetExtension = filepath.Ext(fileInfo.Name())
 			contentType    = mime.TypeByExtension(assetExtension)
 		)
 

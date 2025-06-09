@@ -32,7 +32,7 @@ import (
 
 type KindMapper interface {
 	MapKindID(ctx context.Context, kindID int16) (graph.Kind, error)
-	MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error)
+	MapKindIDs(ctx context.Context, kindIDs []int16) (graph.Kinds, error)
 	MapKind(ctx context.Context, kind graph.Kind) (int16, error)
 	MapKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
 	AssertKinds(ctx context.Context, kinds graph.Kinds) ([]int16, error)
@@ -227,14 +227,14 @@ func (s *SchemaManager) mapKindIDs(kindIDs []int16) (graph.Kinds, []int16) {
 }
 
 func (s *SchemaManager) MapKindID(ctx context.Context, kindID int16) (graph.Kind, error) {
-	if kindIDs, err := s.MapKindIDs(ctx, kindID); err != nil {
+	if kindIDs, err := s.MapKindIDs(ctx, []int16{kindID}); err != nil {
 		return nil, err
 	} else {
 		return kindIDs[0], nil
 	}
 }
 
-func (s *SchemaManager) MapKindIDs(ctx context.Context, kindIDs ...int16) (graph.Kinds, error) {
+func (s *SchemaManager) MapKindIDs(ctx context.Context, kindIDs []int16) (graph.Kinds, error) {
 	s.lock.RLock()
 
 	if kinds, missingKinds := s.mapKindIDs(kindIDs); len(missingKinds) == 0 {

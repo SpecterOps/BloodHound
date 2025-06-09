@@ -38,6 +38,8 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		return &aggregateStats, err
 	} else if syncLAPSStats, err := adAnalysis.PostSyncLAPSPassword(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
+	} else if hasTrustKeyStats, err := adAnalysis.PostHasTrustKeys(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else if localGroupStats, err := adAnalysis.PostLocalGroups(ctx, db, groupExpansions, false, citrixEnabled); err != nil {
 		return &aggregateStats, err
 	} else if adcsStats, adcsCache, err := adAnalysis.PostADCS(ctx, db, groupExpansions, adcsEnabled); err != nil {
@@ -50,6 +52,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(gpoSyncStats)
+		aggregateStats.Merge(hasTrustKeyStats)
 		aggregateStats.Merge(dcSyncStats)
 		aggregateStats.Merge(localGroupStats)
 		aggregateStats.Merge(adcsStats)

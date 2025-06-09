@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
@@ -64,11 +65,16 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
+type PatchAssetGroupTagSelectorRequest struct {
+	model.AssetGroupTagSelector
+	Disabled *bool `json:"disabled"`
+}
+
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var rCtx = request.Context()
 
 	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
-		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specified for include counts", request), response)
 	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 	} else {
@@ -196,7 +202,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  model.AssetGroupTagSelector
+		selUpdateReq  PatchAssetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -219,18 +225,18 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else {
 		// we can update DisabledAt on a default selector
-		if selUpdateReq.DisabledAt.Valid {
-			if selector.AllowDisable {
-				selector.DisabledAt = selUpdateReq.DisabledAt
-				if selector.DisabledAt.Time.IsZero() {
-					// clear DisabledBy if DisabledAt is set to zero
-					selector.DisabledBy = null.String{}
-				} else {
+		if selUpdateReq.Disabled != nil {
+			if *selUpdateReq.Disabled {
+				if selector.AllowDisable {
+					selector.DisabledAt = null.TimeFrom(time.Now())
 					selector.DisabledBy = null.StringFrom(actor.ID.String())
+				} else {
+					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
+					return
 				}
 			} else {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "this selector cannot be disabled", request), response)
-				return
+				selector.DisabledAt = null.Time{}
+				selector.DisabledBy = null.String{}
 			}
 		}
 
@@ -288,10 +294,6 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
-type listSelectorsResponse struct {
-	Selectors model.AssetGroupTagSelectors `json:"selectors"`
-}
-
 func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
@@ -331,6 +333,19 @@ func (s *Resources) DeleteAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
+type AssetGroupTagSelectorCounts struct {
+	Members int64 `json:"members"`
+}
+
+type AssetGroupTagSelectorView struct {
+	model.AssetGroupTagSelector
+	Counts *AssetGroupTagSelectorCounts `json:"counts,omitempty"`
+}
+
+type GetAssetGroupTagSelectorResponse struct {
+	Selectors []AssetGroupTagSelectorView `json:"selectors"`
+}
+
 type GetSelectorResponse struct {
 	Selector model.AssetGroupTagSelector `json:"selector"`
 }
@@ -362,7 +377,9 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 		assetGroupTagSelector    = model.AssetGroupTagSelector{}
 	)
 
-	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
+	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
 	} else {
@@ -400,12 +417,51 @@ func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, requ
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
 		} else if selectorSeedSqlFilter, err := selectorSeedsQueryFilter.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if _, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
+		} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), assetGroupTagID); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else if selectors, err := s.DB.GetAssetGroupTagSelectorsByTagId(request.Context(), assetGroupTagID, selectorSqlFilter, selectorSeedSqlFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			api.WriteBasicResponse(request.Context(), listSelectorsResponse{Selectors: selectors}, http.StatusOK, response)
+			var (
+				resp = GetAssetGroupTagSelectorResponse{
+					Selectors: make([]AssetGroupTagSelectorView, 0, len(selectors)),
+				}
+			)
+
+			for _, selector := range selectors {
+				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
+				if paramIncludeCounts {
+					memberCount := int64(0)
+					// if the selector is not disabled
+					if selector.DisabledAt.Time.IsZero() {
+						// get all the nodes which are selected
+						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
+							api.HandleDatabaseError(request, response, err)
+						} else {
+							nodeIds := make([]graph.ID, 0, len(selectorNodes))
+							for _, node := range selectorNodes {
+								nodeIds = append(nodeIds, node.NodeId)
+							}
+
+							// only count nodes that are actually tagged
+							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
+								query.KindIn(query.Node(), assetGroupTag.ToKind()),
+								query.InIDs(query.NodeID(), nodeIds...),
+							)); err != nil {
+								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
+							} else {
+								memberCount = count
+							}
+						}
+					}
+					selectorView.Counts = &AssetGroupTagSelectorCounts{
+						Members: memberCount,
+					}
+				}
+				resp.Selectors = append(resp.Selectors, selectorView)
+			}
+
+			api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
 		}
 	}
 }

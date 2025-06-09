@@ -14,16 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Card } from '@bloodhoundenterprise/doodleui';
-import { AssetGroupTag, AssetGroupTagSelector, SeedTypesMap } from 'js-client-library';
+import { Card, Skeleton } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector, SeedTypeCypher, SeedTypesMap } from 'js-client-library';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
+import { UseQueryResult } from 'react-query';
 import { LuxonFormat } from '../../../utils';
+import { Cypher } from '../Cypher/Cypher';
+import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
-
-type DynamicDetailsProps = {
-    data: AssetGroupTag | AssetGroupTagSelector;
-};
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -36,28 +35,44 @@ const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => 
     );
 };
 
+const DescriptionField: FC<{ description: string }> = ({ description }) => {
+    return (
+        <div className='flex flex-col gap-x-2'>
+            <span className='font-bold'>Description:</span>
+            <div className='max-h-36 overflow-y-auto'>
+                <p title={description}>{description}</p>
+            </div>
+        </div>
+    );
+};
+
 const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
     return (
-        <Card className='px-6 py-6 max-w-[32rem]'>
-            <div className='text-xl font-bold'>{data.name}</div>
-            {data.position !== null && (
-                <div className='mt-4'>
-                    <DetailField label='Tier' value={data.position.toString()} />
+        <div className='max-h-full flex flex-col gap-8'>
+            <Card className='px-6 py-6 max-w-[32rem]'>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
                 </div>
-            )}
-            <div className='mt-4'>
-                <DetailField label='Description' value={data.description} />
-            </div>
-            <div className='mt-4'>
-                <DetailField label='Created by' value={data.created_by} />
-                <DetailField label='Last Updated' value={lastUpdated} />
-            </div>
-            <div className='mt-4'>
-                <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
-            </div>
-        </Card>
+                {data.position !== null && (
+                    <div className='mt-4'>
+                        <DetailField label='Tier' value={data.position.toString()} />
+                    </div>
+                )}
+                <div className='mt-4'>
+                    <DescriptionField description={data.description} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Last Updated' value={lastUpdated} />
+                </div>
+                <div className='mt-4' hidden>
+                    <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
+                </div>
+            </Card>
+            <ObjectCountPanel tagId={data.id.toString()} />
+        </div>
     );
 };
 
@@ -66,34 +81,50 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const seedType = getSelectorSeedType(data);
 
     return (
-        <Card className='px-6 py-6 max-w-[32rem]'>
-            <div className='text-xl font-bold'>{data.name}</div>
-            <div className='mt-4'>
-                <DetailField label='Description' value={data.description} />
-            </div>
-            <div className='mt-4'>
-                <DetailField label='Created by' value={data.created_by} />
-                <DetailField label='Last Updated' value={lastUpdated} />
-                <DetailField label='Type' value={SeedTypesMap[seedType]} />
-            </div>
-            <div className='mt-4'>
-                <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
-            </div>
-            <div className='mt-4'>
-                <DetailField label='Selector Status' value={data.disabled_at ? 'Enabled' : 'Disabled'} />
-            </div>
-        </Card>
+        <div className='max-h-full flex flex-col gap-8'>
+            <Card className='px-6 py-6 max-w-[32rem]'>
+                <div className='text-xl font-bold truncate' title={data.name}>
+                    {data.name}
+                </div>
+                <div className='mt-4'>
+                    <DescriptionField description={data.description} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Last Updated' value={lastUpdated} />
+                    <DetailField label='Type' value={SeedTypesMap[seedType]} />
+                </div>
+                <div className='mt-4' hidden>
+                    <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
+                </div>
+            </Card>
+            {getSelectorSeedType(data) === SeedTypeCypher && <Cypher preview initialInput={data.seeds[0].value} />}
+        </div>
     );
 };
 
-const DynamicDetails: FC<DynamicDetailsProps> = ({ data }) => {
-    if (isTag(data)) {
+type DynamicDetailsProps = {
+    queryResult: UseQueryResult<AssetGroupTag | undefined> | UseQueryResult<AssetGroupTagSelector | undefined>;
+};
+
+const DynamicDetails: FC<DynamicDetailsProps> = ({ queryResult: { isError, isLoading, data } }) => {
+    if (isLoading) {
+        return <Skeleton className='px-6 py-6 max-w-[32rem] h-52' />;
+    } else if (isError) {
+        return (
+            <Card className='px-6 py-6 max-w-[32rem]'>
+                <span className='text-base'>There was an error fetching this data</span>
+            </Card>
+        );
+    } else if (isTag(data)) {
         return <TagDetails data={data} />;
     } else if (isSelector(data)) {
         return <SelectorDetails data={data} />;
-    } else {
-        return null;
     }
+    return null;
 };
 
 export default DynamicDetails;
