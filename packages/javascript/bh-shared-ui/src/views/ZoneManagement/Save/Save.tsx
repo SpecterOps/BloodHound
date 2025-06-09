@@ -25,7 +25,7 @@ import {
 import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { OWNED_ID, TIER_ZERO_ID } from '../../../utils';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -34,7 +34,7 @@ const Save: FC = () => {
     const { tierId, labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const showSelectorForm = location.pathname.includes('selector');
-    const tagValue = getTagUrlValue(labelId);
+    const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
 

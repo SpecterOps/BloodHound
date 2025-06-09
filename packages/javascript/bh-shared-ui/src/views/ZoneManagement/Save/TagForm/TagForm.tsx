@@ -37,8 +37,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
-import { cn, useAppNavigate } from '../../../../utils';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
+import { OWNED_ID, TIER_ZERO_ID, cn, getTagUrlValue, useAppNavigate } from '../../../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
@@ -114,7 +113,6 @@ export const TagForm: FC = () => {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
 
-                // The desired flow for the creation form is somewhat involved
                 // Upon creation of this tag the user should be moved to creating a selector for the newly created tag, e.g., /save/tier/<NEW_TIER_ID>/selector
                 // This means that we have to await for the ID of the new tag in order to go to the URL for creating a new selector associated with this tag
                 // In addition, once at the create selector form, the cancel button needs go back to the form for the newly created tag
@@ -196,14 +194,14 @@ export const TagForm: FC = () => {
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form>
             <Card className='min-w-96 w-[672px] p-3 mt-6'>
                 <CardHeader>
                     <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className='flex justify-between'>
-                        <span>{`${labelId ? 'Label' : 'Tier'} Information`}</span>
+                        <span>{`${location.pathname.includes('label') ? 'Label' : 'Tier'} Information`}</span>
                     </div>
                     <div className='flex flex-col gap-6 mt-6'>
                         <div>
@@ -270,8 +268,8 @@ export const TagForm: FC = () => {
                     }}>
                     Cancel
                 </Button>
-                <Button variant={'primary'} type='submit'>
-                    {tagId === '' ? 'Define Selector' : 'Save'}
+                <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                    {tagId === '' ? 'Define Selector' : 'Save Edits'}
                 </Button>
             </div>
             <DeleteConfirmationDialog
