@@ -68,7 +68,7 @@ const TierManagement: FC = () => {
                 <p className='mt-6'>
                     Manage asset groups organized by security tiers, assigning assets to specific tiers such as Tier 0.
                     Adjust memberships or move groups between tiers to maintain organization security.
-                    {tierFlag ? (
+                    {!tierFlag ? (
                         <span>
                             To create additional tiers,{' '}
                             <a
