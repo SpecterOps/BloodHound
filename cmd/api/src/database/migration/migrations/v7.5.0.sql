@@ -17,3 +17,6 @@
 -- is_generic column not actually needed.
 ALTER TABLE ingest_tasks
 DROP COLUMN IF EXISTS is_generic;
+
+ -- Add Tier Management Parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.tiering', 'Multi-Tier Analysis Configuration', 'This configuration parameter determines the limits of tiering with respect to analysis', '{"tier_limit": 1, "label_limit": 0, "multi_tier_analysis_enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
