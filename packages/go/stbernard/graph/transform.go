@@ -15,8 +15,10 @@ import (
 	"github.com/specterops/bloodhound/dawgs"
 	"github.com/specterops/bloodhound/dawgs/drivers/pg"
 	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/src/migrations"
@@ -153,20 +155,19 @@ type Position struct {
 
 // Everything in arrows.app is strings
 type Node struct {
-	ID       string   `json:"id"`
-	Position Position `json:"position"`
-	// "caption": "", // name of the node — if we have a name, we use the name, if not, use object id
-	// "labels": [], // kinds that we get back from database — loop through and convert to a string
-	// "properties": {}, map[string]string - map[string]any = typecast to strings
-
+	ID         string            `json:"id"`
+	Position   Position          `json:"position"`
+	Caption    string            `json:"caption"` // name of node, if not, use object_id
+	Label      []string          `json:"label"`   // kinds
+	Properties map[string]string `json:"properties"`
 }
 
 type Relationship struct {
-	ID   string `json:"id"`
-	// type: label - relationship kinds - not an id but kind is a value
-	From string `json:"fromId"`
-	To   string `json:"toId"`
-	// same deal for properties
+	ID         string         `json:"id"`
+	Label      string         `json:"label"` // kind
+	From       string         `json:"fromId"`
+	To         string         `json:"toId"`
+	Properties map[string]string `json:"properties"`
 }
 
 type Arrows struct {
@@ -178,21 +179,39 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) error {
 	var arrowNodes []Node
 	var arrowEdges []Relationship
 
-	for i := range nodes {
+	for _, node := range nodes {
+		name, err := node.Properties.Get(common.Name.String()).String()
+		if err != nil || name == "" {
+			name, err = node.Properties.Get(common.ObjectID.String()).String()
+			if err != nil {
+				return err
+			}
+		}
+
+		var labels = make([]string, 0, 4)
+		for _, kind := range node.Kinds {
+			labels = append(labels, kind.String())
+		}
+
 		arrowNodes = append(arrowNodes, Node{
-			ID: fmt.Sprint(i),
+			ID: node.ID.String(),
 			Position: Position{
 				X: 0,
 				Y: 0,
 			},
+			Caption:    name,
+			Label:      labels,
+			Properties: map[string]string{},
 		})
 	}
 
-	for _, e := range edges {
+	for _, edge := range edges {
 		arrowEdges = append(arrowEdges, Relationship{
-			ID:   e.ID.String(),
-			From: e.StartID.String(),
-			To:   e.EndID.String(),
+			ID:         edge.ID.String(),
+			From:       edge.StartID.String(),
+			To:         edge.EndID.String(),
+			Label:      edge.Kind.String(),
+			Properties: map[string]string{},
 		})
 	}
 
@@ -210,11 +229,41 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) error {
 	return os.WriteFile("arrows.json", jsonBytes, 0644)
 }
 
+// func convertProperties(input map[string]any) map[string]string {
+// 	output := make(map[string]string)
+// 	for key, value := range input {
+// 		output[key] = convertProperty(value)
+// 	}
+// 	return output
+// }
+
+// func convertProperty(input any) string {
+//    switch v := input.(type) {
+// 		case string:
+// 			return v
+// 		case int:
+// 			return strconv.Itoa(v)
+// 		case float64:
+// 			return strconv.FormatFloat(v, 'f', -1, 64)
+// 		case bool:
+// 			return strconv.FormatBool(v)
+// 		case []any:
+// 			return strings.Join(slicesext.Map(v, convertProperty), ",")
+// 		case nil:
+// 			return "null"
+// 		default:
+// 			slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
+// 			return ""
+// 		}
+// }
+
 func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var nodes []*graph.Node
 	var edges []*graph.Relationship
 	err := database.ReadTransaction(context.TODO(), func(tx graph.Transaction) error {
-		err := tx.Nodes().Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+		err := tx.Nodes().Filter(
+			query.Not(query.Kind(query.Node(), common.MigrationData)),
+		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for node := range cursor.Chan() {
 				nodes = append(nodes, node)
 			}

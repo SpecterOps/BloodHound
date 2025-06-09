@@ -1,4056 +1,6684 @@
 {
+    "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#fda1ff",
+    "border-width": 3,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 15,
+    "property-font-weight": "normal"
+  },
   "nodes": [
     {
-      "id": "1"
-    },
-    {
-      "id": "14"
-    },
-    {
-      "id": "4"
-    },
-    {
-      "id": "5"
-    },
-    {
-      "id": "96"
-    },
-    {
-      "id": "43"
-    },
-    {
-      "id": "107"
-    },
-    {
-      "id": "26"
-    },
-    {
-      "id": "260"
-    },
-    {
-      "id": "80"
-    },
-    {
-      "id": "2"
-    },
-    {
-      "id": "7"
-    },
-    {
-      "id": "27"
-    },
-    {
-      "id": "50"
-    },
-    {
-      "id": "56"
-    },
-    {
-      "id": "53"
-    },
-    {
-      "id": "69"
-    },
-    {
-      "id": "57"
-    },
-    {
-      "id": "8"
-    },
-    {
-      "id": "13"
-    },
-    {
-      "id": "23"
-    },
-    {
-      "id": "6"
-    },
-    {
-      "id": "52"
-    },
-    {
-      "id": "39"
-    },
-    {
-      "id": "273"
-    },
-    {
-      "id": "19"
-    },
-    {
-      "id": "112"
-    },
-    {
-      "id": "274"
-    },
-    {
-      "id": "33"
-    },
-    {
-      "id": "3"
-    },
-    {
-      "id": "70"
-    },
-    {
-      "id": "24"
-    },
-    {
-      "id": "11"
-    },
-    {
-      "id": "47"
-    },
-    {
-      "id": "275"
-    },
-    {
-      "id": "12"
-    },
-    {
-      "id": "85"
-    },
-    {
-      "id": "76"
-    },
-    {
-      "id": "22"
-    },
-    {
-      "id": "9"
-    },
-    {
-      "id": "42"
-    },
-    {
-      "id": "97"
-    },
-    {
-      "id": "44"
-    },
-    {
-      "id": "94"
-    },
-    {
-      "id": "102"
-    },
-    {
-      "id": "64"
-    },
-    {
-      "id": "54"
-    },
-    {
-      "id": "48"
-    },
-    {
-      "id": "38"
-    },
-    {
-      "id": "116"
-    },
-    {
-      "id": "51"
-    },
-    {
-      "id": "25"
-    },
-    {
-      "id": "16"
-    },
-    {
-      "id": "41"
-    },
-    {
-      "id": "58"
-    },
-    {
-      "id": "36"
-    },
-    {
-      "id": "49"
-    },
-    {
-      "id": "37"
-    },
-    {
-      "id": "40"
-    },
-    {
-      "id": "99"
-    },
-    {
-      "id": "103"
-    },
-    {
-      "id": "95"
-    },
-    {
-      "id": "119"
-    },
-    {
-      "id": "74"
-    },
-    {
-      "id": "249"
-    },
-    {
-      "id": "250"
-    },
-    {
-      "id": "251"
-    },
-    {
-      "id": "261"
-    },
-    {
-      "id": "75"
-    },
-    {
-      "id": "299"
-    },
-    {
-      "id": "291"
-    },
-    {
-      "id": "82"
-    },
-    {
-      "id": "93"
-    },
-    {
-      "id": "45"
-    },
-    {
-      "id": "46"
-    },
-    {
-      "id": "246"
-    },
-    {
-      "id": "248"
-    },
-    {
-      "id": "247"
-    },
-    {
-      "id": "30"
-    },
-    {
-      "id": "272"
-    },
-    {
-      "id": "271"
-    },
-    {
-      "id": "113"
-    },
-    {
-      "id": "244"
-    },
-    {
-      "id": "106"
-    },
-    {
-      "id": "307"
-    },
-    {
-      "id": "86"
-    },
-    {
-      "id": "311"
-    },
-    {
-      "id": "29"
-    },
-    {
-      "id": "296"
-    },
-    {
-      "id": "28"
-    },
-    {
-      "id": "89"
-    },
-    {
-      "id": "315"
-    },
-    {
-      "id": "312"
-    },
-    {
-      "id": "357"
-    },
-    {
-      "id": "319"
-    },
-    {
-      "id": "92"
-    },
-    {
-      "id": "384"
-    },
-    {
-      "id": "310"
-    },
-    {
-      "id": "361"
-    },
-    {
-      "id": "300"
-    },
-    {
-      "id": "302"
-    },
-    {
-      "id": "313"
-    },
-    {
-      "id": "81"
-    },
-    {
-      "id": "392"
-    },
-    {
-      "id": "98"
-    },
-    {
-      "id": "18"
-    },
-    {
-      "id": "318"
-    },
-    {
-      "id": "79"
-    },
-    {
-      "id": "21"
-    },
-    {
-      "id": "109"
+      "id": "3",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "REMOTE MANAGEMENT USERS@WIN10.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "ADLocalGroup"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "7",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "UCCOMP.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "14",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1108",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "107",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1000",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "96",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1102",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "312",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SERVER OPERATORS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "296",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "RDS REMOTE ACCESS SERVERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "272",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTGPO@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "22",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-12345",
+      "label": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "2",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DISTRIBUTED COM USERS@WIN10.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "ADLocalGroup"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "53",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "MICROSOFTDNS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "260",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TIERZEROGPO@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "39",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "MEETINGS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "112",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ENTERPRISE READ-ONLY DOMAIN CONTROLLERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "69",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ALLOWED RODC PASSWORD REPLICATION GROUP@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "23",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-12344",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "5",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PRIMARY.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "50",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "IP SECURITY@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "46",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "COMPARTITIONSETS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "45",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "MANAGED SERVICE ACCOUNTS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "26",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "COMPUTERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "273",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADMINGPO@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "103",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SCHEMA ADMINS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "8",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1104-544",
+      "label": [
+        "Base",
+        "ADLocalGroup"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "27",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTLAB.LOCAL-S-1-5-32-548",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "47",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "29",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADMINISTRATORS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "85",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ESID@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "106",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GETCHANGESALLGROUP@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "307",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GUESTS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "94",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "READ-ONLY DOMAIN CONTROLLERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "275",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTGPO3@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "25",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "9",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "REMOTE DESKTOP USERS@WIN10.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "ADLocalGroup"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "11",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTLAB.LOCAL-S-1-1-0",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "24",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1107",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "42",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PSPS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "43",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "POLICIES@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "109",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTGMSA$@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "313",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ACCESS CONTROL ASSISTANCE OPERATORS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "274",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTGPO2@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "76",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN GUESTS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "48",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WMIPOLICY@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "38",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "FOREIGNSECURITYPRINCIPALS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "54",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "POLICYTYPE@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "51",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "RPCSERVICES@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "116",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-522",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "12",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTOU@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "OU"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "80",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DCSYNCDIRECT@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "113",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GWRITETEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "58",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADMINSDHOLDER@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "40",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "COMPARTITIONS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "41",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "POLICYTEMPLATE@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "36",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SYSTEM@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "97",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-1103",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "70",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DENIED RODC PASSWORD REPLICATION GROUP@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "99",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SYSADMINS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "16",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "57",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "RAS AND IAS SERVERS ACCESS CHECK@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "44",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "MICROSOFT@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "291",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TERMINAL SERVER LICENSE SERVERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "13",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADMINISTRATOR@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "64",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WRITEOWNERTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "98",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ESID2@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "37",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PROGRAM DATA@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "49",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WMIGPO@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "250",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "EXTERNAL",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "249",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "FOREST",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "251",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "REALM",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "261",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DEFAULT DOMAIN POLICY@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "299",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PRINT OPERATORS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "102",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PROTECTED USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "75",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-517",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "4",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WIN10.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "19",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN COMPUTERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "119",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "KRBTGT@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "246",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PARENT.CHILD",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "248",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SHORTCUT",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "93",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "S-1-5-21-3130019616-2776909439-2417379446-553",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "52",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WINSOCKSERVICES@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "6",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTMSA.TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Computer"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "302",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WINDOWS AUTHORIZATION ACCESS LABEL.GROUP@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "82",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "WRITEDACLTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "247",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TREE.ROOT",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "271",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DEFAULT DOMAIN CONTROLLERS POLICY@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "GPO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "56",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "SOM@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Container"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "244",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "UNKNOWN",
+      "label": [
+        "Base",
+        "Domain"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "30",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN CONTROLLERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "74",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADDMEMBERTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "95",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADMIN@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "89",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTLAB.LOCAL-S-1-5-9",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "315",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "CRYPTOGRAPHIC OPERATORS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "33",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DFM@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "311",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "REMOTE MANAGEMENT LABEL.USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "86",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GETCHANGESGROUP@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "28",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ENTERPRISE ADMINS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "319",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "RDS MANAGEMENT SERVERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "384",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "UNCONDEL@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "310",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PRE-WINDOWS 2000 COMPATIBLE ACCESS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "357",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "TESTLAB.LOCAL-S-1-5-11",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "92",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GROUP POLICY CREATOR OWNERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "361",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN CONTROLLERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "OU"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "392",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "BADCHARTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "81",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "GUEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "300",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "PERFORMANCE LOG LABEL.USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "318",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DISTRIBUTED COM LABEL.USERS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "18",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DOMAIN ADMINS@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "Group"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "79",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "DCSYNCDELEGATIONTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "21",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "caption": "ADDALLOWEDTOACTTEST@TESTLAB.LOCAL",
+      "label": [
+        "Base",
+        "User"
+      ],
+      "properties": {}
     }
   ],
   "relationships": [
     {
-      "id": "55",
-      "fromId": "47",
-      "toId": "33"
-    },
-    {
-      "id": "58",
-      "fromId": "18",
-      "toId": "46"
-    },
-    {
-      "id": "56",
-      "fromId": "18",
-      "toId": "38"
-    },
-    {
-      "id": "57",
-      "fromId": "28",
-      "toId": "46"
-    },
-    {
-      "id": "497",
-      "fromId": "82",
-      "toId": "260"
-    },
-    {
-      "id": "30",
-      "fromId": "29",
-      "toId": "6"
-    },
-    {
-      "id": "14",
-      "fromId": "7",
-      "toId": "25"
-    },
-    {
-      "id": "54",
-      "fromId": "29",
-      "toId": "4"
-    },
-    {
-      "id": "47",
-      "fromId": "4",
-      "toId": "13"
-    },
-    {
-      "id": "44",
-      "fromId": "11",
-      "toId": "2"
-    },
-    {
-      "id": "39",
-      "fromId": "18",
-      "toId": "6"
-    },
-    {
-      "id": "32",
-      "fromId": "29",
-      "toId": "4"
-    },
-    {
-      "id": "7",
-      "fromId": "18",
-      "toId": "7"
-    },
-    {
-      "id": "49",
-      "fromId": "3",
-      "toId": "4"
-    },
-    {
-      "id": "35",
-      "fromId": "4",
-      "toId": "19"
-    },
-    {
-      "id": "3",
-      "fromId": "27",
-      "toId": "4"
-    },
-    {
-      "id": "21",
-      "fromId": "16",
-      "toId": "4"
-    },
-    {
-      "id": "26",
-      "fromId": "5",
-      "toId": "30"
-    },
-    {
-      "id": "516",
-      "fromId": "18",
-      "toId": "273"
-    },
-    {
       "id": "489",
+      "label": "GenericWrite",
       "fromId": "18",
-      "toId": "274"
-    },
-    {
-      "id": "515",
-      "fromId": "28",
-      "toId": "274"
-    },
-    {
-      "id": "523",
-      "fromId": "18",
-      "toId": "273"
-    },
-    {
-      "id": "28",
-      "fromId": "12",
-      "toId": "4"
-    },
-    {
-      "id": "94",
-      "fromId": "47",
-      "toId": "64"
-    },
-    {
-      "id": "447",
-      "fromId": "251",
-      "toId": "25"
-    },
-    {
-      "id": "455",
-      "fromId": "251",
-      "toId": "25"
-    },
-    {
-      "id": "164",
-      "fromId": "28",
-      "toId": "49"
-    },
-    {
-      "id": "46",
-      "fromId": "9",
-      "toId": "4"
-    },
-    {
-      "id": "17",
-      "fromId": "21",
-      "toId": "5"
-    },
-    {
-      "id": "43",
-      "fromId": "7",
-      "toId": "19"
-    },
-    {
-      "id": "4",
-      "fromId": "18",
-      "toId": "6"
-    },
-    {
-      "id": "53",
-      "fromId": "28",
-      "toId": "4"
-    },
-    {
-      "id": "24",
-      "fromId": "4",
-      "toId": "22"
-    },
-    {
-      "id": "208",
-      "fromId": "47",
-      "toId": "94"
-    },
-    {
-      "id": "178",
-      "fromId": "47",
-      "toId": "16"
-    },
-    {
-      "id": "199",
-      "fromId": "28",
-      "toId": "52"
-    },
-    {
-      "id": "134",
-      "fromId": "89",
-      "toId": "53"
-    },
-    {
-      "id": "193",
-      "fromId": "29",
-      "toId": "44"
-    },
-    {
-      "id": "169",
-      "fromId": "29",
-      "toId": "40"
-    },
-    {
-      "id": "474",
-      "fromId": "80",
-      "toId": "25"
-    },
-    {
-      "id": "476",
-      "fromId": "25",
-      "toId": "248"
-    },
-    {
-      "id": "472",
-      "fromId": "112",
-      "toId": "25"
-    },
-    {
-      "id": "468",
-      "fromId": "25",
-      "toId": "246"
-    },
-    {
-      "id": "659",
-      "fromId": "18",
-      "toId": "16"
-    },
-    {
-      "id": "751",
-      "fromId": "18",
-      "toId": "16"
-    },
-    {
-      "id": "624",
-      "fromId": "29",
-      "toId": "311"
-    },
-    {
-      "id": "674",
-      "fromId": "29",
-      "toId": "318"
-    },
-    {
-      "id": "743",
-      "fromId": "29",
-      "toId": "16"
-    },
-    {
-      "id": "545",
-      "fromId": "29",
-      "toId": "19"
-    },
-    {
-      "id": "51",
-      "fromId": "8",
-      "toId": "4"
-    },
-    {
-      "id": "45",
-      "fromId": "18",
-      "toId": "5"
+      "toId": "274",
+      "properties": {}
     },
     {
       "id": "41",
+      "label": "GenericAll",
       "fromId": "28",
-      "toId": "6"
+      "toId": "6",
+      "properties": {}
     },
     {
-      "id": "37",
+      "id": "515",
+      "label": "WriteOwnerRaw",
       "fromId": "28",
-      "toId": "7"
+      "toId": "274",
+      "properties": {}
     },
     {
-      "id": "50",
-      "fromId": "18",
-      "toId": "4"
-    },
-    {
-      "id": "20",
-      "fromId": "33",
-      "toId": "3"
-    },
-    {
-      "id": "25",
-      "fromId": "4",
-      "toId": "14"
-    },
-    {
-      "id": "33",
-      "fromId": "29",
-      "toId": "5"
-    },
-    {
-      "id": "27",
-      "fromId": "27",
-      "toId": "7"
-    },
-    {
-      "id": "22",
-      "fromId": "29",
-      "toId": "5"
-    },
-    {
-      "id": "11",
-      "fromId": "2",
-      "toId": "4"
-    },
-    {
-      "id": "40",
-      "fromId": "27",
-      "toId": "6"
-    },
-    {
-      "id": "13",
-      "fromId": "29",
-      "toId": "6"
-    },
-    {
-      "id": "752",
+      "id": "57",
+      "label": "GenericAll",
       "fromId": "28",
-      "toId": "312"
-    },
-    {
-      "id": "475",
-      "fromId": "261",
-      "toId": "25"
-    },
-    {
-      "id": "631",
-      "fromId": "18",
-      "toId": "310"
-    },
-    {
-      "id": "707",
-      "fromId": "28",
-      "toId": "29"
-    },
-    {
-      "id": "536",
-      "fromId": "27",
-      "toId": "318"
-    },
-    {
-      "id": "626",
-      "fromId": "18",
-      "toId": "112"
-    },
-    {
-      "id": "756",
-      "fromId": "18",
-      "toId": "28"
-    },
-    {
-      "id": "747",
-      "fromId": "18",
-      "toId": "99"
-    },
-    {
-      "id": "692",
-      "fromId": "28",
-      "toId": "30"
-    },
-    {
-      "id": "607",
-      "fromId": "29",
-      "toId": "69"
-    },
-    {
-      "id": "608",
-      "fromId": "18",
-      "toId": "103"
-    },
-    {
-      "id": "31",
-      "fromId": "29",
-      "toId": "6"
-    },
-    {
-      "id": "15",
-      "fromId": "29",
-      "toId": "4"
-    },
-    {
-      "id": "23",
-      "fromId": "29",
-      "toId": "7"
-    },
-    {
-      "id": "144",
-      "fromId": "47",
-      "toId": "98"
-    },
-    {
-      "id": "6",
-      "fromId": "18",
-      "toId": "7"
-    },
-    {
-      "id": "29",
-      "fromId": "16",
-      "toId": "9"
-    },
-    {
-      "id": "201",
-      "fromId": "47",
-      "toId": "113"
-    },
-    {
-      "id": "89",
-      "fromId": "18",
-      "toId": "40"
-    },
-    {
-      "id": "463",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "471",
-      "fromId": "18",
-      "toId": "25"
-    },
-    {
-      "id": "465",
-      "fromId": "106",
-      "toId": "25"
-    },
-    {
-      "id": "467",
-      "fromId": "249",
-      "toId": "25"
-    },
-    {
-      "id": "473",
-      "fromId": "248",
-      "toId": "25"
-    },
-    {
-      "id": "460",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "462",
-      "fromId": "246",
-      "toId": "25"
-    },
-    {
-      "id": "459",
-      "fromId": "18",
-      "toId": "25"
-    },
-    {
-      "id": "470",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "482",
-      "fromId": "28",
-      "toId": "275"
-    },
-    {
-      "id": "486",
-      "fromId": "18",
-      "toId": "275"
-    },
-    {
-      "id": "502",
-      "fromId": "28",
-      "toId": "261"
-    },
-    {
-      "id": "510",
-      "fromId": "28",
-      "toId": "273"
-    },
-    {
-      "id": "520",
-      "fromId": "18",
-      "toId": "273"
-    },
-    {
-      "id": "503",
-      "fromId": "18",
-      "toId": "261"
-    },
-    {
-      "id": "521",
-      "fromId": "28",
-      "toId": "260"
-    },
-    {
-      "id": "477",
-      "fromId": "33",
-      "toId": "272"
-    },
-    {
-      "id": "511",
-      "fromId": "18",
-      "toId": "274"
-    },
-    {
-      "id": "496",
-      "fromId": "18",
-      "toId": "261"
-    },
-    {
-      "id": "531",
-      "fromId": "18",
-      "toId": "299"
-    },
-    {
-      "id": "1",
-      "fromId": "4",
-      "toId": "23"
-    },
-    {
-      "id": "18",
-      "fromId": "18",
-      "toId": "4"
-    },
-    {
-      "id": "16",
-      "fromId": "33",
-      "toId": "8"
-    },
-    {
-      "id": "12",
-      "fromId": "5",
-      "toId": "25"
-    },
-    {
-      "id": "42",
-      "fromId": "6",
-      "toId": "19"
-    },
-    {
-      "id": "2",
-      "fromId": "18",
-      "toId": "8"
-    },
-    {
-      "id": "9",
-      "fromId": "18",
-      "toId": "5"
-    },
-    {
-      "id": "5",
-      "fromId": "4",
-      "toId": "24"
-    },
-    {
-      "id": "19",
-      "fromId": "22",
-      "toId": "4"
-    },
-    {
-      "id": "38",
-      "fromId": "28",
-      "toId": "5"
-    },
-    {
-      "id": "34",
-      "fromId": "29",
-      "toId": "7"
-    },
-    {
-      "id": "36",
-      "fromId": "33",
-      "toId": "7"
-    },
-    {
-      "id": "52",
-      "fromId": "29",
-      "toId": "7"
-    },
-    {
-      "id": "8",
-      "fromId": "26",
-      "toId": "7"
-    },
-    {
-      "id": "10",
-      "fromId": "29",
-      "toId": "5"
-    },
-    {
-      "id": "48",
-      "fromId": "4",
-      "toId": "33"
-    },
-    {
-      "id": "493",
-      "fromId": "28",
-      "toId": "272"
-    },
-    {
-      "id": "512",
-      "fromId": "18",
-      "toId": "274"
-    },
-    {
-      "id": "507",
-      "fromId": "18",
-      "toId": "274"
-    },
-    {
-      "id": "495",
-      "fromId": "28",
-      "toId": "275"
-    },
-    {
-      "id": "478",
-      "fromId": "28",
-      "toId": "271"
-    },
-    {
-      "id": "485",
-      "fromId": "18",
-      "toId": "271"
-    },
-    {
-      "id": "508",
-      "fromId": "28",
-      "toId": "271"
-    },
-    {
-      "id": "505",
-      "fromId": "18",
-      "toId": "272"
-    },
-    {
-      "id": "528",
-      "fromId": "28",
-      "toId": "261"
-    },
-    {
-      "id": "666",
-      "fromId": "29",
-      "toId": "291"
-    },
-    {
-      "id": "656",
-      "fromId": "18",
-      "toId": "299"
-    },
-    {
-      "id": "765",
-      "fromId": "28",
-      "toId": "299"
-    },
-    {
-      "id": "598",
-      "fromId": "94",
-      "toId": "70"
-    },
-    {
-      "id": "673",
-      "fromId": "81",
-      "toId": "307"
-    },
-    {
-      "id": "565",
-      "fromId": "29",
-      "toId": "311"
-    },
-    {
-      "id": "799",
-      "fromId": "4",
-      "toId": "82"
-    },
-    {
-      "id": "112",
-      "fromId": "18",
-      "toId": "44"
-    },
-    {
-      "id": "122",
-      "fromId": "47",
-      "toId": "69"
-    },
-    {
-      "id": "74",
-      "fromId": "28",
-      "toId": "50"
-    },
-    {
-      "id": "175",
-      "fromId": "29",
-      "toId": "50"
-    },
-    {
-      "id": "84",
-      "fromId": "18",
-      "toId": "52"
-    },
-    {
-      "id": "76",
-      "fromId": "18",
-      "toId": "58"
-    },
-    {
-      "id": "146",
-      "fromId": "29",
-      "toId": "58"
-    },
-    {
-      "id": "183",
-      "fromId": "28",
-      "toId": "58"
-    },
-    {
-      "id": "99",
-      "fromId": "18",
-      "toId": "49"
-    },
-    {
-      "id": "206",
-      "fromId": "18",
-      "toId": "43"
-    },
-    {
-      "id": "87",
-      "fromId": "28",
-      "toId": "53"
-    },
-    {
-      "id": "166",
-      "fromId": "28",
-      "toId": "54"
-    },
-    {
-      "id": "127",
-      "fromId": "29",
-      "toId": "46"
-    },
-    {
-      "id": "77",
-      "fromId": "18",
-      "toId": "47"
-    },
-    {
-      "id": "128",
-      "fromId": "47",
-      "toId": "21"
-    },
-    {
-      "id": "125",
-      "fromId": "18",
-      "toId": "41"
-    },
-    {
-      "id": "131",
-      "fromId": "29",
-      "toId": "36"
-    },
-    {
-      "id": "139",
-      "fromId": "29",
-      "toId": "43"
-    },
-    {
-      "id": "220",
-      "fromId": "29",
-      "toId": "45"
-    },
-    {
-      "id": "162",
-      "fromId": "28",
-      "toId": "36"
-    },
-    {
-      "id": "91",
-      "fromId": "93",
-      "toId": "57"
-    },
-    {
-      "id": "86",
-      "fromId": "29",
-      "toId": "53"
-    },
-    {
-      "id": "197",
-      "fromId": "18",
-      "toId": "36"
-    },
-    {
-      "id": "212",
-      "fromId": "18",
-      "toId": "52"
-    },
-    {
-      "id": "82",
-      "fromId": "18",
-      "toId": "42"
-    },
-    {
-      "id": "136",
-      "fromId": "28",
-      "toId": "47"
-    },
-    {
-      "id": "98",
-      "fromId": "18",
-      "toId": "56"
-    },
-    {
-      "id": "105",
-      "fromId": "28",
-      "toId": "51"
-    },
-    {
-      "id": "189",
-      "fromId": "47",
-      "toId": "95"
-    },
-    {
-      "id": "196",
-      "fromId": "47",
-      "toId": "103"
-    },
-    {
-      "id": "73",
-      "fromId": "47",
-      "toId": "82"
-    },
-    {
-      "id": "176",
-      "fromId": "18",
-      "toId": "58"
-    },
-    {
-      "id": "109",
-      "fromId": "29",
-      "toId": "46"
-    },
-    {
-      "id": "188",
-      "fromId": "47",
-      "toId": "74"
-    },
-    {
-      "id": "177",
-      "fromId": "47",
-      "toId": "80"
+      "toId": "46",
+      "properties": {}
     },
     {
       "id": "81",
+      "label": "Contains",
       "fromId": "47",
-      "toId": "92"
+      "toId": "92",
+      "properties": {}
     },
     {
-      "id": "130",
-      "fromId": "18",
-      "toId": "41"
-    },
-    {
-      "id": "211",
-      "fromId": "18",
-      "toId": "45"
-    },
-    {
-      "id": "60",
-      "fromId": "18",
-      "toId": "42"
-    },
-    {
-      "id": "173",
+      "id": "86",
+      "label": "WriteOwnerRaw",
       "fromId": "29",
-      "toId": "57"
+      "toId": "53",
+      "properties": {}
     },
     {
-      "id": "163",
-      "fromId": "93",
-      "toId": "57"
-    },
-    {
-      "id": "167",
-      "fromId": "18",
-      "toId": "52"
-    },
-    {
-      "id": "158",
-      "fromId": "28",
-      "toId": "39"
-    },
-    {
-      "id": "140",
-      "fromId": "29",
-      "toId": "50"
-    },
-    {
-      "id": "68",
-      "fromId": "29",
-      "toId": "44"
-    },
-    {
-      "id": "215",
-      "fromId": "18",
-      "toId": "47"
-    },
-    {
-      "id": "95",
-      "fromId": "28",
-      "toId": "56"
-    },
-    {
-      "id": "116",
-      "fromId": "18",
-      "toId": "50"
-    },
-    {
-      "id": "117",
-      "fromId": "18",
-      "toId": "44"
-    },
-    {
-      "id": "170",
-      "fromId": "28",
-      "toId": "37"
-    },
-    {
-      "id": "114",
-      "fromId": "29",
-      "toId": "53"
-    },
-    {
-      "id": "159",
-      "fromId": "18",
-      "toId": "54"
-    },
-    {
-      "id": "202",
-      "fromId": "18",
-      "toId": "46"
-    },
-    {
-      "id": "156",
-      "fromId": "29",
-      "toId": "47"
-    },
-    {
-      "id": "221",
-      "fromId": "29",
-      "toId": "26"
-    },
-    {
-      "id": "195",
-      "fromId": "29",
-      "toId": "26"
-    },
-    {
-      "id": "155",
-      "fromId": "29",
-      "toId": "38"
-    },
-    {
-      "id": "115",
-      "fromId": "18",
-      "toId": "54"
-    },
-    {
-      "id": "75",
-      "fromId": "18",
-      "toId": "37"
-    },
-    {
-      "id": "160",
+      "id": "55",
+      "label": "Contains",
       "fromId": "47",
-      "toId": "102"
+      "toId": "33",
+      "properties": {}
     },
     {
-      "id": "59",
-      "fromId": "47",
-      "toId": "18"
-    },
-    {
-      "id": "102",
-      "fromId": "29",
-      "toId": "51"
-    },
-    {
-      "id": "213",
-      "fromId": "29",
-      "toId": "52"
-    },
-    {
-      "id": "180",
+      "id": "39",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "39"
+      "toId": "6",
+      "properties": {}
     },
     {
-      "id": "185",
-      "fromId": "47",
-      "toId": "13"
+      "id": "497",
+      "label": "WriteDacl",
+      "fromId": "82",
+      "toId": "260",
+      "properties": {}
     },
     {
-      "id": "147",
-      "fromId": "47",
-      "toId": "70"
-    },
-    {
-      "id": "107",
-      "fromId": "47",
-      "toId": "81"
-    },
-    {
-      "id": "90",
-      "fromId": "28",
-      "toId": "41"
-    },
-    {
-      "id": "137",
+      "id": "523",
+      "label": "WriteOwnerRaw",
       "fromId": "18",
-      "toId": "56"
+      "toId": "273",
+      "properties": {}
     },
     {
-      "id": "219",
+      "id": "516",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "50"
-    },
-    {
-      "id": "62",
-      "fromId": "18",
-      "toId": "51"
-    },
-    {
-      "id": "63",
-      "fromId": "28",
-      "toId": "26"
-    },
-    {
-      "id": "207",
-      "fromId": "29",
-      "toId": "38"
-    },
-    {
-      "id": "70",
-      "fromId": "18",
-      "toId": "46"
-    },
-    {
-      "id": "72",
-      "fromId": "47",
-      "toId": "79"
-    },
-    {
-      "id": "123",
-      "fromId": "47",
-      "toId": "19"
-    },
-    {
-      "id": "79",
-      "fromId": "47",
-      "toId": "28"
-    },
-    {
-      "id": "141",
-      "fromId": "29",
-      "toId": "51"
-    },
-    {
-      "id": "217",
-      "fromId": "18",
-      "toId": "38"
-    },
-    {
-      "id": "168",
-      "fromId": "18",
-      "toId": "39"
-    },
-    {
-      "id": "153",
-      "fromId": "18",
-      "toId": "36"
-    },
-    {
-      "id": "149",
-      "fromId": "18",
-      "toId": "39"
-    },
-    {
-      "id": "135",
-      "fromId": "29",
-      "toId": "45"
-    },
-    {
-      "id": "96",
-      "fromId": "47",
-      "toId": "107"
-    },
-    {
-      "id": "150",
-      "fromId": "28",
-      "toId": "40"
-    },
-    {
-      "id": "184",
-      "fromId": "18",
-      "toId": "26"
-    },
-    {
-      "id": "78",
-      "fromId": "47",
-      "toId": "76"
-    },
-    {
-      "id": "172",
-      "fromId": "18",
-      "toId": "48"
-    },
-    {
-      "id": "83",
-      "fromId": "29",
-      "toId": "42"
-    },
-    {
-      "id": "191",
-      "fromId": "47",
-      "toId": "93"
-    },
-    {
-      "id": "104",
-      "fromId": "18",
-      "toId": "40"
-    },
-    {
-      "id": "198",
-      "fromId": "18",
-      "toId": "36"
-    },
-    {
-      "id": "110",
-      "fromId": "29",
-      "toId": "42"
-    },
-    {
-      "id": "61",
-      "fromId": "18",
-      "toId": "49"
-    },
-    {
-      "id": "142",
-      "fromId": "29",
-      "toId": "37"
-    },
-    {
-      "id": "64",
-      "fromId": "96",
-      "toId": "53"
-    },
-    {
-      "id": "132",
-      "fromId": "18",
-      "toId": "45"
-    },
-    {
-      "id": "93",
-      "fromId": "45",
-      "toId": "6"
-    },
-    {
-      "id": "152",
-      "fromId": "18",
-      "toId": "41"
-    },
-    {
-      "id": "186",
-      "fromId": "28",
-      "toId": "42"
-    },
-    {
-      "id": "92",
-      "fromId": "18",
-      "toId": "49"
-    },
-    {
-      "id": "154",
-      "fromId": "28",
-      "toId": "43"
-    },
-    {
-      "id": "65",
-      "fromId": "47",
-      "toId": "97"
-    },
-    {
-      "id": "165",
-      "fromId": "18",
-      "toId": "43"
-    },
-    {
-      "id": "85",
-      "fromId": "18",
-      "toId": "54"
-    },
-    {
-      "id": "203",
-      "fromId": "47",
-      "toId": "75"
-    },
-    {
-      "id": "119",
-      "fromId": "18",
-      "toId": "48"
-    },
-    {
-      "id": "103",
-      "fromId": "29",
-      "toId": "37"
-    },
-    {
-      "id": "67",
-      "fromId": "18",
-      "toId": "57"
-    },
-    {
-      "id": "129",
-      "fromId": "47",
-      "toId": "116"
-    },
-    {
-      "id": "124",
-      "fromId": "47",
-      "toId": "119"
-    },
-    {
-      "id": "179",
-      "fromId": "47",
-      "toId": "99"
-    },
-    {
-      "id": "111",
-      "fromId": "28",
-      "toId": "57"
-    },
-    {
-      "id": "106",
-      "fromId": "18",
-      "toId": "51"
-    },
-    {
-      "id": "121",
-      "fromId": "45",
-      "toId": "109"
-    },
-    {
-      "id": "194",
-      "fromId": "89",
-      "toId": "53"
-    },
-    {
-      "id": "214",
-      "fromId": "18",
-      "toId": "58"
-    },
-    {
-      "id": "66",
-      "fromId": "47",
-      "toId": "106"
-    },
-    {
-      "id": "113",
-      "fromId": "28",
-      "toId": "45"
-    },
-    {
-      "id": "200",
-      "fromId": "18",
-      "toId": "53"
-    },
-    {
-      "id": "145",
-      "fromId": "29",
-      "toId": "58"
-    },
-    {
-      "id": "143",
-      "fromId": "18",
-      "toId": "26"
-    },
-    {
-      "id": "108",
-      "fromId": "25",
-      "toId": "26"
-    },
-    {
-      "id": "101",
-      "fromId": "47",
-      "toId": "30"
-    },
-    {
-      "id": "205",
-      "fromId": "29",
-      "toId": "40"
-    },
-    {
-      "id": "97",
-      "fromId": "18",
-      "toId": "41"
-    },
-    {
-      "id": "88",
-      "fromId": "29",
-      "toId": "57"
-    },
-    {
-      "id": "69",
-      "fromId": "29",
-      "toId": "52"
-    },
-    {
-      "id": "171",
-      "fromId": "18",
-      "toId": "54"
-    },
-    {
-      "id": "218",
-      "fromId": "29",
-      "toId": "47"
-    },
-    {
-      "id": "161",
-      "fromId": "28",
-      "toId": "48"
-    },
-    {
-      "id": "174",
-      "fromId": "29",
-      "toId": "43"
-    },
-    {
-      "id": "190",
-      "fromId": "47",
-      "toId": "96"
-    },
-    {
-      "id": "80",
-      "fromId": "47",
-      "toId": "86"
-    },
-    {
-      "id": "157",
-      "fromId": "29",
-      "toId": "39"
-    },
-    {
-      "id": "138",
-      "fromId": "29",
-      "toId": "36"
-    },
-    {
-      "id": "449",
-      "fromId": "250",
-      "toId": "25"
-    },
-    {
-      "id": "669",
-      "fromId": "27",
-      "toId": "313"
-    },
-    {
-      "id": "587",
-      "fromId": "18",
-      "toId": "28"
-    },
-    {
-      "id": "622",
-      "fromId": "28",
-      "toId": "16"
-    },
-    {
-      "id": "728",
-      "fromId": "28",
-      "toId": "307"
-    },
-    {
-      "id": "557",
-      "fromId": "27",
-      "toId": "310"
-    },
-    {
-      "id": "625",
-      "fromId": "18",
-      "toId": "318"
-    },
-    {
-      "id": "771",
-      "fromId": "28",
-      "toId": "70"
-    },
-    {
-      "id": "774",
-      "fromId": "29",
-      "toId": "28"
-    },
-    {
-      "id": "576",
-      "fromId": "29",
-      "toId": "94"
-    },
-    {
-      "id": "611",
-      "fromId": "29",
-      "toId": "94"
-    },
-    {
-      "id": "597",
-      "fromId": "18",
-      "toId": "19"
-    },
-    {
-      "id": "652",
-      "fromId": "29",
-      "toId": "99"
-    },
-    {
-      "id": "650",
-      "fromId": "18",
-      "toId": "19"
-    },
-    {
-      "id": "582",
-      "fromId": "18",
-      "toId": "310"
-    },
-    {
-      "id": "694",
-      "fromId": "29",
-      "toId": "30"
-    },
-    {
-      "id": "726",
-      "fromId": "28",
-      "toId": "99"
-    },
-    {
-      "id": "638",
-      "fromId": "18",
-      "toId": "70"
-    },
-    {
-      "id": "704",
-      "fromId": "29",
-      "toId": "291"
-    },
-    {
-      "id": "564",
-      "fromId": "30",
-      "toId": "70"
-    },
-    {
-      "id": "630",
-      "fromId": "28",
-      "toId": "92"
-    },
-    {
-      "id": "773",
-      "fromId": "28",
-      "toId": "315"
-    },
-    {
-      "id": "637",
-      "fromId": "27",
-      "toId": "296"
-    },
-    {
-      "id": "187",
-      "fromId": "18",
-      "toId": "51"
-    },
-    {
-      "id": "210",
-      "fromId": "18",
-      "toId": "37"
-    },
-    {
-      "id": "182",
-      "fromId": "28",
-      "toId": "58"
-    },
-    {
-      "id": "133",
-      "fromId": "18",
-      "toId": "26"
-    },
-    {
-      "id": "192",
-      "fromId": "28",
-      "toId": "44"
-    },
-    {
-      "id": "126",
-      "fromId": "96",
-      "toId": "53"
-    },
-    {
-      "id": "216",
-      "fromId": "28",
-      "toId": "38"
-    },
-    {
-      "id": "71",
-      "fromId": "18",
-      "toId": "47"
-    },
-    {
-      "id": "148",
-      "fromId": "47",
-      "toId": "112"
-    },
-    {
-      "id": "204",
-      "fromId": "47",
-      "toId": "85"
-    },
-    {
-      "id": "181",
-      "fromId": "29",
-      "toId": "39"
-    },
-    {
-      "id": "151",
-      "fromId": "18",
-      "toId": "40"
-    },
-    {
-      "id": "120",
-      "fromId": "18",
-      "toId": "50"
-    },
-    {
-      "id": "100",
-      "fromId": "18",
-      "toId": "45"
-    },
-    {
-      "id": "209",
-      "fromId": "18",
-      "toId": "49"
+      "toId": "273",
+      "properties": {}
     },
     {
       "id": "118",
+      "label": "WriteOwnerRaw",
       "fromId": "18",
-      "toId": "43"
+      "toId": "43",
+      "properties": {}
     },
     {
-      "id": "454",
-      "fromId": "250",
-      "toId": "25"
-    },
-    {
-      "id": "445",
-      "fromId": "89",
-      "toId": "25"
-    },
-    {
-      "id": "443",
-      "fromId": "86",
-      "toId": "25"
-    },
-    {
-      "id": "469",
-      "fromId": "25",
-      "toId": "247"
-    },
-    {
-      "id": "450",
-      "fromId": "251",
-      "toId": "25"
-    },
-    {
-      "id": "451",
-      "fromId": "30",
-      "toId": "25"
-    },
-    {
-      "id": "458",
-      "fromId": "80",
-      "toId": "25"
-    },
-    {
-      "id": "444",
-      "fromId": "25",
-      "toId": "244"
-    },
-    {
-      "id": "464",
-      "fromId": "18",
-      "toId": "25"
-    },
-    {
-      "id": "466",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "453",
-      "fromId": "247",
-      "toId": "25"
-    },
-    {
-      "id": "446",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "461",
-      "fromId": "260",
-      "toId": "25"
-    },
-    {
-      "id": "457",
-      "fromId": "28",
-      "toId": "25"
-    },
-    {
-      "id": "452",
-      "fromId": "29",
-      "toId": "25"
-    },
-    {
-      "id": "448",
-      "fromId": "25",
-      "toId": "249"
-    },
-    {
-      "id": "456",
-      "fromId": "25",
-      "toId": "251"
-    },
-    {
-      "id": "715",
-      "fromId": "18",
-      "toId": "300"
-    },
-    {
-      "id": "593",
-      "fromId": "29",
-      "toId": "291"
-    },
-    {
-      "id": "779",
-      "fromId": "18",
-      "toId": "299"
-    },
-    {
-      "id": "635",
-      "fromId": "18",
-      "toId": "103"
-    },
-    {
-      "id": "671",
-      "fromId": "18",
-      "toId": "103"
-    },
-    {
-      "id": "552",
-      "fromId": "29",
-      "toId": "310"
-    },
-    {
-      "id": "538",
-      "fromId": "28",
-      "toId": "94"
-    },
-    {
-      "id": "696",
-      "fromId": "28",
-      "toId": "291"
-    },
-    {
-      "id": "563",
-      "fromId": "28",
-      "toId": "70"
-    },
-    {
-      "id": "548",
-      "fromId": "29",
-      "toId": "30"
-    },
-    {
-      "id": "585",
-      "fromId": "28",
-      "toId": "30"
-    },
-    {
-      "id": "532",
-      "fromId": "29",
-      "toId": "103"
-    },
-    {
-      "id": "753",
-      "fromId": "27",
-      "toId": "86"
-    },
-    {
-      "id": "708",
-      "fromId": "76",
-      "toId": "307"
-    },
-    {
-      "id": "687",
-      "fromId": "18",
-      "toId": "29"
-    },
-    {
-      "id": "610",
-      "fromId": "29",
-      "toId": "86"
-    },
-    {
-      "id": "677",
-      "fromId": "18",
-      "toId": "99"
-    },
-    {
-      "id": "541",
-      "fromId": "27",
-      "toId": "307"
-    },
-    {
-      "id": "613",
-      "fromId": "28",
-      "toId": "299"
-    },
-    {
-      "id": "492",
-      "fromId": "28",
-      "toId": "261"
-    },
-    {
-      "id": "519",
-      "fromId": "18",
-      "toId": "272"
-    },
-    {
-      "id": "500",
-      "fromId": "18",
-      "toId": "273"
-    },
-    {
-      "id": "484",
-      "fromId": "18",
-      "toId": "271"
-    },
-    {
-      "id": "491",
-      "fromId": "28",
-      "toId": "260"
-    },
-    {
-      "id": "522",
-      "fromId": "18",
-      "toId": "271"
-    },
-    {
-      "id": "517",
-      "fromId": "64",
-      "toId": "260"
-    },
-    {
-      "id": "506",
-      "fromId": "28",
-      "toId": "274"
-    },
-    {
-      "id": "498",
-      "fromId": "18",
-      "toId": "260"
-    },
-    {
-      "id": "514",
-      "fromId": "82",
-      "toId": "275"
-    },
-    {
-      "id": "488",
-      "fromId": "18",
-      "toId": "261"
-    },
-    {
-      "id": "509",
-      "fromId": "28",
-      "toId": "273"
-    },
-    {
-      "id": "525",
-      "fromId": "28",
-      "toId": "260"
-    },
-    {
-      "id": "494",
-      "fromId": "28",
-      "toId": "273"
-    },
-    {
-      "id": "730",
-      "fromId": "18",
-      "toId": "28"
-    },
-    {
-      "id": "682",
-      "fromId": "28",
-      "toId": "18"
-    },
-    {
-      "id": "621",
-      "fromId": "27",
-      "toId": "19"
-    },
-    {
-      "id": "685",
-      "fromId": "28",
-      "toId": "29"
-    },
-    {
-      "id": "549",
-      "fromId": "28",
-      "toId": "299"
-    },
-    {
-      "id": "591",
-      "fromId": "29",
-      "toId": "318"
-    },
-    {
-      "id": "732",
-      "fromId": "18",
-      "toId": "29"
-    },
-    {
-      "id": "672",
-      "fromId": "29",
-      "toId": "76"
-    },
-    {
-      "id": "750",
-      "fromId": "29",
-      "toId": "296"
-    },
-    {
-      "id": "668",
-      "fromId": "29",
-      "toId": "112"
-    },
-    {
-      "id": "562",
-      "fromId": "29",
-      "toId": "16"
-    },
-    {
-      "id": "595",
-      "fromId": "18",
-      "toId": "311"
-    },
-    {
-      "id": "586",
-      "fromId": "13",
-      "toId": "103"
-    },
-    {
-      "id": "763",
-      "fromId": "29",
-      "toId": "70"
-    },
-    {
-      "id": "577",
-      "fromId": "28",
-      "toId": "94"
-    },
-    {
-      "id": "778",
-      "fromId": "29",
-      "toId": "307"
-    },
-    {
-      "id": "569",
-      "fromId": "28",
-      "toId": "312"
-    },
-    {
-      "id": "762",
-      "fromId": "28",
-      "toId": "112"
-    },
-    {
-      "id": "604",
-      "fromId": "27",
-      "toId": "319"
-    },
-    {
-      "id": "691",
-      "fromId": "29",
-      "toId": "106"
-    },
-    {
-      "id": "651",
-      "fromId": "29",
-      "toId": "319"
-    },
-    {
-      "id": "550",
-      "fromId": "29",
-      "toId": "315"
-    },
-    {
-      "id": "534",
-      "fromId": "28",
-      "toId": "18"
-    },
-    {
-      "id": "618",
-      "fromId": "28",
-      "toId": "310"
-    },
-    {
-      "id": "725",
-      "fromId": "28",
-      "toId": "99"
-    },
-    {
-      "id": "588",
-      "fromId": "29",
-      "toId": "18"
-    },
-    {
-      "id": "592",
-      "fromId": "18",
-      "toId": "312"
-    },
-    {
-      "id": "767",
-      "fromId": "29",
-      "toId": "102"
-    },
-    {
-      "id": "768",
-      "fromId": "28",
-      "toId": "319"
-    },
-    {
-      "id": "539",
-      "fromId": "29",
-      "toId": "319"
-    },
-    {
-      "id": "533",
-      "fromId": "13",
-      "toId": "28"
-    },
-    {
-      "id": "733",
-      "fromId": "29",
-      "toId": "300"
-    },
-    {
-      "id": "742",
-      "fromId": "18",
-      "toId": "302"
-    },
-    {
-      "id": "737",
-      "fromId": "18",
-      "toId": "112"
-    },
-    {
-      "id": "679",
-      "fromId": "29",
-      "toId": "299"
-    },
-    {
-      "id": "744",
-      "fromId": "18",
-      "toId": "70"
-    },
-    {
-      "id": "710",
-      "fromId": "27",
-      "toId": "92"
-    },
-    {
-      "id": "580",
-      "fromId": "29",
-      "toId": "18"
-    },
-    {
-      "id": "758",
-      "fromId": "29",
-      "toId": "311"
-    },
-    {
-      "id": "736",
-      "fromId": "29",
-      "toId": "76"
-    },
-    {
-      "id": "616",
-      "fromId": "29",
-      "toId": "300"
-    },
-    {
-      "id": "664",
-      "fromId": "29",
-      "toId": "310"
-    },
-    {
-      "id": "619",
-      "fromId": "79",
-      "toId": "106"
-    },
-    {
-      "id": "614",
-      "fromId": "18",
-      "toId": "70"
-    },
-    {
-      "id": "772",
-      "fromId": "119",
-      "toId": "70"
-    },
-    {
-      "id": "629",
-      "fromId": "27",
-      "toId": "315"
-    },
-    {
-      "id": "698",
-      "fromId": "29",
-      "toId": "318"
-    },
-    {
-      "id": "617",
-      "fromId": "28",
-      "toId": "19"
-    },
-    {
-      "id": "554",
-      "fromId": "18",
-      "toId": "319"
-    },
-    {
-      "id": "720",
-      "fromId": "18",
-      "toId": "94"
-    },
-    {
-      "id": "735",
-      "fromId": "27",
-      "toId": "69"
-    },
-    {
-      "id": "703",
-      "fromId": "28",
-      "toId": "76"
-    },
-    {
-      "id": "572",
-      "fromId": "28",
-      "toId": "106"
-    },
-    {
-      "id": "573",
-      "fromId": "29",
-      "toId": "106"
-    },
-    {
-      "id": "662",
-      "fromId": "18",
-      "toId": "28"
-    },
-    {
-      "id": "627",
-      "fromId": "29",
-      "toId": "319"
-    },
-    {
-      "id": "706",
-      "fromId": "28",
-      "toId": "29"
-    },
-    {
-      "id": "658",
-      "fromId": "29",
-      "toId": "102"
-    },
-    {
-      "id": "711",
-      "fromId": "13",
-      "toId": "92"
-    },
-    {
-      "id": "544",
-      "fromId": "18",
-      "toId": "94"
-    },
-    {
-      "id": "649",
-      "fromId": "18",
-      "toId": "302"
-    },
-    {
-      "id": "724",
-      "fromId": "28",
-      "toId": "99"
-    },
-    {
-      "id": "623",
-      "fromId": "29",
-      "toId": "315"
-    },
-    {
-      "id": "600",
-      "fromId": "28",
-      "toId": "311"
-    },
-    {
-      "id": "575",
-      "fromId": "28",
-      "toId": "318"
-    },
-    {
-      "id": "609",
-      "fromId": "13",
-      "toId": "18"
-    },
-    {
-      "id": "639",
-      "fromId": "28",
-      "toId": "94"
-    },
-    {
-      "id": "589",
-      "fromId": "27",
-      "toId": "102"
-    },
-    {
-      "id": "590",
-      "fromId": "29",
-      "toId": "28"
-    },
-    {
-      "id": "646",
-      "fromId": "29",
-      "toId": "315"
-    },
-    {
-      "id": "615",
-      "fromId": "95",
-      "toId": "18"
-    },
-    {
-      "id": "684",
-      "fromId": "29",
-      "toId": "313"
-    },
-    {
-      "id": "571",
-      "fromId": "29",
-      "toId": "94"
-    },
-    {
-      "id": "713",
-      "fromId": "27",
-      "toId": "112"
-    },
-    {
-      "id": "740",
-      "fromId": "28",
-      "toId": "103"
-    },
-    {
-      "id": "690",
-      "fromId": "18",
-      "toId": "103"
-    },
-    {
-      "id": "699",
-      "fromId": "18",
-      "toId": "94"
-    },
-    {
-      "id": "560",
-      "fromId": "18",
-      "toId": "94"
-    },
-    {
-      "id": "764",
-      "fromId": "29",
-      "toId": "19"
-    },
-    {
-      "id": "555",
-      "fromId": "29",
-      "toId": "30"
-    },
-    {
-      "id": "632",
-      "fromId": "29",
-      "toId": "313"
-    },
-    {
-      "id": "738",
-      "fromId": "18",
-      "toId": "307"
-    },
-    {
-      "id": "748",
-      "fromId": "29",
-      "toId": "299"
-    },
-    {
-      "id": "755",
-      "fromId": "75",
-      "toId": "70"
-    },
-    {
-      "id": "640",
-      "fromId": "28",
-      "toId": "69"
-    },
-    {
-      "id": "709",
-      "fromId": "29",
-      "toId": "311"
-    },
-    {
-      "id": "780",
-      "fromId": "18",
-      "toId": "312"
-    },
-    {
-      "id": "769",
-      "fromId": "29",
-      "toId": "315"
-    },
-    {
-      "id": "643",
-      "fromId": "28",
-      "toId": "312"
-    },
-    {
-      "id": "657",
-      "fromId": "103",
-      "toId": "70"
-    },
-    {
-      "id": "695",
-      "fromId": "28",
-      "toId": "30"
-    },
-    {
-      "id": "556",
-      "fromId": "99",
-      "toId": "18"
-    },
-    {
-      "id": "749",
-      "fromId": "29",
-      "toId": "313"
-    },
-    {
-      "id": "777",
-      "fromId": "29",
-      "toId": "302"
-    },
-    {
-      "id": "579",
-      "fromId": "18",
-      "toId": "99"
-    },
-    {
-      "id": "721",
-      "fromId": "18",
-      "toId": "30"
-    },
-    {
-      "id": "574",
-      "fromId": "27",
-      "toId": "70"
-    },
-    {
-      "id": "702",
-      "fromId": "28",
-      "toId": "103"
-    },
-    {
-      "id": "561",
-      "fromId": "29",
-      "toId": "102"
-    },
-    {
-      "id": "628",
-      "fromId": "29",
-      "toId": "70"
-    },
-    {
-      "id": "645",
-      "fromId": "18",
-      "toId": "291"
-    },
-    {
-      "id": "551",
-      "fromId": "28",
-      "toId": "103"
-    },
-    {
-      "id": "745",
-      "fromId": "28",
-      "toId": "300"
-    },
-    {
-      "id": "693",
-      "fromId": "29",
-      "toId": "319"
-    },
-    {
-      "id": "727",
-      "fromId": "18",
-      "toId": "30"
-    },
-    {
-      "id": "680",
-      "fromId": "29",
-      "toId": "103"
-    },
-    {
-      "id": "633",
-      "fromId": "18",
-      "toId": "29"
-    },
-    {
-      "id": "686",
-      "fromId": "18",
-      "toId": "29"
-    },
-    {
-      "id": "599",
-      "fromId": "18",
-      "toId": "69"
-    },
-    {
-      "id": "776",
-      "fromId": "29",
-      "toId": "296"
-    },
-    {
-      "id": "655",
-      "fromId": "29",
-      "toId": "307"
-    },
-    {
-      "id": "644",
-      "fromId": "29",
-      "toId": "296"
-    },
-    {
-      "id": "717",
-      "fromId": "28",
-      "toId": "313"
-    },
-    {
-      "id": "739",
-      "fromId": "92",
-      "toId": "70"
-    },
-    {
-      "id": "788",
-      "fromId": "18",
-      "toId": "361"
-    },
-    {
-      "id": "661",
-      "fromId": "29",
-      "toId": "69"
-    },
-    {
-      "id": "791",
-      "fromId": "271",
-      "toId": "361"
-    },
-    {
-      "id": "546",
-      "fromId": "29",
-      "toId": "18"
-    },
-    {
-      "id": "759",
-      "fromId": "29",
-      "toId": "76"
-    },
-    {
-      "id": "714",
-      "fromId": "28",
-      "toId": "18"
-    },
-    {
-      "id": "781",
-      "fromId": "95",
-      "toId": "8"
-    },
-    {
-      "id": "782",
-      "fromId": "18",
-      "toId": "12"
-    },
-    {
-      "id": "784",
-      "fromId": "29",
-      "toId": "12"
-    },
-    {
-      "id": "785",
-      "fromId": "29",
-      "toId": "361"
-    },
-    {
-      "id": "789",
-      "fromId": "18",
-      "toId": "361"
-    },
-    {
-      "id": "705",
-      "fromId": "18",
-      "toId": "86"
-    },
-    {
-      "id": "787",
-      "fromId": "275",
-      "toId": "12"
-    },
-    {
-      "id": "553",
-      "fromId": "29",
-      "toId": "99"
-    },
-    {
-      "id": "783",
-      "fromId": "28",
-      "toId": "12"
-    },
-    {
-      "id": "829",
-      "fromId": "95",
-      "toId": "16"
-    },
-    {
-      "id": "838",
-      "fromId": "18",
-      "toId": "13"
-    },
-    {
-      "id": "802",
-      "fromId": "18",
-      "toId": "95"
-    },
-    {
-      "id": "887",
-      "fromId": "28",
-      "toId": "85"
-    },
-    {
-      "id": "899",
-      "fromId": "29",
-      "toId": "113"
-    },
-    {
-      "id": "948",
-      "fromId": "29",
-      "toId": "21"
-    },
-    {
-      "id": "839",
-      "fromId": "27",
-      "toId": "82"
-    },
-    {
-      "id": "895",
-      "fromId": "18",
-      "toId": "109"
-    },
-    {
-      "id": "804",
-      "fromId": "27",
-      "toId": "392"
-    },
-    {
-      "id": "928",
-      "fromId": "18",
-      "toId": "79"
-    },
-    {
-      "id": "697",
-      "fromId": "29",
-      "toId": "307"
-    },
-    {
-      "id": "729",
-      "fromId": "29",
-      "toId": "103"
-    },
-    {
-      "id": "681",
-      "fromId": "29",
-      "toId": "28"
-    },
-    {
-      "id": "775",
-      "fromId": "357",
-      "toId": "310"
-    },
-    {
-      "id": "719",
-      "fromId": "27",
-      "toId": "106"
-    },
-    {
-      "id": "770",
+      "id": "151",
+      "label": "WriteOwnerRaw",
       "fromId": "18",
-      "toId": "30"
+      "toId": "40",
+      "properties": {}
     },
     {
-      "id": "786",
-      "fromId": "272",
-      "toId": "12"
-    },
-    {
-      "id": "663",
-      "fromId": "18",
-      "toId": "92"
-    },
-    {
-      "id": "642",
-      "fromId": "18",
-      "toId": "76"
-    },
-    {
-      "id": "741",
-      "fromId": "18",
-      "toId": "92"
-    },
-    {
-      "id": "718",
-      "fromId": "29",
-      "toId": "300"
-    },
-    {
-      "id": "634",
-      "fromId": "27",
-      "toId": "311"
-    },
-    {
-      "id": "568",
-      "fromId": "29",
-      "toId": "92"
-    },
-    {
-      "id": "683",
-      "fromId": "29",
-      "toId": "86"
-    },
-    {
-      "id": "603",
-      "fromId": "28",
-      "toId": "296"
-    },
-    {
-      "id": "537",
-      "fromId": "27",
-      "toId": "300"
-    },
-    {
-      "id": "601",
-      "fromId": "29",
-      "toId": "300"
-    },
-    {
-      "id": "596",
-      "fromId": "18",
-      "toId": "296"
-    },
-    {
-      "id": "761",
-      "fromId": "29",
-      "toId": "302"
-    },
-    {
-      "id": "754",
-      "fromId": "18",
-      "toId": "99"
-    },
-    {
-      "id": "641",
-      "fromId": "29",
-      "toId": "69"
-    },
-    {
-      "id": "581",
-      "fromId": "29",
-      "toId": "92"
-    },
-    {
-      "id": "670",
-      "fromId": "29",
-      "toId": "19"
-    },
-    {
-      "id": "566",
-      "fromId": "29",
-      "toId": "312"
-    },
-    {
-      "id": "734",
-      "fromId": "29",
-      "toId": "99"
-    },
-    {
-      "id": "547",
-      "fromId": "18",
-      "toId": "30"
-    },
-    {
-      "id": "605",
-      "fromId": "27",
-      "toId": "291"
-    },
-    {
-      "id": "689",
-      "fromId": "29",
-      "toId": "299"
-    },
-    {
-      "id": "653",
-      "fromId": "29",
-      "toId": "70"
-    },
-    {
-      "id": "731",
-      "fromId": "27",
-      "toId": "76"
-    },
-    {
-      "id": "567",
-      "fromId": "29",
-      "toId": "92"
-    },
-    {
-      "id": "578",
-      "fromId": "18",
-      "toId": "102"
-    },
-    {
-      "id": "678",
-      "fromId": "28",
-      "toId": "29"
-    },
-    {
-      "id": "542",
-      "fromId": "18",
-      "toId": "315"
-    },
-    {
-      "id": "602",
-      "fromId": "29",
-      "toId": "312"
-    },
-    {
-      "id": "676",
-      "fromId": "28",
-      "toId": "102"
-    },
-    {
-      "id": "612",
-      "fromId": "18",
-      "toId": "102"
-    },
-    {
-      "id": "540",
-      "fromId": "18",
-      "toId": "29"
-    },
-    {
-      "id": "722",
-      "fromId": "18",
-      "toId": "69"
-    },
-    {
-      "id": "543",
-      "fromId": "29",
-      "toId": "312"
-    },
-    {
-      "id": "766",
-      "fromId": "18",
-      "toId": "312"
-    },
-    {
-      "id": "760",
-      "fromId": "18",
-      "toId": "106"
-    },
-    {
-      "id": "559",
-      "fromId": "29",
-      "toId": "313"
-    },
-    {
-      "id": "647",
-      "fromId": "29",
-      "toId": "318"
-    },
-    {
-      "id": "688",
-      "fromId": "29",
-      "toId": "307"
-    },
-    {
-      "id": "583",
-      "fromId": "28",
-      "toId": "86"
-    },
-    {
-      "id": "558",
-      "fromId": "18",
-      "toId": "86"
-    },
-    {
-      "id": "746",
-      "fromId": "18",
-      "toId": "313"
-    },
-    {
-      "id": "667",
-      "fromId": "29",
-      "toId": "16"
-    },
-    {
-      "id": "584",
-      "fromId": "29",
-      "toId": "86"
-    },
-    {
-      "id": "870",
-      "fromId": "64",
-      "toId": "16"
-    },
-    {
-      "id": "946",
-      "fromId": "18",
-      "toId": "80"
-    },
-    {
-      "id": "951",
+      "id": "131",
+      "label": "WriteOwnerRaw",
       "fromId": "29",
-      "toId": "98"
-    },
-    {
-      "id": "827",
-      "fromId": "29",
-      "toId": "33"
-    },
-    {
-      "id": "939",
-      "fromId": "27",
-      "toId": "81"
-    },
-    {
-      "id": "915",
-      "fromId": "28",
-      "toId": "119"
-    },
-    {
-      "id": "907",
-      "fromId": "98",
-      "toId": "16"
-    },
-    {
-      "id": "803",
-      "fromId": "18",
-      "toId": "33"
-    },
-    {
-      "id": "966",
-      "fromId": "33",
-      "toId": "22"
-    },
-    {
-      "id": "918",
-      "fromId": "29",
-      "toId": "82"
-    },
-    {
-      "id": "957",
-      "fromId": "82",
-      "toId": "16"
-    },
-    {
-      "id": "831",
-      "fromId": "27",
-      "toId": "33"
-    },
-    {
-      "id": "712",
-      "fromId": "29",
-      "toId": "310"
-    },
-    {
-      "id": "885",
-      "fromId": "28",
-      "toId": "109"
-    },
-    {
-      "id": "809",
-      "fromId": "119",
-      "toId": "16"
-    },
-    {
-      "id": "828",
-      "fromId": "29",
-      "toId": "13"
-    },
-    {
-      "id": "906",
-      "fromId": "85",
-      "toId": "13"
-    },
-    {
-      "id": "866",
-      "fromId": "29",
-      "toId": "80"
-    },
-    {
-      "id": "924",
-      "fromId": "109",
-      "toId": "19"
-    },
-    {
-      "id": "848",
-      "fromId": "29",
-      "toId": "119"
-    },
-    {
-      "id": "900",
-      "fromId": "28",
-      "toId": "33"
-    },
-    {
-      "id": "832",
-      "fromId": "18",
-      "toId": "392"
-    },
-    {
-      "id": "805",
-      "fromId": "28",
-      "toId": "13"
-    },
-    {
-      "id": "958",
-      "fromId": "28",
-      "toId": "21"
-    },
-    {
-      "id": "949",
-      "fromId": "29",
-      "toId": "21"
-    },
-    {
-      "id": "820",
-      "fromId": "18",
-      "toId": "85"
-    },
-    {
-      "id": "801",
-      "fromId": "29",
-      "toId": "113"
-    },
-    {
-      "id": "936",
-      "fromId": "29",
-      "toId": "113"
-    },
-    {
-      "id": "862",
-      "fromId": "18",
-      "toId": "64"
-    },
-    {
-      "id": "941",
-      "fromId": "33",
-      "toId": "23"
-    },
-    {
-      "id": "954",
-      "fromId": "28",
-      "toId": "13"
-    },
-    {
-      "id": "880",
-      "fromId": "18",
-      "toId": "85"
-    },
-    {
-      "id": "932",
-      "fromId": "28",
-      "toId": "95"
-    },
-    {
-      "id": "872",
-      "fromId": "29",
-      "toId": "21"
-    },
-    {
-      "id": "859",
-      "fromId": "29",
-      "toId": "81"
-    },
-    {
-      "id": "854",
-      "fromId": "29",
-      "toId": "119"
-    },
-    {
-      "id": "842",
-      "fromId": "18",
-      "toId": "13"
-    },
-    {
-      "id": "950",
-      "fromId": "29",
-      "toId": "85"
-    },
-    {
-      "id": "844",
-      "fromId": "28",
-      "toId": "64"
-    },
-    {
-      "id": "892",
-      "fromId": "29",
-      "toId": "74"
-    },
-    {
-      "id": "818",
-      "fromId": "29",
-      "toId": "81"
-    },
-    {
-      "id": "836",
-      "fromId": "392",
-      "toId": "16"
-    },
-    {
-      "id": "937",
-      "fromId": "113",
-      "toId": "16"
-    },
-    {
-      "id": "884",
-      "fromId": "28",
-      "toId": "81"
-    },
-    {
-      "id": "825",
-      "fromId": "29",
-      "toId": "80"
-    },
-    {
-      "id": "894",
-      "fromId": "29",
-      "toId": "80"
-    },
-    {
-      "id": "877",
-      "fromId": "18",
-      "toId": "33"
-    },
-    {
-      "id": "943",
-      "fromId": "27",
-      "toId": "64"
-    },
-    {
-      "id": "945",
-      "fromId": "18",
-      "toId": "21"
-    },
-    {
-      "id": "927",
-      "fromId": "98",
-      "toId": "13"
-    },
-    {
-      "id": "947",
-      "fromId": "33",
-      "toId": "16"
-    },
-    {
-      "id": "963",
-      "fromId": "29",
-      "toId": "74"
-    },
-    {
-      "id": "893",
-      "fromId": "29",
-      "toId": "81"
-    },
-    {
-      "id": "923",
-      "fromId": "28",
-      "toId": "95"
+      "toId": "36",
+      "properties": {}
     },
     {
-      "id": "841",
+      "id": "202",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "13"
+      "toId": "46",
+      "properties": {}
     },
     {
       "id": "822",
+      "label": "MemberOf",
       "fromId": "85",
-      "toId": "16"
+      "toId": "16",
+      "properties": {}
     },
     {
-      "id": "901",
+      "id": "584",
+      "label": "WriteOwnerRaw",
       "fromId": "29",
-      "toId": "79"
+      "toId": "86",
+      "properties": {}
     },
     {
-      "id": "834",
-      "fromId": "28",
-      "toId": "95"
-    },
-    {
-      "id": "914",
+      "id": "545",
+      "label": "WriteDacl",
       "fromId": "29",
-      "toId": "109"
+      "toId": "19",
+      "properties": {}
     },
     {
-      "id": "886",
-      "fromId": "29",
-      "toId": "392"
-    },
-    {
-      "id": "952",
-      "fromId": "29",
-      "toId": "95"
-    },
-    {
-      "id": "908",
-      "fromId": "29",
-      "toId": "95"
-    },
-    {
-      "id": "847",
-      "fromId": "384",
-      "toId": "16"
-    },
-    {
-      "id": "879",
-      "fromId": "27",
-      "toId": "85"
-    },
-    {
-      "id": "935",
-      "fromId": "28",
-      "toId": "113"
-    },
-    {
-      "id": "902",
-      "fromId": "28",
-      "toId": "95"
-    },
-    {
-      "id": "480",
-      "fromId": "28",
-      "toId": "272"
-    },
-    {
-      "id": "524",
-      "fromId": "64",
-      "toId": "275"
-    },
-    {
-      "id": "526",
-      "fromId": "18",
-      "toId": "271"
-    },
-    {
-      "id": "483",
-      "fromId": "18",
-      "toId": "272"
-    },
-    {
-      "id": "513",
-      "fromId": "18",
-      "toId": "275"
-    },
-    {
-      "id": "504",
-      "fromId": "28",
-      "toId": "271"
-    },
-    {
-      "id": "518",
-      "fromId": "18",
-      "toId": "261"
-    },
-    {
-      "id": "479",
-      "fromId": "28",
-      "toId": "275"
-    },
-    {
-      "id": "487",
-      "fromId": "18",
-      "toId": "275"
-    },
-    {
-      "id": "527",
-      "fromId": "18",
-      "toId": "272"
-    },
-    {
-      "id": "529",
-      "fromId": "18",
-      "toId": "260"
-    },
-    {
-      "id": "530",
-      "fromId": "18",
-      "toId": "260"
-    },
-    {
-      "id": "501",
-      "fromId": "18",
-      "toId": "260"
-    },
-    {
-      "id": "499",
-      "fromId": "28",
-      "toId": "272"
-    },
-    {
-      "id": "481",
-      "fromId": "28",
-      "toId": "274"
-    },
-    {
-      "id": "490",
-      "fromId": "18",
-      "toId": "275"
-    },
-    {
-      "id": "648",
-      "fromId": "18",
-      "toId": "312"
-    },
-    {
-      "id": "654",
-      "fromId": "29",
-      "toId": "302"
-    },
-    {
-      "id": "594",
-      "fromId": "18",
-      "toId": "299"
-    },
-    {
-      "id": "620",
-      "fromId": "89",
-      "toId": "302"
-    },
-    {
-      "id": "701",
-      "fromId": "27",
-      "toId": "16"
-    },
-    {
-      "id": "716",
-      "fromId": "18",
-      "toId": "106"
-    },
-    {
-      "id": "757",
-      "fromId": "29",
-      "toId": "112"
-    },
-    {
-      "id": "636",
-      "fromId": "79",
-      "toId": "86"
-    },
-    {
-      "id": "700",
-      "fromId": "27",
-      "toId": "302"
-    },
-    {
-      "id": "570",
-      "fromId": "29",
-      "toId": "106"
-    },
-    {
-      "id": "723",
-      "fromId": "28",
-      "toId": "302"
-    },
-    {
-      "id": "535",
-      "fromId": "18",
-      "toId": "76"
-    },
-    {
-      "id": "606",
+      "id": "609",
+      "label": "MemberOf",
       "fromId": "13",
-      "toId": "29"
+      "toId": "18",
+      "properties": {}
     },
     {
-      "id": "665",
+      "id": "30",
+      "label": "WriteDacl",
       "fromId": "29",
-      "toId": "112"
+      "toId": "6",
+      "properties": {}
     },
     {
-      "id": "675",
+      "id": "33",
+      "label": "WriteOwnerRaw",
       "fromId": "29",
-      "toId": "296"
+      "toId": "5",
+      "properties": {}
     },
     {
-      "id": "660",
+      "id": "50",
+      "label": "GenericAll",
       "fromId": "18",
-      "toId": "291"
+      "toId": "4",
+      "properties": {}
     },
     {
-      "id": "962",
-      "fromId": "29",
-      "toId": "392"
+      "id": "21",
+      "label": "RemoteInteractiveLogonRight",
+      "fromId": "16",
+      "toId": "4",
+      "properties": {}
     },
     {
-      "id": "863",
-      "fromId": "27",
-      "toId": "74"
-    },
-    {
-      "id": "965",
-      "fromId": "27",
-      "toId": "21"
-    },
-    {
-      "id": "909",
-      "fromId": "13",
-      "toId": "109"
-    },
-    {
-      "id": "917",
-      "fromId": "27",
-      "toId": "79"
-    },
-    {
-      "id": "930",
-      "fromId": "29",
-      "toId": "80"
-    },
-    {
-      "id": "857",
-      "fromId": "18",
-      "toId": "95"
-    },
-    {
-      "id": "846",
-      "fromId": "74",
-      "toId": "16"
-    },
-    {
-      "id": "815",
-      "fromId": "28",
-      "toId": "119"
-    },
-    {
-      "id": "942",
-      "fromId": "18",
-      "toId": "98"
-    },
-    {
-      "id": "856",
-      "fromId": "29",
-      "toId": "79"
-    },
-    {
-      "id": "853",
-      "fromId": "81",
-      "toId": "76"
-    },
-    {
-      "id": "814",
-      "fromId": "18",
-      "toId": "13"
-    },
-    {
-      "id": "837",
-      "fromId": "18",
-      "toId": "13"
-    },
-    {
-      "id": "843",
-      "fromId": "29",
-      "toId": "85"
-    },
-    {
-      "id": "817",
-      "fromId": "29",
-      "toId": "82"
-    },
-    {
-      "id": "811",
-      "fromId": "29",
-      "toId": "392"
-    },
-    {
-      "id": "840",
-      "fromId": "29",
-      "toId": "13"
-    },
-    {
-      "id": "849",
-      "fromId": "18",
-      "toId": "119"
-    },
-    {
-      "id": "919",
-      "fromId": "27",
-      "toId": "80"
-    },
-    {
-      "id": "865",
-      "fromId": "29",
-      "toId": "81"
-    },
-    {
-      "id": "792",
-      "fromId": "28",
-      "toId": "361"
-    },
-    {
-      "id": "796",
-      "fromId": "29",
-      "toId": "12"
-    },
-    {
-      "id": "797",
-      "fromId": "274",
-      "toId": "12"
-    },
-    {
-      "id": "793",
-      "fromId": "18",
-      "toId": "361"
-    },
-    {
-      "id": "790",
-      "fromId": "29",
-      "toId": "361"
-    },
-    {
-      "id": "795",
-      "fromId": "18",
-      "toId": "12"
-    },
-    {
-      "id": "940",
-      "fromId": "29",
-      "toId": "109"
-    },
-    {
-      "id": "850",
-      "fromId": "33",
-      "toId": "22"
-    },
-    {
-      "id": "864",
-      "fromId": "18",
-      "toId": "74"
-    },
-    {
-      "id": "938",
-      "fromId": "18",
-      "toId": "21"
-    },
-    {
-      "id": "967",
-      "fromId": "18",
-      "toId": "392"
-    },
-    {
-      "id": "912",
-      "fromId": "27",
-      "toId": "113"
-    },
-    {
-      "id": "826",
-      "fromId": "28",
-      "toId": "119"
-    },
-    {
-      "id": "910",
-      "fromId": "29",
-      "toId": "392"
-    },
-    {
-      "id": "897",
-      "fromId": "29",
-      "toId": "98"
-    },
-    {
-      "id": "882",
-      "fromId": "18",
-      "toId": "79"
-    },
-    {
-      "id": "807",
-      "fromId": "29",
-      "toId": "113"
-    },
-    {
-      "id": "816",
-      "fromId": "29",
-      "toId": "64"
-    },
-    {
-      "id": "833",
-      "fromId": "18",
-      "toId": "64"
-    },
-    {
-      "id": "964",
-      "fromId": "18",
-      "toId": "74"
-    },
-    {
-      "id": "898",
-      "fromId": "29",
-      "toId": "79"
-    },
-    {
-      "id": "808",
-      "fromId": "29",
-      "toId": "82"
-    },
-    {
-      "id": "806",
-      "fromId": "29",
-      "toId": "74"
-    },
-    {
-      "id": "830",
-      "fromId": "29",
-      "toId": "109"
-    },
-    {
-      "id": "889",
-      "fromId": "28",
-      "toId": "79"
-    },
-    {
-      "id": "891",
-      "fromId": "18",
-      "toId": "95"
-    },
-    {
-      "id": "810",
-      "fromId": "28",
-      "toId": "392"
-    },
-    {
-      "id": "867",
-      "fromId": "18",
-      "toId": "119"
-    },
-    {
-      "id": "913",
-      "fromId": "27",
-      "toId": "109"
-    },
-    {
-      "id": "926",
-      "fromId": "29",
-      "toId": "98"
-    },
-    {
-      "id": "845",
-      "fromId": "28",
-      "toId": "74"
-    },
-    {
-      "id": "873",
+      "id": "17",
+      "label": "AddAllowedToAct",
       "fromId": "21",
-      "toId": "16"
+      "toId": "5",
+      "properties": {}
     },
     {
-      "id": "960",
-      "fromId": "28",
-      "toId": "80"
-    },
-    {
-      "id": "819",
-      "fromId": "29",
-      "toId": "33"
-    },
-    {
-      "id": "911",
-      "fromId": "85",
-      "toId": "33"
-    },
-    {
-      "id": "878",
-      "fromId": "29",
-      "toId": "33"
-    },
-    {
-      "id": "934",
-      "fromId": "29",
-      "toId": "98"
-    },
-    {
-      "id": "835",
+      "id": "7",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "119"
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "88",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "586",
+      "label": "MemberOf",
+      "fromId": "13",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "691",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "632",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "669",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "558",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "86",
+      "properties": {}
     },
     {
       "id": "871",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "95"
-    },
-    {
-      "id": "852",
-      "fromId": "29",
-      "toId": "74"
+      "toId": "95",
+      "properties": {}
     },
     {
       "id": "858",
+      "label": "GenericWrite",
       "fromId": "29",
-      "toId": "82"
+      "toId": "82",
+      "properties": {}
     },
     {
-      "id": "903",
+      "id": "24",
+      "label": "AllowedToDelegate",
+      "fromId": "4",
+      "toId": "22",
+      "properties": {}
+    },
+    {
+      "id": "926",
+      "label": "WriteDacl",
       "fromId": "29",
-      "toId": "81"
+      "toId": "98",
+      "properties": {}
     },
     {
-      "id": "875",
-      "fromId": "18",
-      "toId": "119"
-    },
-    {
-      "id": "855",
-      "fromId": "28",
-      "toId": "13"
-    },
-    {
-      "id": "959",
-      "fromId": "384",
-      "toId": "25"
-    },
-    {
-      "id": "812",
-      "fromId": "79",
-      "toId": "16"
-    },
-    {
-      "id": "944",
-      "fromId": "18",
-      "toId": "82"
-    },
-    {
-      "id": "961",
-      "fromId": "80",
-      "toId": "16"
-    },
-    {
-      "id": "920",
-      "fromId": "29",
-      "toId": "13"
-    },
-    {
-      "id": "955",
+      "id": "912",
+      "label": "GenericAll",
       "fromId": "27",
-      "toId": "98"
+      "toId": "113",
+      "properties": {}
     },
     {
-      "id": "813",
-      "fromId": "29",
-      "toId": "21"
-    },
-    {
-      "id": "925",
-      "fromId": "29",
-      "toId": "119"
-    },
-    {
-      "id": "861",
-      "fromId": "29",
-      "toId": "85"
-    },
-    {
-      "id": "869",
-      "fromId": "29",
-      "toId": "64"
-    },
-    {
-      "id": "883",
-      "fromId": "29",
-      "toId": "64"
-    },
-    {
-      "id": "851",
-      "fromId": "18",
-      "toId": "95"
-    },
-    {
-      "id": "876",
-      "fromId": "18",
-      "toId": "119"
-    },
-    {
-      "id": "800",
-      "fromId": "29",
-      "toId": "79"
-    },
-    {
-      "id": "921",
-      "fromId": "18",
-      "toId": "113"
-    },
-    {
-      "id": "874",
-      "fromId": "18",
-      "toId": "109"
-    },
-    {
-      "id": "896",
-      "fromId": "29",
-      "toId": "119"
-    },
-    {
-      "id": "823",
-      "fromId": "18",
-      "toId": "113"
-    },
-    {
-      "id": "888",
-      "fromId": "18",
-      "toId": "98"
-    },
-    {
-      "id": "931",
-      "fromId": "29",
-      "toId": "95"
-    },
-    {
-      "id": "922",
-      "fromId": "29",
-      "toId": "64"
-    },
-    {
-      "id": "881",
+      "id": "889",
+      "label": "GenericAll",
       "fromId": "28",
-      "toId": "98"
+      "toId": "79",
+      "properties": {}
     },
     {
-      "id": "824",
+      "id": "98",
+      "label": "GenericAll",
       "fromId": "18",
-      "toId": "82"
-    },
-    {
-      "id": "933",
-      "fromId": "29",
-      "toId": "109"
-    },
-    {
-      "id": "916",
-      "fromId": "13",
-      "toId": "16"
-    },
-    {
-      "id": "868",
-      "fromId": "29",
-      "toId": "33"
+      "toId": "56",
+      "properties": {}
     },
     {
       "id": "929",
+      "label": "GenericAll",
       "fromId": "29",
-      "toId": "81"
+      "toId": "81",
+      "properties": {}
     },
     {
-      "id": "904",
-      "fromId": "28",
-      "toId": "119"
+      "id": "947",
+      "label": "MemberOf",
+      "fromId": "33",
+      "toId": "16",
+      "properties": {}
     },
     {
-      "id": "821",
+      "id": "187",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "897",
+      "label": "GenericWrite",
       "fromId": "29",
-      "toId": "85"
+      "toId": "98",
+      "properties": {}
     },
     {
-      "id": "905",
+      "id": "965",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "853",
+      "label": "MemberOf",
+      "fromId": "81",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "815",
+      "label": "AllExtendedRights",
+      "fromId": "28",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "961",
+      "label": "MemberOf",
+      "fromId": "80",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "934",
+      "label": "AllExtendedRights",
       "fromId": "29",
-      "toId": "13"
+      "toId": "98",
+      "properties": {}
     },
     {
-      "id": "860",
-      "fromId": "28",
-      "toId": "13"
+      "id": "49",
+      "label": "LocalToComputer",
+      "fromId": "3",
+      "toId": "4",
+      "properties": {}
     },
     {
-      "id": "956",
+      "id": "3",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "47",
+      "label": "HasSession",
+      "fromId": "4",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "43",
+      "label": "MemberOf",
+      "fromId": "7",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "35",
+      "label": "MemberOf",
+      "fromId": "4",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "26",
+      "label": "MemberOf",
+      "fromId": "5",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "54",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "14",
+      "label": "CoerceToTGT",
+      "fromId": "7",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "11",
+      "label": "LocalToComputer",
+      "fromId": "2",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "114",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "206",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "43",
+      "properties": {}
+    },
+    {
+      "id": "76",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "736",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "649",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "687",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "706",
+      "label": "WriteOwnerRaw",
       "fromId": "28",
-      "toId": "82"
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "752",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "51",
+      "label": "LocalToComputer",
+      "fromId": "8",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "913",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "866",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "942",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "835",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "737",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "559",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "735",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "688",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "741",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "20",
+      "label": "MemberOfLocalGroup",
+      "fromId": "33",
+      "toId": "3",
+      "properties": {}
+    },
+    {
+      "id": "13",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "6",
+      "properties": {}
+    },
+    {
+      "id": "134",
+      "label": "WriteOwnerRaw",
+      "fromId": "89",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "447",
+      "label": "SpoofSIDHistory",
+      "fromId": "251",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "445",
+      "label": "GetChanges",
+      "fromId": "89",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "464",
+      "label": "AllExtendedRights",
+      "fromId": "18",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "455",
+      "label": "AbuseTGTDelegation",
+      "fromId": "251",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "451",
+      "label": "GetChangesAll",
+      "fromId": "30",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "452",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "698",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "634",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "801",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "920",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "910",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "740",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "542",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "590",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "933",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "917",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "898",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "882",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "943",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "922",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "450",
+      "label": "CrossForestTrust",
+      "fromId": "251",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "720",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "724",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "583",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "755",
+      "label": "MemberOf",
+      "fromId": "75",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "639",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "718",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "549",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "53",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "37",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "614",
+      "label": "MemberOf",
+      "fromId": "18",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "4",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "6",
+      "properties": {}
+    },
+    {
+      "id": "646",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "837",
+      "label": "AllExtendedRights",
+      "fromId": "18",
+      "toId": "13",
+      "properties": {}
     },
     {
       "id": "890",
+      "label": "GenericWrite",
       "fromId": "29",
-      "toId": "95"
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "902",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "909",
+      "label": "ReadGMSAPassword",
+      "fromId": "13",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "918",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "827",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "870",
+      "label": "MemberOf",
+      "fromId": "64",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "657",
+      "label": "MemberOf",
+      "fromId": "103",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "658",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "743",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "667",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "659",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "816",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "964",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "878",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "905",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "955",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "906",
+      "label": "HasSIDHistory",
+      "fromId": "85",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "199",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "193",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "44",
+      "properties": {}
+    },
+    {
+      "id": "208",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "169",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "40",
+      "properties": {}
+    },
+    {
+      "id": "178",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "164",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "49",
+      "properties": {}
+    },
+    {
+      "id": "468",
+      "label": "SameForestTrust",
+      "fromId": "25",
+      "toId": "246",
+      "properties": {}
+    },
+    {
+      "id": "472",
+      "label": "GetChanges",
+      "fromId": "112",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "474",
+      "label": "GetChangesAll",
+      "fromId": "80",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "476",
+      "label": "CrossForestTrust",
+      "fromId": "25",
+      "toId": "248",
+      "properties": {}
+    },
+    {
+      "id": "931",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "863",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "580",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "566",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "647",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "672",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "520",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "273",
+      "properties": {}
+    },
+    {
+      "id": "764",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "554",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "710",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "6",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "46",
+      "label": "LocalToComputer",
+      "fromId": "9",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "38",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "5",
+      "properties": {}
+    },
+    {
+      "id": "31",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "6",
+      "properties": {}
+    },
+    {
+      "id": "27",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "23",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "144",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "201",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "89",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "40",
+      "properties": {}
+    },
+    {
+      "id": "471",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "460",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "473",
+      "label": "SpoofSIDHistory",
+      "fromId": "248",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "470",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "486",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "496",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "463",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "510",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "273",
+      "properties": {}
+    },
+    {
+      "id": "482",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "503",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "521",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "702",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "578",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "695",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "29",
+      "label": "MemberOfLocalGroup",
+      "fromId": "16",
+      "toId": "9",
+      "properties": {}
+    },
+    {
+      "id": "477",
+      "label": "GenericWrite",
+      "fromId": "33",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "28",
+      "label": "Contains",
+      "fromId": "12",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "511",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "274",
+      "properties": {}
+    },
+    {
+      "id": "502",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "15",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "40",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "6",
+      "properties": {}
+    },
+    {
+      "id": "22",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "5",
+      "properties": {}
+    },
+    {
+      "id": "1",
+      "label": "HasSIDHistory",
+      "fromId": "4",
+      "toId": "23",
+      "properties": {}
+    },
+    {
+      "id": "507",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "274",
+      "properties": {}
+    },
+    {
+      "id": "495",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "478",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "689",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "799",
+      "label": "HasSession",
+      "fromId": "4",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "36",
+      "label": "GenericAll",
+      "fromId": "33",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "18",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "12",
+      "label": "DCFor",
+      "fromId": "5",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "5",
+      "label": "HasSession",
+      "fromId": "4",
+      "toId": "24",
+      "properties": {}
+    },
+    {
+      "id": "10",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "5",
+      "properties": {}
+    },
+    {
+      "id": "52",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "48",
+      "label": "HasSession",
+      "fromId": "4",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "8",
+      "label": "Contains",
+      "fromId": "26",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "493",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "505",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "485",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "528",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "512",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "274",
+      "properties": {}
+    },
+    {
+      "id": "508",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "603",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "531",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "761",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "765",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "748",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "612",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "539",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "758",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "42",
+      "label": "MemberOf",
+      "fromId": "6",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "19",
+      "label": "AllowedToAct",
+      "fromId": "22",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "9",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "5",
+      "properties": {}
+    },
+    {
+      "id": "34",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "7",
+      "properties": {}
+    },
+    {
+      "id": "2",
+      "label": "MemberOfLocalGroup",
+      "fromId": "18",
+      "toId": "8",
+      "properties": {}
+    },
+    {
+      "id": "763",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "629",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "598",
+      "label": "MemberOf",
+      "fromId": "94",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "666",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "673",
+      "label": "MemberOf",
+      "fromId": "81",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "684",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "958",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "810",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "856",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "967",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "824",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "492",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "514",
+      "label": "WriteDacl",
+      "fromId": "82",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "484",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "498",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "509",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "273",
+      "properties": {}
+    },
+    {
+      "id": "571",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "690",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "670",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "565",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "574",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "854",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "930",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "885",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "877",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "813",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "32",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "4",
+      "properties": {}
+    },
+    {
+      "id": "25",
+      "label": "HasSession",
+      "fromId": "4",
+      "toId": "14",
+      "properties": {}
+    },
+    {
+      "id": "44",
+      "label": "MemberOfLocalGroup",
+      "fromId": "11",
+      "toId": "2",
+      "properties": {}
+    },
+    {
+      "id": "16",
+      "label": "MemberOfLocalGroup",
+      "fromId": "33",
+      "toId": "8",
+      "properties": {}
+    },
+    {
+      "id": "45",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "5",
+      "properties": {}
+    },
+    {
+      "id": "488",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "491",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "517",
+      "label": "WriteOwnerRaw",
+      "fromId": "64",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "806",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "864",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "939",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "519",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "494",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "273",
+      "properties": {}
+    },
+    {
+      "id": "525",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "500",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "273",
+      "properties": {}
+    },
+    {
+      "id": "506",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "274",
+      "properties": {}
+    },
+    {
+      "id": "522",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "108",
+      "label": "Contains",
+      "fromId": "25",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "886",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "177",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "91",
+      "label": "WriteDacl",
+      "fromId": "93",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "195",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "213",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "198",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "36",
+      "properties": {}
+    },
+    {
+      "id": "60",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "42",
+      "properties": {}
+    },
+    {
+      "id": "105",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "200",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "153",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "36",
+      "properties": {}
+    },
+    {
+      "id": "209",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "49",
+      "properties": {}
+    },
+    {
+      "id": "135",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "63",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "78",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "117",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "44",
+      "properties": {}
+    },
+    {
+      "id": "104",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "40",
+      "properties": {}
+    },
+    {
+      "id": "115",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "54",
+      "properties": {}
+    },
+    {
+      "id": "71",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "116",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "217",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "38",
+      "properties": {}
+    },
+    {
+      "id": "128",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "581",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "845",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "946",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "819",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "159",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "54",
+      "properties": {}
+    },
+    {
+      "id": "90",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "41",
+      "properties": {}
+    },
+    {
+      "id": "179",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "145",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "147",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "119",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "48",
+      "properties": {}
+    },
+    {
+      "id": "168",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "149",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "111",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "163",
+      "label": "WriteOwnerRaw",
+      "fromId": "93",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "196",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "155",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "38",
+      "properties": {}
+    },
+    {
+      "id": "72",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "95",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "56",
+      "properties": {}
+    },
+    {
+      "id": "107",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "68",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "44",
+      "properties": {}
+    },
+    {
+      "id": "93",
+      "label": "Contains",
+      "fromId": "45",
+      "toId": "6",
+      "properties": {}
+    },
+    {
+      "id": "124",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "152",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "41",
+      "properties": {}
+    },
+    {
+      "id": "122",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "154",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "43",
+      "properties": {}
+    },
+    {
+      "id": "449",
+      "label": "CrossForestTrust",
+      "fromId": "250",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "192",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "44",
+      "properties": {}
+    },
+    {
+      "id": "161",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "48",
+      "properties": {}
+    },
+    {
+      "id": "218",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "185",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "212",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "214",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "203",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "75",
+      "properties": {}
+    },
+    {
+      "id": "80",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "126",
+      "label": "WriteDacl",
+      "fromId": "96",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "641",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "630",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "734",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "597",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "576",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "589",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "587",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "596",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "183",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "211",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "190",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "96",
+      "properties": {}
+    },
+    {
+      "id": "84",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "120",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "62",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "103",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "37",
+      "properties": {}
+    },
+    {
+      "id": "125",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "41",
+      "properties": {}
+    },
+    {
+      "id": "87",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "138",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "36",
+      "properties": {}
+    },
+    {
+      "id": "172",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "48",
+      "properties": {}
+    },
+    {
+      "id": "194",
+      "label": "WriteDacl",
+      "fromId": "89",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "182",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "61",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "49",
+      "properties": {}
+    },
+    {
+      "id": "150",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "40",
+      "properties": {}
+    },
+    {
+      "id": "67",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "113",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "83",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "42",
+      "properties": {}
+    },
+    {
+      "id": "121",
+      "label": "Contains",
+      "fromId": "45",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "127",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "46",
+      "properties": {}
+    },
+    {
+      "id": "181",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "123",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "97",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "41",
+      "properties": {}
+    },
+    {
+      "id": "207",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "38",
+      "properties": {}
+    },
+    {
+      "id": "94",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "82",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "42",
+      "properties": {}
+    },
+    {
+      "id": "220",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "64",
+      "label": "WriteOwnerRaw",
+      "fromId": "96",
+      "toId": "53",
+      "properties": {}
+    },
+    {
+      "id": "613",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "708",
+      "label": "MemberOf",
+      "fromId": "76",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "635",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "532",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "585",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "696",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "552",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "671",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "538",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "677",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "753",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "541",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "715",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "610",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "548",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "171",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "54",
+      "properties": {}
+    },
+    {
+      "id": "70",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "46",
+      "properties": {}
+    },
+    {
+      "id": "180",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "167",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "132",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "109",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "46",
+      "properties": {}
+    },
+    {
+      "id": "133",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "186",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "42",
+      "properties": {}
+    },
+    {
+      "id": "73",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "560",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "608",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "638",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "766",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "777",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "58",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "46",
+      "properties": {}
+    },
+    {
+      "id": "77",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "204",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "137",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "56",
+      "properties": {}
+    },
+    {
+      "id": "165",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "43",
+      "properties": {}
+    },
+    {
+      "id": "197",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "36",
+      "properties": {}
+    },
+    {
+      "id": "156",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "96",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "107",
+      "properties": {}
+    },
+    {
+      "id": "160",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "624",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "601",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "678",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "722",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "746",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "767",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "627",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "616",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "731",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "66",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "458",
+      "label": "GetChanges",
+      "fromId": "80",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "465",
+      "label": "GetChangesAll",
+      "fromId": "106",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "444",
+      "label": "CrossForestTrust",
+      "fromId": "25",
+      "toId": "244",
+      "properties": {}
+    },
+    {
+      "id": "443",
+      "label": "GetChanges",
+      "fromId": "86",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "459",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "461",
+      "label": "GPLink",
+      "fromId": "260",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "633",
+      "label": "MemberOf",
+      "fromId": "18",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "544",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "551",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "749",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "675",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "622",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "568",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "537",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "692",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "663",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "674",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "615",
+      "label": "MemberOf",
+      "fromId": "95",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "595",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "462",
+      "label": "SameForestTrust",
+      "fromId": "246",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "469",
+      "label": "SameForestTrust",
+      "fromId": "25",
+      "toId": "247",
+      "properties": {}
+    },
+    {
+      "id": "467",
+      "label": "SpoofSIDHistory",
+      "fromId": "249",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "456",
+      "label": "CrossForestTrust",
+      "fromId": "25",
+      "toId": "251",
+      "properties": {}
+    },
+    {
+      "id": "446",
+      "label": "GetChanges",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "457",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "611",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "626",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "546",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "662",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "716",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "685",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "642",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "637",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "762",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "535",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "732",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "656",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "838",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "928",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "887",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "788",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "781",
+      "label": "MemberOfLocalGroup",
+      "fromId": "95",
+      "toId": "8",
+      "properties": {}
+    },
+    {
+      "id": "573",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "714",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "759",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "655",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "705",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "553",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "782",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "729",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "697",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "679",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "717",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "313",
+      "properties": {}
+    },
+    {
+      "id": "783",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "895",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "804",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "802",
+      "label": "AllExtendedRights",
+      "fromId": "18",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "839",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "829",
+      "label": "MemberOf",
+      "fromId": "95",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "899",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "948",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "599",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "592",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "787",
+      "label": "GPLink",
+      "fromId": "275",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "789",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "786",
+      "label": "GPLink",
+      "fromId": "272",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "785",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "791",
+      "label": "GPLink",
+      "fromId": "271",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "784",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "750",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "623",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "728",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "644",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "703",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "76",
+      "properties": {}
+    },
+    {
+      "id": "682",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "577",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "754",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "713",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "563",
+      "label": "MemberOf",
+      "fromId": "28",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "534",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "555",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "712",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "661",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "591",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "738",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "893",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "951",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "936",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "805",
+      "label": "AllExtendedRights",
+      "fromId": "28",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "825",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "923",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "954",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "848",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "818",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "820",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "173",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "57",
+      "properties": {}
+    },
+    {
+      "id": "142",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "37",
+      "properties": {}
+    },
+    {
+      "id": "174",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "43",
+      "properties": {}
+    },
+    {
+      "id": "219",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "146",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "158",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "110",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "42",
+      "properties": {}
+    },
+    {
+      "id": "136",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "215",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "47",
+      "properties": {}
+    },
+    {
+      "id": "175",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "157",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "39",
+      "properties": {}
+    },
+    {
+      "id": "139",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "43",
+      "properties": {}
+    },
+    {
+      "id": "130",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "41",
+      "properties": {}
+    },
+    {
+      "id": "170",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "37",
+      "properties": {}
+    },
+    {
+      "id": "205",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "40",
+      "properties": {}
+    },
+    {
+      "id": "604",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "640",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "739",
+      "label": "MemberOf",
+      "fromId": "92",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "660",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "654",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "668",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "569",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "594",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "628",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "572",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "701",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "643",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "665",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "543",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "570",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "56",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "38",
+      "properties": {}
+    },
+    {
+      "id": "620",
+      "label": "MemberOf",
+      "fromId": "89",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "880",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "872",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "892",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "884",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "908",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "879",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "914",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "950",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "836",
+      "label": "MemberOf",
+      "fromId": "392",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "832",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "937",
+      "label": "MemberOf",
+      "fromId": "113",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "862",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "924",
+      "label": "MemberOf",
+      "fromId": "109",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "949",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "834",
+      "label": "AllExtendedRights",
+      "fromId": "28",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "941",
+      "label": "HasSIDHistory",
+      "fromId": "33",
+      "toId": "23",
+      "properties": {}
+    },
+    {
+      "id": "963",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "859",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "74",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "184",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "129",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "116",
+      "properties": {}
+    },
+    {
+      "id": "106",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "100",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "45",
+      "properties": {}
+    },
+    {
+      "id": "191",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "93",
+      "properties": {}
+    },
+    {
+      "id": "69",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "52",
+      "properties": {}
+    },
+    {
+      "id": "221",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "475",
+      "label": "GPLink",
+      "fromId": "261",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "453",
+      "label": "SameForestTrust",
+      "fromId": "247",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "466",
+      "label": "GetChangesAll",
+      "fromId": "29",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "448",
+      "label": "CrossForestTrust",
+      "fromId": "25",
+      "toId": "249",
+      "properties": {}
+    },
+    {
+      "id": "454",
+      "label": "AbuseTGTDelegation",
+      "fromId": "250",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "607",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "69",
+      "properties": {}
+    },
+    {
+      "id": "699",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "94",
+      "properties": {}
+    },
+    {
+      "id": "927",
+      "label": "HasSIDHistory",
+      "fromId": "98",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "162",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "36",
+      "properties": {}
+    },
+    {
+      "id": "102",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "216",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "38",
+      "properties": {}
+    },
+    {
+      "id": "79",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "65",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "97",
+      "properties": {}
+    },
+    {
+      "id": "176",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "58",
+      "properties": {}
+    },
+    {
+      "id": "99",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "49",
+      "properties": {}
+    },
+    {
+      "id": "141",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "51",
+      "properties": {}
+    },
+    {
+      "id": "210",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "37",
+      "properties": {}
+    },
+    {
+      "id": "92",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "49",
+      "properties": {}
+    },
+    {
+      "id": "188",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "148",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "59",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "143",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "26",
+      "properties": {}
+    },
+    {
+      "id": "189",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "900",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "959",
+      "label": "CoerceToTGT",
+      "fromId": "384",
+      "toId": "25",
+      "properties": {}
+    },
+    {
+      "id": "916",
+      "label": "MemberOf",
+      "fromId": "13",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "873",
+      "label": "MemberOf",
+      "fromId": "21",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "807",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "800",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "855",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "869",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "960",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "80",
+      "properties": {}
     },
     {
       "id": "953",
+      "label": "OwnsRaw",
       "fromId": "18",
-      "toId": "80"
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "896",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "944",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "956",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "952",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "847",
+      "label": "MemberOf",
+      "fromId": "384",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "894",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "725",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "617",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "707",
+      "label": "MemberOf",
+      "fromId": "28",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "650",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "773",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "774",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "811",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "849",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "919",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "80",
+      "properties": {}
+    },
+    {
+      "id": "940",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "817",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "840",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "588",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "772",
+      "label": "MemberOf",
+      "fromId": "119",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "561",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "540",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "625",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "536",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "631",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "700",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "793",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "790",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "797",
+      "label": "GPLink",
+      "fromId": "274",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "795",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "796",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "12",
+      "properties": {}
+    },
+    {
+      "id": "792",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "361",
+      "properties": {}
+    },
+    {
+      "id": "865",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "850",
+      "label": "AllowedToDelegate",
+      "fromId": "33",
+      "toId": "22",
+      "properties": {}
+    },
+    {
+      "id": "778",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "307",
+      "properties": {}
+    },
+    {
+      "id": "547",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "779",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "299",
+      "properties": {}
+    },
+    {
+      "id": "745",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "652",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "533",
+      "label": "MemberOf",
+      "fromId": "13",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "768",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "664",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "550",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "602",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "776",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "296",
+      "properties": {}
+    },
+    {
+      "id": "780",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "605",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "693",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "621",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "19",
+      "properties": {}
+    },
+    {
+      "id": "600",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "680",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "103",
+      "properties": {}
+    },
+    {
+      "id": "719",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "751",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "711",
+      "label": "MemberOf",
+      "fromId": "13",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "694",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "582",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "556",
+      "label": "MemberOf",
+      "fromId": "99",
+      "toId": "18",
+      "properties": {}
+    },
+    {
+      "id": "723",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "579",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "769",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "315",
+      "properties": {}
+    },
+    {
+      "id": "676",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "102",
+      "properties": {}
+    },
+    {
+      "id": "742",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "302",
+      "properties": {}
+    },
+    {
+      "id": "557",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "844",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "828",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "891",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "618",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "726",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "721",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "606",
+      "label": "MemberOf",
+      "fromId": "13",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "730",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "562",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "686",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "29",
+      "properties": {}
+    },
+    {
+      "id": "744",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "575",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "318",
+      "properties": {}
+    },
+    {
+      "id": "747",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "99",
+      "properties": {}
+    },
+    {
+      "id": "709",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "311",
+      "properties": {}
+    },
+    {
+      "id": "756",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "648",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "312",
+      "properties": {}
+    },
+    {
+      "id": "653",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "619",
+      "label": "MemberOf",
+      "fromId": "79",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "645",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "564",
+      "label": "MemberOf",
+      "fromId": "30",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "771",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "70",
+      "properties": {}
+    },
+    {
+      "id": "683",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "704",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "727",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "770",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "881",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "911",
+      "label": "HasSIDHistory",
+      "fromId": "85",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "883",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "857",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "830",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "821",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "876",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "833",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "64",
+      "properties": {}
+    },
+    {
+      "id": "938",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "861",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "823",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "957",
+      "label": "MemberOf",
+      "fromId": "82",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "843",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "85",
+      "properties": {}
+    },
+    {
+      "id": "860",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "867",
+      "label": "AllExtendedRights",
+      "fromId": "18",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "888",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "98",
+      "properties": {}
+    },
+    {
+      "id": "831",
+      "label": "GenericAll",
+      "fromId": "27",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "962",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "392",
+      "properties": {}
+    },
+    {
+      "id": "529",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "481",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "274",
+      "properties": {}
+    },
+    {
+      "id": "483",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "757",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "112",
+      "properties": {}
+    },
+    {
+      "id": "760",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "106",
+      "properties": {}
+    },
+    {
+      "id": "733",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "300",
+      "properties": {}
+    },
+    {
+      "id": "112",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "44",
+      "properties": {}
+    },
+    {
+      "id": "75",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "37",
+      "properties": {}
+    },
+    {
+      "id": "85",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "54",
+      "properties": {}
+    },
+    {
+      "id": "101",
+      "label": "Contains",
+      "fromId": "47",
+      "toId": "30",
+      "properties": {}
+    },
+    {
+      "id": "140",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "50",
+      "properties": {}
+    },
+    {
+      "id": "166",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "54",
+      "properties": {}
+    },
+    {
+      "id": "479",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "526",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "524",
+      "label": "WriteOwnerRaw",
+      "fromId": "64",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "567",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "92",
+      "properties": {}
+    },
+    {
+      "id": "593",
+      "label": "WriteDacl",
+      "fromId": "29",
+      "toId": "291",
+      "properties": {}
+    },
+    {
+      "id": "775",
+      "label": "MemberOf",
+      "fromId": "357",
+      "toId": "310",
+      "properties": {}
+    },
+    {
+      "id": "681",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "28",
+      "properties": {}
+    },
+    {
+      "id": "651",
+      "label": "OwnsRaw",
+      "fromId": "29",
+      "toId": "319",
+      "properties": {}
+    },
+    {
+      "id": "636",
+      "label": "MemberOf",
+      "fromId": "79",
+      "toId": "86",
+      "properties": {}
+    },
+    {
+      "id": "490",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "499",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "513",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "487",
+      "label": "WriteOwnerRaw",
+      "fromId": "18",
+      "toId": "275",
+      "properties": {}
+    },
+    {
+      "id": "504",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "271",
+      "properties": {}
+    },
+    {
+      "id": "518",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "261",
+      "properties": {}
+    },
+    {
+      "id": "480",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "530",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "527",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "272",
+      "properties": {}
+    },
+    {
+      "id": "501",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "260",
+      "properties": {}
+    },
+    {
+      "id": "925",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "803",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "851",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "852",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "74",
+      "properties": {}
+    },
+    {
+      "id": "932",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "95",
+      "properties": {}
+    },
+    {
+      "id": "812",
+      "label": "MemberOf",
+      "fromId": "79",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "874",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "109",
+      "properties": {}
+    },
+    {
+      "id": "846",
+      "label": "MemberOf",
+      "fromId": "74",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "842",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "826",
+      "label": "WriteDacl",
+      "fromId": "28",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "814",
+      "label": "GenericWrite",
+      "fromId": "18",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "808",
+      "label": "WriteOwnerRaw",
+      "fromId": "29",
+      "toId": "82",
+      "properties": {}
+    },
+    {
+      "id": "915",
+      "label": "GenericWrite",
+      "fromId": "28",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "966",
+      "label": "SQLAdmin",
+      "fromId": "33",
+      "toId": "22",
+      "properties": {}
+    },
+    {
+      "id": "841",
+      "label": "WriteDacl",
+      "fromId": "18",
+      "toId": "13",
+      "properties": {}
+    },
+    {
+      "id": "904",
+      "label": "WriteOwnerRaw",
+      "fromId": "28",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "875",
+      "label": "OwnsRaw",
+      "fromId": "18",
+      "toId": "119",
+      "properties": {}
+    },
+    {
+      "id": "935",
+      "label": "GenericAll",
+      "fromId": "28",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "901",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "79",
+      "properties": {}
+    },
+    {
+      "id": "868",
+      "label": "GenericWrite",
+      "fromId": "29",
+      "toId": "33",
+      "properties": {}
+    },
+    {
+      "id": "921",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "113",
+      "properties": {}
+    },
+    {
+      "id": "903",
+      "label": "AllExtendedRights",
+      "fromId": "29",
+      "toId": "81",
+      "properties": {}
+    },
+    {
+      "id": "907",
+      "label": "MemberOf",
+      "fromId": "98",
+      "toId": "16",
+      "properties": {}
+    },
+    {
+      "id": "945",
+      "label": "GenericAll",
+      "fromId": "18",
+      "toId": "21",
+      "properties": {}
+    },
+    {
+      "id": "809",
+      "label": "MemberOf",
+      "fromId": "119",
+      "toId": "16",
+      "properties": {}
     }
   ]
 }
