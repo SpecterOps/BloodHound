@@ -41,7 +41,7 @@ func PostGPOs(ctx context.Context, db graph.Database) (*analysis.AtomicPostProce
 				processGPOs(ctx, tx, outC, domain, []graph.ID{}, []graph.ID{}, []graph.ID{})
 				return nil
 			}); err != nil {
-				slog.ErrorContext(ctx, fmt.Sprintf("Failded processing GPOs of domain %d: %v", domain.ID, err))
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed processing GPOs of domain %d: %v", domain.ID, err))
 			}
 		}
 
@@ -57,23 +57,23 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 	if node.Kinds.ContainsOneOf(ad.Domain, ad.OU) {
 		// Find principals with permission to link GPOs to this node
 		if gpoAppliersOnThisContainer, err := fetchGPOAppliers(tx, node.ID); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching GPO appliers on node %d: %v", node.ID, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO appliers on node %d: %v", node.ID, err))
 		} else {
 			gpoAppliers = append(gpoAppliers, gpoAppliersOnThisContainer...)
 		}
 
 		// Find GPOs linked to this node
 		if gposLinkedDirectly, err := fetchGPOLinkedDirectly(tx, node.ID, false); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching GPO linked directly on node %d: %v", node.ID, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO linked directly on node %d: %v", node.ID, err))
 		} else if gposLinkedDirectlyEnforced, err := fetchGPOLinkedDirectly(tx, node.ID, true); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching GPO linked directly on node %d: %v", node.ID, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO linked directly on node %d: %v", node.ID, err))
 		} else {
 			applyingGPOs = gposLinkedDirectly
 			gposInheritedEnforcedNew = append(gposInheritedEnforced, gposLinkedDirectlyEnforced...)
 
 			if node.Kinds.ContainsOneOf(ad.OU) {
 				if blocksInheritance, err := node.Properties.Get(ad.BlocksInheritance.String()).Bool(); err != nil {
-					slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching %s on node %d: %v", ad.BlocksInheritance.String(), node.ID, err))
+					slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching %s on node %d: %v", ad.BlocksInheritance.String(), node.ID, err))
 				} else {
 					blocksGPOInheritance = blocksInheritance
 				}
@@ -89,7 +89,7 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 
 	// Create GPO edges to direct child users and computers
 	if children, err := fetchDirectChildUsersAndComputers(tx, node.ID); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching direct child user and computer nodes of node %d: %v", node.ID, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching direct child user and computer nodes of node %d: %v", node.ID, err))
 	} else {
 		for _, childId := range children {
 			for _, gpoId := range applyingGPOs {
@@ -112,7 +112,7 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 
 	// Continue recursively with child container nodes
 	if childContainers, err := fetchDirectChildContainers(tx, node.ID); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Failded fetching direct child container nodes of node %d: %v", node.ID, err))
+		slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching direct child container nodes of node %d: %v", node.ID, err))
 	} else {
 		for _, childContainer := range childContainers {
 			processGPOs(ctx, tx, outC, childContainer, applyingGPOs, gposInheritedEnforcedNew, gpoAppliers)
