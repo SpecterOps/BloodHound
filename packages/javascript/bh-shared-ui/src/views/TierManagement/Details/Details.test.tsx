@@ -37,7 +37,7 @@ describe('Details', async () => {
     it('renders', async () => {
         render(<Details />);
 
-        expect(await screen.findByText(/To create additional tiers/)).toBeInTheDocument();
+        expect(await screen.findByText(/Tiers/)).toBeInTheDocument();
 
         expect(await screen.findByTestId('tier-management_details_tiers-list')).toBeInTheDocument();
         expect(await screen.findByTestId('tier-management_details_selectors-list')).toBeInTheDocument();

@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useTheme } from '@mui/material';
+import { Popper, useTheme } from '@mui/material';
 import {
     BaseGraphLayoutOptions,
     ExploreTable,
-    GraphControls,
     GraphProgress,
+    SearchCurrentNodes,
     WebGLDisabledAlert,
-    baseGraphLayouts,
+    exportToJson,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
@@ -35,6 +35,7 @@ import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
+import GraphButtons from 'src/components/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout } from 'src/ducks/global/actions';
@@ -53,7 +54,8 @@ const GraphView: FC = () => {
 
     const graphQuery = useSigmaExploreGraph();
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { setSelectedItem } = useExploreSelectedItem();
+    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+    const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
@@ -61,13 +63,17 @@ const GraphView: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
-    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
     const [exportJsonData, setExportJsonData] = useState();
+    const [showNodeLabels, setShowNodeLabels] = useState(true);
+    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
 
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+
+    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
+    const currentSearchAnchorElement = useRef(null);
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -88,6 +94,15 @@ const GraphView: FC = () => {
         setGraphologyGraph(graph);
     }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
 
+    // Changes highlighted item when browser back/forward is used
+    useEffect(() => {
+        if (selectedItem && selectedItem !== highlightedItem) {
+            setHighlightedItem(selectedItem);
+        }
+        // NOTE: Do not include `highlightedItem` as it will override ability to unselect highlights
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedItem]);
+
     if (isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
@@ -103,13 +118,18 @@ const GraphView: FC = () => {
     }
 
     /* Event Handlers */
-    const handleClickNode = (id: string) => {
+    const selectItem = (id: string) => {
         setSelectedItem(id);
+        setHighlightedItem(id);
+    };
+
+    const cancelHighlight = () => {
+        setHighlightedItem(null);
     };
 
     const handleContextMenu = (event: SigmaNodeEventPayload) => {
         setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
-        setSelectedItem(event.node);
+        selectItem(event.node);
     };
 
     const handleCloseContextMenu = () => {
@@ -141,7 +161,10 @@ const GraphView: FC = () => {
             onContextMenu={(e) => e.preventDefault()}>
             <SigmaChart
                 graph={graphologyGraph}
-                onClickNode={handleClickNode}
+                highlightedItem={highlightedItem}
+                onClickEdge={selectItem}
+                onClickNode={selectItem}
+                onClickStage={cancelHighlight}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
                 showEdgeLabels={showEdgeLabels}
@@ -150,22 +173,65 @@ const GraphView: FC = () => {
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <GraphControls
-                    layoutOptions={baseGraphLayouts}
-                    selectedLayout={exploreLayout}
-                    onLayoutChange={handleLayoutChange}
-                    showNodeLabels={showNodeLabels}
-                    onToggleNodeLabels={toggleShowNodeLabels}
-                    showEdgeLabels={showEdgeLabels}
-                    onToggleEdgeLabels={toggleShowEdgeLabels}
-                    jsonData={exportJsonData}
-                    onReset={() => sigmaChartRef.current?.resetCamera()}
-                    currentNodes={currentNodes}
-                    onSearchedNodeClick={(node) => {
-                        setSelectedItem(node.id);
-                        sigmaChartRef?.current?.zoomTo(node.id);
-                    }}
-                />
+                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
+                    <GraphButtons
+                        onExportJson={() => {
+                            exportToJson(exportJsonData);
+                        }}
+                        onReset={() => {
+                            sigmaChartRef.current?.resetCamera();
+                        }}
+                        onRunSequentialLayout={() => {
+                            dispatch(setExploreLayout('sequential'));
+                            sigmaChartRef.current?.runSequentialLayout();
+                        }}
+                        onRunStandardLayout={() => {
+                            dispatch(setExploreLayout('standard'));
+                            sigmaChartRef.current?.runStandardLayout();
+                        }}
+                        onSearchCurrentResults={() => {
+                            toggleCurrentSearch();
+                        }}
+                        onToggleAllLabels={() => {
+                            if (!showNodeLabels || !showEdgeLabels) {
+                                setShowNodeLabels(true);
+                                setShowEdgeLabels(true);
+                            } else {
+                                setShowNodeLabels(false);
+                                setShowEdgeLabels(false);
+                            }
+                        }}
+                        onToggleNodeLabels={() => {
+                            setShowNodeLabels((prev) => !prev);
+                        }}
+                        onToggleEdgeLabels={() => {
+                            setShowEdgeLabels((prev) => !prev);
+                        }}
+                        showNodeLabels={showNodeLabels}
+                        showEdgeLabels={showEdgeLabels}
+                        isCurrentSearchOpen={false}
+                        isJsonExportDisabled={isEmpty(exportJsonData)}
+                    />
+                </div>
+                <Popper
+                    open={currentSearchOpen}
+                    anchorEl={currentSearchAnchorElement.current}
+                    placement='top'
+                    disablePortal
+                    className='w-[90%] z-[1]'>
+                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
+                        <SearchCurrentNodes
+                            sx={{ padding: 1, marginBottom: 1 }}
+                            currentNodes={currentNodes || {}}
+                            onSelect={(node) => {
+                                selectItem(node.id);
+                                sigmaChartRef?.current?.zoomTo(node.id);
+                                toggleCurrentSearch?.();
+                            }}
+                            onClose={toggleCurrentSearch}
+                        />
+                    </div>
+                </Popper>
             </div>
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
