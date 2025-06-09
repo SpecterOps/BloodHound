@@ -50,6 +50,11 @@ func PostGPOs(ctx context.Context, db graph.Database) (*analysis.AtomicPostProce
 }
 
 func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, node *graph.Node, gposInherited, gposInheritedEnforced, gpoAppliers []graph.ID) {
+	// Check for context cancellation
+	if err := ctx.Err(); err != nil {
+		return
+	}
+
 	applyingGPOs := []graph.ID{}
 	gposInheritedEnforcedNew := gposInheritedEnforced
 	blocksGPOInheritance := false
@@ -91,22 +96,25 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 	if children, err := fetchDirectChildUsersAndComputers(tx, node.ID); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching direct child user and computer nodes of node %d: %v", node.ID, err))
 	} else {
+		var jobs []analysis.CreatePostRelationshipJob
 		for _, childId := range children {
 			for _, gpoId := range applyingGPOs {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				jobs = append(jobs, analysis.CreatePostRelationshipJob{
 					FromID: gpoId,
 					ToID:   childId,
 					Kind:   ad.GPOAppliesTo,
 				})
 			}
-
 			for _, gpoApplierId := range gpoAppliers {
-				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+				jobs = append(jobs, analysis.CreatePostRelationshipJob{
 					FromID: gpoApplierId,
 					ToID:   childId,
 					Kind:   ad.CanApplyGPO,
 				})
 			}
+		}
+		for _, job := range jobs {
+			channels.Submit(ctx, outC, job)
 		}
 	}
 

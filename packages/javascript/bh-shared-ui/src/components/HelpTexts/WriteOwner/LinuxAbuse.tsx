@@ -636,7 +636,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeover</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
@@ -735,7 +735,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { haslaps: boolean }> = ({ sourceName, targ
                         Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeover</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
