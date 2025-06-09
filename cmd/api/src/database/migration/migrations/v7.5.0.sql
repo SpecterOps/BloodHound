@@ -20,3 +20,9 @@ DROP COLUMN IF EXISTS is_generic;
 
  -- Add Tier Management Parameter
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.tiering', 'Multi-Tier Analysis Configuration', 'This configuration parameter determines the limits of tiering with respect to analysis', '{"tier_limit": 1, "label_limit": 0, "multi_tier_analysis_enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add analysis_enabled flag to asset_group_tags
+ALTER TABLE asset_group_tags ADD COLUMN IF NOT EXISTS analysis_enabled BOOL NOT NULL DEFAULT false;
+
+-- Set analysis_enabled for tier zero
+UPDATE asset_group_tags SET analysis_enabled = true WHERE type = 1 AND position = 1;
