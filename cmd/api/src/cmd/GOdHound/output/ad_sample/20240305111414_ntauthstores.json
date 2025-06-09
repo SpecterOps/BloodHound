@@ -1,0 +1,77 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "NTAUTHCERTIFICATES@WRAITH.CORP",
+    "distinguishedname": "CN=NTAUTHCERTIFICATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "certthumbprints": [
+      "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "description": null,
+    "whencreated": 1683819999
+  },
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "EE31DEA9-883F-4299-BB34-42B9DCEACAF9",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "00BF4F87-8F79-4680-A1F2-FB05B29AE6C4",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "ntauthstores",
+  "count": 1,
+  "version": 6
+}
+}

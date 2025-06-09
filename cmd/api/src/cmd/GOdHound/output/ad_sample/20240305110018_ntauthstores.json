@@ -1,0 +1,77 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "NTAUTHCERTIFICATES@PHANTOM.CORP",
+    "distinguishedname": "CN=NTAUTHCERTIFICATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "certthumbprints": [
+      "B3D5A90DE644B03DF7FABDD53920EDC4EF63053E",
+      "F2341DB3A23BC3DE157C8DDCCCA09E5E157AE37B"
+    ],
+    "description": null,
+    "whencreated": 1683986131
+  },
+  "DomainSID": "S-1-5-21-2697957641-2271029196-387917394",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "2F9F3630-F46A-49BF-B186-6629994EBCF9",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "9DDA5312-9FD8-44DE-9F45-2C3DB2101286",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "ntauthstores",
+  "count": 1,
+  "version": 6
+}
+}

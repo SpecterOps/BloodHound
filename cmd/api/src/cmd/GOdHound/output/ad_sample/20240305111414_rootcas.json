@@ -1,0 +1,86 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH-EXTCA01-CA@WRAITH.CORP",
+    "distinguishedname": "CN=WRAITH-EXTCA01-CA,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683819999,
+    "certthumbprint": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certname": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certchain": [
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-517",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "7D356C8F-C8F0-4760-9CF4-3EF5A1888D18",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "814A7DEC-E2B2-4437-B33D-C58F9E388AC7",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "rootcas",
+  "count": 1,
+  "version": 6
+}
+}

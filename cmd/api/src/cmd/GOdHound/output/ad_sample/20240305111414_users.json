@@ -1,0 +1,5003 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "RODCMANAGER@WRAITH.CORP",
+    "distinguishedname": "CN=RODCMANAGER,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "rodcmanager",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683454026,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1683480084,
+    "lastlogontimestamp": 1683479367,
+    "pwdlastset": 1683479226,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "rodcmanager",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1119",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOXABC60D0@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOXABC60D05A51E4ED49D858AE3357C00EC,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailboxabc60d0",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415598,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440798,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-003",
+    "email": "HealthMailboxabc60d05a51e4ed49d858ae3357c00ec@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1157",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TESTER@WRAITH.CORP",
+    "distinguishedname": "CN=TESTER,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "tester",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707360605,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": 1707389545,
+    "pwdlastset": 1707389405,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "tester",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1174",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "ADMINISTRATOR@WRAITH.CORP",
+    "distinguishedname": "CN=ADMINISTRATOR,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "Administrator",
+    "isaclprotected": true,
+    "description": "Built-in account for administering the computer/domain",
+    "whencreated": 1668394808,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1702922830,
+    "lastlogontimestamp": 1702922830,
+    "pwdlastset": 1676466845,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-500",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "VICTIMUSERB@WRAITH.CORP",
+    "distinguishedname": "CN=VICTIMUSERB,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "VictimUserB",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708935530,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708968622,
+    "lastlogontimestamp": 1708968581,
+    "pwdlastset": 1708967587,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "VictimUserB",
+    "email": "targetuserb@wraith.com",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1182",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "T1-ADMIN@WRAITH.CORP",
+    "distinguishedname": "CN=T1-ADMIN,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "t1-admin",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707444411,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708622588,
+    "lastlogontimestamp": 1707987898,
+    "pwdlastset": 1707473211,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "t1-admin",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1175",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TARGET@WRAITH.CORP",
+    "distinguishedname": "CN=TARGET5,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "target",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708471377,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1708500177,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "target",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1179",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXCHANGE-ADMIN@WRAITH.CORP",
+    "distinguishedname": "CN=EXCHANGE-ADMIN,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "exchange-admin",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707282629,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708371312,
+    "lastlogontimestamp": 1708371241,
+    "pwdlastset": 1707311429,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "exchange-admin",
+    "email": "exchange-admin@mail.com",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1171",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_B155AF8B1A654AD7B@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{1F05A927-1DBF-4B03-B815-B232A0E9F06F},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_b155af8b1a654ad7b",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange Approval Assistant",
+    "email": "SystemMailbox{1f05a927-1dbf-4b03-b815-b232a0e9f06f}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1144",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOXF48EA85@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOXF48EA85E624041F4BB490848DB428461,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailboxf48ea85",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415608,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440808,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-004",
+    "email": "HealthMailboxf48ea85e624041f4bb490848db428461@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1158",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "VICTIMUSERC@WRAITH.CORP",
+    "distinguishedname": "CN=TARGETCOMPUTERC.WRAITH.CORP,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "VictimUserC",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708935615,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708970684,
+    "lastlogontimestamp": 1708970512,
+    "pwdlastset": 1708964415,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "VictimUserC",
+    "email": "victimuserc@wraith.com",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1184",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX94A5D11@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX94A5D118F7354FE99766590D8C1872CA,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox94a5d11",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415649,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440849,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-008",
+    "email": "HealthMailbox94a5d118f7354fe99766590d8c1872ca@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1162",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX64077ED@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX64077ED6EE2444F5B2E5F8951950991C,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox64077ed",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415670,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440870,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-010",
+    "email": "HealthMailbox64077ed6ee2444f5b2e5f8951950991c@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1164",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX69CCCDD@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX69CCCDD60AD74C18BE097ECD752184C0,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox69cccdd",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415587,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440787,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-002",
+    "email": "HealthMailbox69cccdd60ad74c18be097ecd752184c0@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1156",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX5B9D5FF@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX5B9D5FF9AF914D399083DA4739B69145,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox5b9d5ff",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415618,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440818,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-005",
+    "email": "HealthMailbox5b9d5ff9af914d399083da4739b69145@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1159",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_D27DF2C10F6F4DCEB@WRAITH.CORP",
+    "distinguishedname": "CN=FEDERATEDEMAIL.4C1F4D8B-8179-4148-93BF-00A95FA1E042,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_d27df2c10f6f4dceb",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange Federation Mailbox",
+    "email": "FederatedEmail.4c1f4d8b-8179-4148-93bf-00a95fa1e042@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1149",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_2BAE44F73C6440FEB@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{2CE34405-31BE-455D-89D7-A7C7DA7A0DAA},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_2bae44f73c6440feb",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange",
+    "email": "SystemMailbox{2CE34405-31BE-455D-89D7-A7C7DA7A0DAA}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1151",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "BM@WRAITH.CORP",
+    "distinguishedname": "CN=BATMAN,OU=MYUSERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "bm",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683440403,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1709665909,
+    "lastlogontimestamp": 1709304002,
+    "pwdlastset": 1683465603,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "batman",
+    "email": "bm@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "1862497B-9BDD-4DCB-AEA8-D0D709DF5AFB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX3FCFECE@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX3FCFECE0EFAE42599848E93CC4877531,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox3fcfece",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415659,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440859,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-009",
+    "email": "HealthMailbox3fcfece0efae42599848e93cc4877531@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1163",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_5662B6499D81481EA@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{D0E409A0-AF9B-4720-92FE-AAC869B0D201},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_5662b6499d81481ea",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "E4E Encryption Store - Active",
+    "email": "SystemMailbox{D0E409A0-AF9B-4720-92FE-AAC869B0D201}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1150",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "DU@WRAITH.CORP",
+    "distinguishedname": "CN=DU,OU=MYUSERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "du",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1697499985,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708330483,
+    "lastlogontimestamp": 1708257658,
+    "pwdlastset": 1697525185,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "du",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1168",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "1862497B-9BDD-4DCB-AEA8-D0D709DF5AFB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "GUEST@WRAITH.CORP",
+    "distinguishedname": "CN=GUEST,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "Guest",
+    "isaclprotected": false,
+    "description": "Built-in account for guest access to the computer/domain",
+    "whencreated": 1668394808,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-514",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-501",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_EEB7D57B1FB548CF8@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{BB558C35-97F1-4CB9-8FF7-D53741DC928C},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_eeb7d57b1fb548cf8",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange",
+    "email": "SystemMailbox{bb558c35-97f1-4cb9-8ff7-d53741dc928c}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1145",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "XADMIN@WRAITH.CORP",
+    "distinguishedname": "CN=XADMIN,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "xadmin",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1668409698,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1669562727,
+    "lastlogontimestamp": 1669403383,
+    "pwdlastset": 1668438498,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "xadmin",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1104",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOXC658051@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOXC658051F8D6B407FBEB512C8C2E9B091,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailboxc658051",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415554,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1709216526,
+    "lastlogontimestamp": 1709216399,
+    "pwdlastset": 1709216393,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-Mailbox-Database-1794621940",
+    "email": "HealthMailboxc658051f8d6b407fbeb512c8c2e9b091@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1154",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TRUSTER@WRAITH.CORP",
+    "distinguishedname": "CN=TRUSTER,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "truster",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1693539214,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1707402371,
+    "lastlogontimestamp": 1707330477,
+    "pwdlastset": 1693564414,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "truster",
+    "email": "myemail@mail.com",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1166",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX3741A31@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX3741A317A52E4E9D8B33405AC90E6BCB,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox3741a31",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415639,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440839,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-007",
+    "email": "HealthMailbox3741a317a52e4e9d8b33405ac90e6bcb@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1161",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_1A7427FCEEAF44A0B@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{E0DC1C29-89C3-4034-B678-E6C29D823ED9},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_1a7427fceeaf44a0b",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange",
+    "email": "SystemMailbox{e0dc1c29-89c3-4034-b678-e6c29d823ed9}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1146",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "KRBTGT_16199@WRAITH.CORP",
+    "distinguishedname": "CN=KRBTGT_16199,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "krbtgt_16199",
+    "isaclprotected": false,
+    "description": "Key Distribution Center service account for read-only domain controller",
+    "whencreated": 1683441184,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1683466384,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1112",
+      "PrincipalType": "Computer",
+      "RightName": "ForceChangePassword",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1116",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX7EA9F2A@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX7EA9F2AF64D4492BADAF0B93FB0CF4F7,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox7ea9f2a",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415576,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1709216424,
+    "lastlogontimestamp": 1709216400,
+    "pwdlastset": 1709216393,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-001",
+    "email": "HealthMailbox7ea9f2af64d4492badaf0b93fb0cf4f7@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1155",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_B3E37754DB7F4DE8B@WRAITH.CORP",
+    "distinguishedname": "CN=SYSTEMMAILBOX{8CC370D3-822A-4AB8-A926-BB94BD0641A9},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_b3e37754db7f4de8b",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "SystemMailbox{8cc370d3-822a-4ab8-a926-bb94bd0641a9}",
+    "email": "SystemMailbox{8cc370d3-822a-4ab8-a926-bb94bd0641a9}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1152",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "$N31000-BBHT9IVGI4SP@WRAITH.CORP",
+    "distinguishedname": "CN=EXCHANGE ONLINE-APPLICATIONACCOUNT,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "$N31000-BBHT9IVGI4SP",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414752,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1143",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "HEALTHMAILBOX2B7B5D1@WRAITH.CORP",
+    "distinguishedname": "CN=HEALTHMAILBOX2B7B5D186236446D932EC197BC65CBCF,CN=MONITORING MAILBOXES,CN=MICROSOFT EXCHANGE SYSTEM OBJECTS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "HealthMailbox2b7b5d1",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685415628,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685440829,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "HealthMailbox-extexch01-006",
+    "email": "HealthMailbox2b7b5d186236446d932ec197bc65cbcf@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+      "PrincipalType": "Computer",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1160",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AE9B1195-DFA7-4EDF-82EF-A9EDF0821782",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_156A673DB2BF45D48@WRAITH.CORP",
+    "distinguishedname": "CN=DISCOVERYSEARCHMAILBOX {D919BA05-46A6-415F-80AD-7E09334BB852},CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_156a673db2bf45d48",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Discovery Search Mailbox",
+    "email": "DiscoverySearchMailbox{D919BA05-46A6-415f-80AD-7E09334BB852}@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1147",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SM_6352FF0D1E8A4B359@WRAITH.CORP",
+    "distinguishedname": "CN=MIGRATION.8F3E7716-2011-43E4-96B1-ABA62D229136,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "SM_6352ff0d1e8a4b359",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414753,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Microsoft Exchange Migration",
+    "email": "Migration.8f3e7716-2011-43e4-96b1-aba62d229136@wraith.corp",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1148",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TARGETUSERD@WRAITH.CORP",
+    "distinguishedname": "CN=TARGETUSERD,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "TargetUserD",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708935647,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708981041,
+    "lastlogontimestamp": 1708977468,
+    "pwdlastset": 1708964447,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "TargetUserD",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1185",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TARGETUSERB@WRAITH.CORP",
+    "distinguishedname": "CN=TARGETUSERB,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "TargetUserB",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708935568,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708969596,
+    "lastlogontimestamp": 1708969596,
+    "pwdlastset": 1708981206,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "TargetUserB",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1185",
+      "PrincipalType": "User",
+      "RightName": "ForceChangePassword",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1183",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "KRBTGT@WRAITH.CORP",
+    "distinguishedname": "CN=KRBTGT,CN=USERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "krbtgt",
+    "isaclprotected": true,
+    "description": "Key Distribution Center Service Account",
+    "whencreated": 1668394831,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1668423631,
+    "serviceprincipalnames": [
+      "kadmin/changepw"
+    ],
+    "hasspn": true,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-502",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "2A2FEF21-A610-4A28-AAE0-D5D69A8E5BA8",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "name": "NETWORK SERVICE@WRAITH.CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "domain": "WRAITH.CORP",
+    "reconcile": false
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": null,
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [],
+  "ObjectIdentifier": "WRAITH.CORP-S-1-5-20",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+{
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "JACK@WRAITH.CORP",
+    "distinguishedname": "CN=JACK,OU=MYUSERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "jack",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1107164693,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 1221657838,
+    "lastlogontimestamp": 1221657838,
+    "pwdlastset": 1117877458,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "jack",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1141",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1189",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "1862497B-9BDD-4DCB-AEA8-D0D709DF5AFB",
+    "ObjectType": "OU"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "users",
+  "count": 39,
+  "version": 6
+}
+}

@@ -1,0 +1,338 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "MYFAKECA2@PHANTOM.CORP",
+    "distinguishedname": "CN=MYFAKECA2,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1695941525,
+    "certthumbprint": "247AE88BD996DD5F1DC303009B702700B4000B82",
+    "certname": "247AE88BD996DD5F1DC303009B702700B4000B82",
+    "certchain": [
+      "247AE88BD996DD5F1DC303009B702700B4000B82"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "DomainSID": "S-1-5-21-2697957641-2271029196-387917394",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-517",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "FA7E9CE8-AF88-4E6B-99F6-3C2935A59655",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "EEF7BFE1-B6CA-4714-9803-91010F65CF02",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PHANTOM-DC01-CA@PHANTOM.CORP",
+    "distinguishedname": "CN=PHANTOM-DC01-CA,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683986131,
+    "certthumbprint": "F2341DB3A23BC3DE157C8DDCCCA09E5E157AE37B",
+    "certname": "F2341DB3A23BC3DE157C8DDCCCA09E5E157AE37B",
+    "certchain": [
+      "F2341DB3A23BC3DE157C8DDCCCA09E5E157AE37B"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "DomainSID": "S-1-5-21-2697957641-2271029196-387917394",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-517",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "FA4FB111-ADDB-4320-951C-39F909ED2B1D",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "EEF7BFE1-B6CA-4714-9803-91010F65CF02",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "MYFAKECA3@PHANTOM.CORP",
+    "distinguishedname": "CN=MYFAKECA3,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1695942392,
+    "certthumbprint": "4C9E812E9F2C14BDBADFA0FB9FCD187C1ECF3BF0",
+    "certname": "4C9E812E9F2C14BDBADFA0FB9FCD187C1ECF3BF0",
+    "certchain": [
+      "4C9E812E9F2C14BDBADFA0FB9FCD187C1ECF3BF0"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "DomainSID": "S-1-5-21-2697957641-2271029196-387917394",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-517",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "44BB3DFB-4533-403D-A3D9-5A07F2E8CC49",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "EEF7BFE1-B6CA-4714-9803-91010F65CF02",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "MYFAKECA@PHANTOM.CORP",
+    "distinguishedname": "CN=MYFAKECA,CN=CERTIFICATION AUTHORITIES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1695941362,
+    "certthumbprint": "C8E45A32D12EE4307F899F89373139E4FB434E7D",
+    "certname": "C8E45A32D12EE4307F899F89373139E4FB434E7D",
+    "certchain": [
+      "C8E45A32D12EE4307F899F89373139E4FB434E7D"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "DomainSID": "S-1-5-21-2697957641-2271029196-387917394",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-517",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "4B64E374-64D1-4A2C-971B-6F064F07538D",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "EEF7BFE1-B6CA-4714-9803-91010F65CF02",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "rootcas",
+  "count": 4,
+  "version": 6
+}
+}

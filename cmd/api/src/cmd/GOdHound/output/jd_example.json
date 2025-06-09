@@ -1,0 +1,59 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "123",
+        "kinds": [
+          "Person",
+          "Base"
+        ],
+        "properties": {
+          "displayname": "bob",
+          "property": "a",
+          "objectid": "123",
+          "name": "BOB"
+        }
+      },
+      {
+        "id": "234",
+        "kinds": [
+          "Person",
+          "Base"
+        ],
+        "properties": {
+          "displayname": "alice",
+          "property": "b",
+          "objectid": "234",
+          "name": "ALICE"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "kind": "Knows",
+        "start": {
+          "value": "123",
+          "match_by": "id"
+        },
+        "end": {
+          "value": "234",
+          "match_by": "id"
+        },
+        "properties": {}
+      }
+    ]
+  },
+  "metadata": {
+    "ingest_version": "v1",
+    "collector": {
+      "name": "Custom Collector",
+      "version": "beta",
+      "properties": {
+        "collection_methods": [
+          "Custom Method"
+        ],
+        "windows_server_version": "n/a"
+      }
+    }
+  }
+}

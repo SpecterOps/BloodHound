@@ -1,0 +1,5390 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PRINT OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=PRINT OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Print Operators",
+    "isaclprotected": true,
+    "description": "Members can administer printers installed on domain controllers",
+    "whencreated": 1653361617,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2187",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2186",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-550",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "REMOTE DESKTOP USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=REMOTE DESKTOP USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Remote Desktop Users",
+    "isaclprotected": false,
+    "description": "Members in this group are granted the right to logon remotely",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2155",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-555",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "IIS_IUSRS@PHANTOM.CORP",
+    "distinguishedname": "CN=IIS_IUSRS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "IIS_IUSRS",
+    "isaclprotected": false,
+    "description": "Built-in group used by Internet Information Services.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-17",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-568",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ACCOUNT OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=ACCOUNT OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Account Operators",
+    "isaclprotected": true,
+    "description": "Members can administer domain user and group accounts",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2210",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-548",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RDS MANAGEMENT SERVERS@PHANTOM.CORP",
+    "distinguishedname": "CN=RDS MANAGEMENT SERVERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "RDS Management Servers",
+    "isaclprotected": false,
+    "description": "Servers in this group can perform routine administrative actions on servers running Remote Desktop Services. This group needs to be populated on all servers in a Remote Desktop Services deployment. The servers running the RDS Central Management service must be included in this group.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-577",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "STORAGE REPLICA ADMINISTRATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=STORAGE REPLICA ADMINISTRATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Storage Replica Administrators",
+    "isaclprotected": false,
+    "description": "Members of this group have complete and unrestricted access to all features of Storage Replica.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-582",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "REMOTE MANAGEMENT USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=REMOTE MANAGEMENT USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Remote Management Users",
+    "isaclprotected": false,
+    "description": "Members of this group can access WMI resources over management protocols (such as WS-Management via the Windows Remote Management service). This applies only to WMI namespaces that grant access to the user.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-580",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAIN CONTROLLERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Domain Controllers",
+    "isaclprotected": true,
+    "description": "All domain controllers in the domain",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2182",
+      "ObjectType": "Computer"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-516",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SCHEMA ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=SCHEMA ADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Schema Admins",
+    "isaclprotected": true,
+    "description": "Designated administrators of the schema",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-518",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ENTERPRISE ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=ENTERPRISE ADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Enterprise Admins",
+    "isaclprotected": true,
+    "description": "Designated administrators of the enterprise",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-519",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PRE-WINDOWS 2000 COMPATIBLE ACCESS@PHANTOM.CORP",
+    "distinguishedname": "CN=PRE-WINDOWS 2000 COMPATIBLE ACCESS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Pre-Windows 2000 Compatible Access",
+    "isaclprotected": false,
+    "description": "A backward compatibility group which allows read access on all users and groups in the domain",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2167",
+      "ObjectType": "Computer"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+      "ObjectType": "Computer"
+    },
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-11",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-554",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PERFORMANCE LOG USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=PERFORMANCE LOG USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Performance Log Users",
+    "isaclprotected": false,
+    "description": "Members of this group may schedule logging of performance counters, enable trace providers, and collect event traces both locally and via remote access to this computer",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-559",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAIN USERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Domain Users",
+    "isaclprotected": true,
+    "description": "All domain users",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2168",
+      "ObjectType": "Base"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CERTIFICATE SERVICE DCOM ACCESS@PHANTOM.CORP",
+    "distinguishedname": "CN=CERTIFICATE SERVICE DCOM ACCESS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Certificate Service DCOM Access",
+    "isaclprotected": false,
+    "description": "Members of this group are allowed to connect to Certification Authorities in the enterprise",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-11",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-574",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DISTRIBUTED COM USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=DISTRIBUTED COM USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Distributed COM Users",
+    "isaclprotected": false,
+    "description": "Members are allowed to launch, activate and use Distributed COM objects on this machine.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-562",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ENTERPRISE KEY ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=ENTERPRISE KEY ADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Enterprise Key Admins",
+    "isaclprotected": true,
+    "description": "Members of this group can perform administrative actions on key objects within the forest.",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-527",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "EVENT LOG READERS@PHANTOM.CORP",
+    "distinguishedname": "CN=EVENT LOG READERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Event Log Readers",
+    "isaclprotected": false,
+    "description": "Members of this group can read event logs from local machine",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-573",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CERT PUBLISHERS@PHANTOM.CORP",
+    "distinguishedname": "CN=CERT PUBLISHERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Cert Publishers",
+    "isaclprotected": false,
+    "description": "Members of this group are permitted to publish certificates to the directory",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2167",
+      "ObjectType": "Computer"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+      "ObjectType": "Computer"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-517",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CRYPTOGRAPHIC OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=CRYPTOGRAPHIC OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Cryptographic Operators",
+    "isaclprotected": false,
+    "description": "Members are authorized to perform cryptographic operations.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-569",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GUESTS@PHANTOM.CORP",
+    "distinguishedname": "CN=GUESTS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Guests",
+    "isaclprotected": false,
+    "description": "Guests have the same access as members of the Users group by default, except for the Guest account which is further restricted",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-514",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-501",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-546",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "INCOMING FOREST TRUST BUILDERS@PHANTOM.CORP",
+    "distinguishedname": "CN=INCOMING FOREST TRUST BUILDERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Incoming Forest Trust Builders",
+    "isaclprotected": false,
+    "description": "Members of this group can create incoming, one-way trusts to this forest",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-557",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WINDOWS AUTHORIZATION ACCESS GROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=WINDOWS AUTHORIZATION ACCESS GROUP,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Windows Authorization Access Group",
+    "isaclprotected": false,
+    "description": "Members of this group have access to the computed tokenGroupsGlobalAndUniversal attribute on User objects",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-9",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-560",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DENIED RODC PASSWORD REPLICATION GROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=DENIED RODC PASSWORD REPLICATION GROUP,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Denied RODC Password Replication Group",
+    "isaclprotected": false,
+    "description": "Members in this group cannot have their passwords replicated to any read-only domain controllers in the domain",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-521",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-520",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-517",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-518",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-516",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-502",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-572",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PERFORMANCE MONITOR USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=PERFORMANCE MONITOR USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Performance Monitor Users",
+    "isaclprotected": false,
+    "description": "Members of this group can access performance counter data locally and remotely",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-558",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GROUP POLICY CREATOR OWNERS@PHANTOM.CORP",
+    "distinguishedname": "CN=GROUP POLICY CREATOR OWNERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Group Policy Creator Owners",
+    "isaclprotected": false,
+    "description": "Members in this group can modify group policy for the domain",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2175",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-520",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RDS ENDPOINT SERVERS@PHANTOM.CORP",
+    "distinguishedname": "CN=RDS ENDPOINT SERVERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "RDS Endpoint Servers",
+    "isaclprotected": false,
+    "description": "Servers in this group run virtual machines and host sessions where users RemoteApp programs and personal virtual desktops run. This group needs to be populated on servers running RD Connection Broker. RD Session Host servers and RD Virtualization Host servers used in the deployment need to be in this group.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-576",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HYPER-V ADMINISTRATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=HYPER-V ADMINISTRATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Hyper-V Administrators",
+    "isaclprotected": false,
+    "description": "Members of this group have complete and unrestricted access to all features of Hyper-V.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-578",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ACCESS CONTROL ASSISTANCE OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=ACCESS CONTROL ASSISTANCE OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Access Control Assistance Operators",
+    "isaclprotected": false,
+    "description": "Members of this group can remotely query authorization attributes and permissions for resources on this computer.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-579",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TERMINAL SERVER LICENSE SERVERS@PHANTOM.CORP",
+    "distinguishedname": "CN=TERMINAL SERVER LICENSE SERVERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Terminal Server License Servers",
+    "isaclprotected": false,
+    "description": "Members of this group can update user accounts in Active Directory with information about license issuance, for the purpose of tracking and reporting TS Per User CAL usage",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-561",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "BACKUP OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=BACKUP OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Backup Operators",
+    "isaclprotected": true,
+    "description": "Backup Operators can override security restrictions for the sole purpose of backing up or restoring files",
+    "whencreated": 1653361617,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2175",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-551",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "NETWORK CONFIGURATION OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=NETWORK CONFIGURATION OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Network Configuration Operators",
+    "isaclprotected": false,
+    "description": "Members in this group can have some administrative privileges to manage configuration of networking features",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-556",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RDS REMOTE ACCESS SERVERS@PHANTOM.CORP",
+    "distinguishedname": "CN=RDS REMOTE ACCESS SERVERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "RDS Remote Access Servers",
+    "isaclprotected": false,
+    "description": "Servers in this group enable users of RemoteApp programs and personal virtual desktops access to these resources. In Internet-facing deployments, these servers are typically deployed in an edge network. This group needs to be populated on servers running RD Connection Broker. RD Gateway servers and RD Web Access servers used in the deployment need to be in this group.",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-575",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "REPLICATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=REPLICATOR,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Replicator",
+    "isaclprotected": true,
+    "description": "Supports file replication in a domain",
+    "whencreated": 1653361617,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-552",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SERVER OPERATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=SERVER OPERATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Server Operators",
+    "isaclprotected": true,
+    "description": "Members can administer domain servers",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-549",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAIN ADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Domain Admins",
+    "isaclprotected": true,
+    "description": "Designated administrators of the domain",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2200",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2197",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2194",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2191",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2187",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2179",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2158",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2140",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2138",
+      "ObjectType": "Base"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2186",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2117",
+      "PrincipalType": "User",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-512",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=USERS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Users",
+    "isaclprotected": false,
+    "description": "Users are prevented from making accidental or intentional system-wide changes and can run most applications",
+    "whencreated": 1653361617,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-513",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-11",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "PHANTOM.CORP-S-1-5-4",
+      "ObjectType": "Group"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-545",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "READ-ONLY DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "distinguishedname": "CN=READ-ONLY DOMAIN CONTROLLERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Read-only Domain Controllers",
+    "isaclprotected": true,
+    "description": "Members of this group are Read-Only Domain Controllers in the domain",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-521",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WINRMREMOTEWMIUSERS__@PHANTOM.CORP",
+    "distinguishedname": "CN=WINRMREMOTEWMIUSERS__,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "WinRMRemoteWMIUsers__",
+    "isaclprotected": false,
+    "description": "Members of this group can access WMI resources over management protocols (such as WS-Management via the Windows Remote Management service). This applies only to WMI namespaces that grant access to the user.",
+    "whencreated": 1692022858,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2195",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TEST2@PHANTOM.CORP",
+    "distinguishedname": "CN=TEST2,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "test2",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1702885913,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2202",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2206",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PROTECTED USERS@PHANTOM.CORP",
+    "distinguishedname": "CN=PROTECTED USERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Protected Users",
+    "isaclprotected": false,
+    "description": "Members of this group are afforded additional protections against authentication security threats. See http://go.microsoft.com/fwlink/?LinkId=298939 for more information.",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2140",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2136",
+      "ObjectType": "Base"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2116",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-525",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DNSADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=DNSADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "DnsAdmins",
+    "isaclprotected": false,
+    "description": "DNS Administrators Group",
+    "whencreated": 1653361684,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1101",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ALLOWED RODC PASSWORD REPLICATION GROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=ALLOWED RODC PASSWORD REPLICATION GROUP,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Allowed RODC Password Replication Group",
+    "isaclprotected": false,
+    "description": "Members in this group can have their passwords replicated to all read-only domain controllers in the domain",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-571",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN GUESTS@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAIN GUESTS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Domain Guests",
+    "isaclprotected": false,
+    "description": "All domain guests",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-514",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ALLCHANGES@PHANTOM.CORP",
+    "distinguishedname": "CN=ALLCHANGES,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "AllChanges",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1705894169,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2183",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2208",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN COMPUTERS@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAIN COMPUTERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Domain Computers",
+    "isaclprotected": false,
+    "description": "All workstations and servers joined to the domain",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SUBDAS@PHANTOM.CORP",
+    "distinguishedname": "CN=SUBDAS,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "SubDAs",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1694633448,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2173",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2200",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ESC13GROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=ESC13GROUP,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "ESC13Group",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1706588933,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2211",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RG_T1_SERVER_ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=RG_T1_SERVER_ADMINS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "RG_T1_Server_Admins",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1687741248,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2193",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAINLOCALGROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAINLOCALGROUP,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "DomainLocalGroup",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1706589037,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2212",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HR@PHANTOM.CORP",
+    "distinguishedname": "CN=HR,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "HR",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681261645,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2173",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2172",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CLONEABLE DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "distinguishedname": "CN=CLONEABLE DOMAIN CONTROLLERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Cloneable Domain Controllers",
+    "isaclprotected": false,
+    "description": "Members of this group that are domain controllers may be cloned.",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-522",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SERVERADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=SERVERADMINS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Serveradmins",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685587277,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2189",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ADMINISTRATORS@PHANTOM.CORP",
+    "distinguishedname": "CN=ADMINISTRATORS,CN=BUILTIN,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Administrators",
+    "isaclprotected": true,
+    "description": "Administrators have complete and unrestricted access to the computer/domain",
+    "whencreated": 1653361617,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1168",
+      "ObjectType": "Base"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2202",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2201",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2199",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2141",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+      "ObjectType": "Computer"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-544",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSASIMONGROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSASIMONGROUP,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sMSASimonGroup",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1674196612,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2132",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2131",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DCSYNCERS@PHANTOM.CORP",
+    "distinguishedname": "CN=DCSYNCERS,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "DCSyncers",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1673592823,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2123",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T1_ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=T1_ADMINS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T1_Admins",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664356276,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2110",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2111",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSAMANGERS@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSAMANGERS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sMSAMangers",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1674195890,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2128",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2127",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SOMECHANGES@PHANTOM.CORP",
+    "distinguishedname": "CN=SOMECHANGES,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "somechanges",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1705894205,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2183",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2209",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HELPDESKADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=HELPDESKADMINS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "HelpdeskAdmins",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685587235,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2214",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2187",
+      "ObjectType": "User"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2186",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2113",
+      "PrincipalType": "User",
+      "RightName": "AddMember",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2188",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2188",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GPO ADMINS - WORKSTATIONS@PHANTOM.CORP",
+    "distinguishedname": "CN=GPO ADMINS - WORKSTATIONS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "GPO admins - workstations",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681262104,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2175",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2178",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SERVICE DESK@PHANTOM.CORP",
+    "distinguishedname": "CN=SERVICE DESK,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "service desk",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681261952,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2175",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2176",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ANOTHER ONE@PHANTOM.CORP",
+    "distinguishedname": "CN=ANOTHER ONE,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "another one",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1676012079,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2141",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DISTR@PHANTOM.CORP",
+    "distinguishedname": "CN=DISTR,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "distr",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1678172821,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2160",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WNEVERREVEAGROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=WNEVERREVEAGROUP,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "wNeverReveaGroup",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677041812,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2153",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RODCADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=RODCADMINS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "rodcAdmins",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677050866,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2155",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ALLEXTENDEDRIGHTS-GROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=ALLEXTENDEDRIGHTS-GROUP,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "AllExtendedRights-Group",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1682543270,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2184",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WMANAGEDBY@PHANTOM.CORP",
+    "distinguishedname": "CN=WMANAGEDBY,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "wManagedBy",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677042345,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2188",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2154",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WREVEALONDEMANDGROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=WREVEALONDEMANDGROUP,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "wRevealOnDemandGroup",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677041794,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2152",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T0_ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=T0_ADMINS,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T0_Admins",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1665530506,
+    "admincount": true
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2199",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2199",
+      "PrincipalType": "User",
+      "RightName": "AddSelf",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2114",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "LOW_PRIV@PHANTOM.CORP",
+    "distinguishedname": "CN=LOW_PRIV,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "low_priv",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1676010645,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2188",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2139",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSAFULLCONTROL@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSAFULLCONTROL,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "smsaFullControl",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1674200023,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2133",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "RAS AND IAS SERVERS@PHANTOM.CORP",
+    "distinguishedname": "CN=RAS AND IAS SERVERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "RAS and IAS Servers",
+    "isaclprotected": false,
+    "description": "Servers in this group can access remote access properties of users",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-553",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DNSUPDATEPROXY@PHANTOM.CORP",
+    "distinguishedname": "CN=DNSUPDATEPROXY,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "DnsUpdateProxy",
+    "isaclprotected": true,
+    "description": "DNS clients who are permitted to perform dynamic updates on behalf of some other clients (such as DHCP servers).",
+    "whencreated": 1653361684,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1102",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS_PWD@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS_PWD,OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS_pwd",
+    "isaclprotected": false,
+    "description": "This group holds the rights to retrieve the password of the BloodHound Enterprise data collector (SharpHound) gMSA 'gMSA_SHS'.",
+    "whencreated": 1664345937,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2101",
+      "ObjectType": "Computer"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2102",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "KEY ADMINS@PHANTOM.CORP",
+    "distinguishedname": "CN=KEY ADMINS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Key Admins",
+    "isaclprotected": true,
+    "description": "Members of this group can perform administrative actions on key objects within the domain.",
+    "whencreated": 1653361642,
+    "admincount": true
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-526",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T1_TRASH@PHANTOM.CORP",
+    "distinguishedname": "CN=T1_TRASH,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T1_trash",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1668487244,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2188",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2118",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ENTERPRISE READ-ONLY DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "distinguishedname": "CN=ENTERPRISE READ-ONLY DOMAIN CONTROLLERS,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Enterprise Read-only Domain Controllers",
+    "isaclprotected": false,
+    "description": "Members of this group are Read-Only Domain Controllers in the enterprise",
+    "whencreated": 1653361642,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-498",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-32",
+    "ObjectType": "Base"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T1_WACCOUNTRESTRICTIONS@PHANTOM.CORP",
+    "distinguishedname": "CN=T1_WACCOUNTRESTRICTIONS,OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T1_WAccountRestrictions",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1670323206,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2121",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HIDDENGROUP@PHANTOM.CORP",
+    "distinguishedname": "CN=HIDDENGROUP,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "hiddengroup",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1702884957,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2172",
+      "PrincipalType": "Group",
+      "RightName": "AddMember",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2204",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TEST@PHANTOM.CORP",
+    "distinguishedname": "CN=TEST,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "test",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1702885840,
+    "admincount": false
+  },
+  "Members": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-1104",
+      "PrincipalType": "Base",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2205",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "name": "NETWORK CONFIGURATION OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-556",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "GUESTS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-546",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "RDS ENDPOINT SERVERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-576",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "EVENT LOG READERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-573",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "PERFORMANCE LOG USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-559",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "PRE-WINDOWS 2000 COMPATIBLE ACCESS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-554",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "SERVER OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-549",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "ADMINISTRATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-544",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "ACCESS CONTROL ASSISTANCE OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-579",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "CERTIFICATE SERVICE DCOM ACCESS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-574",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "CRYPTOGRAPHIC OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-569",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "BACKUP OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-551",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "REPLICATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-552",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "TERMINAL SERVER LICENSE SERVERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-561",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "DISTRIBUTED COM USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-562",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "STORAGE REPLICA ADMINISTRATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-582",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "PERFORMANCE MONITOR USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-558",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "INCOMING FOREST TRUST BUILDERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-557",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "ACCOUNT OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-548",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "IUSR@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-17",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "HYPER-V ADMINISTRATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-578",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "RDS MANAGEMENT SERVERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-577",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "IIS_IUSRS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-568",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "INTERACTIVE@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-4",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "EVERYONE@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-1-0",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "PRINT OPERATORS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-550",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "WINDOWS AUTHORIZATION ACCESS GROUP@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-560",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "REMOTE MANAGEMENT USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-580",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "REMOTE DESKTOP USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-555",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-545",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "AUTHENTICATED USERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-11",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "RDS REMOTE ACCESS SERVERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "Members": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-32-575",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "name": "ENTERPRISE DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "phantom.corp"
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+      "ObjectType": "Computer"
+    }
+  ],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-9",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+"Properties": {
+  "domain": "PHANTOM.CORP",
+  "name": "HELPDESK@PHANTOM.CORP",
+  "distinguishedname": "CN=HELPDESK,OU=TIER1,DC=PHANTOM,DC=CORP",
+  "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+  "samaccountname": "HelpDesk",
+  "isaclprotected": false,
+  "description": null,
+  "whencreated": 1685414725,
+  "admincount": false
+},
+"Members": [
+  {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2134",
+    "ObjectType": "User"
+  }
+],
+"Aces": [
+  {
+    "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+    "PrincipalType": "Group",
+    "RightName": "Owns",
+    "IsInherited": false
+  },
+  {
+    "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+    "PrincipalType": "Group",
+    "RightName": "WriteDacl",
+    "IsInherited": true
+  },
+  {
+    "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+    "PrincipalType": "Group",
+    "RightName": "WriteOwner",
+    "IsInherited": true
+  },
+  {
+    "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+    "PrincipalType": "Group",
+    "RightName": "GenericWrite",
+    "IsInherited": true
+  }
+],
+"ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1129",
+"IsDeleted": false,
+"IsACLProtected": false,
+"ContainedBy": {
+  "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+  "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "Tier2Support@PHANTOM.CORP",
+    "distinguishedname": "CN=TIER2SUPPORT,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Tier2Support",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414725,
+    "admincount": false
+  },
+  "Members": [
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1129",
+      "ObjectType": "Group"
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2143",
+      "ObjectType": "User"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1138",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+    "ObjectType": "OU"
+  }
+    }
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "groups",
+  "count": 113,
+  "version": 6
+}
+}

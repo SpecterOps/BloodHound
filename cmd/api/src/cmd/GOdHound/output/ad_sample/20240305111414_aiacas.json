@@ -1,0 +1,165 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH-EXTCA01-CA@WRAITH.CORP",
+    "distinguishedname": "CN=WRAITH-EXTCA01-CA,CN=AIA,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683819999,
+    "crosscertificatepair": [],
+    "hascrosscertificatepair": false,
+    "certthumbprint": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certname": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certchain": [
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+      "PrincipalType": "Computer",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "57B562EF-392C-4007-BA51-985DD495054B",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "39A089EC-D89E-4384-8523-6CD3572699CD",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH-EXTCA02-CA@WRAITH.CORP",
+    "distinguishedname": "CN=WRAITH-EXTCA02-CA,CN=AIA,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1699345952,
+    "crosscertificatepair": [],
+    "hascrosscertificatepair": false,
+    "certthumbprint": "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+    "certname": "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+    "certchain": [
+      "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "PrincipalType": "Computer",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "4C94F3DC-BA18-4C43-B642-AB6D7C743FE2",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "39A089EC-D89E-4384-8523-6CD3572699CD",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "aiacas",
+  "count": 2,
+  "version": 6
+}
+}

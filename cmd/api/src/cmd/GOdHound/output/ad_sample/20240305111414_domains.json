@@ -1,0 +1,200 @@
+{
+  "data": [
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1000",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1112",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1114",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1117",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1180",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1181",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1186",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1188",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH.CORP",
+    "distinguishedname": "DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1668394804,
+    "functionallevel": "2016",
+    "collected": true
+  },
+  "ChildObjects": [],
+  "Trusts": [
+    {
+      "TargetDomainSid": "S-1-5-21-720005541-26010935-3948964793",
+      "TargetDomainName": "CHILD.WRAITH.CORP",
+      "IsTransitive": true,
+      "SidFilteringEnabled": false,
+      "TrustDirection": "Bidirectional",
+      "TrustType": "ParentChild"
+    },
+    {
+      "TargetDomainSid": "S-1-5-21-2697957641-2271029196-387917394",
+      "TargetDomainName": "PHANTOM.CORP",
+      "IsTransitive": true,
+      "SidFilteringEnabled": true,
+      "TrustDirection": "Bidirectional",
+      "TrustType": "External"
+    }
+  ],
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "919CE5D9-AC4C-489B-8E66-BD4902089E39"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "3BA15CD9-C7A9-4345-8079-D702C8D376AD"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesInFilteredSet",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesInFilteredSet",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-498",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "domains",
+  "count": 1,
+  "version": 6
+}
+}

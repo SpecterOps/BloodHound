@@ -1,0 +1,146 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "GHOST-DC01.GHOST.CORP",
+    "distinguishedname": "CN=GHOST-DC01,OU=DOMAIN CONTROLLERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "GHOST-DC01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1656555700,
+    "enabled": true,
+    "unconstraineddelegation": true,
+    "trustedtoauth": false,
+    "isdc": true,
+    "lastlogon": 1709665427,
+    "lastlogontimestamp": 1709665397,
+    "pwdlastset": 1709665397,
+    "serviceprincipalnames": [
+      "ldap/GHOST-DC01.ghost.corp/DomainDnsZones.ghost.corp",
+      "ldap/GHOST-DC01.ghost.corp/ForestDnsZones.phantom.corp",
+      "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/GHOST-DC01.ghost.corp",
+      "TERMSRV/GHOST-DC01",
+      "TERMSRV/GHOST-DC01.ghost.corp",
+      "DNS/GHOST-DC01.ghost.corp",
+      "GC/GHOST-DC01.ghost.corp/phantom.corp",
+      "RestrictedKrbHost/GHOST-DC01.ghost.corp",
+      "RestrictedKrbHost/GHOST-DC01",
+      "RPC/b9642dbb-4f31-4f61-9303-3f1be491bbaa._msdcs.phantom.corp",
+      "HOST/GHOST-DC01/GHOST",
+      "HOST/GHOST-DC01.ghost.corp/GHOST",
+      "HOST/GHOST-DC01",
+      "HOST/GHOST-DC01.ghost.corp",
+      "HOST/GHOST-DC01.ghost.corp/ghost.corp",
+      "E3514235-4B06-11D1-AB04-00C04FC2DCD2/b9642dbb-4f31-4f61-9303-3f1be491bbaa/ghost.corp",
+      "ldap/GHOST-DC01/GHOST",
+      "ldap/b9642dbb-4f31-4f61-9303-3f1be491bbaa._msdcs.phantom.corp",
+      "ldap/GHOST-DC01.ghost.corp/GHOST",
+      "ldap/GHOST-DC01",
+      "ldap/GHOST-DC01.ghost.corp",
+      "ldap/GHOST-DC01.ghost.corp/ghost.corp"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-516",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": true,
+  "DomainSID": "S-1-5-21-2845847946-3451170323-4261139666",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-526",
+      "PrincipalType": "Base",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-1000",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "F2DF5C82-FE82-447F-92D4-BDA619225F76",
+    "ObjectType": "OU"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "computers",
+  "count": 1,
+  "version": 6
+}
+}

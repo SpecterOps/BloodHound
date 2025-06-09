@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "DOMAIN CONTROLLERS@GHOST.CORP",
+    "distinguishedname": "OU=DOMAIN CONTROLLERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "isaclprotected": false,
+    "description": "Default container for domain controllers",
+    "whencreated": 1656555664,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "45B859D5-8CF6-4F5F-985C-741E5C070D31"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "F2DF5C82-FE82-447F-92D4-BDA619225F76",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666",
+    "ObjectType": "Domain"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "ous",
+  "count": 1,
+  "version": 6
+}
+}

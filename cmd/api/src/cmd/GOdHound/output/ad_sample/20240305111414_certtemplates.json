@@ -1,0 +1,4293 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "ENROLLMENTAGENT@WRAITH.CORP",
+    "distinguishedname": "CN=ENROLLMENTAGENT,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Enrollment Agent",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.11",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "A269698C-847F-4194-B09A-D0FFA1B06392",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MACHINEENROLLMENTAGENT@WRAITH.CORP",
+    "distinguishedname": "CN=MACHINEENROLLMENTAGENT,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Enrollment Agent (Computer)",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.13",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "2BC96403-EDF8-4E35-B07C-FEC4B7BC21D4",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CODESIGNING@WRAITH.CORP",
+    "distinguishedname": "CN=CODESIGNING,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Code Signing",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.9",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.3"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.3"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "A0756E6D-FCE3-427C-AB48-2FA26E595B48",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MACHINE@WRAITH.CORP",
+    "distinguishedname": "CN=MACHINE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Computer",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.14",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "6A8E30F8-9436-4FC9-AC70-A4BC704F3909",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "KEYRECOVERYAGENT@WRAITH.CORP",
+    "distinguishedname": "CN=KEYRECOVERYAGENT,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Key Recovery Agent",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.27",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PEND_ALL_REQUESTS, PUBLISH_TO_KRA_CONTAINER, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": true,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.21.6"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.21.6"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.21.6"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "9C709E2D-4B7B-48E6-BFD7-D3607EFD7F4B",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "DOMAINCONTROLLERAUTHENTICATION@WRAITH.CORP",
+    "distinguishedname": "CN=DOMAINCONTROLLERAUTHENTICATION,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Domain Controller Authentication",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.28",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-498",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "6D4C7268-4B18-47E8-8E94-C2BC1A7B7B1B",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WORKSTATION@WRAITH.CORP",
+    "distinguishedname": "CN=WORKSTATION,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Workstation Authentication",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.30",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "79B1C0F3-546D-4ACD-877B-F8DB3746F373",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "RASANDIASSERVER@WRAITH.CORP",
+    "distinguishedname": "CN=RASANDIASSERVER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "RAS and IAS Server",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.31",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_COMMON_NAME",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-553",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "C480500A-CE9C-4A34-960B-7011C97A2785",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USER@WRAITH.CORP",
+    "distinguishedname": "CN=USER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "User",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.1",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": true,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "0059CED1-7362-4506-AD56-DAEEFAAE8628",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USEREMAIL@WRAITH.CORP",
+    "distinguishedname": "CN=USEREMAIL,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707372450,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "UserEmail",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.5784745.16405388",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": true,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "DA2D7CF7-325E-4029-8168-18A0EACF2A0C",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "KERBEROSAUTHENTICATION@WRAITH.CORP",
+    "distinguishedname": "CN=KERBEROSAUTHENTICATION,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Kerberos Authentication",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.33",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DOMAIN_DNS, SUBJECT_ALT_REQUIRE_DNS",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": true,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2",
+      "1.3.6.1.5.2.3.5"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2",
+      "1.3.6.1.5.2.3.5"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.4.1.311.20.2.2",
+      "1.3.6.1.5.2.3.5"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-498",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "A036F26A-1921-471C-A5F8-A4157B2BD40B",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EFS@WRAITH.CORP",
+    "distinguishedname": "CN=EFS,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Basic EFS",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.6",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "7E43AF6D-951D-48E7-8CC0-6546742A222F",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CEPENCRYPTION@WRAITH.CORP",
+    "distinguishedname": "CN=CEPENCRYPTION,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "CEP Encryption",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.22",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "00E6E829-0A53-47E9-977A-0166317AC231",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USERSIGNATURE@WRAITH.CORP",
+    "distinguishedname": "CN=USERSIGNATURE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "User Signature Only",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.2",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": true,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "5EFC7529-63B5-4524-8EFC-8B99A8275CED",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CROSSCA@WRAITH.CORP",
+    "distinguishedname": "CN=CROSSCA,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "5 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Cross Certification Authority",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.25",
+    "enrollmentflag": "PUBLISH_TO_DS",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 1,
+    "applicationpolicies": [
+      "1.3.6.1.4.1.311.10.3.10"
+    ],
+    "issuancepolicies": [],
+    "effectiveekus": [],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "A838BDFD-3613-492F-9D44-22A99E62ED79",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "ADMINISTRATOR@WRAITH.CORP",
+    "distinguishedname": "CN=ADMINISTRATOR,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Administrator",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.7",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": true,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.1",
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.1",
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "959ED959-BC98-4C02-92C2-46FEAC2B5C71",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "ENROLLMENTAGENTOFFLINE@WRAITH.CORP",
+    "distinguishedname": "CN=ENROLLMENTAGENTOFFLINE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Exchange Enrollment Agent (Offline request)",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.12",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.20.2.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "E7A92C62-3BE3-4787-9F3E-F5DE7EC70612",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USERNOEMAILNOSEC@WRAITH.CORP",
+    "distinguishedname": "CN=USERNOEMAILNOSEC,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707958457,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "UserNoEmailNoSec",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.14381922.10066634",
+    "enrollmentflag": "AUTO_ENROLLMENT, NO_SECURITY_EXTENSION",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": true,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "22A32FDF-278D-44C2-8000-1F2AEECC117F",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USERNOSANFLAGS@WRAITH.CORP",
+    "distinguishedname": "CN=USERNOSANFLAGS,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707969750,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "UserNoSANFlags",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.11697010.11591605",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "13AA88AA-7AEA-4325-A9EA-55A12AB45FD2",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USERV2@WRAITH.CORP",
+    "distinguishedname": "CN=USERV2,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1708583773,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Userv2",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.14135127.9807496",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-11",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "545E2256-6CE8-4EC8-8196-C7A180243EFF",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MYTEMPLATE@WRAITH.CORP",
+    "distinguishedname": "CN=MYTEMPLATE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1708563898,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 4,
+    "displayname": "MyTemplate",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.14136809.3072780",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "73473DD3-86B2-494C-8A92-8E214873B890",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTMAIL@WRAITH.CORP",
+    "distinguishedname": "CN=EXTMAIL,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1708936411,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "ExtMail",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.2882530.7582803",
+    "enrollmentflag": "AUTO_ENROLLMENT, NO_SECURITY_EXTENSION",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": true,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_COMMON_NAME",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "59B53E94-6DD2-4EC4-AB97-576327BACFEE",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USERNOUPN@WRAITH.CORP",
+    "distinguishedname": "CN=USERNOUPN,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707970562,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "UserNoUPN",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.6147060.6362222",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "6685875C-5565-460B-822F-57586AF0AB76",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MACHINENOSEC@WRAITH.CORP",
+    "distinguishedname": "CN=MACHINENOSEC,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1708947469,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "MachineNoSec",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.6353415.53152",
+    "enrollmentflag": "AUTO_ENROLLMENT, NO_SECURITY_EXTENSION",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": true,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "C086A673-804F-416A-9C05-B265270B8763",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CTLSIGNING@WRAITH.CORP",
+    "distinguishedname": "CN=CTLSIGNING,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Trust List Signing",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.10",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "591B107C-53F8-4429-A998-9CCB0869F6BE",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXCHANGEUSER@WRAITH.CORP",
+    "distinguishedname": "CN=EXCHANGEUSER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Exchange User",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.23",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.4"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.4"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "581E1099-7F51-4573-98A4-49691898043C",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "OFFLINEROUTER@WRAITH.CORP",
+    "distinguishedname": "CN=OFFLINEROUTER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Router (Offline request)",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.21",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "39DC2536-A6C0-4CEA-9791-D5D4554AE345",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SUBCA@WRAITH.CORP",
+    "distinguishedname": "CN=SUBCA,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "5 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Subordinate Certification Authority",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.18",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "38DAC231-28AD-4D4F-8F50-A979C17965DC",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "IPSECINTERMEDIATEONLINE@WRAITH.CORP",
+    "distinguishedname": "CN=IPSECINTERMEDIATEONLINE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "IPSec",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.19",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.8.2.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.8.2.2"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "6B60F31E-366E-4F18-931F-959DB2ECA3C2",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WEBSERVER@WRAITH.CORP",
+    "distinguishedname": "CN=WEBSERVER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Web Server",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.16",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "571DF4F8-93A5-432D-A6F9-1001B5991381",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CA@WRAITH.CORP",
+    "distinguishedname": "CN=CA,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "5 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Root Certification Authority",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.17",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "B398A636-417E-4D3B-9CDD-56614B48CA90",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "DOMAINCONTROLLER@WRAITH.CORP",
+    "distinguishedname": "CN=DOMAINCONTROLLER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Domain Controller",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.15",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DIRECTORY_GUID, SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.1"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-498",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "ADFC73B7-BEA7-4FC3-A16A-D8A141B7C16B",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "USEREMAILNOSEC@WRAITH.CORP",
+    "distinguishedname": "CN=USEREMAILNOSEC,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707957712,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "UserEmailNoSec",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.11065944.7782457",
+    "enrollmentflag": "AUTO_ENROLLMENT, NO_SECURITY_EXTENSION",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": true,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_COMMON_NAME",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.311.10.3.4"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "035A964D-8533-4110-8A98-E3CAF15920EC",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXCHANGEUSERSIGNATURE@WRAITH.CORP",
+    "distinguishedname": "CN=EXCHANGEUSERSIGNATURE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Exchange Signature Only",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.24",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.4"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.4"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "92A79802-F46E-496C-97EB-FBD807A0E6A7",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CAEXCHANGE@WRAITH.CORP",
+    "distinguishedname": "CN=CAEXCHANGE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 week",
+    "renewalperiod": "1 day",
+    "schemaversion": 2,
+    "displayname": "CA Exchange",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.26",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.21.5"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.21.5"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.21.5"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "243959BB-9306-43E9-A9E0-D8BDDAAB79B3",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SMARTCARDLOGON@WRAITH.CORP",
+    "distinguishedname": "CN=SMARTCARDLOGON,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Smartcard Logon",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.5",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "9542619B-44C8-4D6E-8986-A531968EFC30",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "DIRECTORYEMAILREPLICATION@WRAITH.CORP",
+    "distinguishedname": "CN=DIRECTORYEMAILREPLICATION,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Directory Email Replication",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.29",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DIRECTORY_GUID, SUBJECT_ALT_REQUIRE_DNS",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.21.19"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.4.1.311.21.19"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.21.19"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-498",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "BF8A11CB-667D-4E21-A50F-CBA1E9A97E79",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SMARTCARDUSER@WRAITH.CORP",
+    "distinguishedname": "CN=SMARTCARDUSER,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Smartcard User",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.3",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, PUBLISH_TO_DS",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_ALT_REQUIRE_EMAIL, SUBJECT_REQUIRE_EMAIL, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": true,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": true,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.5.5.7.3.2",
+      "1.3.6.1.4.1.311.20.2.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "9CD0CB06-3418-4289-AC43-F749BEE26D2D",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "CLIENTAUTH@WRAITH.CORP",
+    "distinguishedname": "CN=CLIENTAUTH,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "Authenticated Session",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.4",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-513",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "9CC41FA5-7C15-4D50-949C-38C17BEB6F7C",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "OCSPRESPONSESIGNING@WRAITH.CORP",
+    "distinguishedname": "CN=OCSPRESPONSESIGNING,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 weeks",
+    "renewalperiod": "2 days",
+    "schemaversion": 3,
+    "displayname": "OCSP Response Signing",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.32",
+    "enrollmentflag": "ADD_OCSP_NOCHECK, NOREVOCATIONINFOINISSUEDCERTS",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS, SUBJECT_REQUIRE_DNS_AS_CN",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.9"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.9"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.9"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "BB8F288C-68A9-4FF3-A420-9C664ABF87E7",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "IPSECINTERMEDIATEOFFLINE@WRAITH.CORP",
+    "distinguishedname": "CN=IPSECINTERMEDIATEOFFLINE,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "2 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "IPSec (Offline request)",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.20",
+    "enrollmentflag": "NONE",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "ENROLLEE_SUPPLIES_SUBJECT",
+    "enrolleesuppliessubject": true,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.8.2.2"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.8.2.2"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "4725FCAE-F554-4021-AA68-FC010B41FC2A",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EFSRECOVERY@WRAITH.CORP",
+    "distinguishedname": "CN=EFSRECOVERY,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1683819999,
+    "validityperiod": "5 years",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 1,
+    "displayname": "EFS Recovery Agent",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.1.8",
+    "enrollmentflag": "INCLUDE_SYMMETRIC_ALGORITHMS, AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_UPN, SUBJECT_REQUIRE_DIRECTORY_PATH",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": true,
+    "subjectaltrequiredns": false,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.4.1.311.10.3.4.1"
+    ],
+    "certificateapplicationpolicy": [],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.4.1.311.10.3.4.1"
+    ],
+    "authenticationenabled": false
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "6C3B2CA1-FB94-4D99-ACAA-E35849312407",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "COMPUTERV2@WRAITH.CORP",
+    "distinguishedname": "CN=COMPUTERV2,CN=CERTIFICATE TEMPLATES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1707377840,
+    "validityperiod": "1 year",
+    "renewalperiod": "6 weeks",
+    "schemaversion": 2,
+    "displayname": "Computerv2",
+    "oid": "1.3.6.1.4.1.311.21.8.1025696.9511870.13912499.8731921.7487918.84.9549374.9762423",
+    "enrollmentflag": "AUTO_ENROLLMENT",
+    "requiresmanagerapproval": false,
+    "nosecurityextension": false,
+    "certificatenameflag": "SUBJECT_ALT_REQUIRE_DNS",
+    "enrolleesuppliessubject": false,
+    "subjectaltrequireupn": false,
+    "subjectaltrequiredns": true,
+    "subjectaltrequiredomaindns": false,
+    "subjectaltrequireemail": false,
+    "subjectaltrequirespn": false,
+    "subjectrequireemail": false,
+    "ekus": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "certificateapplicationpolicy": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authorizedsignatures": 0,
+    "applicationpolicies": [],
+    "issuancepolicies": [],
+    "effectiveekus": [
+      "1.3.6.1.5.5.7.3.1",
+      "1.3.6.1.5.5.7.3.2"
+    ],
+    "authenticationenabled": true
+  },
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-11",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+      "PrincipalType": "User",
+      "RightName": "Enroll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "9FD91BB3-DB77-4509-B458-6F5D2E6EBF7F",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "30CB5FD2-20F8-46CE-9E38-FAC6163655E7",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "certtemplates",
+  "count": 43,
+  "version": 6
+}
+}

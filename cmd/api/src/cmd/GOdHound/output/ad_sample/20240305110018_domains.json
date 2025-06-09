@@ -1,0 +1,280 @@
+{
+  "data": [
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1103",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2101",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2124",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2148",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2149",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2150",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2161",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2162",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2163",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2164",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2166",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2167",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2171",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2174",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2177",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2182",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2190",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2222",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2223",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "PHANTOM.CORP",
+    "distinguishedname": "DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1653361613,
+    "functionallevel": "2016",
+    "collected": true
+  },
+  "ChildObjects": [],
+  "Trusts": [
+    {
+      "TargetDomainSid": "S-1-5-21-2845847946-3451170323-4261139666",
+      "TargetDomainName": "GHOST.CORP",
+      "IsTransitive": true,
+      "SidFilteringEnabled": false,
+      "TrustDirection": "Bidirectional",
+      "TrustType": "ParentChild"
+    },
+    {
+      "TargetDomainSid": "S-1-5-21-1852147331-818484528-1557274963",
+      "TargetDomainName": "REVENANT.CORP",
+      "IsTransitive": true,
+      "SidFilteringEnabled": false,
+      "TrustDirection": "Inbound",
+      "TrustType": "External"
+    },
+    {
+      "TargetDomainSid": "S-1-5-21-3702535222-3822678775-2090119576",
+      "TargetDomainName": "WRAITH.CORP",
+      "IsTransitive": true,
+      "SidFilteringEnabled": true,
+      "TrustDirection": "Bidirectional",
+      "TrustType": "External"
+    }
+  ],
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "B88EC183-544A-4FEE-9492-EBBD3415238C"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "8ED690E2-9E43-44FD-AF20-AFE2F3270458"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "CD1CCCC8-8C57-432C-B895-B326F007FF7F"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "3E2ECA5A-7D5C-4224-934E-4E7FEA187B01"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "6BA11144-DC08-497C-A9C0-3AF9F4B4A39E"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-9",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesInFilteredSet",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesInFilteredSet",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-498",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-516",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2123",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2123",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2208",
+      "PrincipalType": "Group",
+      "RightName": "GetChangesAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2209",
+      "PrincipalType": "Group",
+      "RightName": "GetChanges",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "domains",
+  "count": 1,
+  "version": 6
+}
+}

@@ -24,6 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
 	"github.com/specterops/bloodhound/src/cmd/GOdHound/config"
+	"github.com/specterops/bloodhound/src/cmd/GOdHound/generator"
 )
 
 func fatal(value any) {
@@ -35,10 +36,7 @@ func fatalf(format string, args ...any) {
 	fatal(fmt.Sprintf(format, args...))
 }
 
-func main() {
-
-	config.Validate()
-
+func uploadFiles(dir string) {
 	var (
 		token = &client.TokenCredentialsHandler{
 			TokenID:  config.Server.APIID,
@@ -62,7 +60,7 @@ func main() {
 		if newFileUploadJob, err := apiClient.StartFileUploadJob(); err != nil {
 			fatal(err)
 		} else {
-			dir := ("./output/ad_sample/")
+			//dir := ("./output/ad_sample/")
 
 			entries, err := os.ReadDir(dir)
 			if err != nil {
@@ -99,4 +97,18 @@ func main() {
 			} // FOR
 		}
 	}
+}
+
+func main() {
+
+	config.Validate()
+
+	user := generator.AddADUser()
+	fmt.Printf("My user is: ", user)
+	fmt.Printf("\n")
+	computer := generator.AddADComputer()
+	fmt.Printf("My computer is: ", computer)
+
+	//dir := "./output/ad_sample"
+	//uploadFiles(dir)
 }

@@ -1,0 +1,622 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH-EXTCA01-CA@WRAITH.CORP",
+    "distinguishedname": "CN=WRAITH-EXTCA01-CA,CN=ENROLLMENT SERVICES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683819999,
+    "flags": "SUPPORTS_NT_AUTHENTICATION, CA_SERVERTYPE_ADVANCED",
+    "caname": "wraith-EXTCA01-CA",
+    "dnshostname": "extca01.wraith.corp",
+    "certthumbprint": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certname": "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6",
+    "certchain": [
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0,
+    "casecuritycollected": true,
+    "enrollmentagentrestrictionscollected": true,
+    "isuserspecifiessanenabledcollected": true
+  },
+  "HostingComputer": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+  "CARegistryData": {
+    "CASecurity": {
+      "Data": [
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+          "PrincipalType": "LocalGroup",
+          "RightName": "Owns",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "WRAITH.CORP-S-1-5-11",
+          "PrincipalType": "Group",
+          "RightName": "Enroll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+          "PrincipalType": "LocalGroup",
+          "RightName": "ManageCA",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+          "PrincipalType": "LocalGroup",
+          "RightName": "ManageCertificates",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-501",
+          "PrincipalType": "User",
+          "RightName": "ManageCA",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-501",
+          "PrincipalType": "User",
+          "RightName": "Enroll",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+          "PrincipalType": "Group",
+          "RightName": "ManageCA",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+          "PrincipalType": "Group",
+          "RightName": "ManageCertificates",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+          "PrincipalType": "Group",
+          "RightName": "ManageCA",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+          "PrincipalType": "Group",
+          "RightName": "ManageCertificates",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120-1000",
+          "PrincipalType": "LocalGroup",
+          "RightName": "ManageCA",
+          "IsInherited": false
+        },
+        {
+          "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120-1000",
+          "PrincipalType": "LocalGroup",
+          "RightName": "Enroll",
+          "IsInherited": false
+        }
+      ],
+      "Collected": true,
+      "FailureReason": null
+    },
+    "EnrollmentAgentRestrictions": {
+      "Restrictions": [
+        {
+          "AccessType": "AccessDeniedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+            "ObjectType": "Group"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+              "ObjectType": "Group"
+            }
+          ],
+          "Template": {
+            "ObjectIdentifier": "ADFC73B7-BEA7-4FC3-A16A-D8A141B7C16B",
+            "ObjectType": "CertTemplate"
+          },
+          "AllTemplates": false
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+            "ObjectType": "Group"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+              "ObjectType": "Group"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+              "ObjectType": "Group"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+              "ObjectType": "Group"
+            }
+          ],
+          "Template": {
+            "ObjectIdentifier": "ADFC73B7-BEA7-4FC3-A16A-D8A141B7C16B",
+            "ObjectType": "CertTemplate"
+          },
+          "AllTemplates": false
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+            "ObjectType": "Group"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+              "ObjectType": "Group"
+            }
+          ],
+          "Template": null,
+          "AllTemplates": true
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "WRAITH.CORP-S-1-1-0",
+            "ObjectType": "Group"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "WRAITH.CORP-S-1-1-0",
+              "ObjectType": "Group"
+            }
+          ],
+          "Template": null,
+          "AllTemplates": true
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-548",
+            "ObjectType": "LocalGroup"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-548",
+              "ObjectType": "LocalGroup"
+            }
+          ],
+          "Template": null,
+          "AllTemplates": true
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+            "ObjectType": "LocalGroup"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+              "ObjectType": "LocalGroup"
+            },
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+              "ObjectType": "LocalGroup"
+            }
+          ],
+          "Template": null,
+          "AllTemplates": true
+        },
+        {
+          "AccessType": "AccessAllowedCallback",
+          "Agent": {
+            "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-1000",
+            "ObjectType": "LocalGroup"
+          },
+          "Targets": [
+            {
+              "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-1000",
+              "ObjectType": "LocalGroup"
+            }
+          ],
+          "Template": null,
+          "AllTemplates": true
+        }
+      ],
+      "Collected": true,
+      "FailureReason": null
+    },
+    "IsUserSpecifiesSanEnabled": {
+      "Value": false,
+      "Collected": true,
+      "FailureReason": null
+    }
+  },
+  "EnabledCertTemplates": [
+    {
+      "ObjectIdentifier": "C086A673-804F-416A-9C05-B265270B8763",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "59B53E94-6DD2-4EC4-AB97-576327BACFEE",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "545E2256-6CE8-4EC8-8196-C7A180243EFF",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "73473DD3-86B2-494C-8A92-8E214873B890",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6685875C-5565-460B-822F-57586AF0AB76",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "13AA88AA-7AEA-4325-A9EA-55A12AB45FD2",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "22A32FDF-278D-44C2-8000-1F2AEECC117F",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "035A964D-8533-4110-8A98-E3CAF15920EC",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "9FD91BB3-DB77-4509-B458-6F5D2E6EBF7F",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "DA2D7CF7-325E-4029-8168-18A0EACF2A0C",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "BF8A11CB-667D-4E21-A50F-CBA1E9A97E79",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6D4C7268-4B18-47E8-8E94-C2BC1A7B7B1B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "A036F26A-1921-471C-A5F8-A4157B2BD40B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6C3B2CA1-FB94-4D99-ACAA-E35849312407",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "7E43AF6D-951D-48E7-8CC0-6546742A222F",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "ADFC73B7-BEA7-4FC3-A16A-D8A141B7C16B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "571DF4F8-93A5-432D-A6F9-1001B5991381",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6A8E30F8-9436-4FC9-AC70-A4BC704F3909",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "0059CED1-7362-4506-AD56-DAEEFAAE8628",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "38DAC231-28AD-4D4F-8F50-A979C17965DC",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "959ED959-BC98-4C02-92C2-46FEAC2B5C71",
+      "ObjectType": "CertTemplate"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "ManageCA",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "ManageCertificates",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+      "PrincipalType": "Computer",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+      "PrincipalType": "Computer",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+      "PrincipalType": "Computer",
+      "RightName": "ManageCA",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+      "PrincipalType": "Computer",
+      "RightName": "ManageCertificates",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-11",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-501",
+      "PrincipalType": "User",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-428050025-2300188546-864808017-1000",
+      "PrincipalType": "Base",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "ManageCA",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "4F334FEC-0BCE-46A0-AF60-F1C481829440",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "F60F0F44-14DD-43AC-840C-B8E87EE04CBD",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "WRAITH-EXTCA02-CA@WRAITH.CORP",
+    "distinguishedname": "CN=WRAITH-EXTCA02-CA,CN=ENROLLMENT SERVICES,CN=PUBLIC KEY SERVICES,CN=SERVICES,CN=CONFIGURATION,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1699345952,
+    "flags": "SUPPORTS_NT_AUTHENTICATION, CA_SERVERTYPE_ADVANCED",
+    "caname": "wraith-EXT02-CA",
+    "dnshostname": "extca02.wraith.corp",
+    "certthumbprint": "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+    "certname": "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+    "certchain": [
+      "35FC7B878F908F0042F27340B185F3D1CBD6817C",
+      "9AEA9DB29D0EC823DC200A2CF929328AAD3E9CF6"
+    ],
+    "hasbasicconstraints": false,
+    "basicconstraintpathlength": 0,
+    "casecuritycollected": false,
+    "enrollmentagentrestrictionscollected": false,
+    "isuserspecifiessanenabledcollected": false
+  },
+  "HostingComputer": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+  "CARegistryData": {
+    "CASecurity": {
+      "Data": [],
+      "Collected": false,
+      "FailureReason": "Target machine was not found or not connectable"
+    },
+    "EnrollmentAgentRestrictions": {
+      "Restrictions": [],
+      "Collected": false,
+      "FailureReason": "Target machine was not found or not connectable"
+    },
+    "IsUserSpecifiesSanEnabled": {
+      "Value": false,
+      "Collected": false,
+      "FailureReason": "Target machine was not found or not connectable"
+    }
+  },
+  "EnabledCertTemplates": [
+    {
+      "ObjectIdentifier": "BF8A11CB-667D-4E21-A50F-CBA1E9A97E79",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6D4C7268-4B18-47E8-8E94-C2BC1A7B7B1B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "A036F26A-1921-471C-A5F8-A4157B2BD40B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6C3B2CA1-FB94-4D99-ACAA-E35849312407",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "7E43AF6D-951D-48E7-8CC0-6546742A222F",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "ADFC73B7-BEA7-4FC3-A16A-D8A141B7C16B",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "571DF4F8-93A5-432D-A6F9-1001B5991381",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "6A8E30F8-9436-4FC9-AC70-A4BC704F3909",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "0059CED1-7362-4506-AD56-DAEEFAAE8628",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "38DAC231-28AD-4D4F-8F50-A979C17965DC",
+      "ObjectType": "CertTemplate"
+    },
+    {
+      "ObjectIdentifier": "959ED959-BC98-4C02-92C2-46FEAC2B5C71",
+      "ObjectType": "CertTemplate"
+    }
+  ],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "ManageCA",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "ManageCertificates",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "PrincipalType": "Computer",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "PrincipalType": "Computer",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "PrincipalType": "Computer",
+      "RightName": "ManageCA",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "PrincipalType": "Computer",
+      "RightName": "ManageCertificates",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-11",
+      "PrincipalType": "Group",
+      "RightName": "Enroll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "ManageCA",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "396FFDC9-079C-4AB1-9816-ACEED046BCDD",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "F60F0F44-14DD-43AC-840C-B8E87EE04CBD",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "enterprisecas",
+  "count": 2,
+  "version": 6
+}
+}

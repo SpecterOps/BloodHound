@@ -1,0 +1,767 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "KRBTGT@GHOST.CORP",
+    "distinguishedname": "CN=KRBTGT,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "krbtgt",
+    "isaclprotected": true,
+    "description": "Key Distribution Center Service Account",
+    "whencreated": 1656555700,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1656580901,
+    "serviceprincipalnames": [
+      "kadmin/changepw"
+    ],
+    "hasspn": true,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-502",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "BH@GHOST.CORP",
+    "distinguishedname": "CN=BINHEAD,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "bh",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1702884393,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1702916615,
+    "lastlogontimestamp": 1702913370,
+    "pwdlastset": 1702913193,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "binhead",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-1104",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "ADMINISTRATOR@GHOST.CORP",
+    "distinguishedname": "CN=ADMINISTRATOR,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "Administrator",
+    "isaclprotected": true,
+    "description": "Built-in account for administering the computer/domain",
+    "whencreated": 1656555664,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1702913193,
+    "lastlogontimestamp": 1702913054,
+    "pwdlastset": 1674763808,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-500",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "GUEST@GHOST.CORP",
+    "distinguishedname": "CN=GUEST,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "Guest",
+    "isaclprotected": false,
+    "description": "Built-in account for guest access to the computer/domain",
+    "whencreated": 1656555664,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-514",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-526",
+      "PrincipalType": "Base",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-501",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "name": "NETWORK SERVICE@GHOST.CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "domain": "GHOST.CORP",
+    "reconcile": false
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": null,
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [],
+  "ObjectIdentifier": "GHOST.CORP-S-1-5-20",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+{
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "TOM@GHOST.CORP",
+    "distinguishedname": "CN=TOM,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "tom",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1107163853,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 1352620493,
+    "lastlogontimestamp": 1352620493,
+    "pwdlastset": 1294408493,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "tom",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-1105",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+},
+{
+  "Properties": {
+    "domain": "GHOST.CORP",
+    "name": "WALTER@GHOST.CORP",
+    "distinguishedname": "CN=WALTER,CN=USERS,DC=GHOST,DC=CORP",
+    "domainsid": "S-1-5-21-2845847946-3451170323-4261139666",
+    "samaccountname": "walter",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1107164693,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 1221657838,
+    "lastlogontimestamp": 1221657838,
+    "pwdlastset": 1117877458,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "walter",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2845847946-3451170323-4261139666-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "GHOST.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2845847946-3451170323-4261139666-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2845847946-3451170323-4261139666-1106",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "EA1ABAEF-5DC2-4426-B744-21A84A759B5B",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "users",
+  "count": 5,
+  "version": 6
+}
+}

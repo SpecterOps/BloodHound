@@ -1,0 +1,6209 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "KRBTGT@PHANTOM.CORP",
+    "distinguishedname": "CN=KRBTGT,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "krbtgt",
+    "isaclprotected": true,
+    "description": "Key Distribution Center Service Account",
+    "whencreated": 1653361641,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1692274242,
+    "serviceprincipalnames": [
+      "kadmin/changepw"
+    ],
+    "hasspn": true,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-502",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DU001@PHANTOM.CORP",
+    "distinguishedname": "CN=DU001,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "du001",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1698717873,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1705180369,
+    "lastlogontimestamp": 1705180369,
+    "pwdlastset": 1698743073,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "du001",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2202",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "STEPHEN@PHANTOM.CORP",
+    "distinguishedname": "CN=DC01.PHANTOM.CORP,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "stephen",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1699347828,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708508097,
+    "lastlogontimestamp": 1708507965,
+    "pwdlastset": 1699376628,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "stephen",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2202",
+      "PrincipalType": "User",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2202",
+      "PrincipalType": "User",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2203",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ADMINISTRATOR@PHANTOM.CORP",
+    "distinguishedname": "CN=ADMINISTRATOR,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Administrator",
+    "isaclprotected": true,
+    "description": "Built-in account for administering the computer/domain",
+    "whencreated": 1653361617,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708330440,
+    "lastlogontimestamp": 1708258690,
+    "pwdlastset": 1653386139,
+    "serviceprincipalnames": [
+      "test/test"
+    ],
+    "hasspn": true,
+    "displayname": null,
+    "email": "test@mail.com",
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-500",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ANDY@PHANTOM.CORP",
+    "distinguishedname": "CN=ANDY,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "andy",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1685519094,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1685544338,
+    "lastlogontimestamp": 1685544338,
+    "pwdlastset": 1685544294,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "andy",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2187",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ALICE@PHANTOM.CORP",
+    "distinguishedname": "CN=ALICE,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "alice",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1681261677,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1681286877,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "alice",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2173",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "FABIAN@PHANTOM.CORP",
+    "distinguishedname": "CN=FABIAN,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Fabian",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1685588144,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685613344,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Fabian",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2191",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HACKERDA@PHANTOM.CORP",
+    "distinguishedname": "CN=HACKERDA,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "hackerda",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1692088301,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1692123107,
+    "lastlogontimestamp": 1692123107,
+    "pwdlastset": 1692113501,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "hackerda",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2197",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "BOB@PHANTOM.CORP",
+    "distinguishedname": "CN=BOB,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "bob",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1681261936,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1699543784,
+    "lastlogontimestamp": 1707234613,
+    "pwdlastset": 1681287136,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "bob",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2175",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T2_HANNAHMONTANA@PHANTOM.CORP",
+    "distinguishedname": "CN=T2_HANNAHMONTANA,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T2_HannahMontana",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1668342254,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1668409935,
+    "lastlogontimestamp": 1668371201,
+    "pwdlastset": 1668371054,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "T2_HannahMontana",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2116",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CERTMAN@PHANTOM.CORP",
+    "distinguishedname": "CN=CERTMAN,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "certman",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1695941121,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1695966948,
+    "lastlogontimestamp": 1695966443,
+    "pwdlastset": 1695966321,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "certman",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2201",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ADDSELF@PHANTOM.CORP",
+    "distinguishedname": "CN=ADDSELF,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "addself",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1694483288,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1694508512,
+    "lastlogontimestamp": 1694508512,
+    "pwdlastset": 1694508488,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "addself",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2199",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DA-NOPW2@PHANTOM.CORP",
+    "distinguishedname": "CN=DA-NOPW2,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "da-nopw2",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1677565870,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1677595952,
+    "lastlogontimestamp": 1677594759,
+    "pwdlastset": 1677595099,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2158",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ROSHI@PHANTOM.CORP",
+    "distinguishedname": "CN=ROSHI,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Roshi",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1690420899,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708677450,
+    "lastlogontimestamp": 1708414903,
+    "pwdlastset": 1707055837,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Roshi",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2194",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "JD@PHANTOM.CORP",
+    "distinguishedname": "CN=JOHNNY DÖNER,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "jd",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1665132889,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1709665027,
+    "lastlogontimestamp": 1709541513,
+    "pwdlastset": 1665158089,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Johnny Döner",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSASIMON@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSASIMON,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "smsasimon",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1674196659,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1674225459,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "smsasimon",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2132",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CHARLIE@PHANTOM.CORP",
+    "distinguishedname": "CN=CHARLIE,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "charlie",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1681262335,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1681287535,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "charlie",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2179",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T1_FABIAN@PHANTOM.CORP",
+    "distinguishedname": "CN=T1_FABIAN,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "t1_fabian",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1676854392,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676893259,
+    "lastlogontimestamp": 1676892730,
+    "pwdlastset": 1676883192,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "t1_fabian",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-1-0",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2147",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "T1_TONYMONTANA@PHANTOM.CORP",
+    "distinguishedname": "CN=T1_TONYMONTANA,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "T1_TonyMontana",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1664356251,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1674216447,
+    "lastlogontimestamp": 1673626093,
+    "pwdlastset": 1664381451,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "T1_TonyMontana",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2110",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "CERTEXT@PHANTOM.CORP",
+    "distinguishedname": "CN=CERTEXT,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "certext",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1706513013,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1706542139,
+    "lastlogontimestamp": 1706542085,
+    "pwdlastset": 1706541813,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "certext",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2210",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSAMASTER@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSAMASTER,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sMSAmaster",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1674196312,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1678192188,
+    "lastlogontimestamp": 1678192188,
+    "pwdlastset": 1674225112,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "sMSAmaster",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2128",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SH3@PHANTOM.CORP",
+    "distinguishedname": "CN=SH3,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sh3",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1676011748,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676270556,
+    "lastlogontimestamp": 1677139199,
+    "pwdlastset": 1676040548,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "sh3",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2140",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SVC_KERB_DEL@PHANTOM.CORP",
+    "distinguishedname": "CN=SVC_KERB_DEL,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "svc_kerb_del",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1680566874,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1680592074,
+    "serviceprincipalnames": [
+      "test/test2"
+    ],
+    "hasspn": true,
+    "displayname": "svc_kerb_del",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2170",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS7$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS7,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS7$",
+    "gmsa": true,
+    "isaclprotected": true,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1676194024,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676222989,
+    "lastlogontimestamp": 1676222989,
+    "pwdlastset": 1676222824,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2142",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS3$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS3,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS3$",
+    "gmsa": true,
+    "isaclprotected": true,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1675826005,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1675864631,
+    "lastlogontimestamp": 1675854944,
+    "pwdlastset": 1675854805,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2136",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SH2@PHANTOM.CORP",
+    "distinguishedname": "CN=SH2,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sh2",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1675834587,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676362118,
+    "lastlogontimestamp": 1676356748,
+    "pwdlastset": 1675863387,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "sh2",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2137",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS8$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS8,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS8$",
+    "gmsa": true,
+    "isaclprotected": true,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1676009890,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676216880,
+    "lastlogontimestamp": 1676038779,
+    "pwdlastset": 1676038690,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2138",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SHARPHOUND@PHANTOM.CORP",
+    "distinguishedname": "CN=SHARPHOUND,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sharphound",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1665724170,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": 1677138756,
+    "pwdlastset": 1665749370,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "sharphound",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2115",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS21$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS21,CN=MANAGED SERVICE ACCOUNTS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS21$",
+    "gmsa": true,
+    "isaclprotected": false,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1684984430,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685009630,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2185",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AB800822-D421-4264-9E61-87F9EDAA1A92",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS22$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS22,CN=MANAGED SERVICE ACCOUNTS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS22$",
+    "gmsa": true,
+    "isaclprotected": false,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1684984596,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1685009796,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2186",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AB800822-D421-4264-9E61-87F9EDAA1A92",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMANAGER@PHANTOM.CORP",
+    "distinguishedname": "CN=GMANAGER,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gmanager",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707704492,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1707733327,
+    "lastlogontimestamp": 1707733327,
+    "pwdlastset": 1707733292,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "gmanager",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2214",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "KRBTGT_8221@PHANTOM.CORP",
+    "distinguishedname": "CN=KRBTGT_8221,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "krbtgt_8221",
+    "isaclprotected": false,
+    "description": "Key Distribution Center service account for read-only domain controller",
+    "whencreated": 1676971036,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1676999836,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2150",
+      "PrincipalType": "Computer",
+      "RightName": "ForceChangePassword",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2176",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2151",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TARGET@PHANTOM.CORP",
+    "distinguishedname": "CN=TARGET4,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "target",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708472042,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708682049,
+    "lastlogontimestamp": 1708680572,
+    "pwdlastset": 1708500842,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "target",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2176",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2221",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAINUSER@PHANTOM.CORP",
+    "distinguishedname": "CN=DOMAINUSER,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "domainuser",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1682543105,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1683842359,
+    "lastlogontimestamp": 1683842359,
+    "pwdlastset": 1682568305,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "domainuser",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2183",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS2$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS2,OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gMSA_SHS2$",
+    "gmsa": true,
+    "isaclprotected": false,
+    "description": "SharpHound service account for BloodHound Enterprise",
+    "whencreated": 1675824608,
+    "sensitive": true,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1675854218,
+    "lastlogontimestamp": 1675853864,
+    "pwdlastset": 1675853408,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2110",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2102",
+      "PrincipalType": "Group",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2135",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "IAMADC@PHANTOM.CORP",
+    "distinguishedname": "CN=IAMADC,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "IAmADC",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1680527857,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1680553057,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "IAmADC",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2169",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "NOPREAUTH@PHANTOM.CORP",
+    "distinguishedname": "CN=NOPREAUTH,OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "nopreauth",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708416740,
+    "sensitive": false,
+    "dontreqpreauth": true,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708502828,
+    "lastlogontimestamp": 1708445555,
+    "pwdlastset": 1708445540,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "nopreauth",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2110",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2220",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "MAPPER@PHANTOM.CORP",
+    "distinguishedname": "CN=MAPPER,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "mapper",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707910870,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1707942141,
+    "lastlogontimestamp": 1707939895,
+    "pwdlastset": 1707939670,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "mapper",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2176",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2215",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GUEST@PHANTOM.CORP",
+    "distinguishedname": "CN=GUEST,CN=USERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Guest",
+    "isaclprotected": false,
+    "description": "Built-in account for guest access to the computer/domain",
+    "whencreated": 1653361617,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-514",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2176",
+      "PrincipalType": "Group",
+      "RightName": "ForceChangePassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-501",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "06DDAA96-A710-4023-A26A-C522B2A87AB4",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "JBK@PHANTOM.CORP",
+    "distinguishedname": "CN=JONAS BÜLOW KNUDSEN,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "jbk",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681357992,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "Jonas Bülow Knudsen",
+    "email": null,
+    "title": "Product Architect",
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2180",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "MANUEL@PHANTOM.CORP",
+    "distinguishedname": "CN=MANUEL,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "manuel",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1687741219,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1687766419,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "manuel",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2192",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DA-NOPW@PHANTOM.CORP",
+    "distinguishedname": "CN=DA-NOPW,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "da-nopw",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677565787,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": true,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 0,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2157",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ESC13USER2@PHANTOM.CORP",
+    "distinguishedname": "CN=ESC13USER2,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "ESC13User2",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708332910,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1708361996,
+    "lastlogontimestamp": 1708361733,
+    "pwdlastset": 1708361710,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "ESC13User2",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2219",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GMSA_SHS$@PHANTOM.CORP",
+    "distinguishedname": "CN=GMSA_SHS,OU=SHARPHOUND TEST,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "gmsa_shs$",
+    "gmsa": true,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1678282331,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1697709409,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2167",
+      "PrincipalType": "Computer",
+      "RightName": "ReadGMSAPassword",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2168",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "96B54890-3289-45CC-9B19-F46465ED6A56",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "ZZZIGNE@PHANTOM.CORP",
+    "distinguishedname": "CN=ZZZIGNE,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "zzzigne",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1707910956,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1707939756,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "zzzigne",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2216",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SVC_DOMAINJOIN@PHANTOM.CORP",
+    "distinguishedname": "CN=SVC_DOMAINJOIN,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "svc_domainjoin",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681360606,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1681385806,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "svc_domainjoin",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2181",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SMSA_BHE$@PHANTOM.CORP",
+    "distinguishedname": "CN=SMSA_BHE,CN=MANAGED SERVICE ACCOUNTS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "sMSA_bhe$",
+    "msa": true,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1677643705,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": false,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1709223401,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": null,
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-515",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2159",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "AB800822-D421-4264-9E61-87F9EDAA1A92",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SVC_SHS@PHANTOM.CORP",
+    "distinguishedname": "CN=SVC_SHS,OU=SHARPHOUND TEST,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "svc_shs",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1678280765,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1678309565,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "svc_shs",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2165",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "96B54890-3289-45CC-9B19-F46465ED6A56",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "name": "NETWORK SERVICE@PHANTOM.CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "domain": "PHANTOM.CORP",
+    "reconcile": false
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": null,
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [],
+  "ObjectIdentifier": "PHANTOM.CORP-S-1-5-20",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": null
+},
+    {
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "HAYDEN@PHANTOM.CORP",
+    "distinguishedname": "CN=HAYDEN,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "hayden",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1107164693,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": false,
+    "trustedtoauth": false,
+    "lastlogon": 1221657838,
+    "lastlogontimestamp": 1221657838,
+    "pwdlastset": 1117877458,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "hayden",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2186",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+    "ObjectType": "OU"
+  }
+},
+{
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DAVID@PHANTOM.CORP",
+    "distinguishedname": "CN=DAVID,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "david",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1675834587,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676362118,
+    "lastlogontimestamp": 1676356748,
+    "pwdlastset": 1675863387,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "david",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2134",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+{
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SCOTT@PHANTOM.CORP",
+    "distinguishedname": "CN=SCOTT,OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "Scott",
+    "isaclprotected": true,
+    "description": null,
+    "whencreated": 1675834587,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1676362118,
+    "lastlogontimestamp": 1676356748,
+    "pwdlastset": 1675863387,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "scott",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": true,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2143",
+  "IsDeleted": false,
+  "IsACLProtected": true,
+  "ContainedBy": {
+    "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+    "ObjectType": "OU"
+  }
+},
+{
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SVC_PAYADMIN@PHANTOM.CORP",
+    "distinguishedname": "CN=SVC_PAYADMIN,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "samaccountname": "svc_payadmin",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1678280765,
+    "sensitive": false,
+    "dontreqpreauth": false,
+    "passwordnotreqd": false,
+    "unconstraineddelegation": false,
+    "pwdneverexpires": true,
+    "enabled": true,
+    "trustedtoauth": false,
+    "lastlogon": 1711209293,
+    "lastlogontimestamp": 1711209293,
+    "pwdlastset": 1678309565,
+    "serviceprincipalnames": [],
+    "hasspn": false,
+    "displayname": "svc_payadmin",
+    "email": null,
+    "title": null,
+    "homedirectory": null,
+    "userpassword": null,
+    "unixpassword": null,
+    "unicodepassword": null,
+    "sfupassword": null,
+    "logonscript": null,
+    "admincount": false,
+    "sidhistory": []
+  },
+  "AllowedToDelegate": [],
+  "PrimaryGroupSID": "S-1-5-21-2697957641-2271029196-387917394-513",
+  "HasSIDHistory": [],
+  "SPNTargets": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2117",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "96B54890-3289-45CC-9B19-F46465ED6A56",
+    "ObjectType": "OU"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "users",
+  "count": 49,
+  "version": 6
+}
+}

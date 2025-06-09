@@ -1,0 +1,400 @@
+{
+  "data": [
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "GROUPS@WRAITH.CORP",
+    "distinguishedname": "OU=GROUPS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683440684,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "8B4A8536-A790-40DF-A2A0-35FBDAEF3C54",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MICROSOFT EXCHANGE SECURITY GROUPS@WRAITH.CORP",
+    "distinguishedname": "OU=MICROSOFT EXCHANGE SECURITY GROUPS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685414725,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1124",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "DBC94E96-79F8-4986-9118-E8D0AACB129B",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "MYUSERS@WRAITH.CORP",
+    "distinguishedname": "OU=MYUSERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1694233010,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "1862497B-9BDD-4DCB-AEA8-D0D709DF5AFB",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "FUNKYLOCATION@WRAITH.CORP",
+    "distinguishedname": "OU=FUNKYLOCATION,CN=BATMAN,OU=MYUSERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1694233262,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    }
+  ],
+  "ObjectIdentifier": "D82E36DB-3836-42EF-9CD5-33B18EFC6E85",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+    "ObjectType": "User"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1114",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1117",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "SERVERS@WRAITH.CORP",
+    "distinguishedname": "OU=SERVERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683440517,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "E4EF3200-D838-43E0-B3ED-CFC29478031B"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "63FE618D-75B9-42B5-B36F-B6FBBC5A5E3E",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1112",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1000",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "DOMAIN CONTROLLERS@WRAITH.CORP",
+    "distinguishedname": "OU=DOMAIN CONTROLLERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "isaclprotected": false,
+    "description": "Default container for domain controllers",
+    "whencreated": 1668394808,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "5D3B8EA0-696C-4502-9E18-672F9E55CBD8"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "C67544F8-3AFA-4182-9C0D-0A97ABC06FA0"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "0203BC2E-4EA4-46AE-8648-BA337E053522"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "16D432AC-31A9-47A8-9449-36C2BFF9417B",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576",
+    "ObjectType": "Domain"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "ous",
+  "count": 6,
+  "version": 6
+}
+}

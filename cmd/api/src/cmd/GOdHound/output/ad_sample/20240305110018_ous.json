@@ -1,0 +1,884 @@
+{
+  "data": [
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "USERS@PHANTOM.CORP",
+    "distinguishedname": "OU=USERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664356125,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "51FB8637-28BC-4816-9A51-984160B207FA",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SHARPHOUND TEST@PHANTOM.CORP",
+    "distinguishedname": "OU=SHARPHOUND TEST,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1678280527,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "96B54890-3289-45CC-9B19-F46465ED6A56",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SERVICEACCOUNTS@PHANTOM.CORP",
+    "distinguishedname": "OU=SERVICEACCOUNTS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664347229,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "707F30C0-CCE8-4C77-9EEB-5DD0F975F636",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "FC647E72-CD1C-4D7E-960D-454F981E34AB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GROUPS@PHANTOM.CORP",
+    "distinguishedname": "OU=GROUPS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664350452,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "401DD3EB-3B3B-4CCF-A33C-AEB97C976B25",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "FC647E72-CD1C-4D7E-960D-454F981E34AB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "COMPUTERS@PHANTOM.CORP",
+    "distinguishedname": "OU=COMPUTERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664350495,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "97CC70A4-3A85-41CD-BF9B-76148CF0BEA2",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "FC647E72-CD1C-4D7E-960D-454F981E34AB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "GROUPS@PHANTOM.CORP",
+    "distinguishedname": "OU=GROUPS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664356091,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "D1348511-7BE5-42A1-8FC9-D5A5C4DD23A8",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TIER1@PHANTOM.CORP",
+    "distinguishedname": "OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664356080,
+    "blocksinheritance": false
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": []
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "USERS@PHANTOM.CORP",
+    "distinguishedname": "OU=USERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1665132785,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "A12512B2-7103-4BEF-B528-50681B3796AB"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "39ECBE77-D692-4D47-93D6-11925D4DB5A1",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "FC647E72-CD1C-4D7E-960D-454F981E34AB",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2101",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2148",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2149",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2161",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2162",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2163",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "TIER0@PHANTOM.CORP",
+    "distinguishedname": "OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664347200,
+    "blocksinheritance": true
+  },
+  "Links": [],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "FC647E72-CD1C-4D7E-960D-454F981E34AB",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2101",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "SHARPHOUND@PHANTOM.CORP",
+    "distinguishedname": "OU=SHARPHOUND,OU=COMPUTERS,OU=TIER0,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664351824,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "D67A4025-27B6-414A-9060-0411C8694C84"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2110",
+      "PrincipalType": "User",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "89800DCF-9B8B-412B-8EAC-DDA2B7F81B1C",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "97CC70A4-3A85-41CD-BF9B-76148CF0BEA2",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2173",
+        "ObjectType": "User"
+      }
+    ],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2174",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "WORKSTATIONS@PHANTOM.CORP",
+    "distinguishedname": "OU=WORKSTATIONS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1681261744,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "0E7541BB-814F-4768-85E2-025B57444AC9"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "2A2B238D-7CD4-45FD-964A-A402A9752B2E",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+    "ObjectType": "Domain"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-513",
+        "ObjectType": "Group"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2111",
+        "ObjectType": "Group"
+      }
+    ],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2124",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2171",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2177",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2190",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "COMPUTERS@PHANTOM.CORP",
+    "distinguishedname": "OU=COMPUTERS,OU=TIER1,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1664356101,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "4B1F3AE0-2AE4-4DA0-8F1E-70DDB14F9E8A"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "3D91B8EE-7463-4356-A537-4B3845AB1DCB"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "5EECB9AC-D79B-42FD-B4A9-59A179B6BBF4"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-2189",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "7EE10B2F-2234-49AE-BCCD-B87AF1E2C687",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "79583BC0-65A5-49A3-8FCB-9EF814445913",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "GPOChanges": {
+    "LocalAdmins": [],
+    "RemoteDesktopUsers": [],
+    "DcomUsers": [],
+    "PSRemoteUsers": [],
+    "AffectedComputers": [
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2150",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2182",
+        "ObjectType": "Computer"
+      },
+      {
+        "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-1000",
+        "ObjectType": "Computer"
+      }
+    ]
+  },
+  "Properties": {
+    "domain": "PHANTOM.CORP",
+    "name": "DOMAIN CONTROLLERS@PHANTOM.CORP",
+    "distinguishedname": "OU=DOMAIN CONTROLLERS,DC=PHANTOM,DC=CORP",
+    "domainsid": "S-1-5-21-2697957641-2271029196-387917394",
+    "isaclprotected": false,
+    "description": "Default container for domain controllers",
+    "whencreated": 1653361617,
+    "blocksinheritance": false
+  },
+  "Links": [
+    {
+      "IsEnforced": false,
+      "GUID": "BB929560-02B5-47CC-BA2D-654DAE1798B4"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "7F8CC2FA-82A5-41D0-8D5B-967EB093A523"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "8CFCA3B1-C2EC-4DFE-BEC2-A4DFF257EE40"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "19AAB229-16B1-4725-A3E9-91DB8780A43C"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "4CBB081A-E5A7-43AA-A786-0AA61E604E7F"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "A7B3C839-17A3-4602-898C-B4532B97FCC3"
+    },
+    {
+      "IsEnforced": false,
+      "GUID": "6BA11144-DC08-497C-A9C0-3AF9F4B4A39E"
+    }
+  ],
+  "ChildObjects": [],
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-512",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-2697957641-2271029196-387917394-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "PHANTOM.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "E4E6B0BB-0403-4F6A-9CC1-12138BB62220",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394",
+    "ObjectType": "Domain"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "ous",
+  "count": 13,
+  "version": 6
+}
+}

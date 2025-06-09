@@ -1,0 +1,46 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "kinds": [
+          "User",
+          "Base"
+        ],
+        "id": "1234-4567-13456-5120",
+        "properties": {
+          "name": "SCOUBI",
+          "objectid": "1234-4567-13456-5120"
+        }
+      },
+      {
+        "kinds": [
+          "Group",
+          "Base"
+        ],
+        "id": "1234-4567-13456-5121",
+        "properties": {
+          "name": "SPOOKY",
+          "objectid": "1234-4567-13456-5121"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "kind": "MemberOf",
+        "start": {
+          "match_by": "id",
+          "value": "1234-4567-13456-5120",
+          "kind": "Base"
+        },
+        "end": {
+          "match_by": "id",
+          "value": "1234-4567-13456-5121",
+          "kind": "Base"
+        },
+        "properties": {
+          "thing": "that thing I sent you"
+        }
+      }
+    ]
+  }
+}

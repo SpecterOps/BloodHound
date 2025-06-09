@@ -1,0 +1,2409 @@
+{
+  "data": [
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTSRV02.WRAITH.CORP",
+    "distinguishedname": "CN=EXTSRV02,OU=SERVERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTSRV02$",
+    "haslaps": true,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683450451,
+    "enabled": false,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 1683926273,
+    "lastlogontimestamp": 1683475651,
+    "pwdlastset": 1683475651,
+    "serviceprincipalnames": [
+      "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/extsrv02.wraith.corp",
+      "TERMSRV/EXTSRV02",
+      "TERMSRV/extsrv02.wraith.corp",
+      "RestrictedKrbHost/EXTSRV02",
+      "HOST/EXTSRV02",
+      "RestrictedKrbHost/extsrv02.wraith.corp",
+      "HOST/extsrv02.wraith.corp"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PwdLastSetOutOfRange"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1115",
+      "PrincipalType": "Group",
+      "RightName": "ReadLAPSPassword",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "AllExtendedRights",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1117",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "63FE618D-75B9-42B5-B36F-B6FBBC5A5E3E",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTRODC01.WRAITH.CORP",
+    "distinguishedname": "CN=EXTRODC01,OU=DOMAIN CONTROLLERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTRODC01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683440255,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": true,
+    "isdc": false,
+    "allowedtodelegate": [],
+    "lastlogon": 1693752960,
+    "lastlogontimestamp": 1693571033,
+    "pwdlastset": 1693572833,
+    "serviceprincipalnames": [
+      "exchangeAB/EXTRODC01.wraith.corp",
+      "exchangeAB/EXTRODC01",
+      "HOST/EXTRODC01/WRAITH",
+      "HOST/EXTRODC01.wraith.corp/WRAITH",
+      "RPC/a0777b9c-9a12-4549-a7b6-ef886524469d._msdcs.wraith.corp",
+      "GC/EXTRODC01.wraith.corp/wraith.corp",
+      "HOST/EXTRODC01.wraith.corp/wraith.corp",
+      "ldap/EXTRODC01/WRAITH",
+      "ldap/a0777b9c-9a12-4549-a7b6-ef886524469d._msdcs.wraith.corp",
+      "ldap/EXTRODC01.wraith.corp/WRAITH",
+      "ldap/EXTRODC01",
+      "ldap/EXTRODC01.wraith.corp",
+      "ldap/EXTRODC01.wraith.corp/wraith.corp",
+      "WSMAN/EXTRODC01",
+      "WSMAN/EXTRODC01.wraith.corp",
+      "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/EXTRODC01.wraith.corp",
+      "TERMSRV/EXTRODC01",
+      "TERMSRV/EXTRODC01.wraith.corp",
+      "RestrictedKrbHost/EXTRODC01",
+      "HOST/EXTRODC01",
+      "RestrictedKrbHost/EXTRODC01.wraith.corp",
+      "HOST/EXTRODC01.wraith.corp"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-521",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PwdLastSetOutOfRange"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-1118",
+      "PrincipalType": "Group",
+      "RightName": "WriteAccountRestrictions",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1112",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "16D432AC-31A9-47A8-9449-36C2BFF9417B",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTSRV01.WRAITH.CORP",
+    "distinguishedname": "CN=EXTSRV01,OU=SERVERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTSRV01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683440541,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1683465741,
+    "serviceprincipalnames": [],
+    "email": null,
+    "operatingsystem": null,
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PwdLastSetOutOfRange"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1114",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "63FE618D-75B9-42B5-B36F-B6FBBC5A5E3E",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTCA02.WRAITH.CORP",
+    "distinguishedname": "CN=EXTCA02,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTCA02$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1699338145,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 1708524454,
+    "lastlogontimestamp": 1708524454,
+    "pwdlastset": 1702470695,
+    "serviceprincipalnames": [
+      "TERMSRV/EXTCA02",
+      "TERMSRV/extca02.wraith.corp",
+      "RestrictedKrbHost/EXTCA02",
+      "HOST/EXTCA02",
+      "RestrictedKrbHost/extca02.wraith.corp",
+      "HOST/extca02.wraith.corp"
+    ],
+    "email": "test2@mail.com",
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PwdLastSetOutOfRange"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TARGETCOMPUTERC.WRAITH.CORP",
+    "distinguishedname": "CN=TARGETCOMPUTERC,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "TARGETCOMPUTERC$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708936070,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": 1708971571,
+    "pwdlastset": 1708964870,
+    "serviceprincipalnames": [],
+    "email": null,
+    "operatingsystem": null,
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1188",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "VICTIMCOMPUTERA.WRAITH.CORP",
+    "distinguishedname": "CN=VICTIMCOMPUTERA,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "VICTIMCOMPUTERA$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708934718,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1708963518,
+    "serviceprincipalnames": [],
+    "email": null,
+    "operatingsystem": null,
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1181",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TEST.WRAITH.CORP",
+    "distinguishedname": "CN=TEST,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "TEST$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708584973,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1708613773,
+    "serviceprincipalnames": [],
+    "email": null,
+    "operatingsystem": null,
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1180",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTDC01.WRAITH.CORP",
+    "distinguishedname": "CN=EXTDC01,OU=DOMAIN CONTROLLERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTDC01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1668394831,
+    "enabled": true,
+    "unconstraineddelegation": true,
+    "trustedtoauth": false,
+    "isdc": true,
+    "lastlogon": 1709665899,
+    "lastlogontimestamp": 1709137481,
+    "pwdlastset": 1707307709,
+    "serviceprincipalnames": [
+      "exchangeAB/EXTDC01.wraith.corp",
+      "Dfsr-12F9A27C-BF97-4787-9364-D31B6C55EB04/EXTDC01.wraith.corp",
+      "TERMSRV/EXTDC01.wraith.corp",
+      "ldap/EXTDC01.wraith.corp/ForestDnsZones.wraith.corp",
+      "ldap/EXTDC01.wraith.corp/DomainDnsZones.wraith.corp",
+      "DNS/EXTDC01.wraith.corp",
+      "GC/EXTDC01.wraith.corp/wraith.corp",
+      "RestrictedKrbHost/EXTDC01.wraith.corp",
+      "HOST/EXTDC01.wraith.corp/WRAITH",
+      "HOST/EXTDC01.wraith.corp",
+      "HOST/EXTDC01.wraith.corp/wraith.corp",
+      "ldap/EXTDC01.wraith.corp/WRAITH",
+      "ldap/EXTDC01.wraith.corp",
+      "ldap/EXTDC01.wraith.corp/wraith.corp",
+      "exchangeAB/EXTDC01",
+      "TERMSRV/EXTDC01",
+      "RestrictedKrbHost/EXTDC01",
+      "RPC/168472ea-c8df-4a89-a29a-b230b04a3032._msdcs.wraith.corp",
+      "HOST/EXTDC01/WRAITH",
+      "HOST/EXTDC01",
+      "E3514235-4B06-11D1-AB04-00C04FC2DCD2/168472ea-c8df-4a89-a29a-b230b04a3032/wraith.corp",
+      "ldap/EXTDC01/WRAITH",
+      "ldap/168472ea-c8df-4a89-a29a-b230b04a3032._msdcs.wraith.corp",
+      "ldap/EXTDC01"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-516",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1000"
+      },
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1000"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1000"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "LocalGroups": [
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-549",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-548",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-554",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+          "ObjectType": "Computer"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+          "ObjectType": "Computer"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-557",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-560",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-9",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1138",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-561",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-544",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-500",
+          "ObjectType": "User"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-519",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-512",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-2697957641-2271029196-387917394-2113",
+          "ObjectType": "Base"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1105",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1106",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1119",
+          "ObjectType": "User"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-545",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-546",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-501",
+          "ObjectType": "User"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-514",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-550",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-551",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-552",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-555",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-556",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-558",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-559",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-562",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-568",
+      "Name": "IGNOREME",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-17",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-569",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-573",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-574",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-575",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-576",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-577",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-578",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-579",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-580",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-582",
+      "Name": "IGNOREME",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "UserRights": [
+    {
+      "Privilege": "SeRemoteInteractiveLogonRight",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-32-544",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "DCRegistryData": {
+    "CertificateMappingMethods": {
+      "Value": 24,
+      "Collected": true,
+      "FailureReason": null
+    },
+    "StrongCertificateBindingEnforcement": {
+      "Value": 1,
+      "Collected": true,
+      "FailureReason": null
+    }
+  },
+  "Status": null,
+  "IsDC": true,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1000",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "16D432AC-31A9-47A8-9449-36C2BFF9417B",
+    "ObjectType": "OU"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTCA01.WRAITH.CORP",
+    "distinguishedname": "CN=EXTCA01,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTCA01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683819588,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 1709665908,
+    "lastlogontimestamp": 1709665899,
+    "pwdlastset": 1707329093,
+    "serviceprincipalnames": [
+      "WSMAN/EXTCA01.wraith.corp",
+      "TERMSRV/EXTCA01.wraith.corp",
+      "RestrictedKrbHost/EXTCA01.wraith.corp",
+      "HOST/EXTCA01.wraith.corp",
+      "WSMAN/extca01",
+      "TERMSRV/EXTCA01",
+      "RestrictedKrbHost/EXTCA01",
+      "HOST/EXTCA01"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1169",
+      "ObjectType": "Computer"
+    }
+  ],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1120"
+      },
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1120"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-1120"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "LocalGroups": [
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-1000",
+      "Name": "BOOH@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-579",
+      "Name": "ACCESS CONTROL ASSISTANCE OPERATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+      "Name": "ADMINISTRATORS@EXTCA01.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-512",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1166",
+          "ObjectType": "User"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-551",
+      "Name": "BACKUP OPERATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-574",
+      "Name": "CERTIFICATE SERVICE DCOM ACCESS@EXTCA01.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-569",
+      "Name": "CRYPTOGRAPHIC OPERATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-583",
+      "Name": "DEVICE OWNERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-562",
+      "Name": "DISTRIBUTED COM USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-573",
+      "Name": "EVENT LOG READERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-546",
+      "Name": "GUESTS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-578",
+      "Name": "HYPER-V ADMINISTRATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-568",
+      "Name": "IIS_IUSRS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-556",
+      "Name": "NETWORK CONFIGURATION OPERATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-559",
+      "Name": "PERFORMANCE LOG USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-558",
+      "Name": "PERFORMANCE MONITOR USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-547",
+      "Name": "POWER USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-550",
+      "Name": "PRINT OPERATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-576",
+      "Name": "RDS ENDPOINT SERVERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-577",
+      "Name": "RDS MANAGEMENT SERVERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-575",
+      "Name": "RDS REMOTE ACCESS SERVERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-555",
+      "Name": "REMOTE DESKTOP USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-580",
+      "Name": "REMOTE MANAGEMENT USERS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-552",
+      "Name": "REPLICATOR@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-582",
+      "Name": "STORAGE REPLICA ADMINISTRATORS@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-581",
+      "Name": "SYSTEM MANAGED ACCOUNTS GROUP@EXTCA01.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-545",
+      "Name": "USERS@EXTCA01.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "UserRights": [
+    {
+      "Privilege": "SeRemoteInteractiveLogonRight",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-555",
+          "ObjectType": "LocalGroup"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-544",
+          "ObjectType": "LocalGroup"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": null,
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+{
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "UNCON.WRAITH.CORP",
+    "distinguishedname": "CN=UNCON,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "UNCON$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1683819588,
+    "enabled": true,
+    "unconstraineddelegation": true,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 1709665908,
+    "lastlogontimestamp": 1709665899,
+    "pwdlastset": 1707329093,
+    "serviceprincipalnames": [
+      "WSMAN/UNCON.wraith.corp",
+      "TERMSRV/UNCON.wraith.corp",
+      "RestrictedKrbHost/UNCON.wraith.corp",
+      "HOST/UNCON.wraith.corp",
+      "WSMAN/UNCON",
+      "TERMSRV/UNCON",
+      "RestrictedKrbHost/UNCON",
+      "HOST/UNCON"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-11203"
+      },
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-11203"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [
+      {
+        "UserSID": "S-1-5-21-3702535222-3822678775-2090119576-1113",
+        "ComputerSID": "S-1-5-21-3702535222-3822678775-2090119576-11203"
+      }
+    ],
+    "Collected": true,
+    "FailureReason": null
+  },
+  "LocalGroups": [
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-1000",
+      "Name": "BOOH@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-579",
+      "Name": "ACCESS CONTROL ASSISTANCE OPERATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-544",
+      "Name": "ADMINISTRATORS@UNCON.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-512",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1166",
+          "ObjectType": "User"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-551",
+      "Name": "BACKUP OPERATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-574",
+      "Name": "CERTIFICATE SERVICE DCOM ACCESS@UNCON.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-569",
+      "Name": "CRYPTOGRAPHIC OPERATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-583",
+      "Name": "DEVICE OWNERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-562",
+      "Name": "DISTRIBUTED COM USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-573",
+      "Name": "EVENT LOG READERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-546",
+      "Name": "GUESTS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-578",
+      "Name": "HYPER-V ADMINISTRATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-568",
+      "Name": "IIS_IUSRS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-556",
+      "Name": "NETWORK CONFIGURATION OPERATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1120-559",
+      "Name": "PERFORMANCE LOG USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-558",
+      "Name": "PERFORMANCE MONITOR USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-547",
+      "Name": "POWER USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-550",
+      "Name": "PRINT OPERATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-576",
+      "Name": "RDS ENDPOINT SERVERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-577",
+      "Name": "RDS MANAGEMENT SERVERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-575",
+      "Name": "RDS REMOTE ACCESS SERVERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-555",
+      "Name": "REMOTE DESKTOP USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-580",
+      "Name": "REMOTE MANAGEMENT USERS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-552",
+      "Name": "REPLICATOR@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-582",
+      "Name": "STORAGE REPLICA ADMINISTRATORS@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-581",
+      "Name": "SYSTEM MANAGED ACCOUNTS GROUP@UNCON.WRAITH.CORP",
+      "Results": [],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    },
+    {
+      "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-545",
+      "Name": "USERS@UNCON.WRAITH.CORP",
+      "Results": [
+        {
+          "ObjectIdentifier": "WRAITH.CORP-S-1-5-11",
+          "ObjectType": "Group"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-513",
+          "ObjectType": "Group"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "UserRights": [
+    {
+      "Privilege": "SeRemoteInteractiveLogonRight",
+      "Results": [
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-555",
+          "ObjectType": "LocalGroup"
+        },
+        {
+          "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203-544",
+          "ObjectType": "LocalGroup"
+        }
+      ],
+      "LocalNames": [],
+      "Collected": true,
+      "FailureReason": null
+    }
+  ],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": null,
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-11203",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "TARGETUSERD2",
+    "distinguishedname": "CN=VICTIMCOMPUTERD,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "VICTIMCOMPUTERD$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1708935679,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 0,
+    "lastlogontimestamp": -1,
+    "pwdlastset": 1708964479,
+    "serviceprincipalnames": [],
+    "email": null,
+    "operatingsystem": null,
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1186",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+},
+    {
+  "Properties": {
+    "domain": "WRAITH.CORP",
+    "name": "EXTEXCH01.WRAITH.CORP",
+    "distinguishedname": "CN=EXTEXCH01,CN=COMPUTERS,DC=WRAITH,DC=CORP",
+    "domainsid": "S-1-5-21-3702535222-3822678775-2090119576",
+    "samaccountname": "EXTEXCH01$",
+    "haslaps": false,
+    "isaclprotected": false,
+    "description": null,
+    "whencreated": 1685412547,
+    "enabled": true,
+    "unconstraineddelegation": false,
+    "trustedtoauth": false,
+    "isdc": false,
+    "lastlogon": 1709216404,
+    "lastlogontimestamp": 1709216386,
+    "pwdlastset": 1707818193,
+    "serviceprincipalnames": [
+      "IMAP/EXTEXCH01",
+      "IMAP/extexch01.wraith.corp",
+      "IMAP4/EXTEXCH01",
+      "IMAP4/extexch01.wraith.corp",
+      "POP/EXTEXCH01",
+      "POP/extexch01.wraith.corp",
+      "POP3/EXTEXCH01",
+      "POP3/extexch01.wraith.corp",
+      "exchangeRFR/EXTEXCH01",
+      "exchangeRFR/extexch01.wraith.corp",
+      "exchangeAB/EXTEXCH01",
+      "exchangeAB/extexch01.wraith.corp",
+      "exchangeMDB/EXTEXCH01",
+      "exchangeMDB/extexch01.wraith.corp",
+      "SMTP/EXTEXCH01",
+      "SMTP/extexch01.wraith.corp",
+      "SmtpSvc/EXTEXCH01",
+      "SmtpSvc/extexch01.wraith.corp",
+      "WSMAN/extexch01",
+      "WSMAN/extexch01.wraith.corp",
+      "TERMSRV/EXTEXCH01",
+      "TERMSRV/extexch01.wraith.corp",
+      "RestrictedKrbHost/EXTEXCH01",
+      "HOST/EXTEXCH01",
+      "RestrictedKrbHost/extexch01.wraith.corp",
+      "HOST/extexch01.wraith.corp"
+    ],
+    "email": null,
+    "operatingsystem": "Windows Server 2019 Standard",
+    "sidhistory": []
+  },
+  "PrimaryGroupSID": "S-1-5-21-3702535222-3822678775-2090119576-515",
+  "AllowedToDelegate": [],
+  "AllowedToAct": [],
+  "HasSIDHistory": [],
+  "DumpSMSAPassword": [],
+  "Sessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "PrivilegedSessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "RegistrySessions": {
+    "Results": [],
+    "Collected": false,
+    "FailureReason": null
+  },
+  "LocalGroups": [],
+  "UserRights": [],
+  "DCRegistryData": {
+    "CertificateMappingMethods": null,
+    "StrongCertificateBindingEnforcement": null
+  },
+  "Status": {
+    "Connectable": false,
+    "Error": "PortNotOpen"
+  },
+  "IsDC": false,
+  "DomainSID": "S-1-5-21-3702535222-3822678775-2090119576",
+  "Aces": [
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "Owns",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-548",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-512",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": false
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-526",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-527",
+      "PrincipalType": "Group",
+      "RightName": "AddKeyCredentialLink",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "S-1-5-21-3702535222-3822678775-2090119576-519",
+      "PrincipalType": "Group",
+      "RightName": "GenericAll",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteDacl",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "WriteOwner",
+      "IsInherited": true
+    },
+    {
+      "PrincipalSID": "WRAITH.CORP-S-1-5-32-544",
+      "PrincipalType": "Group",
+      "RightName": "GenericWrite",
+      "IsInherited": true
+    }
+  ],
+  "ObjectIdentifier": "S-1-5-21-3702535222-3822678775-2090119576-1123",
+  "IsDeleted": false,
+  "IsACLProtected": false,
+  "ContainedBy": {
+    "ObjectIdentifier": "37638B6C-38DE-49D3-AC90-F53FDAC8A529",
+    "ObjectType": "Container"
+  }
+}
+  ],
+  "meta": {
+  "methods": 521215,
+  "type": "computers",
+  "count": 11,
+  "version": 6
+}
+}
