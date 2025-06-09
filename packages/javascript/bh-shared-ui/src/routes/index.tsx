@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { TIER_ZERO_ID } from '../views/TierManagement/utils';
+import { TIER_ZERO_ID } from '../utils/tagUrlValue';
 
 export const DEFAULT_TIER_MANAGEMENT_ROUTE = 'details/tier/' + TIER_ZERO_ID;
 
@@ -25,7 +25,6 @@ export const ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/
 export const ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
 export const ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS =
     '/details/label/:labelId/selector/:selectorId/member/:memberId';
-
 export const ROUTE_TIER_MANAGEMENT_SAVE = '/save';
 export const ROUTE_TIER_MANAGEMENT_UPDATE_TIER = '/save/tier/:tierId';
 export const ROUTE_TIER_MANAGEMENT_UPDATE_LABEL = '/save/label/:labelId';

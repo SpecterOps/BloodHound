@@ -29,6 +29,7 @@ export * from './passwd';
 export * from './permissions';
 export * from './queries';
 export * from './searchParams';
+export * from './tagUrlValue';
 export * from './testHelpers';
 export * from './theme';
 export * from './user';
