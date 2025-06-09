@@ -335,8 +335,6 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	var (
 		dbInst             = integration.SetupDB(t)
 		testCtx            = context.Background()
-		tagTypeTier        = model.AssetGroupTagTypeTier
-		tagTypeLabel       = model.AssetGroupTagTypeLabel
 		testUser           = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 		testName           = "test tag name"
 		testName2          = "test tag name2"
@@ -347,9 +345,9 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	)
 
 	t.Run("successfully deletes asset group tag tier", func(t *testing.T) {
-		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
+		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
 		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, assetGroupTagTier.Type)
+		require.Equal(t, model.AssetGroupTagTypeTier, assetGroupTagTier.Type)
 		require.Equal(t, testName, assetGroupTagTier.Name)
 		require.Equal(t, testDescription, assetGroupTagTier.Description)
 
@@ -365,9 +363,9 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("successfully deletes asset group label", func(t *testing.T) {
-		assetGroupTagLabel, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testUser, testName2, testDescription2, null.Int32{}, null.Bool{})
+		assetGroupTagLabel, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testUser, testName2, testDescription2, null.Int32{}, null.Bool{})
 		require.NoError(t, err)
-		require.Equal(t, tagTypeLabel, assetGroupTagLabel.Type)
+		require.Equal(t, model.AssetGroupTagTypeLabel, assetGroupTagLabel.Type)
 		require.Equal(t, testName2, assetGroupTagLabel.Name)
 		require.Equal(t, testDescription2, assetGroupTagLabel.Description)
 
