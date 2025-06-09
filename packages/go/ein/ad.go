@@ -303,25 +303,24 @@ func ParsePrimaryGroup(item IngestBase, itemType graph.Kind, primaryGroupSid str
 }
 
 func ParseDomainForIdentity(item IngestBase, itemType graph.Kind, domainSID string) IngestibleRelationship {
-	if domainSID != "" {
-		return NewIngestibleRelationship(
-			IngestibleEndpoint{
-				Value: domainSID,
-				Kind:  ad.Domain,
-			},
-			IngestibleEndpoint{
-				Value: item.ObjectIdentifier,
-				Kind:  itemType,
-			},
-			IngestibleRel{
-				RelProps: map[string]any{ad.IsACL.String(): false},
-				RelType:  ad.ContainsIdentity,
-			},
-		)
+	if domainSID == "" {
+		return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
 	}
 
-	// TODO: Decide if we even want empty rels in the first place
-	return NewIngestibleRelationship(IngestibleEndpoint{}, IngestibleEndpoint{}, IngestibleRel{})
+	return NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: domainSID,
+			Kind:  ad.Domain,
+		},
+		IngestibleEndpoint{
+			Value: item.ObjectIdentifier,
+			Kind:  itemType,
+		},
+		IngestibleRel{
+			RelProps: map[string]any{ad.IsACL.String(): false},
+			RelType:  ad.ContainsIdentity,
+		},
+	)
 }
 
 func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
