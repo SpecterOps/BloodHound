@@ -24,7 +24,7 @@ const General: FC<EdgeInfoProps> = () => {
             <Typography variant='body2'>
                 The ClaimSpecialIdentity edge represents the ability to obtain an access token containing a special
                 identity (group) SID. Unlike regular groups, membership in special identities is determined at
-                authentication rather than via an explicit member list.
+                authentication rather than by an explicit member list.
             </Typography>
             <Typography variant='body2'>See the Abuse section for specific cases.</Typography>
         </>
