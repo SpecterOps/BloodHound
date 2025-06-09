@@ -273,7 +273,7 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                 <>
                     <Typography variant='body2'>
                         An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can weaponize by injecting a malicious
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
                         configuration, such as a scheduled task executing a malicious script.
                     </Typography>
                     <Typography variant='body2'>

@@ -438,7 +438,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         {"secretsdump 'DOMAIN'/'USER':'PASSWORD'@'DOMAINCONTROLLER'"}
                     </Typography>
 
-                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to obtain control of the objects of the domain is to
                         apply a GenericAll ACE on the domain that will inherit down to all object types. This can be
@@ -452,7 +452,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
                     <Typography variant='body1'>
@@ -467,7 +467,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can weaponize by injecting a malicious
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
                         configuration, such as a scheduled task executing a malicious script.
                     </Typography>
                     <Typography variant='body2'>
@@ -564,7 +564,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         With ownership of the OU object, you may grant yourself the GenericAll permission.
                     </Typography>
 
-                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to abuse control of the OU is to apply a GenericAll
                         ACE on the OU that will inherit down to all object types. This can be done using Impacket's
@@ -578,14 +578,14 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendent objects. Refer to the Windows
+                        right you want to apply to precisely which kinds of descendant objects. Refer to the Windows
                         Abuse info for this.
                     </Typography>
 
@@ -601,7 +601,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
 
                     <Typography variant='body2'>
                         An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can weaponize by injecting a malicious
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
                         configuration, such as a scheduled task executing a malicious script.
                     </Typography>
                     <Typography variant='body2'>
@@ -654,7 +654,7 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                         With ownership of the container object, you may grant yourself the GenericAll permission.
                     </Typography>
 
-                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to abuse control of the OU is to apply a GenericAll
                         ACE on the OU that will inherit down to all object types. This can be done using Impacket's
@@ -668,14 +668,14 @@ const LinuxAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> = (
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendent objects. Refer to the Windows
+                        right you want to apply to precisely which kinds of descendant objects. Refer to the Windows
                         Abuse info for this.
                     </Typography>
                 </>

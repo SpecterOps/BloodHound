@@ -600,7 +600,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body2'>
                         Alternatively, you can grant GenericAll on the domain and execute one of the follwing attacks.
                     </Typography>
-                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
                     <Typography variant='body2'>
                         The simplest and most straight forward way to obtain control of the objects of the domain is to
                         apply a GenericAll ACE on the domain that will inherit down to all object types. This can be
@@ -640,14 +640,14 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendent objects. You could, for example,
+                        right you want to apply to precisely which kinds of descendant objects. You could, for example,
                         grant a user "ForceChangePassword" permission against all user objects, or grant a security
                         group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
@@ -677,7 +677,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                     <Typography variant='body2'>
                         An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can weaponize by injecting a malicious
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
                         configuration, such as a scheduled task executing a malicious script.
                     </Typography>
                     <Typography variant='body2'>
@@ -775,7 +775,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     <Typography variant='body1'>Control of the Organizational Unit</Typography>
                     <Typography variant='body2'>
                         With WriteDACL access on the OU object, you may grant yourself GenericAll against the OU, and
-                        then set another ACE on the OU that will inherit down to its descendent objects. First, you will
+                        then set another ACE on the OU that will inherit down to its descendant objects. First, you will
                         need to set a GenericAll ACE against the OU object itself. This can be accomplished using the
                         Add-DomainObjectAcl function in PowerView.
                     </Typography>
@@ -805,7 +805,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         step:
                     </Typography>
 
-                    <Typography variant='body1'>Generic Descendent Object Takeover</Typography>
+                    <Typography variant='body1'>Generic Descendant Object Takeover</Typography>
 
                     <Typography variant='body2'>
                         The simplest and most straight forward way to abuse control of the OU is to apply a GenericAll
@@ -843,14 +843,14 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                             '$dsEntry.PsBase.CommitChanges()'}
                     </Typography>
                     <Typography variant='body2'>
-                        Now, the "JKOHLER" user will have full control of all descendent objects of each type.
+                        Now, the "JKOHLER" user will have full control of all descendant objects of each type.
                     </Typography>
 
-                    <Typography variant='body1'>Targeted Descendent Object Takeoever</Typography>
+                    <Typography variant='body1'>Targeted Descendant Object Takeoever</Typography>
 
                     <Typography variant='body2'>
                         If you want to be more targeted with your approach, it is possible to specify precisely what
-                        right you want to apply to precisely which kinds of descendent objects. You could, for example,
+                        right you want to apply to precisely which kinds of descendant objects. You could, for example,
                         grant a user "ForceChangePassword" permission against all user objects, or grant a security
                         group the ability to read every GMSA password under a certain OU. Below is an example taken from
                         PowerView's help text on how to grant the "ITADMIN" user the ability to read the LAPS password
@@ -879,7 +879,7 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                     <Typography variant='body2'>
                         An attacker with permission to modify the gPLink attribute can link GPOs to the object,
-                        affecting all contained users and computers. The GPO can weaponize by injecting a malicious
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
                         configuration, such as a scheduled task executing a malicious script.
                     </Typography>
                     <Typography variant='body2'>
