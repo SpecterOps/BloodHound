@@ -1375,6 +1375,21 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), ctx, assetGroupID)
 }
 
+// GetOrderedAssetGroupTagTiers mocks base method.
+func (m *MockDatabase) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderedAssetGroupTagTiers", ctx)
+	ret0, _ := ret[0].([]model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderedAssetGroupTagTiers indicates an expected call of GetOrderedAssetGroupTagTiers.
+func (mr *MockDatabaseMockRecorder) GetOrderedAssetGroupTagTiers(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderedAssetGroupTagTiers", reflect.TypeOf((*MockDatabase)(nil).GetOrderedAssetGroupTagTiers), ctx)
+}
+
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
