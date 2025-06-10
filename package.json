@@ -28,7 +28,8 @@
   "resolutions": {
     "dompurify": "3.1.3",
     "cross-spawn": "^7.0.5",
-    "tar-fs": "^2.1.2"
+    "tar-fs": "^2.1.2",
+    "@bloodhoundenterprise/doodleui": "portal:/Users/dpcairns/coding/DoodleUI"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

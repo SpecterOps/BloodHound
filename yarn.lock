@@ -361,9 +361,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bloodhoundenterprise/doodleui@npm:^1.0.0-alpha.17":
-  version: 1.0.0-alpha.17
-  resolution: "@bloodhoundenterprise/doodleui@npm:1.0.0-alpha.17"
+"@bloodhoundenterprise/doodleui@portal:/Users/dpcairns/coding/DoodleUI::locator=bloodhound-ce%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bloodhoundenterprise/doodleui@portal:/Users/dpcairns/coding/DoodleUI::locator=bloodhound-ce%40workspace%3A."
   dependencies:
     "@radix-ui/react-accordion": ^1.1.2
     "@radix-ui/react-checkbox": ^1.1.2
@@ -391,9 +391,8 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     tailwindcss: ^3.4.3
-  checksum: 51ec2ccc3b93e796b476460c1f39448bd61ae597d3f9b70edadb8808c376eb12741454546b24e71681d9a1f9a69f2df332fa080ec91e59ee60319ba36a1d1a4b
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@braintree/sanitize-url@npm:=6.0.2":
   version: 6.0.2
