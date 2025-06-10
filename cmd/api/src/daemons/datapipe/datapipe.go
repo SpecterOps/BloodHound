@@ -48,15 +48,6 @@ func NewDaemon(pipeline Pipeline, tickInterval time.Duration, db database.Databa
 	}
 }
 
-// PipelineInterface defines methods that operate on instance state.
-// These methods are not static and require a fully initialized pipeline.
-type Pipeline interface {
-	PruneData(context.Context)
-	DeleteData(context.Context)
-	IngestTasks(context.Context)
-	Analyze(context.Context)
-}
-
 func (s *Daemon) Start(ctx context.Context) {
 	var (
 		datapipeLoopTimer = time.NewTimer(s.tickInterval)
@@ -66,7 +57,7 @@ func (s *Daemon) Start(ctx context.Context) {
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()
 
-	s.WithDatapipeStatus(ctx, model.DatapipeStatusPurging, s.pipeline.PruneData)
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusPurging, s.pipeline.Start)
 
 	for {
 		select {

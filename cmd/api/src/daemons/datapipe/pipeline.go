@@ -33,6 +33,16 @@ import (
 	"github.com/specterops/bloodhound/src/services/upload"
 )
 
+// PipelineInterface defines methods that operate on instance state.
+// These methods are not static and require a fully initialized pipeline.
+type Pipeline interface {
+	PruneData(context.Context)
+	DeleteData(context.Context)
+	IngestTasks(context.Context)
+	Analyze(context.Context)
+	Start(context.Context)
+}
+
 type BHCEPipeline struct {
 	db                  database.Database
 	graphdb             graph.Database
@@ -55,6 +65,10 @@ func NewPipeline(ctx context.Context, cfg config.Configuration, db database.Data
 		jobService:          job.NewJobService(ctx, db),
 		graphifyService:     graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
 	}
+}
+
+func (s *BHCEPipeline) Start(ctx context.Context) {
+	s.PruneData(ctx)
 }
 
 // This handles the deletion of data if the customer requests it. I'm not sure why the defers

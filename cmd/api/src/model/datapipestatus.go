@@ -26,6 +26,7 @@ const (
 	DatapipeStatusAnalyzing DatapipeStatus = "analyzing"
 	DatapipeStatusPurging   DatapipeStatus = "purging"
 	DatapipeStatusPruning   DatapipeStatus = "pruning"
+	DatapipeStatusStarting  DatapipeStatus = "starting"
 )
 
 type DatapipeStatusWrapper struct {
