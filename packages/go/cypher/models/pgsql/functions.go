@@ -17,8 +17,8 @@
 package pgsql
 
 const (
-	//
 	FunctionUnidirectionalASPHarness Identifier = "unidirectional_asp_harness"
+	FunctionUnidirectionalSPHarness  Identifier = "unidirectional_sp_harness"
 	FunctionBidirectionalASPHarness  Identifier = "bidirectional_asp_harness"
 	FunctionIntArrayUnique           Identifier = "uniq"
 	FunctionIntArraySort             Identifier = "sort"
