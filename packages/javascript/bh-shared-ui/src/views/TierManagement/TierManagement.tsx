@@ -16,7 +16,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense, useContext } from 'react';
+import React, { FC, Suspense, useContext, useMemo } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
     DEFAULT_TIER_MANAGEMENT_ROUTE,
@@ -29,8 +29,8 @@ import {
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
+import { OWNED_ID, TIER_ZERO_ID } from '../../utils/tagUrlValue';
 import { TierManagementContext } from './TierManagementContext';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
@@ -48,16 +48,29 @@ const TierManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
 
-    const { savePaths } = useContext(TierManagementContext);
+    const context = useContext(TierManagementContext);
+    if (!context) {
+        throw new Error('TierManagement must be used within a TierManagementContext.Provider');
+    }
+    const { savePaths } = context;
 
-    const childRoutes: Routable[] = [
-        ...detailsPaths.map((path) => {
-            return { path, component: Details, authenticationRequired: true, navigation: true };
-        }),
-        ...savePaths.map((path) => {
-            return { path, component: Save, authenticationRequired: true, navigation: true };
-        }),
-    ];
+    const childRoutes: Routable[] = useMemo(
+        () => [
+            ...detailsPaths.map((path) => ({
+                path,
+                component: Details,
+                authenticationRequired: true,
+                navigation: true,
+            })),
+            ...savePaths.map((path) => ({
+                path,
+                component: Save,
+                authenticationRequired: true,
+                navigation: true,
+            })),
+        ],
+        [savePaths]
+    );
 
     return (
         <main>

@@ -20,7 +20,7 @@ import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { AppIcon } from '../../../../components/AppIcon';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
-import { getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../../../utils/tagUrlValue';
 import { itemSkeletons } from '../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
