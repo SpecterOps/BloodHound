@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // needed for table body level scope DnD setup
 
@@ -33,6 +33,7 @@ interface ExploreTableProps {
 }
 
 const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => {
+    const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () =>
             items &&
@@ -73,12 +74,25 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => 
     if (!open) return null;
 
     return (
-        <div className='border-2 border-violet-700 absolute bottom-16 left-4 right-4 w-4/5 h-1/2 bg-pink-400'>
+        <div className='border-2 absolute bottom-24 left-4 right-4 w-4/5 h-1/2'>
             <div className='explore-table-container w-full h-full'>
                 <DataTable
                     className='h-full'
                     TableProps={{
                         containerClassName: 'h-full',
+                    }}
+                    TableControlsProps={{
+                        onDownloadClick: () => alert('download icon clicked'),
+                        onExpandClick: () => alert('expand icon clicked'),
+                        onManageColumnsClick: () => alert('manage columns button clicked'),
+                        onCloseClick: () => alert('close icon clicked'),
+                        tableName: 'Results',
+                        resultsCount: 230,
+                        SearchInputProps: {
+                            onChange: (e) => setSearchInput(e.target.value),
+                            value: searchInput,
+                            placeholder: 'Search',
+                        },
                     }}
                     data={mungedData}
                     columns={columns}
