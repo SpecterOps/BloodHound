@@ -65,6 +65,13 @@ export const setExploreLayout = (exploreLayout: BaseGraphLayoutOptions): types.G
     };
 };
 
+export const setIsExploreTableSelected = (isExploreTableSelected: boolean): types.GlobalViewActionTypes => {
+    return {
+        type: types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
+        isExploreTableSelected,
+    };
+};
+
 export const setExpanded = (expanded: { [key: string]: symbol[] }): types.GlobalAccordionsActionTypes => {
     return {
         type: types.GLOBAL_SET_EXPANDED,

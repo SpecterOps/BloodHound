@@ -70,4 +70,6 @@ export type SelectedNode = {
     graphId?: string;
 };
 
-export type BaseGraphLayoutOptions = 'standard' | 'sequential' | 'table';
+export type BaseGraphLayoutOptions = 'standard' | 'sequential';
+
+export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
