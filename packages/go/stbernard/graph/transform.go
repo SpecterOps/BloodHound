@@ -184,11 +184,13 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 		}
 	}
 
-	var errStrings []string
-	for _, err := range errs {
-		errStrings = append(errStrings, err.Error())
+	if len(errs) > 0 {
+		var errStrings []string
+		for _, err := range errs {
+			errStrings = append(errStrings, err.Error())
+		}
+		slog.Warn("errors occurred while ingesting files", "errors", errStrings)
 	}
-	slog.Warn("errors occurred while ingesting files", "errors", errStrings)
 
 	return nil
 }

@@ -71,8 +71,7 @@ The following environment variables are required:
         - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
 
 The following flags are supported:
--    `PATH`: Specifies the output directory for the generated arrows.json file.
-By default, the file will be placed in the current working directory. If you would like to change the default directory, the flag `path` can be set to specify where it should output.
+-    `PATH`: Specifies the output directory for the generated arrows.json file. By default, the file will be placed in the current working directory. If you would like to change the default directory, the flag `path` can be set to specify where it should output.
         - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph --path=XYZ`
 
 ### Contributing
