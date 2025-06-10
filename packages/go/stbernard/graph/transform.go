@@ -106,23 +106,25 @@ func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	var (
+		outPath = filepath.Join(s.path, "arrows.json")
+	)
+
 	if database, err := s.initializeDatabase(ctx); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from test directory %v", err)
 	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
 		return fmt.Errorf("error ingesting data %v", err)
-	} else if nodes, edges, err := getNodesAndEdges(database); err != nil {
+	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
 	} else if arrows, err := transformToArrows(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to arrows format %w", err)
 	} else if jsonBytes, err := json.MarshalIndent(arrows, "", "  "); err != nil {
 		return fmt.Errorf("error occurred while marshalling arrows into bytes %w", err)
+	} else if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+		return fmt.Errorf("creating output directory: %w", err)
 	} else {
-		outPath := filepath.Join(s.path, "arrows.json")
-		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
-			return fmt.Errorf("creating output directory: %w", err)
-		}
 		return os.WriteFile(outPath, jsonBytes, 0o644)
 	}
 }
@@ -210,7 +212,7 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows
 			}
 		}
 
-		var labels = make([]string, 0, 4)
+		var labels = make([]string, 0, len(node.Kinds))
 		for _, kind := range node.Kinds {
 			labels = append(labels, kind.String())
 		}
@@ -271,10 +273,10 @@ func convertProperty(input any) string {
 	}
 }
 
-func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
+func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var nodes []*graph.Node
 	var edges []*graph.Relationship
-	if err := database.ReadTransaction(context.TODO(), func(tx graph.Transaction) error {
+	if err := database.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		err := tx.Nodes().Filter(
 			query.Not(query.Kind(query.Node(), common.MigrationData)),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
@@ -306,7 +308,7 @@ func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relation
 
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var (
-		testIngestFilePath = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
+		testIngestFilePath = filepath.Join("cmd", "api", "src", "test", "fixtures", "fixtures", "v6", "ingest")
 		testIngestFileDir  = filepath.Join(s.root, testIngestFilePath)
 	)
 
