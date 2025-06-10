@@ -18,9 +18,11 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
@@ -348,7 +350,11 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			}
 
 			if !origPos.Equal(tag.Position) {
-				if err := bhdb.CascadeShiftTierPositions(ctx, user, newPosition, shiftUp); err != nil {
+				dir := shiftUp
+				if tag.Position.ValueOrZero() > origPos.ValueOrZero() {
+					dir = shiftDown
+				}
+				if err := bhdb.CascadeShiftTierPositions(ctx, user, newPosition, dir); err != nil {
 					return err
 				}
 			}
@@ -361,19 +367,25 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 					name = ?,
 					description = ?,
 					position = ?,
-					require_certify = ?
+					require_certify = ?,
 					updated_at = NOW(),
-					updated_by = ?,
+					updated_by = ?
 				WHERE id = ?`,
 				tag.TableName(),
 			),
 			tag.Name,
 			tag.Description,
-			newPosition,
+			newPosition, // this is the same as tag.Position for non-tiers
 			tag.RequireCertify,
 			user.ID.String(),
 			tag.ID,
 		); result.Error != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(result.Error, &pgErr) &&
+				pgErr.Code == "23505" && // unique_violation
+				pgErr.ConstraintName == "agl_name_unique_index" {
+				return fmt.Errorf("tag name must be unique: %w: %v", ErrDuplicateAGName, result.Error)
+			}
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 			return err
@@ -539,7 +551,7 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated positon %d", originalPosition, tag.Position.Int32))); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated position %d", originalPosition, tag.Position.Int32))); err != nil {
 				return fmt.Errorf("failed to create history record: %w", err)
 			}
 
