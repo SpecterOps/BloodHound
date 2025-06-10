@@ -54,7 +54,7 @@ func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB gr
 		collectedErrors = append(collectedErrors, fmt.Errorf("domain association and pruning failed: %w", err))
 	}
 
-	if err := adAnalysis.LinkWellKnownGroups(ctx, graphDB); err != nil {
+	if err := adAnalysis.LinkWellKnownNodes(ctx, graphDB); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("well known group linking failed: %w", err))
 	}
 
