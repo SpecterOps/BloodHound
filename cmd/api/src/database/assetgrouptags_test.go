@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"log"
 	"testing"
 	"time"
 
@@ -264,114 +265,6 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[1].Action)
 	})
 
-	t.Run("shifts tier higher successfully", func(t *testing.T) {
-		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift1", "", null.Int32From(2), null.Bool{})
-		require.NoError(t, err)
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift2", "", null.Int32From(3), null.Bool{})
-		require.NoError(t, err)
-		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift3", "", null.Int32From(4), null.Bool{})
-		require.NoError(t, err)
-		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift4", "", null.Int32From(5), null.Bool{})
-		require.NoError(t, err)
-
-		toUpdate := tag3
-		toUpdate.Position = null.Int32From(3)
-		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
-		require.NoError(t, err)
-
-		// load new positions
-		updated1, err := dbInst.GetAssetGroupTag(testCtx, tag1.ID)
-		require.NoError(t, err)
-		updated2, err := dbInst.GetAssetGroupTag(testCtx, tag2.ID)
-		require.NoError(t, err)
-		updated3, err := dbInst.GetAssetGroupTag(testCtx, tag3.ID)
-		require.NoError(t, err)
-		updated4, err := dbInst.GetAssetGroupTag(testCtx, tag4.ID)
-		require.NoError(t, err)
-
-		// verify positions
-		require.Greater(t,
-			updated3.Position.ValueOrZero(),
-			updated1.Position.ValueOrZero(),
-		)
-		require.Greater(t,
-			updated2.Position.ValueOrZero(),
-			updated3.Position.ValueOrZero(),
-		)
-		require.Greater(t,
-			updated4.Position.ValueOrZero(),
-			updated2.Position.ValueOrZero(),
-		)
-
-		// verify history records were created
-		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
-		require.NoError(t, err)
-		require.GreaterOrEqual(t, len(history), 4)
-		n := len(history) - 4
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+0].Action)
-		require.Contains(t, history[n+0].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+1].Action)
-		require.Contains(t, history[n+1].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+2].Action)
-		require.Contains(t, history[n+2].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+3].Action)
-		require.Equal(t, history[n+3].Note.Valid, false)
-	})
-
-	t.Run("shifts tier lower successfully", func(t *testing.T) {
-		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift1", "", null.Int32From(2), null.Bool{})
-		require.NoError(t, err)
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift2", "", null.Int32From(3), null.Bool{})
-		require.NoError(t, err)
-		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift3", "", null.Int32From(4), null.Bool{})
-		require.NoError(t, err)
-		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift4", "", null.Int32From(5), null.Bool{})
-		require.NoError(t, err)
-
-		toUpdate := tag1
-		toUpdate.Position = null.Int32From(3)
-		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
-		require.NoError(t, err)
-
-		// load new positions
-		updated1, err := dbInst.GetAssetGroupTag(testCtx, tag1.ID)
-		require.NoError(t, err)
-		updated2, err := dbInst.GetAssetGroupTag(testCtx, tag2.ID)
-		require.NoError(t, err)
-		updated3, err := dbInst.GetAssetGroupTag(testCtx, tag3.ID)
-		require.NoError(t, err)
-		updated4, err := dbInst.GetAssetGroupTag(testCtx, tag4.ID)
-		require.NoError(t, err)
-
-		// verify positions
-		require.Greater(t,
-			updated1.Position.ValueOrZero(),
-			updated2.Position.ValueOrZero(),
-		)
-		require.Greater(t,
-			updated3.Position.ValueOrZero(),
-			updated1.Position.ValueOrZero(),
-		)
-		require.Greater(t,
-			updated4.Position.ValueOrZero(),
-			updated3.Position.ValueOrZero(),
-		)
-
-		// verify history records were created
-		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
-		require.NoError(t, err)
-		require.GreaterOrEqual(t, len(history), 4)
-		n := len(history) - 4
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+0].Action)
-		require.Contains(t, history[n+0].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+1].Action)
-		require.Contains(t, history[n+1].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+2].Action)
-		require.Contains(t, history[n+2].Note.ValueOrZero(), "updated position")
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+3].Action)
-		require.Equal(t, history[n+3].Note.Valid, false)
-	})
-
 	t.Run("returns error for duplicate name", func(t *testing.T) {
 		_, err := dbInst.CreateAssetGroupTag(
 			testCtx,
@@ -453,6 +346,121 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
 		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
+	})
+}
+
+func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
+	var (
+		testCtx   = context.Background()
+		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+	)
+
+	t.Run("shifts tier higher successfully", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift1", "", null.Int32From(2), null.Bool{})
+		require.NoError(t, err)
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift2", "", null.Int32From(3), null.Bool{})
+		require.NoError(t, err)
+		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift3", "", null.Int32From(4), null.Bool{})
+		require.NoError(t, err)
+		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "upshift4", "", null.Int32From(5), null.Bool{})
+		require.NoError(t, err)
+
+		toUpdate := tag3
+		toUpdate.Position = null.Int32From(3)
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
+		require.NoError(t, err)
+
+		// load new positions
+		updated1, err := dbInst.GetAssetGroupTag(testCtx, tag1.ID)
+		require.NoError(t, err)
+		updated2, err := dbInst.GetAssetGroupTag(testCtx, tag2.ID)
+		require.NoError(t, err)
+		updated3, err := dbInst.GetAssetGroupTag(testCtx, tag3.ID)
+		require.NoError(t, err)
+		updated4, err := dbInst.GetAssetGroupTag(testCtx, tag4.ID)
+		require.NoError(t, err)
+		log.Printf("shiftup: before: %v", []int32{tag1.Position.ValueOrZero(), tag2.Position.ValueOrZero(), tag3.Position.ValueOrZero(), tag4.Position.ValueOrZero()})
+		log.Printf("shiftup: after: %v", []int32{updated1.Position.ValueOrZero(), updated2.Position.ValueOrZero(), updated3.Position.ValueOrZero(), updated4.Position.ValueOrZero()})
+
+		// verify positions
+		require.Greater(t,
+			updated3.Position.ValueOrZero(),
+			updated1.Position.ValueOrZero(),
+		)
+		require.Greater(t,
+			updated2.Position.ValueOrZero(),
+			updated3.Position.ValueOrZero(),
+		)
+		require.Greater(t,
+			updated4.Position.ValueOrZero(),
+			updated2.Position.ValueOrZero(),
+		)
+
+		// verify history records were created
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(history), 2)
+		n := len(history) - 2
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+0].Action)
+		require.Equal(t, history[n+0].AssetGroupTagId, tag2.ID)
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+1].Action)
+		require.Equal(t, history[n+1].AssetGroupTagId, tag3.ID)
+	})
+
+	t.Run("shifts tier lower successfully", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		tag1, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift1", "", null.Int32From(2), null.Bool{})
+		require.NoError(t, err)
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift2", "", null.Int32From(3), null.Bool{})
+		require.NoError(t, err)
+		tag3, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift3", "", null.Int32From(4), null.Bool{})
+		require.NoError(t, err)
+		tag4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testActor, "downshift4", "", null.Int32From(5), null.Bool{})
+		require.NoError(t, err)
+
+		toUpdate := tag1
+		toUpdate.Position = null.Int32From(3)
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, toUpdate)
+		require.NoError(t, err)
+
+		// load new positions
+		updated1, err := dbInst.GetAssetGroupTag(testCtx, tag1.ID)
+		require.NoError(t, err)
+		updated2, err := dbInst.GetAssetGroupTag(testCtx, tag2.ID)
+		require.NoError(t, err)
+		updated3, err := dbInst.GetAssetGroupTag(testCtx, tag3.ID)
+		require.NoError(t, err)
+		updated4, err := dbInst.GetAssetGroupTag(testCtx, tag4.ID)
+		require.NoError(t, err)
+		log.Printf("shiftdown: before: %v", []int32{tag1.Position.ValueOrZero(), tag2.Position.ValueOrZero(), tag3.Position.ValueOrZero(), tag4.Position.ValueOrZero()})
+		log.Printf("shiftdown: after: %v", []int32{updated1.Position.ValueOrZero(), updated2.Position.ValueOrZero(), updated3.Position.ValueOrZero(), updated4.Position.ValueOrZero()})
+
+		// verify positions
+		require.Greater(t,
+			updated1.Position.ValueOrZero(),
+			updated2.Position.ValueOrZero(),
+		)
+		require.Greater(t,
+			updated3.Position.ValueOrZero(),
+			updated1.Position.ValueOrZero(),
+		)
+		require.Greater(t,
+			updated4.Position.ValueOrZero(),
+			updated3.Position.ValueOrZero(),
+		)
+
+		// verify history records were created
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(history), 2)
+		n := len(history) - 2
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+0].Action)
+		require.Equal(t, history[n+0].AssetGroupTagId, tag2.ID)
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[n+1].Action)
+		require.Equal(t, history[n+1].AssetGroupTagId, tag1.ID)
 	})
 }
 
