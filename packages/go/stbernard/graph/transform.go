@@ -252,23 +252,23 @@ func convertProperties(input map[string]any) map[string]string {
 }
 
 func convertProperty(input any) string {
-   switch v := input.(type) {
-		case string:
-			return v
-		case int:
-			return strconv.Itoa(v)
-		case float64:
-			return strconv.FormatFloat(v, 'f', -1, 64)
-		case bool:
-			return strconv.FormatBool(v)
-		case []any:
-			return strings.Join(slicesext.Map(v, convertProperty), ",")
-		case nil:
-			return "null"
-		default:
-			slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
-			return ""
-		}
+	switch v := input.(type) {
+	case string:
+		return v
+	case int:
+		return strconv.Itoa(v)
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case bool:
+		return strconv.FormatBool(v)
+	case []any:
+		return strings.Join(slicesext.Map(v, convertProperty), ",")
+	case nil:
+		return "null"
+	default:
+		slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
+		return ""
+	}
 }
 
 func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
@@ -306,10 +306,10 @@ func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relation
 
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var (
-		testIngestFilePath    = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
-		testIngestFileDir = filepath.Join(s.root, testIngestFilePath)
+		testIngestFilePath = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
+		testIngestFileDir  = filepath.Join(s.root, testIngestFilePath)
 	)
-	
+
 	if ingestFiles, err := os.ReadDir(testIngestFileDir); err != nil {
 		return []string{}, fmt.Errorf("error reading  directory %s: %w", testIngestFileDir, err)
 	} else {
