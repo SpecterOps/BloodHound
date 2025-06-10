@@ -37,18 +37,16 @@ oneOf:
       finding_name:
         type: string
       environment_id:
-        type: object
-        additionalProperties:
-          type: object
+        type: string
       impact_percentage:
         type: number
         format: double
       impact_count:
-        type: number
-        format: double
-      accepted_until:
         type: integer
         format: int64
+      accepted_until:
+        type: string
+        format: date-time
   - type: object
     required:
       - target_id
@@ -71,7 +69,7 @@ oneOf:
       target_kind:
         type: string
       target_properties:
-        type: string
+        type: object
         additionalProperties:
           type: object
       source_id:
@@ -83,25 +81,24 @@ oneOf:
         additionalProperties:
           type: object
       attack_path_edge_id:
-        type: int64
+        type: integer
+        format: int64
       finding_name:
         type: string
       environment_id:
-        type: object
-        additionalProperties:
-          type: object
+        type: string
       impact_percentage:
         type: number
         format: double
       impact_count:
-        type: number
+        type: integer
         format: int64
       exposure_percentage:
         type: number
         format: double
       exposure_count:
-        type: number
-        format: int64
-      accepted_until:
         type: integer
         format: int64
+      accepted_until:
+        type: string
+        format: date-time

@@ -20,7 +20,7 @@ properties:
     type: array
     description: List of unified findings.
     items:
-      $ref: './../schemas/model.unified-finding.yaml'
+      $ref: './model.unified-finding.yaml'
 
   finding_assets:
     type: object
