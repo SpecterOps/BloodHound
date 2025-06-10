@@ -306,15 +306,16 @@ func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relation
 
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var (
-		testFilePath    = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
-		ingestDirectory = filepath.Join(s.root, testFilePath)
+		testIngestFilePath    = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
+		testIngestFileDir = filepath.Join(s.root, testIngestFilePath)
 	)
-	if ingestFiles, err := os.ReadDir(filepath.Join(s.root, testFilePath)); err != nil {
-		return []string{}, err
+	
+	if ingestFiles, err := os.ReadDir(testIngestFileDir); err != nil {
+		return []string{}, fmt.Errorf("error reading  directory %s: %w", testIngestFileDir, err)
 	} else {
 		var paths = make([]string, 0, len(ingestFiles))
 		for _, path := range ingestFiles {
-			paths = append(paths, filepath.Join(ingestDirectory, path.Name()))
+			paths = append(paths, filepath.Join(testIngestFileDir, path.Name()))
 		}
 		return paths, nil
 	}
