@@ -16,78 +16,65 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useAppNavigate, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
+import { NodeResponse, apiClient, isNode, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { selectTierZeroAssetGroupId, selectOwnedAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppSelector } from 'src/store';
+import { useMutation } from 'react-query';
+import { Link } from 'react-router-dom';
+import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
+const AssetGroupMenuItem: FC<{
+    assetGroupId: number;
+    assetGroupName: string;
+    assetGroupTag: string;
+    isCurrentMember: boolean;
+    showConfirmationOnAdd?: boolean;
+    confirmationOnAddMessage?: string;
+}> = ({
+    assetGroupId,
+    assetGroupName,
+    assetGroupTag,
+    isCurrentMember,
+    showConfirmationOnAdd = false,
+    confirmationOnAddMessage = '',
+}) => {
     const { addNotification } = useNotifications();
-    const { refetch } = useExploreGraph();
-    const navigate = useAppNavigate();
-    const queryClient = useQueryClient();
 
-    const [open, setOpen] = useState(false);
+    const { refetch } = useSigmaExploreGraph();
 
-    const selectedNode = useExploreSelectedItem().selectedItemQuery.data as NodeResponse;
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
-    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-    const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
+    const { selectedItemQuery } = useExploreSelectedItem();
 
-    const assetGroupTag = new Map([
-        [tierZeroAssetGroupId, 'Tag_Tier_Zero'],
-        [ownedAssetGroupId, 'Tag_Owned'],
-    ]).get(assetGroupId);
-
-    const mutation = useMutation({
+    const createAssetGroupTagSelectorMutation = useMutation({
         mutationFn: (node: NodeResponse) => {
             return apiClient.createAssetGroupTagSelector(assetGroupId, {
                 name: node.label ?? node.objectId,
-                seeds: [{
-                    type: SeedTypeObjectId,
-                    value: node.objectId,
-                }],
+                seeds: [
+                    {
+                        type: SeedTypeObjectId,
+                        value: node.objectId,
+                    },
+                ],
             });
         },
-        onSuccess: (data: any, node: NodeResponse) => {
-            queryClient.invalidateQueries(['check-tier-node', assetGroupTag, node.objectId]);
-            refetch();
+        onSuccess: () => {
             addNotification('Update successful.', 'AssetGroupUpdateSuccess');
         },
         onError: (error: any) => {
             console.error(error);
             addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
         },
+        onSettled: () => {
+            refetch();
+            selectedItemQuery.refetch();
+        },
     });
 
-    const { data: taggedNode } = useQuery(['check-tier-node', assetGroupTag, selectedNode?.objectId], () =>
-        apiClient
-            .cypherSearch(`MATCH (n:${assetGroupTag}) WHERE n.objectid = '${selectedNode?.objectId}' RETURN n LIMIT 1`)
-            .then((res) => { let r = res.data.data?.nodes; for (let n in r) return r[n]; })
-    );
-
     const handleAddToAssetGroup = () => {
-        if (selectedNode && 'objectId' in selectedNode) {
-            mutation.mutate(selectedNode);
+        if (isNode(selectedItemQuery.data)) {
+            createAssetGroupTagSelectorMutation.mutate(selectedItemQuery.data);
         }
-    };
-
-    const handleRemoveFromAssetGroup = () => {
-        if (selectedNode && 'objectId' in selectedNode) {
-            navigate(`/tier-management/details/tag/${assetGroupId}`);
-        }
-    };
-
-    const handleOpenConfirmation = (e: React.MouseEvent<HTMLLIElement>) => {
-        e.stopPropagation();
-        setOpen(true);
-    };
-
-    const handleCloseConfirmation = () => {
-        setOpen(false);
     };
 
     // unsupported type
@@ -96,25 +83,25 @@ const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> =
     }
 
     // selected node is not a member of the group
-    if (!taggedNode) {
+    if (!isCurrentMember) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
+                <MenuItem onClick={showConfirmationOnAdd ? () => setConfirmDialogOpen(true) : handleAddToAssetGroup}>
                     Add to {assetGroupName}
                 </MenuItem>
-                {isMenuItemForTierZero ? (
+                {showConfirmationOnAdd && (
                     <ConfirmNodeChangesDialog
-                        handleCancel={handleCloseConfirmation}
+                        handleCancel={() => setConfirmDialogOpen(false)}
                         handleApply={handleAddToAssetGroup}
-                        open={open}
-                        dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                        open={confirmDialogOpen}
+                        dialogContent={confirmationOnAddMessage}
                     />
-                ) : null}
+                )}
             </>
         );
     } else {
         return (
-            <MenuItem onClick={handleRemoveFromAssetGroup}>
+            <MenuItem component={Link} to={`/tier-management/details/tag/${assetGroupId}`}>
                 Remove from {assetGroupName}
             </MenuItem>
         );

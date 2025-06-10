@@ -16,17 +16,11 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import {
-    Permission,
-    isNode,
-    useExploreParams,
-    useExploreSelectedItem,
-    useFeatureFlag,
-    usePermissions,
-} from 'bh-shared-ui';
+import { Permission, isNode, useExploreParams, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
+import { OWNED_ASSET_GROUP_TAG, TIER_ZERO_ASSET_GROUP_TAG } from '../utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
@@ -35,10 +29,11 @@ const ContextMenu: FC<{
     handleClose: () => void;
 }> = ({ contextMenu, handleClose }) => {
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
+
     const { selectedItemQuery } = useExploreSelectedItem();
-    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
     const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
+
     const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
 
     const { checkPermission } = usePermissions();
@@ -75,20 +70,24 @@ const ContextMenu: FC<{
             onClick={handleClose}>
             <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
+            {checkPermission(Permission.GRAPH_DB_WRITE) && (
+                <>
                     <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
                         assetGroupId={tierZeroAssetGroupId}
                         assetGroupName='High Value'
-                    />,
+                        assetGroupTag={TIER_ZERO_ASSET_GROUP_TAG}
+                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
+                        showConfirmationOnAdd
+                        confirmationOnAddMessage={`Are you sure you want to add this node to High Value? This action will initiate an analysis run to update group membership.`}
+                    />
                     <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
                         assetGroupId={ownedAssetGroupId}
                         assetGroupName='Owned'
-                    />,
-                ]}
+                        assetGroupTag={OWNED_ASSET_GROUP_TAG}
+                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
+                    />
+                </>
+            )}
             <CopyMenuItem />
         </Menu>
     );

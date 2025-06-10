@@ -190,3 +190,7 @@ const initGraphEdges = (graph: MultiDirectedGraph, edges: GraphEdges, themedOpti
         }
     }
 };
+
+export const TIER_ZERO_ASSET_GROUP_TAG = 'Tag_Tier_Zero';
+
+export const OWNED_ASSET_GROUP_TAG = 'Tag_Owned';
