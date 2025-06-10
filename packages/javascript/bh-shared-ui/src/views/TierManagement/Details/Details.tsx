@@ -16,13 +16,13 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../../components';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { TIER_ZERO_ID, getTagUrlValue } from '../../../utils/tagUrlValue';
+import { TierManagementContext } from '../TierManagementContext';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -79,6 +79,12 @@ const Details: FC = () => {
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
+    const context = useContext(TierManagementContext);
+    if (!context) {
+        throw new Error('Details must be used within a TierManagementContext.Provider');
+    }
+    const { InfoHeader } = context;
+
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
         queryFn: async () => {
@@ -101,47 +107,9 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
 
     return (
-        <div>
+        <>
             <div className='flex mt-6 gap-8'>
-                <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3'>
-                        <div className='flex items-center align-middle'>
-                            <CreateMenu
-                                createMenuTitle='Create Selector'
-                                disabled={!tagId}
-                                menuItems={[
-                                    {
-                                        title: 'Create Selector',
-                                        onClick: () => {
-                                            navigate(
-                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
-                                            );
-                                        },
-                                    },
-                                ]}
-                            />
-                            <div className='hidden'>
-                                <div>
-                                    <AppIcon.Info className='mr-4 ml-2' size={24} />
-                                </div>
-                                <span>
-                                    To create additional tiers{' '}
-                                    <Button
-                                        variant='text'
-                                        asChild
-                                        className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
-                                        <a href='#'>contact sales</a>
-                                    </Button>{' '}
-                                    in order to upgrade for multi-tier analysis.
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className='flex justify-start basis-1/3'>
-                        <input type='text' placeholder='search' className='hidden' />
-                    </div>
-                </div>
-
+                <InfoHeader />
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
@@ -186,7 +154,7 @@ const Details: FC = () => {
                     <SelectedDetails />
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

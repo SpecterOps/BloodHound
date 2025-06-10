@@ -24,7 +24,7 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { getTagUrlValue } from '../utils';
+import { getTagUrlValue } from '../../../utils/tagUrlValue';
 import SelectorForm from './SelectorForm';
 import { TagForm } from './TagForm';
 
