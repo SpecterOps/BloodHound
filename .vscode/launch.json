@@ -74,7 +74,7 @@
             "cwd": "${workspaceFolder}",
             "args": ["graph", "-path=packages/go/stbernard/graph"],
             "env": {
-                "SB_PG_CONNECTION":"user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+                "SB_PG_CONNECTION":"user=bloodhound password=${env:BH_PASSWORD} dbname=bloodhound host=localhost port=65432"
             }
         }
     ]

@@ -21,6 +21,8 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 
 	"os"
 	"path/filepath"
@@ -35,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
+	"github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/migrations"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/graphify"
@@ -43,7 +46,7 @@ import (
 
 const (
 	Name  = "graph"
-	Usage = "Run code generation in current workspace"
+	Usage = "Ingest test files and transform graph data into arrows.app compatible JSON files"
 )
 
 type command struct {
@@ -76,7 +79,6 @@ func (s *command) Parse(cmdIndex int) error {
 	if err != nil {
 		return fmt.Errorf("failed to find workspace paths: %w", err)
 	}
-
 	s.root = workspacePaths.Root
 
 	path := cmd.String("path", workspacePaths.Root, "destination path for arrows.json file, default is root")
@@ -174,7 +176,7 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 			// ingest file into database
 			err = graphify.ReadFileForIngest(timestampedBatch, file, readOpts)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("error ingesting timestamped batch %v -- error: %w", timestampedBatch, err))
+				errs = append(errs, fmt.Errorf("error ingesting file %s: %w", filepath, err))
 			}
 
 			return nil
@@ -196,8 +198,8 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 }
 
 func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows, error) {
-	var arrowNodes = make([]Node, 0, 4)
-	var arrowEdges = make([]Relationship, 0, 4)
+	var arrowNodes = make([]Node, 0, len(nodes))
+	var arrowEdges = make([]Relationship, 0, len(edges))
 
 	for _, node := range nodes {
 		name, err := node.Properties.Get(common.Name.String()).String()
@@ -221,7 +223,7 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows
 			},
 			Caption:    name,
 			Label:      labels,
-			Properties: map[string]string{},
+			Properties: convertProperties(node.Properties.Map),
 		})
 	}
 
@@ -231,7 +233,7 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows
 			From:       edge.StartID.String(),
 			To:         edge.EndID.String(),
 			Label:      edge.Kind.String(),
-			Properties: map[string]string{},
+			Properties: convertProperties(edge.Properties.Map),
 		})
 	}
 
@@ -241,33 +243,33 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows
 	}, nil
 }
 
-// func convertProperties(input map[string]any) map[string]string {
-// 	output := make(map[string]string)
-// 	for key, value := range input {
-// 		output[key] = convertProperty(value)
-// 	}
-// 	return output
-// }
+func convertProperties(input map[string]any) map[string]string {
+	output := make(map[string]string)
+	for key, value := range input {
+		output[key] = convertProperty(value)
+	}
+	return output
+}
 
-// func convertProperty(input any) string {
-//    switch v := input.(type) {
-// 		case string:
-// 			return v
-// 		case int:
-// 			return strconv.Itoa(v)
-// 		case float64:
-// 			return strconv.FormatFloat(v, 'f', -1, 64)
-// 		case bool:
-// 			return strconv.FormatBool(v)
-// 		case []any:
-// 			return strings.Join(slicesext.Map(v, convertProperty), ",")
-// 		case nil:
-// 			return "null"
-// 		default:
-// 			slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
-// 			return ""
-// 		}
-// }
+func convertProperty(input any) string {
+   switch v := input.(type) {
+		case string:
+			return v
+		case int:
+			return strconv.Itoa(v)
+		case float64:
+			return strconv.FormatFloat(v, 'f', -1, 64)
+		case bool:
+			return strconv.FormatBool(v)
+		case []any:
+			return strings.Join(slicesext.Map(v, convertProperty), ",")
+		case nil:
+			return "null"
+		default:
+			slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
+			return ""
+		}
+}
 
 func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var nodes []*graph.Node
@@ -304,13 +306,13 @@ func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relation
 
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var (
-		testFilePath    = filepath.Join("cmd", "api", "src", "test", "fixtures", "fixtures", "v6", "ingest")
+		testFilePath    = filepath.Join(strings.Split("cmd/api/src/test/fixtures/fixtures/v6/ingest", "/")...)
 		ingestDirectory = filepath.Join(s.root, testFilePath)
 	)
 	if ingestFiles, err := os.ReadDir(filepath.Join(s.root, testFilePath)); err != nil {
 		return []string{}, err
 	} else {
-		var paths = make([]string, 0, 10)
+		var paths = make([]string, 0, len(ingestFiles))
 		for _, path := range ingestFiles {
 			paths = append(paths, filepath.Join(ingestDirectory, path.Name()))
 		}
