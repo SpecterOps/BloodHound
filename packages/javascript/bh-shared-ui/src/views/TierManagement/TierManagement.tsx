@@ -77,13 +77,8 @@ const TierManagement: FC = () => {
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Tier Management</h1>
                 <p className='mt-6'>
-                    <span>
-                        Use Privilege Zones to segment and organize assets based on sensitivity and access level.
-                    </span>
-                    <br />
-                    <span>
-                        <SupportLink />
-                    </span>
+                    Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <SupportLink />
                 </p>
 
                 <div className='flex flex-col'>
