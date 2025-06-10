@@ -68,13 +68,13 @@ func (s *Daemon) Start(ctx context.Context) {
 	defer datapipeLoopTimer.Stop()
 	defer pruningTicker.Stop()
 
-	s.WithDatapipeStatus(ctx, model.DatapipeStatusPurging, s.pipeline.Start)
+	s.WithDatapipeStatus(ctx, model.DatapipeStatusStarting, s.pipeline.Start)
 
 	for {
 		select {
 		case <-pruningTicker.C:
 
-			s.WithDatapipeStatus(ctx, model.DatapipeStatusPurging, s.pipeline.PruneData)
+			s.WithDatapipeStatus(ctx, model.DatapipeStatusPruning, s.pipeline.PruneData)
 
 		case <-datapipeLoopTimer.C:
 			if s.db.HasCollectedGraphDataDeletionRequest(ctx) {
