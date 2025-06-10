@@ -359,19 +359,19 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			}
 
 			if !origPos.Equal(tag.Position) {
+				origPosInt := int(origPos.ValueOrZero())
+				newPosInt := int(tag.Position.ValueOrZero())
 				orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx)
 				if err != nil {
 					return err
 				}
 
-				pos := tag.Position.ValueOrZero()
-				if pos <= 1 || pos > int32(len(orderedTags)) {
+				if newPosInt <= 1 || newPosInt > len(orderedTags) {
 					return fmt.Errorf("position out of range")
 				}
-				// remove tag from original position in list
-				orderedTags = append(orderedTags[:origPos.ValueOrZero()-1], orderedTags[origPos.ValueOrZero():]...)
-				// create new list inserting updated tag in the middle
-				orderedTags = append(orderedTags[:pos-1], append(model.AssetGroupTags{tag}, orderedTags[pos-1:]...)...)
+
+				orderedTags = slices.Delete(orderedTags, origPosInt-1, origPosInt)
+				orderedTags = slices.Insert(orderedTags, newPosInt-1, tag)
 
 				if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, []int{tag.ID}); err != nil {
 					return err
