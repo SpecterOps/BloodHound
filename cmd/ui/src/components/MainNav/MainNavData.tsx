@@ -66,7 +66,7 @@ export const useMainNavPrimaryListData = (): MainNavData['primaryList'] => {
             testId: 'global_nav-explore',
         },
         {
-            label: tierFlag?.enabled ? 'Zone Management' : 'Group Management',
+            label: tierFlag?.enabled ? 'Privilege Zones' : 'Group Management',
             icon: <AppIcon.Diamond size={24} />,
             route: tierFlag?.enabled ? routes.ROUTE_ZONE_MANAGEMENT_ROOT : routes.ROUTE_GROUP_MANAGEMENT,
             testId: tierFlag?.enabled ? 'global_nav-zone-management' : 'global_nav-group-management',

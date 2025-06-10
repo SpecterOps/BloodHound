@@ -75,7 +75,7 @@ const ZoneManagement: FC = () => {
     return (
         <main>
             <div className='h-dvh min-w-full px-8'>
-                <h1 className='text-4xl font-bold pt-8'>Zone Management</h1>
+                <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
                     <span>Define and manage selectors to dynamically gather objects based on criteria.</span>
                     <br />
