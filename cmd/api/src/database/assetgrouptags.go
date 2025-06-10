@@ -38,9 +38,8 @@ type AssetGroupTagData interface {
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
-	GetMaxTierPosition(ctx context.Context) (int32, error)
-	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
+	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -278,8 +277,6 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			Action: model.AuditLogActionCreateAssetGroupTag,
 			Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
 		}
-
-		positionProvided = tag.Position.Valid
 	)
 
 	if tag.ToType() == "unknown" {
@@ -295,35 +292,17 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 
 		if tag.Type == model.AssetGroupTagTypeTier {
 
-			// get the next possible max position
-			maxPosition, err := bhdb.GetMaxTierPosition(ctx)
-			if err != nil {
-				return err
-			}
-
-			newMax := maxPosition + 1
-
-			if !positionProvided {
-				tag.Position = null.Int32From(newMax)
-			} else {
-				// ensure the provided position is the next sequential value
-				if tag.Position.Int32 > newMax {
-					return fmt.Errorf("cannot insert tier at position %d — must be next in sequence (position %d)", tag.Position.Int32, newMax)
-				}
-
-				if tag.Position.Int32 <= 1 {
-					return fmt.Errorf("cannot explicitly create a tier at or below position 1")
-				}
-			}
-
 			orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx)
 			if err != nil {
 				return err
 			}
 
+			if !tag.Position.Valid {
+				tag.Position.SetValid(int32(len(orderedTags) + 1))
+			}
 			pos := tag.Position.ValueOrZero()
 			if pos <= 1 || pos > int32(len(orderedTags))+1 {
-				return fmt.Errorf("position out of range")
+				return ErrPositionOutOfRange
 			}
 
 			orderedTags = append(orderedTags[:pos-1], append(model.AssetGroupTags{tag}, orderedTags[pos-1:]...)...)
@@ -470,19 +449,6 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
-}
-
-func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
-	var max null.Int32
-	var tag model.AssetGroupTag
-
-	if result := s.db.WithContext(ctx).
-		Raw(fmt.Sprintf("SELECT MAX(position) FROM %s", tag.TableName())).
-		Scan(&max); result.Error != nil {
-		return 0, CheckError(result)
-	}
-
-	return max.Int32, nil
 }
 
 func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {

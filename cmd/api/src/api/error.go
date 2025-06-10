@@ -76,7 +76,7 @@ const (
 	ErrorResponseAssetGroupTagDuplicateKindName     = "asset group tag name must be unique"
 	ErrorResponseAssetGroupTagInvalid               = "valid tag type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"
-	ErrorResponseAssetGroupTagInvalidFields         = "position and requireCertify are only allowed for tiers"
+	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
