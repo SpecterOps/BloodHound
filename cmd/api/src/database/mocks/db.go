@@ -91,20 +91,6 @@ func (mr *MockDatabaseMockRecorder) CancelAllIngestJobs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelAllIngestJobs", reflect.TypeOf((*MockDatabase)(nil).CancelAllIngestJobs), ctx)
 }
 
-// CascadeShiftTierPositions mocks base method.
-func (m *MockDatabase) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction database.ShiftDirection) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CascadeShiftTierPositions", ctx, user, position, direction)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CascadeShiftTierPositions indicates an expected call of CascadeShiftTierPositions.
-func (mr *MockDatabaseMockRecorder) CascadeShiftTierPositions(ctx, user, position, direction any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CascadeShiftTierPositions", reflect.TypeOf((*MockDatabase)(nil).CascadeShiftTierPositions), ctx, user, position, direction)
-}
-
 // Close mocks base method.
 func (m *MockDatabase) Close(ctx context.Context) {
 	m.ctrl.T.Helper()
@@ -1404,6 +1390,21 @@ func (mr *MockDatabaseMockRecorder) GetMaxTierPosition(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxTierPosition", reflect.TypeOf((*MockDatabase)(nil).GetMaxTierPosition), ctx)
 }
 
+// GetOrderedAssetGroupTagTiers mocks base method.
+func (m *MockDatabase) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderedAssetGroupTagTiers", ctx)
+	ret0, _ := ret[0].([]model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderedAssetGroupTagTiers indicates an expected call of GetOrderedAssetGroupTagTiers.
+func (mr *MockDatabaseMockRecorder) GetOrderedAssetGroupTagTiers(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderedAssetGroupTagTiers", reflect.TypeOf((*MockDatabase)(nil).GetOrderedAssetGroupTagTiers), ctx)
+}
+
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
@@ -2167,6 +2168,20 @@ func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, selector
 func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId, certified, certifiedBy, nodeId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, selectorId, certified, certifiedBy, nodeId)
+}
+
+// UpdateTierPositions mocks base method.
+func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTierPositions", ctx, user, orderedTags)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTierPositions indicates an expected call of UpdateTierPositions.
+func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), ctx, user, orderedTags)
 }
 
 // UpdateUser mocks base method.

@@ -28,12 +28,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type ShiftDirection int
-
 const (
-	kindTable                = "kind"
-	shiftUp   ShiftDirection = 1
-	shiftDown ShiftDirection = -1
+	kindTable = "kind"
 )
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
@@ -43,7 +39,8 @@ type AssetGroupTagData interface {
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetMaxTierPosition(ctx context.Context) (int32, error)
-	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error
+	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
+	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -319,7 +316,19 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 				}
 			}
 
-			if err := bhdb.CascadeShiftTierPositions(ctx, user, tag.Position, shiftUp); err != nil {
+			orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx)
+			if err != nil {
+				return err
+			}
+
+			pos := tag.Position.ValueOrZero()
+			if pos <= 1 || pos > int32(len(orderedTags))+1 {
+				return fmt.Errorf("position out of range")
+			}
+
+			orderedTags = append(orderedTags[:pos-1], append(model.AssetGroupTags{tag}, orderedTags[pos-1:]...)...)
+
+			if err := bhdb.UpdateTierPositions(ctx, user, orderedTags); err != nil {
 				return err
 			}
 
@@ -345,7 +354,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			requireCertify,
 		).Scan(&tag); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"kind_name_key\"") {
-				return fmt.Errorf("%w: %v", ErrDuplicateAssetGroupTagName, result.Error)
+				fmt.Printf("dupe error: %v", result.Error)
+				return fmt.Errorf("%w: %v", ErrDuplicateKindName, result.Error)
 			}
 			return CheckError(result)
 		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, name, model.AssetGroupHistoryActionCreateTag, tag.ID, null.String{}, null.String{}); err != nil {
@@ -475,31 +485,14 @@ func (s *BloodhoundDB) GetMaxTierPosition(ctx context.Context) (int32, error) {
 	return max.Int32, nil
 }
 
-func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
-	var (
-		positionOp string
-	)
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+	for newPos, tag := range orderedTags {
+		newPos++ // position is 1 based not zero
 
-	switch direction {
-	case shiftUp:
-		positionOp = ">="
-	case shiftDown:
-		positionOp = ">"
-	default:
-		return fmt.Errorf("invalid shift direction")
-	}
+		if tag.Position.ValueOrZero() == int32(newPos) {
+			continue
+		}
 
-	// get affected rows
-	var tags []model.AssetGroupTag
-	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1 AND deleted_at IS NULL", positionOp), model.AssetGroupTagTypeTier, position.Int32).
-		Order("position ASC").
-		Find(&tags).Error; err != nil {
-		return fmt.Errorf("failed to fetch tags to shift: %w", err)
-	}
-
-	// update each and create history record
-	for _, tag := range tags {
 		var (
 			auditEntry = model.AuditEntry{
 				Action: model.AuditLogActionUpdateAssetGroupTag,
@@ -510,14 +503,9 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-			if direction == shiftUp {
-				tag.Position.Int32++
-			} else {
-				tag.Position.Int32--
-			}
-
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()
+			tag.Position.SetValid(int32(newPos))
 
 			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
 				return fmt.Errorf("failed to update tag position: %w", err)
@@ -534,4 +522,18 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	var tags model.AssetGroupTags
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
+			model.AssetGroupTag{}.TableName(),
+		),
+		model.AssetGroupTagTypeTier,
+	).Find(&tags); result.Error != nil {
+		return model.AssetGroupTags{}, CheckError(result)
+	}
+	return tags, nil
 }
