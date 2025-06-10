@@ -38,13 +38,15 @@ const savePaths = [
 export interface ZoneManagementContextValue {
     savePaths: string[];
     InfoHeader: FC;
+    SupportLink: FC;
 }
 
-const EmptyHeader: FC = () => <span></span>;
+const EmptySpan: FC = () => <span></span>;
 
 export const defaultZoneMgmtCtxValue: ZoneManagementContextValue = {
     savePaths,
-    InfoHeader: EmptyHeader,
+    InfoHeader: EmptySpan,
+    SupportLink: EmptySpan,
 };
 
 export const ZoneManagementContext = createContext<ZoneManagementContextValue>(defaultZoneMgmtCtxValue);

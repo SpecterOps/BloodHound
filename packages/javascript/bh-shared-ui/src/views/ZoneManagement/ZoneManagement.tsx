@@ -52,7 +52,7 @@ const ZoneManagement: FC = () => {
     if (!context) {
         throw new Error('ZoneManagement must be used within a ZoneManagementContext.Provider');
     }
-    const { savePaths } = context;
+    const { savePaths, SupportLink } = context;
 
     const childRoutes: Routable[] = useMemo(
         () => [
@@ -77,9 +77,8 @@ const ZoneManagement: FC = () => {
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
-                    <span>Define and manage selectors to dynamically gather objects based on criteria.</span>
-                    <br />
-                    <span>Ensure selectors capture the right assets for groups assignments or review.</span>
+                    Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <SupportLink />
                 </p>
 
                 <div className='flex flex-col'>
