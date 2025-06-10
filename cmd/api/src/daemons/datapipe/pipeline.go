@@ -27,21 +27,12 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/specterops/bloodhound/src/services/job"
 	"github.com/specterops/bloodhound/src/services/upload"
 )
-
-// PipelineInterface defines methods that operate on instance state.
-// These methods are not static and require a fully initialized pipeline.
-type Pipeline interface {
-	PruneData(context.Context)
-	DeleteData(context.Context)
-	IngestTasks(context.Context)
-	Analyze(context.Context)
-	Start(context.Context)
-}
 
 type BHCEPipeline struct {
 	db                  database.Database
@@ -77,7 +68,7 @@ func (s *BHCEPipeline) DeleteData(ctx context.Context) {
 
 	defer func() {
 		_ = s.db.DeleteAnalysisRequest(ctx)
-		_ = s.db.RequestAnalysis(ctx, "datapie")
+		_ = s.db.RequestAnalysis(ctx, "datapipe")
 		measure.Measure(slog.LevelInfo, "Purge Graph Data Completed")()
 	}()
 
@@ -136,6 +127,11 @@ func updateJobFunc(ctx context.Context, db database.Database) graphify.UpdateJob
 			}
 		}
 	}
+}
+
+// If the pipeline needs to do anything to the context, this is called before each other pipeline stage
+func (s *BHCEPipeline) IsActive(ctx context.Context, status model.DatapipeStatus) (bool, context.Context) {
+	return true, ctx
 }
 
 func (s *BHCEPipeline) Analyze(ctx context.Context) {
