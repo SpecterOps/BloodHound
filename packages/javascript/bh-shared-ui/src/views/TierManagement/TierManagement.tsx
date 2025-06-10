@@ -52,7 +52,7 @@ const TierManagement: FC = () => {
     if (!context) {
         throw new Error('TierManagement must be used within a TierManagementContext.Provider');
     }
-    const { savePaths } = context;
+    const { savePaths, SupportLink } = context;
 
     const childRoutes: Routable[] = useMemo(
         () => [
@@ -77,9 +77,13 @@ const TierManagement: FC = () => {
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Tier Management</h1>
                 <p className='mt-6'>
-                    <span>Define and manage selectors to dynamically gather objects based on criteria.</span>
+                    <span>
+                        Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    </span>
                     <br />
-                    <span>Ensure selectors capture the right assets for groups assignments or review.</span>
+                    <span>
+                        <SupportLink />
+                    </span>
                 </p>
 
                 <div className='flex flex-col'>

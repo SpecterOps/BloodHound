@@ -38,13 +38,15 @@ const savePaths = [
 export interface TierManagementContextValue {
     savePaths: string[];
     InfoHeader: FC;
+    SupportLink: FC;
 }
 
-const EmptyHeader: FC = () => <span></span>;
+const EmptySpan: FC = () => <span></span>;
 
 export const defaultTierMgmtCtxValue: TierManagementContextValue = {
     savePaths,
-    InfoHeader: EmptyHeader,
+    InfoHeader: EmptySpan,
+    SupportLink: EmptySpan,
 };
 
 export const TierManagementContext = createContext<TierManagementContextValue>(defaultTierMgmtCtxValue);
