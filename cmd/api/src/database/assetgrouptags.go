@@ -29,13 +29,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type ShiftDirection int
-
-const (
-	shiftUp   ShiftDirection = 1
-	shiftDown ShiftDirection = -1
-)
-
 const (
 	kindTable = "kind"
 )
@@ -46,6 +39,7 @@ type AssetGroupTagData interface {
 	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
+	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
@@ -234,6 +228,20 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 			sqlFilter.SQLString,
 		),
 		sqlFilter.Params...,
+	).Find(&tags); result.Error != nil {
+		return model.AssetGroupTags{}, CheckError(result)
+	}
+	return tags, nil
+}
+
+func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	var tags model.AssetGroupTags
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
+			model.AssetGroupTag{}.TableName(),
+		),
+		model.AssetGroupTagTypeTier,
 	).Find(&tags); result.Error != nil {
 		return model.AssetGroupTags{}, CheckError(result)
 	}
@@ -502,31 +510,14 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
 
-func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
-	var (
-		positionOp string
-	)
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+	for newPos, tag := range orderedTags {
+		newPos++ // position is 1 based not zero
 
-	switch direction {
-	case shiftUp:
-		positionOp = ">="
-	case shiftDown:
-		positionOp = ">"
-	default:
-		return fmt.Errorf("invalid shift direction")
-	}
+		if tag.Position.ValueOrZero() == int32(newPos) {
+			continue
+		}
 
-	// get affected rows
-	var tags []model.AssetGroupTag
-	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1", positionOp), model.AssetGroupTagTypeTier, position.Int32).
-		Order("position ASC").
-		Find(&tags).Error; err != nil {
-		return fmt.Errorf("failed to fetch tags to shift: %w", err)
-	}
-
-	// update each and create history record
-	for _, tag := range tags {
 		var (
 			auditEntry = model.AuditEntry{
 				Action: model.AuditLogActionUpdateAssetGroupTag,
@@ -537,21 +528,15 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-			originalPosition := tag.Position.Int32
-			if direction == shiftUp {
-				tag.Position.Int32++
-			} else {
-				tag.Position.Int32--
-			}
-
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()
+			tag.Position.SetValid(int32(newPos))
 
 			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.StringFrom(fmt.Sprintf("original position %d, updated position %d", originalPosition, tag.Position.Int32))); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 				return fmt.Errorf("failed to create history record: %w", err)
 			}
 
