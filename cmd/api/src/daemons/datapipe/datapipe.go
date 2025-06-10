@@ -30,6 +30,17 @@ const (
 	pruningInterval = time.Hour * 24
 )
 
+// PipelineInterface defines methods that operate on instance state.
+// These methods are not static and require a fully initialized pipeline.
+type Pipeline interface {
+	PruneData(context.Context)
+	DeleteData(context.Context)
+	IngestTasks(context.Context)
+	Analyze(context.Context)
+	Start(context.Context)
+	IsActive(context.Context, model.DatapipeStatus) (bool, context.Context)
+}
+
 type Daemon struct {
 	tickInterval time.Duration
 	pipeline     Pipeline
@@ -89,16 +100,21 @@ func (s *Daemon) Stop(ctx context.Context) error {
 // Any function can be wrapped with a datapipe lock, giving it the status. If everything locks
 // the datapipe through this same wrapper, it should always defer the idle status after.
 func (s *Daemon) WithDatapipeStatus(ctx context.Context, status model.DatapipeStatus, action func(context.Context)) {
+	active, pipelineContext := s.pipeline.IsActive(ctx, status)
 
-	if err := s.db.SetDatapipeStatus(ctx, status, false); err != nil {
-		slog.ErrorContext(ctx, fmt.Sprintf("Error setting datapipe status: %v", err))
+	if !active {
+		return
+	}
+
+	if err := s.db.SetDatapipeStatus(pipelineContext, status, false); err != nil {
+		slog.ErrorContext(pipelineContext, fmt.Sprintf("Error setting datapipe status: %v", err))
 		return
 	}
 	defer func() {
-		if err := s.db.SetDatapipeStatus(ctx, model.DatapipeStatusIdle, false); err != nil {
-			slog.ErrorContext(ctx, "failed to reset datapipe status", "error", err)
+		if err := s.db.SetDatapipeStatus(pipelineContext, model.DatapipeStatusIdle, false); err != nil {
+			slog.ErrorContext(pipelineContext, "failed to reset datapipe status", "error", err)
 		}
 	}()
 
-	action(ctx)
+	action(pipelineContext)
 }
