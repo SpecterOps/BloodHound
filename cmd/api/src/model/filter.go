@@ -313,6 +313,18 @@ type QueryParameterFilterParser struct {
 }
 
 func (s QueryParameterFilterParser) ParseQueryParameterFilter(name, value string) (QueryParameterFilter, error) {
+	// remove any leading or trailing whitespace before passing the value
+	trimValue := strings.TrimSpace(value)
+	// matches any character that's not a digit
+	parseNonDigitChar := regexp.MustCompile(`[^0-9]+`)
+	result := parseNonDigitChar.FindStringSubmatch(trimValue)
+	if len(result) == 0 {
+		return QueryParameterFilter{
+			Name:     name,
+			Operator: Equals,
+			Value:    trimValue,
+		}, nil
+	}
 	if subgroups := s.re.FindStringSubmatch(value); len(subgroups) > 0 {
 		if filterPredicate, err := ParseFilterOperator(subgroups[1]); err != nil {
 			return QueryParameterFilter{}, err

@@ -106,6 +106,36 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 					apitest.StatusCode(output, http.StatusOK)
 				},
 			},
+			{
+				Name: "Success without an operators",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "skip", "1")
+					apitest.AddQueryParam(input, "limit", "2")
+					apitest.AddQueryParam(input, "sort_by", "start_time")
+					apitest.AddQueryParam(input, "user_id", "123")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = ?", Params: []any{"123"}}).Return([]model.IngestJob{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success when passing a leading or trailing whitespaces",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "skip", "1")
+					apitest.AddQueryParam(input, "limit", "2")
+					apitest.AddQueryParam(input, "sort_by", "start_time")
+					apitest.AddQueryParam(input, "user_id", " 123 ")
+				},
+				Setup: func() {
+					mockDB.EXPECT().GetAllIngestJobs(gomock.Any(), 1, 2, "start_time", model.SQLFilter{SQLString: "user_id = ?", Params: []any{"123"}}).Return([]model.IngestJob{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
 		})
 
 }
