@@ -27,6 +27,7 @@ Commands:
   build       Build commands in current workspace
   cover       Collect coverage reports
   license     Check all supported files for expected license header and add one if missing
+  graph       Ingests test files from test fixture directory and transforms the node/edge data into json files that are compatible with arrows.app
 ```
 
 ### Usage
@@ -58,6 +59,21 @@ The following environment variables are supported:
 -   `SB_LOG_LEVEL`: takes a level name from among `debug`, `info`, `warn`, `error`, and `fatal`
 -   `SB_COVERAGE_PATH`: allows setting a path other than `./tmp/coverage` to store Go coverage files in
 -   Pass-through of any tool specific environment variables, such as for changing the Go path for caching purposes. Some pass-through variables have sane defaults defined, but will be overridden if you set the environment variables yourself.
+
+### Sub-Commands
+
+#### Graph Transform
+
+The subcommand `graph` ingests [test data](../../../cmd/api/src/test/fixtures/fixtures/v6/ingest/) into Postgres, retrieves the nodes and edges from the database, and then outputs the data as JSON files compatible with Arrows.app. This allows you to generate structured files that can be directly imported into the Arrows platform.
+
+The following environment variables are required:
+-    `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
+        - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
+
+The following flags are supported:
+-    `PATH`: Specifies the output directory for the generated arrows.json file.
+By default, the file will be placed in the current working directory. If you would like to change the default directory, the flag `path` can be set to specify where it should output.
+        - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph --path=XYZ`
 
 ### Contributing
 

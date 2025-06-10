@@ -66,13 +66,16 @@
             "outFiles": ["${workspaceFolder}/**/*.js"]
         },
         {
-            "name": "St Bernard Graph Translation",
+            "name": "St Bernard Graph Ingest & Transform",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "packages/go/stbernard",
             "cwd": "${workspaceFolder}",
-            "args": ["graph"]
+            "args": ["graph", "-path=packages/go/stbernard/graph"],
+            "env": {
+                "SB_PG_CONNECTION":"user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+            }
         }
     ]
 }

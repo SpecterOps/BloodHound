@@ -424,7 +424,7 @@ type Database interface {
 
 	// Run allows a user to pass statements directly to the database. Since results may rely on a transactional context
 	// only an error is returned from this function
-	Run(ctx context.Context, query  string, parameters map[string]any) error
+	Run(ctx context.Context, query string, parameters map[string]any) error
 
 	// Close closes the database context and releases any pooled resources held by the instance.
 	Close(ctx context.Context) error

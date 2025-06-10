@@ -1,12 +1,26 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 package graph
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 
 	"os"
 	"path/filepath"
@@ -33,7 +47,9 @@ const (
 )
 
 type command struct {
-	env environment.Environment
+	env  environment.Environment
+	path string
+	root string
 }
 
 // Create new instance of command to capture given environment
@@ -56,6 +72,14 @@ func (s *command) Name() string {
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
+	workspacePaths, err := workspace.FindPaths(s.env)
+	if err != nil {
+		return fmt.Errorf("failed to find workspace paths: %w", err)
+	}
+
+	s.root = workspacePaths.Root
+
+	path := cmd.String("path", workspacePaths.Root, "destination path for arrows.json file, default is root")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -68,6 +92,10 @@ func (s *command) Parse(cmdIndex int) error {
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
 
+	if *path != "" {
+		s.path = *path
+	}
+
 	return nil
 }
 
@@ -76,76 +104,25 @@ func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// connect to database
-	database, err := initializeDatabase(ctx)
-	if err != nil {
+	if database, err := s.initializeDatabase(ctx); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
-	}
-
-	// loads the generic ingest schema from node/edge json files
-	schema, err := upload.LoadIngestSchema()
-	if err != nil {
-		return fmt.Errorf("error loading schema %v", err)
-	}
-
-	// get test data path
-	paths, err := workspace.FindPaths(s.env)
-	if err != nil {
-		return fmt.Errorf("error finding workspace root: %w", err)
-	}
-
-	ingestFilePath := filepath.Join(paths.Root + "/cmd/api/src/test/fixtures/fixtures/v6/ingest/")
-
-	// return all files in test data path directory
-	ingestFiles, err := os.ReadDir(ingestFilePath)
-	if err != nil {
-		return fmt.Errorf("error reading ingest directory: %v", err)
-	}
-
-	var errs []error
-
-	for _, entry := range ingestFiles {
-		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
-			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
-
-			readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
-
-			file, err := os.Open(ingestFilePath + "/" + entry.Name())
-			if err != nil {
-				return fmt.Errorf("error opening JSON file %s: %v", entry.Name(), err)
-			}
-			defer file.Close()
-
-			// ingest file into database
-			if err := graphify.ReadFileForIngest(timestampedBatch, file, readOpts); err != nil {
-				if errors.Is(err, sql.ErrNoRows) {
-					errs = append(errs, fmt.Errorf("error ingesting timestamped batch %v: /n error: %w", timestampedBatch, sql.ErrNoRows))
-				}
-				errs = append(errs, fmt.Errorf("error ingesting timestamped batch %v: error: %w", timestampedBatch, err))
-			}
-
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("error occurred during batch operation %w", err)
-		}
-	}
-
-	// TODO: log ingest errors
-
-	// Read nodes and edges from database
-	nodes, edges, err := getNodesAndEdges(database)
-	if err != nil {
+	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
+		return fmt.Errorf("error getting ingest file paths from test directory %v", err)
+	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
+		return fmt.Errorf("error ingesting data %v", err)
+	} else if nodes, edges, err := getNodesAndEdges(database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
-	}
-
-	// transform to arrows.app files
-	err = transformToArrows(nodes, edges)
-	if err != nil {
+	} else if arrows, err := transformToArrows(nodes, edges); err != nil {
 		return fmt.Errorf("error transforming nodes and edges to arrows.app format %w", err)
+	} else if jsonBytes, err := json.MarshalIndent(arrows, "", "  "); err != nil {
+		return fmt.Errorf("error occurred while marshalling arrows into bytes %w", err)
+	} else {
+		outPath := filepath.Join(s.path, "arrows.json")
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+			return fmt.Errorf("creating output directory: %w", err)
+		}
+		return os.WriteFile(outPath, jsonBytes, 0o644)
 	}
-
-	return nil
 }
 
 type Position struct {
@@ -153,20 +130,19 @@ type Position struct {
 	Y int `json:"y"`
 }
 
-// Everything in arrows.app is strings
 type Node struct {
 	ID         string            `json:"id"`
 	Position   Position          `json:"position"`
-	Caption    string            `json:"caption"` // name of node, if not, use object_id
+	Caption    string            `json:"caption"` // name of node -- if not, use object_id
 	Label      []string          `json:"label"`   // kinds
 	Properties map[string]string `json:"properties"`
 }
 
 type Relationship struct {
-	ID         string         `json:"id"`
-	Label      string         `json:"label"` // kind
-	From       string         `json:"fromId"`
-	To         string         `json:"toId"`
+	ID         string            `json:"id"`
+	Label      string            `json:"label"` // kind
+	From       string            `json:"fromId"`
+	To         string            `json:"toId"`
 	Properties map[string]string `json:"properties"`
 }
 
@@ -175,16 +151,58 @@ type Arrows struct {
 	Relationships []Relationship `json:"relationships"`
 }
 
-func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) error {
-	var arrowNodes []Node
-	var arrowEdges []Relationship
+func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
+	var errs []error
+
+	schema, err := upload.LoadIngestSchema()
+	if err != nil {
+		return fmt.Errorf("error loading ingest schema %v", err)
+	}
+
+	for _, filepath := range filepaths {
+		err := database.BatchOperation(ctx, func(batch graph.Batch) error {
+			timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
+
+			readOpts := graphify.ReadOptions{IngestSchema: schema, FileType: model.FileTypeJson, ADCSEnabled: true}
+
+			file, err := os.Open(filepath)
+			if err != nil {
+				return fmt.Errorf("error opening JSON file %s: %v", filepath, err)
+			}
+			defer file.Close()
+
+			// ingest file into database
+			err = graphify.ReadFileForIngest(timestampedBatch, file, readOpts)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("error ingesting timestamped batch %v -- error: %w", timestampedBatch, err))
+			}
+
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("unrecoverable error occurred during batch operation %w", err)
+		}
+	}
+
+	var errStrings []string
+	for _, err := range errs {
+		errStrings = append(errStrings, err.Error())
+	}
+	slog.Warn("errors occurred while ingesting files", "errors", errStrings)
+
+	return nil
+}
+
+func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows, error) {
+	var arrowNodes = make([]Node, 0, 4)
+	var arrowEdges = make([]Relationship, 0, 4)
 
 	for _, node := range nodes {
 		name, err := node.Properties.Get(common.Name.String()).String()
 		if err != nil || name == "" {
 			name, err = node.Properties.Get(common.ObjectID.String()).String()
 			if err != nil {
-				return err
+				return Arrows{}, err
 			}
 		}
 
@@ -215,18 +233,10 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) error {
 		})
 	}
 
-	arrows := Arrows{
+	return Arrows{
 		Nodes:         arrowNodes,
 		Relationships: arrowEdges,
-	}
-
-	jsonBytes, err := json.MarshalIndent(arrows, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// TODO: make this agnostic - allow for user to define where this should live
-	return os.WriteFile("arrows.json", jsonBytes, 0644)
+	}, nil
 }
 
 // func convertProperties(input map[string]any) map[string]string {
@@ -260,7 +270,7 @@ func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) error {
 func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
 	var nodes []*graph.Node
 	var edges []*graph.Relationship
-	err := database.ReadTransaction(context.TODO(), func(tx graph.Transaction) error {
+	if err := database.ReadTransaction(context.TODO(), func(tx graph.Transaction) error {
 		err := tx.Nodes().Filter(
 			query.Not(query.Kind(query.Node(), common.MigrationData)),
 		).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
@@ -283,40 +293,47 @@ func getNodesAndEdges(database graph.Database) ([]*graph.Node, []*graph.Relation
 		}
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		return nodes, edges, fmt.Errorf("error occurred reading the database %w", err)
+	} else {
+		return nodes, edges, nil
 	}
-	return nodes, edges, nil
 }
 
-func initializeDatabase(ctx context.Context) (graph.Database, error) {
-	// TODO: use an sb_environment variable - or a flag on subcommand
-	connection := "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
+func (s *command) getIngestFilePaths() ([]string, error) {
+	var (
+		testFilePath    = filepath.Join("cmd", "api", "src", "test", "fixtures", "fixtures", "v6", "ingest")
+		ingestDirectory = filepath.Join(s.root, testFilePath)
+	)
+	if ingestFiles, err := os.ReadDir(filepath.Join(s.root, testFilePath)); err != nil {
+		return []string{}, err
+	} else {
+		var paths = make([]string, 0, 10)
+		for _, path := range ingestFiles {
+			paths = append(paths, filepath.Join(ingestDirectory, path.Name()))
+		}
+		return paths, nil
+	}
+}
+
+func (s *command) initializeDatabase(ctx context.Context) (graph.Database, error) {
+	var (
+		connection = s.env[environment.PostgresConnectionVarName]
+	)
+
 	if pool, err := pg.NewPool(connection); err != nil {
 		return nil, err
+	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
+		GraphQueryMemoryLimit: size.Gibibyte,
+		ConnectionString:      connection,
+		Pool:                  pool,
+	}); err != nil {
+		return nil, err
+	} else if err = migrations.NewGraphMigrator(database).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
+		return nil, err
+	} else if err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
+		return nil, err
 	} else {
-		database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
-			GraphQueryMemoryLimit: size.Gibibyte,
-			ConnectionString:      connection,
-			Pool:                  pool,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		migrator := migrations.NewGraphMigrator(database)
-		err = migrator.Migrate(ctx, graphschema.DefaultGraphSchema())
-		if err != nil {
-			return nil, err
-		}
-
-		err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph())
-		if err != nil {
-			return nil, err
-		}
-
 		return database, nil
 	}
 }
