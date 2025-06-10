@@ -14,14 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Popper, useTheme } from '@mui/material';
+import { useTheme } from '@mui/material';
 import {
     BaseGraphLayoutOptions,
     ExploreTable,
+    GraphControls,
     GraphProgress,
-    SearchCurrentNodes,
     WebGLDisabledAlert,
-    exportToJson,
+    baseGraphLayouts,
+    defaultGraphLayout,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
@@ -35,7 +36,6 @@ import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
-import GraphButtons from 'src/components/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout } from 'src/ducks/global/actions';
@@ -58,22 +58,21 @@ const GraphView: FC = () => {
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout) ?? defaultGraphLayout;
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
     const [exportJsonData, setExportJsonData] = useState();
-    const [showNodeLabels, setShowNodeLabels] = useState(true);
-    const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
+    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
 
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
-    const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
-
-    const currentSearchAnchorElement = useRef(null);
+    // const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay();
+    const displayTable = true; // autoDisplayTable || exploreLayout === 'table';
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -86,13 +85,14 @@ const GraphView: FC = () => {
 
         const graph = new MultiDirectedGraph();
 
-        initGraph(graph, items, theme, darkMode, customIcons.data ?? {});
+        const hideNodes = displayTable;
+        initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data]);
+    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -136,12 +136,6 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const setAllNodesToHidden = (hidden: boolean) => {
-        graphologyGraph?.updateEachNodeAttributes((node, attr) => {
-            return { ...attr, hidden };
-        });
-    };
-
     const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
         dispatch(setExploreLayout(layout));
 
@@ -149,8 +143,6 @@ const GraphView: FC = () => {
             sigmaChartRef.current?.runStandardLayout();
         } else if (layout === 'sequential') {
             sigmaChartRef.current?.runSequentialLayout();
-        } else if (layout === 'table') {
-            setAllNodesToHidden(true);
         }
     };
 
@@ -173,75 +165,32 @@ const GraphView: FC = () => {
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
-                <div className='flex gap-1 pointer-events-auto' ref={currentSearchAnchorElement}>
-                    <GraphButtons
-                        onExportJson={() => {
-                            exportToJson(exportJsonData);
-                        }}
-                        onReset={() => {
-                            sigmaChartRef.current?.resetCamera();
-                        }}
-                        onRunSequentialLayout={() => {
-                            dispatch(setExploreLayout('sequential'));
-                            sigmaChartRef.current?.runSequentialLayout();
-                        }}
-                        onRunStandardLayout={() => {
-                            dispatch(setExploreLayout('standard'));
-                            sigmaChartRef.current?.runStandardLayout();
-                        }}
-                        onSearchCurrentResults={() => {
-                            toggleCurrentSearch();
-                        }}
-                        onToggleAllLabels={() => {
-                            if (!showNodeLabels || !showEdgeLabels) {
-                                setShowNodeLabels(true);
-                                setShowEdgeLabels(true);
-                            } else {
-                                setShowNodeLabels(false);
-                                setShowEdgeLabels(false);
-                            }
-                        }}
-                        onToggleNodeLabels={() => {
-                            setShowNodeLabels((prev) => !prev);
-                        }}
-                        onToggleEdgeLabels={() => {
-                            setShowEdgeLabels((prev) => !prev);
-                        }}
-                        showNodeLabels={showNodeLabels}
-                        showEdgeLabels={showEdgeLabels}
-                        isCurrentSearchOpen={false}
-                        isJsonExportDisabled={isEmpty(exportJsonData)}
-                    />
-                </div>
-                <Popper
-                    open={currentSearchOpen}
-                    anchorEl={currentSearchAnchorElement.current}
-                    placement='top'
-                    disablePortal
-                    className='w-[90%] z-[1]'>
-                    <div className='pointer-events-auto' data-testid='explore_graph-controls'>
-                        <SearchCurrentNodes
-                            sx={{ padding: 1, marginBottom: 1 }}
-                            currentNodes={currentNodes || {}}
-                            onSelect={(node) => {
-                                selectItem(node.id);
-                                sigmaChartRef?.current?.zoomTo(node.id);
-                                toggleCurrentSearch?.();
-                            }}
-                            onClose={toggleCurrentSearch}
-                        />
-                    </div>
-                </Popper>
+                <GraphControls
+                    layoutOptions={baseGraphLayouts}
+                    selectedLayout={exploreLayout}
+                    onLayoutChange={handleLayoutChange}
+                    showNodeLabels={showNodeLabels}
+                    onToggleNodeLabels={toggleShowNodeLabels}
+                    showEdgeLabels={showEdgeLabels}
+                    onToggleEdgeLabels={toggleShowEdgeLabels}
+                    jsonData={exportJsonData}
+                    onReset={() => sigmaChartRef.current?.resetCamera()}
+                    currentNodes={currentNodes}
+                    onSearchedNodeClick={(node) => {
+                        selectItem(node.id);
+                        sigmaChartRef?.current?.zoomTo(node.id);
+                    }}
+                />
             </div>
             <GraphItemInformationPanel />
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
             <ExploreTable
-                open={exploreLayout === 'table'}
+                items={graphQuery.data}
+                open={displayTable}
                 onClose={() => {
-                    handleLayoutChange('sequential');
-                    setAllNodesToHidden(false);
+                    handleLayoutChange(defaultGraphLayout);
                 }}
             />
         </div>

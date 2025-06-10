@@ -105,10 +105,11 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => 
         [onClose]
     );
 
+    console.log({ mungedData });
     const columns = useMemo(
         () =>
             // If column order exists in redux/localStorage, use that
-            Object.keys(mungedData[0])
+            Object.keys(mungedData?.[0])
                 .slice(0, 10)
                 .map((key: any) => {
                     return {

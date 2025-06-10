@@ -459,3 +459,5 @@ export const baseGraphLayouts = [
     baseGraphLayoutOptions.standard,
     baseGraphLayoutOptions.table,
 ] as const;
+
+export const defaultGraphLayout = baseGraphLayoutOptions.sequential;
