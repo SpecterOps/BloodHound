@@ -46,7 +46,7 @@ import (
 
 const (
 	Name  = "graph"
-	Usage = "Ingest test files and transform graph data into arrows.app compatible JSON files"
+	Usage = "Ingest test files and transform graph data into an arrows file"
 )
 
 type command struct {
@@ -115,7 +115,7 @@ func (s *command) Run() error {
 	} else if nodes, edges, err := getNodesAndEdges(database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
 	} else if arrows, err := transformToArrows(nodes, edges); err != nil {
-		return fmt.Errorf("error transforming nodes and edges to arrows.app format %w", err)
+		return fmt.Errorf("error transforming nodes and edges to arrows format %w", err)
 	} else if jsonBytes, err := json.MarshalIndent(arrows, "", "  "); err != nil {
 		return fmt.Errorf("error occurred while marshalling arrows into bytes %w", err)
 	} else {

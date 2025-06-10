@@ -27,7 +27,7 @@ Commands:
   build       Build commands in current workspace
   cover       Collect coverage reports
   license     Check all supported files for expected license header and add one if missing
-  graph       Ingests test files from test fixture directory and transforms the node/edge data into json files that are compatible with arrows.app
+  graph       Ingests test files from test fixture directory and transforms the node/edge data into an arrows file
 ```
 
 ### Usage
@@ -64,7 +64,7 @@ The following environment variables are supported:
 
 #### Graph Transform
 
-The subcommand `graph` ingests [test data](../../../cmd/api/src/test/fixtures/fixtures/v6/ingest/) into Postgres, retrieves the nodes and edges from the database, and then outputs the data as JSON files compatible with Arrows.app. This allows you to generate structured files that can be directly imported into the Arrows platform.
+The subcommand `graph` ingests [test data](../../../cmd/api/src/test/fixtures/fixtures/v6/ingest/) into Postgres, retrieves the nodes and edges from the database, and then outputs the data as an arrows file.
 
 The following environment variables are required:
 - `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
