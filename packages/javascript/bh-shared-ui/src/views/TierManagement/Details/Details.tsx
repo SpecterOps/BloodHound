@@ -21,11 +21,11 @@ import { useParams } from 'react-router-dom';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { TierManagementContext } from '../TierManagementContext';
+import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
-import { TierActionBar } from '../fragments';
 
 const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
     const savePath = '/tier-management/save';
