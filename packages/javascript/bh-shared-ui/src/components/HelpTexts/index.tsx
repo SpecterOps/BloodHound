@@ -133,6 +133,7 @@ import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import WriteAltSecurityIdentities from './WriteAltSecurityIdentities/WriteAltSecurityIdentities';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteOwner from './WriteOwner/WriteOwner';
@@ -140,6 +141,7 @@ import WriteOwnerLimitedRights from './WriteOwnerLimitedRights/WriteOwnerLimited
 import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
+import WritePublicInformation from './WritePublicInformation/WritePublicInformation';
 import WriteSPN from './WriteSPN/WriteSPN';
 
 export type EdgeInfoProps = {
@@ -280,6 +282,8 @@ const EdgeInfoComponents = {
     CanApplyGPO: CanApplyGPO,
     GPOAppliesTo: GPOAppliesTo,
     HasTrustKeys: HasTrustKeys,
+    WriteAltSecurityIdentities: WriteAltSecurityIdentities,
+    WritePublicInformation: WritePublicInformation,
 };
 
 export default EdgeInfoComponents;
