@@ -150,6 +150,8 @@ export enum ActiveDirectoryRelationshipKind {
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
     HasTrustKeys = 'HasTrustKeys',
+    WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
+    WritePublicInformation = 'WritePublicInformation',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -313,6 +315,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToLDAPS';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
+        case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
+            return 'WriteAltSecurityIdentities';
+        case ActiveDirectoryRelationshipKind.WritePublicInformation:
+            return 'WritePublicInformation';
         default:
             return undefined;
     }
@@ -800,6 +806,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
