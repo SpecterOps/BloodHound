@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -39,7 +40,7 @@ type AssetGroupTagData interface {
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
-	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
+	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -300,14 +301,14 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			if !tag.Position.Valid {
 				tag.Position.SetValid(int32(len(orderedTags) + 1))
 			}
-			pos := tag.Position.ValueOrZero()
-			if pos <= 1 || pos > int32(len(orderedTags))+1 {
+			pos := int(tag.Position.ValueOrZero())
+			if pos <= 1 || pos > len(orderedTags)+1 {
 				return ErrPositionOutOfRange
 			}
 
-			orderedTags = append(orderedTags[:pos-1], append(model.AssetGroupTags{tag}, orderedTags[pos-1:]...)...)
+			orderedTags = slices.Insert(orderedTags, pos-1, tag)
 
-			if err := bhdb.UpdateTierPositions(ctx, user, orderedTags); err != nil {
+			if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, []int{tag.ID}); err != nil {
 				return err
 			}
 
@@ -333,7 +334,6 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			requireCertify,
 		).Scan(&tag); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"kind_name_key\"") {
-				fmt.Printf("dupe error: %v", result.Error)
 				return fmt.Errorf("%w: %v", ErrDuplicateKindName, result.Error)
 			}
 			return CheckError(result)
@@ -451,11 +451,11 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
 
-func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error {
 	for newPos, tag := range orderedTags {
 		newPos++ // position is 1 based not zero
 
-		if tag.Position.ValueOrZero() == int32(newPos) {
+		if slices.Contains(ignoredTagIds, tag.ID) || tag.Position.ValueOrZero() == int32(newPos) {
 			continue
 		}
 

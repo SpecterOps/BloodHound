@@ -2156,17 +2156,17 @@ func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId,
 }
 
 // UpdateTierPositions mocks base method.
-func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTierPositions", ctx, user, orderedTags)
+	ret := m.ctrl.Call(m, "UpdateTierPositions", ctx, user, orderedTags, ignoredTagIds)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateTierPositions indicates an expected call of UpdateTierPositions.
-func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags, ignoredTagIds any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), ctx, user, orderedTags)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), ctx, user, orderedTags, ignoredTagIds)
 }
 
 // UpdateUser mocks base method.
