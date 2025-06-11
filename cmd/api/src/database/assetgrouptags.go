@@ -346,18 +346,23 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
 		var (
+			origName    string
 			origPos     null.Int32
 			newPosition = tag.Position // only set for tiers
 		)
 
-		if tag.Type == model.AssetGroupTagTypeTier {
-			if res := tx.Raw(
-				fmt.Sprintf("SELECT position FROM %s WHERE id = ?", tag.TableName()),
-				tag.ID,
-			).Scan(&origPos); res.Error != nil {
-				return CheckError(res)
-			}
+		out := map[string]any{}
+		if res := tx.Raw(
+			fmt.Sprintf("SELECT name, position FROM %s WHERE id = ?", tag.TableName()),
+			tag.ID,
+		).Scan(&out); res.Error != nil {
+			return CheckError(res)
+		} else {
+			origName = out["name"].(string)
+			_ = origPos.Scan(out["position"])
+		}
 
+		if tag.Type == model.AssetGroupTagTypeTier {
 			if !origPos.Equal(tag.Position) {
 				origPosInt := int(origPos.ValueOrZero())
 				newPosInt := int(tag.Position.ValueOrZero())
@@ -406,8 +411,19 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 				return fmt.Errorf("tag name must be unique: %w: %v", ErrDuplicateAGName, result.Error)
 			}
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
-			return err
+		} else {
+			if origName != tag.Name {
+				if result := tx.Exec(
+					fmt.Sprintf(`UPDATE %s SET name = ? WHERE id = ?`, kindTable),
+					tag.ToKind(),
+					tag.KindId,
+				); result.Error != nil {
+					return CheckError(result)
+				}
+			}
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
+				return err
+			}
 		}
 
 		return nil
