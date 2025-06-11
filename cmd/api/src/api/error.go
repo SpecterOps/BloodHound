@@ -77,7 +77,7 @@ const (
 	ErrorResponseAssetGroupTagInvalid               = "valid tag type is required"
 	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"
 	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
-	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided position is out of range for a new tier"
+	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided tier position is out of range"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"
