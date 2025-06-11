@@ -58,6 +58,43 @@ get:
     500:
       $ref: './../responses/internal-server-error.yaml'
 
+patch:
+  operationId: UpdateAssetGroupTag
+  summary: Update Asset Group Tag
+  description: Updates an asset group tag by ID
+  tags:
+    - Asset Isolation
+    - Enterprise
+  requestBody:
+    description: The request body for updating an asset group tag. At least one field is required.
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/model.asset-group-tag-update.yaml'
+  responses:
+    200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.asset-group-tag.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+        $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
 delete:
   operationId: DeleteAssetGroupTag
   summary: Delete an Asset Group Tag
