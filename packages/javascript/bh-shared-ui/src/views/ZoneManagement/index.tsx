@@ -17,5 +17,6 @@
 import ZoneManagement from './ZoneManagement';
 
 export * from './ZoneManagementContext';
+export * from './hooks';
 export * from './utils';
 export default ZoneManagement;

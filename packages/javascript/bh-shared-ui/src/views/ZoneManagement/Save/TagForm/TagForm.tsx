@@ -30,6 +30,7 @@ import {
     AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
+    AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
 import { FC, useCallback, useState } from 'react';
@@ -46,7 +47,7 @@ type TagFormInputs = {
     name: string;
     description: string;
     position: number | null;
-    certificationRequired: boolean;
+    type: AssetGroupTagTypes;
 };
 
 const MAX_NAME_LENGTH = 250;
@@ -107,7 +108,10 @@ export const TagForm: FC = () => {
         async (formData: TagFormInputs) => {
             try {
                 const response = await createTagMutation.mutateAsync({
-                    values: { ...formData, type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier },
+                    values: {
+                        ...formData,
+                        type: location.pathname.includes('label') ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
+                    },
                 });
 
                 addNotification(`${labelId ? 'Label' : 'Tier'} was created successfully!`, undefined, {
@@ -119,13 +123,14 @@ export const TagForm: FC = () => {
                 // In addition, once at the create selector form, the cancel button needs go back to the form for the newly created tag
                 // but the URL for creating a new tag does not have the recently created tag ID in the path, i.e., /save/tier vs /save/tier/<NEW_TIER_ID>
                 // that means the location history needs to be manipulated (replaced) in order to have that available once at the selector form
-                navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${response.tag.id}`, { replace: true });
-                navigate(`/tier-management/save/${getTagUrlValue(labelId)}/${response.tag.id}/selector`);
+
+                navigate(`${location.pathname}/${response.id}`, { replace: true });
+                navigate(`${location.pathname}/${response.id}/selector`);
             } catch (error) {
                 handleError(error, 'creating', getTagUrlValue(labelId), addNotification);
             }
         },
-        [labelId, navigate, createTagMutation, addNotification]
+        [labelId, navigate, createTagMutation, addNotification, location]
     );
 
     const handleUpdateTag = useCallback(
@@ -136,7 +141,6 @@ export const TagForm: FC = () => {
                 await updateTagMutation.mutateAsync({
                     updatedValues: {
                         ...diffedValues,
-                        type: labelId ? AssetGroupTagTypeLabel : AssetGroupTagTypeTier,
                     },
                     tagId,
                 });
@@ -149,7 +153,7 @@ export const TagForm: FC = () => {
                     }
                 );
 
-                navigate(`/tier-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
             } catch (error) {
                 handleError(error, 'updating', getTagUrlValue(labelId), addNotification);
             }
@@ -172,7 +176,7 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/tier-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -210,6 +214,7 @@ export const TagForm: FC = () => {
                             <Input
                                 id='name'
                                 type='text'
+                                disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
                                 {...register('name', {
                                     required: `Please provide a name for the ${labelId ? 'Label' : 'Tier'}`,
                                     value: tagQuery.data?.name,

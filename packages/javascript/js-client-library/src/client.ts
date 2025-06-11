@@ -171,13 +171,18 @@ class BHEAPIClient {
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 
     createAssetGroupTag = (values: CreateAssetGroupTagRequest, options?: RequestOptions) =>
-        this.baseClient.post<AssetGroupTagResponse>(`/api/v2/asset-group-tags`, values, options);
+        this.baseClient.post<BasicResponse<types.AssetGroupTag>>(`/api/v2/asset-group-tags`, values, options);
 
     updateAssetGroupTag = (
         tagId: number | string,
         updatedValues: UpdateAssetGroupTagRequest,
         options?: RequestOptions
-    ) => this.baseClient.patch<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, updatedValues, options);
+    ) =>
+        this.baseClient.patch<BasicResponse<types.AssetGroupTag>>(
+            `/api/v2/asset-group-tags/${tagId}`,
+            updatedValues,
+            options
+        );
 
     deleteAssetGroupTag = (tagId: string | number, options?: RequestOptions) =>
         this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}`, options);
