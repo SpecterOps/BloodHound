@@ -72,6 +72,12 @@ const (
 	ErrorResponseUserDuplicateEmail                 = "email must be unique"
 	ErrorResponseDetailsUniqueViolation             = "unique constraint was violated"
 	ErrorResponseDetailsNotImplemented              = "All good things to those who wait. Not implemented."
+	ErrorResponseAssetGroupTagExceededNameLimit     = "asset group tag name is limited to 250 characters"
+	ErrorResponseAssetGroupTagDuplicateKindName     = "asset group tag name must be unique"
+	ErrorResponseAssetGroupTagInvalid               = "valid tag type is required"
+	ErrorResponseAssetGroupTagExceededTagLimit      = "tag limit has been exceeded"
+	ErrorResponseAssetGroupTagInvalidFields         = "position and require_certify are only allowed for tiers"
+	ErrorResponseAssetGroupTagPositionOutOfRange    = "provided position is out of range for a new tier"
 
 	FmtErrorResponseDetailsBadQueryParameters            = "there are errors in the query parameters: %v"
 	FmtErrorResponseDetailsMissingRequiredQueryParameter = "missing required query parameter: %v"

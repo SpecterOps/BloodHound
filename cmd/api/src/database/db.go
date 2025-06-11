@@ -48,6 +48,8 @@ var (
 	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
 	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName           = errors.New("duplicate kind name")
+	ErrPositionOutOfRange          = errors.New("position out of range")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
