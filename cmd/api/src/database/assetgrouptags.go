@@ -384,26 +384,16 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 		bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-		var (
-			origName    string
-			origPos     null.Int32
-			newPosition = tag.Position // only set for tiers
-		)
+		var newPosition = tag.Position // only set for tiers
 
-		out := map[string]any{}
-		if res := tx.Raw(
-			fmt.Sprintf("SELECT name, position FROM %s WHERE id = ?", tag.TableName()),
-			tag.ID,
-		).Scan(&out); res.Error != nil {
-			return CheckError(res)
-		} else {
-			origName = out["name"].(string)
-			_ = origPos.Scan(out["position"])
+		origTag, err := bhdb.GetAssetGroupTag(ctx, tag.ID)
+		if err != nil {
+			return err
 		}
 
 		if tag.Type == model.AssetGroupTagTypeTier {
-			if !origPos.Equal(tag.Position) {
-				origPosInt := int(origPos.ValueOrZero())
+			if !origTag.Position.Equal(tag.Position) {
+				origPosInt := int(origTag.Position.ValueOrZero())
 				newPosInt := int(tag.Position.ValueOrZero())
 				orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx)
 				if err != nil {
@@ -451,7 +441,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			}
 			return CheckError(result)
 		} else {
-			if origName != tag.Name {
+			if origTag.Name != tag.Name {
 				if result := tx.Exec(
 					fmt.Sprintf(`UPDATE %s SET name = ? WHERE id = ?`, kindTable),
 					tag.KindName(),
