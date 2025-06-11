@@ -44,7 +44,6 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
     const isCypherSearch = searchType === 'cypher';
     const autoDisplayTableQueryCandidate = !!(
         isCypherSearch && // auto display only on cypher search
-        !hasTriggered && // check that it hasnt already triggered for this query
         graphData && // type check the response for type safety
         isGraphResponse(graphData)
     );
@@ -59,29 +58,37 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
     // Memoized this because it could be semi-expensive when checking if nodes are empty and
     // we dont need to recalculate it on every rerender.
     const [emptyEdges, containsNodes] = useMemo(() => {
-        if (enabled && graphData && isGraphResponse(graphData)) {
+        if (enabled && autoDisplayTableQueryCandidate) {
             const emptyEdges = isEmpty(graphData.data.edges);
             const containsNodes = !isEmpty(graphData.data.nodes);
 
             return [emptyEdges, containsNodes];
         }
         return [false, false];
-    }, [enabled, graphData]);
+    }, [autoDisplayTableQueryCandidate, enabled, graphData]);
 
     // checks if current query is a candidate to auto display the table
     // if it is, and the query is nodes only then call setAutoDisplayTable.
     useEffect(() => {
-        if (featureFlag?.enabled && enabled && autoDisplayTableQueryCandidate) {
-            const shouldAutoDisplay = emptyEdges && containsNodes;
+        if (!featureFlag?.enabled || !enabled || hasTriggered) return;
 
-            if (shouldAutoDisplay) {
-                // set triggered to true so that we dont try to reopen the table until a new query is executed.
-                setHasTriggered(true);
-            }
-            // This will automatically open/close the table
-            setAutoDisplayTable(shouldAutoDisplay);
+        const shouldAutoDisplay = autoDisplayTableQueryCandidate && emptyEdges && containsNodes;
+
+        if (shouldAutoDisplay) {
+            // set triggered to true so that we dont try to reopen the table until a new query is executed.
+            setHasTriggered(true);
         }
-    }, [autoDisplayTableQueryCandidate, containsNodes, emptyEdges, enabled, featureFlag?.enabled, setAutoDisplayTable]);
+        // This will automatically open/close the table
+        setAutoDisplayTable(shouldAutoDisplay);
+    }, [
+        autoDisplayTableQueryCandidate,
+        containsNodes,
+        emptyEdges,
+        enabled,
+        featureFlag?.enabled,
+        hasTriggered,
+        setAutoDisplayTable,
+    ]);
 
     return [autoDisplayTable, setAutoDisplayTable] as const;
 };
