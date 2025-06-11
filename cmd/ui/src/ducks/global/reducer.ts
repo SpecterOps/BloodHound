@@ -42,7 +42,6 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.darkMode = action.darkMode;
         } else if (action.type === types.GLOBAL_SET_EXPLORE_LAYOUT) {
             draft.exploreLayout = action.exploreLayout;
-            draft.isExploreTableSelected = false;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
         }
