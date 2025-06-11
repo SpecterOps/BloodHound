@@ -147,6 +147,7 @@ const GraphView: FC = () => {
         }
 
         dispatch(setExploreLayout(layout));
+        dispatch(setIsExploreTableSelected(false));
 
         if (layout === 'standard') {
             sigmaChartRef.current?.runStandardLayout();
@@ -199,7 +200,7 @@ const GraphView: FC = () => {
                 open={displayTable}
                 onClose={() => {
                     setAutoDisplayTable(false);
-                    handleLayoutChange(defaultGraphLayout);
+                    dispatch(setIsExploreTableSelected(false));
                 }}
             />
         </div>
