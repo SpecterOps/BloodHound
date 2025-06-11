@@ -454,6 +454,49 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
 		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
 	})
+
+	t.Run("blocks updating to position 1", func(t *testing.T) {
+		tag, err := dbInst.CreateAssetGroupTag(
+			testCtx,
+			model.AssetGroupTagTypeTier,
+			testActor,
+			"tagpos1",
+			"",
+			null.Int32From(2),
+			null.Bool{},
+		)
+		require.NoError(t, err)
+
+		tag.Position = null.Int32From(1)
+
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
+		require.ErrorIs(t, err, database.ErrPositionOutOfRange)
+	})
+
+	t.Run("blocks updating to invalid positions", func(t *testing.T) {
+		tag, err := dbInst.CreateAssetGroupTag(
+			testCtx,
+			model.AssetGroupTagTypeTier,
+			testActor,
+			"tagposinv",
+			"",
+			null.Int32From(2),
+			null.Bool{},
+		)
+		require.NoError(t, err)
+
+		tag.Position = null.Int32From(50)
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
+		require.ErrorIs(t, err, database.ErrPositionOutOfRange)
+
+		tag.Position = null.Int32From(0)
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
+		require.ErrorIs(t, err, database.ErrPositionOutOfRange)
+
+		tag.Position = null.Int32From(-1)
+		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
+		require.ErrorIs(t, err, database.ErrPositionOutOfRange)
+	})
 }
 
 func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
