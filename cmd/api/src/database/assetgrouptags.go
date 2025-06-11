@@ -373,7 +373,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 				orderedTags = slices.Delete(orderedTags, origPosInt-1, origPosInt)
 				orderedTags = slices.Insert(orderedTags, newPosInt-1, tag)
 
-				if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, []int{tag.ID}); err != nil {
+				if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, tag.ID); err != nil {
 					return err
 				}
 			}
@@ -521,7 +521,7 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
 }
 
-func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error {
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
 	for newPos, tag := range orderedTags {
 		newPos++ // position is 1 based not zero
 
