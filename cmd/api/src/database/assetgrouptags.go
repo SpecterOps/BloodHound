@@ -40,9 +40,7 @@ type AssetGroupTagData interface {
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
-	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
-	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -310,7 +308,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 
 			orderedTags = slices.Insert(orderedTags, pos-1, tag)
 
-			if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, []int{tag.ID}); err != nil {
+			if err := bhdb.UpdateTierPositions(ctx, user, orderedTags, tag.ID); err != nil {
 				return err
 			}
 
@@ -559,57 +557,4 @@ func (s *BloodhoundDB) GetSelectorNodesBySelectorIds(ctx context.Context, select
 		return nodes, nil
 	}
 	return nodes, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT selector_id, node_id, certified, certified_by, source, created_at, updated_at FROM %s WHERE selector_id IN ?", model.AssetGroupSelectorNode{}.TableName()), selectorIds).Find(&nodes))
-}
-
-func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error {
-	for newPos, tag := range orderedTags {
-		newPos++ // position is 1 based not zero
-
-		if slices.Contains(ignoredTagIds, tag.ID) || tag.Position.ValueOrZero() == int32(newPos) {
-			continue
-		}
-
-		var (
-			auditEntry = model.AuditEntry{
-				Action: model.AuditLogActionUpdateAssetGroupTag,
-				Model:  &tag, // Pointer is required to ensure success log contains updated fields after transaction
-			}
-		)
-
-		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
-			bhdb := NewBloodhoundDB(tx, s.idResolver)
-
-			tag.UpdatedAt = time.Now()
-			tag.UpdatedBy = user.ID.String()
-			tag.Position.SetValid(int32(newPos))
-
-			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
-				return fmt.Errorf("failed to update tag position: %w", err)
-			}
-
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
-				return fmt.Errorf("failed to create history record: %w", err)
-			}
-
-			return nil
-		}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
-	var tags model.AssetGroupTags
-	if result := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
-			model.AssetGroupTag{}.TableName(),
-		),
-		model.AssetGroupTagTypeTier,
-	).Find(&tags); result.Error != nil {
-		return model.AssetGroupTags{}, CheckError(result)
-	}
-	return tags, nil
 }
