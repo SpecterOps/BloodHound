@@ -411,7 +411,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 				}
 
 				if newPosInt <= 1 || newPosInt > len(orderedTags) {
-					return fmt.Errorf("position out of range")
+					return ErrPositionOutOfRange
 				}
 
 				orderedTags = slices.Delete(orderedTags, origPosInt-1, origPosInt)
