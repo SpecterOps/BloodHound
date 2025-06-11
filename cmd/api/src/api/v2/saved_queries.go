@@ -17,19 +17,22 @@
 package v2
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm/utils"
+
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
-	"gorm.io/gorm/utils"
 )
 
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
@@ -135,6 +138,91 @@ func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.
 	}
 
 }
+
+// TransferableSavedQuery - Used for importing/exporting saved queries
+type TransferableSavedQuery struct {
+	Query       string `json:"query"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// ExportSavedQuery - Returns the saved query as a json file using the saved query's name as the filename.
+// Admins can share any public query regardless of user ownership.
+func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.Request) {
+	var (
+		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		savedQuery      model.SavedQuery
+		auditLogEntry   model.AuditEntry
+		err             error
+	)
+
+	// defer audit function
+	defer func() {
+		if auditLogEntry.Status == model.AuditLogStatusFailure || auditLogEntry.Status == model.AuditLogStatusSuccess {
+			if err != nil {
+				auditLogEntry.ErrorMsg = err.Error()
+			}
+			if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				} else if errors.Is(err, context.DeadlineExceeded) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				} else {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				}
+			}
+		}
+		// did not make it far enough in the api request for an audit log event
+	}()
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+		return
+	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
+		return
+	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"target_query_id": savedQueryID, "user_id": user.ID}); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		return
+	} else if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		api.HandleDatabaseError(request, response, err)
+		return
+	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.HandleDatabaseError(request, response, err)
+		return
+	} else if savedQuery.UserID != user.ID.String() {
+		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+			err = fmt.Errorf("query does not exist")
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
+			return
+		}
+		if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+			return
+		} else if !isPublic {
+			err = fmt.Errorf("query does not exist")
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
+			return
+		}
+	}
+
+	if data, err := api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		return
+	} else {
+		auditLogEntry.Status = model.AuditLogStatusSuccess
+		api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+	}
+}
+
+// ImportSavedQuery - Used to import custom cypher queries.
+// Can import a single query in a json file, or if bulk is desired, a zip file containing multiple json files.
+func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.Request) {}
 
 type CreateSavedQueryRequest struct {
 	Query       string `json:"query"`
