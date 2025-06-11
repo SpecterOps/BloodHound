@@ -29,12 +29,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type ShiftDirection int
-
 const (
-	kindTable                = "kind"
-	ShiftUp   ShiftDirection = 1
-	ShiftDown ShiftDirection = -1
+	kindTable = "kind"
 )
 
 // AssetGroupTagData defines the methods required to interact with the asset_group_tags table
@@ -46,7 +42,8 @@ type AssetGroupTagData interface {
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
-	CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error
+	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
+	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -394,8 +391,26 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 		}
 
 		if assetGroupTag.Type == model.AssetGroupTagTypeTier && assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
-			if err := bhdb.CascadeShiftTierPositions(ctx, user, assetGroupTag.Position, ShiftDown); err != nil {
+			if orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx); err != nil {
 				return err
+			} else {
+				pos := assetGroupTag.Position.Int32
+
+				if pos <= 1 || pos > int32(len(orderedTags)) {
+					return ErrPositionOutOfRange
+				}
+
+				// Remove the tag being deleted from the list
+				filtered := make(model.AssetGroupTags, 0, len(orderedTags))
+				for _, tag := range orderedTags {
+					if tag.ID != assetGroupTag.ID {
+						filtered = append(filtered, tag)
+					}
+				}
+
+				if err := bhdb.UpdateTierPositions(ctx, user, filtered); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -407,31 +422,14 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model.User, position null.Int32, direction ShiftDirection) error {
-	var (
-		positionOp string
-	)
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+	for newPos, tag := range orderedTags {
+		newPos++ // position is 1 based not zero
 
-	switch direction {
-	case ShiftUp:
-		positionOp = ">="
-	case ShiftDown:
-		positionOp = ">"
-	default:
-		return fmt.Errorf("invalid shift direction")
-	}
+		if tag.Position.ValueOrZero() == int32(newPos) {
+			continue
+		}
 
-	// get affected rows
-	var tags []model.AssetGroupTag
-	if err := s.db.WithContext(ctx).
-		Where(fmt.Sprintf("type = ? AND position %s ? AND position > 1 AND deleted_at IS NULL", positionOp), model.AssetGroupTagTypeTier, position.Int32).
-		Order("position ASC").
-		Find(&tags).Error; err != nil {
-		return fmt.Errorf("failed to fetch tags to shift: %w", err)
-	}
-
-	// update each and create history record
-	for _, tag := range tags {
 		var (
 			auditEntry = model.AuditEntry{
 				Action: model.AuditLogActionUpdateAssetGroupTag,
@@ -442,14 +440,9 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 		if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
 			bhdb := NewBloodhoundDB(tx, s.idResolver)
 
-			if direction == ShiftUp {
-				tag.Position.Int32++
-			} else {
-				tag.Position.Int32--
-			}
-
 			tag.UpdatedAt = time.Now()
 			tag.UpdatedBy = user.ID.String()
+			tag.Position.SetValid(int32(newPos))
 
 			if err := tx.WithContext(ctx).Save(&tag).Error; err != nil {
 				return fmt.Errorf("failed to update tag position: %w", err)
@@ -466,6 +459,20 @@ func (s *BloodhoundDB) CascadeShiftTierPositions(ctx context.Context, user model
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	var tags model.AssetGroupTags
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
+			model.AssetGroupTag{}.TableName(),
+		),
+		model.AssetGroupTagTypeTier,
+	).Find(&tags); result.Error != nil {
+		return model.AssetGroupTags{}, CheckError(result)
+	}
+	return tags, nil
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
