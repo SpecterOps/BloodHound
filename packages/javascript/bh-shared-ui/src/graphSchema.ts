@@ -149,6 +149,10 @@ export enum ActiveDirectoryRelationshipKind {
     OwnsRaw = 'OwnsRaw',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
+    ContainsIdentity = 'ContainsIdentity',
+    PropagatesACEsTo = 'PropagatesACEsTo',
+    GPOAppliesTo = 'GPOAppliesTo',
+    CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
@@ -311,6 +315,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
+        case ActiveDirectoryRelationshipKind.ContainsIdentity:
+            return 'ContainsIdentity';
+        case ActiveDirectoryRelationshipKind.PropagatesACEsTo:
+            return 'PropagatesACEsTo';
+        case ActiveDirectoryRelationshipKind.GPOAppliesTo:
+            return 'GPOAppliesTo';
+        case ActiveDirectoryRelationshipKind.CanApplyGPO:
+            return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
         default:
@@ -334,6 +346,8 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
+    'GPOAppliesTo',
+    'CanApplyGPO',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -748,7 +762,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.AllowedToAct,
@@ -787,8 +800,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.ContainsIdentity,
+        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
+        ActiveDirectoryRelationshipKind.GPOAppliesTo,
+        ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
-        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,

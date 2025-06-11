@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -16,20 +16,17 @@
 
 import { Typography } from '@mui/material';
 import { FC } from 'react';
-import { EdgeInfoProps } from '../index';
 
-const WindowsAbuse: FC<EdgeInfoProps> = () => {
+const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                With full control of a GPO, you may make modifications to that GPO which will then apply to the users
-                and computers affected by the GPO. Select the target object you wish to push an evil policy down to,
-                then use the gpedit GUI to modify the GPO, using an evil policy that allows item-level targeting, such
-                as a new immediate scheduled task. Then wait for the group policy client to pick up and execute the new
-                evil policy. See the references tab for a more detailed write up on this abuse.
+                Control over the container node DACL enables an attacker to compromise the child node by creating ACEs,
+                such as GenericAll, with inheritance enabled, allowing those permissions to apply to the child node.
             </Typography>
+            <Typography variant='body2'>Refer to the inbound edges on the container node for more details.</Typography>
         </>
     );
 };
 
-export default WindowsAbuse;
+export default Abuse;

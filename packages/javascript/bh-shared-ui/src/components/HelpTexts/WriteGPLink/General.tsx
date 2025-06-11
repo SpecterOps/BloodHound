@@ -33,20 +33,6 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetType, target
                 exploited to make said child objects execute arbitrary commands through an immediate scheduled task,
                 thus compromising them.
             </Typography>
-
-            <Typography variant='body2'>
-                Successful exploitation will require the possibility to add non-existing DNS records to the domain and
-                to create machine accounts. Alternatively, an already compromised domain-joined machine may be used to
-                perform the attack. Note that the attack vector implementation is not trivial and will require some
-                setup.
-            </Typography>
-
-            <Typography variant='body2'>
-                Alternatively, the ability to modify the gPLink attribute can be exploited in conjunction with write
-                permissions on a GPO. In such a situation, an attacker could first inject a malicious scheduled task in
-                the controlled GPO, and then link the GPO to the target through its gPLink attribute, making all child
-                users and computers apply the malicious GPO and execute arbitrary commands.
-            </Typography>
         </>
     );
 };
