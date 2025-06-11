@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -46,13 +47,13 @@ import (
 
 const (
 	Name  = "graph"
-	Usage = "Ingest test files and transform graph data into an arrows file"
+	Usage = "Ingest valid collection files and transform graph data into a generic graph file"
 )
 
 type command struct {
-	env  environment.Environment
-	path string
-	root string
+	env     environment.Environment
+	outfile string
+	path    string
 }
 
 // Create new instance of command to capture given environment
@@ -74,14 +75,10 @@ func (s *command) Name() string {
 
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
-	cmd := flag.NewFlagSet(Name, flag.ExitOnError)
-	workspacePaths, err := workspace.FindPaths(s.env)
-	if err != nil {
-		return fmt.Errorf("failed to find workspace paths: %w", err)
-	}
-	s.root = workspacePaths.Root
+	cmd := flag.NewFlagSet(Name, flag.ContinueOnError)
 
-	path := cmd.String("path", workspacePaths.Root, "destination path for arrows.json file, default is root")
+	cmd.StringVar(&s.outfile, "outfile", "", "destination path for generic graph file, default is {root}/tmp/graph.json")
+	cmd.StringVar(&s.path, "path", "", "directory containing bloodhound collection files")
 
 	cmd.Usage = func() {
 		w := flag.CommandLine.Output()
@@ -94,8 +91,10 @@ func (s *command) Parse(cmdIndex int) error {
 		return fmt.Errorf("parsing %s command: %w", Name, err)
 	}
 
-	if *path != "" {
-		s.path = *path
+	if s.path == "" {
+		cmd.Usage()
+
+		return fmt.Errorf("path flag is required")
 	}
 
 	return nil
@@ -106,10 +105,6 @@ func (s *command) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var (
-		outPath = filepath.Join(s.path, "arrows.json")
-	)
-
 	if database, err := s.initializeDatabase(ctx); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
@@ -118,41 +113,53 @@ func (s *command) Run() error {
 		return fmt.Errorf("error ingesting data %v", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
-	} else if arrows, err := transformToArrows(nodes, edges); err != nil {
-		return fmt.Errorf("error transforming nodes and edges to arrows format %w", err)
-	} else if jsonBytes, err := json.MarshalIndent(arrows, "", "  "); err != nil {
-		return fmt.Errorf("error occurred while marshalling arrows into bytes %w", err)
-	} else if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+	} else if graph, err := transformGraph(nodes, edges); err != nil {
+		return fmt.Errorf("error transforming nodes and edges to graph %w", err)
+	} else if jsonBytes, err := json.MarshalIndent(generateIngestFile(graph), "", "  "); err != nil {
+		return fmt.Errorf("error occurred while marshalling ingest file into bytes %w", err)
+	} else if err := os.MkdirAll(filepath.Dir(s.outfile), 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	} else {
-		return os.WriteFile(outPath, jsonBytes, 0o644)
+		return os.WriteFile(s.outfile, jsonBytes, 0644)
 	}
-}
-
-type Position struct {
-	X int `json:"x"`
-	Y int `json:"y"`
 }
 
 type Node struct {
 	ID         string            `json:"id"`
-	Position   Position          `json:"position"`
-	Caption    string            `json:"caption"` // name of node -- if not, use object_id
-	Label      []string          `json:"label"`   // kinds
+	Kinds      []string          `json:"kinds"`
 	Properties map[string]string `json:"properties"`
+}
+
+type Terminal struct {
+	MatchBy string `json:"match_by"`
+	Value   string `json:"value"`
 }
 
 type Relationship struct {
-	ID         string            `json:"id"`
-	Label      string            `json:"label"` // kind
-	From       string            `json:"fromId"`
-	To         string            `json:"toId"`
+	Start      Terminal          `json:"start"`
+	End        Terminal          `json:"end"`
+	Kind       string            `json:"kind"`
 	Properties map[string]string `json:"properties"`
 }
 
-type Arrows struct {
+type Graph struct {
 	Nodes         []Node         `json:"nodes"`
 	Relationships []Relationship `json:"relationships"`
+}
+
+type Collector struct {
+	Name string `json:"name"`
+	Version string `json:"version"`
+}
+
+type Metadata struct {
+	IngestVersion string `json:"ingest_version"`
+	Collector Collector `json:"collector"`
+}
+
+type IngestFile struct {
+	Metadata Metadata `json:"metadata"`
+	Graph    Graph    `json:"graph"`
 }
 
 func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
@@ -199,54 +206,64 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 	return nil
 }
 
-func transformToArrows(nodes []*graph.Node, edges []*graph.Relationship) (Arrows, error) {
-	var arrowNodes = make([]Node, 0, len(nodes))
-	var arrowEdges = make([]Relationship, 0, len(edges))
+func generateIngestFile(graph Graph) IngestFile{
+	return IngestFile{
+		Metadata: Metadata{
+			IngestVersion: "v1",
+		},
+		Graph: graph,
+	}
+}
+
+func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, error) {
+	var graphNodes = make([]Node, 0, len(nodes))
+	var graphEdges = make([]Relationship, 0, len(edges))
+
+	var nodeObjectIDs = make(map[graph.ID]string, len(nodes))
 
 	for _, node := range nodes {
-		name, err := node.Properties.Get(common.Name.String()).String()
-		if err != nil || name == "" {
-			name, err = node.Properties.Get(common.ObjectID.String()).String()
-			if err != nil {
-				return Arrows{}, err
-			}
-		}
-
-		var labels = make([]string, 0, len(node.Kinds))
+		var kinds = make([]string, 0, len(node.Kinds))
 		for _, kind := range node.Kinds {
-			labels = append(labels, kind.String())
+			kinds = append(kinds, kind.String())
 		}
 
-		arrowNodes = append(arrowNodes, Node{
-			ID: node.ID.String(),
-			Position: Position{
-				X: 0,
-				Y: 0,
-			},
-			Caption:    name,
-			Label:      labels,
+		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
+		if err != nil {
+			return Graph{}, err
+		}
+
+		nodeObjectIDs[node.ID] = objectID
+
+		graphNodes = append(graphNodes, Node{
+			ID:         objectID,
+			Kinds:      kinds,
 			Properties: convertProperties(node.Properties.Map),
 		})
 	}
 
 	for _, edge := range edges {
-		arrowEdges = append(arrowEdges, Relationship{
-			ID:         edge.ID.String(),
-			From:       edge.StartID.String(),
-			To:         edge.EndID.String(),
-			Label:      edge.Kind.String(),
+		graphEdges = append(graphEdges, Relationship{
+			Start: Terminal{
+				MatchBy: "id",
+				Value:   nodeObjectIDs[edge.StartID],
+			},
+			End: Terminal{
+				MatchBy: "id",
+				Value:   nodeObjectIDs[edge.EndID],
+			},
+			Kind:       edge.Kind.String(),
 			Properties: convertProperties(edge.Properties.Map),
 		})
 	}
 
-	return Arrows{
-		Nodes:         arrowNodes,
-		Relationships: arrowEdges,
+	return Graph{
+		Nodes:         graphNodes,
+		Relationships: graphEdges,
 	}, nil
 }
 
 func convertProperties(input map[string]any) map[string]string {
-	output := make(map[string]string)
+	var output = make(map[string]string, len(input))
 	for key, value := range input {
 		output[key] = convertProperty(value)
 	}
@@ -307,20 +324,32 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 }
 
 func (s *command) getIngestFilePaths() ([]string, error) {
-	var (
-		testIngestFilePath = filepath.Join("cmd", "api", "src", "test", "fixtures", "fixtures", "v6", "ingest")
-		testIngestFileDir  = filepath.Join(s.root, testIngestFilePath)
-	)
+	var paths = make([]string, 0, 16)
 
-	if ingestFiles, err := os.ReadDir(testIngestFileDir); err != nil {
-		return []string{}, fmt.Errorf("error reading  directory %s: %w", testIngestFileDir, err)
-	} else {
-		var paths = make([]string, 0, len(ingestFiles))
-		for _, path := range ingestFiles {
-			paths = append(paths, filepath.Join(testIngestFileDir, path.Name()))
+	if s.path == "" {
+		workspacePaths, err := workspace.FindPaths(s.env)
+		if err != nil {
+			return nil, fmt.Errorf("error finding workspace paths: %w", err)
 		}
-		return paths, nil
+
+		s.path = filepath.Join(workspacePaths.Root, "graph.json")
 	}
+
+	if err := filepath.Walk(s.path, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && filepath.Ext(path) == ".json" {
+			paths = append(paths, path)
+		}
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("error getting files from directory %w", err)
+	}
+
+	return paths, nil
 }
 
 func (s *command) initializeDatabase(ctx context.Context) (graph.Database, error) {
@@ -329,17 +358,17 @@ func (s *command) initializeDatabase(ctx context.Context) (graph.Database, error
 	)
 
 	if pool, err := pg.NewPool(connection); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating postgres connection %w", err)
 	} else if database, err := dawgs.Open(ctx, pg.DriverName, dawgs.Config{
 		GraphQueryMemoryLimit: size.Gibibyte,
 		ConnectionString:      connection,
 		Pool:                  pool,
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error connecting to database %w", err)
 	} else if err = migrations.NewGraphMigrator(database).Migrate(ctx, graphschema.DefaultGraphSchema()); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error migrating graph %w", err)
 	} else if err = database.SetDefaultGraph(ctx, graphschema.DefaultGraph()); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error setting default graph %w", err)
 	} else {
 		return database, nil
 	}
