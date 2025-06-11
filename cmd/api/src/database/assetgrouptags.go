@@ -39,11 +39,11 @@ const (
 type AssetGroupTagData interface {
 	CreateAssetGroupTag(ctx context.Context, tagType model.AssetGroupTagType, user model.User, name string, description string, position null.Int32, requireCertify null.Bool) (model.AssetGroupTag, error)
 	UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error)
+	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
-	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error
 }
 
 // AssetGroupTagSelectorData defines the methods required to interact with the asset_group_tag_selectors and asset_group_tag_selector_seeds tables
@@ -471,6 +471,61 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 	}
 
 	return tag, nil
+}
+
+func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	var (
+		auditEntry = model.AuditEntry{
+			Action: model.AuditLogActionDeleteAssetGroupTag,
+			Model:  &assetGroupTag, // Pointer is required to ensure success log contains updated fields after transaction
+		}
+	)
+
+	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
+		bhdb := NewBloodhoundDB(tx, s.idResolver)
+
+		if selectors, err := bhdb.GetAssetGroupTagSelectorsByTagId(ctx, assetGroupTag.ID, model.SQLFilter{}, model.SQLFilter{}); err != nil {
+			return err
+		} else {
+			for _, selector := range selectors {
+				if err := bhdb.DeleteAssetGroupTagSelector(ctx, user, selector); err != nil {
+					return err
+				}
+			}
+		}
+
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier && assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 == 1 {
+			return fmt.Errorf("you cannot delete a tier in the 1st position")
+		} else if assetGroupTag.Type == model.AssetGroupTagTypeOwned {
+			return fmt.Errorf("you cannot delete the owned tag")
+		}
+
+		if result := tx.Exec(fmt.Sprintf(`
+			UPDATE %s SET kind_id = null, updated_at = NOW(), updated_by = ?, deleted_at = NOW(), deleted_by = ?, position = null
+			WHERE id = ?`,
+			assetGroupTag.TableName()),
+			user.ID.String(), user.ID.String(), assetGroupTag.ID); result.Error != nil {
+			return CheckError(result)
+		} else if result := tx.Exec("DELETE FROM kind WHERE id = ?", assetGroupTag.KindId); result.Error != nil {
+			return CheckError(result)
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
+			return err
+		}
+
+		if assetGroupTag.Type == model.AssetGroupTagTypeTier && assetGroupTag.Position.Valid && assetGroupTag.Position.Int32 > 1 {
+			if orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx); err != nil {
+				return err
+			} else {
+				if err := bhdb.UpdateTierPositions(ctx, user, orderedTags); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {

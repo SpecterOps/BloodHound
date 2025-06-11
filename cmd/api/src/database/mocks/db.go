@@ -594,6 +594,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), ctx, assetGroupIds)
 }
 
+// DeleteAssetGroupTag mocks base method.
+func (m *MockDatabase) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupTag", ctx, user, assetGroupTag)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupTag indicates an expected call of DeleteAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupTag(ctx, user, assetGroupTag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupTag), ctx, user, assetGroupTag)
+}
+
 // DeleteAssetGroupTagSelector mocks base method.
 func (m *MockDatabase) DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error {
 	m.ctrl.T.Helper()
@@ -2168,25 +2182,6 @@ func (m *MockDatabase) UpdateSelectorNodesByNodeId(ctx context.Context, selector
 func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId, certified, certifiedBy, nodeId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSelectorNodesByNodeId", reflect.TypeOf((*MockDatabase)(nil).UpdateSelectorNodesByNodeId), ctx, selectorId, certified, certifiedBy, nodeId)
-}
-
-// UpdateTierPositions mocks base method.
-func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, user, orderedTags}
-	for _, a := range ignoredTagIds {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "UpdateTierPositions", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateTierPositions indicates an expected call of UpdateTierPositions.
-func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags any, ignoredTagIds ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, user, orderedTags}, ignoredTagIds...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), varargs...)
 }
 
 // UpdateUser mocks base method.

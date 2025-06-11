@@ -614,6 +614,98 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 	})
 }
 
+func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
+	var (
+		testCtx            = context.Background()
+		userID, _          = uuid.NewV4()
+		userID2, _         = uuid.NewV4()
+		userID4, _         = uuid.NewV4()
+		testUser           = model.User{Unique: model.Unique{ID: userID}}
+		testUser2          = model.User{Unique: model.Unique{ID: userID2}}
+		testUser4          = model.User{Unique: model.Unique{ID: userID4}}
+		testName           = "test tag name"
+		testName2          = "test tag name2"
+		testName4          = "test tag name4"
+		testDescription    = "test tag description"
+		testDescription2   = "test tag description2"
+		testDescription4   = "test tag description4"
+		position           = null.Int32From(2)
+		position2          = null.Int32From(3)
+		requireCertifyTier = null.BoolFrom(true)
+	)
+
+	getTagOrder := func(orderedTags []model.AssetGroupTag) []int {
+		var order []int
+		for _, tag := range orderedTags {
+			order = append(order, tag.ID)
+		}
+		return order
+	}
+
+	t.Run("successfully deletes asset group tag tier", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		assetGroupTagTier, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser, testName, testDescription, position, requireCertifyTier)
+		require.NoError(t, err)
+		require.Equal(t, model.AssetGroupTagTypeTier, assetGroupTagTier.Type)
+		require.Equal(t, testName, assetGroupTagTier.Name)
+		require.Equal(t, testDescription, assetGroupTagTier.Description)
+
+		assetGroupTagTier2, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, testUser2, testName2, testDescription2, position2, requireCertifyTier)
+		require.NoError(t, err)
+		require.Equal(t, model.AssetGroupTagTypeTier, assetGroupTagTier2.Type)
+		require.Equal(t, testName2, assetGroupTagTier2.Name)
+		require.Equal(t, testDescription2, assetGroupTagTier2.Description)
+
+		orderedTagsBefore, err := dbInst.GetOrderedAssetGroupTagTiers(testCtx)
+		require.NoError(t, err)
+		require.Equal(t, []int{1, assetGroupTagTier.ID, assetGroupTagTier2.ID}, getTagOrder(orderedTagsBefore))
+
+		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, assetGroupTagTier)
+		require.NoError(t, err)
+
+		orderedTagsAfter, err := dbInst.GetOrderedAssetGroupTagTiers(testCtx)
+		require.NoError(t, err)
+		require.Equal(t, []int{1, assetGroupTagTier2.ID}, getTagOrder(orderedTagsAfter))
+
+		// verify history records were created
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.Len(t, history, 4)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[1].Action)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[2].Action)
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[3].Action)
+	})
+
+	t.Run("successfully deletes asset group label", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		assetGroupTagLabel4, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeLabel, testUser4, testName4, testDescription4, null.Int32{}, null.Bool{})
+		require.NoError(t, err)
+		require.Equal(t, model.AssetGroupTagTypeLabel, assetGroupTagLabel4.Type)
+		require.Equal(t, testName4, assetGroupTagLabel4.Name)
+		require.Equal(t, testDescription4, assetGroupTagLabel4.Description)
+
+		err = dbInst.DeleteAssetGroupTag(testCtx, testUser, assetGroupTagLabel4)
+		require.NoError(t, err)
+
+		// verify history records were created
+		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+		require.NoError(t, err)
+		require.Len(t, history, 2)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
+		require.Equal(t, model.AssetGroupHistoryActionDeleteTag, history[1].Action)
+	})
+
+	t.Run("Non existant asset group tag errors out", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
+		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
+		require.Error(t, err)
+	})
+}
+
 func TestDatabase_GetAssetGroupTags(t *testing.T) {
 	var (
 		dbInst          = integration.SetupDB(t)
