@@ -25,11 +25,7 @@ export const handleError = (
 ) => {
     console.error(error);
 
-<<<<<<<< HEAD:packages/javascript/bh-shared-ui/src/views/ZoneManagement/Save/SelectorForm/utils.ts
-    const key = `zone-management_${action}-selector`;
-========
-    const key = `tier-management_${action}-${entity}`;
->>>>>>>> 54a351d4 (feat(tier-mgmt): tag form wire up):packages/javascript/bh-shared-ui/src/views/ZoneManagement/Save/utils.ts
+    const key = `zone-management_${action}-${entity}`;
 
     const options: OptionsObject = { anchorOrigin: { vertical: 'top', horizontal: 'right' } };
 

@@ -25,7 +25,7 @@ import {
 import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { OWNED_ID, TIER_ZERO_ID } from '../../../utils';
+import { OWNED_ID, TIER_ZERO_ID } from '../utils';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
