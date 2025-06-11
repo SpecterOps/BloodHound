@@ -14,9 +14,26 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Skeleton } from '@bloodhoundenterprise/doodleui';
+import { CSSProperties } from 'react';
+
 export const getTagUrlValue = (labelId: string | undefined) => {
     return labelId === undefined ? 'tier' : 'label';
 };
 
 export const TIER_ZERO_ID = '1';
 export const OWNED_ID = '2';
+
+export const ItemSkeleton = (title: string, key: number, height?: string, style?: CSSProperties) => {
+    return (
+        <li
+            key={key}
+            data-testid={`tier-management_${title.toLowerCase()}-list_loading-skeleton`}
+            style={style}
+            className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative w-full'>
+            <Skeleton className={`${height ?? 'min-h-10'} rounded-none`} />
+        </li>
+    );
+};
+
+export const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
