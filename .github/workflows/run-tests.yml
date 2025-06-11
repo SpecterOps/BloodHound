@@ -46,7 +46,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: "^1.23.0"
+          go-version: "~1.23.0"
 
       - name: Install Python
         uses: actions/setup-python@v4
