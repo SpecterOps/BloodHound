@@ -42,7 +42,6 @@ type AssetGroupTagData interface {
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
-	UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 }
 
@@ -394,39 +393,23 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			if orderedTags, err := bhdb.GetOrderedAssetGroupTagTiers(ctx); err != nil {
 				return err
 			} else {
-				pos := assetGroupTag.Position.Int32
-
-				if pos <= 1 || pos > int32(len(orderedTags)) {
-					return ErrPositionOutOfRange
-				}
-
-				// Remove the tag being deleted from the list
-				filtered := make(model.AssetGroupTags, 0, len(orderedTags))
-				for _, tag := range orderedTags {
-					if tag.ID != assetGroupTag.ID {
-						filtered = append(filtered, tag)
-					}
-				}
-
-				if err := bhdb.UpdateTierPositions(ctx, user, filtered); err != nil {
+				if err := bhdb.UpdateTierPositions(ctx, user, orderedTags); err != nil {
 					return err
 				}
 			}
 		}
-
 		return nil
 	}); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags) error {
+func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
 	for newPos, tag := range orderedTags {
 		newPos++ // position is 1 based not zero
 
-		if tag.Position.ValueOrZero() == int32(newPos) {
+		if slices.Contains(ignoredTagIds, tag.ID) || tag.Position.ValueOrZero() == int32(newPos) {
 			continue
 		}
 
