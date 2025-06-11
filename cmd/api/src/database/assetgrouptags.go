@@ -454,7 +454,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			if origName != tag.Name {
 				if result := tx.Exec(
 					fmt.Sprintf(`UPDATE %s SET name = ? WHERE id = ?`, kindTable),
-					tag.ToKind(),
+					tag.KindName(),
 					tag.KindId,
 				); result.Error != nil {
 					return CheckError(result)
