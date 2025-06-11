@@ -5204,6 +5204,61 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "patch": {
+        "operationId": "UpdateAssetGroupTag",
+        "summary": "Update Asset Group Tag",
+        "description": "Updates an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating an asset group tag. At least one field is required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.asset-group-tag-update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tag"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/asset-group-tags/{asset_group_tag_id}/members": {
@@ -17519,6 +17574,23 @@
           },
           "type": {
             "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "require_certify": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "model.asset-group-tag-update": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
           },
           "description": {
             "type": "string"

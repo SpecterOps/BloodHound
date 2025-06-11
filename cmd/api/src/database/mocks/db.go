@@ -2171,17 +2171,22 @@ func (mr *MockDatabaseMockRecorder) UpdateSelectorNodesByNodeId(ctx, selectorId,
 }
 
 // UpdateTierPositions mocks base method.
-func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds []int) error {
+func (m *MockDatabase) UpdateTierPositions(ctx context.Context, user model.User, orderedTags model.AssetGroupTags, ignoredTagIds ...int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTierPositions", ctx, user, orderedTags, ignoredTagIds)
+	varargs := []any{ctx, user, orderedTags}
+	for _, a := range ignoredTagIds {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateTierPositions", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateTierPositions indicates an expected call of UpdateTierPositions.
-func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags, ignoredTagIds any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateTierPositions(ctx, user, orderedTags any, ignoredTagIds ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), ctx, user, orderedTags, ignoredTagIds)
+	varargs := append([]any{ctx, user, orderedTags}, ignoredTagIds...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTierPositions", reflect.TypeOf((*MockDatabase)(nil).UpdateTierPositions), varargs...)
 }
 
 // UpdateUser mocks base method.
