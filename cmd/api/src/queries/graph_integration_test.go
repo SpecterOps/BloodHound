@@ -236,7 +236,7 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 			Graph: db,
 		}
 
-		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity, azure.Entity)
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity)
 		require.Nil(t, err)
 
 		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind
