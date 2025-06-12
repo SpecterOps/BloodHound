@@ -1,0 +1,242 @@
+{
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 1240.2416084075371,
+        "y": 532.6526356874799
+      },
+      "caption": "Domain1",
+      "labels": [
+        "Domain"
+      ],
+      "properties": {
+        "collected": "BOOL:True"
+      },
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 2043.8705472781733,
+        "y": 649.0717575415765
+      },
+      "caption": "NTAuthStore1",
+      "labels": [
+        "NTAuthStore"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 2154.7487206889787,
+        "y": 532.6526356874799
+      },
+      "caption": "RootCA1",
+      "labels": [
+        "RootCA"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#653294",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 2154.7487206889787,
+        "y": 1209.1738042348059
+      },
+      "caption": "EnterpriseCA1",
+      "labels": [
+        "EnterpriseCA"
+      ],
+      "properties": {
+        "isuserspecifiessanenabled": "BOOL:True",
+        "isuserspecifiessanenabledcollected": "BOOL:True",
+        "disabledextensionscollected": "BOOL:True",
+        "disabledextensions": "STRLIST:1.3.6.1.4.1.311.25.2"
+      },
+      "style": {
+        "node-color": "#194d33",
+        "caption-color": "#ffffff"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 1697.495164548258,
+        "y": 945.1783405090471
+      },
+      "caption": "CertTemplate1",
+      "labels": [
+        "CertTemplate"
+      ],
+      "properties": {
+        "authenticationenabled": "BOOL:True",
+        "requiresmanagerapproval": "BOOL:False",
+        "schemaversion": "DECIMAL:1",
+        "authorizedsignatures": "DECIMAL:0",
+        "subjectaltrequiredns": "BOOL:False",
+        "subjectaltrequiredomaindns": "BOOL:False"
+      },
+      "style": {
+        "node-color": "#fda1ff",
+        "outside-position": "left",
+        "node-margin": 50
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 1240.2416084075371,
+        "y": 1209.1738042348059
+      },
+      "caption": "Group1",
+      "labels": [
+        "Group"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#fcc400"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n2",
+      "toId": "n0",
+      "type": "RootCAFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n1",
+      "fromId": "n3",
+      "toId": "n2",
+      "type": "IssuedSignedBy",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n1",
+      "toId": "n0",
+      "type": "NTAuthStoreFor",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n3",
+      "fromId": "n3",
+      "toId": "n1",
+      "type": "TrustedForNTAuth",
+      "properties": {},
+      "style": {
+        "arrow-color": "#000000"
+      }
+    },
+    {
+      "id": "n5",
+      "fromId": "n5",
+      "toId": "n3",
+      "type": "PublishedTo",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n6",
+      "toId": "n5",
+      "type": "Enroll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n32",
+      "type": "ADCSESC16",
+      "style": {
+        "arrow-color": "#aea1ff"
+      },
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n0"
+    },
+    {
+      "id": "n33",
+      "type": "Enroll",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n3"
+    }
+  ],
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  }
+}
