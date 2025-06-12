@@ -37,7 +37,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 	"github.com/specterops/bloodhound/src/migrations"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/graphify"
@@ -107,7 +106,7 @@ func (s *command) Run() error {
 	if database, err := s.initializeDatabase(ctx); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
-		return fmt.Errorf("error getting ingest file paths from test directory %v", err)
+		return fmt.Errorf("error getting ingest file paths from test directory %w", err)
 	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
 		return fmt.Errorf("error ingesting data %v", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {
@@ -296,15 +295,6 @@ func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.No
 
 func (s *command) getIngestFilePaths() ([]string, error) {
 	var paths = make([]string, 0, 16)
-
-	if s.path == "" {
-		workspacePaths, err := workspace.FindPaths(s.env)
-		if err != nil {
-			return nil, fmt.Errorf("error finding workspace paths: %w", err)
-		}
-
-		s.path = filepath.Join(workspacePaths.Root, "graph.json")
-	}
 
 	if err := filepath.Walk(s.path, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {

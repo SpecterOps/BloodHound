@@ -27,7 +27,7 @@ Commands:
   build       Build commands in current workspace
   cover       Collect coverage reports
   license     Check all supported files for expected license header and add one if missing
-  graph       Ingests test files from test fixture directory and transforms the node/edge data into an arrows file
+  graph       Ingests test files from test fixture directory and transforms the node/edge data into a generic ingestible file
 ```
 
 ### Usage
@@ -64,15 +64,18 @@ The following environment variables are supported:
 
 #### Graph Transform
 
-The subcommand `graph` ingests [test data](../../../cmd/api/src/test/fixtures/fixtures/v6/ingest/) into Postgres, retrieves the nodes and edges from the database, and then outputs the data as an arrows file.
+The subcommand `graph` ingests json files into Postgres, retrieves the nodes and edges from the database, and then outputs the data as a generic ingestible file.
 
 The following environment variables are required:
 - `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
   - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
 
+The following flags are required:
+- `--path`: Specifies the input directory for the consumed files. 
+
 The following flags are supported:
-- `--path`: Specifies the output directory for the generated arrows.json file. By default, the file will be placed in the current working directory. If you would like to change the default directory, the flag `path` can be set to specify where it should output.
-  - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph --path=XYZ`
+- `--outputFile`: Specifies the output file for generic ingestible graph file. 
+
 
 ### Contributing
 

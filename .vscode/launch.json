@@ -72,7 +72,7 @@
             "mode": "debug",
             "program": "packages/go/stbernard",
             "cwd": "${workspaceFolder}",
-            "args": ["graph", "--path=/Users/katherinepowderly/github.com/specterops/BloodHound/cmd/api/src/test/fixtures/fixtures/v6/ingest", "--outfile=/Users/katherinepowderly/github.com/specterops/BloodHound/tmp/graph.json"],
+            "args": ["graph", "--path=${workspaceFolder}/cmd/api/src/test/fixtures/fixtures/v6/ingest", "--outfile=${workspaceFolder}/tmp/graph.json"],
             "env": {
                 "SB_PG_CONNECTION":"user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432"
             }
