@@ -48,7 +48,7 @@
             "type": ["object", "null"],
             "description": "A key-value map of edge attributes. Values must not be objects. If a value is an array, it must contain only primitive types (e.g., strings, numbers, booleans) and must be homogeneous (all items must be of the same type).",
             "additionalProperties": {
-                "type": ["string", "number", "boolean", "array"],
+                "type": ["string", "number", "boolean", "array", "null"],
                 "items": {
                     "not": {
                         "type": "object"

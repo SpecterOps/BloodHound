@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"strconv"
-	"strings"
 
 	"os"
 	"path/filepath"
@@ -35,10 +33,11 @@ import (
 	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/slicesext"
 	"github.com/specterops/bloodhound/src/migrations"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/graphify"
@@ -125,9 +124,9 @@ func (s *command) Run() error {
 }
 
 type Node struct {
-	ID         string            `json:"id"`
-	Kinds      []string          `json:"kinds"`
-	Properties map[string]string `json:"properties"`
+	ID         string         `json:"id"`
+	Kinds      []string       `json:"kinds"`
+	Properties map[string]any `json:"properties"`
 }
 
 type Terminal struct {
@@ -135,31 +134,20 @@ type Terminal struct {
 	Value   string `json:"value"`
 }
 
-type Relationship struct {
-	Start      Terminal          `json:"start"`
-	End        Terminal          `json:"end"`
-	Kind       string            `json:"kind"`
-	Properties map[string]string `json:"properties"`
+type Edge struct {
+	Start      Terminal       `json:"start"`
+	End        Terminal       `json:"end"`
+	Kind       string         `json:"kind"`
+	Properties map[string]any `json:"properties"`
 }
 
 type Graph struct {
-	Nodes         []Node         `json:"nodes"`
-	Relationships []Relationship `json:"relationships"`
-}
-
-type Collector struct {
-	Name string `json:"name"`
-	Version string `json:"version"`
-}
-
-type Metadata struct {
-	IngestVersion string `json:"ingest_version"`
-	Collector Collector `json:"collector"`
+	Nodes []Node `json:"nodes"`
+	Edges []Edge `json:"edges"`
 }
 
 type IngestFile struct {
-	Metadata Metadata `json:"metadata"`
-	Graph    Graph    `json:"graph"`
+	Graph Graph `json:"graph"`
 }
 
 func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
@@ -206,25 +194,36 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 	return nil
 }
 
-func generateIngestFile(graph Graph) IngestFile{
+func generateIngestFile(graph Graph) IngestFile {
 	return IngestFile{
-		Metadata: Metadata{
-			IngestVersion: "v1",
-		},
 		Graph: graph,
 	}
 }
 
 func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, error) {
 	var graphNodes = make([]Node, 0, len(nodes))
-	var graphEdges = make([]Relationship, 0, len(edges))
+	var graphEdges = make([]Edge, 0, len(edges))
+	var isAZBase bool
+	var isBase bool
 
 	var nodeObjectIDs = make(map[graph.ID]string, len(nodes))
 
 	for _, node := range nodes {
 		var kinds = make([]string, 0, len(node.Kinds))
 		for _, kind := range node.Kinds {
-			kinds = append(kinds, kind.String())
+			if kind == ad.Entity {
+				isBase = true
+			} else if kind == azure.Entity {
+				isAZBase = true
+			} else {
+				kinds = append(kinds, kind.String())
+			}
+		}
+
+		if isBase {
+			kinds = append(kinds, ad.Entity.String())
+		} else if isAZBase {
+			kinds = append(kinds, azure.Entity.String())
 		}
 
 		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
@@ -237,12 +236,12 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 		graphNodes = append(graphNodes, Node{
 			ID:         objectID,
 			Kinds:      kinds,
-			Properties: convertProperties(node.Properties.Map),
+			Properties: node.Properties.Map,
 		})
 	}
 
 	for _, edge := range edges {
-		graphEdges = append(graphEdges, Relationship{
+		graphEdges = append(graphEdges, Edge{
 			Start: Terminal{
 				MatchBy: "id",
 				Value:   nodeObjectIDs[edge.StartID],
@@ -252,42 +251,14 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 				Value:   nodeObjectIDs[edge.EndID],
 			},
 			Kind:       edge.Kind.String(),
-			Properties: convertProperties(edge.Properties.Map),
+			Properties: edge.Properties.Map,
 		})
 	}
 
 	return Graph{
-		Nodes:         graphNodes,
-		Relationships: graphEdges,
+		Nodes: graphNodes,
+		Edges: graphEdges,
 	}, nil
-}
-
-func convertProperties(input map[string]any) map[string]string {
-	var output = make(map[string]string, len(input))
-	for key, value := range input {
-		output[key] = convertProperty(value)
-	}
-	return output
-}
-
-func convertProperty(input any) string {
-	switch v := input.(type) {
-	case string:
-		return v
-	case int:
-		return strconv.Itoa(v)
-	case float64:
-		return strconv.FormatFloat(v, 'f', -1, 64)
-	case bool:
-		return strconv.FormatBool(v)
-	case []any:
-		return strings.Join(slicesext.Map(v, convertProperty), ",")
-	case nil:
-		return "null"
-	default:
-		slog.Warn("unknown type encountered", slog.String("type", fmt.Sprintf("%T", v)))
-		return ""
-	}
 }
 
 func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {

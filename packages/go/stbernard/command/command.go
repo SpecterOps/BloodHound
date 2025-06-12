@@ -32,12 +32,12 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/envdump"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/generate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/goimports"
+	"github.com/specterops/bloodhound/packages/go/stbernard/command/graph"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/license"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/modsync"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/show"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/tester"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/packages/go/stbernard/graph"
 )
 
 // CommandRunner is an interface for commands, allowing commands to implement the minimum
