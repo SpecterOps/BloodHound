@@ -206,4 +206,13 @@ func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, tar
 		}
 		return nil
 	})
+
+	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if err := PostADCSESC16(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC16.String(), err))
+		} else if err != nil {
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC16.String(), err))
+		}
+		return nil
+	})
 }

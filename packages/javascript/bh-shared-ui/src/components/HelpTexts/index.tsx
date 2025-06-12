@@ -19,6 +19,7 @@ import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
 import ADCSESC13 from './ADCSESC13/ADCSESC13';
+import ADCSESC16 from './ADCSESC16/ADCSESC16';
 import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import ADCSESC4 from './ADCSESC4/ADCSESC4';
 import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
@@ -256,6 +257,7 @@ const EdgeInfoComponents = {
     ADCSESC10a: ADCSESC10a,
     ADCSESC10b: ADCSESC10b,
     ADCSESC13: ADCSESC13,
+    ADCSESC16: ADCSESC16,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
