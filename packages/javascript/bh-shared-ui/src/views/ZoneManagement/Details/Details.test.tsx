@@ -114,8 +114,8 @@ describe('Details', async () => {
             expect(await screen.findByTestId('zone-management_details_members-list_active-members-item-5'));
         });
     });
-    // TODO fix failing test
-    it.skip('handles selector selection when a tier and object are already selected', async () => {
+
+    it('handles selector selection when a tier and object are already selected', async () => {
         render(
             <Routes>
                 <Route path='/zone-management/details/tier/:tierId/member/:memberId' element={<Details />} />
@@ -136,25 +136,20 @@ describe('Details', async () => {
             expect(
                 await screen.findByTestId('zone-management_details_selectors-list_active-selectors-item-7')
             ).toBeInTheDocument();
-        });
 
-        // Selecting a selector after having an Object selected will deselect that Object
-        objectsListItems.forEach((li) => {
-            expect(li.childNodes).toHaveLength(1);
-        });
+            // Selecting a selector after having an Object selected will deselect that Object
+            objectsListItems.forEach((li) => {
+                expect(li.childNodes).toHaveLength(1);
+            });
 
-        longWait(() => {
             // The Tier Zero tier is still selected when selecting a selector that is within it
             expect(screen.getByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
-        });
 
-        longWait(async () => {
             expect(await screen.findByRole('button', { name: /Edit/ })).toBeInTheDocument();
         });
     });
 
-    // TODO fix failing test
-    it.skip('will deselect both the selected selector and selected object when a different tier is selected', async () => {
+    it('will deselect both the selected selector and selected object when a different tier is selected', async () => {
         render(
             <Routes>
                 <Route
@@ -174,21 +169,19 @@ describe('Details', async () => {
         longWait(async () => {
             expect(screen.getByText('Tier-2')).toBeInTheDocument();
             await user.click(screen.getByText('Tier-2'));
-        });
 
-        // This list rerenders with different list items so we have to grab those again
-        selectorsListItems = await within(selectors).findAllByRole('listitem');
-        selectorsListItems.forEach((li) => {
-            expect(li.childNodes).toHaveLength(1);
-        });
+            // This list rerenders with different list items so we have to grab those again
+            selectorsListItems = await within(selectors).findAllByRole('listitem');
+            selectorsListItems.forEach((li) => {
+                expect(li.childNodes).toHaveLength(1);
+            });
 
-        // This list rerenders with different list items so we have to grab those again
-        objectsListItems = await within(objects).findAllByRole('listitem');
-        objectsListItems.forEach((li) => {
-            expect(li.childNodes).toHaveLength(1);
-        });
+            // This list rerenders with different list items so we have to grab those again
+            objectsListItems = await within(objects).findAllByRole('listitem');
+            objectsListItems.forEach((li) => {
+                expect(li.childNodes).toHaveLength(1);
+            });
 
-        longWait(async () => {
             expect(
                 await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-3')
             ).toBeInTheDocument();

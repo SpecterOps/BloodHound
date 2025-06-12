@@ -14,12 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
 import { Button } from '@bloodhoundenterprise/doodleui';
+import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { useParams, Link } from 'react-router-dom';
-import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
@@ -45,9 +44,9 @@ export const getSavePath = (
 
 const getItemCount = (
     tagId: string | undefined,
-    tagsQuery: UseQueryResult<AssetGroupTagsListItem[]>,
+    tagsQuery: UseQueryResult<AssetGroupTag[]>,
     selectorId: string | undefined,
-    selectorsQuery: UseQueryResult<AssetGroupTagSelectorsListItem[]>
+    selectorsQuery: UseQueryResult<AssetGroupTagSelector[]>
 ) => {
     if (selectorId !== undefined) {
         const selectedSelector = selectorsQuery.data?.find((selector) => {
@@ -66,20 +65,17 @@ const getItemCount = (
 
 export const getEditButtonState = (
     memberId: string | undefined,
-    selectorId: string | undefined,
     selectorsQuery: UseQueryResult,
     tagsQuery: UseQueryResult
 ) => {
     return (
-        !!memberId ||
-        !selectorId ||
-        (selectorsQuery.isLoading && tagsQuery.isLoading) ||
-        (selectorsQuery.isError && tagsQuery.isError)
+        !!memberId || (selectorsQuery.isLoading && tagsQuery.isLoading) || (selectorsQuery.isError && tagsQuery.isError)
     );
 };
 
 const Details: FC = () => {
     const navigate = useAppNavigate();
+    const location = useLocation();
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
@@ -108,7 +104,7 @@ const Details: FC = () => {
         },
     });
 
-    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
 
     return (
         <div>
@@ -125,13 +121,11 @@ const Details: FC = () => {
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>
                     <DetailsList
-                        title={labelId ? 'Labels' : 'Tiers'}
+                        title={location.pathname.includes('label') ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
                         selected={tagId}
                         onSelect={(id) => {
-                            navigate(
-                                `/zone-management/${ROUTE_ZONE_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${id}`
-                            );
+                            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
                         }}
                     />
                     <DetailsList
@@ -139,17 +133,19 @@ const Details: FC = () => {
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
-                            navigate(
-                                `/zone-management/${ROUTE_ZONE_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`
-                            );
+                            navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${id}`);
                         }}
                     />
                     <MembersList
                         itemCount={getItemCount(tagId, tagsQuery, selectorId, selectorsQuery)}
                         onClick={(id) => {
-                            navigate(
-                                `/zone-management/${ROUTE_ZONE_MANAGEMENT_DETAILS}/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
-                            );
+                            if (selectorId) {
+                                navigate(
+                                    `/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/selector/${selectorId}/member/${id}`
+                                );
+                            } else {
+                                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}/member/${id}`);
+                            }
                         }}
                         selected={memberId}
                     />

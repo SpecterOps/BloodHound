@@ -14,63 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from '@bloodhoundenterprise/doodleui';
-import { FC } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { getTagUrlValue } from '../../../utils/tagUrlValue';
-import SelectorForm from './SelectorForm';
-import { TagForm } from './TagForm';
+import Save from './Save';
 
-const SaveView: FC = () => {
-    const location = useLocation();
-    const { tierId, labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
-    const showSelectorForm = location.pathname.includes('selector');
-
-    return (
-        <div>
-            {/* TODO: REMOVE HIDDEN CLASS WHEN TAG FORM IS FUNCTIONAL */}
-            <Breadcrumb className='mb-2 hidden'>
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink asChild>
-                            <Link to={`/zone-management/details`}>Tiers</Link>
-                        </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    {showSelectorForm ? (
-                        <>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink asChild>
-                                    <Link to={`/zone-management/save/${getTagUrlValue(labelId)}/${tagId}`}>
-                                        Tier Details
-                                    </Link>
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator />
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Selector</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </>
-                    ) : (
-                        <>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Tier Details</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </>
-                    )}
-                </BreadcrumbList>
-            </Breadcrumb>
-            {showSelectorForm ? <SelectorForm /> : <TagForm />}
-        </div>
-    );
-};
-
-export default SaveView;
+export default Save;

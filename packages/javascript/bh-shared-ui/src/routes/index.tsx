@@ -24,9 +24,12 @@ export const ROUTE_ZONE_MANAGEMENT_SUMMARY = '/summary';
 export const ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS = '/summary/tier/:tierId';
 export const ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS = '/summary/label/:labelId';
 export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS = '/details/tier/:tierId/selector/:selectorId';
-export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/selector/:selectorId/member/:memberId';
+export const ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS = '/details/tier/:tierId/member/:memberId';
+export const ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS =
+    '/details/tier/:tierId/selector/:selectorId/member/:memberId';
 export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS = '/details/label/:labelId/selector/:selectorId';
-export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS =
+export const ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS = '/details/label/:labelId/member/:memberId';
+export const ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS =
     '/details/label/:labelId/selector/:selectorId/member/:memberId';
 
 export const ROUTE_ZONE_MANAGEMENT_SAVE = '/save';

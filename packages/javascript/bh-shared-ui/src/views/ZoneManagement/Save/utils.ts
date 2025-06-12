@@ -20,17 +20,23 @@ import { OptionsObject } from 'notistack';
 export const handleError = (
     error: unknown,
     action: 'creating' | 'updating' | 'deleting',
+    entity: 'selector' | 'tier' | 'label',
     addNotification: (notification: string, key?: string, options?: OptionsObject) => void
 ) => {
     console.error(error);
 
-    const key = `zone-management_${action}-selector`;
+    const key = `zone-management_${action}-${entity}`;
 
     const options: OptionsObject = { anchorOrigin: { vertical: 'top', horizontal: 'right' } };
 
-    const message = isAxiosError(error)
-        ? `An unexpected error occurred while ${action} the selector. Message: ${error.response?.statusText}. Please try again.`
-        : `An unexpected error occurred while ${action} the selector. Please try again.`;
+    let message = `An unexpected error occurred while ${action} the ${entity}. Please try again.`;
+
+    if (isAxiosError(error)) {
+        const errorsList = error.response?.data?.errors ?? [];
+        const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
+        if (apiMessage)
+            message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+    }
 
     addNotification(message, key, options);
 };

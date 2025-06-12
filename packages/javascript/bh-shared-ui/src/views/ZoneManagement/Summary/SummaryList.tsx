@@ -1,5 +1,5 @@
 import {
-    AssetGroupTagsListItem,
+    AssetGroupTag,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypes,
@@ -14,7 +14,7 @@ import SummaryCard from './SummaryCard';
 
 type SummaryListProps = {
     onSelect: (id: number) => void;
-    listQuery: UseQueryResult<AssetGroupTagsListItem[]>;
+    listQuery: UseQueryResult<AssetGroupTag[]>;
     selected: string;
     title: 'Tiers' | 'Labels';
 };

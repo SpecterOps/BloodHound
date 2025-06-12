@@ -56,7 +56,7 @@ const Summary: FC = () => {
         },
     });
 
-    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
+    const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
 
     return (
         <div>

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { AssetGroupTagsListItem } from 'js-client-library';
+import { AssetGroupTag } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
 import SummaryList from './SummaryList';
@@ -27,7 +27,7 @@ vi.mock('../Details/utils', () => ({
     ],
 }));
 
-const mockData: AssetGroupTagsListItem[] = [
+const mockData: AssetGroupTag[] = [
     {
         id: 1,
         name: 'Mock Tier 1',
@@ -75,7 +75,7 @@ describe('SummaryList', () => {
         const query = {
             isLoading: true,
             isError: false,
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+        } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
@@ -86,7 +86,7 @@ describe('SummaryList', () => {
         const query = {
             isLoading: false,
             isError: true,
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+        } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
@@ -97,7 +97,7 @@ describe('SummaryList', () => {
         const query = {
             isSuccess: true,
             data: mockData,
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+        } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
@@ -110,7 +110,7 @@ describe('SummaryList', () => {
         const query = {
             isSuccess: true,
             data: mockData,
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+        } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
@@ -124,7 +124,7 @@ describe('SummaryList', () => {
         const query = {
             isSuccess: true,
             data: [mockData[0]],
-        } as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+        } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={onSelect} />);
 
