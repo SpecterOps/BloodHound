@@ -108,101 +108,39 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache ADCSC
 }
 
 func processEnterpriseCAWithValidCertChainToDomain(enterpriseCA *graph.Node, targetDomains *graph.NodeSet, groupExpansions impact.PathAggregator, cache ADCSCache, operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob]) {
+	for _, fn := range []struct {
+		Kind graph.Kind
+		Post func(context.Context, graph.Transaction, chan<- analysis.CreatePostRelationshipJob, impact.PathAggregator, *graph.Node, *graph.NodeSet, ADCSCache) error
+	}{
+		{ad.ADCSESC1, PostADCSESC1},
+		{ad.ADCSESC3, PostADCSESC3},
+		{ad.ADCSESC4, PostADCSESC4},
+		{ad.ADCSESC6a, PostADCSESC6a},
+		{ad.ADCSESC6b, PostADCSESC6b},
+		{ad.ADCSESC9a, PostADCSESC9a},
+		{ad.ADCSESC9b, PostADCSESC9b},
+		{ad.ADCSESC10a, PostADCSESC10a},
+		{ad.ADCSESC10b, PostADCSESC10b},
+		{ad.ADCSESC13, PostADCSESC13},
+		{ad.ADCSESC16, PostADCSESC16},
+	} {
+		k := fn.Kind
+		p := fn.Post
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if err := p(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", k.String(), err))
+			} else if err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", k.String(), err))
+			}
+			return nil
+		})
+	}
+
 	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
 		if err := PostGoldenCert(ctx, tx, outC, enterpriseCA, targetDomains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.GoldenCert.String(), err))
 		} else if err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.GoldenCert.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC1(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC1.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC1.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC3(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC3.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC3.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC4(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC4.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC4.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6a.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6a.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC6b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC6b.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC6b.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9a.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9a.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC9b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC9b.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC9b.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10a(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10a.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10a.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC10b(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC10b.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC10b.String(), err))
-		}
-		return nil
-	})
-
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-		if err := PostADCSESC13(ctx, tx, outC, groupExpansions, enterpriseCA, targetDomains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
-			slog.WarnContext(ctx, fmt.Sprintf("Post processing for %s: %v", ad.ADCSESC13.String(), err))
-		} else if err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed post processing for %s: %v", ad.ADCSESC13.String(), err))
 		}
 		return nil
 	})
