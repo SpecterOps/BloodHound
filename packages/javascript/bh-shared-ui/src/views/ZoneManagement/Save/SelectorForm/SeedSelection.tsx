@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Card, CardContent, CardHeader, Input, Skeleton } from '@bloodhoundenterprise/doodleui';
-import { createBrowserHistory } from 'history';
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
@@ -28,12 +27,12 @@ import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
 import { getTagUrlValue } from '../../../../utils/tagUrlValue';
 import { Cypher } from '../../Cypher/Cypher';
+import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
 import ObjectSelect from './ObjectSelect';
 import SelectorFormContext from './SelectorFormContext';
 import { useDeleteSelector } from './hooks';
 import { SelectorFormInputs } from './types';
-import { handleError } from './utils';
 
 const getListScalar = (windowHeight: number) => {
     if (windowHeight > 1080) return 18;
@@ -45,7 +44,6 @@ const getListScalar = (windowHeight: number) => {
 const SeedSelection: FC<{
     onSubmit: SubmitHandler<SelectorFormInputs>;
 }> = ({ onSubmit }) => {
-    const history = createBrowserHistory();
     const navigate = useAppNavigate();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
@@ -78,11 +76,15 @@ const SeedSelection: FC<{
 
             await deleteSelectorMutation.mutateAsync({ tagId, selectorId });
 
+            addNotification('Selector was deleted successfully!', undefined, {
+                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+            });
+
             setDeleteDialogOpen(false);
 
             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
         } catch (error) {
-            handleError(error, 'deleting', addNotification);
+            handleError(error, 'deleting', 'selector', addNotification);
         }
     }, [tagId, labelId, selectorId, navigate, deleteSelectorMutation, addNotification]);
 
@@ -125,7 +127,7 @@ const SeedSelection: FC<{
                                     setDeleteDialogOpen(true);
                                 }}
                             />
-                            <Button variant={'secondary'} onClick={history.back}>
+                            <Button variant={'secondary'} onClick={() => navigate(-1)}>
                                 Cancel
                             </Button>
                             <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>

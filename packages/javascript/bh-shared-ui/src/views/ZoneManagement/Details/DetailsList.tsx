@@ -16,39 +16,25 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import {
-    AssetGroupTagSelectorsListItem,
+    AssetGroupTag,
+    AssetGroupTagSelector,
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeOwned,
     AssetGroupTagTypeTier,
-    AssetGroupTagsListItem,
 } from 'js-client-library';
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight, itemSkeletons } from './utils';
+import { SelectedHighlight, getListHeight, isSelector, isTag, itemSkeletons } from './utils';
 
-const isTagListItem = (
-    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
-): listItem is AssetGroupTagsListItem => {
-    if (listItem.counts === undefined) return false;
-    return 'selectors' in listItem.counts;
-};
-
-const isSelectorsListItem = (
-    listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem
-): listItem is AssetGroupTagSelectorsListItem => {
-    if (listItem.counts === undefined) return false;
-    return !('selectors' in listItem.counts);
-};
-
-const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem): React.ReactNode => {
+const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
     if (listItem.counts === undefined) {
         return null;
-    } else if (isTagListItem(listItem)) {
+    } else if (isTag(listItem)) {
         return <span className='text-base ml-4'>{listItem.counts.selectors.toLocaleString()}</span>;
-    } else if (isSelectorsListItem(listItem)) {
+    } else if (isSelector(listItem)) {
         return <span className='text-base ml-4'>{listItem.counts.members.toLocaleString()}</span>;
     } else {
         return null;
@@ -57,7 +43,7 @@ const getCountElement = (listItem: AssetGroupTagsListItem | AssetGroupTagSelecto
 
 type DetailsListProps = {
     title: 'Selectors' | 'Tiers' | 'Labels';
-    listQuery: UseQueryResult<AssetGroupTagsListItem[]> | UseQueryResult<AssetGroupTagSelectorsListItem[]>;
+    listQuery: UseQueryResult<AssetGroupTag[]> | UseQueryResult<AssetGroupTagSelector[]>;
     selected: string | undefined;
     onSelect: (id: number) => void;
 };
@@ -113,31 +99,31 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
-                        // getFilteredList(listQuery.data)
                         listQuery.data
                             ?.sort((a, b) => {
-                                switch (sortOrder) {
-                                    case 'asc':
-                                        return a.name.localeCompare(b.name);
-                                    case 'desc':
-                                        return b.name.localeCompare(a.name);
-                                    default:
-                                        return b.name.localeCompare(a.name);
+                                if (isTag(a) && isTag(b) && title === 'Tiers') {
+                                    // A tag can be a tier and also have position null it seems
+                                    return (a.position || 0) - (b.position || 0);
+                                } else {
+                                    switch (sortOrder) {
+                                        case 'asc':
+                                            return a.name.localeCompare(b.name);
+                                        case 'desc':
+                                            return b.name.localeCompare(a.name);
+                                        default:
+                                            return b.name.localeCompare(a.name);
+                                    }
                                 }
                             })
                             .map((listItem) => {
                                 // Filters out Tier Tags when the active tab is 'Labels'
-                                if (
-                                    isTagListItem(listItem) &&
-                                    listItem.type === AssetGroupTagTypeTier &&
-                                    title !== 'Tiers'
-                                ) {
+                                if (isTag(listItem) && listItem.type === AssetGroupTagTypeTier && title !== 'Tiers') {
                                     return null;
                                 }
 
                                 // Filters out Label and Owned Tags when the active tab is 'Tiers'
                                 if (
-                                    isTagListItem(listItem) &&
+                                    isTag(listItem) &&
                                     (listItem.type === AssetGroupTagTypeLabel ||
                                         listItem.type === AssetGroupTagTypeOwned) &&
                                     title === 'Tiers'
@@ -145,7 +131,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                     return null;
                                 }
 
-                                const isDisabled = isSelectorsListItem(listItem) && listItem.disabled_at;
+                                const isDisabled = isSelector(listItem) && listItem.disabled_at;
 
                                 return (
                                     <li

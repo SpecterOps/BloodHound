@@ -21,9 +21,7 @@ import {
     AssetGroupTagMemberListItem,
     AssetGroupTagSelector,
     AssetGroupTagSelectorSeed,
-    AssetGroupTagSelectorsListItem,
     AssetGroupTagTypeTier,
-    AssetGroupTagsListItem,
     NodeSourceChild,
     SeedTypes,
 } from 'js-client-library';
@@ -46,7 +44,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
     };
 };
 
-export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTagsListItem => {
+export const createAssetGroupTagWithCounts = (tagId: number = 0): AssetGroupTag => {
     return {
         ...createAssetGroupTag(tagId),
         counts: {
@@ -89,7 +87,7 @@ export const createSelector = (tagId: number = 0, selectorId: number = 0) => {
 };
 
 export const createSelectorWithCounts = (tagId: number = 0, selectorId: number = 0) => {
-    const data: AssetGroupTagSelectorsListItem = {
+    const data: AssetGroupTagSelector = {
         ...createSelector(tagId, selectorId),
         counts: { members: faker.datatype.number() },
     };

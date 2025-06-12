@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import ZoneManagement from './ZoneManagement';
+import { TagForm } from './TagForm';
 
-export * from './ZoneManagementContext';
-export * from './hooks';
-export * from './utils';
-export default ZoneManagement;
+export default TagForm;

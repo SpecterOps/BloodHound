@@ -71,6 +71,8 @@ export type ReconciliationConfiguration = {
 export type TieringConfiguration = {
     key: ConfigurationKey.Tiering;
     value: {
+        tier_limit: number;
+        label_limit: number;
         multi_tier_analysis_enabled: boolean;
     };
 };
