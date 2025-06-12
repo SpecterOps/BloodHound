@@ -398,6 +398,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Active Assignments',
             queryType: 'azrole-active_assignments',
         },
+        {
+            id,
+            label: 'Approvers',
+            queryType: 'azrole-approvers',
+        }
     ],
     [AzureNodeKind.ServicePrincipal]: (id: string) => {
         const base: EntityInfoDataTableProps[] = [
@@ -1285,6 +1290,12 @@ export const entityRelationshipEndpoints = {
     'azrole-active_assignments': ({ id, counts, skip, limit, type }) =>
         apiClient
             .getAZEntityInfoV2('roles', id, 'active-assignments', counts, skip, limit, type, {
+                signal: controller.signal,
+            })
+            .then((res) => res.data),
+    'azrole-approvers': ({ id, counts, skip, limit, type }) =>
+        apiClient
+            .getAZEntityInfoV2('roles', id, 'role-approvers', counts, skip, limit, type, {
                 signal: controller.signal,
             })
             .then((res) => res.data),

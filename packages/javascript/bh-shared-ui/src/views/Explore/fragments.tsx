@@ -18,20 +18,21 @@ import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
 import { EntityField, format } from '../../utils';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
+import {ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties} from "../../graphSchema";
 
 export const exclusionList = [
     'gid',
     'admin_rights_count',
     'admin_rights_risk_percent',
-    'hasspn',
-    'system_tags',
+    ActiveDirectoryKindProperties.HasSPN,
+    CommonKindProperties.SystemTags,
     'isTierZero',
-    'user_tags',
+    CommonKindProperties.UserTags,
     'neo4jImportId',
-    'name',
-    'objectid',
-    'displayname',
-    'service_principal_id',
+    CommonKindProperties.Name,
+    CommonKindProperties.ObjectID,
+    CommonKindProperties.DisplayName,
+    AzureKindProperties.ServicePrincipalID,
     'highvalue',
     'reconcile',
 ];
