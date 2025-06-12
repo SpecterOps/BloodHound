@@ -104,3 +104,37 @@ func (s *Resources) GetEdgeComposition(response http.ResponseWriter, request *ht
 		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
 	}
 }
+
+func (s *Resources) GetEdgeACEInheritancePath(response http.ResponseWriter, request *http.Request) {
+	var (
+		params = request.URL.Query()
+	)
+
+	if edgeType, hasParameter := params[edgeParameterEdgeType]; !hasParameter {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterEdgeType), request), response)
+	} else if sourceNode, hasParameter := params[edgeParameterSourceNode]; !hasParameter {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterSourceNode), request), response)
+	} else if targetNode, hasParameter := params[edgeParameterTargetNode]; !hasParameter {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected %s parameter to be set.", edgeParameterTargetNode), request), response)
+	} else if len(edgeType) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterEdgeType), request), response)
+	} else if len(sourceNode) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterSourceNode), request), response)
+	} else if len(targetNode) > 1 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterTargetNode), request), response)
+	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge requested: %s", edgeType[0]), request), response)
+	} else if startID, err := strconv.ParseInt(sourceNode[0], 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
+	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
+	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
+	} else if pathSet, err := ad.GetACEInheritancePath(request.Context(), s.Graph, edge); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting ACE inheritance path for edge: %v", err), request), response)
+	} else {
+		unifiedGraph := model.NewUnifiedGraph()
+		unifiedGraph.AddPathSet(pathSet, true)
+		api.WriteBasicResponse(request.Context(), unifiedGraph, http.StatusOK, response)
+	}
+}

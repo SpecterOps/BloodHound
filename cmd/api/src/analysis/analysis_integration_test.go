@@ -25,24 +25,24 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	analysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
-func TestFetchRDPEnsureNoDescent(t *testing.T) {
+func TestFetchRDPEnsurenodesInPathcent(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.RDPB.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		groupExpansions, err := analysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 
 		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDPB.Computer.ID, groupExpansions, false)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDPB.Computer.ID, groupExpansions, false)
 			require.Nil(t, err)
 
 			// We should expect all groups that have the RIL incoming privilege to the computer
@@ -61,12 +61,12 @@ func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
 		harness.RDP.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		groupExpansions, err := analysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 
 		// Enforced URA validation
 		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, true)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, true)
 			require.Nil(t, err)
 
 			// We should expect all entities that have the RIL incoming privilege to the computer
@@ -93,7 +93,7 @@ func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
 
 		// Unenforced URA validation. result set should only include first degree members of `Remote Desktop Users` group
 		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, false)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, false)
 			require.Nil(t, err)
 
 			require.True(t, rdpEnabledEntityIDBitmap.Contains(harness.RDP.IrshadUser.ID.Uint64()))
@@ -122,12 +122,12 @@ func TestFetchRemoteDesktopUsersBitmapForComputer(t *testing.T) {
 		}))
 
 		// Recalculate group expansions
-		groupExpansions, err = analysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		groupExpansions, err = adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 
 		// result set should only include first degree members of `Remote Desktop Users` group.
 		test.RequireNilErr(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, true)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchRemoteDesktopUsersBitmapForComputer(tx, harness.RDP.Computer.ID, groupExpansions, true)
 			require.Nil(t, err)
 
 			require.Equal(t, 6, int(rdpEnabledEntityIDBitmap.Cardinality()))
@@ -150,12 +150,12 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 		harness.RDPHarnessWithCitrix.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		groupExpansions, err := analysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 
 		// the Remote Desktop Users group does not have an RIL(Remote Interactive Login) edge to the computer.
 		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchCanRDPEntityBitmapForComputer(tx, harness.RDPHarnessWithCitrix.Computer.ID, groupExpansions, true, true)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(tx, harness.RDPHarnessWithCitrix.Computer.ID, groupExpansions, true, true)
 			require.Nil(t, err)
 
 			// We should expect the intersection of members of `Direct Access Users`, with entities that have the RIL privilege to the computer
@@ -176,11 +176,11 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 		}))
 
 		// Recalculate group expansions
-		groupExpansions, err = analysis.ExpandAllRDPLocalGroups(context.Background(), db)
+		groupExpansions, err = adAnalysis.ExpandAllRDPLocalGroups(context.Background(), db)
 		require.Nil(t, err)
 
 		require.Nil(t, db.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
-			rdpEnabledEntityIDBitmap, err := analysis.FetchCanRDPEntityBitmapForComputer(tx, harness.RDPHarnessWithCitrix.Computer.ID, groupExpansions, true, true)
+			rdpEnabledEntityIDBitmap, err := adAnalysis.FetchCanRDPEntityBitmapForComputer(tx, harness.RDPHarnessWithCitrix.Computer.ID, groupExpansions, true, true)
 			require.Nil(t, err)
 
 			// We should expect the intersection of members of `Direct Access Users,` with entities that are first degree members of the `Remote Desktop Users` group
@@ -192,5 +192,48 @@ func TestFetchRDPEntityBitmapForComputer(t *testing.T) {
 
 			return nil
 		}))
+	})
+}
+
+func TestFetchACEInheritancePath(t *testing.T) {
+	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.ACEInheritedFrom.Setup(testContext)
+		return nil
+	}, func(harness integration.HarnessDetails, db graph.Database) {
+		// First positive case
+		startId := harness.ACEInheritedFrom.OU2.ID
+		endId := harness.ACEInheritedFrom.Computer1.ID
+
+		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
+		test.RequireNilErr(t, err)
+
+		pathSet, err := adAnalysis.GetACEInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		nodesInPath := pathSet.AllNodes()
+
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Domain1))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU1))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU2))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Computer1))
+		assert.Len(t, nodesInPath, 4)
+
+		// Second positive case
+		startId = harness.ACEInheritedFrom.OU6.ID
+		endId = harness.ACEInheritedFrom.Computer4.ID
+
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
+		test.RequireNilErr(t, err)
+
+		pathSet, err = adAnalysis.GetACEInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		nodesInPath = pathSet.AllNodes()
+
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU4))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU6))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Computer4))
+		assert.Len(t, nodesInPath, 3)
 	})
 }
