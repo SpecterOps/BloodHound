@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { FC, useContext } from 'react';
-import { useQuery } from 'react-query';
+import { UseQueryResult, useQuery } from 'react-query';
 import { useParams, Link } from 'react-router-dom';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
@@ -23,8 +23,16 @@ import { ZoneManagementContext } from '../ZoneManagementContext';
 import { SelectedDetails } from '../Details/SelectedDetails';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import SummaryList from './SummaryList';
-import { getEditButtonState, getSavePath } from '../Details/Details';
+import { getSavePath } from '../Details/Details';
 import { Button } from '@bloodhoundenterprise/doodleui';
+
+export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
+    return (
+        !!memberId ||
+        (selectorsQuery?.isLoading && tagsQuery?.isLoading) ||
+        (selectorsQuery?.isError && tagsQuery?.isError)
+    );
+};
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
@@ -70,7 +78,7 @@ const Summary: FC = () => {
                     )}
                 </div>
             </div>
-            <div className='flex gap-8 mt-4 w-full'>
+            <div className='flex gap-8 mt-6 w-full'>
                 <div className='flex-1'>
                     <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}

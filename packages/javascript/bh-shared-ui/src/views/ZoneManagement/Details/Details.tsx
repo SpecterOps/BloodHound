@@ -63,13 +63,11 @@ const getItemCount = (
     }
 };
 
-export const getEditButtonState = (
-    memberId: string | undefined,
-    selectorsQuery: UseQueryResult,
-    tagsQuery: UseQueryResult
-) => {
+export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
-        !!memberId || (selectorsQuery.isLoading && tagsQuery.isLoading) || (selectorsQuery.isError && tagsQuery.isError)
+        !!memberId ||
+        (selectorsQuery?.isLoading && tagsQuery?.isLoading) ||
+        (selectorsQuery?.isError && tagsQuery?.isError)
     );
 };
 
