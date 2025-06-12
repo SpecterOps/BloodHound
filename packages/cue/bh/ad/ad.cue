@@ -1718,6 +1718,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+ADCSESC16: types.#Kind & {
+	symbol: "ADCSESC16"
+	schema: "active_directory"
+}
+
 SyncedToADUser: types.#Kind & {
 	symbol:			"SyncedToADUser"
 	schema:			"active_directory"
@@ -1882,6 +1887,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -1982,6 +1988,7 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -2027,6 +2034,7 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
@@ -2057,6 +2065,7 @@ PostProcessedRelationships: [
 	ADCSESC9a,
 	ADCSESC9b,
 	ADCSESC13,
+	ADCSESC16,
 	EnrollOnBehalfOf,
 	SyncedToADUser,
 	ExtendedByPolicy,
