@@ -71,7 +71,7 @@ func TestResources_ToggleFlag(t *testing.T) {
 		mockDB       = mocks.NewMockDatabase(mockCtrl)
 		resources    = v2.Resources{DB: mockDB}
 		requestSetup = test.Request(t).
-				WithMethod(http.MethodGet).
+				WithMethod(http.MethodPut).
 				WithURL("/api/v2/features/%s/toggle", featureIDStr).
 				WithURLPathVars(map[string]string{api.URIPathVariableFeatureID: featureIDStr}).
 				OnHandlerFunc(resources.ToggleFlag)

@@ -27,7 +27,8 @@ import { UseQueryResult } from 'react-query';
 import { SortableHeader } from '../../../components';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
-import { SelectedHighlight, getListHeight, itemSkeletons } from './utils';
+import { itemSkeletons } from '../utils';
+import { SelectedHighlight, getListHeight } from './utils';
 
 const isTagListItem = (
     listItem: AssetGroupTagsListItem | AssetGroupTagSelectorsListItem

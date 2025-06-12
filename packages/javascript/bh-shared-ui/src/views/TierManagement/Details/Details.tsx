@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTagSelectorsListItem, AssetGroupTagsListItem } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { Link, useParams } from 'react-router-dom';
-import { AppIcon, CreateMenu } from '../../../components';
+import { useParams } from 'react-router-dom';
 import { ROUTE_TIER_MANAGEMENT_DETAILS } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
+import { TierManagementContext } from '../TierManagementContext';
+import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
@@ -79,6 +79,8 @@ const Details: FC = () => {
     const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
+    const { InfoHeader } = useContext(TierManagementContext);
+
     const tagsQuery = useQuery({
         queryKey: ['tier-management', 'tags'],
         queryFn: async () => {
@@ -102,53 +104,15 @@ const Details: FC = () => {
 
     return (
         <div>
+            <TierActionBar
+                tierId={tagId}
+                labelId={labelId}
+                selectorId={selectorId}
+                showEditButton={showEditButton}
+                getSavePath={getSavePath}
+            />
             <div className='flex mt-6 gap-8'>
-                <div className='flex justify-around basis-2/3'>
-                    <div className='flex justify-start gap-4 items-center basis-2/3'>
-                        <div className='flex items-center align-middle'>
-                            <CreateMenu
-                                createMenuTitle='Create Selector'
-                                disabled={!tagId}
-                                menuItems={[
-                                    {
-                                        title: 'Create Selector',
-                                        onClick: () => {
-                                            navigate(
-                                                `/tier-management/save/${getTagUrlValue(labelId)}/${tagId}/selector`
-                                            );
-                                        },
-                                    },
-                                ]}
-                            />
-                            <div className='hidden'>
-                                <div>
-                                    <AppIcon.Info className='mr-4 ml-2' size={24} />
-                                </div>
-                                <span>
-                                    To create additional tiers{' '}
-                                    <Button
-                                        variant='text'
-                                        asChild
-                                        className='p-0 text-base text-secondary dark:text-secondary-variant-2'>
-                                        <a href='#'>contact sales</a>
-                                    </Button>{' '}
-                                    in order to upgrade for multi-tier analysis.
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className='flex justify-start basis-1/3'>
-                        <input type='text' placeholder='search' className='hidden' />
-                    </div>
-                </div>
-
-                <div className='basis-1/3'>
-                    {showEditButton && (
-                        <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
-                        </Button>
-                    )}
-                </div>
+                <InfoHeader />
             </div>
             <div className='flex gap-8 mt-4'>
                 <div className='flex basis-2/3 bg-neutral-light-2 dark:bg-neutral-dark-2 rounded-lg shadow-outer-1 *:w-1/3 h-full'>

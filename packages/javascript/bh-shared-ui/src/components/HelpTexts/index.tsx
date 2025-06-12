@@ -62,6 +62,7 @@ import AZOwns from './AZOwns/AZOwns';
 import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin';
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
 import AZResetPassword from './AZResetPassword/AZResetPassword';
+import AZRoleApprover from './AZRoleApprover/AZRoleApprover';
 import AZRunsAs from './AZRunsAs/AZRunsAs';
 import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessAdministrator';
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
@@ -231,6 +232,7 @@ const EdgeInfoComponents = {
     AZKeyVaultKVContributor: AZKeyVaultKVContributor,
     AZLogicAppContributor: AZLogicAppContributor,
     AZNodeResourceGroup: AZNodeResourceGroup,
+    AZRoleApprover: AZRoleApprover,
     Enroll: Enroll,
     EnterpriseCAFor: EnterpriseCAFor,
     RootCAFor: RootCAFor,

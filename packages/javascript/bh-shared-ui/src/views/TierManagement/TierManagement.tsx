@@ -16,30 +16,28 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense } from 'react';
+import React, { FC, Suspense, useContext } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
     DEFAULT_TIER_MANAGEMENT_ROUTE,
-    ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
     ROUTE_TIER_MANAGEMENT_LABEL_DETAILS,
     ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_TIER_MANAGEMENT_LABEL_SELECTOR_DETAILS,
-    ROUTE_TIER_MANAGEMENT_LABEL_UPDATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_SAVE,
-    ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
+    ROUTE_TIER_MANAGEMENT_SUMMARY,
+    ROUTE_TIER_MANAGEMENT_SUMMARY_LABEL_DETAILS,
+    ROUTE_TIER_MANAGEMENT_SUMMARY_TIER_DETAILS,
     ROUTE_TIER_MANAGEMENT_TIER_DETAILS,
     ROUTE_TIER_MANAGEMENT_TIER_OBJECT_DETAILS,
     ROUTE_TIER_MANAGEMENT_TIER_SELECTOR_DETAILS,
-    ROUTE_TIER_MANAGEMENT_TIER_UPDATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_UPDATE_LABEL,
-    ROUTE_TIER_MANAGEMENT_UPDATE_TIER,
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
+import { TierManagementContext } from './TierManagementContext';
 import { OWNED_ID, TIER_ZERO_ID } from './utils';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
+const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
     ROUTE_TIER_MANAGEMENT_TIER_DETAILS,
@@ -50,31 +48,32 @@ const detailsPaths = [
     ROUTE_TIER_MANAGEMENT_LABEL_OBJECT_DETAILS,
 ];
 
-const savePaths = [
-    ROUTE_TIER_MANAGEMENT_SAVE,
-    ROUTE_TIER_MANAGEMENT_UPDATE_TIER,
-    ROUTE_TIER_MANAGEMENT_UPDATE_LABEL,
-    ROUTE_TIER_MANAGEMENT_TIER_CREATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_LABEL_CREATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_TIER_UPDATE_SELECTOR,
-    ROUTE_TIER_MANAGEMENT_LABEL_UPDATE_SELECTOR,
-];
-
-const childRoutes: Routable[] = [
-    ...detailsPaths.map((path) => {
-        return { path, component: Details, authenticationRequired: true, navigation: true };
-    }),
-    ...savePaths.map((path) => {
-        return { path, component: Save, authenticationRequired: true, navigation: true };
-    }),
+const summaryPaths = [
+    ROUTE_TIER_MANAGEMENT_SUMMARY,
+    ROUTE_TIER_MANAGEMENT_SUMMARY_TIER_DETAILS,
+    ROUTE_TIER_MANAGEMENT_SUMMARY_LABEL_DETAILS,
 ];
 
 const TierManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
 
+    const { savePaths } = useContext(TierManagementContext);
+
+    const childRoutes: Routable[] = [
+        ...detailsPaths.map((path) => {
+            return { path, component: Details, authenticationRequired: true, navigation: true };
+        }),
+        ...savePaths.map((path) => {
+            return { path, component: Save, authenticationRequired: true, navigation: true };
+        }),
+        ...summaryPaths.map((path) => {
+            return { path, component: Summary, authenticationRequired: true, navigation: true };
+        }),
+    ];
+
     return (
-        <main className='pl-nav-width'>
+        <main>
             <div className='h-dvh min-w-full px-8'>
                 <h1 className='text-4xl font-bold pt-8'>Tier Management</h1>
                 <p className='mt-6'>
@@ -89,12 +88,10 @@ const TierManagement: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
                         value={location.pathname.includes('label') ? 'label' : 'tier'}
                         onValueChange={(value) => {
-                            if (value === 'tier') {
-                                navigate(`/tier-management/details/${value}/${TIER_ZERO_ID}`);
-                            }
-                            if (value === 'label') {
-                                navigate(`/tier-management/details/${value}/${OWNED_ID}`);
-                            }
+                            const isSummary = location.pathname.includes('summary');
+                            const path = isSummary ? 'summary' : 'details';
+                            const id = value === 'tier' ? TIER_ZERO_ID : OWNED_ID;
+                            navigate(`/tier-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value='tier'>Tiers</TabsTrigger>
