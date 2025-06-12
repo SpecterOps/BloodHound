@@ -147,7 +147,7 @@ export const TagForm: FC = () => {
 
                 addNotification(
                     `${labelId ? 'Label' : 'Tier'} was updated successfully!`,
-                    `tier-management_update-${getTagUrlValue(labelId)}_success_${tagId}`,
+                    `zone-management_update-${getTagUrlValue(labelId)}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
@@ -167,7 +167,7 @@ export const TagForm: FC = () => {
 
             addNotification(
                 `${labelId ? 'Label' : 'Tier'} was deleted successfully!`,
-                `tier-management_delete-${getTagUrlValue(labelId)}_success_${tagId}`,
+                `zone-management_delete-${getTagUrlValue(labelId)}_success_${tagId}`,
                 {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 }
@@ -216,7 +216,7 @@ export const TagForm: FC = () => {
                                 type='text'
                                 disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
                                 {...register('name', {
-                                    required: `Please provide a name for the ${labelId ? 'Label' : 'Tier'}`,
+                                    required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                     value: tagQuery.data?.name,
                                     maxLength: {
                                         value: MAX_NAME_LENGTH,

@@ -33,7 +33,7 @@ import { AssetGroupTagSelector, SeedTypeCypher, SeedTypeObjectId, SeedTypesMap }
 import { FC, useContext, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { apiClient, queriesAreLoadingOrErrored } from '../../../../utils';
 import SelectorFormContext from './SelectorFormContext';
 import { SelectorFormInputs } from './types';
@@ -50,6 +50,7 @@ const selectorStatus = (id: string, data: AssetGroupTagSelector | undefined) => 
 };
 
 const BasicInfo: FC = () => {
+    const location = useLocation();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
@@ -106,7 +107,8 @@ const BasicInfo: FC = () => {
                     </div>
                 )}
                 <p className='font-bold'>
-                    Tag: <span className='font-normal'>{tagQuery.data?.name}</span>
+                    {location.pathname.includes('label') ? 'Label' : 'Tier'}:{' '}
+                    <span className='font-normal'>{tagQuery.data?.name}</span>
                 </p>
                 <div className='flex flex-col gap-6 mt-6'>
                     <div className='flex flex-col gap-6'>

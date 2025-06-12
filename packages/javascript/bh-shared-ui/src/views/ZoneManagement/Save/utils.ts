@@ -29,9 +29,14 @@ export const handleError = (
 
     const options: OptionsObject = { anchorOrigin: { vertical: 'top', horizontal: 'right' } };
 
-    const message = isAxiosError(error)
-        ? `An unexpected error occurred while ${action} the ${entity}. Message: ${error.response?.statusText}. Please try again.`
-        : `An unexpected error occurred while ${action} the ${entity}. Please try again.`;
+    let message = `An unexpected error occurred while ${action} the ${entity}. Please try again.`;
+
+    if (isAxiosError(error)) {
+        const errorsList = error.response?.data?.errors ?? [];
+        const apiMessage = errorsList.length ? errorsList[0].message : error.response?.statusText || undefined;
+        if (apiMessage)
+            message = `An unexpected error occurred while ${action} the ${entity}. Message: ${apiMessage}. Please try again.`;
+    }
 
     addNotification(message, key, options);
 };

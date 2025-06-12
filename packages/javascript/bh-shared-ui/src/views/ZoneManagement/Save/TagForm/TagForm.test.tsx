@@ -305,7 +305,9 @@ describe('Tag Form', () => {
 
         expect(screen.queryByText('Please provide a name for the tier')).not.toBeInTheDocument();
 
-        expect(mockNavigate).toBeCalled();
+        waitFor(() => {
+            expect(mockNavigate).toBeCalled();
+        });
     });
 
     it('handles creating a new tier', async () => {

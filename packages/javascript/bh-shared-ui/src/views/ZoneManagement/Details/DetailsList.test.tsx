@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTagTypeTier, AssetGroupTagsListItem } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagTypeTier } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
 import { render, screen } from '../../../test-utils';
 import { DetailsList } from './DetailsList';
@@ -64,13 +64,11 @@ const testQuery = {
             deleted: false,
         },
     ],
-} as unknown as UseQueryResult<AssetGroupTagsListItem[]>;
+} as unknown as UseQueryResult<AssetGroupTag[]>;
 
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
-        const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<
-            AssetGroupTagsListItem[]
-        >;
+        const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
@@ -78,9 +76,7 @@ describe('List', async () => {
     });
 
     it('handles data fetching errors', async () => {
-        const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<
-            AssetGroupTagsListItem[]
-        >;
+        const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
         render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
 
