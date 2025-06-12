@@ -3613,6 +3613,7 @@ func (s *ESC6aHarnessPrincipalEdges) Setup(c *GraphTestContext) {
 	c.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
 
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	c.UpdateNode(s.EnterpriseCA1)
 }
 
@@ -5066,6 +5067,7 @@ func (s *ESC6bTemplate1Harness) Setup(graphTestContext *GraphTestContext) {
 
 	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
 	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA)
 
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
@@ -5183,6 +5185,7 @@ func (s *ESC6bTemplate2Harness) Setup(graphTestContext *GraphTestContext) {
 
 	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
 	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
+	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA)
 
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid)
@@ -5349,23 +5352,28 @@ func (s *ESC6bECAHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Domain5 = graphTestContext.NewActiveDirectoryDomain("Domain5", domainSid5, false, true)
 
 	s.EnterpriseCA0 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA0", domainSid0)
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA0)
 
 	// leave ca1 isUserSpecifiesSanEnabled as nil
 	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid1)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), false)
 	graphTestContext.UpdateNode(s.EnterpriseCA1)
 
 	s.EnterpriseCA3 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA3", domainSid3)
+	s.EnterpriseCA3.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA3.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA3)
 
 	s.EnterpriseCA4 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA4", domainSid4)
+	s.EnterpriseCA4.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA4.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA4)
 
 	s.EnterpriseCA5 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA5", domainSid5)
+	s.EnterpriseCA5.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA5.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA5)
 
@@ -5471,6 +5479,7 @@ func (s *ESC6bPrincipalEdgesHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 
 	s.EnterpriseCA = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA", domainSid)
+	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA)
 
@@ -7216,6 +7225,9 @@ func (s *ESC6bHarnessDC1) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.DC5, s.Domain2, ad.DCFor)
 	graphTestContext.NewRelationship(s.DC6, s.Domain2, ad.DCFor)
 
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
+	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA2.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
@@ -7336,6 +7348,8 @@ func (s *ESC6bHarnessDC2) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain11, s.Domain1, ad.CrossForestTrust)
 	graphTestContext.NewRelationship(s.Domain1, s.Domain11, ad.CrossForestTrust)
 
+	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabledCollected.String(), true)
 	s.EnterpriseCA0.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	s.EnterpriseCA1.Properties.Set(ad.IsUserSpecifiesSanEnabled.String(), true)
 	graphTestContext.UpdateNode(s.EnterpriseCA0)

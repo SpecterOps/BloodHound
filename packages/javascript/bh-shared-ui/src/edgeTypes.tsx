@@ -94,7 +94,9 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.AddAllowedToAct,
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+                    ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
                     ActiveDirectoryRelationshipKind.WriteGPLink,
+                    ActiveDirectoryRelationshipKind.WritePublicInformation,
                     ActiveDirectoryRelationshipKind.WriteSPN,
                 ],
             },
@@ -112,6 +114,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,
+                    ActiveDirectoryRelationshipKind.ADCSESC16,
                 ],
             },
             {

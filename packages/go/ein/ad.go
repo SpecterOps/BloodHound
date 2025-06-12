@@ -1164,6 +1164,16 @@ func ParseCARegistryProperties(enterpriseCA EnterpriseCA) IngestibleNode {
 		propMap[ad.RoleSeparationEnabled.String()] = enterpriseCA.CARegistryData.RoleSeparationEnabled.Value
 	}
 
+	// RPCEncryptionEnforced
+	if enterpriseCA.CARegistryData.RPCEncryptionEnforced.Collected {
+		propMap[ad.RPCEncryptionEnforced.String()] = enterpriseCA.CARegistryData.RPCEncryptionEnforced.Value
+	}
+
+	// DisabledExtensions
+	if enterpriseCA.CARegistryData.DisabledExtensions.Collected {
+		propMap[ad.DisabledExtensions.String()] = enterpriseCA.CARegistryData.DisabledExtensions.Data
+	}
+
 	return IngestibleNode{
 		ObjectID:    enterpriseCA.ObjectIdentifier,
 		PropertyMap: propMap,

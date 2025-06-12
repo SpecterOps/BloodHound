@@ -970,6 +970,34 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+RPCEncryptionEnforced: types.#StringEnum & {
+	symbol: 		"RPCEncryptionEnforced"
+	schema: 		"ad"
+	name:           "RPC Encryption Enforced"
+	representation: "rpcencryptionenforced"
+}
+
+RPCEncryptionCollected: types.#StringEnum & {
+	symbol: 		"RPCEncryptionCollected"
+	schema: 		"ad"
+	name:           "RPC Encryption Collected"
+	representation: "rpcencryptioncollected"
+}
+
+DisabledExtensions: types.#StringEnum & {
+	symbol: 		"DisabledExtensions"
+	schema: 		"ad"
+	name:           "Disabled Extensions"
+	representation: "disabledextensions"
+}
+
+DisabledExtensionsCollected: types.#StringEnum & {
+	symbol: 		"DisabledExtensionsCollected"
+	schema: 		"ad"
+	name:           "Disabled Extensions Collected"
+	representation: "disabledextensionscollected"
+}
+
 Properties: [
 	AdminCount,
 	CASecurityCollected,
@@ -1102,6 +1130,10 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	RPCEncryptionEnforced,
+	RPCEncryptionCollected,
+	DisabledExtensions,
+	DisabledExtensionsCollected,
 ]
 
 // Kinds
@@ -1563,6 +1595,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+ADCSESC16: types.#Kind & {
+	symbol: "ADCSESC16"
+	schema: "active_directory"
+}
+
 SyncedToEntraUser: types.#Kind & {
 	symbol: "SyncedToEntraUser"
 	schema: "active_directory"
@@ -1610,6 +1647,16 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
+	schema: "active_directory"
+}
+
+WriteAltSecurityIdentities: types.#Kind & {
+	symbol: "WriteAltSecurityIdentities"
+	schema: "active_directory"
+}
+
+WritePublicInformation: types.#Kind & {
+	symbol: "WritePublicInformation"
 	schema: "active_directory"
 }
 
@@ -1685,6 +1732,7 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -1695,6 +1743,8 @@ RelationshipKinds: [
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // ACL Relationships
@@ -1727,6 +1777,8 @@ ACLRelationships: [
 	WritePKINameFlag,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // these edges are common to inbound/outbound/pathfinding
@@ -1773,6 +1825,7 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToEntraUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
@@ -1781,6 +1834,8 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	HasTrustKeys,
+	WriteAltSecurityIdentities,
+	WritePublicInformation,
 ]
 
 // Edges that are used during inbound traversal
@@ -1804,6 +1859,7 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
