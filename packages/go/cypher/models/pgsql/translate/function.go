@@ -18,11 +18,55 @@ package translate
 
 import (
 	"fmt"
+	"github.com/specterops/bloodhound/cypher/models/walk"
 	"strings"
 
 	"github.com/specterops/bloodhound/cypher/models/cypher"
 	"github.com/specterops/bloodhound/cypher/models/pgsql"
 )
+
+func SymbolsFor(node pgsql.SyntaxNode) (*pgsql.SymbolTable, error) {
+	instance := pgsql.NewSymbolTable()
+
+	return instance, walk.PgSQL(node, walk.NewSimpleVisitor[pgsql.SyntaxNode](func(node pgsql.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
+		switch typedNode := node.(type) {
+		case pgsql.Identifier:
+			instance.AddIdentifier(typedNode)
+
+		case pgsql.CompoundIdentifier:
+			instance.AddCompoundIdentifier(typedNode)
+		}
+	}))
+}
+
+func GetAggregatedFunctionParameterSymbols(call pgsql.FunctionCall) (*pgsql.SymbolTable, error) {
+	var (
+		symbolTable = pgsql.NewSymbolTable()
+		callStack   = []pgsql.FunctionCall{call}
+	)
+
+	for len(callStack) > 0 {
+		nextCall := callStack[len(callStack)-1]
+		callStack = callStack[:len(callStack)-1]
+
+		if pgsql.IsAggregateFunction(nextCall.Function) {
+			if functionParameterSymbols, err := SymbolsFor(nextCall); err != nil {
+				return nil, err
+			} else {
+				symbolTable.AddTable(functionParameterSymbols)
+			}
+		} else {
+			for _, parameter := range nextCall.Parameters {
+				switch typedParameter := parameter.(type) {
+				case pgsql.FunctionCall:
+					callStack = append(callStack, typedParameter)
+				}
+			}
+		}
+	}
+
+	return symbolTable, nil
+}
 
 func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocation) {
 	switch formattedName := strings.ToLower(typedExpression.Name); formattedName {
@@ -229,6 +273,8 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 		} else if argument, err := s.treeTranslator.PopOperand(); err != nil {
 			s.SetError(err)
 		} else {
+			castType := pgsql.AnyArray
+
 			switch typedArgument := unwrapParenthetical(argument).(type) {
 			case pgsql.Identifier:
 				if binding, bound := s.scope.Lookup(typedArgument); !bound {
@@ -236,22 +282,25 @@ func (s *Translator) translateFunction(typedExpression *cypher.FunctionInvocatio
 				} else if bindingArrayType, err := binding.DataType.ToArrayType(); err != nil {
 					s.SetError(err)
 				} else {
-					s.treeTranslator.PushOperand(pgsql.FunctionCall{
-						Function:   pgsql.FunctionArrayAggregate,
-						Parameters: []pgsql.Expression{argument},
-						Distinct:   typedExpression.Distinct,
-						CastType:   bindingArrayType,
-					})
+					castType = bindingArrayType
 				}
-
-			default:
-				s.treeTranslator.PushOperand(pgsql.FunctionCall{
-					Function:   pgsql.FunctionArrayAggregate,
-					Parameters: []pgsql.Expression{argument},
-					Distinct:   typedExpression.Distinct,
-					CastType:   pgsql.AnyArray,
-				})
 			}
+
+			s.treeTranslator.PushOperand(
+				pgsql.FunctionCall{
+					Function: pgsql.FunctionArrayRemove,
+					Parameters: []pgsql.Expression{
+						pgsql.FunctionCall{
+							Function:   pgsql.FunctionArrayAggregate,
+							Parameters: []pgsql.Expression{argument},
+							Distinct:   typedExpression.Distinct,
+							CastType:   castType,
+						},
+						pgsql.NullLiteral(),
+					},
+					CastType: castType,
+				},
+			)
 		}
 
 	default:
