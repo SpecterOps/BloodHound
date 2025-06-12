@@ -14,23 +14,31 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC } from 'react';
+import { FC, useContext } from 'react';
 import { useQuery } from 'react-query';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
+import { ZoneManagementContext } from '../ZoneManagementContext';
 import { SelectedDetails } from '../Details/SelectedDetails';
-import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import SummaryList from './SummaryList';
+import { getEditButtonState, getSavePath } from '../Details/Details';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId } = useParams();
+    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
+    const context = useContext(ZoneManagementContext);
+    if (!context) {
+        throw new Error('Details must be used within a ZoneManagementContext.Provider');
+    }
+    const { InfoHeader } = context;
+
     const tagsQuery = useQuery({
-        queryKey: ['zone-management', 'tags'],
+        queryKey: ['tier-management', 'tags'],
         queryFn: async () => {
             return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
                 return res.data.data['tags'];
@@ -38,9 +46,30 @@ const Summary: FC = () => {
         },
     });
 
+    const selectorsQuery = useQuery({
+        queryKey: ['zone-management', 'tags', tagId, 'selectors'],
+        queryFn: async () => {
+            if (!tagId) return [];
+            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
+                return res.data.data['selectors'];
+            });
+        },
+    });
+
+    const showEditButton = !getEditButtonState(memberId, selectorId, selectorsQuery, tagsQuery);
+
     return (
         <div>
-            <TierActionBar tierId={tagId} labelId={labelId} selectorId={selectorId} />
+            <div className='flex mt-6 gap-8'>
+                <InfoHeader />
+                <div className='basis-1/3'>
+                    {showEditButton && (
+                        <Button asChild variant={'secondary'} disabled={showEditButton}>
+                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                        </Button>
+                    )}
+                </div>
+            </div>
             <div className='flex gap-8 mt-4 w-full'>
                 <div className='flex-1'>
                     <SummaryList

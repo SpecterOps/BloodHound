@@ -12,18 +12,18 @@ import { render, screen } from '../../../test-utils';
 import SummaryList from './SummaryList';
 
 vi.mock('../../../components/AppIcon/Icons/DownArrow', () => ({
-    default: () => <div data-testid='tier-management_summary-list_down-arrow' />,
+    default: () => <div data-testid='zone-management_summary-list_down-arrow' />,
 }));
 
 vi.mock('./SummaryCard', () => ({
-    default: ({ title }: { title: string }) => <div data-testid='tier-management_summary-list_card'>{title}</div>,
+    default: ({ title }: { title: string }) => <div data-testid='zone-management_summary-list_card'>{title}</div>,
 }));
 
 vi.mock('../Details/utils', () => ({
     itemSkeletons: [
-        () => <li key='skeleton-1' data-testid='tier-management_summary-list_loading-skeleton' />,
-        () => <li key='skeleton-2' data-testid='tier-management_summary-list_loading-skeleton' />,
-        () => <li key='skeleton-3' data-testid='tier-management_summary-list_loading-skeleton' />,
+        () => <li key='skeleton-1' data-testid='zone-management_summary-list_loading-skeleton' />,
+        () => <li key='skeleton-2' data-testid='zone-management_summary-list_loading-skeleton' />,
+        () => <li key='skeleton-3' data-testid='zone-management_summary-list_loading-skeleton' />,
     ],
 }));
 
@@ -79,7 +79,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
-        expect(screen.getAllByTestId('tier-management_tiers-list_loading-skeleton')).toHaveLength(3);
+        expect(screen.getAllByTestId('zone-management_tiers-list_loading-skeleton')).toHaveLength(3);
     });
 
     it('shows an error message when query fails', async () => {
@@ -101,7 +101,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
-        const cards = await screen.findAllByTestId('tier-management_summary-list_card');
+        const cards = await screen.findAllByTestId('zone-management_summary-list_card');
         expect(cards[0]).toHaveTextContent('Mock Tier 2');
         expect(cards[1]).toHaveTextContent('Mock Tier 1');
     });
@@ -114,7 +114,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={() => {}} />);
 
-        const arrows = await screen.findAllByTestId('tier-management_summary-list_down-arrow');
+        const arrows = await screen.findAllByTestId('zone-management_summary-list_down-arrow');
         expect(arrows).toHaveLength(expectedCount);
     });
 
@@ -128,7 +128,7 @@ describe('SummaryList', () => {
 
         render(<SummaryList title='Tiers' selected='' listQuery={query} onSelect={onSelect} />);
 
-        await userEvent.click(await screen.findByTestId('tier-management_summary-list_card'));
+        await userEvent.click(await screen.findByTestId('zone-management_summary-list_card'));
         expect(onSelect).toHaveBeenCalledWith(mockData[0].id);
     });
 });
