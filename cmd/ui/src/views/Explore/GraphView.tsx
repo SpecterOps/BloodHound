@@ -16,7 +16,7 @@
 
 import { useTheme } from '@mui/material';
 import {
-    BaseGraphLayoutOptions,
+    BaseExploreLayoutOptions,
     ExploreTable,
     GraphControls,
     GraphProgress,
@@ -38,7 +38,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -58,7 +58,8 @@ const GraphView: FC = () => {
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout) ?? defaultGraphLayout;
+    const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
+    const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
@@ -71,8 +72,10 @@ const GraphView: FC = () => {
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
-    // const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay();
-    const displayTable = true; // autoDisplayTable || exploreLayout === 'table';
+    // const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
+    //     enabled: !exploreLayout,
+    // });
+    const displayTable = true; // autoDisplayTable || !!isExploreTableSelected;
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -136,7 +139,12 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleLayoutChange = (layout: BaseGraphLayoutOptions) => {
+    const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
+        if (layout === 'table') {
+            dispatch(setIsExploreTableSelected(true));
+            return;
+        }
+
         dispatch(setExploreLayout(layout));
 
         if (layout === 'standard') {
@@ -167,7 +175,7 @@ const GraphView: FC = () => {
                 <ExploreSearch />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
-                    selectedLayout={exploreLayout}
+                    selectedLayout={exploreLayout ?? defaultGraphLayout}
                     onLayoutChange={handleLayoutChange}
                     showNodeLabels={showNodeLabels}
                     onToggleNodeLabels={toggleShowNodeLabels}

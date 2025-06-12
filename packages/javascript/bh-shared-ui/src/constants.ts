@@ -25,7 +25,7 @@ import {
     AzureRelationshipKind,
     CommonKindProperties,
 } from './graphSchema';
-import { BaseGraphLayoutOptions, MappedStringLiteral } from './types';
+import { BaseExploreLayoutOptions, MappedStringLiteral } from './types';
 import { addOpacityToHex } from './utils/colors';
 
 // Max and min length requirements for creating/updating a user
@@ -457,7 +457,7 @@ export const baseGraphLayoutOptions = {
     sequential: 'sequential',
     standard: 'standard',
     table: 'table',
-} satisfies MappedStringLiteral<BaseGraphLayoutOptions, BaseGraphLayoutOptions>;
+} satisfies MappedStringLiteral<BaseExploreLayoutOptions, BaseExploreLayoutOptions>;
 
 export const baseGraphLayouts = [
     baseGraphLayoutOptions.sequential,

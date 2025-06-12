@@ -28,6 +28,7 @@ const GLOBAL_SET_ASSET_GROUP_INDEX = 'app/global/GLOBALSETASSETGROUPINDEX';
 const GLOBAL_SET_ASSET_GROUP_EDIT = 'app/global/GLOBALSETASSETGROUPEDIT';
 const GLOBAL_SET_DARK_MODE = 'app/global/GLOBALSETDARKMODE';
 const GLOBAL_SET_EXPLORE_LAYOUT = 'app/global/GLOBAL_SET_EXPLORE_LAYOUT';
+const GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED = 'app/global/GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED';
 
 export {
     GLOBAL_ADD_SNACKBAR,
@@ -41,12 +42,15 @@ export {
     GLOBAL_SET_DOMAIN,
     GLOBAL_SET_EXPANDED,
     GLOBAL_SET_EXPLORE_LAYOUT,
+    GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED,
 };
 
 export interface GlobalViewState {
     notifications: Notification[];
     darkMode: boolean;
+    // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
+    isExploreTableSelected?: boolean;
 }
 
 export interface GlobalOptionsState {
@@ -89,7 +93,8 @@ export type GlobalViewActionTypes =
     | RemoveSnackbarAction
     | CloseSnackbarAction
     | SetDarkModeAction
-    | SetExploreLayoutAction;
+    | SetExploreLayoutAction
+    | SetIsExploreTableSelectedAction;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -111,6 +116,11 @@ export interface SetAssetGroupIndexAction {
 export interface SetAssetGroupEditAction {
     type: typeof GLOBAL_SET_ASSET_GROUP_EDIT;
     assetGroupId: number | null;
+}
+
+export interface SetIsExploreTableSelectedAction {
+    type: typeof GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED;
+    isExploreTableSelected: boolean;
 }
 
 export type GlobalOptionsActionTypes =

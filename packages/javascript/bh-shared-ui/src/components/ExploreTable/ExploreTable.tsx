@@ -23,16 +23,29 @@ import React, { useEffect, useMemo, useState } from 'react';
 // needed for row & cell level scope DnD setup
 // needed for table body level scope DnD setup
 import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
+import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
+import NodeIcon from '../NodeIcon';
 
 interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
+    onRowClick?: (data: any) => void;
+    onCloseClick?: () => void;
+    selectedRow: string;
     items?: any;
 }
 
-const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => {
+const ExploreTable: React.FC<ExploreTableProps> = ({
+    items,
+    open,
+    onClose,
+    onRowClick = () => {},
+    onCloseClick,
+    selectedRow,
+}) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () =>
@@ -54,8 +67,34 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => 
         [onClose]
     );
 
+    const initialColumns: ColumnDef<any, any>[] = [
+        {
+            accessorKey: '',
+            id: 'action-menu',
+            cell: () => (
+                <button className='pl-4'>
+                    <FontAwesomeIcon icon={faEllipsis} className='rotate-90 dark:text-neutral-light-1' />
+                </button>
+            ),
+        },
+        {
+            accessorKey: 'nonTierZeroPrincipal',
+            header: () => {
+                return <span className='dark:text-neutral-light-1'>Non Tier Zero Principal</span>;
+            },
+            cell: ({ row }) => {
+                return (
+                    <div className='flex justify-center items-center'>
+                        <NodeIcon nodeType={row?.original?.nodetype || 'N/A'} />
+                    </div>
+                );
+            },
+        },
+    ];
+
     const columns: ColumnDef<any, any>[] = useMemo(
         () =>
+            firstItem &&
             // If column order exists in redux/localStorage, use that
             Object.keys(firstItem)
                 .slice(0, 10)
@@ -71,21 +110,24 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => 
         [labelsMap, firstItem]
     );
 
-    if (!open) return null;
+    if (!open || !items) return null;
 
+    const finalColumns = [...initialColumns, ...columns];
     return (
-        <div className='border-2 absolute bottom-24 left-4 right-4 w-4/5 h-1/2'>
+        <div className='border-2 absolute bottom-24 left-4 right-4 w-[calc(100%-450px)] max-h-1/2 h-[475px] bg-neutral-light-2'>
             <div className='explore-table-container w-full h-full'>
                 <DataTable
                     className='h-full'
+                    onRowClick={onRowClick}
+                    selectedRow={selectedRow}
                     TableProps={{
-                        containerClassName: 'h-full',
+                        containerClassName: 'h-full bg-cyan',
                     }}
                     TableControlsProps={{
                         onDownloadClick: () => alert('download icon clicked'),
                         onExpandClick: () => alert('expand icon clicked'),
                         onManageColumnsClick: () => alert('manage columns button clicked'),
-                        onCloseClick: () => alert('close icon clicked'),
+                        onCloseClick,
                         tableName: 'Results',
                         resultsCount: 230,
                         SearchInputProps: {
@@ -95,7 +137,7 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose }) => 
                         },
                     }}
                     data={mungedData}
-                    columns={columns}
+                    columns={finalColumns}
                 />
             </div>
         </div>
