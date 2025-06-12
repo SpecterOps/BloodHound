@@ -65,9 +65,10 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
-type PatchAssetGroupTagSelectorRequest struct {
+type patchAssetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
-	Disabled *bool `json:"disabled"`
+	Description *string `json:"description"`
+	Disabled    *bool   `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -202,7 +203,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  PatchAssetGroupTagSelectorRequest
+		selUpdateReq  patchAssetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -245,7 +246,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.AutoCertify = selUpdateReq.AutoCertify
 		}
 
-		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != "" || len(selUpdateReq.Seeds) > 0) {
+		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != nil || len(selUpdateReq.Seeds) > 0) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "default selectors only support modifying auto_certify and disabled_at", request), response)
 			return
 		}
@@ -254,8 +255,8 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Name = selUpdateReq.Name
 		}
 
-		if selUpdateReq.Description != "" {
-			selector.Description = selUpdateReq.Description
+		if selUpdateReq.Description != nil {
+			selector.Description = *selUpdateReq.Description
 		}
 
 		// if seeds are not included, call the DB update with them set to nil
