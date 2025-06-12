@@ -38,7 +38,7 @@ const Summary: FC = () => {
     const { InfoHeader } = context;
 
     const tagsQuery = useQuery({
-        queryKey: ['tier-management', 'tags'],
+        queryKey: ['zone-management', 'tags'],
         queryFn: async () => {
             return apiClient.getAssetGroupTags({ params: { counts: true } }).then((res) => {
                 return res.data.data['tags'];
