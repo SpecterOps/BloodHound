@@ -104,10 +104,12 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
 		return nil, fmt.Errorf("failed to load ingest schema")
 	} else {
+
+		var pipeline = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema)
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
 			authorizer     = auth.NewAuthorizer(connections.RDMS)
-			datapipeDaemon = datapipe.NewDaemon(ctx, cfg, connections, graphQueryCache, time.Duration(cfg.DatapipeInterval)*time.Second, ingestSchema)
+			datapipeDaemon = datapipe.NewDaemon(pipeline, time.Duration(cfg.DatapipeInterval)*time.Second, connections.RDMS)
 			routerInst     = router.NewRouter(cfg, authorizer, bootstrap.ContentSecurityPolicy)
 			ctxInitializer = database.NewContextInitializer(connections.RDMS)
 			authenticator  = api.NewAuthenticator(cfg, connections.RDMS, ctxInitializer)
