@@ -109,6 +109,9 @@ describe('FileIngest', () => {
         await expect(submitButton).toBeEnabled();
 
         fireEvent.click(submitButton);
+        expect(screen.getByText('Press "Upload" to continue.')).toBeInTheDocument();
+
+        fireEvent.click(submitButton);
         await waitFor(() => screen.getByText('All files have successfully been uploaded for ingest.'));
         expect(screen.getByText('All files have successfully been uploaded for ingest.')).toBeInTheDocument();
     });
