@@ -33,12 +33,14 @@ import {
     AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
+import { ZoneManagementContext } from '../../ZoneManagementContext';
+import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
@@ -91,6 +93,9 @@ export const TagForm: FC = () => {
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [position, setPosition] = useState<number | null>(null);
+
+    const { TierList } = useContext(ZoneManagementContext);
 
     const {
         register,
@@ -98,6 +103,7 @@ export const TagForm: FC = () => {
         formState: { errors },
     } = useForm<TagFormInputs>();
 
+    const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();
@@ -195,89 +201,105 @@ export const TagForm: FC = () => {
 
     const handleCancel = useCallback(() => setDeleteDialogOpen(false), []);
 
+    useEffect(() => {
+        if (tagQuery.data) {
+            setPosition(tagQuery.data.position);
+        }
+    }, [tagQuery.data]);
+
     if (tagQuery.isLoading) return <Skeleton />;
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
     return (
-        <form>
-            <Card className='min-w-96 w-[672px] p-3 mt-6'>
-                <CardHeader>
-                    <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className='flex justify-between'>
-                        <span>{`${location.pathname.includes('label') ? 'Label' : 'Tier'} Information`}</span>
+        <>
+            <form className='flex gap-x-6 mt-6'>
+                <div className='flex flex-col justify-between'>
+                    <Card className='min-w-96 w-[672px] p-3'>
+                        <CardHeader>
+                            <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className='flex justify-between'>
+                                <span>{`${location.pathname.includes('label') ? 'Label' : 'Tier'} Information`}</span>
+                            </div>
+                            <div className='flex flex-col gap-6 mt-6'>
+                                <div>
+                                    <Label htmlFor='name'>Name</Label>
+                                    <Input
+                                        id='name'
+                                        type='text'
+                                        disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
+                                        {...register('name', {
+                                            required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
+                                            value: tagQuery.data?.name,
+                                            maxLength: {
+                                                value: MAX_NAME_LENGTH,
+                                                message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
+                                            },
+                                        })}
+                                        className={
+                                            'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
+                                        }
+                                    />
+                                    {errors.name && (
+                                        <p className='text-sm text-[#B44641] dark:text-[#E9827C]'>
+                                            {errors.name.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <Label htmlFor='description'>Description</Label>
+                                    <textarea
+                                        id='description'
+                                        {...register('description', { value: tagQuery.data?.description })}
+                                        placeholder='Description Input'
+                                        rows={3}
+                                        className={cn(
+                                            'resize-none rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
+                                        )}
+                                    />
+                                </div>
+                                <div className='hidden'>
+                                    <Label htmlFor='position'>Position</Label>
+                                    <Input id='position' type='number' {...register('position', { value: position })} />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <div className='flex justify-end gap-6 mt-6 w-[672px]'>
+                        {showDeleteButton(labelId, tierId) && (
+                            <Button
+                                variant={'text'}
+                                onClick={() => {
+                                    setDeleteDialogOpen(true);
+                                }}>
+                                <span>
+                                    <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
+                                    {`Delete ${labelId ? 'Label' : 'Tier'}`}
+                                </span>
+                            </Button>
+                        )}
+                        <Button
+                            variant={'secondary'}
+                            onClick={() => {
+                                navigate(-1);
+                            }}>
+                            Cancel
+                        </Button>
+                        <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
+                            {tagId === '' ? 'Define Selector' : 'Save Edits'}
+                        </Button>
                     </div>
-                    <div className='flex flex-col gap-6 mt-6'>
-                        <div>
-                            <Label htmlFor='name'>Name</Label>
-                            <Input
-                                id='name'
-                                type='text'
-                                disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
-                                {...register('name', {
-                                    required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
-                                    value: tagQuery.data?.name,
-                                    maxLength: {
-                                        value: MAX_NAME_LENGTH,
-                                        message: `Name cannot exceed ${MAX_NAME_LENGTH} characters. Please provide a shorter name`,
-                                    },
-                                })}
-                                className={
-                                    'rounded-none text-base bg-transparent dark:bg-transparent border-t-0 border-x-0 border-b-neutral-dark-5 dark:border-b-neutral-light-5 border-b-[1px] focus-visible:outline-none focus:border-t-0 focus:border-x-0 focus-visible:ring-offset-0 focus-visible:ring-transparent focus-visible:border-secondary focus-visible:border-b-2 focus:border-secondary focus:border-b-2 dark:focus-visible:outline-none dark:focus:border-t-0 dark:focus:border-x-0 dark:focus-visible:ring-offset-0 dark:focus-visible:ring-transparent dark:focus-visible:border-secondary-variant-2 dark:focus-visible:border-b-2 dark:focus:border-secondary-variant-2 dark:focus:border-b-2 hover:border-b-2'
-                                }
-                            />
-                            {errors.name && (
-                                <p className='text-sm text-[#B44641] dark:text-[#E9827C]'>{errors.name.message}</p>
-                            )}
-                        </div>
-                        <div>
-                            <Label htmlFor='description'>Description</Label>
-                            <textarea
-                                id='description'
-                                {...register('description', { value: tagQuery.data?.description })}
-                                placeholder='Description Input'
-                                rows={3}
-                                className={cn(
-                                    'resize-none rounded-md dark:bg-neutral-dark-5 pl-2 w-full mt-2 focus-visible:outline-none focus:ring-secondary focus-visible:ring-secondary focus:outline-secondary focus-visible:outline-secondary dark:focus:ring-secondary-variant-2 dark:focus-visible:ring-secondary-variant-2 dark:focus:outline-secondary-variant-2 dark:focus-visible:outline-secondary-variant-2'
-                                )}
-                            />
-                        </div>
-                        <div className='hidden'>
-                            <Label htmlFor='position'>Position</Label>
-                            <Input
-                                id='position'
-                                type='number'
-                                {...register('position', { value: tagQuery.data?.position || null })}
-                            />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-            <div className='flex justify-end gap-6 mt-6 w-[672px]'>
-                {showDeleteButton(labelId, tierId) && (
-                    <Button
-                        variant={'text'}
-                        onClick={() => {
-                            setDeleteDialogOpen(true);
-                        }}>
-                        <span>
-                            <FontAwesomeIcon icon={faTrashCan} className='mr-2' />
-                            {`Delete ${labelId ? 'Label' : 'Tier'}`}
-                        </span>
-                    </Button>
+                </div>
+
+                {location.pathname.includes('save/tier') && TierList && (
+                    <TierList
+                        tiers={tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeTier) || []}
+                        setPosition={setPosition}
+                        name={tagQuery.data?.name || 'New Tier'}
+                    />
                 )}
-                <Button
-                    variant={'secondary'}
-                    onClick={() => {
-                        navigate(-1);
-                    }}>
-                    Cancel
-                </Button>
-                <Button variant={'primary'} onClick={handleSubmit(onSubmit)}>
-                    {tagId === '' ? 'Define Selector' : 'Save Edits'}
-                </Button>
-            </div>
+            </form>
             <DeleteConfirmationDialog
                 isLoading={tagQuery.isLoading}
                 itemName={tagQuery.data?.name || getTagUrlValue(labelId)}
@@ -286,6 +308,6 @@ export const TagForm: FC = () => {
                 onConfirm={handleDeleteTag}
                 open={deleteDialogOpen}
             />
-        </form>
+        </>
     );
 };
