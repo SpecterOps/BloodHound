@@ -84,7 +84,7 @@ const ExploreTable: React.FC<ExploreTableProps> = ({
             },
             cell: ({ row }) => {
                 return (
-                    <div className='flex justify-center items-center'>
+                    <div className='flex justify-center items-center relative'>
                         <NodeIcon nodeType={row?.original?.nodetype || 'N/A'} />
                     </div>
                 );
@@ -114,7 +114,8 @@ const ExploreTable: React.FC<ExploreTableProps> = ({
 
     const finalColumns = [...initialColumns, ...columns];
     return (
-        <div className='border-2 absolute bottom-24 left-4 right-4 w-[calc(100%-450px)] max-h-1/2 h-[475px] bg-neutral-light-2'>
+        <div
+            className={`border-2 overflow-hidden absolute bottom-16 left-4 right-4 ${selectedRow ? 'w-[calc(100%-450px)]' : 'w-90'} max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
                 <DataTable
                     className='h-full'
@@ -123,18 +124,25 @@ const ExploreTable: React.FC<ExploreTableProps> = ({
                     TableProps={{
                         containerClassName: 'h-full bg-cyan',
                     }}
+                    TableHeaderProps={{
+                        // TODO: icons were visible over header on scroll, find solution without z-index?
+                        className: 'sticky top-0 z-10',
+                    }}
                     TableControlsProps={{
                         onDownloadClick: () => alert('download icon clicked'),
                         onExpandClick: () => alert('expand icon clicked'),
                         onManageColumnsClick: () => alert('manage columns button clicked'),
                         onCloseClick,
                         tableName: 'Results',
-                        resultsCount: 230,
+                        resultsCount: mungedData.length,
                         SearchInputProps: {
                             onChange: (e) => setSearchInput(e.target.value),
                             value: searchInput,
                             placeholder: 'Search',
                         },
+                    }}
+                    tableOptions={{
+                        getRowId: (row) => row?.id,
                     }}
                     data={mungedData}
                     columns={finalColumns}
