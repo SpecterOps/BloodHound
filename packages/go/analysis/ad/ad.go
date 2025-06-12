@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -605,4 +606,70 @@ func GetRelayTargets(ctx context.Context, db graph.Database, edge *graph.Relatio
 		return graph.NewNodeSet(), err
 	}
 	return nodeSet, nil
+}
+
+func GetACEInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		err     error
+		pathSet = graph.NewPathSet()
+	)
+
+	hash, _ := edge.Properties.Get(ad.InheritanceHash.String()).String()
+	isAcl, _ := edge.Properties.Get(ad.IsACL.String()).Bool()
+	isInherited, err := edge.Properties.Get(common.IsInherited.String()).Bool()
+
+	// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
+	if err != nil || !isAcl || !isInherited || len(hash) == 0 {
+		return pathSet, nil
+	}
+
+	if err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if target, err := ops.FetchNode(tx, edge.StartID); err != nil {
+			return err
+		} else if endNode, err := ops.FetchNode(tx, edge.EndID); err != nil {
+			return err
+		} else {
+			// First, append the starting path to our result pathset
+			pathSet.AddPath(graph.Path{
+				Nodes: []*graph.Node{endNode},
+				Edges: []*graph.Relationship{edge},
+			})
+
+			return ops.Traversal(tx, ops.TraversalPlan{
+				Root:      target,
+				Direction: graph.DirectionInbound,
+				BranchQuery: func() graph.Criteria {
+					return query.And(
+						query.KindIn(query.Start(), ad.Domain, ad.OU),
+						query.KindIn(query.Relationship(), ad.Contains),
+					)
+				},
+				ExpansionFilter: func(segment *graph.PathSegment) bool {
+					// First check that our hash is included in the current node
+					hashes, _ := segment.Node.Properties.Get(ad.InheritanceHashes.String()).StringSlice()
+
+					if slices.Contains(hashes, hash) {
+						isInheritable := true
+						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
+						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+							// If we run into an intermediary node that is protected, we can stop walking this path
+							if isACLProtected, _ := end.Properties.Get(ad.IsACLProtected.String()).Bool(); isACLProtected {
+								isInheritable = false
+								return false
+							}
+							return true
+						})
+
+						if isInheritable {
+							pathSet.AddPath(segment.Path())
+						}
+					}
+					return true
+				},
+			}, nil)
+		}
+	}); err != nil {
+		return graph.NewPathSet(), err
+	}
+	return pathSet, nil
 }
