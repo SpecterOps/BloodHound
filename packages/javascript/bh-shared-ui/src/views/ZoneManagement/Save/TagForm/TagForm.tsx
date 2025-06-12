@@ -121,9 +121,13 @@ export const TagForm: FC = () => {
                     },
                 });
 
-                addNotification(`${labelId ? 'Label' : 'Tier'} was created successfully!`, undefined, {
-                    anchorOrigin: { vertical: 'top', horizontal: 'right' },
-                });
+                addNotification(
+                    `${location.pathname.includes('label') ? 'Label' : 'Tier'} was created successfully!`,
+                    undefined,
+                    {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    }
+                );
 
                 // Upon creation of this tag the user should be moved to creating a selector for the newly created tag, e.g., /save/tier/<NEW_TIER_ID>/selector
                 // This means that we have to await for the ID of the new tag in order to go to the URL for creating a new selector associated with this tag
@@ -160,19 +164,19 @@ export const TagForm: FC = () => {
                 });
 
                 addNotification(
-                    `${labelId ? 'Label' : 'Tier'} was updated successfully!`,
+                    `${location.pathname.includes('label') ? 'Label' : 'Tier'} was updated successfully!`,
                     `zone-management_update-${getTagUrlValue(labelId)}_success_${tagId}`,
                     {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     }
                 );
 
-                navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${tagId}`);
+                navigate(`/zone-management/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
             } catch (error) {
                 handleError(error, 'updating', getTagUrlValue(labelId), addNotification);
             }
         },
-        [labelId, tagId, navigate, addNotification, updateTagMutation, tagQuery.data]
+        [labelId, tagId, navigate, addNotification, updateTagMutation, tagQuery.data, location]
     );
 
     const handleDeleteTag = useCallback(async () => {
