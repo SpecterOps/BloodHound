@@ -32,7 +32,7 @@ export const createAssetGroupTag = (tagId: number = 0): AssetGroupTag => {
         name: `Tier-${tagId - 1}`,
         kind_id: faker.datatype.number(),
         type: AssetGroupTagTypeTier,
-        position: faker.datatype.number({ min: 0, max: 10 }),
+        position: tagId,
         description: faker.random.words(1000),
         created_at: faker.date.past().toISOString(),
         created_by: faker.internet.email(),
