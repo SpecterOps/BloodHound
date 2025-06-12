@@ -17,10 +17,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/specterops/bloodhound/src/cmd/GOdHound/client"
 	"github.com/specterops/bloodhound/src/cmd/GOdHound/config"
@@ -72,7 +75,6 @@ func uploadFiles(dir string) {
 				}
 
 				fullPath := filepath.Join(dir, entry.Name())
-				fmt.Printf("File: %s\n", fullPath)
 				// Open and process the file
 				file, err := os.Open(fullPath)
 				if err != nil {
@@ -86,7 +88,7 @@ func uploadFiles(dir string) {
 					if err := apiClient.SendFileUploadPart(newFileUploadJob, fin); err != nil {
 						fatal(err)
 					}
-
+					fmt.Printf("File: %v uploaded", fin)
 					fin.Close()
 				}
 
@@ -103,12 +105,68 @@ func main() {
 
 	config.Validate()
 
-	user := generator.AddADUser()
-	fmt.Printf("My user is: ", user)
-	fmt.Printf("\n")
-	computer := generator.AddADComputer()
-	fmt.Printf("My computer is: ", computer)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	nbUsers := 100
+	nbComps := 100
+	//nbGroups := nbUsers / 10
+	nbEdges := 25 //nbUsers * nbComps * nbGroups / 3
 
-	//dir := "./output/ad_sample"
-	//uploadFiles(dir)
+	//var generatedUsers []generator.ADUser
+	var generatedNodes []generator.GenericIngestNode
+
+	for i := 0; i <= nbUsers; i++ {
+		newUser := generator.AddADUser(r, config.Domain.Name, int32(i))
+		generatedNodes = append(generatedNodes, newUser.ToGraphNode())
+	}
+
+	//var generatedComps []generator.ADComputer
+	for i := 1; i <= nbComps; i++ {
+		y := nbUsers + i
+		newComp := generator.AddADComputer(r, config.Domain.Name, int32(y))
+		generatedNodes = append(generatedNodes, newComp.ToGraphNode())
+	}
+
+	//var jsonNodes generator.GenericIngestNode
+	//jsonNodes := generator.ToGraphNode()
+
+	var generatedEdges []generator.GenericIngestEdge
+	for i := 0; i <= nbEdges; i++ {
+		newEdge := generator.AddADEdge(nbUsers + nbComps)
+		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+	}
+
+	graph := generator.GenericIngestGraph{
+		Graph: generator.GenericIngestGraphContent{
+			Nodes: generatedNodes,
+			Edges: generatedEdges,
+		},
+	}
+
+	fileName := "test1.json"
+	/*
+		generator.CreateHeader(file)
+		generator.AddNodes(file)
+		generator.AddEdges(file)
+		generator.CreateFooter(file)
+
+		fmt.Printf("My user is: %+v\n", generatedUsers)
+		fmt.Printf("\n\n")
+		computer := generator.AddADComputer()
+		fmt.Printf("My computer is: ", computer)
+	*/
+	outputDir := "./output/test/"
+	filePath := fmt.Sprintf(outputDir + fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(graph); err != nil {
+		panic(err)
+	}
+
+	uploadFiles(outputDir)
 }

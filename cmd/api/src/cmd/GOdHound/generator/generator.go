@@ -1,5 +1,12 @@
 package generator
 
+import (
+	"encoding/json"
+	"log"
+	"math/rand"
+	"os"
+)
+
 type GenericIngestNode struct {
 	ID         string         `json:"id"`
 	Kinds      []string       `json:"kinds"`
@@ -19,109 +26,201 @@ type GenericIngestEdge struct {
 	Properties map[string]any        `json:"properties"`
 }
 
-type GenericIngestGraph struct {
+type GenericIngestGraphContent struct {
 	Nodes []GenericIngestNode `json:"nodes"`
 	Edges []GenericIngestEdge `json:"edges"`
 }
 
-type GenericIngestPayload struct {
-	Graph GenericIngestGraph `json:"graph"`
+type GenericIngestGraph struct { //Graph
+	Graph GenericIngestGraphContent `json:"graph"`
 }
 
-type ADUser struct {
-	Properties              map[string]any `json:"properties"`
-	domain                  string         // "PHANTOM.CORP"
-	name                    string         // "STEPHEN@PHANTOM.CORP",
-	distinguishedname       string         // "CN=DC01.PHANTOM.CORP,CN=USERS,DC=PHANTOM,DC=CORP",
-	domainsid               string         // "S-1-5-21-2697957641-2271029196-387917394",
-	samaccountname          string         // "stephen",
-	isaclprotected          bool           //": true,
-	description             string         // null,
-	whencreated             int64          // 1699347828,
-	sensitive               bool           // false,
-	dontreqpreauth          bool           // false,
-	passwordnotreqd         bool           // false,
-	unconstraineddelegation bool           // false,
-	pwdneverexpires         bool           // true,
-	enabled                 bool           // true,
-	trustedtoauth           bool           // false,
-	lastlogon               int64          // 1708508097,
-	lastlogontimestamp      int64          // 1708507965,
-	pwdlastset              int64          // 1699376628,
-	serviceprincipalnames   []string       // [],
-	hasspn                  bool           // false,
-	displayname             string         // "stephen",
-	email                   string         // null,
-	title                   string         // null,
-	homedirectory           string         // null,
-	userpassword            string         // null,
-	unixpassword            string         // null,
-	unicodepassword         string         // null,
-	sfupassword             string         // null,
-	logonscript             string         // null,
-	admincount              bool           // false,
-	sidhistory              []string       //": []
-}
-type ADComputer struct {
-	Properties              map[string]any `json:"properties"`
-	domain                  string         // "PHANTOM.CORP",
-	name                    string         // "ALICE-LAPTOP.PHANTOM.CORP",
-	distinguishedname       string         // "CN=ALICE-LAPTOP,OU=WORKSTATIONS,DC=PHANTOM,DC=CORP",
-	domainsid               string         // "S-1-5-21-2697957641-2271029196-387917394",
-	samaccountname          string         // "ALICE-LAPTOP$",
-	haslaps                 string         // false,
-	isaclprotected          bool           // false,
-	description             string         // null,
-	whencreated             int64          // 1681261713,
-	enabled                 bool           //true,
-	unconstraineddelegation bool           // false,
-	trustedtoauth           bool           // false,
-	isdc                    bool           // false,
-	lastlogon               int64          // 0,
-	lastlogontimestamp      int64          // -1,
-	pwdlastset              int64          // 1681286913,
-	serviceprincipalnames   []string       // [],
-	email                   string         // null,
-	operatingsystem         string         // null,
-	sidhistory              []string       // []
+type GraphNode struct {
+	ID         string                 `json:"id"`
+	Kinds      []string               `json:"kinds"`
+	Properties map[string]interface{} `json:"properties"`
 }
 
-// https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
-func newDomainSID() (string, error) {
-	return "", nil
-}
+/*
+	func MakeDomain() (GenericIngestPayload, error) {
+		domain := GenericIngestNode{
+			ID:    "1234",
+			Kinds: []string{"Domain", "Base"},
+			Properties: map[string]any{
+				// This MUST match the ID value of the GenericIngestNode otherwise it will fail validation
+				"objectid": "1234",
+			},
+		}
 
-func MakeDomain() (GenericIngestPayload, error) {
-	domain := GenericIngestNode{
-		ID:    "1234",
-		Kinds: []string{"Domain", "Base"},
-		Properties: map[string]any{
-			// This MUST match the ID value of the GenericIngestNode otherwise it will fail validation
-			"objectid": "1234",
-		},
+		return GenericIngestPayload{
+			Graph: GenericIngestGraph{
+				Nodes: []GenericIngestNode{domain},
+			},
+		}, nil
+	}
+*/
+func getRandomName(r *rand.Rand, filePath string) string {
+	file, err := os.Open(filePath)
+
+	if err != nil {
+		log.Fatalf("❌ Could not open %s: %v", filePath, err)
+	}
+	defer file.Close()
+
+	var names []string
+	if err := json.NewDecoder(file).Decode(&names); err != nil {
+		log.Fatalf("❌ Could not decode JSON from %s: %v", filePath, err)
 	}
 
-	return GenericIngestPayload{
-		Graph: GenericIngestGraph{
-			Nodes: []GenericIngestNode{domain},
-		},
-	}, nil
+	return names[r.Intn(len(names))]
 }
 
-func AddADUser() ADUser {
-	user := ADUser{
-		domain:  "SCOUBI.LAB",
-		name:    "MEGATEST@SCOUBI.LAB",
-		enabled: true,
+func CreateHeader(filePath string) {
+	file, err := os.Create(filePath)
+	if err != nil {
+		log.Fatalf("❌ Could not create file %s: %v", filePath, err)
 	}
-	return user
+	defer file.Close()
+
+	header := `{
+  "graph": {
+`
+
+	if _, err := file.WriteString(header); err != nil {
+		log.Fatalf("❌ Could not write header to %s: %v", filePath, err)
+	}
 }
 
-func AddADComputer() ADComputer {
-	computer := ADComputer{
-		domain:  "SCOUBI.LAB",
-		name:    "COMP00001@SCOUBI.LAB",
-		enabled: true,
+func AddNodes(filePath string) {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("❌ Could not open file %s: %v", filePath, err)
 	}
-	return computer
+	defer file.Close()
+
+	node := ""
+	//write section header
+	line := `    "nodes": [`
+	if _, err := file.WriteString(line); err != nil {
+		log.Fatalf("❌ Could not write header to %s: %v", filePath, err)
+	}
+	// insert all Nodes
+	node = `      {
+        "id": "00000001",
+        "kinds": [
+          "User",
+          "Base"
+        ],
+        "properties": {
+          "displayname": "Scoubi Dou",
+          "property": "a",
+          "objectid": "00000001",
+          "name": "SCOUBI"
+        }
+      },
+      {
+        "id": "00000002",
+        "kinds": [
+          "Group",
+          "Base"
+        ],
+        "properties": {
+          "displayname": "Scoubi's Computer",
+          "property": "a",
+          "objectid": "00000002",
+          "name": "Padawan-GOdev"
+        }
+      }	  
+		`
+	if _, err := file.WriteString(node); err != nil {
+		log.Fatalf("❌ Could not write header to %s: %v", filePath, err)
+	}
+	//write section footer
+	line = `    ],
+	`
+	if _, err := file.WriteString(line); err != nil {
+		log.Fatalf("❌ Could not write header to %s: %v", filePath, err)
+	}
 }
+
+/*
+func AddEdges(filePath string) {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("❌ Could not open file %s: %v", filePath, err)
+	}
+	defer file.Close()
+
+	edge := ""
+	//write section header
+	line := `    "edges": [
+	`
+	if _, err := file.WriteString(line); err != nil {
+		log.Fatalf("❌ Could not write footer to %s: %v", filePath, err)
+	}
+	// insert all Edges
+	edge = `      {
+        "kind": "MemberOf",
+        "start": {
+          "value": "00000001",
+          "match_by": "id"
+        },
+        "end": {
+          "value": "00000002",
+          "match_by": "id"
+        },
+        "properties": {}
+      }
+	`
+	if _, err := file.WriteString(edge); err != nil {
+		log.Fatalf("❌ Could not write footer to %s: %v", filePath, err)
+	}
+	//write section footer
+	line = `    ]
+  },
+  `
+	if _, err := file.WriteString(line); err != nil {
+		log.Fatalf("❌ Could not write footer to %s: %v", filePath, err)
+	}
+}
+
+func CreateFooter(filePath string) {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("❌ Could not create file %s: %v", filePath, err)
+	}
+	defer file.Close()
+
+	// Check file size
+	info, err := file.Stat()
+	if err != nil {
+		log.Fatalf("❌ Could not stat file %s: %v", filePath, err)
+	}
+
+	if info.Size() == 0 {
+		log.Printf("⚠️  File %s is empty — skipping footer write.\n", filePath)
+		return
+	}
+
+	footer := `
+	  "metadata": {
+    "ingest_version": "v1",
+    "collector": {
+      "name": "GOdHound",
+      "version": "beta",
+      "properties": {
+        "collection_methods": [
+          "GOdHound"
+        ],
+        "windows_server_version": "n/a"
+      }
+    }
+  }
+}
+`
+
+	if _, err := file.WriteString(footer); err != nil {
+		log.Fatalf("❌ Could not write footer to %s: %v", filePath, err)
+	}
+}
+*/
