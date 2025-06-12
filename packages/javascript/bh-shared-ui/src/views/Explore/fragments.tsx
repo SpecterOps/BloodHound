@@ -16,9 +16,9 @@
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
+import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, format } from '../../utils';
 import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
-import {ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties} from "../../graphSchema";
 
 export const exclusionList = [
     'gid',

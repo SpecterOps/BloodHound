@@ -402,7 +402,7 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Approvers',
             queryType: 'azrole-approvers',
-        }
+        },
     ],
     [AzureNodeKind.ServicePrincipal]: (id: string) => {
         const base: EntityInfoDataTableProps[] = [
