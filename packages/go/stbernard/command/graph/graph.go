@@ -108,7 +108,7 @@ func (s *command) Run() error {
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
 		return fmt.Errorf("error getting ingest file paths from test directory %w", err)
 	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
-		return fmt.Errorf("error ingesting data %v", err)
+		return fmt.Errorf("error ingesting data %w", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {
 		return fmt.Errorf("error retrieving nodes and edges from database %w", err)
 	} else if graph, err := transformGraph(nodes, edges); err != nil {
@@ -154,7 +154,7 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 
 	schema, err := upload.LoadIngestSchema()
 	if err != nil {
-		return fmt.Errorf("error loading ingest schema %v", err)
+		return fmt.Errorf("error loading ingest schema %w", err)
 	}
 
 	for _, filepath := range filepaths {
@@ -165,7 +165,7 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 
 			file, err := os.Open(filepath)
 			if err != nil {
-				return fmt.Errorf("error opening JSON file %s: %v", filepath, err)
+				return fmt.Errorf("error opening JSON file %s: %w", filepath, err)
 			}
 			defer file.Close()
 
