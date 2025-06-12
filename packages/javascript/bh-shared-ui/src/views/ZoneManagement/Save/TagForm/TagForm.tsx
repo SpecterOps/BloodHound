@@ -33,6 +33,7 @@ import {
     AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
+import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
@@ -143,6 +144,13 @@ export const TagForm: FC = () => {
         async (formData: TagFormInputs) => {
             try {
                 const diffedValues = diffValues(tagQuery.data, formData);
+
+                if (isEmpty(diffedValues)) {
+                    addNotification('No changes detected', `zone-management_update-tag_no-changes-warn_${tagId}`, {
+                        anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                    });
+                    return;
+                }
 
                 await updateTagMutation.mutateAsync({
                     updatedValues: {
