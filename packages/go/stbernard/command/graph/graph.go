@@ -260,25 +260,25 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 	}, nil
 }
 
-func removeNullMapValues(m map[string]any) map[string]any {
-	newMap := make(map[string]any, len(m))
-
-	for key, val := range m {
-		if val == nil {
-			continue
-		}
-
-		switch v := val.(type) {
-		case []any:
-			newMap[key] = removeNullSliceValues(v)
-		case map[string]any:
-			newMap[key] = removeNullMapValues(v)
-		default:
-			newMap[key] = val
+func removeNullMapValues[K comparable](m map[K]any) map[K]any {
+	newMap := make(map[K]any)
+	for k, v := range m {
+		if v != nil {
+			newMap[k] = convert(v)
 		}
 	}
-
 	return newMap
+}
+
+func convert(val any) any {
+	switch v := val.(type) {
+	case []any:
+		return removeNullSliceValues(v)
+	case map[any]any:
+		return removeNullMapValues(v)
+	default:
+		return val
+	}
 }
 
 func removeNullSliceValues(l []any) []any {
@@ -289,7 +289,7 @@ func removeNullSliceValues(l []any) []any {
 			continue
 		}
 
-		newSlice = append(newSlice, val)
+		newSlice = append(newSlice, convert(val))
 	}
 
 	return newSlice
