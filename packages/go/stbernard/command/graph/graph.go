@@ -208,7 +208,11 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 	var nodeObjectIDs = make(map[graph.ID]string, len(nodes))
 
 	for _, node := range nodes {
+		isAZBase = false
+		isBase = false
+
 		var kinds = make([]string, 0, len(node.Kinds))
+
 		for _, kind := range node.Kinds {
 			if kind == ad.Entity {
 				isBase = true
