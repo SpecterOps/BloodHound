@@ -9,8 +9,13 @@ export GOOS := env_var_or_default("GOOS", host_os)
 export GOARCH := env_var_or_default("GOARCH", host_arch)
 export INTEGRATION_CONFIG_PATH := env_var_or_default("INTEGRATION_CONFIG_PATH", absolute_path("./local-harnesses/integration.config.json"))
 export SB_LOG_LEVEL := env_var_or_default("SB_LOG_LEVEL", "info")
+export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhound password=bloodhoundcommunityedition dbname=bloodhound host=localhost port=65432")
 
 set positional-arguments
+
+# generate generic ingestible file with default CLI arguments
+graphify-ingest:
+  @just stbernard graph --path=cmd/api/src/test/fixtures/fixtures/v6/ingest
 
 # run st bernard directly
 stbernard *ARGS:
