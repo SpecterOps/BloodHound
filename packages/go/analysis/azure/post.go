@@ -934,18 +934,19 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 // CreateAZRoleApproverEdge will create AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes
 // according to the following task steps:
 // Step 0: For each AZTenant in the graph...
-func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	// Step 0: Identify each AZTenant labeled node in the database.
+	processingStats := &analysis.AtomicPostProcessingStats{}
 	tenantNodes, err := FetchTenants(ctx, db)
 	if err != nil {
-		return nil, err
+		return processingStats, err
 	}
 
 	for _, tenantNode := range tenantNodes {
 		// Read the tenantId property from the AZTenant node
 		tenantID := tenantNode.Properties.Get(azure.TenantID.String())
 		if tenantID.IsNil() {
-			return nil, fmt.Errorf("read tenant ID property value is nil")
+			return processingStats, fmt.Errorf("read tenant ID property value is nil")
 		}
 
 		// Step 1 & 2: Within this tenant, find all AZRole nodes
@@ -982,7 +983,7 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.Nod
 			return nil
 		})
 		if err != nil {
-			return nil, err
+			return processingStats, err
 		}
 
 		// Step 3: For each AZRole that requires approval...
@@ -992,7 +993,7 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.Nod
 				azure.EndUserAssignmentGroupApprovers.String(),
 			).StringSlice()
 			if err != nil {
-				return nil, err
+				return processingStats, err
 			}
 
 			if len(principalIDs) == 0 {
@@ -1026,7 +1027,7 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.Nod
 					return nil
 				})
 				if err != nil {
-					return nil, err
+					return processingStats, err
 				}
 			} else {
 				// Step 3c: primaryApprovers is NOT null
@@ -1070,13 +1071,12 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (graph.Nod
 						return nil
 					})
 					if err != nil {
-						return nil, err
+						return processingStats, err
 					}
 				}
 			}
 		}
 	}
 
-	// No result set to return; edges are enqueued via channels
-	return nil, nil
+	return processingStats, nil
 }
