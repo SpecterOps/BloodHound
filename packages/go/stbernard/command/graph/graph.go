@@ -118,7 +118,6 @@ func (s *command) Run() error {
 	} else if err := os.MkdirAll(filepath.Dir(s.outfile), 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	} else {
-		slog.Warn("outfile: %v", s.outfile)
 		return os.WriteFile(s.outfile, jsonBytes, 0644)
 	}
 }
