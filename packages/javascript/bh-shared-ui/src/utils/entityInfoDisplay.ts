@@ -74,6 +74,23 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
     return mappedFields;
 };
 
+export const makeFormattedObjectInfoFieldsMap = (props: any) => {
+    const fieldsData = formatObjectInfoFields(props);
+
+    if (fieldsData.length) {
+        return fieldsData.reduce(
+            (acc, curr) => {
+                if (curr.keyprop) {
+                    acc[curr.keyprop] = curr;
+                }
+
+                return acc;
+            },
+            {} as Record<string, any>
+        );
+    }
+};
+
 const isActiveDirectoryProperty = (enumValue: ActiveDirectoryKindProperties): boolean => {
     return Object.values(ActiveDirectoryKindProperties).includes(enumValue);
 };

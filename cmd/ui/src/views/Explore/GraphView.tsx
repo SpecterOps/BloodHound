@@ -197,6 +197,7 @@ const GraphView: FC = () => {
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
             <ExploreTable
+                items={graphQuery.data}
                 open={displayTable}
                 onClose={() => {
                     setAutoDisplayTable(false);
