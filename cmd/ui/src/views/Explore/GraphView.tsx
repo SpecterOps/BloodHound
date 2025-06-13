@@ -27,6 +27,7 @@ import {
     transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreSelectedItem,
+    useExploreTableAutoDisplay,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -64,18 +65,18 @@ const GraphView: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-    const [exportJsonData, setExportJsonData] = useState();
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
+    const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
-    // const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-    //     enabled: !exploreLayout,
-    // });
-    const displayTable = true; // autoDisplayTable || !!isExploreTableSelected;
+    const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
+        enabled: !exploreLayout,
+    });
+    const displayTable = autoDisplayTable || !!isExploreTableSelected;
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -146,6 +147,7 @@ const GraphView: FC = () => {
         }
 
         dispatch(setExploreLayout(layout));
+        dispatch(setIsExploreTableSelected(false));
 
         if (layout === 'standard') {
             sigmaChartRef.current?.runStandardLayout();
@@ -198,7 +200,8 @@ const GraphView: FC = () => {
                 items={graphQuery.data}
                 open={displayTable}
                 onClose={() => {
-                    handleLayoutChange(defaultGraphLayout);
+                    setAutoDisplayTable(false);
+                    dispatch(setIsExploreTableSelected(false));
                 }}
             />
         </div>

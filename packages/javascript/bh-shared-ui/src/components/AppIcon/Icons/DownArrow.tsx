@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import GraphButtons from './GraphButtons';
+import React from 'react';
+import { BasePath, BaseSVG, BaseSVGProps } from './utils';
 
-export default GraphButtons;
+export const DownArrow: React.FC<BaseSVGProps> = (props) => {
+    return (
+        <BaseSVG
+            name='DownArrow'
+            width='10'
+            height='6'
+            viewBox='0 0 10 6'
+            fill='none'
+            xmlns='http://www.w3.org/2000/svg'
+            {...props}>
+            <BasePath d='M0 0.5L5 5.5L10 0.5H0Z' />
+        </BaseSVG>
+    );
+};
+
+export default DownArrow;

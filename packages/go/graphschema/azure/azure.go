@@ -387,7 +387,7 @@ func (s Property) Name() string {
 	case EndUserAssignmentRequiresApproval:
 		return "End User Assignment Requires Approval"
 	case EndUserAssignmentRequiresCAPAuthenticationContext:
-		return "End User Assignment Requires CAP AuthenticationContext"
+		return "End User Assignment Requires CAP Authentication Context"
 	case EndUserAssignmentUserApprovers:
 		return "End User Assignment User Approvers"
 	case EndUserAssignmentGroupApprovers:

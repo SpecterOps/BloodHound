@@ -403,6 +403,24 @@ func FetchEntityPIMAssignments(tx graph.Transaction, node *graph.Node, skip, lim
 	})
 }
 
+func FetchRoleApprovers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionInbound,
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterRoleApprovers,
+	})
+}
+
+func FetchRoleApproverPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionInbound,
+		BranchQuery: FilterRoleApprovers,
+	})
+}
+
 func FetchEntityGroupMembershipPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 	return ops.TraversePaths(tx, ops.TraversalPlan{
 		Root:        node,
