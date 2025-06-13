@@ -460,6 +460,8 @@ paths:
     $ref: './paths/domains.domains.id.outbound-trusts.yaml'
   /api/v2/domains/{object_id}/users:
     $ref: './paths/domains.domains.id.users.yaml'
+  /api/v2/domains/{object_id}/adcs-escalations:
+    $ref: './paths/domains.domains.id.adcs-escalations.yaml'
 
   # gpos
   /api/v2/gpos/{object_id}:
@@ -480,30 +482,42 @@ paths:
     $ref: './paths/aiacas.aiaca.id.yaml'
   /api/v2/aiacas/{object_id}/controllers:
     $ref: './paths/aiacas.aiaca.id.controllers.yaml'
+  /api/v2/aiacas/{object_id}/pki-hierarchy:
+    $ref: './paths/aiacas.aiaca.id.pki-hierarchy.yaml'
 
   # root cas
   /api/v2/rootcas/{object_id}:
     $ref: './paths/rootcas.rootcas.id.yaml'
   /api/v2/rootcas/{object_id}/controllers:
     $ref: './paths/rootcas.rootcas.id.controllers.yaml'
+  /api/v2/rootcas/{object_id}/pki-hierarchy:
+    $ref: './paths/rootcas.rootcas.id.pki-hierarchy.yaml'
 
   # enterprise cas
   /api/v2/enterprisecas/{object_id}:
     $ref: './paths/enterprisecas.enterprisecas.id.controllers.yaml'
   /api/v2/enterprisecas/{object_id}/controllers:
     $ref: './paths/enterprisecas.enterprisecas.id.yaml'
+  /api/v2/enterprisecas/{object_id}/pki-hierarchy:
+    $ref: './paths/enterprisecas.enterprisecas.id.pki-hierarchy.yaml'
+  /api/v2/enterprisecas/{object_id}/published-templates:
+    $ref: './paths/enterprisecas.enterprisecas.id.published-templates.yaml'
 
   # nt auth stores
   /api/v2/ntauthstores/{object_id}:
     $ref: './paths/ntauthstores.ntauthstores.id.yaml'
   /api/v2/ntauthstores/{object_id}/controllers:
     $ref: './paths/ntauthstores.ntauthstores.id.controllers.yaml'
+  /api/v2/ntauthstores/{object_id}/trusted-cas:
+    $ref: './paths/ntauthstores.ntauthstores.id.trusted-cas.yaml'
 
-  # cert templates
+    # cert templates
   /api/v2/certtemplates/{object_id}:
     $ref: './paths/certtemplate.certtemplates.id.yaml'
   /api/v2/certtemplates/{object_id}/controllers:
     $ref: './paths/certtemplate.certtemplates.id.controllers.yaml'
+  /api/v2/certtemplates/{object_id}/published-to-cas:
+    $ref: './paths/certtemplate.certtemplates.id.published-to-cas.yaml'
 
   # ous
   /api/v2/ous/{object_id}:

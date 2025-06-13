@@ -694,12 +694,22 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'aiaca-inbound_object_control',
         },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'aiaca-pki_hierarchy',
+        },
     ],
     [ActiveDirectoryNodeKind.CertTemplate]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
             queryType: 'certtemplate-inbound_object_control',
+        },
+        {
+            id,
+            label: 'Published To CAs',
+            queryType: 'certtemplate-published_to_cas',
         },
     ],
     [ActiveDirectoryNodeKind.Computer]: (id: string) => [
@@ -828,12 +838,27 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Controllers',
             queryType: 'domain-controllers',
         },
+        {
+            id,
+            label: 'ADCS Escalations',
+            queryType: 'domain-adcs_escalations',
+        },
     ],
     [ActiveDirectoryNodeKind.EnterpriseCA]: (id: string) => [
         {
             id,
             label: 'Inbound Object Control',
             queryType: 'enterpriseca-inbound_object_control',
+        },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'enterpriseca-pki_hierarchy',
+        },
+        {
+            id,
+            label: 'Published Templates',
+            queryType: 'enterpriseca-published_templates',
         },
     ],
     [ActiveDirectoryNodeKind.GPO]: (id: string) => [
@@ -928,6 +953,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             label: 'Inbound Object Control',
             queryType: 'ntauthstore-inbound_object_control',
         },
+        {
+            id,
+            label: 'Trusted CAs',
+            queryType: 'ntauthstore-trusted_cas',
+        },
     ],
     [ActiveDirectoryNodeKind.OU]: (id: string) => [
         {
@@ -956,6 +986,11 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
             id,
             label: 'Inbound Object Control',
             queryType: 'rootca-inbound_object_control',
+        },
+        {
+            id,
+            label: 'PKI Hierarchy',
+            queryType: 'rootca-pki_hierarchy',
         },
     ],
     [ActiveDirectoryNodeKind.IssuancePolicy]: (id: string) => [
@@ -1586,9 +1621,15 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'aiaca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getAIACAControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'aiaca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient.getAIACAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'certtemplate-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getCertTemplateControllersV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'certtemplate-published_to_cas': ({ id, skip, limit, type }) =>
+        apiClient
+            .getCertTemplatePublishedToCAsV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'computer-sessions': ({ id, skip, limit, type }) =>
         apiClient.getComputerSessionsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1656,9 +1697,21 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'domain-controllers': ({ id, skip, limit, type }) =>
         apiClient.getDomainControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'domain-adcs_escalations': ({ id, skip, limit, type }) =>
+        apiClient
+            .getDomainADCSEscalationsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'enterpriseca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getEnterpriseCAControllersV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'enterpriseca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient
+            .getEnterpriseCAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
+    'enterpriseca-published_templates': ({ id, skip, limit, type }) =>
+        apiClient
+            .getEnterpriseCAPublishedTemplatesV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
     'gpo-ous': ({ id, skip, limit, type }) =>
         apiClient.getGPOOUsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
@@ -1694,6 +1747,10 @@ export const entityRelationshipEndpoints = {
         apiClient
             .getNTAuthStoreControllersV2(id, skip, limit, type, { signal: controller.signal })
             .then((res) => res.data),
+    'ntauthstore-trusted_cas': ({ id, skip, limit, type }) =>
+        apiClient
+            .getNTAuthStoreTrustedCAsV2(id, skip, limit, type, { signal: controller.signal })
+            .then((res) => res.data),
     'ou-affecting_gpos': ({ id, skip, limit, type }) =>
         apiClient.getOUGPOsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'ou-groups': ({ id, skip, limit, type }) =>
@@ -1704,6 +1761,8 @@ export const entityRelationshipEndpoints = {
         apiClient.getOUUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'rootca-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient.getRootCAControllersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
+    'rootca-pki_hierarchy': ({ id, skip, limit, type }) =>
+        apiClient.getRootCAPKIHierarchyV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'issuancepolicy-inbound_object_control': ({ id, skip, limit, type }) =>
         apiClient
             .getIssuancePolicyControllersV2(id, skip, limit, type, { signal: controller.signal })

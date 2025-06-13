@@ -1843,3 +1843,182 @@ func getNodeDomainSIDOrObjectID(node *graph.Node) (string, error) {
 		return "", err
 	}
 }
+
+func CreateRootCAPKIHierarchyPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.EnterpriseCAFor, ad.HostsCAService, ad.IssuedSignedBy)
+		},
+	})
+}
+
+func CreateRootCAPKIHierarchyListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.HostsCAService, ad.IssuedSignedBy, ad.EnterpriseCAFor)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	})
+}
+
+func CreateCAPKIHierarchyPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	allPaths := graph.PathSet{}
+	if inboundPaths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.EnterpriseCAFor, ad.HostsCAService, ad.IssuedSignedBy)
+		},
+	}); err != nil {
+		return nil, err
+	} else if outboundPaths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.EnterpriseCAFor, ad.TrustedForNTAuth, ad.IssuedSignedBy, ad.RootCAFor, ad.NTAuthStoreFor)
+		},
+	}); err != nil {
+		return nil, err
+	} else {
+		allPaths.AddPathSet(inboundPaths)
+		allPaths.AddPathSet(outboundPaths)
+		return allPaths, nil
+	}
+}
+
+func CreateCAPKIHierarchyListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	allNodes := graph.NodeSet{}
+
+	if inboundNodes, err := ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.HostsCAService, ad.IssuedSignedBy, ad.EnterpriseCAFor)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	}); err != nil {
+		return nil, err
+	} else if outboundNodes, err := ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.KindIn(query.Relationship(), ad.EnterpriseCAFor, ad.TrustedForNTAuth, ad.IssuedSignedBy, ad.RootCAFor, ad.NTAuthStoreFor)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	}); err != nil {
+		return nil, err
+	} else {
+		allNodes.AddSet(inboundNodes)
+		allNodes.AddSet(outboundNodes)
+		return allNodes, nil
+	}
+}
+
+func CreatePublishedTemplatesPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.PublishedTo)
+		},
+	})
+}
+
+func CreatePublishedTemplatesListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.PublishedTo)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	})
+}
+
+func CreatePublishedToCAsPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.PublishedTo)
+		},
+	})
+}
+
+func CreatePublishedToCAsListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionOutbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.PublishedTo)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	})
+}
+
+func CreateTrustedCAsPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.TrustedForNTAuth)
+		},
+	})
+}
+
+func CreateTrustedCAsListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.TrustedForNTAuth)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	})
+}
+
+func CreateADCSEscalationsPathDelegate(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC16)
+		},
+	})
+}
+
+func CreateADCSEscalationsListDelegate(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseNodes(tx, ops.TraversalPlan{
+		Root:      node,
+		Direction: graph.DirectionInbound,
+		BranchQuery: func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.GoldenCert, ad.ADCSESC1, ad.ADCSESC3, ad.ADCSESC4, ad.ADCSESC6a, ad.ADCSESC6b, ad.ADCSESC9a, ad.ADCSESC9b, ad.ADCSESC10a, ad.ADCSESC10b, ad.ADCSESC16)
+		},
+		Skip:  skip,
+		Limit: limit,
+	}, func(candidate *graph.Node) bool {
+		return candidate.ID != node.ID
+	})
+}
