@@ -75,7 +75,7 @@ func (s *command) Name() string {
 func (s *command) Parse(cmdIndex int) error {
 	cmd := flag.NewFlagSet(Name, flag.ContinueOnError)
 
-	cmd.StringVar(&s.outfile, "outfile", "", "destination path for generic graph file, default is {root}/tmp/graph.json")
+	cmd.StringVar(&s.outfile, "outfile", "/tmp/graph.json", "destination path for generic graph file, default is {root}/tmp/graph.json")
 	cmd.StringVar(&s.path, "path", "", "directory containing bloodhound collection files")
 
 	cmd.Usage = func() {
@@ -118,6 +118,7 @@ func (s *command) Run() error {
 	} else if err := os.MkdirAll(filepath.Dir(s.outfile), 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
 	} else {
+		slog.Warn("outfile: %v", s.outfile)
 		return os.WriteFile(s.outfile, jsonBytes, 0644)
 	}
 }
@@ -200,12 +201,14 @@ func generateIngestFile(graph Graph) IngestFile {
 }
 
 func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, error) {
-	var graphNodes = make([]Node, 0, len(nodes))
-	var graphEdges = make([]Edge, 0, len(edges))
-	var isAZBase bool
-	var isBase bool
+	var (
+		isAZBase bool
+		isBase   bool
 
-	var nodeObjectIDs = make(map[graph.ID]string, len(nodes))
+		graphNodes    = make([]Node, 0, len(nodes))
+		graphEdges    = make([]Edge, 0, len(edges))
+		nodeObjectIDs = make(map[graph.ID]string, len(nodes))
+	)
 
 	for _, node := range nodes {
 		isAZBase = false
@@ -265,11 +268,13 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 }
 
 func removeNullMapValues[K comparable](m map[K]any) map[K]any {
-	newMap := make(map[K]any)
+	newMap := make(map[K]any, len(m))
 	for k, v := range m {
-		if v != nil {
-			newMap[k] = convert(v)
+		if v == nil {
+			continue
 		}
+
+		newMap[k] = convert(v)
 	}
 	return newMap
 }
@@ -300,8 +305,11 @@ func removeNullSliceValues(l []any) []any {
 }
 
 func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
-	var nodes []*graph.Node
-	var edges []*graph.Relationship
+	var (
+		nodes []*graph.Node
+		edges []*graph.Relationship
+	)
+
 	if err := database.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		err := tx.Nodes().Filter(
 			query.Not(query.Kind(query.Node(), common.MigrationData)),
