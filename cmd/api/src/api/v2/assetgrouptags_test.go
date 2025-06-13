@@ -578,6 +578,9 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 			Description:    "some description",
 			RequireCertify: null.BoolFrom(true),
 		}, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{
+			EmailAddress: null.StringFrom("spam@exaple.com"),
+		}, nil).Times(2)
 
 		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "GET", fmt.Sprintf(endpoint, assetGroupTagId), nil)
 		require.Nil(t, err)
@@ -612,9 +615,9 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 			Name:           "test tag 5",
 			Description:    "some description",
 			CreatedAt:      parsedTime,
-			CreatedBy:      "",
+			CreatedBy:      "spam@exaple.com",
 			UpdatedAt:      parsedTime,
-			UpdatedBy:      "",
+			UpdatedBy:      "spam@exaple.com",
 			DeletedAt:      null.Time{},
 			DeletedBy:      null.String{},
 			Position:       null.Int32{},
@@ -670,6 +673,8 @@ func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
 			ID:              7,
 			Name:            "Selector 7",
 			Description:     "777",
+			CreatedBy:       "spam@exaple.com",
+			UpdatedBy:       "spam@exaple.com",
 		}
 	)
 
@@ -685,6 +690,9 @@ func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
 	t.Run("successfully got asset group tag selector", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), 5).Return(model.AssetGroupTag{ID: 5}, nil)
 		mockDB.EXPECT().GetAssetGroupTagSelectorBySelectorId(gomock.Any(), 7).Return(selector, nil)
+		mockDB.EXPECT().GetUser(gomock.Any(), gomock.Any()).Return(model.User{
+			EmailAddress: null.StringFrom("spam@exaple.com"),
+		}, nil).Times(2)
 
 		req = mux.SetURLVars(req, map[string]string{api.URIPathVariableAssetGroupTagID: assetGroupTagId, api.URIPathVariableAssetGroupTagSelectorID: selectorId})
 		response := httptest.NewRecorder()
