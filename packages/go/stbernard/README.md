@@ -62,7 +62,7 @@ The following environment variables are supported:
 
 ### Sub-Commands
 
-#### Graph Transform
+#### Graph
 
 The subcommand `graph` ingests json files into Postgres, retrieves the nodes and edges from the database, and then outputs the data as a generic ingestible file.
 
@@ -71,11 +71,10 @@ The following environment variables are required:
   - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
 
 The following flags are required:
-- `--path`: Specifies the input directory for the consumed files. 
+- `--path`: Specifies the input directory for the consumed files.
 
 The following flags are supported:
-- `--outputFile`: Specifies the output file for generic ingestible graph file. 
-
+- `--outfile`: Specifies the output file for generic ingestible graph file. Defaults to {root}/tmp/graph.json".
 
 ### Contributing
 
