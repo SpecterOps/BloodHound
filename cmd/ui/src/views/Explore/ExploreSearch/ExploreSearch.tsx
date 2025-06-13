@@ -174,8 +174,9 @@ const ExploreSearch: React.FC = () => {
             </div>
 
             <div
-                className={cn('hidden min-h-0 p-2 rounded-lg pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]', {
+                className={cn('hidden min-h-0  rounded-lg pointer-events-auto', {
                     block: showSearchWidget,
+                    'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
                 })}>
                 <TabPanels
                     tabs={[

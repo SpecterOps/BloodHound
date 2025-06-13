@@ -63,6 +63,28 @@ export type CommonSearchType = {
     }[];
 };
 
+export type QuerySearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        description: string;
+        cypher: string;
+    }[];
+};
+
+export type QueryListSection = {
+    category?: string;
+    subheader: string;
+    queries: QueryLineItem[];
+};
+
+export type QueryLineItem = {
+    id?: number;
+    description: string;
+    cypher: string;
+    canEdit?: boolean;
+};
+
 export type SelectedNode = {
     id: string;
     type: EntityKinds;

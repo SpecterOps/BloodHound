@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useTheme } from '@mui/material';
+import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { useRef, useState } from 'react';
@@ -42,8 +42,10 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
 
-    const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
+    const [showCommonQueries, setShowCommonQueries] = useState(false);
+
+    const [autoRunQuery, setAutoRunQuery] = useState(true);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);
 
@@ -58,6 +60,15 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         if (cypherQuery) {
             performSearch();
         }
+    };
+    const handleSavedSearch = () => {
+        if (autoRunQuery) {
+            performSearch();
+        }
+    };
+
+    const handleToggleCommonQueries = () => {
+        setShowCommonQueries((v) => !v);
     };
 
     const handleSaveQuery = async (data: { name: string }) => {
@@ -79,80 +90,98 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
     const setFocusOnCypherEditor = () => cypherEditorRef.current?.cypherEditor.focus();
 
+    const handleAutoRunQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setAutoRunQuery(event.target.checked);
+    };
+
     return (
         <>
             <div className='flex flex-col h-full'>
-                <div className='flex gap-2 shrink-0'>
-                    <Button
-                        className='min-w-9 h-9 p-0'
-                        variant={'secondary'}
-                        onClick={() => {
-                            setShowCommonQueries((v) => !v);
-                        }}
-                        aria-label='Show/Hide Saved Queries'>
-                        <FontAwesomeIcon icon={faFolderOpen} />
-                    </Button>
-
-                    <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
-                        <CypherEditor
-                            ref={cypherEditorRef}
-                            className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
-                            value={cypherQuery}
-                            onValueChanged={(val: string) => {
-                                setCypherQuery(val);
-                            }}
-                            theme={theme.palette.mode}
-                            onKeyDown={(e: any) => {
-                                // if enter and shift key is pressed, execute cypher search
-                                if (e.key === 'Enter' && e.shiftKey) {
-                                    e.preventDefault();
-                                    handleCypherSearch();
-                                }
-                            }}
-                            schema={graphSchema(kindsQuery.data)}
-                            lineWrapping
-                            lint
-                            placeholder='Cypher Query'
-                            tooltipAbsolute={false}
+                {/* PRE BUILT SEARCHES SECTION */}
+                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 py-0 rounded-lg mb-4')}>
+                    <CommonSearches
+                        onSetCypherQuery={setCypherQuery}
+                        onPerformCypherSearch={handleSavedSearch}
+                        onToggleCommonQueries={handleToggleCommonQueries}
+                        showCommonQueries={showCommonQueries}
+                    />
+                </div>
+                {/* CYPHER EDITOR SECTION */}
+                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
+                    <div className='flex justify-end mb-2'>
+                        <FormControlLabel
+                            className='mr-0'
+                            control={
+                                <Checkbox
+                                    checked={autoRunQuery}
+                                    onChange={handleAutoRunQueryChange}
+                                    inputProps={{ 'aria-label': 'controlled' }}
+                                />
+                            }
+                            label='Auto-run selected query'
                         />
                     </div>
-                </div>
 
-                <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                    <Button
-                        variant='secondary'
-                        onClick={() => {
-                            setShowSaveQueryDialog(true);
-                        }}
-                        size={'small'}>
-                        <div className='flex items-center'>
-                            <FontAwesomeIcon icon={faSave} />
-                            <p className='ml-2 text-base'>Save Query</p>
+                    <div className='flex gap-2 shrink-0 '>
+                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                            <CypherEditor
+                                ref={cypherEditorRef}
+                                className={cn(
+                                    'flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg',
+                                    showCommonQueries && '[@media(min-height:720px)]:max-h-[20lvh]'
+                                )}
+                                value={cypherQuery}
+                                onValueChanged={(val: string) => {
+                                    setCypherQuery(val);
+                                }}
+                                theme={theme.palette.mode}
+                                onKeyDown={(e: any) => {
+                                    // if enter and shift key is pressed, execute cypher search
+                                    if (e.key === 'Enter' && e.shiftKey) {
+                                        e.preventDefault();
+                                        handleCypherSearch();
+                                    }
+                                }}
+                                schema={graphSchema(kindsQuery.data)}
+                                lineWrapping
+                                lint
+                                placeholder='Cypher Query'
+                                tooltipAbsolute={false}
+                            />
                         </div>
-                    </Button>
-
-                    <Button asChild variant='secondary' size={'small'}>
-                        <a
-                            href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
-                            rel='noreferrer'
-                            target='_blank'>
+                    </div>
+                    <div className='flex gap-2 mt-2 justify-end shrink-0'>
+                        <Button
+                            variant='secondary'
+                            onClick={() => {
+                                setShowSaveQueryDialog(true);
+                            }}
+                            size={'small'}>
                             <div className='flex items-center'>
-                                <FontAwesomeIcon icon={faQuestion} />
-                                <p className='ml-2 text-base'>Help</p>
+                                <FontAwesomeIcon icon={faSave} />
+                                <p className='ml-2 text-base'>Save Query</p>
                             </div>
-                        </a>
-                    </Button>
+                        </Button>
 
-                    <Button onClick={() => handleCypherSearch()} size={'small'}>
-                        <div className='flex items-center'>
-                            <FontAwesomeIcon icon={faPlay} />
-                            <p className='ml-2 text-base'>Run</p>
-                        </div>
-                    </Button>
-                </div>
+                        <Button asChild variant='secondary' size={'small'}>
+                            <a
+                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                rel='noreferrer'
+                                target='_blank'>
+                                <div className='flex items-center'>
+                                    <FontAwesomeIcon icon={faQuestion} />
+                                    <p className='ml-2 text-base'>Help</p>
+                                </div>
+                            </a>
+                        </Button>
 
-                <div className={cn('grow min-h-0', { hidden: !showCommonQueries })}>
-                    <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />
+                        <Button onClick={() => handleCypherSearch()} size={'small'}>
+                            <div className='flex items-center'>
+                                <FontAwesomeIcon icon={faPlay} />
+                                <p className='ml-2 text-base'>Run</p>
+                            </div>
+                        </Button>
+                    </div>
                 </div>
             </div>
             <SaveQueryDialog

@@ -14,61 +14,68 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tab, Tabs } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
-import { useState } from 'react';
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Skeleton } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
-import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
-import { CommonSearchType } from '../../../types';
+import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
+import { QueryLineItem, QueryListSection } from '../../../types';
 
-const AD_TAB = 'Active Directory';
-const AZ_TAB = 'Azure';
-const CUSTOM_TAB = 'Custom Searches';
-
-const useStyles = makeStyles((theme) => ({
-    tabs: {
-        height: '35px',
-        minHeight: '35px',
-    },
-    tab: {
-        height: '35px',
-        minHeight: '35px',
-        color: theme.palette.color.primary,
-    },
-    list: {
-        position: 'relative',
-        overflow: 'hidden',
-        '& ul': { padding: 0 },
-    },
-}));
+import { useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import { useNotifications } from '../../../providers';
+import { QuerySearchType } from '../../../types';
+import { cn } from '../../../utils';
+import QuerySearchFilter from './QuerySearchFilter';
 
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
+    onToggleCommonQueries: () => void;
+    showCommonQueries: boolean;
 };
 
 const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
+    onToggleCommonQueries,
     prebuiltSearchList,
-}: CommonSearchesProps & { prebuiltSearchList: CommonSearchType[] }) => {
-    const classes = useStyles();
+    showCommonQueries,
+}: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
+    const userQueries = useSavedQueries();
+    const deleteQueryMutation = useDeleteSavedQuery();
+    const { addNotification } = useNotifications();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [platform, setPlatform] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
-    const [activeTab, setActiveTab] = useState(AD_TAB);
+    const savedLineItems: QueryLineItem[] =
+        userQueries.data?.map((query) => ({
+            description: query.name,
+            cypher: query.query,
+            canEdit: true,
+            id: query.id,
+        })) || [];
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-        setActiveTab(newValue);
+    const savedQueries = {
+        category: 'Saved Queries',
+        subheader: '',
+        queries: savedLineItems,
     };
 
-    const adSections = prebuiltSearchList
-        .filter(({ category }) => category === 'Active Directory')
-        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+    //master list of pre-made queries
+    const queryList = [...prebuiltSearchList, savedQueries];
+    const allCategories = queryList.map((item) => item.subheader);
+    const uniqueCategoriesSet = new Set(allCategories);
+    const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
-    const azSections = prebuiltSearchList
-        .filter(({ category }) => category === 'Azure')
-        .map(({ subheader, queries }) => ({ subheader, lineItems: queries }));
+    const [filteredList, setFilteredList] = useState<QueryListSection[]>([]);
+
+    useEffect(() => {
+        setFilteredList([...prebuiltSearchList, savedQueries]);
+    }, [userQueries.data]);
 
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
@@ -76,25 +83,81 @@ const InnerCommonSearches = ({
         onPerformCypherSearch(query);
     };
 
+    const handleDeleteQuery = (id: number) =>
+        deleteQueryMutation.mutate(id, {
+            onSuccess: () => {
+                addNotification(`Query deleted.`, 'userDeleteQuery');
+            },
+        });
+
+    if (userQueries.isLoading) {
+        return (
+            <Box mt={2}>
+                <Skeleton />
+            </Box>
+        );
+    }
+
+    const handleFilter = (searchTerm: string, platform: string, categories: string[]) => {
+        setSearchTerm(searchTerm);
+        setPlatform(platform);
+        setCategoryFilter(categories);
+
+        //local array variable
+        let filteredData: QuerySearchType[] = queryList;
+
+        if (searchTerm.length > 2) {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item: QueryLineItem) =>
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    ),
+                }))
+                .filter((x) => x.queries.length);
+        }
+        if (platform) {
+            filteredData = filteredData.filter((obj) => obj.category.toLowerCase() === platform.toLowerCase());
+        }
+        if (categories.length) {
+            filteredData = filteredData
+                .filter((item: QuerySearchType) => categories.includes(item.subheader))
+                .filter((x) => x.queries.length);
+        }
+        setFilteredList(filteredData);
+    };
+
+    const handleClearFilters = () => {
+        handleFilter('', '', []);
+    };
+
     return (
         <div className='flex flex-col h-full'>
-            <h5 className='my-4 font-bold text-lg'>Pre-built Searches</h5>
-            <Tabs
-                value={activeTab}
-                onChange={handleTabChange}
-                className={classes.tabs}
-                TabIndicatorProps={{
-                    sx: { height: 3, backgroundColor: '#6798B9' },
-                }}>
-                <Tab label={AD_TAB} key={AD_TAB} value={AD_TAB} className={classes.tab} />
-                <Tab label={AZ_TAB} key={AZ_TAB} value={AZ_TAB} className={classes.tab} />
-                <Tab label={CUSTOM_TAB} key={CUSTOM_TAB} value={CUSTOM_TAB} className={classes.tab} />
-            </Tabs>
+            <div className='flex items-center'>
+                <FontAwesomeIcon
+                    className='px-2 mr-2'
+                    icon={showCommonQueries ? faChevronDown : faChevronUp}
+                    onClick={onToggleCommonQueries}
+                />
+                <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
+            </div>
 
-            <div className='grow-1 min-h-0 overflow-auto'>
-                {activeTab === AD_TAB && <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />}
-                {activeTab === AZ_TAB && <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />}
-                {activeTab === CUSTOM_TAB && <PersonalSearchList clickHandler={handleClick} />}
+            <div className={cn({ hidden: !showCommonQueries })}>
+                <QuerySearchFilter
+                    queryFilterHandler={handleFilter}
+                    categories={categories}
+                    searchTerm={searchTerm}
+                    platform={platform}
+                    categoryFilter={categoryFilter}></QuerySearchFilter>
+            </div>
+
+            <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
+                <PrebuiltSearchList
+                    listSections={filteredList}
+                    clickHandler={handleClick}
+                    deleteHandler={handleDeleteQuery}
+                    clearFiltersHandler={handleClearFilters}
+                />
             </div>
         </div>
     );
