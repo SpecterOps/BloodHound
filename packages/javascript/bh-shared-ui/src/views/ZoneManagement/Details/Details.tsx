@@ -107,7 +107,7 @@ const Details: FC = () => {
     return (
         <div>
             <div className='flex mt-6 gap-8'>
-                <InfoHeader />
+                {InfoHeader && <InfoHeader />}
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>

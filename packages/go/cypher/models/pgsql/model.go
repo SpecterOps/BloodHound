@@ -178,6 +178,13 @@ type Literal struct {
 	CastType DataType
 }
 
+func NullLiteral() Literal {
+	return Literal{
+		Null:     true,
+		CastType: Null,
+	}
+}
+
 func NewLiteral(value any, dataType DataType) Literal {
 	return Literal{
 		Value:    value,

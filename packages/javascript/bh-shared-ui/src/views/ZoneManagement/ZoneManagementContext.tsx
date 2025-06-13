@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { AssetGroupTag } from 'js-client-library';
 import { createContext, FC } from 'react';
 import {
     ROUTE_ZONE_MANAGEMENT_LABEL_CREATE_SELECTOR,
@@ -37,16 +38,13 @@ const savePaths = [
 
 export interface ZoneManagementContextValue {
     savePaths: string[];
-    InfoHeader: FC;
-    SupportLink: FC;
+    InfoHeader?: FC;
+    SupportLink?: FC;
+    TierList?: FC<{ tiers: AssetGroupTag[]; setPosition: (position: number) => void; name: string }>;
 }
-
-const EmptySpan: FC = () => <span></span>;
 
 export const defaultZoneMgmtCtxValue: ZoneManagementContextValue = {
     savePaths,
-    InfoHeader: EmptySpan,
-    SupportLink: EmptySpan,
 };
 
 export const ZoneManagementContext = createContext<ZoneManagementContextValue>(defaultZoneMgmtCtxValue);

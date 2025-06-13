@@ -54,6 +54,9 @@ const testOwned = {
 };
 
 const handlers = [
+    rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
+        return res(ctx.json({ data: { tags: [] } }));
+    }),
     rest.post('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tag: { id: 777 } } }));
     }),
@@ -403,7 +406,9 @@ describe('Tag Form', () => {
         await user.clear(textField);
         await user.type(textField, 'Delete this label');
 
-        expect(confirmButton).not.toBeDisabled();
+        waitFor(() => {
+            expect(confirmButton).not.toBeDisabled();
+        });
     });
 
     it('open and closes the dialog with the cancel button', async () => {

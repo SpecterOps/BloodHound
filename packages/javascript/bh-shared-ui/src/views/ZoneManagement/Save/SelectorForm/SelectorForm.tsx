@@ -21,7 +21,7 @@ import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import { FC, useCallback, useEffect, useReducer } from 'react';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useNotifications } from '../../../../providers';
 import { apiClient, useAppNavigate } from '../../../../utils';
 import { SearchValue } from '../../../Explore';
@@ -111,6 +111,7 @@ const reducer = (state: SelectorFormState, action: Action): SelectorFormState =>
 };
 
 const SelectorForm: FC = () => {
+    const location = useLocation();
     const { tierId = '', labelId, selectorId = '' } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
@@ -174,12 +175,12 @@ const SelectorForm: FC = () => {
                     anchorOrigin: { vertical: 'top', horizontal: 'right' },
                 });
 
-                navigate(`/zone-management/details/tier/${tagId}`);
+                navigate(`/zone-management/details/${location.pathname.includes('label') ? 'label' : 'tier'}/${tagId}`);
             } catch (error) {
                 handleError(error, 'creating', 'selector', addNotification);
             }
         },
-        [tagId, navigate, createSelectorMutation, addNotification]
+        [tagId, navigate, createSelectorMutation, addNotification, location]
     );
 
     const onSubmit: SubmitHandler<SelectorFormInputs> = useCallback(
