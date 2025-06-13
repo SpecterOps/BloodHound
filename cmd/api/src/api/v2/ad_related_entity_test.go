@@ -492,6 +492,54 @@ func TestResources_ListADGPOAffectedTierZero(t *testing.T) {
 		Run(setupCases(mockGraph, mockDB))
 }
 
+func TestResources_ListRootCAPKIHierarchy(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListRootCAPKIHierarchy).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListCAPKIHierarchy(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListCAPKIHierarchy).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListPublishedTemplates(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListPublishedTemplates).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListPublishedToCAs(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListPublishedToCAs).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListTrustedCAs(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListTrustedCAs).
+		Run(setupCases(mockGraph, mockDB))
+}
+
+func TestResources_ListADCSEscalations(t *testing.T) {
+	var mockCtrl, mockGraph, mockDB, resources = setup(t)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.ListADCSEscalations).
+		Run(setupCases(mockGraph, mockDB))
+}
+
 func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 	t.Parallel()
 
