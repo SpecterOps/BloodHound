@@ -17,6 +17,7 @@
 import { Popper, useTheme } from '@mui/material';
 import {
     GraphProgress,
+    GraphViewErrorAlert,
     SearchCurrentNodes,
     WebGLDisabledAlert,
     exportToJson,
@@ -27,6 +28,7 @@ import {
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
+
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
@@ -106,7 +108,7 @@ const GraphView: FC = () => {
         );
     }
 
-    if (isError) throw new Error();
+    if (isError) return <GraphViewErrorAlert />;
 
     if (!isWebGLEnabled()) {
         return <WebGLDisabledAlert />;
