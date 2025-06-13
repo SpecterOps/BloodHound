@@ -235,7 +235,7 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 		graphNodes = append(graphNodes, Node{
 			ID:         objectID,
 			Kinds:      kinds,
-			Properties: node.Properties.Map,
+			Properties: removeNullMapValues(node.Properties.Map),
 		})
 	}
 
@@ -250,7 +250,7 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 				Value:   nodeObjectIDs[edge.EndID],
 			},
 			Kind:       edge.Kind.String(),
-			Properties: edge.Properties.Map,
+			Properties: removeNullMapValues(edge.Properties.Map),
 		})
 	}
 
@@ -258,6 +258,41 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 		Nodes: graphNodes,
 		Edges: graphEdges,
 	}, nil
+}
+
+func removeNullMapValues(m map[string]any) map[string]any {
+	newMap := make(map[string]any, len(m))
+
+	for key, val := range m {
+		if val == nil {
+			continue
+		}
+
+		switch v := val.(type) {
+		case []any:
+			newMap[key] = removeNullSliceValues(v)
+		case map[string]any:
+			newMap[key] = removeNullMapValues(v)
+		default:
+			newMap[key] = val
+		}
+	}
+
+	return newMap
+}
+
+func removeNullSliceValues(l []any) []any {
+	newSlice := make([]any, 0, len(l))
+
+	for _, val := range l {
+		if val == nil {
+			continue
+		}
+
+		newSlice = append(newSlice, val)
+	}
+
+	return newSlice
 }
 
 func getNodesAndEdges(ctx context.Context, database graph.Database) ([]*graph.Node, []*graph.Relationship, error) {
