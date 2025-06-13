@@ -333,7 +333,7 @@ func (s *command) getIngestFilePaths() ([]string, error) {
 
 	if err := filepath.Walk(s.path, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("error walking filepath %w", err)
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".json" {
