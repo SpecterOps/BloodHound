@@ -944,8 +944,8 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis
 
 	for _, tenantNode := range tenantNodes {
 		// Read the tenantId property from the AZTenant node
-		tenantID := tenantNode.Properties.Get(azure.TenantID.String())
-		if tenantID.IsNil() {
+		tenantID, err := tenantNode.Properties.Get(azure.TenantID.String()).String()
+		if err != nil || len(tenantID) == 0 {
 			return processingStats, fmt.Errorf("read tenant ID property value is nil")
 		}
 
@@ -1002,7 +1002,6 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis
 				return processingStats, err
 			}
 			principalIDs := append(userApproversID, groupApproversID...)
-
 			if len(principalIDs) == 0 {
 				// Step 3b: primaryApprovers is null/empty
 				// Step 3b.i: Use tenantId from this AZRole (already have tenantID)
