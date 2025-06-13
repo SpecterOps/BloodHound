@@ -1132,7 +1132,7 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
             return 'End User Assignment Requires Approval';
         case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'End User Assignment Requires CAP AuthenticationContext';
+            return 'End User Assignment Requires CAP Authentication Context';
         case AzureKindProperties.EndUserAssignmentUserApprovers:
             return 'End User Assignment User Approvers';
         case AzureKindProperties.EndUserAssignmentGroupApprovers:
