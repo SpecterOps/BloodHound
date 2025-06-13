@@ -1053,7 +1053,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`,
+				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
