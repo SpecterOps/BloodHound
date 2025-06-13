@@ -19,6 +19,7 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
+    Chip,
     Dialog,
     DialogActions,
     DialogContent,
@@ -40,6 +41,7 @@ interface PrebuiltSearchListProps {
 }
 
 type ListSection = {
+    category?: string;
     subheader: string;
     lineItems: LineItem[];
 };
@@ -78,7 +80,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
         <>
             <List dense disablePadding>
                 {listSections.map((section) => {
-                    const { subheader, lineItems } = section;
+                    const { category, subheader, lineItems } = section;
 
                     return (
                         <Box key={subheader}>
@@ -108,6 +110,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                                         }>
                                         <ListItemButton onClick={() => clickHandler(cypher)}>
                                             <ListItemText primary={description} />
+                                            {category && <Chip label={category} size='small' className='ml-3'></Chip>}
                                         </ListItemButton>
                                     </ListItem>
                                 );

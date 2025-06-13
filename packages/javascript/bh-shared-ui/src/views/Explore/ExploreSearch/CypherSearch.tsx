@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faFolderOpen, faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
@@ -82,77 +82,69 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     return (
         <>
             <div className='flex flex-col h-full'>
-                <div className='flex gap-2 shrink-0'>
-                    <Button
-                        className='min-w-9 h-9 p-0'
-                        variant={'secondary'}
-                        onClick={() => {
-                            setShowCommonQueries((v) => !v);
-                        }}
-                        aria-label='Show/Hide Saved Queries'>
-                        <FontAwesomeIcon icon={faFolderOpen} />
-                    </Button>
-
-                    <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
-                        <CypherEditor
-                            ref={cypherEditorRef}
-                            className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
-                            value={cypherQuery}
-                            onValueChanged={(val: string) => {
-                                setCypherQuery(val);
-                            }}
-                            theme={theme.palette.mode}
-                            onKeyDown={(e: any) => {
-                                // if enter and shift key is pressed, execute cypher search
-                                if (e.key === 'Enter' && e.shiftKey) {
-                                    e.preventDefault();
-                                    handleCypherSearch();
-                                }
-                            }}
-                            schema={graphSchema(kindsQuery.data)}
-                            lineWrapping
-                            lint
-                            placeholder='Cypher Query'
-                            tooltipAbsolute={false}
-                        />
-                    </div>
-                </div>
-
-                <div className='flex gap-2 mt-2 justify-end shrink-0'>
-                    <Button
-                        variant='secondary'
-                        onClick={() => {
-                            setShowSaveQueryDialog(true);
-                        }}
-                        size={'small'}>
-                        <div className='flex items-center'>
-                            <FontAwesomeIcon icon={faSave} />
-                            <p className='ml-2 text-base'>Save Query</p>
-                        </div>
-                    </Button>
-
-                    <Button asChild variant='secondary' size={'small'}>
-                        <a
-                            href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
-                            rel='noreferrer'
-                            target='_blank'>
-                            <div className='flex items-center'>
-                                <FontAwesomeIcon icon={faQuestion} />
-                                <p className='ml-2 text-base'>Help</p>
-                            </div>
-                        </a>
-                    </Button>
-
-                    <Button onClick={() => handleCypherSearch()} size={'small'}>
-                        <div className='flex items-center'>
-                            <FontAwesomeIcon icon={faPlay} />
-                            <p className='ml-2 text-base'>Run</p>
-                        </div>
-                    </Button>
-                </div>
-
-                <div className={cn('grow min-h-0', { hidden: !showCommonQueries })}>
+                {/* PRE BUILT SEARCHES SECTION */}
+                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 pt-0 rounded-lg mb-4')}>
                     <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />
+                </div>
+                {/* CYPHER EDITOR SECTION */}
+                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg '>
+                    <div className='flex gap-2 shrink-0 '>
+                        <div onClick={setFocusOnCypherEditor} className='flex-1' role='textbox'>
+                            <CypherEditor
+                                ref={cypherEditorRef}
+                                className='flex grow flex-col border border-black/[.23] rounded bg-white dark:bg-[#002b36] min-h-24 max-h-24 overflow-auto [@media(min-height:720px)]:max-h-72 [&_.cm-tooltip]:max-w-lg'
+                                value={cypherQuery}
+                                onValueChanged={(val: string) => {
+                                    setCypherQuery(val);
+                                }}
+                                theme={theme.palette.mode}
+                                onKeyDown={(e: any) => {
+                                    // if enter and shift key is pressed, execute cypher search
+                                    if (e.key === 'Enter' && e.shiftKey) {
+                                        e.preventDefault();
+                                        handleCypherSearch();
+                                    }
+                                }}
+                                schema={graphSchema(kindsQuery.data)}
+                                lineWrapping
+                                lint
+                                placeholder='Cypher Query'
+                                tooltipAbsolute={false}
+                            />
+                        </div>
+                    </div>
+                    <div className='flex gap-2 mt-2 justify-end shrink-0'>
+                        <Button
+                            variant='secondary'
+                            onClick={() => {
+                                setShowSaveQueryDialog(true);
+                            }}
+                            size={'small'}>
+                            <div className='flex items-center'>
+                                <FontAwesomeIcon icon={faSave} />
+                                <p className='ml-2 text-base'>Save Query</p>
+                            </div>
+                        </Button>
+
+                        <Button asChild variant='secondary' size={'small'}>
+                            <a
+                                href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
+                                rel='noreferrer'
+                                target='_blank'>
+                                <div className='flex items-center'>
+                                    <FontAwesomeIcon icon={faQuestion} />
+                                    <p className='ml-2 text-base'>Help</p>
+                                </div>
+                            </a>
+                        </Button>
+
+                        <Button onClick={() => handleCypherSearch()} size={'small'}>
+                            <div className='flex items-center'>
+                                <FontAwesomeIcon icon={faPlay} />
+                                <p className='ml-2 text-base'>Run</p>
+                            </div>
+                        </Button>
+                    </div>
                 </div>
             </div>
             <SaveQueryDialog
