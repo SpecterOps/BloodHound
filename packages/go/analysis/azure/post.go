@@ -989,17 +989,24 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis
 		// Step 3: For each AZRole that requires approval...
 		for _, fetchedAZRole := range fetchedAZRoles {
 			// Step 3a: Read the primaryApprovers list (group GUIDs)
-			principalIDs, err := fetchedAZRole.Properties.Get(
+			userApproversID, err := fetchedAZRole.Properties.Get(
+				azure.EndUserAssignmentUserApprovers.String(),
+			).StringSlice()
+			if err != nil {
+				return processingStats, err
+			}
+			groupApproversID, err := fetchedAZRole.Properties.Get(
 				azure.EndUserAssignmentGroupApprovers.String(),
 			).StringSlice()
 			if err != nil {
 				return processingStats, err
 			}
+			principalIDs := append(userApproversID, groupApproversID...)
 
 			if len(principalIDs) == 0 {
 				// Step 3b: primaryApprovers is null/empty
 				// Step 3b.i: Use tenantId from this AZRole (already have tenantID)
-				// Step 3b.ii: Find GlobalAdmin and PrivilegedRoleAdmin roles in this tenant
+				// Step 3b.ii: Find GlobalAdmin AND PrivilegedRoleAdmin roles in this tenant
 				//             and create an AZRoleApprover edge from each to this role.
 				err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -1032,7 +1039,7 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis
 			} else {
 				// Step 3c: primaryApprovers is NOT null
 				// Step 3c.i & 3c.ii: For each GUID, find-or-create an AZBase node and
-				//                   create an AZRoleApprover edge to the role.
+				//                    create an AZRoleApprover edge to the role.
 				for _, principalID := range principalIDs {
 					err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 						// look up existing entity node by objectId
