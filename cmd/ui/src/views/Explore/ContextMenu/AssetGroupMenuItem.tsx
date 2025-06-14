@@ -16,133 +16,84 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, useExploreGraph, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
 import { FC, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppSelector } from 'src/store';
+import { Link } from 'react-router-dom';
 
-const AssetGroupMenuItem: FC<{ assetGroupId: number; assetGroupName: string }> = ({ assetGroupId, assetGroupName }) => {
-    const { addNotification } = useNotifications();
-    const { refetch } = useExploreGraph();
+const AssetGroupMenuItem: FC<{
+    assetGroupId: number;
+    assetGroupName: string;
+    assetGroupTag: string;
+    isCurrentMember: boolean;
+    onAddNode?: (assetGroupId: string | number) => void;
+    onRemoveNode?: () => void;
+    showConfirmationOnAdd?: boolean;
+    confirmationOnAddMessage?: string;
+}> = ({
+    assetGroupId,
+    assetGroupName,
+    isCurrentMember,
+    onAddNode = () => {},
+    onRemoveNode = () => {},
+    showConfirmationOnAdd = false,
+    confirmationOnAddMessage = '',
+}) => {
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-    const [open, setOpen] = useState(false);
-
-    const { selectedItemQuery } = useExploreSelectedItem();
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
-
-    const isMenuItemForTierZero = assetGroupId === tierZeroAssetGroupId;
-
-    const mutation = useMutation({
-        mutationFn: ({ nodeId, action }: { nodeId: string; action: 'add' | 'remove' }) => {
-            return apiClient.updateAssetGroupSelector(assetGroupId, [
-                {
-                    selector_name: nodeId,
-                    sid: nodeId,
-                    action,
-                },
-            ]);
-        },
-        onSuccess: () => {
-            refetch();
-            addNotification('Update successful.', 'AssetGroupUpdateSuccess');
-        },
-        onError: (error: any) => {
-            console.error(error);
-            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
-        },
-    });
-
-    const { data: assetGroupMembers } = useQuery(['listAssetGroupMembers', assetGroupId], () =>
-        apiClient
-            .listAssetGroupMembers(assetGroupId, undefined, {
-                params: {
-                    object_id: `object_id=eq:${(selectedItemQuery.data as NodeResponse)?.objectId}`,
-                },
-            })
-            .then((res) => res.data.data?.members)
-    );
-
-    const handleAddToAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'add' });
-        }
+    const handleAddNode = () => {
+        onAddNode(assetGroupId);
+        setConfirmDialogOpen(false);
     };
 
-    const handleRemoveFromAssetGroup = () => {
-        if (selectedItemQuery.data && 'objectId' in selectedItemQuery.data) {
-            mutation.mutate({ nodeId: selectedItemQuery.data.objectId, action: 'remove' });
-        }
+    const handleRemoveNode = () => {
+        onRemoveNode();
+        setConfirmDialogOpen(false);
     };
 
-    const handleOpenConfirmation = (e: React.MouseEvent<HTMLLIElement>) => {
-        e.stopPropagation();
-        setOpen(true);
-    };
-
-    const handleCloseConfirmation = () => {
-        setOpen(false);
-    };
-
-    // error state, data didn't load
-    if (!assetGroupMembers) {
+    if (Number.isNaN(assetGroupId)) {
         return null;
     }
 
     // selected node is not a member of the group
-    if (assetGroupMembers.length === 0) {
+    if (!isCurrentMember) {
         return (
             <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleAddToAssetGroup}>
+                <MenuItem onClick={showConfirmationOnAdd ? () => setConfirmDialogOpen(true) : handleAddNode}>
                     Add to {assetGroupName}
                 </MenuItem>
-                {isMenuItemForTierZero ? (
+                {showConfirmationOnAdd && (
                     <ConfirmNodeChangesDialog
-                        handleCancel={handleCloseConfirmation}
-                        handleApply={handleAddToAssetGroup}
-                        open={open}
-                        dialogContent={`Are you sure you want to add this node to ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
+                        onCancel={handleRemoveNode}
+                        onAccept={handleAddNode}
+                        open={confirmDialogOpen}
+                        dialogContent={confirmationOnAddMessage}
                     />
-                ) : null}
+                )}
             </>
         );
-    }
-
-    // selected node is a custom member of the group
-    if (assetGroupMembers.length === 1 && assetGroupMembers[0].custom_member) {
+    } else {
         return (
-            <>
-                <MenuItem onClick={isMenuItemForTierZero ? handleOpenConfirmation : handleRemoveFromAssetGroup}>
-                    Remove from {assetGroupName}
-                </MenuItem>
-                {isMenuItemForTierZero ? (
-                    <ConfirmNodeChangesDialog
-                        handleCancel={() => setOpen(false)}
-                        handleApply={handleRemoveFromAssetGroup}
-                        open={open}
-                        dialogContent={`Are you sure you want to remove this node from ${assetGroupName}? This action will initiate an analysis run to update group membership.`}
-                    />
-                ) : null}
-            </>
+            <MenuItem component={Link} to={`/tier-management/details/tag/${assetGroupId}`}>
+                Remove from {assetGroupName}
+            </MenuItem>
         );
     }
 };
 
 const ConfirmNodeChangesDialog: FC<{
     open: boolean;
-    handleCancel: () => void;
-    handleApply: () => void;
+    onCancel: () => void;
+    onAccept: () => void;
     dialogContent: string;
-}> = ({ open, handleApply, handleCancel, dialogContent }) => {
+}> = ({ open, onCancel, onAccept, dialogContent }) => {
     return (
         <Dialog open={open}>
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleCancel}>
+                <Button variant='tertiary' onClick={onCancel}>
                     Cancel
                 </Button>
-                <Button variant='primary' onClick={handleApply}>
+                <Button variant='primary' onClick={onAccept}>
                     Ok
                 </Button>
             </DialogActions>

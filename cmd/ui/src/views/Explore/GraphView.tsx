@@ -17,21 +17,27 @@
 import { Popper, useTheme } from '@mui/material';
 import {
     GraphProgress,
+    NodeResponse,
     SearchCurrentNodes,
     WebGLDisabledAlert,
+    apiClient,
     exportToJson,
+    isNode,
     isWebGLEnabled,
     transformFlatGraphResponse,
     useCustomNodeKinds,
+    useExploreParams,
     useExploreSelectedItem,
     useGraphHasData,
+    useNotifications,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes } from 'js-client-library';
+import { GraphNodes, SeedTypeObjectId } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
+import { useMutation } from 'react-query';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import GraphButtons from 'src/components/GraphButtons/GraphButtons';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
@@ -48,27 +54,67 @@ import { transformIconDictionary } from './svgIcons';
 const GraphView: FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
+
     const theme = useTheme();
 
     const graphQuery = useSigmaExploreGraph();
+
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
-    const { selectedItem, setSelectedItem } = useExploreSelectedItem();
+
+    const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
+
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
+
+    const { addNotification } = useNotifications();
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
 
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+
     const [currentSearchOpen, toggleCurrentSearch] = useToggle(false);
+
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
     const [showNodeLabels, setShowNodeLabels] = useState(true);
+
     const [showEdgeLabels, setShowEdgeLabels] = useState(true);
+
     const [exportJsonData, setExportJsonData] = useState();
 
     const sigmaChartRef = useRef<any>(null);
+
     const currentSearchAnchorElement = useRef(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+
+    const { setExploreParams, primarySearch, secondarySearch } = useExploreParams();
+
+    const createAssetGroupTagSelectorMutation = useMutation({
+        mutationFn: ({ assetGroupId, node }: { assetGroupId: string | number; node: NodeResponse }) => {
+            return apiClient.createAssetGroupTagSelector(assetGroupId, {
+                name: node.label ?? node.objectId,
+                seeds: [
+                    {
+                        type: SeedTypeObjectId,
+                        value: node.objectId,
+                    },
+                ],
+            });
+        },
+        onSuccess: () => {
+            addNotification('Update successful.', 'AssetGroupUpdateSuccess');
+        },
+        onError: (error: any) => {
+            console.error(error);
+            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
+        },
+        onSettled: () => {
+            graphQuery.refetch();
+            selectedItemQuery.refetch();
+        },
+    });
 
     useEffect(() => {
         let items: any = graphQuery.data;
@@ -129,6 +175,30 @@ const GraphView: FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
+    };
+
+    const handleSetStartingNode = () => {
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            const searchType = secondarySearch ? 'pathfinding' : 'node';
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                primarySearch: selectedItemData?.objectId as string,
+            });
+        }
+    };
+
+    const handleSetEndingNode = () => {
+        const selectedItemData = selectedItemQuery.data;
+        if (selectedItemData && isNode(selectedItemData)) {
+            const searchType = primarySearch ? 'pathfinding' : 'node';
+            setExploreParams({
+                exploreSearchTab: 'pathfinding',
+                searchType,
+                secondarySearch: selectedItemData?.objectId as string,
+            });
+        }
     };
 
     return (
@@ -211,7 +281,18 @@ const GraphView: FC = () => {
                 </Popper>
             </div>
             <GraphItemInformationPanel />
-            <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
+            <ContextMenu
+                contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                onSetStartingNode={handleSetStartingNode}
+                onSetEndingNode={handleSetEndingNode}
+                onAddNode={(assetGroupId) => {
+                    createAssetGroupTagSelectorMutation.mutate({
+                        assetGroupId,
+                        node: selectedItemQuery.data as NodeResponse,
+                    });
+                }}
+                onClose={handleCloseContextMenu}
+            />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
         </div>

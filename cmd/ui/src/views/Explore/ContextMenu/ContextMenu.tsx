@@ -16,79 +16,74 @@
 
 import { Menu, MenuItem } from '@mui/material';
 
-import {
-    Permission,
-    isNode,
-    useExploreParams,
-    useExploreSelectedItem,
-    useFeatureFlag,
-    usePermissions,
-} from 'bh-shared-ui';
+import { Permission, apiClient, isNode, useExploreSelectedItem, usePermissions } from 'bh-shared-ui';
 import { FC } from 'react';
-import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
-import { useAppSelector } from 'src/store';
+import { useQuery } from 'react-query';
+import { OWNED_ASSET_GROUP_TAG, TIER_ZERO_ASSET_GROUP_TAG } from '../utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
-    handleClose: () => void;
-}> = ({ contextMenu, handleClose }) => {
-    const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
+    onSetStartingNode?: () => void;
+    onSetEndingNode?: () => void;
+    onAddNode?: (assetGroupId: string | number) => void;
+    onRemoveNode?: () => void;
+    onClose?: () => void;
+}> = ({
+    contextMenu,
+    onSetStartingNode = () => {},
+    onSetEndingNode = () => {},
+    onAddNode = () => {},
+    onRemoveNode = () => {},
+    onClose = () => {},
+}) => {
     const { selectedItemQuery } = useExploreSelectedItem();
-    const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
-    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
+    const getAssetGroupTagsQuery = useQuery(['getAssetGroupTags'], ({ signal }) =>
+        apiClient.getAssetGroupTags({ signal }).then((res) => res.data.data)
+    );
 
     const { checkPermission } = usePermissions();
 
-    const handleSetStartingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = secondarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                primarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
+    const tierZeroAssetGroupId = getAssetGroupTagsQuery.data?.tags.find((value) => {
+        return value.name === 'Tier Zero';
+    })?.id;
 
-    const handleSetEndingNode = () => {
-        const searchType = primarySearch ? 'pathfinding' : 'node';
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                secondarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
+    const ownedAssetGroupId = getAssetGroupTagsQuery.data?.tags.find((value) => {
+        return value.name === 'Owned';
+    })?.id;
 
     return (
         <Menu
             open={contextMenu !== null}
             anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
             anchorReference='anchorPosition'
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
+            onClick={onClose}>
+            <MenuItem onClick={onSetStartingNode}>Set as starting node</MenuItem>
+            <MenuItem onClick={onSetEndingNode}>Set as ending node</MenuItem>
+            {checkPermission(Permission.GRAPH_DB_WRITE) && [
+                <AssetGroupMenuItem
+                    key={tierZeroAssetGroupId}
+                    assetGroupId={tierZeroAssetGroupId || Number.NaN}
+                    assetGroupName='High Value'
+                    assetGroupTag={TIER_ZERO_ASSET_GROUP_TAG}
+                    onAddNode={onAddNode}
+                    onRemoveNode={onRemoveNode}
+                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
+                    showConfirmationOnAdd
+                    confirmationOnAddMessage={`Are you sure you want to add this node to High Value? This action will initiate an analysis run to update group membership.`}
+                />,
+                <AssetGroupMenuItem
+                    key={ownedAssetGroupId}
+                    assetGroupId={ownedAssetGroupId || Number.NaN}
+                    assetGroupName='Owned'
+                    assetGroupTag={OWNED_ASSET_GROUP_TAG}
+                    onAddNode={onAddNode}
+                    onRemoveNode={onRemoveNode}
+                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
+                />,
+            ]}
             <CopyMenuItem />
         </Menu>
     );

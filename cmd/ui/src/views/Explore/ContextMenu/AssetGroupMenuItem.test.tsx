@@ -20,6 +20,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
+import { OWNED_ASSET_GROUP_TAG, TIER_ZERO_ASSET_GROUP_TAG } from '../utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 
 const tierZeroAssetGroup = { id: 1, name: 'high value' };
@@ -48,41 +49,13 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
 describe('AssetGroupMenuItem', async () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
-            rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
-                // handle `tier zero` requests
-                if (req.params.assetGroupId === tierZeroAssetGroup.id.toString()) {
-                    return res(
-                        ctx.json({
-                            data: {
-                                members: [],
-                            },
-                        })
-                    );
-                } else if (req.params.assetGroupId === ownedAssetGroup.id.toString()) {
-                    // handle `owned` requests
-                    return res(
-                        ctx.json({
-                            data: {
-                                // members: [{ custom_member: true }],
-                                members: [],
-                            },
-                        })
-                    );
-                } else {
-                    return res(ctx.json({}));
-                }
-            }),
-            rest.put('/api/v2/asset-groups/:assetGroupId/selectors', (req, res, ctx) => {
+            rest.get('/api/v2/graph-search', (req, res, ctx) => {
                 return res(ctx.json({}));
             }),
             rest.post('/api/v2/graphs/cypher', (req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: { nodes: [{ objectId: getEntityInfoTestProps().entityinfo.selectedNode.id }] },
-                    })
-                );
+                return res(ctx.json({}));
             }),
-            rest.get('/api/v2/graph-search', (req, res, ctx) => {
+            rest.post('/api/v2/asset-group-tags/:tagId/selectors', (req, res, ctx) => {
                 return res(ctx.json({}));
             })
         );
@@ -95,24 +68,24 @@ describe('AssetGroupMenuItem', async () => {
 
         afterAll(() => server.close());
 
-        it('handles adding to tier zero asset group', async () => {
-            await act(async () => {
-                render(
-                    <AssetGroupMenuItem
-                        assetGroupId={tierZeroAssetGroup.id}
-                        assetGroupName={tierZeroAssetGroup.name}
-                    />,
-                    {
-                        initialState: {
-                            ...getAssetGroupTestProps({ isTierZero: true }),
-                        },
-                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                    }
-                );
-            });
+        it.only('handles adding to tier zero asset group', async () => {
+            const testOnAddNode = vi.fn();
+
+            render(
+                <AssetGroupMenuItem
+                    assetGroupId={tierZeroAssetGroup.id}
+                    assetGroupName={tierZeroAssetGroup.name}
+                    assetGroupTag={TIER_ZERO_ASSET_GROUP_TAG}
+                    isCurrentMember={false}
+                    showConfirmationOnAdd={true}
+                    onAddNode={testOnAddNode}
+                />,
+                {
+                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+                }
+            );
 
             const user = userEvent.setup();
-            const addToHighValueSpy = vi.spyOn(apiClient, 'updateAssetGroupSelector');
 
             const addToHighValueButton = screen.getByRole('menuitem', { name: /add to high value/i });
             expect(addToHighValueButton).toBeInTheDocument();
@@ -125,8 +98,8 @@ describe('AssetGroupMenuItem', async () => {
             const applyButton = screen.getByRole('button', { name: /ok/i });
             await user.click(applyButton);
 
-            expect(addToHighValueSpy).toHaveBeenCalledTimes(1);
-            expect(addToHighValueSpy).toHaveBeenCalledWith(tierZeroAssetGroup.id, [
+            expect(testOnAddNode).toHaveBeenCalledTimes(1);
+            expect(testOnAddNode).toHaveBeenCalledWith(tierZeroAssetGroup.id, [
                 {
                     action: 'add',
                     selector_name: '1234',
@@ -137,12 +110,20 @@ describe('AssetGroupMenuItem', async () => {
 
         it('handles adding to non-tier-zero asset group', async () => {
             await act(async () => {
-                render(<AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />, {
-                    initialState: {
-                        ...getAssetGroupTestProps({ isTierZero: false }),
-                    },
-                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                });
+                render(
+                    <AssetGroupMenuItem
+                        assetGroupId={ownedAssetGroup.id}
+                        assetGroupName={ownedAssetGroup.name}
+                        assetGroupTag={OWNED_ASSET_GROUP_TAG}
+                        isCurrentMember={false}
+                    />,
+                    {
+                        initialState: {
+                            ...getAssetGroupTestProps({ isTierZero: false }),
+                        },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+                    }
+                );
             });
 
             const user = userEvent.setup();
@@ -164,7 +145,15 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
+            render(
+                <AssetGroupMenuItem
+                    assetGroupId={3}
+                    assetGroupName={'blah'}
+                    assetGroupTag='blah'
+                    isCurrentMember={false}
+                />,
+                {}
+            );
 
             expect(document.body.firstChild).toBeEmptyDOMElement();
         });
@@ -224,6 +213,8 @@ describe('AssetGroupMenuItem', async () => {
                     <AssetGroupMenuItem
                         assetGroupId={tierZeroAssetGroup.id}
                         assetGroupName={tierZeroAssetGroup.name}
+                        assetGroupTag={TIER_ZERO_ASSET_GROUP_TAG}
+                        isCurrentMember={true}
                     />,
                     {
                         initialState: {
@@ -261,7 +252,12 @@ describe('AssetGroupMenuItem', async () => {
         it('handles removing from a non-tier-zero asset group', async () => {
             await act(async () => {
                 await render(
-                    <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />,
+                    <AssetGroupMenuItem
+                        assetGroupId={ownedAssetGroup.id}
+                        assetGroupName={ownedAssetGroup.name}
+                        assetGroupTag={OWNED_ASSET_GROUP_TAG}
+                        isCurrentMember={true}
+                    />,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: false }),

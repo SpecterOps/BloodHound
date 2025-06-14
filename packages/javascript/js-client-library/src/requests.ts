@@ -48,7 +48,10 @@ export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
-export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
+export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
+    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
+        seeds: SelectorSeedRequest[];
+    };
 
 export type UpdateSelectorRequest = Partial<
     Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
