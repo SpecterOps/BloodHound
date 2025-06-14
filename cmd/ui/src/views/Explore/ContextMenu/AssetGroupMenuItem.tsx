@@ -16,69 +16,40 @@
 
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
-import { NodeResponse, apiClient, isNode, useExploreSelectedItem, useNotifications } from 'bh-shared-ui';
-import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
-import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
-import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 
 const AssetGroupMenuItem: FC<{
     assetGroupId: number;
     assetGroupName: string;
     assetGroupTag: string;
     isCurrentMember: boolean;
+    onAddNode?: (assetGroupId: string | number) => void;
+    onRemoveNode?: () => void;
     showConfirmationOnAdd?: boolean;
     confirmationOnAddMessage?: string;
 }> = ({
     assetGroupId,
     assetGroupName,
-    assetGroupTag,
     isCurrentMember,
+    onAddNode = () => {},
+    onRemoveNode = () => {},
     showConfirmationOnAdd = false,
     confirmationOnAddMessage = '',
 }) => {
-    const { addNotification } = useNotifications();
-
-    const { refetch } = useSigmaExploreGraph();
-
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-    const { selectedItemQuery } = useExploreSelectedItem();
-
-    const createAssetGroupTagSelectorMutation = useMutation({
-        mutationFn: (node: NodeResponse) => {
-            return apiClient.createAssetGroupTagSelector(assetGroupId, {
-                name: node.label ?? node.objectId,
-                seeds: [
-                    {
-                        type: SeedTypeObjectId,
-                        value: node.objectId,
-                    },
-                ],
-            });
-        },
-        onSuccess: () => {
-            addNotification('Update successful.', 'AssetGroupUpdateSuccess');
-        },
-        onError: (error: any) => {
-            console.error(error);
-            addNotification('Unknown error, group was not updated', 'AssetGroupUpdateError');
-        },
-        onSettled: () => {
-            refetch();
-            selectedItemQuery.refetch();
-        },
-    });
-
-    const handleAddToAssetGroup = () => {
-        if (isNode(selectedItemQuery.data)) {
-            createAssetGroupTagSelectorMutation.mutate(selectedItemQuery.data);
-        }
+    const handleAddNode = () => {
+        onAddNode(assetGroupId);
+        setConfirmDialogOpen(false);
     };
 
-    // unsupported type
-    if (!assetGroupTag) {
+    const handleRemoveNode = () => {
+        onRemoveNode();
+        setConfirmDialogOpen(false);
+    };
+
+    if (Number.isNaN(assetGroupId)) {
         return null;
     }
 
@@ -86,13 +57,13 @@ const AssetGroupMenuItem: FC<{
     if (!isCurrentMember) {
         return (
             <>
-                <MenuItem onClick={showConfirmationOnAdd ? () => setConfirmDialogOpen(true) : handleAddToAssetGroup}>
+                <MenuItem onClick={showConfirmationOnAdd ? () => setConfirmDialogOpen(true) : handleAddNode}>
                     Add to {assetGroupName}
                 </MenuItem>
                 {showConfirmationOnAdd && (
                     <ConfirmNodeChangesDialog
-                        handleCancel={() => setConfirmDialogOpen(false)}
-                        handleApply={handleAddToAssetGroup}
+                        onCancel={handleRemoveNode}
+                        onAccept={handleAddNode}
                         open={confirmDialogOpen}
                         dialogContent={confirmationOnAddMessage}
                     />
@@ -110,19 +81,19 @@ const AssetGroupMenuItem: FC<{
 
 const ConfirmNodeChangesDialog: FC<{
     open: boolean;
-    handleCancel: () => void;
-    handleApply: () => void;
+    onCancel: () => void;
+    onAccept: () => void;
     dialogContent: string;
-}> = ({ open, handleApply, handleCancel, dialogContent }) => {
+}> = ({ open, onCancel, onAccept, dialogContent }) => {
     return (
         <Dialog open={open}>
             <DialogTitle>Confirm Selection</DialogTitle>
             <DialogContent>{dialogContent}</DialogContent>
             <DialogActions>
-                <Button variant='tertiary' onClick={handleCancel}>
+                <Button variant='tertiary' onClick={onCancel}>
                     Cancel
                 </Button>
-                <Button variant='primary' onClick={handleApply}>
+                <Button variant='primary' onClick={onAccept}>
                     Ok
                 </Button>
             </DialogActions>

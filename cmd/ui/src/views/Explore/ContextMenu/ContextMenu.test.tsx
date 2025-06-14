@@ -43,22 +43,6 @@ const server = setupServer(
                 data: createAuthStateWithPermissions([Permission.GRAPH_DB_WRITE]).user,
             })
         );
-    }),
-    rest.get('/api/v2/asset-groups/:assetGroupId/members', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    members: [],
-                },
-            })
-        );
-    }),
-    rest.get('/api/v2/features', (req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: [],
-            })
-        );
     })
 );
 
@@ -88,7 +72,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
     } as any);
 
     const screen = await act(async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
             initialState,
         });
     });
