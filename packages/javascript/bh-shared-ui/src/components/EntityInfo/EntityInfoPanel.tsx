@@ -14,99 +14,53 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Paper, SxProps, Typography } from '@mui/material';
-import { AssetGroupTagMemberInfo } from 'js-client-library';
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { SelectedNode } from '../../types';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
-import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils';
+import { usePaneStyles } from '../InfoStyles';
+import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
+
+import { SelectedNode } from '../../../types';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 interface EntityInfoPanelProps {
     selectedNode: SelectedNode | null;
-    selectedZoneManagementNode: AssetGroupTagMemberInfo | null;
     sx?: SxProps;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, selectedZoneManagementNode }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
-    const location = useLocation();
-
-    const zoneManagement = location.pathname.includes('zone-management');
-
-    if (zoneManagement) {
-        console.log(location.pathname);
-    } else {
-        console.log('FALSE');
-    }
-
     return (
-        <>
-            {!zoneManagement ? (
-                <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
-                    <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                        <Header
-                            name={selectedNode?.name || NoEntitySelectedHeader}
-                            nodeType={selectedNode?.type}
-                            expanded={expanded}
-                            onToggleExpanded={(expanded) => {
-                                setExpanded(expanded);
-                            }}
-                        />
-                    </Paper>
-                    <Paper
-                        elevation={0}
-                        classes={{ root: styles.contentPaperRoot }}
-                        style={{
-                            display: expanded ? 'initial' : 'none',
-                        }}>
-                        {selectedNode ? (
-                            <EntityInfoContent
-                                id={selectedNode.id}
-                                nodeType={selectedNode.type}
-                                databaseId={selectedNode.graphId}
-                            />
-                        ) : (
-                            <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
-                        )}
-                    </Paper>
-                </Box>
-            ) : (
-                <div className='max-w-[400px]'>
-                    <Box className={styles.container} data-testid='explore_entity-information-panel'>
-                        <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
-                            <Header
-                                name={selectedZoneManagementNode?.properties?.name || NoEntitySelectedHeader}
-                                nodeType={selectedZoneManagementNode?.primary_kind}
-                                expanded={expanded}
-                                onToggleExpanded={(expanded) => {
-                                    setExpanded(expanded);
-                                }}
-                            />
-                        </Paper>
-                        <Paper
-                            elevation={0}
-                            classes={{ root: styles.contentPaperRoot }}
-                            style={{
-                                display: expanded ? 'initial' : 'none',
-                            }}>
-                            {selectedNode ? (
-                                <EntityInfoContent
-                                    id={selectedNode.id}
-                                    nodeType={selectedZoneManagementNode?.primary_kind}
-                                    properties={selectedZoneManagementNode?.properties}
-                                />
-                            ) : (
-                                <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
-                            )}
-                        </Paper>
-                    </Box>
-                </div>
-            )}
-        </>
+        <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
+            <Paper elevation={0} classes={{ root: styles.headerPaperRoot }}>
+                <Header
+                    name={selectedNode?.name || NoEntitySelectedHeader}
+                    nodeType={selectedNode?.type}
+                    expanded={expanded}
+                    onToggleExpanded={(expanded) => {
+                        setExpanded(expanded);
+                    }}
+                />
+            </Paper>
+            <Paper
+                elevation={0}
+                classes={{ root: styles.contentPaperRoot }}
+                style={{
+                    display: expanded ? 'initial' : 'none',
+                }}>
+                {selectedNode ? (
+                    <EntityInfoContent
+                        id={selectedNode.id}
+                        nodeType={selectedNode.type}
+                        databaseId={selectedNode.graphId}
+                    />
+                ) : (
+                    <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
+                )}
+            </Paper>
+        </Box>
     );
 };
 
