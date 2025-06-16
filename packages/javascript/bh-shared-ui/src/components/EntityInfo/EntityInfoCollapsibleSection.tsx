@@ -17,10 +17,8 @@ import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
-//import { useCollapsibleSectionStyles } from '../InfoStyles';
-import { useCollapsibleSectionStyles } from '../../views';
-//import { SubHeader } from '../fragments';
-import { SubHeader } from '../../views';
+import { useCollapsibleSectionStyles } from '../InfoStyles';
+import { SubHeader } from '../fragments';
 
 const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) => {
     //TODO: Once azure backend changes for counts param are in, utilize response error details
