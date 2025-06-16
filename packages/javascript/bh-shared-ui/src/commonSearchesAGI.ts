@@ -281,6 +281,22 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'All members of high privileged roles',
                 cypher: `MATCH p=(t:AZRole)<-[:AZHasRole|AZMemberOf*1..2]-(:AZBase)\nWHERE t.name =~ '(?i)${highPrivilegedRoleDisplayNameRegex}'\nRETURN p\nLIMIT 1000`,
             },
+            {
+                description: 'Entra Users with Entra Admin Role direct eligibility',
+                cypher: `MATCH p = (:AZUser)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Entra Users with Entra Admin Roles group delegated eligibility',
+                cypher: `MATCH p = (:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Entra Users with Entra Admin Role approval (direct)',
+                cypher: `MATCH p = (:AZUser)-[:AZRoleApproval]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Entra Users with Entra Admin Role approval (group delegated)',
+                cypher: `MATCH p = (:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleApproval]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
         ],
     },
     {
@@ -377,12 +393,6 @@ export const CommonSearches: CommonSearchType[] = [
                 description: 'On-Prem Users synced to Entra Users with Entra Group Membership',
                 cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)\nRETURN p\nLIMIT 1000`,
             },
-        ],
-    },
-    {
-        subheader: 'Azure PIM',
-        category: categoryAzure,
-        queries: [
             {
                 description: 'Synced Entra Users with Entra Admin Role direct eligibility',
                 cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
@@ -392,12 +402,12 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
             },
             {
-                description: 'Entra Users with Entra Admin Role direct eligibility',
-                cypher: `MATCH p = (:AZUser)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+                description: 'Synced Entra Users with Entra Admin Role approval (direct)',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:RoleApproval]->(:AZRole)\nRETURN p LIMIT 100`,
             },
             {
-                description: 'Entra Users with Entra Admin Roles group delegated eligibility',
-                cypher: `MATCH p = (:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+                description: 'Synced Entra Users with Entra Admin Role approval (group delegated)',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:AZRoleApproval]->(:AZRole)\nRETURN p LIMIT 100`,
             },
         ],
     },
