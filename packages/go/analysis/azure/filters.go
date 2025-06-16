@@ -34,6 +34,10 @@ func FilterEntityPIMAssignments() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Grant, azure.GrantSelf, azure.MemberOf)
 }
 
+func FilterRoleApprovers() graph.Criteria {
+	return query.KindIn(query.Relationship(), azure.AZRoleApprover)
+}
+
 func FilterExecutionPrivileges() graph.Criteria {
 	return query.KindIn(query.Relationship(), append(azure.ExecutionPrivileges(), azure.MemberOf)...)
 }

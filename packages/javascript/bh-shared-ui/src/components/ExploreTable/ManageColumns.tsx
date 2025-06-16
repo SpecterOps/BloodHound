@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import GraphButtons from './GraphButtons';
+import { Button } from '@bloodhoundenterprise/doodleui';
+import React from 'react';
+import { cn } from '../../utils/theme';
 
-export default GraphButtons;
+interface ManageColumnsProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+const ManageColumns: React.FC<ManageColumnsProps> = (props) => {
+    const { open, onClose } = props;
+    return (
+        <div className={cn({ hidden: !open })}>
+            Manage Columns
+            <Button onClick={onClose}>X</Button>
+        </div>
+    );
+};
+
+export default ManageColumns;
