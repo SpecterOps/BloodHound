@@ -17,22 +17,32 @@
 package v2
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm/utils"
 
+	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	ctx2 "github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
+	bhUtils "github.com/specterops/bloodhound/src/utils"
 )
 
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
@@ -154,6 +164,8 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 		savedQuery      model.SavedQuery
 		auditLogEntry   model.AuditEntry
 		err             error
+		savedQueryID    int64
+		isPublic        bool
 	)
 
 	// defer audit function
@@ -162,7 +174,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			if err != nil {
 				auditLogEntry.ErrorMsg = err.Error()
 			}
-			if err := s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 				if errors.Is(err, database.ErrNotFound) {
 					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
 				} else if errors.Is(err, context.DeadlineExceeded) {
@@ -177,52 +189,154 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-		return
-	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
+	} else if savedQueryID, err = strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-		return
-	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"target_query_id": savedQueryID, "user_id": user.ID}); err != nil {
+	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"target_query_id": savedQueryID, "user_id": user.ID.String()}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		return
 	} else if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 		api.HandleDatabaseError(request, response, err)
-		return
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
-		return
 	} else if savedQuery.UserID != user.ID.String() {
 		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
 			err = fmt.Errorf("query does not exist")
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
-			return
-		}
-		if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
+		} else if isPublic, err = s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.HandleDatabaseError(request, response, err)
-			return
 		} else if !isPublic {
 			err = fmt.Errorf("query does not exist")
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
-			return
 		}
-	}
-
-	if data, err := api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
-		auditLogEntry.Status = model.AuditLogStatusFailure
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-		return
 	} else {
-		auditLogEntry.Status = model.AuditLogStatusSuccess
-		api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+		if data, err := api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+		}
 	}
 }
 
 // ImportSavedQuery - Used to import custom cypher queries.
-// Can import a single query in a json file, or if bulk is desired, a zip file containing multiple json files.
-func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.Request) {}
+// Can import a single query in a json file, or a zip file containing multiple json files.
+func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.Request) {
+
+	var (
+		handleFileFunc     func(ctx context.Context, userId uuid.UUID, file io.ReadCloser) (int, error)
+		auditLogEntry      model.AuditEntry
+		importedQueryCount int
+		err                error
+	)
+
+	// defer audit function
+	defer func() {
+		if auditLogEntry.Status == model.AuditLogStatusFailure || auditLogEntry.Status == model.AuditLogStatusSuccess {
+			if err != nil {
+				auditLogEntry.ErrorMsg = err.Error()
+			}
+			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				} else if errors.Is(err, context.DeadlineExceeded) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				} else {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				}
+			}
+		}
+		// did not make it far enough in the api request for an audit log event
+	}()
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionImportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"user_id": user.ID}); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if request.Body == nil {
+		err = fmt.Errorf("import cypher query request body cannot be empty")
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		switch {
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
+			handleFileFunc = s.handleJsonFile
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+			handleFileFunc = s.handleZipFile
+		default:
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, "Content type must be application/json or application/zip", request), response)
+			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			return
+		}
+		if importedQueryCount, err = handleFileFunc(request.Context(), user.ID, request.Body); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			switch {
+			case strings.Contains(err.Error(), "failed to unmarshal json file"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			case strings.Contains(err.Error(), "duplicate key value violates unique constraint"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
+			case strings.Contains(err.Error(), "error during zip validation") || strings.Contains(err.Error(), "not a valid zip file"):
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			default:
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			}
+		} else {
+			api.WriteBasicResponse(request.Context(), fmt.Sprintf("imported %d queries", importedQueryCount), http.StatusCreated, response)
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+		}
+	}
+}
+
+func (s Resources) handleJsonFile(ctx context.Context, userId uuid.UUID, file io.ReadCloser) (int, error) {
+	defer file.Close()
+	var query TransferableSavedQuery
+	if jsonQueryFile, err := io.ReadAll(file); err != nil {
+		return 0, err
+	} else if err = json.Unmarshal(jsonQueryFile, &query); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal json file: %w", err)
+	} else if _, err = s.DB.CreateSavedQuery(ctx, userId, query.Name, query.Query, query.Description); err != nil {
+		return 0, err
+	}
+	return 1, nil
+}
+
+func (s Resources) handleZipFile(ctx context.Context, userId uuid.UUID, zipFile io.ReadCloser) (int, error) {
+	defer zipFile.Close()
+	if zipFileBytes, err := io.ReadAll(zipFile); err != nil {
+		return 0, err
+	} else if zipReader, err := zip.NewReader(bytes.NewReader(zipFileBytes), int64(len(zipFileBytes))); err != nil {
+		return 0, err
+	} else {
+		queries := make(model.SavedQueries, 0)
+		for _, zipQueryFile := range zipReader.File {
+			// OSX will zip hidden files which we don't want to process
+			if strings.Contains(zipQueryFile.Name, "__MACOSX") || strings.HasPrefix(zipQueryFile.Name, ".") {
+				continue
+			}
+			if jsonQueryFile, err := upload.ReadZippedFile(zipQueryFile); err != nil {
+				return 0, err
+			} else {
+				var importQuery TransferableSavedQuery
+				if err = json.Unmarshal(jsonQueryFile, &importQuery); err != nil {
+					return 0, fmt.Errorf("failed to unmarshal json file: %w", err)
+				}
+				queries = append(queries, model.SavedQuery{
+					Query:       importQuery.Query,
+					Name:        importQuery.Name,
+					UserID:      userId.String(),
+					Description: importQuery.Description,
+				})
+			}
+		}
+		return s.DB.CreateSavedQueries(ctx, queries)
+	}
+}
 
 type CreateSavedQueryRequest struct {
 	Query       string `json:"query"`
@@ -343,4 +457,21 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		}
 
 	}
+}
+
+func validateAndExtractScopeQueryParameter(parameters []string) ([]model.SavedQueryScope, error) {
+	savedQueryScopes := make([]model.SavedQueryScope, len(parameters))
+	for _, parameter := range parameters {
+		switch strings.ToLower(parameter) {
+		case string(model.SavedQueryScopeOwned):
+			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopeOwned)
+		case string(model.SavedQueryScopeShared):
+			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopeShared)
+		case string(model.SavedQueryScopePublic):
+			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopePublic)
+		default:
+			return nil, fmt.Errorf("invalid query parameter: %s", parameter)
+		}
+	}
+	return savedQueryScopes, nil
 }
