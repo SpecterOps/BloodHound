@@ -35,6 +35,7 @@ var (
 )
 
 func TestPathSegment_Root(t *testing.T) {
+	t.Parallel()
 	var (
 		domainNode   = test.Node(domainKind)
 		groupNode    = test.Node(groupKind)
@@ -94,6 +95,7 @@ func TestPathSegment_Root(t *testing.T) {
 }
 
 func TestPathSegment_SizeOf(t *testing.T) {
+	t.Parallel()
 	var (
 		domainNode   = test.Node(domainKind)
 		groupNode    = test.Node(groupKind)
@@ -164,6 +166,7 @@ func TestPathSegment_SizeOf(t *testing.T) {
 }
 
 func TestIDSegment_SizeOf(t *testing.T) {
+	t.Parallel()
 	var (
 		rootSegment        = graph.NewRootIDSegment(0)
 		sizeOfEmptySegment = rootSegment.SizeOf()

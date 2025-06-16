@@ -32,6 +32,7 @@ import (
 )
 
 func TestAnalysisAzure_GraphStats(t *testing.T) {
+	t.Parallel()
 	testCtx := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testCtx.SetupAzure()
 	testCtx.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {

@@ -25,6 +25,7 @@ import (
 )
 
 func TestGenerateRandomBase64String(t *testing.T) {
+	t.Parallel()
 	// Using 32 bytes here as that's the number of bits we need for JWT keys
 	str, err := config.GenerateRandomBase64String(32)
 	require.Nilf(t, err, "Error generating random string: %s", err)

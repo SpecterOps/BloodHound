@@ -27,6 +27,7 @@ import (
 )
 
 func TestSelectGPOContainerCandidateFilter(t *testing.T) {
+	t.Parallel()
 	var (
 		computer = graph.NewNode(0, graph.NewProperties(), ad.Computer)
 		group    = graph.NewNode(1, graph.NewProperties().Set(common.SystemTags.String(), ad.AdminTierZero), ad.Group)

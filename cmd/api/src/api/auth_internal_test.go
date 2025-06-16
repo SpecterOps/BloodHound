@@ -97,6 +97,7 @@ func buildAuditLog(testCtx context.Context, status model.AuditLogEntryStatus, us
 }
 
 func TestAuditLogin(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
@@ -112,6 +113,7 @@ func TestAuditLogin(t *testing.T) {
 }
 
 func TestAuditLogin_UserNotFound(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		mockDB   = dbMocks.NewMockDatabase(mockCtrl)
@@ -126,6 +128,7 @@ func TestAuditLogin_UserNotFound(t *testing.T) {
 }
 
 func TestValidateRequestSignature(t *testing.T) {
+	t.Parallel()
 	NewTestAuthenticator := func(ctrl *gomock.Controller) authenticator {
 		cfg := config.Configuration{
 			WorkDir: os.TempDir(),

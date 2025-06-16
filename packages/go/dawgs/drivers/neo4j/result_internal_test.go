@@ -36,6 +36,7 @@ func mapTestCase[T, V any](t *testing.T, source T, expected V) {
 }
 
 func Test_mapValue(t *testing.T) {
+	t.Parallel()
 	var (
 		utcNow         = time.Now().UTC()
 		anyStringSlice = []any{"a", "b", "c"}

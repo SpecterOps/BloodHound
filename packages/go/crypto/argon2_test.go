@@ -23,6 +23,7 @@ import (
 )
 
 func TestArgon2_Digest(t *testing.T) {
+	t.Parallel()
 	argon2Digester := Argon2{
 		MemoryKibibytes: 1024,
 		NumIterations:   1,
@@ -35,6 +36,7 @@ func TestArgon2_Digest(t *testing.T) {
 }
 
 func TestArgon2_ParseDigest(t *testing.T) {
+	t.Parallel()
 	const digestMCFormatString = "$argon2id$v=19$m=1024,t=2,p=2$4TrXa715awDIAbOUi+SGkg==$1cJNBKtLQ2St83ttOv6xVw=="
 
 	argon2Digester := Argon2{}
@@ -59,6 +61,7 @@ func TestArgon2_ParseDigest(t *testing.T) {
 }
 
 func TestArgon2Digest_String(t *testing.T) {
+	t.Parallel()
 	const digestMCFormatString = "$argon2id$v=19$m=1024,t=2,p=2$4TrXa715awDIAbOUi+SGkg==$1cJNBKtLQ2St83ttOv6xVw=="
 
 	argon2Digester := Argon2{}
@@ -73,6 +76,7 @@ func TestArgon2Digest_String(t *testing.T) {
 }
 
 func TestArgon2Digest_Validate(t *testing.T) {
+	t.Parallel()
 	const digestMCFormatString = "$argon2id$v=19$m=1024,t=2,p=2$4TrXa715awDIAbOUi+SGkg==$1cJNBKtLQ2St83ttOv6xVw=="
 
 	argon2Digester := Argon2{}

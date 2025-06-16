@@ -33,6 +33,7 @@ import (
 )
 
 func TestDatabaseWipe(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)

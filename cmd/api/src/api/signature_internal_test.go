@@ -29,6 +29,7 @@ import (
 )
 
 func TestSignRequestValuesUnsupportedHMACMethod(t *testing.T) {
+	t.Parallel()
 	datetime := time.Now().Format(time.RFC3339)
 	reader := strings.NewReader("Hello world")
 
@@ -38,6 +39,7 @@ func TestSignRequestValuesUnsupportedHMACMethod(t *testing.T) {
 }
 
 func TestSignRequestTeeFailure(t *testing.T) {
+	t.Parallel()
 	testFailure := "tee failed to read"
 	reader := iotest.ErrReader(errors.New(testFailure))
 	datetime := time.Now().Format(time.RFC3339)
@@ -48,6 +50,7 @@ func TestSignRequestTeeFailure(t *testing.T) {
 }
 
 func TestSignRequestValuesSuccess(t *testing.T) {
+	t.Parallel()
 	datetime := time.Now().Format(time.RFC3339)
 	reader := strings.NewReader("Hello world")
 

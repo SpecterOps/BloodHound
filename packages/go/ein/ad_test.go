@@ -27,6 +27,7 @@ import (
 )
 
 func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
+	t.Parallel()
 	baseItem := ein.IngestBase{
 		ObjectIdentifier: "ABC123",
 		Properties: map[string]any{
@@ -91,6 +92,7 @@ func TestConvertObjectToNode_DomainInvalidProperties(t *testing.T) {
 }
 
 func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
+	t.Parallel()
 	domainObject := ein.Domain{
 		IngestBase:   ein.IngestBase{},
 		ChildObjects: nil,
@@ -210,6 +212,7 @@ func TestParseDomainTrusts_TrustAttributes(t *testing.T) {
 }
 
 func TestConvertComputerToNode(t *testing.T) {
+	t.Parallel()
 	computer := ein.Computer{
 		IngestBase: ein.IngestBase{
 			Properties: map[string]any{

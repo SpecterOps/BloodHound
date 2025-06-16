@@ -27,6 +27,7 @@ import (
 )
 
 func TestAssetGroupMembers_SortBy(t *testing.T) {
+	t.Parallel()
 	input := api.AssetGroupMembers{
 		api.AssetGroupMember{
 			AssetGroupID:    2,
@@ -89,6 +90,7 @@ func TestAssetGroupMembers_SortBy(t *testing.T) {
 }
 
 func TestAssetGroupMembers_Filter_Equals(t *testing.T) {
+	t.Parallel()
 	input := api.AssetGroupMembers{
 		api.AssetGroupMember{
 			AssetGroupID:    2,
@@ -236,6 +238,7 @@ func TestAssetGroupMembers_Filter_Equals(t *testing.T) {
 }
 
 func TestAssetGroupMembers_Filter_NotEquals(t *testing.T) {
+	t.Parallel()
 	input := api.AssetGroupMembers{
 		api.AssetGroupMember{
 			AssetGroupID:    2,
@@ -357,6 +360,7 @@ func TestAssetGroupMembers_Filter_NotEquals(t *testing.T) {
 }
 
 func TestAssetGroupMembers_BuildFilteringConditional_Error(t *testing.T) {
+	t.Parallel()
 	input := api.AssetGroupMembers{}
 	columns := input.GetFilterableColumns()
 

@@ -24,6 +24,7 @@ import (
 )
 
 func TestNewDefaultConfig(t *testing.T) {
+	t.Parallel()
 	cfg, err := config.NewDefaultConfiguration()
 	require.Nilf(t, err, "Failed to create default configuration: %v", err)
 	require.NotEmpty(t, cfg.Crypto.JWT.SigningKey, "Signing key should not be empty")

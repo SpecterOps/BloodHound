@@ -29,6 +29,7 @@ import (
 )
 
 func TestErrorReadDomainSIDandNameAsString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		message string
@@ -48,6 +49,7 @@ func TestErrorReadDomainSIDandNameAsString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := fmt.Errorf("failed to read domain SID and name: %s", tt.message)
 			assert.Equal(t, tt.want, err.Error())
 		})
@@ -55,6 +57,7 @@ func TestErrorReadDomainSIDandNameAsString(t *testing.T) {
 }
 
 func TestReadDomainIDandNameAsString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		node          *graph.Node
@@ -165,6 +168,7 @@ func TestReadDomainIDandNameAsString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotSID, gotName, err := nodeprops.ReadDomainIDandNameAsString(tt.node)
 
 			assert.Equal(t, tt.wantSID, gotSID, "SID value should match expected")

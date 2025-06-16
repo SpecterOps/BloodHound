@@ -29,6 +29,7 @@ import (
 )
 
 func TestQueryFitness(t *testing.T) {
+	t.Parallel()
 	if updateCases, varSet := os.LookupEnv("CYSQL_UPDATE_CASES"); varSet && strings.ToLower(strings.TrimSpace(updateCases)) == "true" {
 		if err := test.UpdatePositiveTestCasesFitness(); err != nil {
 			fmt.Printf("Error updating cases: %v\n", err)
@@ -39,6 +40,7 @@ func TestQueryFitness(t *testing.T) {
 	for _, caseLoad := range []string{test.PositiveTestCases, test.MutationTestCases} {
 		for _, testCase := range test.LoadFixture(t, caseLoad).RunnableCases() {
 			t.Run(testCase.Name, func(t *testing.T) {
+				t.Parallel()
 				// Only bother with the string match tests
 				if testCase.Type == test.TypeStringMatch {
 					parseContext := frontend.NewContext()

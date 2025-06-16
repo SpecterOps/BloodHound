@@ -49,6 +49,7 @@ func max(a, b int) int {
 }
 
 func TestFoldr(t *testing.T) {
+	t.Parallel()
 	type Reducer[A, B any] func(A, B) B
 	type Case[A, B any] struct {
 		Name    string
@@ -72,11 +73,13 @@ func TestFoldr(t *testing.T) {
 		switch c := c.(type) {
 		case Case[int, int]:
 			t.Run(c.Name, func(t *testing.T) {
+				t.Parallel()
 				require.Equal(t, c.Output, slicesext.Foldr(c.InitVal, c.List, c.Reducer))
 				require.Equal(t, c.Output, slicesext.FoldrEager(c.InitVal, c.List, c.Reducer))
 			})
 		case Case[bool, bool]:
 			t.Run(c.Name, func(t *testing.T) {
+				t.Parallel()
 				require.Equal(t, c.Output, slicesext.Foldr(c.InitVal, c.List, c.Reducer))
 				require.Equal(t, c.Output, slicesext.FoldrEager(c.InitVal, c.List, c.Reducer))
 			})

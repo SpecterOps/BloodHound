@@ -50,6 +50,7 @@ import (
 )
 
 func TestCreateAssetGroupRequest_AuditData(t *testing.T) {
+	t.Parallel()
 	var (
 		req = v2.CreateAssetGroupRequest{
 			Name: "GoodRequest",
@@ -62,6 +63,7 @@ func TestCreateAssetGroupRequest_AuditData(t *testing.T) {
 }
 
 func TestUpdateAssetGroupRequest_AuditData(t *testing.T) {
+	t.Parallel()
 	var (
 		req = v2.UpdateAssetGroupRequest{
 			Name: "GoodRequest",
@@ -72,6 +74,7 @@ func TestUpdateAssetGroupRequest_AuditData(t *testing.T) {
 }
 
 func TestResources_ListAssetGroups(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -159,6 +162,7 @@ func TestResources_ListAssetGroups(t *testing.T) {
 }
 
 func TestResources_GetAssetGroup(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -203,6 +207,7 @@ func TestResources_GetAssetGroup(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupMemberCount_IDMalformed(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -222,6 +227,7 @@ func TestResources_GetAssetGroupMemberCount_IDMalformed(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupMemberCount_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -243,6 +249,7 @@ func TestResources_GetAssetGroupMemberCount_DBError(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupMemberCount_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -320,6 +327,7 @@ func TestResources_GetAssetGroupMemberCount_Success(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroup(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -389,6 +397,7 @@ func TestResources_UpdateAssetGroup(t *testing.T) {
 }
 
 func TestResources_CreateAssetGroup(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -534,6 +543,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupSelectors_GetAssetGroupError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -563,6 +573,7 @@ func TestResources_UpdateAssetGroupSelectors_GetAssetGroupError(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupSelectors_PayloadError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -593,6 +604,7 @@ func TestResources_UpdateAssetGroupSelectors_PayloadError(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -688,6 +700,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessT0(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -778,6 +791,7 @@ func TestResources_UpdateAssetGroupSelectors_SuccessOwned(t *testing.T) {
 }
 
 func TestResources_DeleteAssetGroup(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -835,6 +849,7 @@ func TestResources_DeleteAssetGroup(t *testing.T) {
 }
 
 func TestResources_DeleteAssetGroupSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -934,6 +949,7 @@ func TestResources_DeleteAssetGroupSelector(t *testing.T) {
 }
 
 func TestResources_ListAssetGroupCollections(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = dbmocks.NewMockDatabase(mockCtrl)
@@ -1135,6 +1151,7 @@ func TestResources_ListAssetGroupCollections(t *testing.T) {
 }
 
 func TestResources_ListAssetGroupMembers(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl   = gomock.NewController(t)
 		mockGraph  = queriesMocks.NewMockGraph(mockCtrl)
@@ -1498,6 +1515,7 @@ func TestResources_ListAssetGroupMembers(t *testing.T) {
 }
 
 func TestResources_ListAssetGroupMembersCount(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl   = gomock.NewController(t)
 		mockGraph  = queriesMocks.NewMockGraph(mockCtrl)

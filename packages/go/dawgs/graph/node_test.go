@@ -24,6 +24,7 @@ import (
 )
 
 func Test_NodeSizeOf(t *testing.T) {
+	t.Parallel()
 	node := graph.Node{ID: graph.ID(1)}
 	oldSize := int64(node.SizeOf())
 

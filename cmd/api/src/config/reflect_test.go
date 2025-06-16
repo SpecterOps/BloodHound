@@ -25,6 +25,7 @@ import (
 )
 
 func TestSetValue(t *testing.T) {
+	t.Parallel()
 	var cfg config.Configuration
 
 	t.Run("basic top level key with underscore", func(t *testing.T) {

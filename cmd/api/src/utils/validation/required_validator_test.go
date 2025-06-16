@@ -25,6 +25,7 @@ import (
 )
 
 func TestRequiredValidator(t *testing.T) {
+	t.Parallel()
 
 	type Foo struct {
 		String  string  `validate:"required"`

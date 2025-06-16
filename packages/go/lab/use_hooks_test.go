@@ -25,6 +25,7 @@ import (
 )
 
 func Test_UseHooks(t *testing.T) {
+	t.Parallel()
 	t.Run("should return a time fixture that is initialized before the test", func(t *testing.T) {
 		setup := func() (time.Time, error) {
 			return time.Now(), nil

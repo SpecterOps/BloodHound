@@ -23,6 +23,7 @@ import (
 )
 
 func TestScope(t *testing.T) {
+	t.Parallel()
 	var (
 		scope = NewScope()
 	)

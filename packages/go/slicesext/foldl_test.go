@@ -25,6 +25,7 @@ import (
 )
 
 func TestFoldl(t *testing.T) {
+	t.Parallel()
 	type Accumulator[A, B any] func(A, B) B
 	type Case[A, B any] struct {
 		Name        string
@@ -46,6 +47,7 @@ func TestFoldl(t *testing.T) {
 		switch c := c.(type) {
 		case Case[int, int]:
 			t.Run(c.Name, func(t *testing.T) {
+				t.Parallel()
 				require.Equal(t, c.Output, slicesext.Foldl(c.InitVal, c.List, c.Accumulator))
 				require.Equal(t, c.Output, slicesext.FoldlLazy(c.InitVal, c.List, c.Accumulator))
 			})

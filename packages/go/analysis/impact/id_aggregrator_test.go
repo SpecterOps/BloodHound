@@ -27,6 +27,7 @@ import (
 )
 
 func TestAggregator_Cardinality(t *testing.T) {
+	t.Parallel()
 	resetNextID()
 
 	var (

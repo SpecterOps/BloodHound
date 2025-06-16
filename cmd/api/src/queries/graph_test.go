@@ -38,6 +38,7 @@ import (
 )
 
 func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl     = gomock.NewController(t)
 		mockGraphDB  = graphMocks.NewMockDatabase(mockCtrl)
@@ -110,6 +111,7 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 }
 
 func TestGraphQuery_RawCypherQuery(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockGraphDB = graphMocks.NewMockDatabase(mockCtrl)
@@ -157,6 +159,7 @@ func TestGraphQuery_RawCypherQuery(t *testing.T) {
 }
 
 func TestQueries_GetEntityObjectIDFromRequestPath(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -172,6 +175,7 @@ func TestQueries_GetEntityObjectIDFromRequestPath(t *testing.T) {
 }
 
 func TestQueries_GetRequestedType(t *testing.T) {
+	t.Parallel()
 	graphQuery, listQuery, countQuery := url.Values{}, url.Values{}, url.Values{}
 	graphQuery.Add("type", "graph")
 	listQuery.Add("type", "list")
@@ -183,6 +187,7 @@ func TestQueries_GetRequestedType(t *testing.T) {
 }
 
 func TestQueries_BuildEntityQueryParams_MissingObjectID(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -191,6 +196,7 @@ func TestQueries_BuildEntityQueryParams_MissingObjectID(t *testing.T) {
 }
 
 func TestQueries_BuildEntityQueryParams_InvalidSkip(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -205,6 +211,7 @@ func TestQueries_BuildEntityQueryParams_InvalidSkip(t *testing.T) {
 }
 
 func TestQueries_BuildEntityQueryParams_InvalidLimit(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -219,6 +226,7 @@ func TestQueries_BuildEntityQueryParams_InvalidLimit(t *testing.T) {
 }
 
 func TestQueries_BuildEntityQueryParams(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -238,6 +246,7 @@ func TestQueries_BuildEntityQueryParams(t *testing.T) {
 }
 
 func TestQueries_BuildEntityQueryParams_DataTypeCount(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
 
@@ -254,6 +263,7 @@ func TestQueries_BuildEntityQueryParams_DataTypeCount(t *testing.T) {
 }
 
 func TestQueries_GetEntityResults(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = graphMocks.NewMockDatabase(mockCtrl)

@@ -35,6 +35,8 @@ var testManifestSystem2 embed.FS
 var testManifestSystem3 embed.FS
 
 func TestNewManifest(t *testing.T) {
+	t.Parallel()
+
 	var manifest = migration.NewManifest()
 	assert.NotNil(t, manifest.Migrations)
 }
@@ -42,6 +44,8 @@ func TestNewManifest(t *testing.T) {
 // TestManifest_AddMigration tests that migrations are added to the correct location
 // within the migration map and in the correct order.
 func TestManifest_AddMigration(t *testing.T) {
+	t.Parallel()
+
 	var (
 		migration1 = migration.Migration{Filename: "/migration/1", Version: version.Version{Major: 0, Minor: 1, Patch: 0}}
 		migration2 = migration.Migration{Filename: "/migration/2", Version: version.Version{Major: 1, Minor: 0, Patch: 0}}
@@ -50,22 +54,26 @@ func TestManifest_AddMigration(t *testing.T) {
 	)
 
 	t.Run("No migrations", func(t *testing.T) {
+
 		assert.Empty(t, manifest.Migrations)
 	})
 
 	t.Run("One v0.1.0 migration", func(t *testing.T) {
+
 		manifest.AddMigration(migration1)
 		assert.Equal(t, 1, len(manifest.Migrations["v0.1.0"]))
 		assert.Equal(t, "/migration/1", manifest.Migrations["v0.1.0"][0].Filename)
 	})
 
 	t.Run("One v1.0.0 migration", func(t *testing.T) {
+
 		manifest.AddMigration(migration2)
 		assert.Equal(t, 1, len(manifest.Migrations["v1.0.0"]))
 		assert.Equal(t, "/migration/2", manifest.Migrations["v1.0.0"][0].Filename)
 	})
 
 	t.Run("Two migrations in order", func(t *testing.T) {
+
 		manifest.AddMigration(migration3)
 		assert.Equal(t, 2, len(manifest.Migrations["v1.0.0"]))
 		assert.Equal(t, "/migration/3", manifest.Migrations["v1.0.0"][1].Filename)
@@ -81,6 +89,8 @@ func TestManifest_AddMigration(t *testing.T) {
 // 5) Schema files generate v0.0.0 migrations.
 // 6) Migrations are ordered within each version, in the order the Source was defined.
 func TestMigrator_GenerateManifest(t *testing.T) {
+	t.Parallel()
+
 	var (
 		totalMigrations int
 		migrator        = migration.Migrator{Sources: []migration.Source{
@@ -95,6 +105,7 @@ func TestMigrator_GenerateManifest(t *testing.T) {
 	assert.Nil(t, err)
 
 	t.Run("Basic manifest integrity", func(t *testing.T) {
+
 		// test for correct number of total migrations
 		totalMigrations = getTotalMigrations(manifest)
 		assert.Equal(t, 14, totalMigrations)
@@ -109,6 +120,7 @@ func TestMigrator_GenerateManifest(t *testing.T) {
 	})
 
 	t.Run("Number migrations per version", func(t *testing.T) {
+
 		// test that all versions have correct number of migrations
 		assert.Equal(t, 2, len(manifest.Migrations["v0.0.0"]))
 		assert.Equal(t, 2, len(manifest.Migrations["v0.0.1"]))
@@ -120,12 +132,14 @@ func TestMigrator_GenerateManifest(t *testing.T) {
 	})
 
 	t.Run("Schema is v0.0.0", func(t *testing.T) {
+
 		// make sure schema is v0.0.0
 		assert.Equal(t, "test_manifest/system1/schema.sql", manifest.Migrations["v0.0.0"][0].Filename)
 		assert.Equal(t, "test_manifest/system2/schema.sql", manifest.Migrations["v0.0.0"][1].Filename)
 	})
 
 	t.Run("Source order", func(t *testing.T) {
+
 		// spot check migration ordering within versions
 		assert.Equal(t, "test_manifest/system1/v0.1.1.sql", manifest.Migrations["v0.1.1"][0].Filename)
 		assert.Equal(t, "test_manifest/system2/v0.1.1.sql", manifest.Migrations["v0.1.1"][1].Filename)
@@ -140,6 +154,8 @@ func TestMigrator_GenerateManifest(t *testing.T) {
 // TestMigrator_GenerateManifestAfterVersion builds upon the GenerateManifest test
 // by starting from different version points and spot checking migration counts.
 func TestMigrator_GenerateManifestAfterVersion(t *testing.T) {
+	t.Parallel()
+
 	var (
 		totalMigrations int
 		migrator        = migration.Migrator{Sources: []migration.Source{
@@ -150,6 +166,7 @@ func TestMigrator_GenerateManifestAfterVersion(t *testing.T) {
 	)
 
 	t.Run("After schema", func(t *testing.T) {
+
 		// should contain all but schema (v0.0.0) migrations
 		manifest, err := migrator.GenerateManifestAfterVersion(version.Version{Major: 0, Minor: 0, Patch: 0})
 		assert.Nil(t, err)
@@ -158,6 +175,7 @@ func TestMigrator_GenerateManifestAfterVersion(t *testing.T) {
 	})
 
 	t.Run("Latest only", func(t *testing.T) {
+
 		// should only have v1.0.0 migrations
 		manifest, err := migrator.GenerateManifestAfterVersion(version.Version{Major: 0, Minor: 10, Patch: 0})
 		assert.Nil(t, err)

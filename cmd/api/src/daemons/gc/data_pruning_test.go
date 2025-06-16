@@ -27,6 +27,7 @@ import (
 )
 
 func TestGC_NewDataPruningDaemon(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -35,6 +36,7 @@ func TestGC_NewDataPruningDaemon(t *testing.T) {
 }
 
 func TestGC_Name(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -46,6 +48,7 @@ func TestGC_Name(t *testing.T) {
 }
 
 func TestGC_Start(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 

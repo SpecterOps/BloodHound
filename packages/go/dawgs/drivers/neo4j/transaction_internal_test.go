@@ -35,6 +35,7 @@ var (
 )
 
 func TestNeo4jTransaction_UpdateNodeBy(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtl         = gomock.NewController(t)
 		resultMock      = neo4j.NewMockResult(mockCtl)
@@ -87,6 +88,7 @@ func TestNeo4jTransaction_UpdateNodeBy(t *testing.T) {
 }
 
 func TestNeo4jTransaction_UpdateNodeBy_Batch(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtl         = gomock.NewController(t)
 		resultMock      = neo4j.NewMockResult(mockCtl)
@@ -144,6 +146,7 @@ func TestNeo4jTransaction_UpdateNodeBy_Batch(t *testing.T) {
 }
 
 func TestNeo4jTransaction_UpdateRelationshipBy_Batch(t *testing.T) {
+	t.Parallel()
 	const (
 		batchWriteSize = 1
 		writeFlushSize = batchWriteSize * 2
@@ -200,6 +203,7 @@ func TestNeo4jTransaction_UpdateRelationshipBy_Batch(t *testing.T) {
 }
 
 func TestNeo4jTransaction_UpdateRelationshipBy(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtl         = gomock.NewController(t)
 		resultMock      = neo4j.NewMockResult(mockCtl)
@@ -284,6 +288,7 @@ func TestNeo4jTransaction_UpdateRelationshipBy(t *testing.T) {
 }
 
 func TestNeo4jTransaction_CreateNode(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtl         = gomock.NewController(t)
 		resultMock      = neo4j.NewMockResult(mockCtl)

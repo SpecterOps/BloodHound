@@ -43,6 +43,7 @@ import (
 )
 
 func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(t *testing.T) {
+	t.Parallel()
 	adminUser := model.User{
 		Roles: model.Roles{
 			{

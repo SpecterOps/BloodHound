@@ -38,6 +38,7 @@ import (
 )
 
 func TestResources_GetComputerEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -131,6 +132,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 }
 
 func TestResources_GetDomainEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -224,6 +226,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 }
 
 func TestResources_PatchDomain(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -330,6 +333,7 @@ func TestResources_PatchDomain(t *testing.T) {
 }
 
 func TestResources_GetGPOEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -423,6 +427,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 }
 
 func TestResources_GetOUEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -516,6 +521,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 }
 
 func TestResources_GetUserEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
@@ -609,6 +615,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 }
 
 func TestResources_GetGroupEntityInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)

@@ -23,23 +23,27 @@ import (
 )
 
 func TestIdentifierSet_CombinedKey(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2")
 	assert.Equal(t, Identifier("1234"), identifiers.CombinedKey())
 }
 
 func TestIdentifierSet_CheckedAdd(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2")
 	assert.True(t, identifiers.CheckedAdd("5"))
 	assert.False(t, identifiers.CheckedAdd("5"))
 }
 
 func TestIdentifierSet_Matches(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2")
 	assert.True(t, identifiers.Matches(identifiers.Copy()))
 	assert.False(t, identifiers.Matches(AsIdentifierSet("55")))
 }
 
 func TestIdentifierSet_Remove(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2")
 	identifiers.Remove("4", "5")
 
@@ -50,6 +54,7 @@ func TestIdentifierSet_Remove(t *testing.T) {
 }
 
 func TestIdentifierSet_MergeSet(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4")
 	identifiers.MergeSet(AsIdentifierSet("3", "2"))
 
@@ -57,6 +62,7 @@ func TestIdentifierSet_MergeSet(t *testing.T) {
 }
 
 func TestIdentifierSet_Slice(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2").Slice()
 
 	assert.Equal(t, 4, len(identifiers))
@@ -80,6 +86,7 @@ func TestIdentifierSet_Slice(t *testing.T) {
 }
 
 func TestIdentifierSet_Copy(t *testing.T) {
+	t.Parallel()
 	identifiers := AsIdentifierSet("1", "4", "3", "2")
 	assert.True(t, identifiers.Matches(identifiers.Copy()))
 }

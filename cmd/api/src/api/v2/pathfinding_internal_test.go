@@ -26,6 +26,7 @@ import (
 )
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
+	t.Parallel()
 	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
 
 	// Default case

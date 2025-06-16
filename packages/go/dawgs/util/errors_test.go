@@ -27,6 +27,7 @@ import (
 )
 
 func TestIsNeoTimeoutError(t *testing.T) {
+	t.Parallel()
 	neoTimeOutErr := neo4j.Neo4jError{
 		Code: "Neo.ClientError.Transaction.TransactionTimedOut",
 		Msg:  "The transaction has been terminated. Retry your operation in a new transaction, and you should see a successful result. The transaction has not completed within the specified timeout (dbms.transaction.timeout). You may want to retry with a longer timeout.",

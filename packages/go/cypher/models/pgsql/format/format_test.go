@@ -35,6 +35,7 @@ func mustAsLiteral(value any) pgsql.Literal {
 }
 
 func TestFormat_TypeCastedParenthetical(t *testing.T) {
+	t.Parallel()
 	typeCastedParenthetical := pgsql.NewTypeCast(pgsql.NewParenthetical(pgsql.NewLiteral("str", pgsql.Text)), pgsql.Text)
 
 	formattedQuery, err := format.Expression(typeCastedParenthetical, format.NewOutputBuilder())
@@ -44,6 +45,7 @@ func TestFormat_TypeCastedParenthetical(t *testing.T) {
 }
 
 func TestFormat_Delete(t *testing.T) {
+	t.Parallel()
 	formattedQuery, err := format.Statement(pgsql.Delete{
 		From: []pgsql.TableReference{{
 			Name:    pgsql.CompoundIdentifier{"table"},
@@ -61,6 +63,7 @@ func TestFormat_Delete(t *testing.T) {
 }
 
 func TestFormat_Update(t *testing.T) {
+	t.Parallel()
 	formattedQuery, err := format.Statement(pgsql.Update{
 		Table: pgsql.TableReference{
 			Name:    pgsql.CompoundIdentifier{"table"},
@@ -87,6 +90,7 @@ func TestFormat_Update(t *testing.T) {
 }
 
 func TestFormat_Insert(t *testing.T) {
+	t.Parallel()
 	formattedQuery, err := format.Statement(pgsql.Insert{
 		Table: pgsql.TableReference{
 			Name: pgsql.CompoundIdentifier{"table"},
@@ -268,6 +272,7 @@ func TestFormat_Insert(t *testing.T) {
 }
 
 func TestFormat_Query(t *testing.T) {
+	t.Parallel()
 	query := pgsql.Query{
 		Body: pgsql.Select{
 			Distinct: false,
@@ -296,6 +301,7 @@ func TestFormat_Query(t *testing.T) {
 }
 
 func TestFormat_Merge(t *testing.T) {
+	t.Parallel()
 	formattedQuery, err := format.Statement(pgsql.Merge{
 		Into: true,
 		Table: pgsql.TableReference{
@@ -370,6 +376,7 @@ func TestFormat_Merge(t *testing.T) {
 }
 
 func TestFormat_CTEs(t *testing.T) {
+	t.Parallel()
 	formattedQuery, err := format.Statement(pgsql.Query{
 		CommonTableExpressions: &pgsql.With{
 			Recursive: true,

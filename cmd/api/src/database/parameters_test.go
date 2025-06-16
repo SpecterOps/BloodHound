@@ -30,6 +30,7 @@ import (
 )
 
 func TestParameters_SetConfigurationParameter(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -57,6 +58,7 @@ func TestParameters_SetConfigurationParameter(t *testing.T) {
 }
 
 func TestParameters_GetConfigurationParameter(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -129,6 +131,7 @@ func TestParameters_GetConfigurationParameter(t *testing.T) {
 }
 
 func TestParameters_GetAllConfigurationParameter(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)

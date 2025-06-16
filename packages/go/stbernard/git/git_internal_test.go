@@ -25,6 +25,7 @@ import (
 )
 
 func Test_parseLatestVersion(t *testing.T) {
+	t.Parallel()
 	latestRelease := *semver.MustParse("v5.5.0")
 	latestRC := *semver.MustParse("v5.5.0-rc1")
 

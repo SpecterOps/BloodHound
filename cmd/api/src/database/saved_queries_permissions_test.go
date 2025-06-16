@@ -32,6 +32,7 @@ import (
 )
 
 func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -84,6 +85,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 }
 
 func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -125,6 +127,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 }
 
 func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -159,6 +162,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 }
 
 func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -183,6 +187,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
 }
 
 func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -207,6 +212,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
 }
 
 func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -231,6 +237,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
 }
 
 func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -311,6 +318,7 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 }
 
 func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx       = context.Background()
 		dbInst, user1 = initAndCreateUser(t)
@@ -328,6 +336,7 @@ func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
 }
 
 func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx       = context.Background()
 		dbInst, user1 = initAndCreateUser(t)

@@ -178,6 +178,7 @@ func TestOverwriteQueryParamIfHeaderAndParamExist(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := OverwriteQueryParamIfHeaderAndParamExist(tt.args.headers, tt.args.headerKey, tt.args.paramKey, tt.args.paramValue)
 			assert.Equal(t, tt.want, got)
 		})

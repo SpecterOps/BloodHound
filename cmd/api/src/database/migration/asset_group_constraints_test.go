@@ -29,6 +29,7 @@ import (
 )
 
 func TestAssetGroupConstraints(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	dbInst := integration.SetupDB(t)
 

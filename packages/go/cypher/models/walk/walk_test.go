@@ -28,6 +28,7 @@ import (
 )
 
 func TestWalk(t *testing.T) {
+	t.Parallel()
 	visitor := walk.NewSimpleVisitor[cypher.SyntaxNode](func(node cypher.SyntaxNode, errorHandler walk.CancelableErrorHandler) {
 	})
 

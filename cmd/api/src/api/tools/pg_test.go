@@ -44,6 +44,7 @@ import (
 )
 
 func TestSwitchPostgreSQL(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		graphDB  = graph_mocks.NewMockDatabase(mockCtrl)
@@ -75,6 +76,7 @@ func TestSwitchPostgreSQL(t *testing.T) {
 }
 
 func TestSwitchNeo4j(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		graphDB  = graph_mocks.NewMockDatabase(mockCtrl)
@@ -105,6 +107,7 @@ func TestSwitchNeo4j(t *testing.T) {
 }
 
 func TestPGMigrator(t *testing.T) {
+	t.Parallel()
 	var (
 		schema      = graphschema.DefaultGraphSchema()
 		testContext = integration.NewGraphTestContext(t, schema)

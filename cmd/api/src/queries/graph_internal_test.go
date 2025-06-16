@@ -32,6 +32,7 @@ import (
 )
 
 func Test_ApplyTimeoutReduction(t *testing.T) {
+	t.Parallel()
 	// Query Weight			Reduction Factor 		  Runtime
 	// 	0-4						1						x
 	// 	5-9						2						x/2
@@ -69,6 +70,7 @@ func Test_ApplyTimeoutReduction(t *testing.T) {
 const cacheKey = "ad-entity-query_queryName_objectID_1"
 
 func Test_runMaybeCachedEntityQuery(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl         = gomock.NewController(t)
 		mockDB           = graph_mocks.NewMockDatabase(mockCtrl)
@@ -147,6 +149,7 @@ func Test_runMaybeCachedEntityQuery(t *testing.T) {
 }
 
 func Test_cacheQueryResult(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		mockDB   = graph_mocks.NewMockDatabase(mockCtrl)
@@ -176,6 +179,7 @@ func Test_cacheQueryResult(t *testing.T) {
 }
 
 func Test_formatSearchResults_sorting(t *testing.T) {
+	t.Parallel()
 	var (
 		exactMatches = []model.SearchResult{
 			{Name: "b@c.com"},
@@ -198,6 +202,7 @@ func Test_formatSearchResults_sorting(t *testing.T) {
 }
 
 func Test_formatSearchResults_limit(t *testing.T) {
+	t.Parallel()
 	var (
 		exactMatches = []model.SearchResult{
 			{Name: "b@c.com"},
@@ -219,6 +224,7 @@ func Test_formatSearchResults_limit(t *testing.T) {
 }
 
 func Test_nodesToSearchResult(t *testing.T) {
+	t.Parallel()
 	var (
 		inputNodeProps = graph.NewProperties().
 				Set("name", "this is a name").
@@ -243,6 +249,7 @@ func Test_nodesToSearchResult(t *testing.T) {
 }
 
 func Test_nodesToSearchResult_default(t *testing.T) {
+	t.Parallel()
 	var (
 		input = []*graph.Node{
 			{Properties: graph.NewProperties()},

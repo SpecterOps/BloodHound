@@ -31,6 +31,7 @@ import (
 )
 
 func TestDatabase_ListAuditLogs(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst = integration.SetupDB(t)
 

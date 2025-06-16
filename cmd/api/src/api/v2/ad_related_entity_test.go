@@ -181,6 +181,7 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 }
 
 func TestResources_ListADUserSessions(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -189,6 +190,7 @@ func TestResources_ListADUserSessions(t *testing.T) {
 }
 
 func TestResources_ListADUserSQLAdminRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -197,6 +199,7 @@ func TestResources_ListADUserSQLAdminRights(t *testing.T) {
 }
 
 func TestResources_ListADGroupSessions(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -205,6 +208,7 @@ func TestResources_ListADGroupSessions(t *testing.T) {
 }
 
 func TestResources_ListADComputerSessions(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -213,6 +217,7 @@ func TestResources_ListADComputerSessions(t *testing.T) {
 }
 
 func TestResources_ListADComputerAdmins(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -221,6 +226,7 @@ func TestResources_ListADComputerAdmins(t *testing.T) {
 }
 
 func TestResources_ListADComputerPSRemoteUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -229,6 +235,7 @@ func TestResources_ListADComputerPSRemoteUsers(t *testing.T) {
 }
 
 func TestResources_ListADComputerRDPUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -237,6 +244,7 @@ func TestResources_ListADComputerRDPUsers(t *testing.T) {
 }
 
 func TestResources_ListADComputerDCOMUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -245,6 +253,7 @@ func TestResources_ListADComputerDCOMUsers(t *testing.T) {
 }
 
 func TestResources_ListADGroupMembership(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -253,6 +262,7 @@ func TestResources_ListADGroupMembership(t *testing.T) {
 }
 
 func TestResources_ListADGroupMembers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -261,6 +271,7 @@ func TestResources_ListADGroupMembers(t *testing.T) {
 }
 
 func TestResources_ListADComputerSQLAdmins(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -269,6 +280,7 @@ func TestResources_ListADComputerSQLAdmins(t *testing.T) {
 }
 
 func TestResources_ListADComputerConstrainedDelegationUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -277,6 +289,7 @@ func TestResources_ListADComputerConstrainedDelegationUsers(t *testing.T) {
 }
 
 func TestResources_ListADEntityConstrainedDelegationRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -285,6 +298,7 @@ func TestResources_ListADEntityConstrainedDelegationRights(t *testing.T) {
 }
 
 func TestResources_ListADEntityAdminRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -293,6 +307,7 @@ func TestResources_ListADEntityAdminRights(t *testing.T) {
 }
 
 func TestResources_ListADEntityRDPRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -301,6 +316,7 @@ func TestResources_ListADEntityRDPRights(t *testing.T) {
 }
 
 func TestResources_ListADEntityPSRemoteRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -309,6 +325,7 @@ func TestResources_ListADEntityPSRemoteRights(t *testing.T) {
 }
 
 func TestResources_ListADEntityDCOMRights(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -317,6 +334,7 @@ func TestResources_ListADEntityDCOMRights(t *testing.T) {
 }
 
 func TestResources_ListADEntityControllers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -325,6 +343,7 @@ func TestResources_ListADEntityControllers(t *testing.T) {
 }
 
 func TestResources_ListADEntityControllables(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -333,6 +352,7 @@ func TestResources_ListADEntityControllables(t *testing.T) {
 }
 
 func TestResources_ListADEntityLinkedGPOs(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -341,6 +361,7 @@ func TestResources_ListADEntityLinkedGPOs(t *testing.T) {
 }
 
 func TestResources_ListADDomainContainedUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -349,6 +370,7 @@ func TestResources_ListADDomainContainedUsers(t *testing.T) {
 }
 
 func TestResources_ListADDomainContainedComputers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -357,6 +379,7 @@ func TestResources_ListADDomainContainedComputers(t *testing.T) {
 }
 
 func TestResources_ListADDomainContainedGroups(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -365,6 +388,7 @@ func TestResources_ListADDomainContainedGroups(t *testing.T) {
 }
 
 func TestResources_ListADDomainContainedOUs(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -373,6 +397,7 @@ func TestResources_ListADDomainContainedOUs(t *testing.T) {
 }
 
 func TestResources_ListADDomainContainedGPOs(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -381,6 +406,7 @@ func TestResources_ListADDomainContainedGPOs(t *testing.T) {
 }
 
 func TestResources_ListADDomainForeignGroups(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -389,6 +415,7 @@ func TestResources_ListADDomainForeignGroups(t *testing.T) {
 }
 
 func TestResources_ListADDomainForeignUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -397,6 +424,7 @@ func TestResources_ListADDomainForeignUsers(t *testing.T) {
 }
 
 func TestResources_ListADDomainForeignAdmins(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -405,6 +433,7 @@ func TestResources_ListADDomainForeignAdmins(t *testing.T) {
 }
 
 func TestResources_ListADDomainForeignGPOControllers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -413,6 +442,7 @@ func TestResources_ListADDomainForeignGPOControllers(t *testing.T) {
 }
 
 func TestResources_ListADDomainOutboundTrusts(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -421,6 +451,7 @@ func TestResources_ListADDomainOutboundTrusts(t *testing.T) {
 }
 
 func TestResources_ListADDomainInboundTrusts(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -429,6 +460,7 @@ func TestResources_ListADDomainInboundTrusts(t *testing.T) {
 }
 
 func TestResources_ListADDomainDCSyncers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -437,6 +469,7 @@ func TestResources_ListADDomainDCSyncers(t *testing.T) {
 }
 
 func TestResources_ListADOUContainedUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -445,6 +478,7 @@ func TestResources_ListADOUContainedUsers(t *testing.T) {
 }
 
 func TestResources_ListADOUContainedGroups(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -453,6 +487,7 @@ func TestResources_ListADOUContainedGroups(t *testing.T) {
 }
 
 func TestResources_ListADOUContainedComputers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -461,6 +496,7 @@ func TestResources_ListADOUContainedComputers(t *testing.T) {
 }
 
 func TestResources_ListADGPOAffectedContainers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -469,6 +505,7 @@ func TestResources_ListADGPOAffectedContainers(t *testing.T) {
 }
 
 func TestResources_ListADGPOAffectedUsers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -477,6 +514,7 @@ func TestResources_ListADGPOAffectedUsers(t *testing.T) {
 }
 
 func TestResources_ListADGPOAffectedComputers(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 
@@ -485,6 +523,7 @@ func TestResources_ListADGPOAffectedComputers(t *testing.T) {
 }
 
 func TestResources_ListADGPOAffectedTierZero(t *testing.T) {
+	t.Parallel()
 	var mockCtrl, mockGraph, mockDB, resources = setup(t)
 	defer mockCtrl.Finish()
 

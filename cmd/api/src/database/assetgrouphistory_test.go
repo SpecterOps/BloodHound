@@ -30,6 +30,7 @@ import (
 )
 
 func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst    = integration.SetupDB(t)
 		testCtx   = context.Background()

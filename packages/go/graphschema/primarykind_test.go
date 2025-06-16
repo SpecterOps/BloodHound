@@ -25,6 +25,7 @@ import (
 )
 
 func Test_PrimaryNodeKind(t *testing.T) {
+	t.Parallel()
 
 	t.Run("detects meta kinds", func(t *testing.T) {
 		primaryKind := PrimaryNodeKind(graph.Kinds{meta})

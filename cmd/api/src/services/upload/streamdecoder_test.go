@@ -39,6 +39,7 @@ type metaTagAssertion struct {
 }
 
 func Test_ValidateMetaTag(t *testing.T) {
+	t.Parallel()
 	assertions := []metaTagAssertion{
 		{
 			name:         "succesful generic payload",
@@ -97,6 +98,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 
 	for _, assertion := range assertions {
 		t.Run(assertion.name, func(t *testing.T) {
+			t.Parallel()
 			meta, err := ParseAndValidatePayload(strings.NewReader(assertion.rawString), schema, true, false)
 			assert.ErrorIs(t, err, assertion.err)
 			if assertion.err == nil {
@@ -107,6 +109,7 @@ func Test_ValidateMetaTag(t *testing.T) {
 }
 
 func TestTagScanner_NextTopLevelTag(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		input    string
@@ -122,6 +125,7 @@ func TestTagScanner_NextTopLevelTag(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			scanner := newTagScanner(json.NewDecoder(strings.NewReader(tc.input)))
 			var got []string
 			for {
@@ -192,6 +196,7 @@ func prepareReader(assertion genericIngestAssertion) (io.Reader, error) {
 }
 
 func Test_ValidateGraph(t *testing.T) {
+	t.Parallel()
 	var (
 		positiveCases = []genericIngestAssertion{}
 		negativeCases = []genericIngestAssertion{}
@@ -211,6 +216,7 @@ func Test_ValidateGraph(t *testing.T) {
 
 	for _, assertion := range negativeCases {
 		t.Run(fmt.Sprintf("negative case: %s", assertion.name), func(t *testing.T) {
+			t.Parallel()
 			reader, err := prepareReader(assertion)
 			require.Nil(t, err)
 
@@ -240,6 +246,7 @@ func Test_ValidateGraph(t *testing.T) {
 
 	for _, assertion := range positiveCases {
 		t.Run(fmt.Sprintf("positive case: %s", assertion.name), func(t *testing.T) {
+			t.Parallel()
 			// marshal the test structure into json to simulate input
 			payload, err := json.Marshal(assertion.payload)
 			assert.Nil(t, err)

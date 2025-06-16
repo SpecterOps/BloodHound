@@ -65,12 +65,14 @@ var BasicFooBarFixture = NewFooBarFixture("foo", "bar")
 var BasicFuzzBuzzFixture = NewFuzzBuzzFixture()
 
 func Test_UseFixture(t *testing.T) {
+	t.Parallel()
 	assert, foobar := lab.UseFixture(t, NewFooBarFixture("foo", "bar"))
 	assert.Equal("foo", foobar.Foo)
 	assert.Equal("bar", foobar.Bar)
 }
 
 func Test_FixtureSetup(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	badFixture1 := lab.NewFixture[any](nil, nil)
 	_, err := badFixture1.Setup(nil)
@@ -91,6 +93,7 @@ func Test_FixtureSetup(t *testing.T) {
 }
 
 func Test_FixtureTeardown(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	fixture1 := lab.NewFixture(nil, func(*lab.Harness, any) error {
 		return nil
@@ -103,6 +106,7 @@ func Test_FixtureTeardown(t *testing.T) {
 }
 
 func Test_SetDependency(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	noOpSetup := func(*lab.Harness) (any, error) {
 		return nil, nil

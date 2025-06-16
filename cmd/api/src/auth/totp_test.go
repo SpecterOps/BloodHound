@@ -26,6 +26,7 @@ import (
 )
 
 func TestGenerateTOTPSecret(t *testing.T) {
+	t.Parallel()
 	if key, err := auth.GenerateTOTPSecret("issuer.io", "accountName"); err != nil {
 		t.Fatal(err)
 	} else if key.Issuer() != "issuer.io" {
@@ -34,6 +35,7 @@ func TestGenerateTOTPSecret(t *testing.T) {
 }
 
 func TestValidateTOTPSecret(t *testing.T) {
+	t.Parallel()
 	key, err := auth.GenerateTOTPSecret("issuer.io", "accountName")
 	if err != nil {
 		t.Fatal(err)
@@ -81,6 +83,7 @@ func TestValidateTOTPSecret(t *testing.T) {
 }
 
 func TestGenerateQRCodeBase64(t *testing.T) {
+	t.Parallel()
 
 	key, err := auth.GenerateTOTPSecret("issuer.io", "accountName")
 	if err != nil {

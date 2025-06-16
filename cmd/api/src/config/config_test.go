@@ -24,6 +24,7 @@ import (
 )
 
 func TestSetValuesFromEnv(t *testing.T) {
+	t.Parallel()
 	t.Run("simulated env", func(t *testing.T) {
 		const envPrefix = "test"
 		var cfg config.Configuration

@@ -106,6 +106,7 @@ func TestParseIntQueryParameter(t *testing.T) {
 }
 
 func TestParseSkipQueryParameter_BadFormat(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("skip", "abcd")
 	_, err := v2.ParseSkipQueryParameter(params, 0)
@@ -113,6 +114,7 @@ func TestParseSkipQueryParameter_BadFormat(t *testing.T) {
 }
 
 func TestParseSkipQueryParameter_Invalid(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("skip", "-5")
 	_, err := v2.ParseSkipQueryParameter(params, 0)
@@ -120,6 +122,7 @@ func TestParseSkipQueryParameter_Invalid(t *testing.T) {
 }
 
 func TestParseSkipQueryParameter(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("skip", "5")
 	skip, err := v2.ParseSkipQueryParameter(params, 0)
@@ -128,6 +131,7 @@ func TestParseSkipQueryParameter(t *testing.T) {
 }
 
 func TestParseLimitQueryParameter_BadFormat(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("limit", "abcd")
 	_, err := v2.ParseLimitQueryParameter(params, 0)
@@ -135,6 +139,7 @@ func TestParseLimitQueryParameter_BadFormat(t *testing.T) {
 }
 
 func TestParseLimitQueryParameter_Invalid(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("limit", "-5")
 	_, err := v2.ParseLimitQueryParameter(params, 0)
@@ -142,6 +147,7 @@ func TestParseLimitQueryParameter_Invalid(t *testing.T) {
 }
 
 func TestParseLimitQueryParameter(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("limit", "5")
 	limit, err := v2.ParseLimitQueryParameter(params, 0)
@@ -239,6 +245,7 @@ func TestParseOptionalLimitQueryParameter(t *testing.T) {
 }
 
 func TestAddWhereClauseToNeo4jQuery_NoWhereClause(t *testing.T) {
+	t.Parallel()
 	statement := "MATCH (n:Domain) RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false);"
 	filters := "n.name = 'abcd' AND n.objectid = 1"
 	expected := "MATCH (n:Domain) WHERE n.name = 'abcd' AND n.objectid = 1 RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false);"
@@ -248,6 +255,7 @@ func TestAddWhereClauseToNeo4jQuery_NoWhereClause(t *testing.T) {
 }
 
 func TestAddWhereClauseToNeo4jQuery_WithWhereClause(t *testing.T) {
+	t.Parallel()
 	statement := "MATCH (n:Domain) WHERE n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false);"
 	filters := "n.objectid = 1"
 	expected := "MATCH (n:Domain) WHERE n.objectid = 1 AND n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false);"
@@ -257,6 +265,7 @@ func TestAddWhereClauseToNeo4jQuery_WithWhereClause(t *testing.T) {
 }
 
 func TestAddOrderByToNeo4jQuery_NoOrderByClause(t *testing.T) {
+	t.Parallel()
 	statement := "MATCH (n:Domain) WHERE n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false);"
 	orderBy := "n.name, n.objectid"
 	expected := "MATCH (n:Domain) WHERE n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false) ORDER BY n.name, n.objectid;"
@@ -266,6 +275,7 @@ func TestAddOrderByToNeo4jQuery_NoOrderByClause(t *testing.T) {
 }
 
 func TestAddOrderByToNeo4jQuery_WithOrderByClause(t *testing.T) {
+	t.Parallel()
 	statement := "MATCH (n:Domain) WHERE n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false) ORDER BY n.name;"
 	orderBy := "n.objectid"
 	expected := "MATCH (n:Domain) WHERE n.name = 'abcd' RETURN coalesce(n.name, n.objectid), n.objectid, coalesce(n.collected, false) ORDER BY n.objectid, n.name;"

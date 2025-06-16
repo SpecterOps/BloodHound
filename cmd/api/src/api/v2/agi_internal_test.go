@@ -30,6 +30,7 @@ import (
 )
 
 func TestGetLatestQueryParameter_LatestMalformed(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/asset-groups/1/collections", nil)
 	require.Nil(t, err)
 
@@ -43,6 +44,7 @@ func TestGetLatestQueryParameter_LatestMalformed(t *testing.T) {
 }
 
 func TestGetLatestQueryParameter(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/api/v2/asset-groups/1/collections?latest", nil)
 	require.Nil(t, err)
 
@@ -52,6 +54,7 @@ func TestGetLatestQueryParameter(t *testing.T) {
 }
 
 func TestParseAGMembersFromNodes_(t *testing.T) {
+	t.Parallel()
 	nodes := graph.NodeSet{
 		1: &graph.Node{
 			ID:    1,
@@ -99,6 +102,7 @@ func TestParseAGMembersFromNodes_(t *testing.T) {
 }
 
 func TestParseAGMembersFromNodes_MissingNodeProperties(t *testing.T) {
+	t.Parallel()
 	nodes := graph.NodeSet{
 		// the parse fn should handle nodes with missing name and missing properties with warnings
 		1: &graph.Node{

@@ -38,6 +38,7 @@ import (
 )
 
 func TestResources_ListAuditLogs_SortingError(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -67,6 +68,7 @@ func TestResources_ListAuditLogs_SortingError(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_InvalidColumn(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -95,6 +97,7 @@ func TestResources_ListAuditLogs_InvalidColumn(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_InvalidPredicate(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -123,6 +126,7 @@ func TestResources_ListAuditLogs_InvalidPredicate(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		resources = v2.Resources{}
@@ -151,6 +155,7 @@ func TestResources_ListAuditLogs_PredicateMismatchWithColumn(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_DBError(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -183,6 +188,7 @@ func TestResources_ListAuditLogs_DBError(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -214,6 +220,7 @@ func TestResources_ListAuditLogs(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_Filtered(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -243,6 +250,7 @@ func TestResources_ListAuditLogs_Filtered(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_SkipAndOffset(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -274,6 +282,7 @@ func TestResources_ListAuditLogs_SkipAndOffset(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_OnlyOffset(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -304,6 +313,7 @@ func TestResources_ListAuditLogs_OnlyOffset(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_OnlySkip(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -335,6 +345,7 @@ func TestResources_ListAuditLogs_OnlySkip(t *testing.T) {
 }
 
 func TestResources_ListAuditLogs_InvalidSkip(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)

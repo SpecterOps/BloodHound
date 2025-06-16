@@ -26,6 +26,7 @@ import (
 )
 
 func TestDurationValidator(t *testing.T) {
+	t.Parallel()
 
 	type Epic struct {
 		Duration time.Duration `validate:"duration,min=P1D,max=P14D"`

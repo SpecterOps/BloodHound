@@ -44,6 +44,7 @@ import (
 )
 
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
@@ -165,6 +166,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 }
 
 func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)

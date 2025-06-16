@@ -25,6 +25,7 @@ import (
 )
 
 func Test_RelationshipSizeOf(t *testing.T) {
+	t.Parallel()
 	relationship := graph.Relationship{ID: graph.ID(1)}
 	initialSize := int64(relationship.SizeOf())
 

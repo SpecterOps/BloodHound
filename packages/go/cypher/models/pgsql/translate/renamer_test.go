@@ -41,6 +41,7 @@ func mustPushFrame(t *testing.T, scope *translate.Scope) *translate.Frame {
 }
 
 func TestRewriteFrameBindings(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		Case     pgsql.Expression
 		Expected pgsql.Expression

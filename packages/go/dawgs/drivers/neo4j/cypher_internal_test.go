@@ -26,6 +26,7 @@ import (
 )
 
 func Test_relUpdateKey(t *testing.T) {
+	t.Parallel()
 	updateKey := relUpdateKey(graph.RelationshipUpdate{
 		Relationship: &graph.Relationship{
 			ID:         1,
@@ -94,6 +95,7 @@ func Test_relUpdateKey(t *testing.T) {
 }
 
 func Test_StripCypher(t *testing.T) {
+	t.Parallel()
 	var (
 		query = "match (u1:User {domain: \"DOMAIN1\"}), (u2:User {domain: \"DOMAIN2\"}) where u1.samaccountname <> \"krbtgt\" and u1.samaccountname = u2.samaccountname with u2 match p1 = (u2)-[*1..]->(g:Group) with p1 match p2 = (u2)-[*1..]->(g:Group) return p1, p2"
 	)

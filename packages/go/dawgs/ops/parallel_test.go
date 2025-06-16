@@ -30,6 +30,7 @@ import (
 )
 
 func TestOperation_DriverFailures(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = graph_mocks.NewMockDatabase(mockCtrl)
@@ -100,6 +101,7 @@ func TestOperation_DriverFailures(t *testing.T) {
 }
 
 func TestNewOperation(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl     = gomock.NewController(t)
 		mockDB       = graph_mocks.NewMockDatabase(mockCtrl)

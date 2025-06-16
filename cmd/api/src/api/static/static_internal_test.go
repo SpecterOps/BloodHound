@@ -31,6 +31,7 @@ import (
 )
 
 func TestBHCEStaticHandler(t *testing.T) {
+	t.Parallel()
 	const expectedOutput = "test"
 
 	var (
@@ -49,7 +50,6 @@ func TestBHCEStaticHandler(t *testing.T) {
 	)
 
 	t.Run("success - asset exists", func(t *testing.T) {
-
 		mockFS.EXPECT().Open(gomock.Eq("assets/test.html")).Return(assetsTestMockFile, nil)
 		assetsTestMockFile.EXPECT().Stat().Return(mockFileInfo, nil)
 		mockFileInfo.EXPECT().Name().Return("test.html")

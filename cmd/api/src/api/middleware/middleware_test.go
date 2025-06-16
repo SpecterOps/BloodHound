@@ -33,6 +33,7 @@ import (
 )
 
 func TestServeHTTP_Success(t *testing.T) {
+	t.Parallel()
 	handlerFunc := http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		api.WriteBasicResponse(request.Context(), "success", http.StatusOK, response)
 	})
@@ -52,6 +53,7 @@ func TestServeHTTP_Success(t *testing.T) {
 }
 
 func TestContextMiddleware_InvalidWait(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if req, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
@@ -69,6 +71,7 @@ func TestContextMiddleware_InvalidWait(t *testing.T) {
 }
 
 func TestContextMiddleware(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if req, err := http.NewRequestWithContext(ctx, http.MethodOptions, "/foo", nil); err != nil {
@@ -85,6 +88,7 @@ func TestContextMiddleware(t *testing.T) {
 }
 
 func TestParseHeaderValues(t *testing.T) {
+	t.Parallel()
 	values := middleware.ParseHeaderValues("     respond-async, wait=10,other =  z=   ")
 
 	require.Equal(t, "", values["respond-async"])
@@ -93,6 +97,7 @@ func TestParseHeaderValues(t *testing.T) {
 }
 
 func TestCORSMiddleware(t *testing.T) {
+	t.Parallel()
 	if req, err := http.NewRequest(http.MethodOptions, "/foo", nil); err != nil {
 		t.Error(err)
 	} else {

@@ -41,6 +41,7 @@ import (
 )
 
 func TestGetADDataQualityStats_Failure(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -163,6 +164,7 @@ func TestGetADDataQualityStats_Failure(t *testing.T) {
 }
 
 func TestGetADDataQualityStats_Success(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -279,6 +281,7 @@ func TestGetADDataQualityStats_Success(t *testing.T) {
 }
 
 func TestGetAzureDataQualityStats_Failure(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -401,6 +404,7 @@ func TestGetAzureDataQualityStats_Failure(t *testing.T) {
 }
 
 func TestGetAzureDataQualityStats_Success(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -517,6 +521,7 @@ func TestGetAzureDataQualityStats_Success(t *testing.T) {
 }
 
 func TestGetPlatformAggregateStats_Failure(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -725,6 +730,7 @@ func TestGetPlatformAggregateStats_Failure(t *testing.T) {
 }
 
 func TestGetPlatformAggregateStats_Success(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

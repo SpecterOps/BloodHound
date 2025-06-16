@@ -24,6 +24,7 @@ import (
 )
 
 func TestGenericClone(t *testing.T) {
+	t.Parallel()
 
 	type Foo struct {
 		Bar string
@@ -67,6 +68,7 @@ func TestGenericClone(t *testing.T) {
 }
 
 func TestGenericAssign(t *testing.T) {
+	t.Parallel()
 
 	var assignMaps func(...map[string]string) map[string]string
 	utils.Bind(&assignMaps, utils.GenericAssign)
@@ -121,6 +123,7 @@ func TestGenericAssign(t *testing.T) {
 }
 
 func TestGenericMap(t *testing.T) {
+	t.Parallel()
 
 	expected := []any{nil, nil, nil, nil, nil}
 

@@ -32,6 +32,7 @@ import (
 )
 
 func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -102,6 +103,7 @@ func TestBloodhoundDB_CreateAndGetSSOProvider(t *testing.T) {
 }
 
 func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -201,6 +203,7 @@ func TestBloodhoundDB_DeleteSSOProvider(t *testing.T) {
 }
 
 func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -306,6 +309,7 @@ func TestBloodhoundDB_GetAllSSOProviders(t *testing.T) {
 }
 
 func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -350,6 +354,7 @@ func TestBloodhoundDB_GetSSOProviderBySlug(t *testing.T) {
 }
 
 func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)
@@ -452,6 +457,7 @@ func TestBloodhoundDB_GetSSOProviderUsers(t *testing.T) {
 }
 
 func TestBloodhoundDB_GetSSOProviderById(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)

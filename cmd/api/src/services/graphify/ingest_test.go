@@ -27,6 +27,7 @@ import (
 )
 
 func TestNormalizeEinNodeProperties(t *testing.T) {
+	t.Parallel()
 	var (
 		nowUTC     = time.Now().UTC()
 		objectID   = "objectid"

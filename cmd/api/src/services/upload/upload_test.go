@@ -30,6 +30,7 @@ import (
 )
 
 func TestWriteAndValidateZip(t *testing.T) {
+	t.Parallel()
 	t.Run("valid zip file is ok", func(t *testing.T) {
 		writer := bytes.Buffer{}
 
@@ -52,6 +53,7 @@ func TestWriteAndValidateZip(t *testing.T) {
 }
 
 func TestWriteAndValidateJSON(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		input          []byte
@@ -107,6 +109,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			src := bytes.NewReader(tt.input)
 			dst := &bytes.Buffer{}
 
@@ -123,6 +126,7 @@ func TestWriteAndValidateJSON(t *testing.T) {
 }
 
 func TestWriteAndValidateJSON_NormalizationError(t *testing.T) {
+	t.Parallel()
 	src := &ErrorReader{err: errors.New("read error")}
 	dst := &bytes.Buffer{}
 

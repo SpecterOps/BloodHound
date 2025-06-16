@@ -19,6 +19,7 @@ package version
 import "testing"
 
 func TestParseVersion(t *testing.T) {
+	t.Parallel()
 	if parsed, err := Parse("v1.2.3"); err != nil {
 		t.Fatalf("Parsing version failed: %v", err)
 	} else if parsed.String() != "v1.2.3" {
@@ -33,6 +34,7 @@ func TestParseVersion(t *testing.T) {
 }
 
 func TestVersion_GreaterThan(t *testing.T) {
+	t.Parallel()
 	var (
 		greater = Version{
 			Major: 2,

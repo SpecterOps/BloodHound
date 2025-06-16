@@ -26,6 +26,7 @@ import (
 )
 
 func TestReadRFC3339(t *testing.T) {
+	t.Parallel()
 	var (
 		now  = time.Now()
 		then = now.Add(-time.Hour)

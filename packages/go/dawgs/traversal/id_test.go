@@ -27,6 +27,7 @@ import (
 )
 
 func TestIDBreadthFirstContextCancel(t *testing.T) {
+	t.Parallel()
 	var (
 		numWorkers    = 4
 		mockCtrl      = gomock.NewController(t)

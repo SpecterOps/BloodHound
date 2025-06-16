@@ -25,6 +25,7 @@ import (
 )
 
 func TestConcurrencyLimiter(t *testing.T) {
+	t.Parallel()
 	var (
 		limiter = NewConcurrencyLimiter(2)
 	)

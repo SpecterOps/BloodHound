@@ -32,6 +32,7 @@ const (
 )
 
 func TestSubmit(t *testing.T) {
+	t.Parallel()
 	var (
 		channel                      = make(chan int)
 		wg                           = &sync.WaitGroup{}
@@ -61,6 +62,7 @@ func TestSubmit(t *testing.T) {
 }
 
 func TestReceive(t *testing.T) {
+	t.Parallel()
 	var (
 		channel                      = make(chan int)
 		wg                           = &sync.WaitGroup{}
@@ -97,6 +99,7 @@ func TestReceive(t *testing.T) {
 }
 
 func TestPipe(t *testing.T) {
+	t.Parallel()
 	var (
 		inC                          = make(chan int)
 		outC                         = make(chan int)
@@ -138,6 +141,7 @@ func TestPipe(t *testing.T) {
 }
 
 func TestPipeline(t *testing.T) {
+	t.Parallel()
 	var (
 		inC                          = make(chan int)
 		outC                         = make(chan string)

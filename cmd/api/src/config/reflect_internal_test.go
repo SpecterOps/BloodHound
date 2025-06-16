@@ -24,6 +24,7 @@ import (
 )
 
 func Test_setRawValue(t *testing.T) {
+	t.Parallel()
 	var (
 		uintValue    uint
 		uint8Value   uint8

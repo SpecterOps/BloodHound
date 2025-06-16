@@ -103,6 +103,7 @@ SMRMGd2G85dGQI0qXDJBWXabpA==
 )
 
 func TestManagementResource_ListAuthProviders(t *testing.T) {
+	t.Parallel()
 	const endpoint = "/api/v2/sso-providers"
 
 	var (
@@ -225,6 +226,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 }
 
 func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		ssoDeleteURL      = "/api/v2/sso-providers/%s"
 		mockCtrl          = gomock.NewController(t)
@@ -317,6 +319,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 }
 
 func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		_, mockDB = apitest.NewAuthManagementResource(mockCtrl)

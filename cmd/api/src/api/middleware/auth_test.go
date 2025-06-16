@@ -59,6 +59,7 @@ func auditEntryAndContext(bhCtx ctx.Context, action model.AuditLogAction, fields
 }
 
 func Test_parseAuthorizationHeader(t *testing.T) {
+	t.Parallel()
 	var (
 		expectedTime = time.Now()
 		expectedID   = must.NewUUIDv4()
@@ -76,6 +77,7 @@ func Test_parseAuthorizationHeader(t *testing.T) {
 }
 
 func TestPermissionsCheckAll(t *testing.T) {
+	t.Parallel()
 	var (
 		handlerReturn200 = func(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusOK)
@@ -157,6 +159,7 @@ func TestPermissionsCheckAll(t *testing.T) {
 }
 
 func TestPermissionsCheckAtLeastOne(t *testing.T) {
+	t.Parallel()
 	var (
 		handlerReturn200 = func(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusOK)

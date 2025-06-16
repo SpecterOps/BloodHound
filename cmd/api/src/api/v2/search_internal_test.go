@@ -28,6 +28,7 @@ import (
 )
 
 func Test_SetNodeProperties(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		nodes    []*graph.Node
@@ -100,6 +101,7 @@ func Test_SetNodeProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := setNodeProperties(tt.nodes)
 			assert.Equal(t, tt.expected, got)
 		})

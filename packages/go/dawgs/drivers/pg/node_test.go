@@ -49,6 +49,7 @@ func newKindMapper() KindMapper {
 }
 
 func TestNodeQuery(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockTx        = graph_mocks.NewMockTransaction(mockCtrl)
@@ -75,6 +76,7 @@ func TestNodeQuery(t *testing.T) {
 }
 
 func TestNodeQueryOrderByNodeIdWithLimit(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockTx        = graph_mocks.NewMockTransaction(mockCtrl)

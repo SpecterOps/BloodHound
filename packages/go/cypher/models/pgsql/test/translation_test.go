@@ -49,6 +49,7 @@ func newKindMapper() pgsql.KindMapper {
 }
 
 func TestTranslate(t *testing.T) {
+	t.Parallel()
 	var (
 		casesRun   = 0
 		kindMapper = newKindMapper()
@@ -65,6 +66,7 @@ func TestTranslate(t *testing.T) {
 	} else {
 		for _, testCase := range testCases {
 			t.Run(testCase.Name, func(t *testing.T) {
+				t.Parallel()
 				defer func() {
 					if err := recover(); err != nil {
 						debug.PrintStack()

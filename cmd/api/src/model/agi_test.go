@@ -21,6 +21,7 @@ import (
 )
 
 func TestAssetGroupSelectorSpec_Validate(t *testing.T) {
+	t.Parallel()
 	//happyPath := AssetGroupSelectorSpec{
 	//	SelectorName:   "test",
 	//	EntityObjectID: "S-1-5-21-570004220-2248230615-4072641716-544",

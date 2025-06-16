@@ -29,6 +29,7 @@ import (
 )
 
 func TestDetectBOMEncoding(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    []byte
@@ -83,6 +84,7 @@ func TestDetectBOMEncoding(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			reader := bufio.NewReader(bytes.NewReader(tt.input))
 			result := DetectBOMEncoding(reader)
 			assert.Equal(t, tt.expected.String(), result.String(), "DetectBOMEncoding() should return the correct encoding")
@@ -91,6 +93,7 @@ func TestDetectBOMEncoding(t *testing.T) {
 }
 
 func TestNormalizeToUTF8(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    []byte
@@ -158,6 +161,7 @@ func TestNormalizeToUTF8(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			reader := bufio.NewReader(bytes.NewReader(tt.input))
 			detectedEnc := DetectBOMEncoding(reader)
 			result, err := NormalizeToUTF8(reader)
@@ -184,6 +188,7 @@ func (er errorReader) Read(p []byte) (n int, err error) {
 }
 
 func TestNormalizeToUTF8_ReaderError(t *testing.T) {
+	t.Parallel()
 	reader, err := NormalizeToUTF8(errorReader{})
 	assert.NoError(t, err)
 	_, err = io.ReadAll(reader)
@@ -191,6 +196,7 @@ func TestNormalizeToUTF8_ReaderError(t *testing.T) {
 }
 
 func TestNormalizeToUTF8_LargeInput(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		name     string
 		input    []byte
@@ -220,6 +226,7 @@ func TestNormalizeToUTF8_LargeInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			reader := bufio.NewReader(bytes.NewReader(tt.input))
 			detectedEnc := DetectBOMEncoding(reader)
 			assert.Equal(t, tt.encFrom.String(), detectedEnc.String(), "NormalizedFrom() should return the correct original encoding")

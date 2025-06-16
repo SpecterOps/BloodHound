@@ -67,6 +67,7 @@ func (s *Harness) Run(cases []Case) {
 		input.request = mux.SetURLVars(input.request, input.urlVars)
 		s.handler.ServeHTTP(recorder, input.request)
 		s.t.Run(tcase.Name, func(t *testing.T) {
+			t.Parallel()
 			defer func() {
 				if recovery := recover(); recovery != nil {
 					t.Fatalf("Panic during request execution against the handler: %v", recovery)

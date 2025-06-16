@@ -306,6 +306,7 @@ class GolangWorkspaceTestPlan(TestPlan):
         cmd = [
             "go",
             "test",
+            "-race",
             "-ldflags",
             golang_ldflags(project_ctx=self.project_ctx),
             "-coverprofile",

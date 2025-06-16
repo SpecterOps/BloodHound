@@ -27,6 +27,7 @@ func noOpSetup(*Harness) (any, error) {
 }
 
 func Test_hasCycle(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	fixture0 := NewFixture(noOpSetup, nil)
 	fixture1 := NewFixture(noOpSetup, nil)

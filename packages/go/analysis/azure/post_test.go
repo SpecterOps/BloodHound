@@ -61,6 +61,7 @@ func setupRoleAssignments() azure.RoleAssignments {
 }
 
 func TestRoleAssignments_NodeHasRole(t *testing.T) {
+	t.Parallel()
 	assignments := setupRoleAssignments()
 	assert.True(t, assignments.NodeHasRole(user.ID, azschema.CompanyAdministratorRole))
 	assert.False(t, assignments.NodeHasRole(user.ID, azschema.HelpdeskAdministratorRole))
@@ -70,12 +71,14 @@ func TestRoleAssignments_NodeHasRole(t *testing.T) {
 }
 
 func TestRoleAssignments_UsersWithoutRoles(t *testing.T) {
+	t.Parallel()
 	assignments := setupRoleAssignments()
 	assert.False(t, assignments.UsersWithoutRoles().Contains(uint64(user.ID)))
 	assert.True(t, assignments.UsersWithoutRoles().Contains(uint64(user2.ID)))
 }
 
 func TestRoleAssignments_NodesWithRole(t *testing.T) {
+	t.Parallel()
 	assignments := setupRoleAssignments()
 	assert.True(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID, constants.GlobalAdministratorRoleID).Contains(uint64(user.ID)))
 	assert.True(t, assignments.PrincipalsWithRole(constants.ReportsReaderRoleID, constants.GlobalAdministratorRoleID).Contains(uint64(group.ID)))
@@ -84,6 +87,7 @@ func TestRoleAssignments_NodesWithRole(t *testing.T) {
 }
 
 func TestRoleAssignments_NodesWithRolesExclusive(t *testing.T) {
+	t.Parallel()
 	assignments := setupRoleAssignments()
 	assert.Equal(t, user, assignments.NodesWithRolesExclusive(azschema.ReportsReaderRole, azschema.CompanyAdministratorRole).Get(azschema.User).Get(user.ID))
 	assert.Equal(t, graph.EmptyNodeSet().Get(0), assignments.NodesWithRolesExclusive(azschema.ReportsReaderRole, azschema.CompanyAdministratorRole).Get(azschema.Group).Get(group.ID))
@@ -92,6 +96,7 @@ func TestRoleAssignments_NodesWithRolesExclusive(t *testing.T) {
 }
 
 func TestTenantRoles(t *testing.T) {
+	t.Parallel()
 	var (
 		ctrl       = gomock.NewController(t)
 		mockTx     = graph_mocks.NewMockTransaction(ctrl)
@@ -138,6 +143,7 @@ func TestTenantRoles(t *testing.T) {
 }
 
 func TestRoleMembers(t *testing.T) {
+	t.Parallel()
 	var (
 		ctrl       = gomock.NewController(t)
 		mockTx     = graph_mocks.NewMockTransaction(ctrl)
@@ -247,6 +253,7 @@ func TestRoleMembers(t *testing.T) {
 }
 
 func TestFetchTenants(t *testing.T) {
+	t.Parallel()
 	var (
 		ctrl       = gomock.NewController(t)
 		mockDB     = graph_mocks.NewMockDatabase(ctrl)
@@ -288,6 +295,7 @@ func TestFetchTenants(t *testing.T) {
 }
 
 func TestEndNodes(t *testing.T) {
+	t.Parallel()
 	var (
 		ctrl         = gomock.NewController(t)
 		mockTx       = graph_mocks.NewMockTransaction(ctrl)

@@ -34,6 +34,7 @@ func int64Pointer(value int64) *int64 {
 }
 
 func TestCopy(t *testing.T) {
+	t.Parallel()
 	validateCopy(t, &model2.RegularQuery{})
 	validateCopy(t, &model2.SingleQuery{})
 	validateCopy(t, &model2.SinglePartQuery{

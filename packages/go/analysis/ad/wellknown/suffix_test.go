@@ -23,6 +23,7 @@ import (
 )
 
 func TestSIDSuffix_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		suffix sidSuffix
@@ -47,6 +48,7 @@ func TestSIDSuffix_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.suffix.String()
 			assert.Equal(t, tt.want, got)
 		})
@@ -54,6 +56,7 @@ func TestSIDSuffix_String(t *testing.T) {
 }
 
 func TestSIDSuffix_PrependPrefix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		suffix sidSuffix
@@ -88,6 +91,7 @@ func TestSIDSuffix_PrependPrefix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.suffix.PrependPrefix(tt.prefix)
 			assert.Equal(t, tt.want, got)
 		})
@@ -95,6 +99,7 @@ func TestSIDSuffix_PrependPrefix(t *testing.T) {
 }
 
 func TestNewSIDSuffix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		suffix string
@@ -114,6 +119,7 @@ func TestNewSIDSuffix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := NewSIDSuffix(tt.suffix)
 			assert.Equal(t, tt.want, got.String())
 		})
@@ -121,6 +127,7 @@ func TestNewSIDSuffix(t *testing.T) {
 }
 
 func TestDefineSID(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		sidPrefix string
@@ -149,6 +156,7 @@ func TestDefineSID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := DefineSID(tt.sidPrefix, tt.sidSuffix)
 			assert.Equal(t, tt.want, got)
 		})
@@ -156,6 +164,7 @@ func TestDefineSID(t *testing.T) {
 }
 
 func TestPredefinedSIDSuffixes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		suffix SIDSuffix
@@ -185,6 +194,7 @@ func TestPredefinedSIDSuffixes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.suffix.String()
 			assert.Equal(t, tt.want, got)
 		})

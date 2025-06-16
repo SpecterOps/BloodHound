@@ -30,6 +30,7 @@ import (
 )
 
 func TestResources_GetDatapipeStatus(t *testing.T) {
+	t.Parallel()
 	const (
 		url = "api/v2/datapipe/status"
 	)

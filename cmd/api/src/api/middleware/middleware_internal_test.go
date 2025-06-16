@@ -30,6 +30,7 @@ import (
 )
 
 func TestGetScheme(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "foo/bar", nil)
@@ -51,6 +52,7 @@ func TestGetScheme(t *testing.T) {
 }
 
 func TestRequestWaitDuration_Failure(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "foo/bar", nil)
@@ -65,6 +67,7 @@ func TestRequestWaitDuration_Failure(t *testing.T) {
 }
 
 func TestRequestWaitDuration(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, "GET", "foo/bar", nil)
@@ -80,6 +83,7 @@ func TestRequestWaitDuration(t *testing.T) {
 }
 
 func TestParseUserIP_XForwardedFor_RemoteAddr(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/teapot", nil)
 	require.Nil(t, err)
 
@@ -94,6 +98,7 @@ func TestParseUserIP_XForwardedFor_RemoteAddr(t *testing.T) {
 }
 
 func TestParseUserIP_RemoteAddrOnly(t *testing.T) {
+	t.Parallel()
 	req, err := http.NewRequest("GET", "/teapot", nil)
 	require.Nil(t, err)
 	req.RemoteAddr = "0.0.0.0:3000"
@@ -101,6 +106,7 @@ func TestParseUserIP_RemoteAddrOnly(t *testing.T) {
 }
 
 func TestParsePreferHeaderWait(t *testing.T) {
+	t.Parallel()
 	_, err := parsePreferHeaderWait("wait=1.5")
 	require.NotNil(t, err)
 

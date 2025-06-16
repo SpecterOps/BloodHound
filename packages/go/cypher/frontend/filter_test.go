@@ -23,5 +23,6 @@ import (
 )
 
 func TestUnsupportedOperationFilter(t *testing.T) {
+	t.Parallel()
 	test.LoadFixture(t, test.FilteringTestCases).Run(t)
 }

@@ -25,6 +25,7 @@ import (
 )
 
 func TestOfAny(t *testing.T) {
+	t.Parallel()
 	var value = "123"
 
 	// Size of pointer
@@ -80,6 +81,7 @@ func TestOfAny(t *testing.T) {
 }
 
 func TestOfValueSlice(t *testing.T) {
+	t.Parallel()
 	var (
 		slice        = make([]int64, 0, 32)
 		expectedSize = cap(slice)*8 + 24

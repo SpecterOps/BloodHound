@@ -25,6 +25,7 @@ import (
 )
 
 func TestNewProperties(t *testing.T) {
+	t.Parallel()
 	properties := graph.NewProperties()
 
 	require.Equal(t, 24, int(properties.SizeOf()))
@@ -64,6 +65,7 @@ func TestNewProperties(t *testing.T) {
 }
 
 func TestSizeOfProperties(t *testing.T) {
+	t.Parallel()
 	properties := graph.NewProperties()
 
 	require.Equal(t, 24, int(properties.SizeOf()))
@@ -82,6 +84,7 @@ func TestSizeOfProperties(t *testing.T) {
 }
 
 func TestGetWithFallbackProperties(t *testing.T) {
+	t.Parallel()
 	properties := graph.NewProperties()
 
 	// Set an initial value to force allocation

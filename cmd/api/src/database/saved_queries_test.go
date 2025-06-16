@@ -31,6 +31,7 @@ import (
 )
 
 func TestSavedQueries_ListSavedQueries(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)

@@ -25,6 +25,7 @@ import (
 )
 
 func Test_NewSpecWithHooks(t *testing.T) {
+	t.Parallel()
 	var (
 		setupTimestamp    *time.Time
 		teardownTimestamp *time.Time
@@ -53,6 +54,7 @@ func Test_NewSpecWithHooks(t *testing.T) {
 }
 
 func Test_NewSpec(t *testing.T) {
+	t.Parallel()
 	lab.NewSpec(t, NewFizzBizzHarness()).Run(
 		lab.TestCase("should have BasicFooBarFixture", func(assert lab.Assertions, harness *lab.Harness) {
 			foobar, ok := lab.Unpack(harness, BasicFooBarFixture)

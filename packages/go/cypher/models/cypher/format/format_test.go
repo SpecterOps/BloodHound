@@ -29,6 +29,7 @@ import (
 )
 
 func TestCypherEmitter_StripLiterals(t *testing.T) {
+	t.Parallel()
 	var (
 		buffer            = &bytes.Buffer{}
 		regularQuery, err = frontend.ParseCypher(frontend.DefaultCypherContext(), "match (n {value: 'PII'}) where n.other = 'more pii' and n.number = 411 return n.name, n")
@@ -43,10 +44,12 @@ func TestCypherEmitter_StripLiterals(t *testing.T) {
 }
 
 func TestCypherEmitter_HappyPath(t *testing.T) {
+	t.Parallel()
 	test.LoadFixture(t, test.MutationTestCases).Run(t)
 	test.LoadFixture(t, test.PositiveTestCases).Run(t)
 }
 
 func TestCypherEmitter_NegativeCases(t *testing.T) {
+	t.Parallel()
 	test.LoadFixture(t, test.NegativeTestCases).Run(t)
 }

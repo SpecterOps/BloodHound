@@ -29,6 +29,7 @@ import (
 )
 
 func TestGormLogAdapter_Info(t *testing.T) {
+	t.Parallel()
 	var (
 		gormLogAdapter = database.GormLogAdapter{
 			SlowQueryWarnThreshold:  time.Minute,

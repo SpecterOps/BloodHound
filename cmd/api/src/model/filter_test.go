@@ -25,6 +25,7 @@ import (
 )
 
 func TestModel_BuildSQLFilter_Failure(t *testing.T) {
+	t.Parallel()
 	filter1 := model.QueryParameterFilter{
 		Name:         "filtercolumn1",
 		Operator:     model.FilterOperator("foo"), // invalid predicate
@@ -41,6 +42,7 @@ func TestModel_BuildSQLFilter_Failure(t *testing.T) {
 }
 
 func TestModel_BuildSQLFilter_Success(t *testing.T) {
+	t.Parallel()
 	numericMin := model.QueryParameterFilter{
 		Name:         "filtercolumn1",
 		Operator:     model.GreaterThan,

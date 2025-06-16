@@ -27,6 +27,7 @@ import (
 )
 
 func TestJSONFloat_MarshalJSON_NaN(t *testing.T) {
+	t.Parallel()
 	nan := nan.Float64(math.NaN())
 	marshaledNan, err := json.Marshal(nan)
 	require.Nil(t, err)
@@ -37,6 +38,7 @@ func TestJSONFloat_MarshalJSON_NaN(t *testing.T) {
 }
 
 func TestJSONFloat_MarshalJSON(t *testing.T) {
+	t.Parallel()
 	values := []float64{12.34, -12.34, 0}
 	for _, value := range values {
 		marshaledValue, err := json.Marshal(value)
@@ -49,6 +51,7 @@ func TestJSONFloat_MarshalJSON(t *testing.T) {
 }
 
 func TestJSONFloat_UnmarshalJSON_NaN(t *testing.T) {
+	t.Parallel()
 	type data struct {
 		Value nan.Float64 `json:"value"`
 	}
@@ -65,6 +68,7 @@ func TestJSONFloat_UnmarshalJSON_NaN(t *testing.T) {
 }
 
 func TestJSONFloat_UnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	type data struct {
 		Value nan.Float64 `json:"value"`
 	}

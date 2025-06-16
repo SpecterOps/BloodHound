@@ -24,23 +24,27 @@ import (
 )
 
 func TestParseOptionalBool(t *testing.T) {
+	t.Parallel()
 	result, err := ParseOptionalBool("true", false)
 	require.NoError(t, err)
 	assert.Equal(t, true, result)
 }
 
 func TestParseOptionalBoolEmptyValue(t *testing.T) {
+	t.Parallel()
 	result, _ := ParseOptionalBool("", true)
 	assert.Equal(t, true, result)
 }
 
 func TestParseOptionalBoolMisspelledValue(t *testing.T) {
+	t.Parallel()
 	result, err := ParseOptionalBool("trueee", false)
 	assert.Error(t, err)
 	assert.Equal(t, false, result)
 }
 
 func TestFilterStructSlice(t *testing.T) {
+	t.Parallel()
 	type TestStruct struct {
 		val int
 	}

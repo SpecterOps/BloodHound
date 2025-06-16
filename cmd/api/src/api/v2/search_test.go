@@ -30,6 +30,7 @@ import (
 )
 
 func TestResources_SearchHandler(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = graphMocks.NewMockGraph(mockCtrl)
@@ -101,6 +102,7 @@ func TestResources_SearchHandler(t *testing.T) {
 }
 
 func TestResources_GetAvailableDomains(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl         = gomock.NewController(t)
 		mockGraphQueries = graphMocks.NewMockGraph(mockCtrl)

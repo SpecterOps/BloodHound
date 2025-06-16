@@ -32,6 +32,7 @@ import (
 )
 
 func TestGetVersion(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 	)

@@ -25,6 +25,7 @@ import (
 )
 
 func TestDuplexToGraphIDs(t *testing.T) {
+	t.Parallel()
 	uintIDs := []uint64{1, 2, 3, 4, 5}
 	duplex := cardinality.NewBitmap64()
 	duplex.Add(uintIDs...)
@@ -46,6 +47,7 @@ func TestDuplexToGraphIDs(t *testing.T) {
 }
 
 func TestNodeSetToDuplex(t *testing.T) {
+	t.Parallel()
 	nodes := graph.NodeSet{
 		1: &graph.Node{
 			ID: 1,

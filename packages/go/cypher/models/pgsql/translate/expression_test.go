@@ -35,6 +35,7 @@ func mustAsLiteral(value any) pgsql.Literal {
 }
 
 func TestInferExpressionType(t *testing.T) {
+	t.Parallel()
 	type testCase struct {
 		ExpectedType pgsql.DataType
 		Expression   pgsql.Expression
@@ -152,6 +153,7 @@ func TestInferExpressionType(t *testing.T) {
 			t.Fatalf("unable to format test case expression: %v", err)
 		} else {
 			t.Run(testName, func(t *testing.T) {
+				t.Parallel()
 				inferredType, err := translate.InferExpressionType(nextCase.Expression)
 
 				require.Nil(t, err)
@@ -162,6 +164,7 @@ func TestInferExpressionType(t *testing.T) {
 }
 
 func TestExpressionTreeTranslator(t *testing.T) {
+	t.Parallel()
 	// Tree translator is a stack oriented expression tree builder
 	var (
 		treeTranslator = translate.NewExpressionTreeTranslator(nil)

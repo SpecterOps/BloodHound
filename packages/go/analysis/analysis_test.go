@@ -63,6 +63,7 @@ func validKindStrings() []string {
 }
 
 func TestParseKind(t *testing.T) {
+	t.Parallel()
 	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
 		for _, k := range validKinds() {
 			res, err := analysis.ParseKind(k.String())
@@ -78,6 +79,7 @@ func TestParseKind(t *testing.T) {
 }
 
 func TestParseKinds(t *testing.T) {
+	t.Parallel()
 	t.Run("all known strings map to their graph.Kind", func(t *testing.T) {
 		res, err := analysis.ParseKinds(validKindStrings()...)
 		require.Nil(t, err)
@@ -98,6 +100,7 @@ func TestParseKinds(t *testing.T) {
 }
 
 func TestGetNodeKindDisplayLabel(t *testing.T) {
+	t.Parallel()
 	assert := assert.New(t)
 
 	assert.Equal(ad.Entity.String(), analysis.GetNodeKindDisplayLabel(graph.PrepareNode(graph.NewProperties(), ad.Entity)), "should return base kind if no other valid kinds are present")

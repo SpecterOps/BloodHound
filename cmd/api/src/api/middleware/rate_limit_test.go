@@ -29,6 +29,7 @@ import (
 )
 
 func TestRateLimitMiddleware(t *testing.T) {
+	t.Parallel()
 	allowedReqsPerSecond := 5
 
 	mockCtl := gomock.NewController(t)
@@ -56,6 +57,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 }
 
 func TestDefaultRateLimitMiddleware(t *testing.T) {
+	t.Parallel()
 	testHandler := &CountingHandler{}
 
 	mockCtl := gomock.NewController(t)

@@ -29,6 +29,7 @@ import (
 )
 
 func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
+	t.Parallel()
 	testData := models.RoleEligibilityScheduleInstance{
 		Id:               "lAPpYvVpN0KRkAEhdxReELKn6QMIlSROgkgWZy9fE3c-1-e",
 		RoleDefinitionId: "62e90394-69f5-4237-9190-012177145e10",
@@ -47,6 +48,7 @@ func TestConvertAzureRoleEligibilityScheduleInstanceToRel(t *testing.T) {
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
+	t.Parallel()
 	model := models.RoleManagementPolicyAssignment{
 		Id:                                "id-1234",
 		RoleDefinitionId:                  "role-1234",

@@ -69,6 +69,7 @@ func setupUserCtx(user model.User) context.Context {
 }
 
 func TestResources_ListFileUploadJobs(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -111,6 +112,7 @@ func TestResources_ListFileUploadJobs(t *testing.T) {
 }
 
 func TestResources_StartFileUploadJob(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -157,6 +159,7 @@ func TestResources_StartFileUploadJob(t *testing.T) {
 }
 
 func TestResources_EndFileUploadJob(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = dbmocks.NewMockDatabase(mockCtrl)
@@ -237,6 +240,7 @@ func TestResources_EndFileUploadJob(t *testing.T) {
 }
 
 func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
+	t.Parallel()
 	bytes, err := json.Marshal(ingest.AllowedFileUploadTypes)
 	if err != nil {
 		t.Fatalf("Error marshalling obj: %v", err)
@@ -255,6 +259,7 @@ func TestResources_ListAcceptedFileUploadTypes(t *testing.T) {
 }
 
 func TestResources_ProcessIngestTask(t *testing.T) {
+	t.Parallel()
 	type mock struct {
 		mockDatabase *dbmocks.MockDatabase
 	}
@@ -507,6 +512,7 @@ func TestResources_ProcessIngestTask(t *testing.T) {
 }
 
 func TestIsValidContentTypeForUpload(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		header http.Header
@@ -543,6 +549,7 @@ func TestIsValidContentTypeForUpload(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			got := v2.IsValidContentTypeForUpload(testCase.header)
 			require.Equal(t, testCase.want, got)
 		})

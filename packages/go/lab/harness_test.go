@@ -50,6 +50,7 @@ func NewFizzBizzHarness() *lab.Harness {
 }
 
 func Test_UseHarness(t *testing.T) {
+	t.Parallel()
 	assert, harness := lab.UseHarness(t, NewFizzBizzHarness())
 	foobar, ok := lab.Unpack(harness, BasicFooBarFixture)
 	assert.True(ok, "unable to unpack foobar fixture")
@@ -77,6 +78,7 @@ func Test_UseHarness(t *testing.T) {
 }
 
 func Test_HarnessSetup(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 
 	emptyHarness := lab.NewHarness()
@@ -91,6 +93,7 @@ func Test_HarnessSetup(t *testing.T) {
 }
 
 func Test_HarnessTeardown(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 
 	emptyHarness := lab.NewHarness()

@@ -28,6 +28,7 @@ import (
 )
 
 func Test_ParseGraphSortParameters_InvalidSortColumn(t *testing.T) {
+	t.Parallel()
 	domains := model.DomainSelectors{}
 	params := url.Values{}
 	params.Add("sort_by", "invalidColumn")
@@ -37,6 +38,7 @@ func Test_ParseGraphSortParameters_InvalidSortColumn(t *testing.T) {
 }
 
 func Test_ParseGraphSortParameters_Success(t *testing.T) {
+	t.Parallel()
 	domains := model.DomainSelectors{}
 	params := url.Values{}
 	params.Add("sort_by", "objectid")
@@ -52,6 +54,7 @@ func Test_ParseGraphSortParameters_Success(t *testing.T) {
 }
 
 func Test_ParseSortParameters(t *testing.T) {
+	t.Parallel()
 	domains := model.DomainSelectors{}
 
 	t.Run("invalid column", func(t *testing.T) {

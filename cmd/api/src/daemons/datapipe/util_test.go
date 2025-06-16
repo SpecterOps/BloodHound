@@ -25,6 +25,7 @@ import (
 )
 
 func TestRandomDurationBetween(t *testing.T) {
+	t.Parallel()
 	const (
 		min = time.Minute
 		max = 10 * time.Minute

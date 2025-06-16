@@ -31,6 +31,7 @@ var (
 )
 
 func Test_ComputeAndSetSize(t *testing.T) {
+	t.Parallel()
 	var (
 		idSequence = int64(0)
 

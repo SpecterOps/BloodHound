@@ -34,6 +34,7 @@ type dataTagAssertion struct {
 }
 
 func TestSeekToKey(t *testing.T) {
+	t.Parallel()
 	t.Run("seek to data tag", func(t *testing.T) {
 		key := "data"
 		assertions := generateAssertionsForKey(key)

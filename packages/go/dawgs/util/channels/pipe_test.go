@@ -32,6 +32,7 @@ const (
 )
 
 func TestBufferedPipe_ContextCancel(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx, done        = context.WithCancel(context.Background())
 		writerC, readerC = channels.BufferedPipe[uint32](ctx)
@@ -71,6 +72,7 @@ func TestBufferedPipe_ContextCancel(t *testing.T) {
 }
 
 func TestBufferedPipe_DumpOnContextCancel(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx, done  = context.WithTimeout(context.Background(), time.Second*5)
 		writerC, _ = channels.BufferedPipe[uint32](ctx)
@@ -89,6 +91,7 @@ func TestBufferedPipe_DumpOnContextCancel(t *testing.T) {
 }
 
 func TestBufferedPipe_HappyPath(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx, done        = context.WithTimeout(context.Background(), time.Second*5)
 		writerC, readerC = channels.BufferedPipe[uint64](ctx)

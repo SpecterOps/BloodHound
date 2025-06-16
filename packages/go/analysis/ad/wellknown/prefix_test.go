@@ -23,6 +23,7 @@ import (
 )
 
 func TestNodeNamePrefix_String(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		prefix nodeNamePrefix
@@ -47,6 +48,7 @@ func TestNodeNamePrefix_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.prefix.String()
 			assert.Equal(t, tt.want, got)
 		})
@@ -54,6 +56,7 @@ func TestNodeNamePrefix_String(t *testing.T) {
 }
 
 func TestNodeNamePrefix_AppendSuffix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		prefix nodeNamePrefix
@@ -88,6 +91,7 @@ func TestNodeNamePrefix_AppendSuffix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.prefix.AppendSuffix(tt.suffix)
 			assert.Equal(t, tt.want, got)
 		})
@@ -95,6 +99,7 @@ func TestNodeNamePrefix_AppendSuffix(t *testing.T) {
 }
 
 func TestNewNodeNamePrefix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		prefix string
@@ -114,6 +119,7 @@ func TestNewNodeNamePrefix(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := NewNodeNamePrefix(tt.prefix)
 			assert.Equal(t, tt.want, got.String())
 		})
@@ -121,6 +127,7 @@ func TestNewNodeNamePrefix(t *testing.T) {
 }
 
 func TestDefineNodeName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		prefix NodeNamePrefix
@@ -149,6 +156,7 @@ func TestDefineNodeName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := DefineNodeName(tt.prefix, tt.suffix)
 			assert.Equal(t, tt.want, got)
 		})
@@ -156,6 +164,7 @@ func TestDefineNodeName(t *testing.T) {
 }
 
 func TestPredefinedNodeNamePrefixes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		prefix NodeNamePrefix
@@ -185,6 +194,7 @@ func TestPredefinedNodeNamePrefixes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := tt.prefix.String()
 			assert.Equal(t, tt.want, got)
 		})

@@ -23,6 +23,7 @@ import (
 )
 
 func TestIngestJobs_IsSortable(t *testing.T) {
+	t.Parallel()
 	fuj := IngestJobs{}
 	require.False(t, fuj.IsSortable("user_id"))
 	require.True(t, fuj.IsSortable("status"))
@@ -39,6 +40,7 @@ func TestIngestJobs_IsSortable(t *testing.T) {
 }
 
 func TestIngestJobs_ValidFilters(t *testing.T) {
+	t.Parallel()
 	fuj := IngestJobs{}
 	columns := fuj.ValidFilters()
 	require.Equal(t, 13, len(columns))

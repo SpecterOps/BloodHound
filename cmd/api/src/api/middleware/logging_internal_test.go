@@ -27,6 +27,7 @@ import (
 )
 
 func Test_signedRequestDate(t *testing.T) {
+	t.Parallel()
 	var (
 		expectedTime = time.Now()
 		expectedID   = must.NewUUIDv4()

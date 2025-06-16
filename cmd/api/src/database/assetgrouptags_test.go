@@ -32,6 +32,7 @@ import (
 )
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -73,6 +74,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -112,6 +114,7 @@ func TestDatabase_GetAssetGroupTagSelectorBySelectorId(t *testing.T) {
 }
 
 func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst            = integration.SetupDB(t)
 		testCtx           = context.Background()
@@ -170,6 +173,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestDatabase_CreateAssetGroupTag(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -225,6 +229,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTags(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -307,6 +312,7 @@ func TestDatabase_GetAssetGroupTags(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t)
 		testCtx = context.Background()
@@ -368,6 +374,7 @@ func TestDatabase_GetAssetGroupTagSelectorCounts(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst        = integration.SetupDB(t)
 		testCtx       = context.Background()
@@ -469,6 +476,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 }
 
 func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -500,6 +508,7 @@ func TestDatabase_GetSelectorsByMemberId(t *testing.T) {
 	require.Equal(t, testSelectorId, selectors[0].AssetGroupTagId)
 }
 func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()

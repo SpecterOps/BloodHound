@@ -54,6 +54,7 @@ func (s dirEntry) Info() (fs.FileInfo, error) {
 }
 
 func TestOrphanFileSweeper_Clear(t *testing.T) {
+	t.Parallel()
 	const workDir = "/fake/work/dir"
 
 	t.Run("Allow Only One Goroutine", func(t *testing.T) {

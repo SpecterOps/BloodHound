@@ -29,6 +29,7 @@ import (
 )
 
 func TestGraphToPUMLDigraph(t *testing.T) {
+	t.Parallel()
 	kindMapper := pgutil.NewInMemoryKindMapper()
 
 	regularQuery, err := frontend.ParseCypher(frontend.NewContext(), "match (s), (e) where s.name = s.other + 1 / s.last return s")

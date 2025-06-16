@@ -24,6 +24,7 @@ import (
 )
 
 func TestSet(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	foo := make(internal.Set[any])
 	assert.NotNil(foo)

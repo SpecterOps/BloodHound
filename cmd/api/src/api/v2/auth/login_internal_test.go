@@ -44,6 +44,7 @@ import (
 )
 
 func TestLoginFailure(t *testing.T) {
+	t.Parallel()
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -194,6 +195,7 @@ func TestLoginFailure(t *testing.T) {
 }
 
 func TestLoginSuccess(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 

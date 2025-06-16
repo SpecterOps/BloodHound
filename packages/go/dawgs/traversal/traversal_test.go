@@ -55,6 +55,7 @@ var (
 )
 
 func TestAcyclicSegmentVisitor(t *testing.T) {
+	t.Parallel()
 	visitor := AcyclicNodeFilter(func(next *graph.PathSegment) bool {
 		return true
 	})
@@ -64,6 +65,7 @@ func TestAcyclicSegmentVisitor(t *testing.T) {
 }
 
 func TestUniquePathSegmentVisitor(t *testing.T) {
+	t.Parallel()
 	visitor := UniquePathSegmentFilter(func(next *graph.PathSegment) bool {
 		return true
 	})
@@ -82,6 +84,7 @@ func TestUniquePathSegmentVisitor(t *testing.T) {
 }
 
 func TestFilteredSkipLimit(t *testing.T) {
+	t.Parallel()
 	var nodes []*graph.Node
 
 	visitor := FilteredSkipLimit(
@@ -112,6 +115,7 @@ func TestFilteredSkipLimit(t *testing.T) {
 }
 
 func TestTraversalBreadthFirstContextCancel(t *testing.T) {
+	t.Parallel()
 	var (
 		numWorkers    = 4
 		mockCtrl      = gomock.NewController(t)

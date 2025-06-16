@@ -49,6 +49,7 @@ import (
 // Pro:  Unify test logic - later maintenance requires only one test modification, or splitting off new tests when necessary
 // Con:  Poor IDE integration, added complexity, test writer must determine when tests should and shouldn't be consolidated
 func TestResources_ListSavedQueries_SortingError(t *testing.T) {
+	t.Parallel()
 	type TestData struct {
 		testName             string
 		expectedResponseBody string
@@ -67,6 +68,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 
 	for _, testArgs := range testData {
 		t.Run(testArgs.testName, func(t *testing.T) {
+			t.Parallel()
 			// Setup
 			var (
 				mockCtrl  = gomock.NewController(t)
@@ -105,6 +107,7 @@ func TestResources_ListSavedQueries_SortingError(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -139,6 +142,7 @@ func TestResources_ListSavedQueries_InvalidFilterColumn(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_NotAUserAuth(t *testing.T) {
+	t.Parallel()
 	// Setup
 	bhCtx := ctx.Context{
 		RequestID: "",
@@ -177,6 +181,7 @@ func TestResources_ListSavedQueries_NotAUserAuth(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidQueryParameterFilters(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -211,6 +216,7 @@ func TestResources_ListSavedQueries_InvalidQueryParameterFilters(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -245,6 +251,7 @@ func TestResources_ListSavedQueries_InvalidFilterPredicate(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -279,6 +286,7 @@ func TestResources_ListSavedQueries_InvalidSkip(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -313,6 +321,7 @@ func TestResources_ListSavedQueries_InvalidLimit(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_DBError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -347,6 +356,7 @@ func TestResources_ListSavedQueries_DBError(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -392,6 +402,7 @@ func TestResources_ListSavedQueries(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -439,6 +450,7 @@ func TestResources_ListSavedQueries_OwnedQueries(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -484,6 +496,7 @@ func TestResources_ListSavedQueries_PublicQueries(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -529,6 +542,7 @@ func TestResources_ListSavedQueries_SharedQueries(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -583,6 +597,7 @@ func TestResources_ListSavedQueries_MulitpleScopeQueries(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -622,6 +637,7 @@ func TestResources_ListSavedQueries_ScopeDBError(t *testing.T) {
 }
 
 func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -657,6 +673,7 @@ func TestResources_ListSavedQueries_InvalidScope(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
+	t.Parallel()
 	// Setup
 	bhCtx := ctx.Context{
 		RequestID: "",
@@ -697,6 +714,7 @@ func TestResources_CreateSavedQuery_NotAUserAuth(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -731,6 +749,7 @@ func TestResources_CreateSavedQuery_InvalidBody(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -771,6 +790,7 @@ func TestResources_CreateSavedQuery_EmptyBody(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -813,6 +833,7 @@ func TestResources_CreateSavedQuery_DuplicateName(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -856,6 +877,7 @@ func TestResources_CreateSavedQuery_CreateFailure(t *testing.T) {
 }
 
 func TestResources_CreateSavedQuery(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -902,6 +924,7 @@ func TestResources_CreateSavedQuery(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
+	t.Parallel()
 	// Setup
 	bhCtx := ctx.Context{
 		RequestID: "",
@@ -942,6 +965,7 @@ func TestResources_UpdateSavedQuery_NotAUserAuth(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_InvalidBody(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -976,6 +1000,7 @@ func TestResources_UpdateSavedQuery_InvalidBody(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1010,6 +1035,7 @@ func TestResources_UpdateSavedQuery_InvalidID(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1048,6 +1074,7 @@ func TestResources_UpdateSavedQuery_GetSavedQueryError(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1088,6 +1115,7 @@ func TestResources_UpdateSavedQuery_QueryBelongsToAnotherUser(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1131,6 +1159,7 @@ func TestResources_UpdateSavedQuery_Admin_NonPublicQuery(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1169,6 +1198,7 @@ func TestResources_UpdateSavedQuery_NoQueryMatch(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1212,6 +1242,7 @@ func TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1268,6 +1299,7 @@ func TestResources_UpdateSavedQuery_UpdateFailed(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1322,6 +1354,7 @@ func TestResources_UpdateSavedQuery_OwnPrivateQuery_Success(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -1376,6 +1409,7 @@ func TestResources_UpdateSavedQuery_AdminPrivateQuery_Success(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1430,6 +1464,7 @@ func TestResources_UpdateSavedQuery_OwnPublicQuery_Success(t *testing.T) {
 }
 
 func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1490,6 +1525,7 @@ func TestResources_UpdateSavedQuery_AdminPublicQuery_Success(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
+	t.Parallel()
 	// Setup
 	bhCtx := ctx.Context{
 		RequestID: "",
@@ -1530,6 +1566,7 @@ func TestResources_DeleteSavedQuery_NotAUserAuth(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1561,6 +1598,7 @@ func TestResources_DeleteSavedQuery_IDMalformed(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1597,6 +1635,7 @@ func TestResources_DeleteSavedQuery_DBError(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1633,6 +1672,7 @@ func TestResources_DeleteSavedQuery_UserNotAdmin(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1670,6 +1710,7 @@ func TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1707,6 +1748,7 @@ func TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1743,6 +1785,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1780,6 +1823,7 @@ func TestResources_DeleteSavedQuery_RecordNotFound_EdgeCase(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1817,6 +1861,7 @@ func TestResources_DeleteSavedQuery_DeleteError(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)
@@ -1853,6 +1898,7 @@ func TestResources_DeleteSavedQuery_PublicQueryAndUserIsAdmin(t *testing.T) {
 }
 
 func TestResources_DeleteSavedQuery(t *testing.T) {
+	t.Parallel()
 	// Setup
 	var (
 		mockCtrl  = gomock.NewController(t)

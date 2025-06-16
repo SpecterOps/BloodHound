@@ -31,6 +31,7 @@ import (
 )
 
 func TestSignRequestAtInternalError(t *testing.T) {
+	t.Parallel()
 	reader := strings.NewReader("Hello world")
 	request, err := http.NewRequest("GET", "www.foo.bar", reader)
 	require.Nil(t, err)
@@ -42,6 +43,7 @@ func TestSignRequestAtInternalError(t *testing.T) {
 }
 
 func TestSignRequestSuccess(t *testing.T) {
+	t.Parallel()
 	request, err := http.NewRequest("GET", "www.foo.bar", strings.NewReader("Hello world"))
 	require.Nil(t, err)
 
@@ -59,6 +61,7 @@ func TestSignRequestSuccess(t *testing.T) {
 }
 
 func TestSelfDestructingTempFile(t *testing.T) {
+	t.Parallel()
 	file, err := api.NewSelfDestructingTempFile("", "test-")
 	require.NoError(t, err)
 

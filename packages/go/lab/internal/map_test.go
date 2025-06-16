@@ -24,6 +24,7 @@ import (
 )
 
 func TestMap(t *testing.T) {
+	t.Parallel()
 	assert := require.New(t)
 	foo := make(internal.Map[any, any])
 	assert.NotNil(foo)

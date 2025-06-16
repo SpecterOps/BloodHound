@@ -30,6 +30,7 @@ import (
 )
 
 func Test_NewRequestSignature(t *testing.T) {
+	t.Parallel()
 	t.Run("returns error on context timeout", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

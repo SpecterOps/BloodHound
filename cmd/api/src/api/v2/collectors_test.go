@@ -35,6 +35,7 @@ import (
 )
 
 func TestResources_DownloadCollectorByVersion(t *testing.T) {
+	t.Parallel()
 	type mock struct {
 		mockFS *fsmocks.MockService
 	}
@@ -142,6 +143,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			request := testCase.buildRequest()
 
 			ctrl := gomock.NewController(t)
@@ -182,6 +184,7 @@ func TestResources_DownloadCollectorByVersion(t *testing.T) {
 }
 
 func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
+	t.Parallel()
 	type mock struct {
 		mockFS *fsmocks.MockService
 	}
@@ -289,6 +292,7 @@ func TestResources_DownloadCollectorChecksumByVersion(t *testing.T) {
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			request := testCase.buildRequest()
 
 			collectorManifests := map[string]config.CollectorManifest{

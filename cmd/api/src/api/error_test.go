@@ -35,6 +35,7 @@ import (
 )
 
 func TestIsErrorResponse(t *testing.T) {
+	t.Parallel()
 
 	var cases = []struct {
 		Input    int
@@ -58,6 +59,7 @@ func TestIsErrorResponse(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 	errStruct := api.ErrorWrapper{
 		HTTPStatus: http.StatusInternalServerError,
@@ -76,6 +78,7 @@ func TestError(t *testing.T) {
 }
 
 func TestBuildErrorResponseInternalServerError(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 
 	response := api.BuildErrorResponse(http.StatusInternalServerError, details, test.Request(t).WithContext(&ctx.Context{
@@ -95,6 +98,7 @@ func TestBuildErrorResponseInternalServerError(t *testing.T) {
 }
 
 func TestBuildErrorResponseBadRequest(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 	response := api.BuildErrorResponse(http.StatusBadRequest, details, test.Request(t).WithContext(&ctx.Context{
 		RequestID: "12345",
@@ -113,6 +117,7 @@ func TestBuildErrorResponseBadRequest(t *testing.T) {
 }
 
 func TestBuildErrorResponseUnauthorized(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 	response := api.BuildErrorResponse(http.StatusUnauthorized, details, test.Request(t).WithContext(&ctx.Context{
 		RequestID: "12345",
@@ -131,6 +136,7 @@ func TestBuildErrorResponseUnauthorized(t *testing.T) {
 }
 
 func TestBuildErrorResponseConflict(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 	response := api.BuildErrorResponse(http.StatusConflict, details, test.Request(t).WithContext(&ctx.Context{
 		RequestID: "12345",
@@ -149,6 +155,7 @@ func TestBuildErrorResponseConflict(t *testing.T) {
 }
 
 func TestBuildErrorResponseDefault(t *testing.T) {
+	t.Parallel()
 	details := "Test error"
 	response := api.BuildErrorResponse(http.StatusTeapot, details, test.Request(t).WithContext(&ctx.Context{
 		RequestID: "12345",
@@ -167,6 +174,7 @@ func TestBuildErrorResponseDefault(t *testing.T) {
 }
 
 func TestHandleDatabaseErrorNotFound(t *testing.T) {
+	t.Parallel()
 	bhCtx := ctx.Context{
 		RequestID: "requestID",
 		AuthCtx:   auth.Context{},
@@ -186,6 +194,7 @@ func TestHandleDatabaseErrorNotFound(t *testing.T) {
 }
 
 func TestHandleDatabaseError(t *testing.T) {
+	t.Parallel()
 	bhCtx := ctx.Context{
 		RequestID: "requestID",
 		AuthCtx:   auth.Context{},
@@ -205,11 +214,13 @@ func TestHandleDatabaseError(t *testing.T) {
 }
 
 func TestFormatDatabaseErrorNotFound(t *testing.T) {
+	t.Parallel()
 	err := api.FormatDatabaseError(database.ErrNotFound)
 	require.Equal(t, err.Error(), api.ErrorResponseDetailsResourceNotFound)
 }
 
 func TestFormatDatabaseError(t *testing.T) {
+	t.Parallel()
 	err := api.FormatDatabaseError(errors.New("custom error"))
 	require.Equal(t, err.Error(), api.ErrorResponseDetailsInternalServerError)
 }

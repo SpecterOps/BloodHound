@@ -73,6 +73,7 @@ func requireImpact(t *testing.T, agg impact.Aggregator, nodeID uint64, contained
 }
 
 func TestAggregator_NonImpactingShortcut(t *testing.T) {
+	t.Parallel()
 	resetNextID()
 	var (
 		node0 = node(aKind)
@@ -109,6 +110,7 @@ func TestAggregator_NonImpactingShortcut(t *testing.T) {
 }
 
 func TestAggregator_Impact(t *testing.T) {
+	t.Parallel()
 	resetNextID()
 
 	var (

@@ -30,6 +30,7 @@ func validateParsing(t *testing.T, expected Operator, operatorStr string) {
 }
 
 func TestParseOperator(t *testing.T) {
+	t.Parallel()
 	validateParsing(t, OperatorAdd, "+")
 	validateParsing(t, OperatorSubtract, "-")
 	validateParsing(t, OperatorMultiply, "*")

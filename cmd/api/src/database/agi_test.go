@@ -30,6 +30,7 @@ import (
 )
 
 func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst        = integration.SetupDB(t)
 		testCtx       = context.Background()
@@ -74,6 +75,7 @@ func TestCreateGetUpdateDeleteAssetGroup(t *testing.T) {
 }
 
 func TestAssetGroupMemberCount(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t)
 		testCtx = context.Background()

@@ -30,6 +30,7 @@ import (
 )
 
 func TestResources_GetFlags(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
@@ -61,6 +62,7 @@ func TestResources_GetFlags(t *testing.T) {
 }
 
 func TestResources_ToggleFlag(t *testing.T) {
+	t.Parallel()
 	const (
 		featureID    = int32(1)
 		featureIDStr = "1"

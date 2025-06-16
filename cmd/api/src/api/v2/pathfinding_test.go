@@ -31,6 +31,7 @@ import (
 )
 
 func TestResources_GetPathfindingResult(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
@@ -92,6 +93,7 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 }
 
 func TestResources_GetShortestPath(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
@@ -332,6 +334,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 }
 
 func TestResources_GetSearchResult(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)

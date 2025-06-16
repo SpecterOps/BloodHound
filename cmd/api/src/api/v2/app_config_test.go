@@ -35,6 +35,7 @@ import (
 )
 
 func Test_GetApplicationConfigurations(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks.NewMockDatabase(mockCtrl)
@@ -131,6 +132,7 @@ func Test_GetApplicationConfigurations(t *testing.T) {
 }
 
 func Test_SetApplicationConfiguration(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)

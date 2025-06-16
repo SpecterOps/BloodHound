@@ -26,6 +26,7 @@ import (
 )
 
 func TestEncodingInterface(t *testing.T) {
+	t.Parallel()
 	encodings := []struct {
 		name     string
 		encoding Encoding
@@ -40,6 +41,7 @@ func TestEncodingInterface(t *testing.T) {
 
 	for _, tt := range encodings {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			assert.NotEmpty(t, tt.encoding.String(), "Encoding String() should not be empty")
 			if tt.encoding.String() != Unknown.String() {
 				assert.NotEmpty(t, tt.encoding.Sequence(), "Encoding Sequence() should not be empty for non-Unknown encodings")
@@ -54,6 +56,7 @@ func TestEncodingInterface(t *testing.T) {
 }
 
 func TestEncodingValues(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		encoding     Encoding
@@ -100,6 +103,7 @@ func TestEncodingValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tt.expectedType, tt.encoding.String(), "Encoding type should match")
 			assert.Equal(t, tt.expectedSeq, tt.encoding.Sequence(), "Encoding sequence should match")
 			if tt.encoding.String() != Unknown.String() {
@@ -110,6 +114,7 @@ func TestEncodingValues(t *testing.T) {
 }
 
 func TestBOMEncoding(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name           string
 		encoding       bomEncoding
@@ -156,6 +161,7 @@ func TestBOMEncoding(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tc.expectedString, tc.encoding.String(), "bomEncoding String() should return correct value")
 			assert.Equal(t, tc.expectedSeq, tc.encoding.Sequence(), "bomEncoding Sequence() should return correct value")
 			assert.Equal(t, tc.hasSequence, tc.encoding.HasSequence(bufio.NewReader(bytes.NewReader(tc.testData))), "bomEncoding HasSequence() should return correct value")
@@ -164,6 +170,7 @@ func TestBOMEncoding(t *testing.T) {
 }
 
 func TestEncodingEquality(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		enc1     Encoding
@@ -198,12 +205,14 @@ func TestEncodingEquality(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tc.expected, tc.enc1.String() == tc.enc2.String(), "Encoding equality check should be correct")
 		})
 	}
 }
 
 func TestHasSequence(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		encoding Encoding
@@ -226,6 +235,7 @@ func TestHasSequence(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result := tc.encoding.HasSequence(bufio.NewReader(bytes.NewReader(tc.input)))
 			assert.Equal(t, tc.expected, result, "HasSequence() should correctly identify BOM presence")
 		})

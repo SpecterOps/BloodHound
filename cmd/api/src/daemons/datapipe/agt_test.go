@@ -32,6 +32,7 @@ import (
 )
 
 func TestAGT_FetchNodesFromSeeds_Expansions(t *testing.T) {
+	t.Parallel()
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.SetupActiveDirectory()
 
@@ -80,6 +81,7 @@ func TestAGT_FetchNodesFromSeeds_Expansions(t *testing.T) {
 }
 
 func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
+	t.Parallel()
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 
 	t.Run("FetchNodesFromSeeds_ChildExpansion retrieves AD group members without limit", func(t *testing.T) {
@@ -163,6 +165,7 @@ func TestAGT_FetchNodesFromSeeds_ChildExpansion(t *testing.T) {
 }
 
 func TestAGT_FetchNodesFromSeeds_ParentExpansion(t *testing.T) {
+	t.Parallel()
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.SetupActiveDirectory()
 

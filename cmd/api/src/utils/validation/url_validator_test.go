@@ -27,6 +27,7 @@ import (
 )
 
 func TestUrlValidator(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid URL", func(t *testing.T) {
 		type testStruct struct {
 			URL string `validate:"url"`

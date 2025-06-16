@@ -34,6 +34,7 @@ import (
 )
 
 func TestToolContainer_GetScheduledAnalysisConfiguration_Errors(t *testing.T) {
+	t.Parallel()
 	t.Run("returns error on invalid rrule", func(t *testing.T) {
 		var (
 			ctrl     = gomock.NewController(t)

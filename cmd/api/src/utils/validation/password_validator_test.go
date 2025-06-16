@@ -25,6 +25,7 @@ import (
 )
 
 func TestPasswordValidator(t *testing.T) {
+	t.Parallel()
 
 	type Foo struct {
 		Password string `validate:"password,length=12,lower=2,upper=2,special=2,numeric=2"`

@@ -25,6 +25,7 @@ import (
 )
 
 func TestNewCounterToMaximum(t *testing.T) {
+	t.Parallel()
 	t.Run("Count to 0", func(t *testing.T) {
 		var (
 			counter    = atomics.NewCounter[uint32](0)

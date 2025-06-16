@@ -41,6 +41,7 @@ import (
 )
 
 func TestAuth_CreateSSOSession(t *testing.T) {
+	t.Parallel()
 	var (
 		gothamSAML = model.SAMLProvider{Serial: model.Serial{ID: 1}}
 		gothamSSO  = model.SSOProvider{SAMLProvider: &gothamSAML, Serial: model.Serial{ID: 1}, Type: model.SessionAuthProviderSAML}

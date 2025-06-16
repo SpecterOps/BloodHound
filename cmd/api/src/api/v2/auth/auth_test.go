@@ -68,6 +68,7 @@ const (
 )
 
 func TestManagementResource_PutUserAuthSecret(t *testing.T) {
+	t.Parallel()
 	var (
 		currentPassword   = "currentPassword"
 		goodUser          = model.User{AuthSecret: defaultDigestAuthSecret(t, currentPassword), Unique: model.Unique{ID: must.NewUUIDv4()}}
@@ -169,6 +170,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 }
 
 func TestManagementResource_EnableUserSAML(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl          = gomock.NewController(t)
 		resources, mockDB = apitest.NewAuthManagementResource(mockCtrl)
@@ -277,6 +279,7 @@ func TestManagementResource_EnableUserSAML(t *testing.T) {
 }
 
 func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		goodSAMLProvider = model.SAMLProvider{
 			SSOProviderID: null.Int32From(1),
@@ -336,6 +339,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 }
 
 func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -363,6 +367,7 @@ func TestManagementResource_ListPermissions_SortingError(t *testing.T) {
 }
 
 func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -390,6 +395,7 @@ func TestManagementResource_ListPermissions_InvalidFilterPredicate(t *testing.T)
 }
 
 func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -417,6 +423,7 @@ func TestManagementResource_ListPermissions_PredicateMismatchWithColumn(t *testi
 }
 
 func TestManagementResource_ListPermissions_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -447,6 +454,7 @@ func TestManagementResource_ListPermissions_DBError(t *testing.T) {
 }
 
 func TestManagementResource_ListPermissions(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -615,6 +623,7 @@ func TestManagementResource_GetPermission(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles_SortingError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -642,6 +651,7 @@ func TestManagementResource_ListRoles_SortingError(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -669,6 +679,7 @@ func TestManagementResource_ListRoles_InvalidColumn(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -696,6 +707,7 @@ func TestManagementResource_ListRoles_InvalidFilterPredicate(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -723,6 +735,7 @@ func TestManagementResource_ListRoles_PredicateMismatchWithColumn(t *testing.T) 
 }
 
 func TestManagementResource_ListRoles_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -752,6 +765,7 @@ func TestManagementResource_ListRoles_DBError(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -802,6 +816,7 @@ func TestManagementResource_ListRoles(t *testing.T) {
 }
 
 func TestManagementResource_ListRoles_Filtered(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -970,6 +985,7 @@ func TestManagementResource_GetRole(t *testing.T) {
 }
 
 func TestExpireUserAuthSecret_Failure(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1033,6 +1049,7 @@ func TestExpireUserAuthSecret_Failure(t *testing.T) {
 }
 
 func TestExpireUserAuthSecret_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1061,6 +1078,7 @@ func TestExpireUserAuthSecret_Success(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers_SortingError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1088,6 +1106,7 @@ func TestManagementResource_ListUsers_SortingError(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1115,6 +1134,7 @@ func TestManagementResource_ListUsers_InvalidColumn(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1142,6 +1162,7 @@ func TestManagementResource_ListUsers_InvalidFilterPredicate(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1169,6 +1190,7 @@ func TestManagementResource_ListUsers_PredicateMismatchWithColumn(t *testing.T) 
 }
 
 func TestManagementResource_ListUsers_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1198,6 +1220,7 @@ func TestManagementResource_ListUsers_DBError(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1247,6 +1270,7 @@ func TestManagementResource_ListUsers(t *testing.T) {
 }
 
 func TestManagementResource_ListUsers_Filtered(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1289,6 +1313,7 @@ func TestManagementResource_ListUsers_Filtered(t *testing.T) {
 }
 
 func TestCreateUser_Failure(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1414,6 +1439,7 @@ func TestCreateUser_Failure(t *testing.T) {
 }
 
 func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1458,6 +1484,7 @@ func TestCreateUser_FailureDuplicateEmail(t *testing.T) {
 }
 
 func TestCreateUser_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1503,6 +1530,7 @@ func TestCreateUser_Success(t *testing.T) {
 }
 
 func TestCreateUser_ResetPassword(t *testing.T) {
+	t.Parallel()
 	goodUser := model.User{
 		PrincipalName: "good user",
 		AuthSecret:    &model.AuthSecret{ExpiresAt: time.Time{}},
@@ -1575,6 +1603,7 @@ func TestCreateUser_ResetPassword(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1638,6 +1667,7 @@ func TestManagementResource_UpdateUser_IDMalformed(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1702,6 +1732,7 @@ func TestManagementResource_UpdateUser_GetUserError(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1767,6 +1798,7 @@ func TestManagementResource_UpdateUser_GetRolesError(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1797,6 +1829,7 @@ func TestManagementResource_UpdateUser_DuplicateEmailError(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -1874,6 +1907,7 @@ func TestManagementResource_UpdateUser_SelfDisable(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
+	t.Parallel()
 	var (
 		adminRole = model.Role{
 			Serial: model.Serial{
@@ -1933,6 +1967,7 @@ func TestManagementResource_UpdateUser_UserSelfModify(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2016,6 +2051,7 @@ func TestManagementResource_UpdateUser_LookupActiveSessionsError(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2222,6 +2258,7 @@ func TestManagementResource_GetUser(t *testing.T) {
 }
 
 func TestManagementResource_GetSelf(t *testing.T) {
+	t.Parallel()
 	type expected struct {
 		responseBody   string
 		responseCode   int
@@ -2299,6 +2336,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 			request := testCase.buildRequest()
 
 			response := httptest.NewRecorder()
@@ -2319,6 +2357,7 @@ func TestManagementResource_GetSelf(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2342,6 +2381,7 @@ func TestManagementResource_DeleteUser_BadUserID(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		endpoint = "/api/v2/bloodhound-users"
@@ -2369,6 +2409,7 @@ func TestManagementResource_DeleteUser_UserNotFound(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_UserBhCtxNotFound(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl = gomock.NewController(t)
 		endpoint = "/api/v2/bloodhound-users"
@@ -2403,6 +2444,7 @@ func TestManagementResource_DeleteUser_UserBhCtxNotFound(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		adminRole = model.Role{
@@ -2445,6 +2487,7 @@ func TestManagementResource_DeleteUser_UserCannotSelfDelete(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2471,6 +2514,7 @@ func TestManagementResource_DeleteUser_GetUserError(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		adminRole = model.Role{
@@ -2515,6 +2559,7 @@ func TestManagementResource_DeleteUser_DeleteUserError(t *testing.T) {
 }
 
 func TestManagementResource_DeleteUser_Success(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		adminRole = model.Role{
@@ -2558,6 +2603,7 @@ func TestManagementResource_DeleteUser_Success(t *testing.T) {
 }
 
 func TestManagementResource_UpdateUser_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2646,6 +2692,7 @@ func TestManagementResource_UpdateUser_Success(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2724,6 +2771,7 @@ func TestManagementResource_ListAuthTokens_SortingError(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2751,6 +2799,7 @@ func TestManagementResource_ListAuthTokens_InvalidColumn(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2778,6 +2827,7 @@ func TestManagementResource_ListAuthTokens_InvalidFilterPredicate(t *testing.T) 
 }
 
 func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2805,6 +2855,7 @@ func TestManagementResource_ListAuthTokens_PredicateMismatchWithColumn(t *testin
 }
 
 func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2849,6 +2900,7 @@ func TestManagementResource_ListAuthTokens_DBError(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -2977,6 +3029,7 @@ func TestManagementResource_ListAuthTokens_Admin(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -3098,6 +3151,7 @@ func TestManagementResource_ListAuthTokens_NonAdmin(t *testing.T) {
 }
 
 func TestManagementResource_ListAuthTokens_Filtered(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -3508,6 +3562,7 @@ func TestManagementResource_CreateAuthToken(t *testing.T) {
 }
 
 func TestManagementResource_EnrollMFA(t *testing.T) {
+	t.Parallel()
 	type mock struct {
 		mockDatabase *mocks.MockDatabase
 	}
@@ -3974,6 +4029,7 @@ func TestManagementResource_EnrollMFA(t *testing.T) {
 }
 
 func TestDisenrollMFA_Failure(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4030,6 +4086,7 @@ func TestDisenrollMFA_Failure(t *testing.T) {
 }
 
 func TestDisenrollMFA_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4062,6 +4119,7 @@ func TestDisenrollMFA_Success(t *testing.T) {
 }
 
 func TestDisenrollMFA_Admin_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4112,6 +4170,7 @@ func TestDisenrollMFA_Admin_Success(t *testing.T) {
 }
 
 func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4164,6 +4223,7 @@ func TestDisenrollMFA_Admin_FailureIncorrectPassword(t *testing.T) {
 }
 
 func TestGetMFAActivationStatus_Failure(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4212,6 +4272,7 @@ func TestGetMFAActivationStatus_Failure(t *testing.T) {
 }
 
 func TestGetMFAActivationStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4279,6 +4340,7 @@ func TestGetMFAActivationStatus_Success(t *testing.T) {
 }
 
 func TestActivateMFA_Failure(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -4344,6 +4406,7 @@ func TestActivateMFA_Failure(t *testing.T) {
 }
 
 func TestActivateMFA_Success(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 

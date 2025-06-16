@@ -27,6 +27,7 @@ import (
 //
 // For more information on HLL see: https://en.wikipedia.org/wiki/HyperLogLog
 func TestHyperLogLog32(t *testing.T) {
+	t.Parallel()
 	const cardinalityMax = 10_000_000
 
 	sketch := NewHyperLogLog32()
@@ -54,6 +55,7 @@ func TestHyperLogLog32(t *testing.T) {
 }
 
 func TestHyperLogLog32_Add(t *testing.T) {
+	t.Parallel()
 	sketch := NewHyperLogLog32()
 
 	sketch.Add(1)

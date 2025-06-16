@@ -26,6 +26,7 @@ import (
 )
 
 func TestURLJoinPathEscapesSlashes(t *testing.T) {
+	t.Parallel()
 	link, err := url.Parse("www.test.com/")
 	require.NoError(t, err)
 
@@ -35,6 +36,7 @@ func TestURLJoinPathEscapesSlashes(t *testing.T) {
 }
 
 func TestURLJoinPathNoPrefix(t *testing.T) {
+	t.Parallel()
 	link, err := url.Parse("www.test.com")
 	require.NoError(t, err)
 

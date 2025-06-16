@@ -27,6 +27,7 @@ import (
 )
 
 func TestDatabase_checkError_NotFound(t *testing.T) {
+	t.Parallel()
 	errType := gorm.ErrRecordNotFound
 	tx := gorm.DB{
 		Error: errType,
@@ -40,6 +41,7 @@ func TestDatabase_checkError_NotFound(t *testing.T) {
 }
 
 func TestDatabase_checkError_OtherError(t *testing.T) {
+	t.Parallel()
 	errType := gorm.ErrInvalidData
 	tx := gorm.DB{
 		Error: errType,
@@ -53,6 +55,7 @@ func TestDatabase_checkError_OtherError(t *testing.T) {
 }
 
 func TestDatabase_NullUUID(t *testing.T) {
+	t.Parallel()
 	value, err := uuid.NewV4()
 	require.Nil(t, err)
 

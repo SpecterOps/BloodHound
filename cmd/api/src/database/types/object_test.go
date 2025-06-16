@@ -24,6 +24,7 @@ import (
 )
 
 func TestTypes_Scan_InvalidInput(t *testing.T) {
+	t.Parallel()
 	object := JSONUntypedObject{}
 	err := object.Scan(json.RawMessage(`{"a":"b"}`))
 	require.NotNil(t, err)
@@ -31,6 +32,7 @@ func TestTypes_Scan_InvalidInput(t *testing.T) {
 }
 
 func TestTypes_Scan_Success(t *testing.T) {
+	t.Parallel()
 	object := JSONUntypedObject{}
 
 	jsonInput := []byte(`{"a":"b"}`)
@@ -44,6 +46,7 @@ func TestTypes_Scan_Success(t *testing.T) {
 }
 
 func TestTypes_Value(t *testing.T) {
+	t.Parallel()
 	object := JSONUntypedObject(map[string]any{"key": "value"})
 
 	value, err := object.Value()

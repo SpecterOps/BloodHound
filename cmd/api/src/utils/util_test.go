@@ -32,6 +32,7 @@ import (
 )
 
 func TestIsValidClientVersion(t *testing.T) {
+	t.Parallel()
 	var (
 		err error
 	)
@@ -67,6 +68,7 @@ func TestIsValidClientVersion(t *testing.T) {
 }
 
 func TestParseClientVersion(t *testing.T) {
+	t.Parallel()
 	version, err := utils.ParseClientVersion("sharphound/2.0.6.0")
 
 	require.Nil(t, err)
@@ -119,6 +121,7 @@ func TestParseClientVersion(t *testing.T) {
 }
 
 func TestWriteResultJson(t *testing.T) {
+	t.Parallel()
 	rr := httptest.NewRecorder()
 	expectedResult := make(map[string]any)
 	expectedResult["foo"] = "bar"
@@ -144,6 +147,7 @@ func TestWriteResultJson(t *testing.T) {
 }
 
 func TestWriteResultRawJson(t *testing.T) {
+	t.Parallel()
 	rr := httptest.NewRecorder()
 	expectedResult := make(map[string]any)
 	expectedResult["foo"] = "bar"
@@ -170,6 +174,7 @@ func TestWriteResultRawJson(t *testing.T) {
 }
 
 func TestGetPageParamsForGraphQuery(t *testing.T) {
+	t.Parallel()
 	expectedSkip := 0
 	expectedLimit := 10
 	expectedOrder := "n.foo, n.bar DESC"
@@ -187,6 +192,7 @@ func TestGetPageParamsForGraphQuery(t *testing.T) {
 }
 
 func TestGetSkipParamForGraphQuery(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("skip", "foo")
 
@@ -205,6 +211,7 @@ func TestGetSkipParamForGraphQuery(t *testing.T) {
 }
 
 func TestGetLimitParamForGraphQuery(t *testing.T) {
+	t.Parallel()
 	params := url.Values{}
 	params.Add("limit", "foo")
 
@@ -223,6 +230,7 @@ func TestGetLimitParamForGraphQuery(t *testing.T) {
 }
 
 func TestGetOrderForNeo4jQuery(t *testing.T) {
+	t.Parallel()
 	expectedResult := "n.someColumn, n.anotherColumn DESC"
 
 	params := url.Values{}
@@ -234,6 +242,7 @@ func TestGetOrderForNeo4jQuery(t *testing.T) {
 }
 
 func TestHeaderMatches(t *testing.T) {
+	t.Parallel()
 	header := http.Header{
 		headers.ContentType.String(): []string{mediatypes.ApplicationJson.String()},
 	}
@@ -244,6 +253,7 @@ func TestHeaderMatches(t *testing.T) {
 }
 
 func TestIsValidEmail(t *testing.T) {
+	t.Parallel()
 	t.Run("is valid email", func(t *testing.T) {
 		require.True(t, utils.IsValidEmail("odoylerules@specterops.io"))
 	})

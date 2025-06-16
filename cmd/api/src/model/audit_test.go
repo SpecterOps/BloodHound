@@ -32,6 +32,7 @@ func (m MockAuditable) AuditData() AuditData {
 }
 
 func TestMatches_Success(t *testing.T) {
+	t.Parallel()
 	validEntry1 := AuditEntry{
 		CommitID: uuid.Must(uuid.NewV4()),
 		Action:   "action",
@@ -52,6 +53,7 @@ func TestMatches_Success(t *testing.T) {
 }
 
 func TestMatches_FailureAction(t *testing.T) {
+	t.Parallel()
 	actionEntry1 := AuditEntry{
 		CommitID: uuid.Must(uuid.NewV4()),
 		Action:   "action",
@@ -72,6 +74,7 @@ func TestMatches_FailureAction(t *testing.T) {
 }
 
 func TestMatches_FailureModel(t *testing.T) {
+	t.Parallel()
 	modelEntry1 := AuditEntry{
 		CommitID: uuid.Must(uuid.NewV4()),
 		Action:   "action",
@@ -92,6 +95,7 @@ func TestMatches_FailureModel(t *testing.T) {
 }
 
 func TestMatches_FailureStatus(t *testing.T) {
+	t.Parallel()
 	statusEntry1 := AuditEntry{
 		CommitID: uuid.Must(uuid.NewV4()),
 		Action:   "action",
@@ -112,6 +116,7 @@ func TestMatches_FailureStatus(t *testing.T) {
 }
 
 func TestMatches_FailureErrMsg(t *testing.T) {
+	t.Parallel()
 	errMsgEntry1 := AuditEntry{
 		CommitID: uuid.Must(uuid.NewV4()),
 		Action:   "action",

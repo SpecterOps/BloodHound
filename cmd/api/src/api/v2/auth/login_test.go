@@ -50,6 +50,7 @@ import (
 )
 
 func TestLoginExpiry(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 

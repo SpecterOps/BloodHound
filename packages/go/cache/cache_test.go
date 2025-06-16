@@ -69,6 +69,7 @@ func getPopulatedInstance(data cacheFillHarness) (cache.Cache, error) {
 }
 
 func TestCache_NewCache(t *testing.T) {
+	t.Parallel()
 	var (
 		testValidSizes = []int{1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096}
 	)
@@ -80,6 +81,7 @@ func TestCache_NewCache(t *testing.T) {
 
 	for _, size := range testValidSizes {
 		t.Run(fmt.Sprintf("NewCache should succeed if MaxSize is: %d", size), func(t *testing.T) {
+			t.Parallel()
 			_, err := cache.NewCache(cache.Config{MaxSize: 1})
 			require.Nil(t, err)
 		})
@@ -87,6 +89,7 @@ func TestCache_NewCache(t *testing.T) {
 }
 
 func TestCache_Set(t *testing.T) {
+	t.Parallel()
 	_, jsonErr := json.Marshal(invalidInputValue)
 	require.NotNil(t, jsonErr)
 
@@ -132,6 +135,7 @@ func TestCache_Set(t *testing.T) {
 }
 
 func TestCache_GuardedSet(t *testing.T) {
+	t.Parallel()
 	_, jsonErr := json.Marshal(invalidInputValue)
 	require.NotNil(t, jsonErr)
 
@@ -172,6 +176,7 @@ func TestCache_GuardedSet(t *testing.T) {
 }
 
 func TestCache_Get(t *testing.T) {
+	t.Parallel()
 	instance, err := getPopulatedInstance(cacheEntries)
 	require.Nil(t, err)
 
@@ -197,6 +202,7 @@ func TestCache_Get(t *testing.T) {
 }
 
 func TestCache_Reset(t *testing.T) {
+	t.Parallel()
 	instance, err := getPopulatedInstance(cacheEntries)
 	require.Nil(t, err)
 
@@ -209,6 +215,7 @@ func TestCache_Reset(t *testing.T) {
 }
 
 func TestInvalidValueError(t *testing.T) {
+	t.Parallel()
 	var (
 		testValue              = struct{}{}
 		invalidValueNil        = cache.InvalidValueError{nil}
@@ -222,6 +229,7 @@ func TestInvalidValueError(t *testing.T) {
 }
 
 func TestCache_FillFifo(t *testing.T) {
+	t.Parallel()
 	var (
 		cacheKeys  = []string{"0", "1", "2", "3", "4", "5"}
 		value      testStruct

@@ -27,18 +27,21 @@ import (
 )
 
 func TestDomainSelectors_TestIsSortable(t *testing.T) {
+	t.Parallel()
 	domains := DomainSelectors{}
 	require.True(t, domains.IsSortable("objectid"))
 	require.False(t, domains.IsSortable("foo"))
 }
 
 func TestDomainSelectors_GetFilterableColumns(t *testing.T) {
+	t.Parallel()
 	domains := DomainSelectors{}
 	columns := domains.GetFilterableColumns()
 	require.Equal(t, 3, len(columns))
 }
 
 func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
+	t.Parallel()
 	domains := DomainSelectors{}
 	_, err := domains.GetValidFilterPredicatesAsStrings("foo")
 	require.Equal(t, ErrResponseDetailsColumnNotFilterable, err.Error())
@@ -55,6 +58,7 @@ func TestDomainSelectors_GetValidFilterPredicatesAsStrings(t *testing.T) {
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
+	t.Parallel()
 	request, err := http.NewRequest("GET", "endpoint", nil)
 	require.Nil(t, err)
 	q := url.Values{}
@@ -69,6 +73,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn(t *testing.T) {
 }
 
 func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) {
+	t.Parallel()
 	request, err := http.NewRequest("GET", "endpoint", nil)
 	require.Nil(t, err)
 	q := url.Values{}
@@ -83,6 +88,7 @@ func TestDomainSelectors_GetFilterCriteria_InvalidFilterPredicate(t *testing.T) 
 }
 
 func TestDomainSelectors_GetFilterCriteria_Success(t *testing.T) {
+	t.Parallel()
 	request, err := http.NewRequest("GET", "endpoint", nil)
 	require.Nil(t, err)
 	q := url.Values{}

@@ -25,6 +25,7 @@ import (
 )
 
 func TestDataType_CoerceToSupertype(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		LeftTypes       []DataType
 		RightTypes      []DataType
@@ -101,6 +102,7 @@ func TestDataType_CoerceToSupertype(t *testing.T) {
 }
 
 func TestDataType_Comparable(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		LeftTypes  []DataType
 		Operators  []Operator
@@ -239,6 +241,7 @@ func TestDataType_Comparable(t *testing.T) {
 }
 
 func TestValueToDataType(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		Value        any
 		ExpectedType DataType

@@ -95,6 +95,7 @@ func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 }
 
 func TestDatabase_Installation(t *testing.T) {
+	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t)
 		testCtx = context.Background()
@@ -109,6 +110,7 @@ func TestDatabase_Installation(t *testing.T) {
 }
 
 func TestDatabase_InitializePermissions(t *testing.T) {
+	t.Parallel()
 	dbInst := integration.SetupDB(t)
 
 	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
@@ -134,6 +136,7 @@ func TestDatabase_InitializePermissions(t *testing.T) {
 }
 
 func TestDatabase_InitializeRoles(t *testing.T) {
+	t.Parallel()
 	var (
 		_, roles  = initAndGetRoles(t)
 		templates = auth.Roles()
@@ -156,6 +159,7 @@ func TestDatabase_InitializeRoles(t *testing.T) {
 }
 
 func TestDatabase_CreateGetDeleteUser(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx           = context.Background()
 		dbInst, roles = initAndGetRoles(t)
@@ -235,6 +239,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 }
 
 func TestDatabase_UpdateUserAuth(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
@@ -300,6 +305,7 @@ func TestDatabase_UpdateUserAuth(t *testing.T) {
 }
 
 func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
+	t.Parallel()
 	var (
 		ctx          = context.Background()
 		dbInst, user = initAndCreateUser(t)
@@ -336,6 +342,7 @@ func TestDatabase_CreateGetDeleteAuthToken(t *testing.T) {
 }
 
 func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
+	t.Parallel()
 	const updatedDigest = "updated"
 
 	var (
@@ -385,6 +392,7 @@ func TestDatabase_CreateGetDeleteAuthSecret(t *testing.T) {
 }
 
 func TestDatabase_CreateUpdateDeleteSSOProvider(t *testing.T) {
+	t.Parallel()
 	t.Run("successfully CreateUpdateDeleteSAMLProvider", func(t *testing.T) {
 		var (
 			ctx             = context.Background()
@@ -526,6 +534,7 @@ func TestDatabase_CreateUpdateDeleteSSOProvider(t *testing.T) {
 }
 
 func TestDatabase_CreateUserSession(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx      = context.Background()
 		dbInst, user = initAndCreateUser(t)
@@ -560,6 +569,7 @@ func TestDatabase_CreateUserSession(t *testing.T) {
 }
 
 func TestDatabase_SetUserSessionFlag(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx      = context.Background()
 		dbInst, user = initAndCreateUser(t)
@@ -582,6 +592,7 @@ func TestDatabase_SetUserSessionFlag(t *testing.T) {
 }
 
 func TestDatabase_GetUserSSOSession(t *testing.T) {
+	t.Parallel()
 	t.Run("Successful GetUserSSOSession (SAML)", func(t *testing.T) {
 		var (
 			testCtx      = context.Background()

@@ -27,6 +27,7 @@ import (
 )
 
 func TestSavedQueries_IsSortable(t *testing.T) {
+	t.Parallel()
 	savedQueries := model.SavedQueries{}
 	for _, column := range []string{"user_id", "name", "query", "id", "created_at", "updated_at", "deleted_at"} {
 		require.True(t, savedQueries.IsSortable(column))
@@ -36,6 +37,7 @@ func TestSavedQueries_IsSortable(t *testing.T) {
 }
 
 func TestSavedQueries_ValidFilters(t *testing.T) {
+	t.Parallel()
 	savedQueries := model.SavedQueries{}
 	validFilters := savedQueries.ValidFilters()
 	require.Equal(t, 4, len(validFilters))
@@ -54,6 +56,7 @@ func TestSavedQueries_ValidFilters(t *testing.T) {
 }
 
 func TestSavedQueries_GetValidFilterPredicatesAsStrings(t *testing.T) {
+	t.Parallel()
 	savedQueries := model.SavedQueries{}
 	for _, column := range []string{"user_id", "query"} {
 		predicates, err := savedQueries.GetValidFilterPredicatesAsStrings(column)
@@ -74,6 +77,7 @@ func TestSavedQueries_GetValidFilterPredicatesAsStrings(t *testing.T) {
 }
 
 func TestSavedQueries_IsString(t *testing.T) {
+	t.Parallel()
 	savedQueries := model.SavedQueries{}
 	for _, column := range []string{"name", "query", "description"} {
 		require.True(t, savedQueries.IsString(column))

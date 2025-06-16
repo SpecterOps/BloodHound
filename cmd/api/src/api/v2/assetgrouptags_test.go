@@ -52,6 +52,7 @@ import (
 )
 
 func TestResources_GetAssetGroupTags(t *testing.T) {
+	t.Parallel()
 	const queryParamTagType = "type"
 	var (
 		mockCtrl      = gomock.NewController(t)
@@ -294,6 +295,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 }
 
 func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -553,6 +555,7 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTag(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -656,6 +659,7 @@ func TestDatabase_GetAssetGroupTag(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
@@ -759,6 +763,7 @@ func TestDatabase_GetAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -1007,6 +1012,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -1134,6 +1140,7 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 }
 
 func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -1304,6 +1311,7 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -1385,6 +1393,7 @@ func TestResources_GetAssetGroupTagSelectorsByTagId(t *testing.T) {
 }
 
 func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
@@ -1535,6 +1544,7 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 }
 
 func Test_GetAssetGroupMembersByTag(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -1759,6 +1769,7 @@ func Test_GetAssetGroupMembersByTag(t *testing.T) {
 }
 
 func Test_GetAssetGroupMembersBySelector(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl    = gomock.NewController(t)
 		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
@@ -2103,6 +2114,7 @@ func Test_GetAssetGroupMembersBySelector(t *testing.T) {
 }
 
 func TestResources_PreviewSelectors(t *testing.T) {
+	t.Parallel()
 	var (
 		mockCtrl       = gomock.NewController(t)
 		mockDB         = mocks_db.NewMockDatabase(mockCtrl)

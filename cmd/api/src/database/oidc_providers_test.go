@@ -30,6 +30,7 @@ import (
 )
 
 func TestBloodhoundDB_CreateUpdateOIDCProvider(t *testing.T) {
+	t.Parallel()
 	var (
 		testCtx = context.Background()
 		dbInst  = integration.SetupDB(t)

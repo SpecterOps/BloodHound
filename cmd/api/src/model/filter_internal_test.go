@@ -23,6 +23,7 @@ import (
 )
 
 func TestQueryParameterFilterParser_ParseQueryParameterFilter(t *testing.T) {
+	t.Parallel()
 	parser := NewQueryParameterFilterParser()
 
 	t.Run("parser should parse a parameter filter", func(t *testing.T) {

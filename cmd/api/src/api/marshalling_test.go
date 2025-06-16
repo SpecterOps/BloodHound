@@ -33,6 +33,7 @@ import (
 )
 
 func TestWriteErrorResponse_InvalidFormat(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteErrorResponse(context.Background(), fmt.Errorf("foo"), response)
 	require.Equal(t, response.Code, http.StatusInternalServerError)
@@ -40,6 +41,7 @@ func TestWriteErrorResponse_InvalidFormat(t *testing.T) {
 }
 
 func TestWriteErrorResponse_V1(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteErrorResponse(context.Background(), &api.ErrorResponse{
 		HTTPStatus: http.StatusTeapot,
@@ -50,6 +52,7 @@ func TestWriteErrorResponse_V1(t *testing.T) {
 }
 
 func TestWriteErrorResponse_V2(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteErrorResponse(context.Background(), &api.ErrorWrapper{
 		HTTPStatus: http.StatusTeapot,
@@ -63,6 +66,7 @@ func TestWriteErrorResponse_V2(t *testing.T) {
 }
 
 func TestWriteBasicResponse(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteBasicResponse(context.Background(), json.RawMessage(`{"foo":"bar"}`), http.StatusOK, response)
 	require.Equal(t, http.StatusOK, response.Code)
@@ -70,6 +74,7 @@ func TestWriteBasicResponse(t *testing.T) {
 }
 
 func TestWriteResponseWrapperWithPagination(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteResponseWrapperWithPagination(context.Background(), json.RawMessage(`{"foo":"bar"}`), 5, 10, 100, http.StatusOK, response)
 	require.Equal(t, http.StatusOK, response.Code)
@@ -77,6 +82,7 @@ func TestWriteResponseWrapperWithPagination(t *testing.T) {
 }
 
 func TestWriteTimeWindowedResponse(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteTimeWindowedResponse(context.Background(), json.RawMessage(`{"foo":"bar"}`), time.Now().Add(-1*time.Second), time.Now(), http.StatusOK, response)
 	require.Equal(t, http.StatusOK, response.Code)
@@ -84,6 +90,7 @@ func TestWriteTimeWindowedResponse(t *testing.T) {
 }
 
 func TestWriteResponseWrapperWithTimeWindowAndPagination(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteResponseWrapperWithTimeWindowAndPagination(context.Background(), json.RawMessage(`{"foo":"bar"}`), time.Now().Add(-5*time.Second), time.Now(), 5, 10, 100, http.StatusOK, response)
 	require.Equal(t, http.StatusOK, response.Code)
@@ -104,6 +111,7 @@ func TestWriteResponseWrapperWithTimeWindowAndPagination(t *testing.T) {
 }
 
 func TestWriteBinaryResponse(t *testing.T) {
+	t.Parallel()
 	response := httptest.NewRecorder()
 	api.WriteBinaryResponse(context.Background(), []byte(`{"foo":"bar"}`), "filename", http.StatusOK, response)
 	require.Equal(t, http.StatusOK, response.Code)

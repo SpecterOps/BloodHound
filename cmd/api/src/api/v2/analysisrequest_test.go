@@ -41,6 +41,7 @@ import (
 )
 
 func TestResources_GetAnalysisRequest(t *testing.T) {
+	t.Parallel()
 	const (
 		url = "api/v2/analysis/status"
 	)

@@ -29,22 +29,26 @@ import (
 )
 
 func TestFilter(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, []int{1, 3}, slicesext.Filter([]int{1, 2, 3, 4}, isOdd))
 	require.Equal(t, []string{"bbbbbb", "cccccccc"}, slicesext.Filter([]string{"aaaa", "bbbbbb", "cccccccc", "dd"}, isLong))
 }
 
 func TestMap(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, []uint{1, 3, 4, 12}, slicesext.Map([]int{-1, -3, 4, -12}, abs))
 	require.Equal(t, []string{"abc", "def", "hij"}, slicesext.Map([]string{"ABC", "DEF", "HIJ"}, strings.ToLower))
 	require.Equal(t, []int{3, 6, 9, 12}, slicesext.Map([]int{1, 2, 3, 4}, triple))
 }
 
 func TestFlatMap(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, []string{"a", "a", "b", "b"}, slicesext.FlatMap([]string{"a", "b"}, duplicate[string]))
 	require.Equal(t, []int{1, 1, 2, 2}, slicesext.FlatMap([]int{1, 2}, duplicate[int]))
 }
 
 func TestUnique(t *testing.T) {
+	t.Parallel()
 	var (
 		in  = []string{"a", "a", "b", "b"}
 		out = slicesext.Unique(in)
@@ -131,6 +135,7 @@ func BenchmarkTail(b *testing.B) {
 // TestConcat was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
 // Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices_test.go#L1228
 func TestConcat(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		s    [][]int
 		want []int
@@ -173,6 +178,7 @@ func TestConcat(t *testing.T) {
 // TestConcat was ripped from go1.22 source and should be replaced with the stdlib implementation when we move to 1.22
 // Original source: https://github.com/golang/go/blob/5c0d0929d3a6378c710376b55a49abd55b31a805/src/slices/slices_test.go#L1228
 func TestConcat_too_large(t *testing.T) {
+	t.Parallel()
 	// Use zero length element to minimize memory in testing
 	type void struct{}
 	cases := []struct {
