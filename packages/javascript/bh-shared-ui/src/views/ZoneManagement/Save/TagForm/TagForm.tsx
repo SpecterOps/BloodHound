@@ -23,6 +23,7 @@ import {
     Input,
     Label,
     Skeleton,
+    Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -31,6 +32,7 @@ import {
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
     AssetGroupTagTypes,
+    parseTieringConfiguration,
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
@@ -46,11 +48,14 @@ import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
+import { useGetConfiguration } from '../../../../hooks';
+
 type TagFormInputs = {
     name: string;
     description: string;
     position: number | null;
     type: AssetGroupTagTypes;
+    analysis: boolean;
 };
 
 const MAX_NAME_LENGTH = 250;
@@ -82,6 +87,7 @@ const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs):
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
     if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+    if (data.analysis !== workingCopy.analysis) diffed.analysis = workingCopy.analysis;
 
     return diffed;
 };
@@ -98,11 +104,18 @@ export const TagForm: FC = () => {
 
     const { TierList } = useContext(ZoneManagementContext);
 
+    const { data } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+
     const {
         register,
         handleSubmit,
         formState: { errors },
+        setValue
     } = useForm<TagFormInputs>();
+
+    // Toggle Enable Analysis 
+    const [enabled, setEnabled] = useState(false);
 
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
@@ -271,6 +284,32 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
+
+                                {tieringConfig?.value.multi_tier_analysis_enabled && tierId ? (
+                                    <div>
+                                        <Label htmlFor='analysis'>Enable Analysis</Label>
+                                        <div className='flex gap-3'>
+                                            <Switch
+                                                id='analysis'
+                                                checked={enabled}
+                                                {...register('analysis')}
+                                                data-testid='tag-form_switch-enable-analysis'
+                                                onCheckedChange={(checked: boolean) => {
+                                                    // setEnabled((prev) => !prev);
+                                                    if (checked) {
+                                                        setValue('analysis', true);
+                                                        setEnabled(true);
+                                                    } else {
+                                                        setValue('analysis', false);
+                                                        setEnabled(false);
+                                                    }
+                                                }}
+                                            />
+                                            <p className='text-xs'>Include this tier when running analysis</p>
+                                        </div>
+                                    </div>
+                                ) : null}
+
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
                                     <Input id='position' type='number' {...register('position', { value: position })} />
