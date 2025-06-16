@@ -16,6 +16,10 @@
 
 export * from './BasicObjectInfoFields';
 export * from './EdgeInfo';
+<<<<<<< HEAD
+=======
+//export * from './EntityInfo';
+>>>>>>> 2ae8f0b4 (moved EntityInfo component into shared components)
 export * from './ExploreSearch';
 export * from './InfoStyles';
 export * from './fragments';
