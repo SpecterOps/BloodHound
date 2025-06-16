@@ -55,7 +55,7 @@ type TagFormInputs = {
     description: string;
     position: number | null;
     type: AssetGroupTagTypes;
-    analysis: boolean;
+    analysis_enabled: boolean;
 };
 
 const MAX_NAME_LENGTH = 250;
@@ -87,7 +87,7 @@ const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs):
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
     if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
-    if (data.analysis !== workingCopy.analysis) diffed.analysis = workingCopy.analysis;
+    if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
 
     return diffed;
 };
@@ -292,16 +292,14 @@ export const TagForm: FC = () => {
                                             <Switch
                                                 id='analysis'
                                                 checked={enabled}
-                                                {...register('analysis')}
+                                                {...register('analysis_enabled')}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
-                                                    // setEnabled((prev) => !prev);
-                                                    if (checked) {
-                                                        setValue('analysis', true);
-                                                        setEnabled(true);
+                                                    setEnabled((prev) => !prev);
+                                                    if (checked === true) {
+                                                        setValue('analysis_enabled', true);
                                                     } else {
-                                                        setValue('analysis', false);
-                                                        setEnabled(false);
+                                                        setValue('analysis_enabled', false);
                                                     }
                                                 }}
                                             />
