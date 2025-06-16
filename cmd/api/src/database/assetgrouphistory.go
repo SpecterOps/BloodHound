@@ -27,7 +27,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupHistory, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupHistory, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,18 +35,30 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter) ([]model.AssetGroupHistory, error) {
-	var historyRecs []model.AssetGroupHistory
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupHistory, error) {
+	var (
+		historyRecs     []model.AssetGroupHistory
+		skipLimitString string
+	)
 
 	if sqlFilter.SQLString != "" {
-		sqlFilter.SQLString = " AND " + sqlFilter.SQLString
+		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
+	}
+
+	if limit != 0 {
+		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
+	}
+
+	if skip != 0 {
+		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY id ASC",
+			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at ASC %s",
 			(model.AssetGroupHistory{}).TableName(),
 			sqlFilter.SQLString,
+			skipLimitString,
 		),
 		sqlFilter.Params...,
 	).Find(&historyRecs); result.Error != nil {

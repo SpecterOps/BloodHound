@@ -822,14 +822,19 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 
 func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, request *http.Request) {
 	var (
-		rCtx = request.Context()
+		rCtx        = request.Context()
+		queryParams = request.URL.Query()
 	)
 
-	if paramIncludeCounts, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeCounts), false); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid value specifed for include counts", request), response)
-	} else if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+	defer measure.ContextMeasure(rCtx, slog.LevelDebug, "Asset Group Tag Get History Records")()
+
+	if queryFilters, err := model.NewQueryParameterFilterParser().ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
 		return
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
+	} else if limit, err := ParseOptionalLimitQueryParameter(queryParams, 100); err != nil {
+		api.WriteErrorResponse(rCtx, ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
 	} else {
 		for name, filters := range queryFilters {
 			if validPredicates, err := api.GetValidFilterPredicatesAsStrings(model.AssetGroupHistory{}, name); err != nil {
@@ -846,53 +851,12 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 			}
 		}
 
-		defer measure.ContextMeasure(request.Context(), slog.LevelDebug, "Asset Group Tag Get Selectors")()
-
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if historyRecs, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter); err != nil && !errors.Is(err, database.ErrNotFound) {
+		} else if historyRecs, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter, skip, limit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
-			var (
-				resp = GetAssetGroupTagSelectorResponse{
-					Selectors: make([]AssetGroupTagSelectorView, 0, len(selectors)),
-				}
-			)
-
-			for _, selector := range selectors {
-				selectorView := AssetGroupTagSelectorView{AssetGroupTagSelector: selector}
-				if paramIncludeCounts {
-					memberCount := int64(0)
-					// if the selector is not disabled
-					if selector.DisabledAt.Time.IsZero() {
-						// get all the nodes which are selected
-						if selectorNodes, err := s.DB.GetSelectorNodesBySelectorIds(request.Context(), selector.ID); err != nil {
-							api.HandleDatabaseError(request, response, err)
-						} else {
-							nodeIds := make([]graph.ID, 0, len(selectorNodes))
-							for _, node := range selectorNodes {
-								nodeIds = append(nodeIds, node.NodeId)
-							}
-
-							// only count nodes that are actually tagged
-							if count, err := s.GraphQuery.CountFilteredNodes(request.Context(), query.And(
-								query.KindIn(query.Node(), assetGroupTag.ToKind()),
-								query.InIDs(query.NodeID(), nodeIds...),
-							)); err != nil {
-								api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting member count: %v", err), request), response)
-							} else {
-								memberCount = count
-							}
-						}
-					}
-					selectorView.Counts = &AssetGroupTagSelectorCounts{
-						Members: memberCount,
-					}
-				}
-				resp.Selectors = append(resp.Selectors, selectorView)
-			}
-
-			api.WriteBasicResponse(request.Context(), resp, http.StatusOK, response)
+			api.WriteResponseWrapperWithPagination(rCtx, historyRecs, limit, skip, len(historyRecs), http.StatusOK, response)
 		}
 	}
 }
