@@ -2200,34 +2200,33 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		testQuery = model.SavedQuery{
+		testQuery = v2.TransferableSavedQuery{
 			Name:        "test_query",
 			Query:       "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100",
 			Description: "test description",
 		}
-		testQuery2 = model.SavedQuery{
+		testQuery2 = v2.TransferableSavedQuery{
 			Name:        "test_query_2",
 			Query:       "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100",
 			Description: "test description",
 		}
-		testQuery3 = model.SavedQuery{
+		testQuery3 = v2.TransferableSavedQuery{
 			Name:        "test_query_3",
 			Query:       "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100",
 			Description: "test description",
 		}
-		testQueryDuplicate = model.SavedQuery{
+		testQueryDuplicate = v2.TransferableSavedQuery{
 			Name:        "test_query",
 			Query:       "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100",
 			Description: "test description",
 		}
-		testQueries          = model.SavedQueries{testQuery, testQuery2, testQuery3}
-		testQueriesDuplicate = model.SavedQueries{testQuery, testQuery2, testQueryDuplicate}
+		testQueries          = []v2.TransferableSavedQuery{testQuery, testQuery2, testQuery3}
+		testQueriesDuplicate = []v2.TransferableSavedQuery{testQuery, testQuery2, testQueryDuplicate}
 	)
 	defer mockCtrl.Finish()
 
 	userId, err := uuid2.NewV4()
 	require.NoError(t, err)
-	testQuery.UserID = userId.String()
 
 	type expected struct {
 		responseCode   int
