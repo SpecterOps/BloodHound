@@ -210,7 +210,7 @@ func TestFetchACEInheritancePath(t *testing.T) {
 		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
 		test.RequireNilErr(t, err)
 
-		pathSet, err := adAnalysis.GetACEInheritancePath(testContext.Context(), db, edge)
+		pathSet, err := adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		nodesInPath := pathSet.AllNodes()
@@ -228,7 +228,7 @@ func TestFetchACEInheritancePath(t *testing.T) {
 		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
 		test.RequireNilErr(t, err)
 
-		pathSet, err = adAnalysis.GetACEInheritancePath(testContext.Context(), db, edge)
+		pathSet, err = adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
 		test.RequireNilErr(t, err)
 
 		nodesInPath = pathSet.AllNodes()

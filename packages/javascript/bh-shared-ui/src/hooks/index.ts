@@ -66,4 +66,6 @@ export * from './usePreviousValue';
 
 export * from './useCustomNodeKinds';
 
+export * from './useExploreTableAutoDisplay';
+
 export * from './useGraphHasData';

@@ -981,91 +981,91 @@ EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
 EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
 EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
 }
-export function AzureKindPropertiesToDisplay (value : AzureKindProperties): string | undefined {
-switch (value) {
-case AzureKindProperties.AppOwnerOrganizationID: 
-return 'App Owner Organization ID'
-case AzureKindProperties.AppDescription: 
-return 'App Description'
-case AzureKindProperties.AppDisplayName: 
-return 'App Display Name'
-case AzureKindProperties.ServicePrincipalType: 
-return 'Service Principal Type'
-case AzureKindProperties.UserType: 
-return 'User Type'
-case AzureKindProperties.TenantID: 
-return 'Tenant ID'
-case AzureKindProperties.ServicePrincipalID: 
-return 'Service Principal ID'
-case AzureKindProperties.ServicePrincipalNames: 
-return 'Service Principal Names'
-case AzureKindProperties.OperatingSystemVersion: 
-return 'Operating System Version'
-case AzureKindProperties.TrustType: 
-return 'Trust Type'
-case AzureKindProperties.IsBuiltIn: 
-return 'Is Built In'
-case AzureKindProperties.AppID: 
-return 'App ID'
-case AzureKindProperties.AppRoleID: 
-return 'App Role ID'
-case AzureKindProperties.DeviceID: 
-return 'Device ID'
-case AzureKindProperties.NodeResourceGroupID: 
-return 'Node Resource Group ID'
-case AzureKindProperties.OnPremID: 
-return 'On Prem ID'
-case AzureKindProperties.OnPremSyncEnabled: 
-return 'On Prem Sync Enabled'
-case AzureKindProperties.SecurityEnabled: 
-return 'Security Enabled'
-case AzureKindProperties.SecurityIdentifier: 
-return 'Security Identifier'
-case AzureKindProperties.EnableRBACAuthorization: 
-return 'RBAC Authorization Enabled'
-case AzureKindProperties.Scope: 
-return 'Scope'
-case AzureKindProperties.Offer: 
-return 'Offer'
-case AzureKindProperties.MFAEnabled: 
-return 'MFA Enabled'
-case AzureKindProperties.License: 
-return 'License'
-case AzureKindProperties.Licenses: 
-return 'Licenses'
-case AzureKindProperties.LoginURL: 
-return 'Login URL'
-case AzureKindProperties.MFAEnforced: 
-return 'MFA Enforced'
-case AzureKindProperties.UserPrincipalName: 
-return 'User Principal Name'
-case AzureKindProperties.IsAssignableToRole: 
-return 'Is Role Assignable'
-case AzureKindProperties.PublisherDomain: 
-return 'Publisher Domain'
-case AzureKindProperties.SignInAudience: 
-return 'Sign In Audience'
-case AzureKindProperties.RoleTemplateID: 
-return 'Role Template ID'
-case AzureKindProperties.RoleDefinitionId: 
-return 'Role Definition Id'
-case AzureKindProperties.EndUserAssignmentRequiresApproval: 
-return 'End User Assignment Requires Approval'
-case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext: 
-return 'End User Assignment Requires CAP AuthenticationContext'
-case AzureKindProperties.EndUserAssignmentUserApprovers: 
-return 'End User Assignment User Approvers'
-case AzureKindProperties.EndUserAssignmentGroupApprovers: 
-return 'End User Assignment Group Approvers'
-case AzureKindProperties.EndUserAssignmentRequiresMFA: 
-return 'End User Assignment Requires MFA'
-case AzureKindProperties.EndUserAssignmentRequiresJustification: 
-return 'End User Assignment Requires Justification'
-case AzureKindProperties.EndUserAssignmentRequiresTicketInformation: 
-return 'End User Assignment Requires Ticket Information'
-default:
-return undefined
-}
+export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
+    switch (value) {
+        case AzureKindProperties.AppOwnerOrganizationID:
+            return 'App Owner Organization ID';
+        case AzureKindProperties.AppDescription:
+            return 'App Description';
+        case AzureKindProperties.AppDisplayName:
+            return 'App Display Name';
+        case AzureKindProperties.ServicePrincipalType:
+            return 'Service Principal Type';
+        case AzureKindProperties.UserType:
+            return 'User Type';
+        case AzureKindProperties.TenantID:
+            return 'Tenant ID';
+        case AzureKindProperties.ServicePrincipalID:
+            return 'Service Principal ID';
+        case AzureKindProperties.ServicePrincipalNames:
+            return 'Service Principal Names';
+        case AzureKindProperties.OperatingSystemVersion:
+            return 'Operating System Version';
+        case AzureKindProperties.TrustType:
+            return 'Trust Type';
+        case AzureKindProperties.IsBuiltIn:
+            return 'Is Built In';
+        case AzureKindProperties.AppID:
+            return 'App ID';
+        case AzureKindProperties.AppRoleID:
+            return 'App Role ID';
+        case AzureKindProperties.DeviceID:
+            return 'Device ID';
+        case AzureKindProperties.NodeResourceGroupID:
+            return 'Node Resource Group ID';
+        case AzureKindProperties.OnPremID:
+            return 'On Prem ID';
+        case AzureKindProperties.OnPremSyncEnabled:
+            return 'On Prem Sync Enabled';
+        case AzureKindProperties.SecurityEnabled:
+            return 'Security Enabled';
+        case AzureKindProperties.SecurityIdentifier:
+            return 'Security Identifier';
+        case AzureKindProperties.EnableRBACAuthorization:
+            return 'RBAC Authorization Enabled';
+        case AzureKindProperties.Scope:
+            return 'Scope';
+        case AzureKindProperties.Offer:
+            return 'Offer';
+        case AzureKindProperties.MFAEnabled:
+            return 'MFA Enabled';
+        case AzureKindProperties.License:
+            return 'License';
+        case AzureKindProperties.Licenses:
+            return 'Licenses';
+        case AzureKindProperties.LoginURL:
+            return 'Login URL';
+        case AzureKindProperties.MFAEnforced:
+            return 'MFA Enforced';
+        case AzureKindProperties.UserPrincipalName:
+            return 'User Principal Name';
+        case AzureKindProperties.IsAssignableToRole:
+            return 'Is Role Assignable';
+        case AzureKindProperties.PublisherDomain:
+            return 'Publisher Domain';
+        case AzureKindProperties.SignInAudience:
+            return 'Sign In Audience';
+        case AzureKindProperties.RoleTemplateID:
+            return 'Role Template ID';
+        case AzureKindProperties.RoleDefinitionId:
+            return 'Role Definition Id';
+        case AzureKindProperties.EndUserAssignmentRequiresApproval:
+            return 'End User Assignment Requires Approval';
+        case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
+            return 'End User Assignment Requires CAP Authentication Context';
+        case AzureKindProperties.EndUserAssignmentUserApprovers:
+            return 'End User Assignment User Approvers';
+        case AzureKindProperties.EndUserAssignmentGroupApprovers:
+            return 'End User Assignment Group Approvers';
+        case AzureKindProperties.EndUserAssignmentRequiresMFA:
+            return 'End User Assignment Requires MFA';
+        case AzureKindProperties.EndUserAssignmentRequiresJustification:
+            return 'End User Assignment Requires Justification';
+        case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
+            return 'End User Assignment Requires Ticket Information';
+        default:
+            return undefined;
+    }
 }
 export function AzurePathfindingEdges (): AzureRelationshipKind[] {
 return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.AZRoleEligible,AzureRelationshipKind.AZRoleApprover,AzureRelationshipKind.Contains]

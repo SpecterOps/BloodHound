@@ -61,6 +61,7 @@ const (
 	RelatedEntityTypeDescendentVMScaleSets              RelatedEntityType = "descendent-vm-scale-sets"
 	RelatedEntityTypeDescendentContainerRegistries      RelatedEntityType = "descendent-container-registries"
 	RelatedEntityTypeDescendentFunctionApps             RelatedEntityType = "descendent-function-apps"
+	RelatedEntityTypeRoleApprovers                      RelatedEntityType = "role-approvers"
 )
 
 // FromGraphNodes takes a slice of *graph.Node and converts them to serializable node structs.
@@ -238,6 +239,7 @@ type RoleDetails struct {
 
 	ActiveAssignments int `json:"active_assignments"`
 	PIMAssignments    int `json:"pim_assignments"`
+	Approvers         int `json:"approvers"`
 }
 
 type LogicAppDetails struct {
