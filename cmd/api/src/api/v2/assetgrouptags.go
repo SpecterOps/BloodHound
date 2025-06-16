@@ -43,10 +43,12 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"gorm.io/gorm/utils"
 )
 
 const (
 	assetGroupPreviewSelectorDefaultLimit = 200
+	assetGroupTagsSearchLimit             = 20
 
 	includeProperties = true
 	excludeProperties = false
@@ -735,4 +737,79 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 
 		api.WriteBasicResponse(request.Context(), GetAssetGroupMembersResponse{Members: members}, http.StatusOK, response)
 	}
+}
+
+type SearchAssetGroupTagsResponse struct {
+	Tiers     model.AssetGroupTags         `json:"tiers"`
+	Labels    model.AssetGroupTags         `json:"labels"`
+	Selectors model.AssetGroupTagSelectors `json:"selectors"`
+	Nodes     []AssetGroupMember           `json:"nodes"`
+}
+
+func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
+	var (
+		// queryParams = request.URL.Query()
+		tag      = model.AssetGroupTag{}
+		selector = model.AssetGroupTagSelector{}
+	)
+
+	queryParameterFilterParser := model.NewQueryParameterFilterParser()
+	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
+		return
+	} else {
+		for name, filters := range queryFilters {
+			if validTagPredicates, err := api.GetValidFilterPredicatesAsStrings(tag, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else if validSelectorPredicates, err := api.GetValidFilterPredicatesAsStrings(selector, name); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
+				return
+			} else {
+				for _, filter := range filters {
+					// look up at line 404
+					if !utils.Contains(validTagPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					} else if !utils.Contains(validSelectorPredicates, string(filter.Operator)) {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+						return
+					}
+					if slices.Contains(validTagPredicates, string(filter.Operator)) {
+
+					}
+					// queryFilters[name][i].IsStringData = tag.IsString(filter.Name)
+				}
+			}
+		}
+
+		if _, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupTagsSearchLimit); err != nil {
+			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
+		} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else if tiers, labels := tierOrLabel(tags); err != nil {
+			slog.Log(request.Context(), slog.LevelInfo, "some error")
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil {
+			api.HandleDatabaseError(request, response, err)
+		} else {
+			api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tiers: tiers, Labels: labels, Selectors: selectors}, http.StatusOK, response)
+		}
+	}
+
+}
+
+func tierOrLabel(tags model.AssetGroupTags) (model.AssetGroupTags, model.AssetGroupTags) {
+	var (
+		tiers  model.AssetGroupTags
+		labels model.AssetGroupTags
+	)
+	for _, tag := range tags {
+		if tag.Type == model.AssetGroupTagTypeTier {
+			tiers = append(tiers, tag)
+		}
+		if tag.Type == model.AssetGroupTagTypeLabel {
+			labels = append(labels, tag)
+		}
+	}
+	return tiers, labels
 }

@@ -55,6 +55,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -739,4 +740,25 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 	}
 
 	return nil
+}
+
+func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
+	var selectors model.AssetGroupTagSelectors
+
+	if sqlFilter.SQLString != "" {
+		sqlFilter.SQLString = " AND " + sqlFilter.SQLString
+	}
+
+	if result := s.db.WithContext(ctx).Raw(
+		fmt.Sprintf(
+			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE deleted_at IS NULL%s",
+			model.AssetGroupTagSelector{}.TableName(),
+			sqlFilter.SQLString,
+		),
+		sqlFilter.Params...,
+	).Find(&selectors); result.Error != nil {
+		return model.AssetGroupTagSelectors{}, CheckError(result)
+	}
+
+	return selectors, nil
 }
