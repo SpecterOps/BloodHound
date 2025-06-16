@@ -616,6 +616,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		var (
 			labelsOrOwned []model.AssetGroupTag
 			tiersOrdered  []model.AssetGroupTag
+			nodesSeen     = cardinality.NewBitmap64()
 		)
 		for _, tag := range tags {
 			switch tag.Type {
@@ -635,6 +636,7 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
+				// Nodes can contain multiple labels therefore there is no need to exclude here
 				if err = tagAssetGroupNodesForTag(ctx, db, graphDb, tag, cardinality.NewBitmap64(), additionalFilters...); err != nil {
 					slog.Error("AGT: Error tagging nodes", tag.ToType(), tag, "err", err)
 				}
@@ -642,8 +644,8 @@ func tagAssetGroupNodes(ctx context.Context, db database.Database, graphDb graph
 		}
 
 		// Process the tier tagging synchronously
-		nodesSeen := cardinality.NewBitmap64()
 		for _, tier := range tiersOrdered {
+			// Nodes cannot contain multiple tiers therefore the nodesSeen serves as a running exclusion bitmap
 			if err := tagAssetGroupNodesForTag(ctx, db, graphDb, tier, nodesSeen, additionalFilters...); err != nil {
 				slog.Error("AGT: Error tagging nodes", "tier", tier, "err", err)
 			}

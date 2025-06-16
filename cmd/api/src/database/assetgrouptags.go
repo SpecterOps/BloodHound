@@ -211,6 +211,7 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 	}
 }
 
+// TODO Add databases tests for this
 func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(

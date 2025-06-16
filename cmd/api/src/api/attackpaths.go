@@ -35,7 +35,7 @@ func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, 
 			return tierIdParam, nil
 		}
 	}
-	if agt, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ? AND position = ?", Params: []interface{}{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition}}); err != nil {
+	if agt, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ? AND position = ?", Params: []any{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition}}); err != nil {
 		return 0, err
 	} else if len(agt) == 0 {
 		return 0, fmt.Errorf("no asset group tag found for tier zero")
