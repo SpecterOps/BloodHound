@@ -160,12 +160,13 @@ type TransferableSavedQuery struct {
 // Admins can share any public query regardless of user ownership.
 func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
-		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
-		savedQuery      model.SavedQuery
-		auditLogEntry   model.AuditEntry
-		err             error
-		savedQueryID    int64
-		isPublic        bool
+		rawSavedQueryID    = mux.Vars(request)[api.URIPathVariableSavedQueryID]
+		savedQuery         model.SavedQuery
+		auditLogEntry      model.AuditEntry
+		err                error
+		savedQueryID       int64
+		isAccessibleToUser bool
+		data               []byte
 	)
 
 	// defer audit function
@@ -199,22 +200,26 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
 	} else if savedQuery.UserID != user.ID.String() {
-		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
-			err = fmt.Errorf("query does not exist")
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
-		} else if isPublic, err = s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
+		if isAccessibleToUser, err = s.DB.IsSavedQuerySharedToUserOrPublic(request.Context(), savedQueryID, user.ID); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.HandleDatabaseError(request, response, err)
-		} else if !isPublic {
+		} else if !isAccessibleToUser {
 			err = fmt.Errorf("query does not exist")
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
+		} else {
+			if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
+				auditLogEntry.Status = model.AuditLogStatusFailure
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			} else {
+				auditLogEntry.Status = model.AuditLogStatusSuccess
+				api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+			}
 		}
 	} else {
-		if data, err := api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
+		if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			auditLogEntry.Status = model.AuditLogStatusSuccess
 			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
