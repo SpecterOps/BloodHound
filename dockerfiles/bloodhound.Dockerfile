@@ -23,7 +23,7 @@ ARG AZUREHOUND_VERSION=v2.5.0
 ########
 # Golang Image
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.22 AS godeps
 
 ########
 # Builder init
