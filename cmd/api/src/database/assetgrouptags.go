@@ -211,7 +211,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTagSelector(ctx context.Context, user mod
 
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
@@ -223,7 +223,7 @@ func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]mode
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE type = 1 AND deleted_at IS NULL ORDER BY position ASC",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE type = 1 AND deleted_at IS NULL ORDER BY position ASC",
 			model.AssetGroupTag{}.TableName(),
 		),
 	).Find(&tags); result.Error != nil {
@@ -240,7 +240,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify FROM %s WHERE deleted_at IS NULL%s",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE deleted_at IS NULL%s",
 			model.AssetGroupTag{}.TableName(),
 			sqlFilter.SQLString,
 		),
@@ -337,7 +337,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			)
 			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify)
 			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?)
-			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify
+			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled
 			`, kindTable, tag.TableName())
 
 		if result := tx.Raw(query,
@@ -377,8 +377,8 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 		if !tag.Position.Valid {
 			return model.AssetGroupTag{}, fmt.Errorf("position is required for an existing tier")
 		}
-	} else if tag.Position.Valid || tag.RequireCertify.Valid {
-		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
+	} else if tag.Position.Valid || tag.RequireCertify.Valid || tag.AnalysisEnabled.Bool {
+		return model.AssetGroupTag{}, fmt.Errorf("position, require_certify, analysis_enabled are limited to tiers only")
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -421,6 +421,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 					description = ?,
 					position = ?,
 					require_certify = ?,
+					analysis_enabled = ?,
 					updated_at = NOW(),
 					updated_by = ?
 				WHERE id = ?`,
@@ -430,6 +431,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			tag.Description,
 			newPosition, // this is the same as tag.Position for non-tiers
 			tag.RequireCertify,
+			tag.AnalysisEnabled,
 			user.ID.String(),
 			tag.ID,
 		); result.Error != nil {
@@ -590,7 +592,7 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		), owned AS (
 			SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1
 		)
-		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
+		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 
