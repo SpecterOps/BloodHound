@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Divider } from '@mui/material';
 import React from 'react';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { EntityKinds, allSections } from '../../utils';
+import { ActiveDirectoryNodeKind } from '../../../graphSchema';
+import { EntityKinds, allSections } from '../../../utils';
 import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
