@@ -45,8 +45,11 @@ type Log interface {
 }
 
 type Daemon struct {
-	writerC          chan<- Change
-	readerC          <-chan Change
+	// ingest writes to writerC.
+	writerC chan<- Change
+	// we continuously read changes from readerC to insert into pg
+	readerC <-chan Change
+
 	pgxPool          *pgxpool.Pool
 	kindMapper       pg.KindMapper
 	changeCacheLock  *sync.RWMutex

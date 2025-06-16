@@ -3,12 +3,14 @@ package changestream
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"time"
 )
 
 const (
+	// todo: makes sense to partition on time because we are flushing every 5 seconds and therefore only need to look at the latest data
 	assertTableSQL = `
 create table if not exists node_change_stream (
 	id bigint generated always as identity not null,
@@ -73,6 +75,7 @@ func disableSynchronousCommitForConn(ctx context.Context, conn *pgx.Conn) error 
 }
 
 const (
+	// todo: why is a partition one hour
 	tablePartitionRangeDuration   = time.Hour
 	tablePartitionRangeFormatStr  = "2006-01-02 15:00:00"
 	tablePartitionSuffixFormatStr = "2006_01_02_15"
@@ -88,7 +91,7 @@ func edgeChangePartitionName(now time.Time) string {
 
 func shouldAssertNextPartition(lastPartitionAssert time.Time) bool {
 	var (
-		now                     = time.Now()
+		now                   = time.Now()
 		lastPartitionRangeStr = lastPartitionAssert.Format(tablePartitionRangeFormatStr)
 		nowPartitionRangeStr  = now.Format(tablePartitionRangeFormatStr)
 	)
@@ -102,8 +105,9 @@ func assertChangelogPartition(ctx context.Context, pgxPool *pgxpool.Pool) error 
 		partitionTableSuffix = now.Format(tablePartitionSuffixFormatStr)
 		partitionRangeStart  = now.Format(tablePartitionRangeFormatStr)
 		partitionRangeEnd    = now.Add(tablePartitionRangeDuration).Format(tablePartitionRangeFormatStr)
-		assertSQL            = fmt.Sprintf(createChangeStreamPartitionsSQLFmt, partitionTableSuffix, partitionRangeStart, partitionRangeEnd, partitionTableSuffix, partitionRangeStart, partitionRangeEnd)
-		_, err               = pgxPool.Exec(ctx, assertSQL)
+		// todo: can clean this up a bit by expressing the string in smaller pieces (node stream piece + edge edge piece perhaps)
+		assertSQL = fmt.Sprintf(createChangeStreamPartitionsSQLFmt, partitionTableSuffix, partitionRangeStart, partitionRangeEnd, partitionTableSuffix, partitionRangeStart, partitionRangeEnd)
+		_, err    = pgxPool.Exec(ctx, assertSQL)
 	)
 
 	return err

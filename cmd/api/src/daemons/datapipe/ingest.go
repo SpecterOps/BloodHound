@@ -291,6 +291,7 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 			},
 		}
 
+		// todo: Bloodhound convention: ingested nodes are treated as upserts, so go ahead and instantiate this as an `Update` change type
 		nodeChange = changestream.NewNodeChange(changestream.ChangeTypeUpdate, nextNode.ObjectID, nodeKinds, graph.AsProperties(normalizedProperties).Clone())
 	)
 

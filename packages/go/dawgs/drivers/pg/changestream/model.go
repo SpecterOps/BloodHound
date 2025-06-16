@@ -9,6 +9,8 @@ type ChangeType int
 
 const (
 	ChangeTypeUpdate ChangeType = 0
+	// todo: how are these intended to be used?
+	// at this time, ingest only uses `update`
 	ChangeTypeAdd    ChangeType = 1
 	ChangeTypeRemove ChangeType = 2
 )
