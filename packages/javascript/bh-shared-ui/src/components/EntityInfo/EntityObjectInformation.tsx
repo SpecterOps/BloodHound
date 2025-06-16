@@ -15,15 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Alert, Skeleton } from '@mui/material';
 import React, { useEffect } from 'react';
-import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../hooks';
-import { EntityField, formatObjectInfoFields } from '../../utils';
-import {
-    BasicObjectInfoFields,
-    FieldsContainer,
-    ObjectInfoFields,
-    SearchValue,
-    useObjectInfoPanelContext,
-} from '../../views';
+import { useExploreParams, useFetchEntityProperties, usePreviousValue } from '../../../hooks';
+import { EntityField, formatObjectInfoFields } from '../../../utils';
+import { BasicObjectInfoFields } from '../BasicObjectInfoFields';
+import { SearchValue } from '../ExploreSearch/types';
+import { FieldsContainer, ObjectInfoFields } from '../fragments';
+import { useObjectInfoPanelContext } from '../providers/ObjectInfoPanelProvider';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 import { EntityInfoContentProps } from './EntityInfoContent';
 
