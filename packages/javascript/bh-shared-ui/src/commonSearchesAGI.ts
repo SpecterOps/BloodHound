@@ -380,6 +380,28 @@ export const CommonSearches: CommonSearchType[] = [
         ],
     },
     {
+        subheader: 'Azure PIM',
+        category: categoryAzure,
+        queries: [
+            {
+                description: 'Synced Entra Users with Entra Admin Role direct eligibility',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:RoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Synced Entra Users with Entra Admin Roles group delegated eligibility',
+                cypher: `MATCH p = (:User)-[:SyncedToEntraUser]->(:AZUser)-[:AZMemberOf]->(:AZGroup)-[:RoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Entra Users with Entra Admin Role direct eligibility',
+                cypher: `MATCH p = (:AZUser)-[:RoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+            {
+                description: 'Entra Users with Entra Admin Roles group delegated eligibility',
+                cypher: `MATCH p = (:AZUser)-[:AZMemberOf]->(:AZGroup)-[:RoleEligible]->(:AZRole)\nRETURN p LIMIT 100`,
+            },
+        ],
+    },
+    {
         subheader: 'NTLM Relay Attacks',
         category: categoryAD,
         queries: [
