@@ -16,9 +16,9 @@
 import userEvent from '@testing-library/user-event';
 import { RequestHandler, rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
-import { act, render, screen } from '../../test-utils';
-import { allSections } from '../../utils';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
+import { act, render, screen } from '../../../test-utils';
+import { allSections } from '../../../utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
 const objectId = 'fake-object-id';
