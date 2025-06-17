@@ -813,6 +813,8 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
         ActiveDirectoryRelationshipKind.WritePublicInformation,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

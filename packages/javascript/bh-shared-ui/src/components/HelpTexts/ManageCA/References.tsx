@@ -24,8 +24,16 @@ const References: FC = () => {
                 target='_blank'
                 rel='noopener'
                 href='https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf'>
-                https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf
+                Certified Pre-Owned
             </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc7-dangerous-permissions-on-ca'>
+                ESC7: Dangerous Permissions on CA
+            </Link>
+            <br />
         </Box>
     );
 };

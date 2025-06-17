@@ -1831,6 +1831,8 @@ SharedRelationshipKinds: [
 	HasTrustKeys,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	ManageCA,
+	ManageCertificates,
 ]
 
 // Edges that are used during inbound traversal
