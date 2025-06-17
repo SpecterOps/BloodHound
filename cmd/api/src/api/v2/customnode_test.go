@@ -63,7 +63,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode",
+						Path: "/api/v2/custom-node",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -102,7 +102,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode",
+						Path: "/api/v2/custom-node",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -141,7 +141,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode",
+						Path: "/api/v2/custom-node",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -208,6 +208,45 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
+		{
+			name: "Error: custom_types has a top-level empty key",
+			buildRequest: func() *http.Request {
+				request := &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/custom-node",
+					},
+					Method: http.MethodPost,
+					Header: http.Header{},
+				}
+
+				payload := &v2.CreateCustomNodeRequest{
+					CustomTypes: map[string]model.CustomNodeKindConfig{
+						"": {
+							Icon: model.CustomNodeIcon{
+								Type:  "font-awesome",
+								Name:  "coffee",
+								Color: "#FFFFFF",
+							},
+						},
+					},
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				request.Header.Add(headers.ContentType.String(), "application/json")
+				request.Body = io.NopCloser(bytes.NewReader(jsonPayload))
+
+				return request
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {},
+			expected: expected{
+				responseCode:   http.StatusBadRequest,
+				responseBody:   `{"errors":[{"context":"","message":"BadRequest: custom_types contains an entry with an empty string as a key. please remove or replace the empty key"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
 	}
 	for _, testCase := range tt {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -229,7 +268,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/customnode", resources.CreateCustomNodeKind).Methods(request.Method)
+			router.HandleFunc("/api/v2/custom-node", resources.CreateCustomNodeKind).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -265,7 +304,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode/kind",
+						Path: "/api/v2/custom-node/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -306,7 +345,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode/kind",
+						Path: "/api/v2/custom-node/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -347,7 +386,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/customnode/kind",
+						Path: "/api/v2/custom-node/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -416,7 +455,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 			response := httptest.NewRecorder()
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).Methods(request.Method)
+			router.HandleFunc(fmt.Sprintf("/api/v2/custom-node/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

@@ -53,7 +53,7 @@ describe('Pathfinding: interaction', () => {
                 })
             );
         }),
-        rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        rest.get(`/api/v2/custom-node`, async (req, res, ctx) => {
             return res(
                 ctx.json({
                     data: [],

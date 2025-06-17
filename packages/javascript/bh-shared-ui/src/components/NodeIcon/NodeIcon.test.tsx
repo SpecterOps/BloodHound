@@ -48,7 +48,7 @@ const icons: GetCustomNodeKindsResponse = {
 };
 
 const server = setupServer(
-    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+    rest.get(`/api/v2/custom-node`, async (_req, res, ctx) => {
         return res(ctx.json(icons));
     })
 );
