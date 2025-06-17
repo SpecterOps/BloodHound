@@ -221,3 +221,16 @@ func (s *DatabaseSwitch) FetchKinds(ctx context.Context) (Kinds, error) {
 		return s.currentDB.FetchKinds(ctx)
 	}
 }
+
+func (s *DatabaseSwitch) RefreshKinds(ctx context.Context) error {
+	if internalCtx, err := s.newInternalContext(ctx); err != nil {
+		return err
+	} else {
+		defer s.retireInternalContext(internalCtx)
+
+		s.currentDBLock.RLock()
+		defer s.currentDBLock.RUnlock()
+
+		return s.currentDB.RefreshKinds(ctx)
+	}
+}

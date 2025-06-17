@@ -32,11 +32,11 @@ func (s *Translator) translateWith() error {
 			projectedItems = pgsql.NewIdentifierSet()
 
 			// aggregatedItems contains a set of symbols of projected aggregate functions.
-			aggregatedItems = NewSymbols()
+			aggregatedItems = pgsql.NewSymbolTable()
 
 			// groupByItems is a set of symbols (identifiers and compound identifiers) that the query is expected to
 			// group by. This is built by exclusion of all aggregated items.
-			groupByItems = NewSymbols()
+			groupByItems = pgsql.NewSymbolTable()
 		)
 
 		for _, projectionItem := range currentPart.projections.Items {
@@ -45,19 +45,14 @@ func (s *Translator) translateWith() error {
 			}
 		}
 
-		// If an aggregation function is being used this invokes an implicit group by of non-function projections
+		// If an aggregation function is being used, this invokes an implicit group by of non-function projections
 		for _, projectionItem := range currentPart.projections.Items {
 			switch typedSelectItem := projectionItem.SelectItem.(type) {
 			case pgsql.FunctionCall:
-				if pgsql.IsAggregateFunction(typedSelectItem.Function) {
-					for _, parameter := range typedSelectItem.Parameters {
-						if symbols, err := SymbolsFor(parameter); err != nil {
-							return err
-						} else {
-							aggregatedItems.AddSymbols(symbols)
-						}
-					}
-
+				if aggregatedFunctionSymbols, err := GetAggregatedFunctionParameterSymbols(typedSelectItem); err != nil {
+					return err
+				} else if !aggregatedFunctionSymbols.IsEmpty() {
+					aggregatedItems.AddTable(aggregatedFunctionSymbols)
 					continue
 				}
 			}

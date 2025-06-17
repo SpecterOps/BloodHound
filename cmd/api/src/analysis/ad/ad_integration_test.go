@@ -25,7 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	schema "github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/lab"
+	"github.com/specterops/bloodhound/lab/arrows"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/stretchr/testify/assert"
 
@@ -1097,10 +1097,10 @@ func TestFetchLocalGroupCompleteness(t *testing.T) {
 		graphDB = testCtx.Graph.Database
 	)
 
-	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/completenessharness.json")
 	require.NoError(t, err)
 
-	err = lab.WriteGraphFixture(graphDB, &fixture)
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
@@ -1119,10 +1119,10 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 		graphDB = testCtx.Graph.Database
 	)
 
-	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/completenessharness.json")
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/completenessharness.json")
 	require.NoError(t, err)
 
-	err = lab.WriteGraphFixture(graphDB, &fixture)
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
@@ -1565,12 +1565,12 @@ func TestHasTrustKeys(t *testing.T) {
 		graphDB = testCtx.Graph.Database
 	)
 
-	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/HasTrustKeysHarness.json")
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/HasTrustKeysHarness.json")
 	require.NoError(t, err)
 
 	// Split edges into test edges and the other edges
-	testEdges := []lab.Edge{}
-	otherEdges := []lab.Edge{}
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
 	for _, edge := range fixture.Relationships {
 		if edge.Type == ad.HasTrustKeys.String() {
 			testEdges = append(testEdges, edge)
@@ -1580,7 +1580,7 @@ func TestHasTrustKeys(t *testing.T) {
 	}
 	fixture.Relationships = otherEdges
 
-	err = lab.WriteGraphFixture(graphDB, &fixture)
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
@@ -1626,7 +1626,7 @@ func TestHasTrustKeys(t *testing.T) {
 	})
 }
 
-func findNodeByID(nodes []lab.Node, id string) (*lab.Node, bool) {
+func findNodeByID(nodes []arrows.Node, id string) (*arrows.Node, bool) {
 	for i := range nodes {
 		if nodes[i].ID == id {
 			return &nodes[i], true
