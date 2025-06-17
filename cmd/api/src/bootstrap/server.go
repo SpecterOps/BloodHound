@@ -27,7 +27,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -35,6 +34,7 @@ import (
 	"github.com/specterops/bloodhound/src/migrations"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (

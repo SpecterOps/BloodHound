@@ -22,10 +22,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 func convertGenericNode(entity ein.GenericNode, converted *ConvertedData) error {

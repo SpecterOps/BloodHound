@@ -30,9 +30,6 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/dawgs/graph"
-	graphmocks "github.com/specterops/dawgs/graph/mocks"
-	"github.com/specterops/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -47,6 +44,9 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/src/queries/mocks"
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

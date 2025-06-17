@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/dawgs/graph"
-	graph_mocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/src/model"
+	graph_mocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

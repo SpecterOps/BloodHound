@@ -32,10 +32,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	azureanalysis "github.com/specterops/bloodhound/analysis/azure"
+	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/bloodhound/src/test/integration"
 )
 
 func TestFetchEntityByObjectID(t *testing.T) {

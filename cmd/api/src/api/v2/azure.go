@@ -25,13 +25,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/ops"
 	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 const (

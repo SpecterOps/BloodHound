@@ -18,11 +18,11 @@ package graphify
 import (
 	"context"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
 )
 
 // The GraphifyData interface is designed to manage the lifecycle of ingestion tasks

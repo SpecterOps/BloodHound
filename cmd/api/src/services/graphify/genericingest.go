@@ -21,11 +21,11 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util"
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type endpointKey struct {

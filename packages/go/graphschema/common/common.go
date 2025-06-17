@@ -21,9 +21,9 @@ package common
 import (
 	"errors"
 
-	graph "github.com/specterops/dawgs/graph"
 	ad "github.com/specterops/bloodhound/graphschema/ad"
 	azure "github.com/specterops/bloodhound/graphschema/azure"
+	graph "github.com/specterops/dawgs/graph"
 )
 
 var (

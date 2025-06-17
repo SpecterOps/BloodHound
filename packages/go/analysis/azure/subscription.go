@@ -19,8 +19,8 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 func NewSubscriptionEntityDetails(node *graph.Node) SubscriptionDetails {

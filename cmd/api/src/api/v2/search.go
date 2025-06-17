@@ -22,12 +22,12 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/graph"
 )
 
 func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Request) {

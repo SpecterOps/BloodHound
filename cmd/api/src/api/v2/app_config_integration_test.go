@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/dawgs/drivers/neo4j"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/integration"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/stretchr/testify/require"
 )
 

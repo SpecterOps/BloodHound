@@ -23,13 +23,13 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util/channels"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {

@@ -25,8 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -34,6 +32,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/ingest"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util"
 )
 
 const (

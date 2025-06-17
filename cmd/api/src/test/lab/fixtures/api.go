@@ -26,13 +26,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
+	"github.com/specterops/dawgs/graph"
 )
 
 var BHApiFixture = NewApiFixture()

@@ -24,11 +24,11 @@ import (
 
 	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/bhlog/measure"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util/channels"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 func statsSortedKeys(value map[graph.Kind]int) []graph.Kind {

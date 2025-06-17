@@ -23,10 +23,10 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/dawgs/graph"
 )
 
 type DataQualityData interface {

@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/bloodhound/lab"
 )
 
 type propsConstraint interface {

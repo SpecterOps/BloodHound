@@ -25,9 +25,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type FilterOperator string

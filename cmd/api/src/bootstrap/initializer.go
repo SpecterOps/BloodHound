@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/daemons"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/dawgs/graph"
 )
 
 type DatabaseConnections[DBType database.Database, GraphType graph.Database] struct {

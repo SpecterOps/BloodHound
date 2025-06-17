@@ -18,8 +18,8 @@ package bloodhoundgraph
 
 import (
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (

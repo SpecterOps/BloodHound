@@ -29,7 +29,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/graph"
 )
 
 // CreateAssetGroupRequest holds data required to create an asset group

@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 type Migration struct {

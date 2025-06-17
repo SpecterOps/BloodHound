@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/api"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	mocks_graph "github.com/specterops/bloodhound/src/queries/mocks"
+	"github.com/specterops/dawgs/graph"
 	"go.uber.org/mock/gomock"
 )
 

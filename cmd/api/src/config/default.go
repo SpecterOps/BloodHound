@@ -19,8 +19,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/dawgs/drivers/neo4j"
 )
 
 // NewDefaultConfiguration returns a new Configuration struct containing all documented

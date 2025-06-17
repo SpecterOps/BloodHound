@@ -19,8 +19,8 @@ package graphschema
 import (
 	"testing"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 

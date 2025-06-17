@@ -26,9 +26,9 @@ import (
 
 	"github.com/specterops/bloodhound/bhlog/level"
 	"github.com/specterops/bloodhound/bhlog/measure"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/bloodhound/graphschema/common"
 )
 
 type StatTrackedOperation[T any] struct {

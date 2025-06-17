@@ -25,14 +25,14 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/database/types/nan"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 func ValidateDomains(ctx context.Context, queries queries.Graph, objectIDs ...string) ([]string, error) {

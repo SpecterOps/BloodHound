@@ -22,11 +22,11 @@ import (
 
 	"github.com/bloodhoundad/azurehound/v2/constants"
 	"github.com/specterops/bloodhound/analysis/azure"
+	azschema "github.com/specterops/bloodhound/graphschema/azure"
+	graph_mocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
-	graph_mocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/dawgs/util/size"
-	azschema "github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

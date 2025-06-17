@@ -21,8 +21,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/dawgs/graph"
 )
 
 type ListKindsResponse struct {

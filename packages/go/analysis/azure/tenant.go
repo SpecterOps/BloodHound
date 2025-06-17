@@ -22,10 +22,10 @@ import (
 	"log/slog"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
+	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
 func NewTenantEntityDetails(node *graph.Node) TenantDetails {

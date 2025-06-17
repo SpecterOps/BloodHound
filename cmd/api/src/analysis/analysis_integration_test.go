@@ -24,11 +24,11 @@ import (
 	"testing"
 
 	analysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 

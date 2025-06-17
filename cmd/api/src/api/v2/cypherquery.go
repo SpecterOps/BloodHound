@@ -24,12 +24,12 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/dawgs/util"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
+	"github.com/specterops/dawgs/util"
 )
 
 var (

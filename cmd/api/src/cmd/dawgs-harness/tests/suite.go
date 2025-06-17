@@ -19,8 +19,8 @@ package tests
 import (
 	"context"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 func RunSuite(db graph.Database, driverName string) (TestSuite, error) {

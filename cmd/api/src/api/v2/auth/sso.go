@@ -27,13 +27,13 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/dawgs/cardinality"
 	"gorm.io/gorm/utils"
 )
 

@@ -19,10 +19,10 @@ package v2
 import (
 	"testing"
 
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/dawgs/graph"
 
 	"github.com/stretchr/testify/assert"
 )

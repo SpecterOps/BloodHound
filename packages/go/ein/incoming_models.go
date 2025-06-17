@@ -18,8 +18,8 @@ package ein
 
 import (
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (

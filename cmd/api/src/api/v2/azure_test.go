@@ -27,8 +27,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/azure"
 
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/graph"
-	graphmocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/dawgs/ops"
 
 	v2 "github.com/specterops/bloodhound/src/api/v2"

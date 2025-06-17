@@ -26,9 +26,9 @@ import (
 	"reflect"
 	"testing"
 
-	graphmocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/src/utils"
 	"github.com/specterops/bloodhound/src/utils/test"
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/src/api"

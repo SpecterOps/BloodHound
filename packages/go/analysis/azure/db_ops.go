@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/bloodhound/graphschema/azure"
 )
 
 func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, objectID string) (graph.PathSet, error) {

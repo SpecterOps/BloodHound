@@ -25,8 +25,8 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 
 	"github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (
