@@ -182,8 +182,32 @@ export const CommonSearches: CommonSearchType[] = [
             },
             {
                 description:
-                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled',
+                    'Enrollment rights on certificate templates published to Enterprise CA with User Specified SAN enabled (ESC6)',
                 cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with vulnerable HTTP(S) endpoint (ESC8)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with vulnerable RPC endpoint (ESC11)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.rpcencryptionenforced = False\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description:
+                    'Enrollment rights on certificate templates published to Enterprise CA with disabled security extension (ESC16)',
+                cypher: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.25.2" IN eca.disabledextensions\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                description: 'Compromising pemissions on ADCS nodes (ESC5)',
+                cypher: `MATCH p = (n:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite]->(m:Base)\n
+                        WHERE m.distinguishedname CONTAINS "PUBLIC KEY SERVICES"\n
+                        AND NOT n.objectid ENDS WITH "-512" // Domain Admins\n
+                        AND NOT n.objectid ENDS WITH "-519" // Enterprise Admins\n
+                        AND NOT n.objectid ENDS WITH "-544" // Administrators\n
+                        RETURN p\nLIMIT 1000`,
             },
             {
                 description: 'CA administrators and CA managers',
