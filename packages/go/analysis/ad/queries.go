@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/RoaringBitmap/roaring/roaring64"
@@ -562,6 +563,65 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 
 			return nil
 		})
+	})
+}
+
+func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	var (
+		pathSet        = graph.NewPathSet()
+		hash, _        = edge.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
+		isAcl, _       = edge.Properties.GetOrDefault(ad.IsACL.String(), false).Bool()
+		isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+	)
+
+	// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
+	if !isAcl || !isInherited || len(hash) == 0 {
+		return pathSet, nil
+	}
+
+	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+			return err
+		} else {
+			// First append the starting path to our result pathset
+			pathSet.AddPath(graph.Path{
+				Nodes: []*graph.Node{startNode, endNode},
+				Edges: []*graph.Relationship{edge},
+			})
+
+			return ops.Traversal(tx, ops.TraversalPlan{
+				Root:      startNode,
+				Direction: graph.DirectionInbound,
+				BranchQuery: func() graph.Criteria {
+					return query.And(
+						query.KindIn(query.Start(), ad.Domain, ad.OU),
+						query.KindIn(query.Relationship(), ad.Contains),
+					)
+				},
+				ExpansionFilter: func(segment *graph.PathSegment) bool {
+					// Check that our hash is included in the current node
+					hashes, _ := segment.Node.Properties.Get(ad.InheritanceHashes.String()).StringSlice()
+
+					if slices.Contains(hashes, hash) {
+						isInheritable := true
+						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
+						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
+							// If we run into an intermediary node that is protected, we can stop walking this path
+							if isACLProtected, _ := end.Properties.Get(ad.IsACLProtected.String()).Bool(); isACLProtected {
+								isInheritable = false
+								return false
+							}
+							return true
+						})
+
+						if isInheritable {
+							pathSet.AddPath(segment.Path())
+						}
+					}
+					return true
+				},
+			}, nil)
+		}
 	})
 }
 
