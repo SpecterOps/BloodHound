@@ -37,8 +37,6 @@ import { FC, useState } from 'react';
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];
-    // listSections: any;
-
     clickHandler: (query: string) => void;
     deleteHandler?: (id: number) => void;
 }
@@ -46,7 +44,7 @@ interface PrebuiltSearchListProps {
 type ListSection = {
     category?: string;
     subheader: string;
-    lineItems: LineItem[];
+    queries: LineItem[];
 };
 
 export type LineItem = {
@@ -87,49 +85,45 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                 {Object.entries(groupedQueries).map(([category, queryData]) => (
                     <Box key={category}>
                         <ListSubheader className={styles.subheader}>{category}</ListSubheader>
-                        <ul>
-                            {queryData.map((queryItem, i) => {
-                                const { subheader, lineItems } = queryItem;
-                                return (
-                                    <li key={i}>
-                                        {lineItems?.map((lineItem, idx) => {
-                                            const { id, description, cypher, canEdit = false } = lineItem;
+                        {queryData.map((queryItem, i) => {
+                            const { subheader, queries } = queryItem;
+                            return (
+                                <li key={i}>
+                                    {queries?.map((lineItem, idx) => {
+                                        const { id, description, cypher, canEdit = false } = lineItem;
 
-                                            return (
-                                                <ListItem
-                                                    disablePadding
-                                                    key={`${id}-${idx}`}
-                                                    sx={{ borderRadius: '8px', py: '4px' }}
-                                                    secondaryAction={
-                                                        canEdit && (
-                                                            <Button
-                                                                aria-label='Delete Query'
-                                                                size='small'
-                                                                variant='secondary'
-                                                                onClick={() => {
-                                                                    setQueryId(id);
-                                                                    handleOpen();
-                                                                }}>
-                                                                <FontAwesomeIcon icon={faTrash} />
-                                                            </Button>
-                                                        )
-                                                    }>
-                                                    <ListItemButton onClick={() => clickHandler(cypher)}>
-                                                        <ListItemText primary={description} />
-                                                        {subheader && (
-                                                            <Chip
-                                                                label={subheader}
-                                                                size='small'
-                                                                className='ml-3'></Chip>
-                                                        )}
-                                                    </ListItemButton>
-                                                </ListItem>
-                                            );
-                                        })}
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                                        return (
+                                            <ListItem
+                                                component='div'
+                                                disablePadding
+                                                key={`${id}-${idx}`}
+                                                sx={{ borderRadius: '8px', py: '4px' }}
+                                                secondaryAction={
+                                                    canEdit && (
+                                                        <Button
+                                                            aria-label='Delete Query'
+                                                            size='small'
+                                                            variant='secondary'
+                                                            onClick={() => {
+                                                                setQueryId(id);
+                                                                handleOpen();
+                                                            }}>
+                                                            <FontAwesomeIcon icon={faTrash} />
+                                                        </Button>
+                                                    )
+                                                }>
+                                                <ListItemButton onClick={() => clickHandler(cypher)}>
+                                                    <ListItemText primary={description} />
+                                                    {subheader && (
+                                                        <Chip label={subheader} size='small' className='ml-3'></Chip>
+                                                    )}
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </li>
+                            );
+                        })}
                     </Box>
                 ))}
             </List>

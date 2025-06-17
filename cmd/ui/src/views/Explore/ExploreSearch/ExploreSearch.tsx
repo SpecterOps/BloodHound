@@ -80,7 +80,6 @@ const ExploreSearch: React.FC = () => {
     const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
-    console.log(activeTab);
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 

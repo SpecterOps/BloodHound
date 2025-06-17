@@ -16,6 +16,7 @@
 
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Box, Skeleton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
@@ -24,8 +25,9 @@ import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList, { LineItem } from '../../../components/PrebuiltSearchList';
 import { useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
-import { CommonSearchType } from '../../../types';
+import { QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
+import QuerySearchFilter from './QuerySearchFilter';
 const AD_TAB = 'Active Directory';
 const AZ_TAB = 'Azure';
 const CUSTOM_TAB = 'Custom Searches';
@@ -56,20 +58,13 @@ const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
     prebuiltSearchList,
-}: CommonSearchesProps & { prebuiltSearchList: CommonSearchType[] }) => {
-    // const classes = useStyles();
-
-    // const [activeTab, setActiveTab] = useState(AD_TAB);
-
-    // const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    //     setActiveTab(newValue);
-    // };
+}: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-
+    const [filteredList, setFilteredList] = useState<any[]>([]);
     const savedLineItems: LineItem[] =
         userQueries.data?.map((query) => ({
             description: query.name,
@@ -78,35 +73,13 @@ const InnerCommonSearches = ({
             id: query.id,
         })) || [];
 
-    // console.log(savedLineItems);
     const savedQueries = {
         category: 'Saved Queries',
         subheader: '',
-        lineItems: savedLineItems,
+        queries: savedLineItems,
     };
-    console.log('savedQueries');
-    console.log(savedQueries);
-
-    const adSections = prebuiltSearchList
-        .filter(({ category }) => category === 'Active Directory')
-        .map(({ category, subheader, queries }) => ({ category, subheader, lineItems: queries }));
-
-    const azSections = prebuiltSearchList
-        .filter(({ category }) => category === 'Azure')
-        .map(({ category, subheader, queries }) => ({ category, subheader, lineItems: queries }));
 
     const queryList = [...prebuiltSearchList, savedQueries];
-    console.log('queryList');
-    console.log(queryList);
-
-    const adAzSections = prebuiltSearchList
-        .filter(({ category }) => category === 'Active Directory' || category === 'Azure')
-        .map(({ category, subheader, queries }) => ({ category, subheader, lineItems: queries }));
-
-    console.log('prebuiltSearchList');
-    console.log(prebuiltSearchList);
-    console.log('adAzSections');
-    console.log(adAzSections);
 
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
@@ -121,6 +94,49 @@ const InnerCommonSearches = ({
             },
         });
 
+    const handleFuzzySearch = (searchTerm: string) => {
+        console.log(`handle fuzzy search ${searchTerm}`);
+        console.log('queryList');
+
+        console.log(queryList);
+
+        //clear filtered list
+        if (searchTerm.length === 0) {
+            setFilteredList([]);
+            return;
+        }
+        if (searchTerm.length > 2) {
+            // const filteredData = queryList.map((obj) => ({
+            //     ...obj,
+            //     queries: obj.queries.filter((item) =>
+            //         item.description.toLowerCase().includes(searchTerm.toLowerCase())
+            //     ),
+            // }));
+
+            const filteredData = queryList
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item) =>
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    ),
+                }))
+                .filter((x) => x.queries.length);
+            console.log(filteredData);
+
+            // const test = filteredData.filter((x) => x.queries.length);
+            // console.log(test);
+
+            setFilteredList(filteredData);
+        }
+    };
+
+    if (userQueries.isLoading) {
+        return (
+            <Box mt={2}>
+                <Skeleton />
+            </Box>
+        );
+    }
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
@@ -135,11 +151,12 @@ const InnerCommonSearches = ({
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
-                {/* <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />
-                <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />
-                <PersonalSearchList clickHandler={handleClick} /> */}
-                <PrebuiltSearchList listSections={adAzSections} clickHandler={handleClick} />
-                {/* <QuerySearchList clickHandler={handleClick} /> */}
+                <QuerySearchFilter searchHandler={handleFuzzySearch}></QuerySearchFilter>
+                <PrebuiltSearchList
+                    listSections={filteredList.length ? filteredList : queryList}
+                    clickHandler={handleClick}
+                    deleteHandler={handleDeleteQuery}
+                />
             </div>
         </div>
     );

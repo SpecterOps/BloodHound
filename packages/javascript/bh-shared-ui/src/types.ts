@@ -63,6 +63,15 @@ export type CommonSearchType = {
     }[];
 };
 
+export type QuerySearchType = {
+    subheader: string;
+    category: string;
+    queries: {
+        description: string;
+        cypher: string;
+    }[];
+};
+
 export type SelectedNode = {
     id: string;
     type: EntityKinds;
