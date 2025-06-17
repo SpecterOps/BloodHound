@@ -566,7 +566,7 @@ func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph
 		pathSet        = graph.NewPathSet()
 		hash, _        = edge.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
 		isAcl, _       = edge.Properties.GetOrDefault(ad.IsACL.String(), false).Bool()
-		isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), "").Bool()
+		isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
 	)
 
 	// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
@@ -580,7 +580,7 @@ func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph
 		} else {
 			// First append the starting path to our result pathset
 			pathSet.AddPath(graph.Path{
-				Nodes: []*graph.Node{endNode},
+				Nodes: []*graph.Node{startNode, endNode},
 				Edges: []*graph.Relationship{edge},
 			})
 
