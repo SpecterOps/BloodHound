@@ -32,10 +32,13 @@ import {
     ListSubheader,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
+import { groupBy } from 'lodash';
 import { FC, useState } from 'react';
 
 interface PrebuiltSearchListProps {
     listSections: ListSection[];
+    // listSections: any;
+
     clickHandler: (query: string) => void;
     deleteHandler?: (id: number) => void;
 }
@@ -76,12 +79,63 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
         setQueryId(undefined);
     };
 
+    const groupedQueries = groupBy(listSections, 'category');
+
     return (
         <>
             <List dense disablePadding>
+                {Object.entries(groupedQueries).map(([category, queryData]) => (
+                    <Box key={category}>
+                        <ListSubheader className={styles.subheader}>{category}</ListSubheader>
+                        <ul>
+                            {queryData.map((queryItem, i) => {
+                                const { subheader, lineItems } = queryItem;
+                                return (
+                                    <li key={i}>
+                                        {lineItems?.map((lineItem, idx) => {
+                                            const { id, description, cypher, canEdit = false } = lineItem;
+
+                                            return (
+                                                <ListItem
+                                                    disablePadding
+                                                    key={`${id}-${idx}`}
+                                                    sx={{ borderRadius: '8px', py: '4px' }}
+                                                    secondaryAction={
+                                                        canEdit && (
+                                                            <Button
+                                                                aria-label='Delete Query'
+                                                                size='small'
+                                                                variant='secondary'
+                                                                onClick={() => {
+                                                                    setQueryId(id);
+                                                                    handleOpen();
+                                                                }}>
+                                                                <FontAwesomeIcon icon={faTrash} />
+                                                            </Button>
+                                                        )
+                                                    }>
+                                                    <ListItemButton onClick={() => clickHandler(cypher)}>
+                                                        <ListItemText primary={description} />
+                                                        {subheader && (
+                                                            <Chip
+                                                                label={subheader}
+                                                                size='small'
+                                                                className='ml-3'></Chip>
+                                                        )}
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            );
+                                        })}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </Box>
+                ))}
+            </List>
+            {/* <List dense disablePadding>
                 {listSections.map((section) => {
                     const { category, subheader, lineItems } = section;
-
                     return (
                         <Box key={subheader}>
                             <ListSubheader className={styles.subheader}>{subheader} </ListSubheader>
@@ -118,7 +172,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                         </Box>
                     );
                 })}
-            </List>
+            </List> */}
 
             <Dialog open={open} onClose={handleClose} maxWidth={'xs'} fullWidth>
                 <DialogTitle>Delete Query</DialogTitle>

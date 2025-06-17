@@ -83,7 +83,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         <>
             <div className='flex flex-col h-full'>
                 {/* PRE BUILT SEARCHES SECTION */}
-                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 pt-0 rounded-lg mb-4')}>
+                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] p-2 py-0 rounded-lg mb-4')}>
                     <CommonSearches onSetCypherQuery={setCypherQuery} onPerformCypherSearch={performSearch} />
                 </div>
                 {/* CYPHER EDITOR SECTION */}

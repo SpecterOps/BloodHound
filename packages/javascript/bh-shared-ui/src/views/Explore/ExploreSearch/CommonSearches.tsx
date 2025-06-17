@@ -21,7 +21,9 @@ import { useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
-import PrebuiltSearchList, { PersonalSearchList } from '../../../components/PrebuiltSearchList';
+import PrebuiltSearchList, { LineItem } from '../../../components/PrebuiltSearchList';
+import { useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import { useNotifications } from '../../../providers';
 import { CommonSearchType } from '../../../types';
 import { cn } from '../../../utils';
 const AD_TAB = 'Active Directory';
@@ -55,15 +57,35 @@ const InnerCommonSearches = ({
     onPerformCypherSearch,
     prebuiltSearchList,
 }: CommonSearchesProps & { prebuiltSearchList: CommonSearchType[] }) => {
-    const classes = useStyles();
+    // const classes = useStyles();
 
-    const [activeTab, setActiveTab] = useState(AD_TAB);
+    // const [activeTab, setActiveTab] = useState(AD_TAB);
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-        setActiveTab(newValue);
-    };
+    // const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    //     setActiveTab(newValue);
+    // };
+    const userQueries = useSavedQueries();
+    const deleteQueryMutation = useDeleteSavedQuery();
+    const { addNotification } = useNotifications();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
+
+    const savedLineItems: LineItem[] =
+        userQueries.data?.map((query) => ({
+            description: query.name,
+            cypher: query.query,
+            canEdit: true,
+            id: query.id,
+        })) || [];
+
+    // console.log(savedLineItems);
+    const savedQueries = {
+        category: 'Saved Queries',
+        subheader: '',
+        lineItems: savedLineItems,
+    };
+    console.log('savedQueries');
+    console.log(savedQueries);
 
     const adSections = prebuiltSearchList
         .filter(({ category }) => category === 'Active Directory')
@@ -73,11 +95,31 @@ const InnerCommonSearches = ({
         .filter(({ category }) => category === 'Azure')
         .map(({ category, subheader, queries }) => ({ category, subheader, lineItems: queries }));
 
+    const queryList = [...prebuiltSearchList, savedQueries];
+    console.log('queryList');
+    console.log(queryList);
+
+    const adAzSections = prebuiltSearchList
+        .filter(({ category }) => category === 'Active Directory' || category === 'Azure')
+        .map(({ category, subheader, queries }) => ({ category, subheader, lineItems: queries }));
+
+    console.log('prebuiltSearchList');
+    console.log(prebuiltSearchList);
+    console.log('adAzSections');
+    console.log(adAzSections);
+
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
         onSetCypherQuery(query);
         onPerformCypherSearch(query);
     };
+
+    const handleDeleteQuery = (id: number) =>
+        deleteQueryMutation.mutate(id, {
+            onSuccess: () => {
+                addNotification(`Query deleted.`, 'userDeleteQuery');
+            },
+        });
 
     return (
         <div className='flex flex-col h-full'>
@@ -93,9 +135,11 @@ const InnerCommonSearches = ({
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
-                <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />
+                {/* <PrebuiltSearchList listSections={adSections} clickHandler={handleClick} />
                 <PrebuiltSearchList listSections={azSections} clickHandler={handleClick} />
-                <PersonalSearchList clickHandler={handleClick} />
+                <PersonalSearchList clickHandler={handleClick} /> */}
+                <PrebuiltSearchList listSections={adAzSections} clickHandler={handleClick} />
+                {/* <QuerySearchList clickHandler={handleClick} /> */}
             </div>
         </div>
     );
