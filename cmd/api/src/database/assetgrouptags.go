@@ -454,7 +454,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 					return CheckError(result)
 				}
 			}
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 				return err
 			}
 		}
@@ -502,7 +502,7 @@ func (s *BloodhoundDB) DeleteAssetGroupTag(ctx context.Context, user model.User,
 			return CheckError(result)
 		} else if result := tx.Exec("DELETE FROM kind WHERE id = ?", assetGroupTag.KindId); result.Error != nil {
 			return CheckError(result)
-		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
+		} else if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), assetGroupTag.Name, model.AssetGroupHistoryActionDeleteTag, assetGroupTag.ID, null.String{}, null.String{}); err != nil {
 			return err
 		}
 
@@ -694,7 +694,7 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 				return fmt.Errorf("failed to update tag position: %w", err)
 			}
 
-			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user, tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
+			if err := bhdb.CreateAssetGroupHistoryRecord(ctx, user.ID.String(), user.EmailAddress.ValueOrZero(), tag.Name, model.AssetGroupHistoryActionUpdateTag, tag.ID, null.String{}, null.String{}); err != nil {
 				return fmt.Errorf("failed to create history record: %w", err)
 			}
 
