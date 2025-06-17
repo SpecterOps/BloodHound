@@ -206,7 +206,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.DeleteSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.ShareSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}/export", api.URIPathVariableSavedQueryID), resources.ExportSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
-		routerInst.GET("/api/v2/saved-queries/export", resources.ExportSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
+		routerInst.GET("/api/v2/saved-queries/export", resources.ExportSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
 		routerInst.POST("/api/v2/saved-queries/import", resources.ImportSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 
 		// Azure Entity API

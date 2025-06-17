@@ -208,6 +208,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
 		} else {
+			// User does not own but has access to query
 			if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
 				auditLogEntry.Status = model.AuditLogStatusFailure
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -225,6 +226,105 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
 		}
 	}
+}
+
+// ExportSavedQueries - Exports one or more saved queries in a ZIP file. The scope query parameter determines which queries are exported.
+// Only the first scope query parameter will be considered.
+func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *http.Request) {
+	var (
+		auditLogEntry = model.AuditEntry{}
+		err           error
+		queryParams   = request.URL.Query()
+		scope         = queryParams.Get(api.QueryParameterScope)
+		savedQueries  = make(model.SavedQueries, 0)
+		zipBytes      []byte
+	)
+
+	defer func() {
+		if auditLogEntry.Status == model.AuditLogStatusFailure || auditLogEntry.Status == model.AuditLogStatusSuccess {
+			if err != nil {
+				auditLogEntry.ErrorMsg = err.Error()
+			}
+			if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("resource not found: %v", err))
+				} else if errors.Is(err, context.DeadlineExceeded) {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("context deadline exceeded: %v", err))
+				} else {
+					slog.ErrorContext(request.Context(), fmt.Sprintf("unexpected database error: %v", err))
+				}
+			}
+		}
+		// did not maCke it far enough in the api request for an audit log event
+	}()
+
+	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
+	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"export_saved_queries_scope": scope, "user_id": user.ID.String()}); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if scope == "" {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		err = fmt.Errorf("scope query parameter cannot be empty")
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+	} else {
+		switch strings.ToLower(scope) {
+		case string(model.SavedQueryScopeAll):
+			savedQueries, err = s.DB.GetAllSavedQueriesByUser(request.Context(), user.ID)
+		case string(model.SavedQueryScopePublic):
+			savedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
+		case string(model.SavedQueryScopeShared):
+			savedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
+		case string(model.SavedQueryScopeOwned):
+			savedQueries, _, err = s.DB.ListSavedQueries(request.Context(), user.ID, "id", model.SQLFilter{}, 0, 0)
+		default:
+			err = fmt.Errorf("invalid scope param: %s", scope)
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
+			return
+		}
+		if err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.HandleDatabaseError(request, response, err)
+			return
+		}
+		if zipBytes, err = createSavedQueriesZipFile(savedQueries); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+		} else {
+			auditLogEntry.Status = model.AuditLogStatusSuccess
+			api.WriteBinaryResponse(request.Context(), zipBytes, "exported_queries.zip", http.StatusOK, response)
+		}
+	}
+}
+
+func createSavedQueriesZipFile(savedQueries []model.SavedQuery) ([]byte, error) {
+	var err error
+	zipBuffer := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(zipBuffer)
+	for _, query := range savedQueries {
+		var (
+			file        io.Writer
+			jsonBytes   []byte
+			exportQuery = TransferableSavedQuery{
+				Query:       query.Query,
+				Name:        query.Name,
+				Description: query.Description,
+			}
+		)
+		if file, err = zipWriter.Create(fmt.Sprintf("%s.json", exportQuery.Name)); err != nil {
+			return nil, err
+		} else if jsonBytes, err = json.Marshal(exportQuery); err != nil {
+			return nil, err
+		} else if _, err = io.Copy(file, bytes.NewReader(jsonBytes)); err != nil {
+			return nil, err
+		}
+	}
+	if err = zipWriter.Close(); err != nil {
+		return nil, err
+	}
+	return zipBuffer.Bytes(), nil
 }
 
 // ImportSavedQuery - Used to import custom cypher queries.
@@ -462,21 +562,4 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		}
 
 	}
-}
-
-func validateAndExtractScopeQueryParameter(parameters []string) ([]model.SavedQueryScope, error) {
-	savedQueryScopes := make([]model.SavedQueryScope, len(parameters))
-	for _, parameter := range parameters {
-		switch strings.ToLower(parameter) {
-		case string(model.SavedQueryScopeOwned):
-			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopeOwned)
-		case string(model.SavedQueryScopeShared):
-			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopeShared)
-		case string(model.SavedQueryScopePublic):
-			savedQueryScopes = append(savedQueryScopes, model.SavedQueryScopePublic)
-		default:
-			return nil, fmt.Errorf("invalid query parameter: %s", parameter)
-		}
-	}
-	return savedQueryScopes, nil
 }

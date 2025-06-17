@@ -983,6 +983,21 @@ func (mr *MockDatabaseMockRecorder) GetAllSSOProviders(ctx, order, sqlFilter any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSSOProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSSOProviders), ctx, order, sqlFilter)
 }
 
+// GetAllSavedQueriesByUser mocks base method.
+func (m *MockDatabase) GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllSavedQueriesByUser", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllSavedQueriesByUser indicates an expected call of GetAllSavedQueriesByUser.
+func (mr *MockDatabaseMockRecorder) GetAllSavedQueriesByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSavedQueriesByUser", reflect.TypeOf((*MockDatabase)(nil).GetAllSavedQueriesByUser), ctx, userID)
+}
+
 // GetAllUsers mocks base method.
 func (m *MockDatabase) GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
 	m.ctrl.T.Helper()
