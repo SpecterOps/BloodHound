@@ -567,20 +567,19 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 }
 
 func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
-	var (
-		pathSet        = graph.NewPathSet()
-		hash, _        = edge.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
-		isAcl, _       = edge.Properties.GetOrDefault(ad.IsACL.String(), false).Bool()
-		isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
-	)
-
-	// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
-	if !isAcl || !isInherited || len(hash) == 0 {
-		return pathSet, nil
-	}
+	pathSet := graph.NewPathSet()
 
 	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
+		var (
+			hash, _        = edge.Properties.GetOrDefault(ad.InheritanceHash.String(), "").String()
+			isAcl, _       = edge.Properties.GetOrDefault(ad.IsACL.String(), false).Bool()
+			isInherited, _ = edge.Properties.GetOrDefault(common.IsInherited.String(), false).Bool()
+		)
+
+		// If the target edge is not ACL-related or does not have an inheritance hash to match against, return an empty result set
+		if !isAcl || !isInherited || len(hash) == 0 {
+			return nil
+		} else if startNode, endNode, err := ops.FetchRelationshipNodes(tx, edge); err != nil {
 			return err
 		} else {
 			// First append the starting path to our result pathset
