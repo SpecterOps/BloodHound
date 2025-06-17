@@ -44,7 +44,7 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
     },
 });
 
-describe('AssetGroupMenuItem', async () => {
+describe('AssetGroupMenuItem', () => {
     describe('adding to an asset group', () => {
         const server = setupServer(
             rest.get('/api/v2/graph-search', (req, res, ctx) => {

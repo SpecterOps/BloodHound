@@ -62,7 +62,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('ContextMenu', async () => {
+describe('ContextMenu', () => {
     it('renders asset group edit options with graph write permissions', async () => {
         render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
