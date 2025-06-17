@@ -236,7 +236,7 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 		err           error
 		queryParams   = request.URL.Query()
 		scope         = queryParams.Get(api.QueryParameterScope)
-		savedQueries  = make(model.SavedQueries, 0)
+		savedQueries  model.SavedQueries
 		zipBytes      []byte
 	)
 

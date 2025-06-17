@@ -1964,10 +1964,9 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 	testQuery.UserID = userId.String()
 
 	type expected struct {
-		responseCode   int
-		responseHeader http.Header
-		responseBody   v2.TransferableSavedQuery
-		responseError  string
+		responseCode  int
+		responseBody  v2.TransferableSavedQuery
+		responseError string
 	}
 
 	type fields struct {
@@ -2230,10 +2229,9 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	type expected struct {
-		responseCode   int
-		responseHeader http.Header
-		responseBody   string
-		responseError  string
+		responseCode  int
+		responseBody  string
+		responseError string
 	}
 
 	type fields struct {
@@ -2446,6 +2444,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 						file, err := zipWriter.Create(query.Name)
 						require.NoError(t, err)
 						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
 						_, err = io.Copy(file, bytes.NewReader(jsonFile))
 						require.NoError(t, err)
 					}
@@ -2479,6 +2478,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 						file, err := zipWriter.Create(query.Name)
 						require.NoError(t, err)
 						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
 						_, err = io.Copy(file, bytes.NewReader(jsonFile))
 						require.NoError(t, err)
 					}
@@ -2536,6 +2536,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 						file, err := zipWriter.Create(query.Name)
 						require.NoError(t, err)
 						jsonFile, err := json.Marshal(query)
+						require.NoError(t, err)
 						_, err = io.Copy(file, bytes.NewReader(jsonFile))
 						require.NoError(t, err)
 					}
@@ -2628,7 +2629,6 @@ func TestResources_ExportSavedQueries(t *testing.T) {
 
 	type expected struct {
 		responseCode     int
-		responseHeader   http.Header
 		responseZipFiles map[string]v2.TransferableSavedQuery
 		responseError    string
 	}
