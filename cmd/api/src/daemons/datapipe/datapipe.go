@@ -30,8 +30,9 @@ const (
 	pruningInterval = time.Hour * 24
 )
 
-// PipelineInterface defines methods that operate on instance state.
-// These methods are not static and require a fully initialized pipeline.
+// Pipeline defines instance methods that operate on pipeline state.
+// These methods require a fully initialized Pipeline instance including
+// graph and db connections. Whatever is neeeded by the pipe to do the work
 type Pipeline interface {
 	PruneData(context.Context)
 	DeleteData(context.Context)
@@ -42,6 +43,7 @@ type Pipeline interface {
 }
 
 type Daemon struct {
+	start        time.Duration
 	tickInterval time.Duration
 	pipeline     Pipeline
 	db           database.Database
@@ -51,17 +53,18 @@ func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(pipeline Pipeline, tickInterval time.Duration, db database.Database) *Daemon {
+func NewDaemon(pipeline Pipeline, start time.Duration, tickInterval time.Duration, db database.Database) *Daemon {
 	return &Daemon{
 		db:           db,
 		tickInterval: tickInterval,
 		pipeline:     pipeline,
+		start:        start,
 	}
 }
 
 func (s *Daemon) Start(ctx context.Context) {
 	var (
-		datapipeLoopTimer = time.NewTimer(s.tickInterval)
+		datapipeLoopTimer = time.NewTimer(s.start)
 		pruningTicker     = time.NewTicker(pruningInterval)
 	)
 
