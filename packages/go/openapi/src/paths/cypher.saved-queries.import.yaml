@@ -13,25 +13,42 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-parameters:
-  - name: saved_query_id
-    description: ID of the saved query
-    in: path
-    required: true
-    schema:
-      type: integer
-      format: int32
-get:
-  operationId: ExportSavedQuery
-  summary: Export a saved query
-  description: Export an existing saved query by ID
+post:
+  operationId: ImportQuery
+  summary: Import a cypher query
+  description: | 
+    Import one or more cypher queries.
+    
+    The request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.
+
+    The underlying JSON file(s) is expected to have the following structure:
+    ```json
+    {
+     "name": "Return_Nodes,
+     "query": "MATCH (n) RETURN n",
+     "description": "Returns all nodes in a given graph"
+    }
+    ```
   tags:
     - Cypher
     - Community
     - Enterprise
+  requestBody:
+    description: Zip or Json file
+    required: true
+    content:
+      application/json:
+        schema:
+          type: string
+          format: binary
+      application/zip:
+        schema:
+          type: string
+          format: binary
   responses:
-    200:
-      $ref: './../responses/binary-response.yaml'
+    # Cannot override a referenced schema in OpenApi 3.0 so below is needed to add the underlying JSON schema type for exported queries.
+    201:
+      $ref: './../responses/no-content.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
