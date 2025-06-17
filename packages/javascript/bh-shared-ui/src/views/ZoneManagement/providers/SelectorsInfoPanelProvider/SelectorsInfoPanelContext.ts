@@ -20,6 +20,7 @@ export const SelectorsInfoPanelContext = React.createContext<
     | {
           isSelectorsInfoPanelOpen: boolean;
           setIsSelectorsInfoPanelOpen: (isOpen: boolean) => void;
+          collapseAllSections: () => void;
       }
     | undefined
 >(undefined);

@@ -79,6 +79,9 @@ export { default as Enable2FADialog } from './Enable2FADialog';
 export * from './EnterpriseIcon';
 export { default as EnterpriseIcon } from './EnterpriseIcon';
 
+export * from './EntityInfo';
+export { default as EntityInfoPanel } from './EntityInfo';
+
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 

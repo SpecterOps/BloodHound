@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils';
-import { usePaneStyles } from '../InfoStyles';
-import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
-
-import { SelectedNode } from '../../../types';
+import { SelectedNode } from '../../types';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
+import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views';
+import { SelectorsInfoPanelContextProvider } from '../../views/ZoneManagement/providers';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
@@ -31,6 +30,8 @@ interface EntityInfoPanelProps {
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
+
+    //console.log(expanded);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
@@ -65,9 +66,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
 };
 
 const WrappedEntityInfoPanel: React.FC<EntityInfoPanelProps> = (props) => (
-    <ObjectInfoPanelContextProvider>
-        <EntityInfoPanel {...props} />
-    </ObjectInfoPanelContextProvider>
+    <SelectorsInfoPanelContextProvider>
+        <ObjectInfoPanelContextProvider>
+            <EntityInfoPanel {...props} />
+        </ObjectInfoPanelContextProvider>
+    </SelectorsInfoPanelContextProvider>
 );
 
 export default WrappedEntityInfoPanel;

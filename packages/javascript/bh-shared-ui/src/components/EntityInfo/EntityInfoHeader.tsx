@@ -17,12 +17,12 @@ import { faAngleDoubleUp, faMinus, faPlus } from '@fortawesome/free-solid-svg-ic
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Typography } from '@mui/material';
 import React from 'react';
-import Icon from '../../../components/Icon';
-import NodeIcon from '../../../components/NodeIcon/NodeIcon';
-import { useExploreParams } from '../../../hooks';
-import { EntityKinds } from '../../../utils';
-import { useHeaderStyles } from '../InfoStyles';
-import { useObjectInfoPanelContext } from '../providers/ObjectInfoPanelProvider';
+import Icon from '../../components/Icon';
+import NodeIcon from '../../components/NodeIcon/NodeIcon';
+import { useExploreParams } from '../../hooks';
+import { EntityKinds } from '../../utils';
+import { useHeaderStyles, useObjectInfoPanelContext } from '../../views';
+import { useSelectorsInfoPanelContext } from '../../views/ZoneManagement/providers';
 
 export interface HeaderProps {
     expanded: boolean;
@@ -35,9 +35,12 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const { isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen, collapseAllSections } =
+        useSelectorsInfoPanelContext();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
+        setIsSelectorsInfoPanelOpen(false);
         if (expandedPanelSections?.length) {
             setExploreParams({
                 expandedPanelSections: [],
