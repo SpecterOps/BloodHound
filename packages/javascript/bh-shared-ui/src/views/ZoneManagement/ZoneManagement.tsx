@@ -72,7 +72,7 @@ const ZoneManagement: FC = () => {
                 authenticationRequired: true,
                 navigation: true,
             })),
-    ],
+        ],
         [savePaths]
     );
 

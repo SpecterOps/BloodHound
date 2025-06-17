@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
@@ -24,7 +25,6 @@ import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
-import { Button } from '@bloodhoundenterprise/doodleui';
 
 const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
     const savePath = '/zone-management/save';
