@@ -23,6 +23,12 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
+	"github.com/specterops/bloodhound/analysis/azure/azrole"
+	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -936,153 +942,17 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 // Step 0: For each AZTenant in the graph...
 func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	// Step 0: Identify each AZTenant labeled node in the database.
-	processingStats := &analysis.AtomicPostProcessingStats{}
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)
 	if err != nil {
-		return processingStats, err
+		return &operation.Stats, err
 	}
 
 	for _, tenantNode := range tenantNodes {
-		// Read the tenantId property from the AZTenant node
-		tenantID, err := tenantNode.Properties.Get(azure.TenantID.String()).String()
-		if err != nil || len(tenantID) == 0 {
-			return processingStats, fmt.Errorf("read tenant ID property value is nil")
-		}
-
-		// Step 1 & 2: Within this tenant, find all AZRole nodes
-		//             whose tenantId matches AND where
-		//             end-user approval is required AND
-		//             at least one of the primaryApprovers props is non-null.
-		var fetchedAZRoles graph.NodeSet
-		err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-				return query.And(
-					// Step 1: Kind = AZRole and tenantId matches
-					query.Kind(query.Node(), azure.Role),
-					query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
-					// Step 2: isApprovalRequired == true
-					query.Equals(
-						query.NodeProperty(azure.EndUserAssignmentRequiresApproval.String()),
-						true,
-					),
-					// Step 2: primaryApprovers (user or group) is not null
-					query.Or(
-						query.IsNotNull(
-							query.NodeProperty(azure.EndUserAssignmentUserApprovers.String()),
-						),
-						query.IsNotNull(
-							query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String()),
-						),
-					),
-				)
-			}))
-			if err != nil {
-				return err
-			}
-			fetchedAZRoles = fetchedNodes
-			return nil
-		})
-		if err != nil {
-			return processingStats, err
-		}
-
-		// Step 3: For each AZRole that requires approval...
-		for _, fetchedAZRole := range fetchedAZRoles {
-			// Step 3a: Read the primaryApprovers list (group GUIDs)
-			userApproversID, err := fetchedAZRole.Properties.Get(
-				azure.EndUserAssignmentUserApprovers.String(),
-			).StringSlice()
-			if err != nil {
-				return processingStats, err
-			}
-			groupApproversID, err := fetchedAZRole.Properties.Get(
-				azure.EndUserAssignmentGroupApprovers.String(),
-			).StringSlice()
-			if err != nil {
-				return processingStats, err
-			}
-			principalIDs := append(userApproversID, groupApproversID...)
-			if len(principalIDs) == 0 {
-				// Step 3b: primaryApprovers is null/empty
-				// Step 3b.i: Use tenantId from this AZRole (already have tenantID)
-				// Step 3b.ii: Find GlobalAdmin AND PrivilegedRoleAdmin roles in this tenant
-				//             and create an AZRoleApprover edge from each to this role.
-				err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-					fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-						return query.And(
-							query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
-							query.Kind(query.Node(), azure.Role),
-							query.Kind(query.Node(), azure.GlobalAdmin),
-							query.Kind(query.Node(), azure.PrivilegedRoleAdmin),
-						)
-					}))
-					if err != nil {
-						return err
-					}
-
-					for _, fetchedNode := range fetchedNodes {
-						// enqueue creation of AZRoleApprover edge: from fetchedNode → fetchedAZRole
-						var outC chan<- analysis.CreatePostRelationshipJob
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: fetchedNode.ID,
-							ToID:   fetchedAZRole.ID,
-							Kind:   azure.AZRoleApprover,
-						})
-					}
-
-					return nil
-				})
-				if err != nil {
-					return processingStats, err
-				}
-			} else {
-				// Step 3c: primaryApprovers is NOT null
-				// Step 3c.i & 3c.ii: For each GUID, find-or-create an AZBase node and
-				//                    create an AZRoleApprover edge to the role.
-				for _, principalID := range principalIDs {
-					err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-						// look up existing entity node by objectId
-						fetchedNode, err := tx.Nodes().Filterf(func() graph.Criteria {
-							return query.And(
-								query.Kind(query.Node(), azure.Entity),
-								query.Equals(query.NodeProperty(common.ObjectID.String()), principalID),
-							)
-						}).First()
-						if err != nil {
-							if graph.IsErrNotFound(err) {
-								// not found → create new AZBase/Entity node
-								createdNode, err := tx.CreateNode(
-									graph.AsProperties(graph.PropertyMap{
-										common.ObjectID: principalID,
-									}),
-									azure.Entity,
-								)
-								if err != nil {
-									return err
-								}
-								fetchedNode = createdNode
-							} else {
-								return err
-							}
-						}
-
-						// enqueue creation of AZRoleApprover edge: from fetchedNode → fetchedAZRole
-						var outC chan<- analysis.CreatePostRelationshipJob
-						channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-							FromID: fetchedNode.ID,
-							ToID:   fetchedAZRole.ID,
-							Kind:   azure.AZRoleApprover,
-						})
-
-						return nil
-					})
-					if err != nil {
-						return processingStats, err
-					}
-				}
-			}
+		if err := azrole.CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
+			return &operation.Stats, err
 		}
 	}
 
-	return processingStats, nil
+	return &operation.Stats, operation.Done()
 }
