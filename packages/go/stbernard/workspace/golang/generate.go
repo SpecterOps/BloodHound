@@ -28,7 +28,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/dawgs/util/channels"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )

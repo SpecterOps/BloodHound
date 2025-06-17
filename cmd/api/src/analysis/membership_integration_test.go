@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	analysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/test"

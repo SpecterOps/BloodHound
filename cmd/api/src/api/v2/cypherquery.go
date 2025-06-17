@@ -24,8 +24,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/bloodhound/dawgs/util"
-
+	"github.com/specterops/dawgs/util"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"

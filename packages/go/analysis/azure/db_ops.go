@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/azure"
 )
 

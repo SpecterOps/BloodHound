@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 )

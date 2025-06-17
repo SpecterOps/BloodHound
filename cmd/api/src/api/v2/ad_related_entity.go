@@ -22,8 +22,8 @@ import (
 	"net/http"
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"

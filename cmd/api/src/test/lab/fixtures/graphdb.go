@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/bootstrap"

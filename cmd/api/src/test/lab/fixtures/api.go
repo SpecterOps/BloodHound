@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/lab"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"

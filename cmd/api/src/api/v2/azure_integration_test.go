@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/common"
 	v2 "github.com/specterops/bloodhound/src/api/v2"

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	_ "github.com/specterops/dawgs/drivers/neo4j"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"

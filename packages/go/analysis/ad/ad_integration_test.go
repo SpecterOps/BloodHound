@@ -25,9 +25,9 @@ import (
 
 	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
 	"github.com/specterops/bloodhound/analysis/ad/wellknown"
-	"github.com/specterops/bloodhound/cypher/models/cypher"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/dawgs/cypher/models/cypher"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"

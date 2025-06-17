@@ -29,8 +29,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	graph "github.com/specterops/bloodhound/dawgs/graph"
-	query "github.com/specterops/bloodhound/dawgs/query"
+	graph "github.com/specterops/dawgs/graph"
+	query "github.com/specterops/dawgs/query"
 	model "github.com/specterops/bloodhound/src/model"
 	queries "github.com/specterops/bloodhound/src/queries"
 	agi "github.com/specterops/bloodhound/src/services/agi"

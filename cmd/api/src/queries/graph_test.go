@@ -25,8 +25,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	graphMocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
+	"github.com/specterops/dawgs/graph"
+	graphMocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/config"

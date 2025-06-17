@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	graph_mocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
+	graph_mocks "github.com/specterops/dawgs/graph/mocks"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	v2 "github.com/specterops/bloodhound/src/api/v2"

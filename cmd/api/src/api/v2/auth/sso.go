@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
+	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"

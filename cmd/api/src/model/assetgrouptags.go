@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
 )
 

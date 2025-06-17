@@ -23,7 +23,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
+	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test/integration"

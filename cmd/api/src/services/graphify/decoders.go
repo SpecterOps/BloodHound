@@ -24,7 +24,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/util"
+	"github.com/specterops/dawgs/util"
 	"github.com/specterops/bloodhound/ein"
 )
 

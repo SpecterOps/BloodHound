@@ -22,8 +22,8 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"

@@ -25,7 +25,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 
 	"github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 )
 

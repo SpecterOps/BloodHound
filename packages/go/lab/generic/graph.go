@@ -22,8 +22,8 @@ import (
 	"io/fs"
 	"testing"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

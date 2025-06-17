@@ -31,7 +31,7 @@ import (
 	time "time"
 
 	uuid "github.com/gofrs/uuid"
-	graph "github.com/specterops/bloodhound/dawgs/graph"
+	graph "github.com/specterops/dawgs/graph"
 	database "github.com/specterops/bloodhound/src/database"
 	null "github.com/specterops/bloodhound/src/database/types/null"
 	model "github.com/specterops/bloodhound/src/model"
