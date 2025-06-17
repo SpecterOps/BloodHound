@@ -853,7 +853,7 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 
 		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
 			api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if historyRecs, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter, skip, limit); err != nil && !errors.Is(err, database.ErrNotFound) {
+		} else if historyRecs, err := s.DB.GetAssetGroupHistoryRecords(rCtx, sqlFilter, false, skip, limit); err != nil && !errors.Is(err, database.ErrNotFound) {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			api.WriteResponseWrapperWithPagination(rCtx, historyRecs, limit, skip, len(historyRecs), http.StatusOK, response)

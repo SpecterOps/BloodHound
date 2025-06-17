@@ -27,7 +27,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupHistory, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,14 +35,21 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, skip, limit int) ([]model.AssetGroupHistory, error) {
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, error) {
 	var (
 		historyRecs     []model.AssetGroupHistory
 		skipLimitString string
+		sortDir         string
 	)
 
 	if sqlFilter.SQLString != "" {
 		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
+	}
+
+	if sortDirectionAscending {
+		sortDir = "ASC"
+	} else {
+		sortDir = "DESC"
 	}
 
 	if limit != 0 {
@@ -55,9 +62,10 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilte
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at ASC %s",
+			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at %s %s",
 			(model.AssetGroupHistory{}).TableName(),
 			sqlFilter.SQLString,
+			sortDir,
 			skipLimitString,
 		),
 		sqlFilter.Params...,

@@ -45,7 +45,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 		require.NoError(t, err)
 
-		record, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, 0, 0)
+		record, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, record, 1)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
