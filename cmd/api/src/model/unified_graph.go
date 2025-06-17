@@ -25,6 +25,14 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
+// UnifiedGraphWPropertyKeys
+type UnifiedGraphWPropertyKeys struct {
+	NodeKeys []string               `json:"node_keys,omitempty"`
+	EdgeKeys []string               `json:"edge_keys,omitempty"`
+	Edges    []UnifiedEdge          `json:"edges"`
+	Nodes    map[string]UnifiedNode `json:"nodes"`
+}
+
 // UnifiedGraph represents a single, generic and minimalistic graph
 type UnifiedGraph struct {
 	Nodes map[string]UnifiedNode `json:"nodes"`
