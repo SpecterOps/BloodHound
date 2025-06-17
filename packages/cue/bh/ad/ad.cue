@@ -1832,6 +1832,8 @@ SharedRelationshipKinds: [
 	GPOAppliesTo,
 	CanApplyGPO,
 	HasTrustKeys,
+	ManageCA,
+	ManageCertificates,
 ]
 
 // Edges that are used during inbound traversal
