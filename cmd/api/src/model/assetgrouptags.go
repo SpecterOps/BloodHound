@@ -73,9 +73,9 @@ const (
 
 type AssetGroupTag struct {
 	ID             int               `json:"id"`
-	Type           AssetGroupTagType `json:"type"`
+	Type           AssetGroupTagType `json:"type" validate:"required"`
 	KindId         int               `json:"kind_id"`
-	Name           string            `json:"name"`
+	Name           string            `json:"name" validate:"required"`
 	Description    string            `json:"description"`
 	CreatedAt      time.Time         `json:"created_at"`
 	CreatedBy      string            `json:"created_by"`
@@ -106,7 +106,11 @@ func (s AssetGroupTag) AuditData() AuditData {
 }
 
 func (s AssetGroupTag) ToKind() graph.Kind {
-	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+	return graph.StringKind(s.KindName())
+}
+
+func (s AssetGroupTag) KindName() string {
+	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {

@@ -5071,6 +5071,72 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "post": {
+        "operationId": "CreateAssetGroupTag",
+        "summary": "Create Asset Group Tag",
+        "description": "Creates an asset group tag ie. a tier or label",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for creating an asset group tag. Name and type fields are required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tag-request"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tag"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/asset-group-tags/{asset_group_tag_id}": {
@@ -5118,6 +5184,93 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateAssetGroupTag",
+        "summary": "Update Asset Group Tag",
+        "description": "Updates an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating an asset group tag. At least one field is required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.asset-group-tag-update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tag"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteAssetGroupTag",
+        "summary": "Delete an Asset Group Tag",
+        "description": "Deletes an asset group tag",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -17442,6 +17595,43 @@
           },
           "require_certify": {
             "$ref": "#/components/schemas/null.boolean"
+          }
+        }
+      },
+      "model.asset-group-tag-request": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "require_certify": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "model.asset-group-tag-update": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "require_certify": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
           }
         }
       },
