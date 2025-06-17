@@ -6096,71 +6096,94 @@
         }
       }
     },
-    "/api/v2/asset-group-tags/search": {
-      "post": {
-        "operationId": "AssetGroupTagSearch",
-        "summary": "Search Asset Group Tags",
-        "description": "Supports searching by name on asset group tags and selectors, and by name or object ID on members.",
+    "/api/v2/asset-group-tags/history": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetAssetGroupTagHistory",
+        "summary": "Get history records",
+        "description": "Retrieves history records for actions on asset group tags",
         "tags": [
           "Asset Isolation",
           "Enterprise",
           "Community"
         ],
-        "requestBody": {
-          "description": "The request body for searching asset group tags.",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string"
-                  },
-                  "tag_type": {
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "query",
-                  "tag_type"
-                ]
-              }
+        "parameters": [
+          {
+            "name": "created_at",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "asset_group_tag_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "environment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "note",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "tags": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tag"
-                          }
-                        },
-                        "selectors": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-selector-response"
-                          }
-                        },
-                        "members": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/model.asset-group-tags-member"
-                          }
-                        }
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/model.asset-group-tags-history"
                 }
               }
             }
@@ -17883,6 +17906,57 @@
             }
           }
         ]
+      },
+      "model.asset-group-tags-history": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "skip": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "actor": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "asset_group_tag_id": {
+                  "type": "integer"
+                },
+                "environment_id": {
+                  "type": "integer"
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       },
       "model.bh-graph.item-border": {
         "type": "object",
