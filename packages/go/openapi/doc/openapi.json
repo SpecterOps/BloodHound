@@ -7190,7 +7190,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.unified-graph.graph"
+                      "$ref": "#/components/schemas/model.unified-graph.graph.w.property.keys"
                     }
                   }
                 }
@@ -18230,6 +18230,35 @@
             }
           }
         ]
+      },
+      "model.unified-graph.graph.w.property.keys": {
+        "type": "object",
+        "properties": {
+          "node_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "edge_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/model.unified-graph.node"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          }
+        }
       },
       "api.response.time-window": {
         "type": "object",

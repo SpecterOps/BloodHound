@@ -20,9 +20,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
+	"slices"
 
 	"github.com/specterops/bloodhound/dawgs/util"
+
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/ctx"
@@ -37,6 +40,36 @@ var (
 type CypherQueryPayload struct {
 	Query             string `json:"query"`
 	IncludeProperties bool   `json:"include_properties,omitempty"`
+}
+
+// Helper function to handle error conditions in CypherQuery.
+func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, err error) {
+	if errors.Is(err, errUnauthorizedGraphMutation) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
+	} else if util.IsNeoTimeoutError(err) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
+	} else {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+	}
+}
+
+// Helper function to handle processing of property keys.
+func processCypherProperties(graphResponse model.UnifiedGraph) model.UnifiedGraphWPropertyKeys {
+	eKeys := map[string]struct{}{}
+	nKeys := map[string]struct{}{}
+	for _, node := range graphResponse.Nodes {
+		for key := range node.Properties {
+			nKeys[key] = struct{}{}
+		}
+	}
+	for _, edge := range graphResponse.Edges {
+		for key := range edge.Properties {
+			eKeys[key] = struct{}{}
+		}
+	}
+	eSlice := slices.Sorted(maps.Keys(eKeys))
+	nSlice := slices.Sorted(maps.Keys(nKeys))
+	return model.UnifiedGraphWPropertyKeys{NodeKeys: nSlice, EdgeKeys: eSlice, Edges: graphResponse.Edges, Nodes: graphResponse.Nodes}
 }
 
 func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Request) {
@@ -64,18 +97,21 @@ func (s Resources) CypherQuery(response http.ResponseWriter, request *http.Reque
 	}
 
 	if err != nil {
-		if errors.Is(err, errUnauthorizedGraphMutation) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
-		} else if util.IsNeoTimeoutError(err) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request), response)
-		} else {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-		}
-	} else if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
-	} else {
-		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		handleCypherDBErrors(response, request, err)
+		return
 	}
+
+	if !preparedQuery.HasMutation && len(graphResponse.Nodes)+len(graphResponse.Edges) == 0 {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "resource not found", request), response)
+		return
+	}
+	if !payload.IncludeProperties {
+		api.WriteBasicResponse(request.Context(), graphResponse, http.StatusOK, response)
+		return
+	}
+
+	api.WriteBasicResponse(request.Context(), processCypherProperties(graphResponse), http.StatusOK, response)
+
 }
 
 func (s Resources) cypherMutation(request *http.Request, preparedQuery queries.PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
