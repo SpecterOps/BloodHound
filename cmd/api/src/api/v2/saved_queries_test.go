@@ -2335,7 +2335,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), "test_query", "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100", "test description").Return(model.SavedQuery{}, fmt.Errorf("test error"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("test error"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2359,7 +2359,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), "test_query", "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100", "test description").Return(model.SavedQuery{}, fmt.Errorf("duplicate key value violates unique constraint"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("duplicate key value violates unique constraint"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2500,7 +2500,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQuery(gomock.Any(), gomock.Any(), "test_query", "MATCH (n:Base)\nWHERE n.usedeskeyonly\nOR ANY(type IN n.supportedencryptiontypes WHERE type CONTAINS 'DES')\nRETURN n\nLIMIT 100", "test description").Return(model.SavedQuery{}, nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(1, nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},

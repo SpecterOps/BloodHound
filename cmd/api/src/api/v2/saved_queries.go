@@ -332,10 +332,11 @@ func createSavedQueriesZipFile(savedQueries []model.SavedQuery) ([]byte, error) 
 func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.Request) {
 
 	var (
-		handleFileFunc     func(ctx context.Context, userId uuid.UUID, file io.ReadCloser) (int, error)
-		auditLogEntry      model.AuditEntry
-		importedQueryCount int
-		err                error
+		extractQueriesFromFileFunc func(userId uuid.UUID, file io.ReadCloser) (model.SavedQueries, error)
+		auditLogEntry              model.AuditEntry
+		importedQueryCount         int
+		err                        error
+		savedQueries               model.SavedQueries
 	)
 
 	// defer audit function
@@ -370,26 +371,32 @@ func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.
 	} else {
 		switch {
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
-			handleFileFunc = s.handleJsonFile
+			extractQueriesFromFileFunc = extractImportQueriesFromJsonFile
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
-			handleFileFunc = s.handleZipFile
+			extractQueriesFromFileFunc = extractImportQueriesFromZipFile
 		default:
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, "Content type must be application/json or application/zip", request), response)
 			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
 			auditLogEntry.Status = model.AuditLogStatusFailure
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, "Content type must be application/json or application/zip", request), response)
 			return
 		}
-		if importedQueryCount, err = handleFileFunc(request.Context(), user.ID, request.Body); err != nil {
+		if savedQueries, err = extractQueriesFromFileFunc(user.ID, request.Body); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			switch {
 			case strings.Contains(err.Error(), "failed to unmarshal json file"):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			case strings.Contains(err.Error(), "duplicate key value violates unique constraint"):
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
 			case strings.Contains(err.Error(), "error during zip validation") || strings.Contains(err.Error(), "not a valid zip file"):
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 			default:
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+			}
+			return
+		} else if importedQueryCount, err = s.DB.CreateSavedQueries(request.Context(), savedQueries); err != nil {
+			auditLogEntry.Status = model.AuditLogStatusFailure
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
 			api.WriteBasicResponse(request.Context(), fmt.Sprintf("imported %d queries", importedQueryCount), http.StatusCreated, response)
@@ -398,25 +405,33 @@ func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s Resources) handleJsonFile(ctx context.Context, userId uuid.UUID, file io.ReadCloser) (int, error) {
+func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.ReadCloser) (model.SavedQueries, error) {
 	defer file.Close()
-	var query TransferableSavedQuery
+	var (
+		savedQueries = make(model.SavedQueries, 0)
+		query        TransferableSavedQuery
+	)
 	if jsonQueryFile, err := io.ReadAll(file); err != nil {
-		return 0, err
+		return savedQueries, err
 	} else if err = json.Unmarshal(jsonQueryFile, &query); err != nil {
-		return 0, fmt.Errorf("failed to unmarshal json file: %w", err)
-	} else if _, err = s.DB.CreateSavedQuery(ctx, userId, query.Name, query.Query, query.Description); err != nil {
-		return 0, err
+		return savedQueries, fmt.Errorf("failed to unmarshal json file: %w", err)
+	} else {
+		savedQueries = append(savedQueries, model.SavedQuery{
+			UserID:      userId.String(),
+			Name:        query.Name,
+			Query:       query.Query,
+			Description: query.Description,
+		})
 	}
-	return 1, nil
+	return savedQueries, nil
 }
 
-func (s Resources) handleZipFile(ctx context.Context, userId uuid.UUID, zipFile io.ReadCloser) (int, error) {
+func extractImportQueriesFromZipFile(userId uuid.UUID, zipFile io.ReadCloser) (model.SavedQueries, error) {
 	defer zipFile.Close()
 	if zipFileBytes, err := io.ReadAll(zipFile); err != nil {
-		return 0, err
+		return model.SavedQueries{}, err
 	} else if zipReader, err := zip.NewReader(bytes.NewReader(zipFileBytes), int64(len(zipFileBytes))); err != nil {
-		return 0, err
+		return model.SavedQueries{}, err
 	} else {
 		queries := make(model.SavedQueries, 0)
 		for _, zipQueryFile := range zipReader.File {
@@ -425,11 +440,11 @@ func (s Resources) handleZipFile(ctx context.Context, userId uuid.UUID, zipFile 
 				continue
 			}
 			if jsonQueryFile, err := upload.ReadZippedFile(zipQueryFile); err != nil {
-				return 0, err
+				return queries, err
 			} else {
 				var importQuery TransferableSavedQuery
 				if err = json.Unmarshal(jsonQueryFile, &importQuery); err != nil {
-					return 0, fmt.Errorf("failed to unmarshal json file: %w", err)
+					return queries, fmt.Errorf("failed to unmarshal json file: %w", err)
 				}
 				queries = append(queries, model.SavedQuery{
 					Query:       importQuery.Query,
@@ -439,7 +454,7 @@ func (s Resources) handleZipFile(ctx context.Context, userId uuid.UUID, zipFile 
 				})
 			}
 		}
-		return s.DB.CreateSavedQueries(ctx, queries)
+		return queries, nil
 	}
 }
 
