@@ -75,6 +75,7 @@ const (
 
 	AuditLogActionExportRelationshipRisks AuditLogAction = "ExportRelationshipRisks"
 	AuditLogActionExportListRisks         AuditLogAction = "ExportListRisks"
+	AuditLogActionExportAllRisks          AuditLogAction = "ExportAllRisks"
 
 	AuditLogActionDeleteBloodhoundData AuditLogAction = "DeleteBloodhoundData"
 

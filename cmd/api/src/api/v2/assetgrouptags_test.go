@@ -128,8 +128,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: "type = ?",
-							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeLabel))},
+							SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeLabel)),
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeLabel},
@@ -154,8 +153,7 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupTags(gomock.Any(), model.SQLFilter{
-							SQLString: "type = ?",
-							Params:    []any{strconv.Itoa(int(model.AssetGroupTagTypeTier))},
+							SQLString: "type = " + strconv.Itoa(int(model.AssetGroupTagTypeTier)),
 						}).
 						Return(model.AssetGroupTags{
 							model.AssetGroupTag{ID: 1, Type: model.AssetGroupTagTypeTier},

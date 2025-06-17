@@ -2891,26 +2891,32 @@
                     }
                   }
                 },
-                "example": [
-                  {
-                    "id": 1,
-                    "kindName": "KindA",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "house",
-                      "color": "#FFFFFF"
+                "example": {
+                  "data": [
+                    {
+                      "id": 1,
+                      "kindName": "KindA",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "house",
+                          "color": "#FFFFFF"
+                        }
+                      }
+                    },
+                    {
+                      "id": 2,
+                      "kindName": "KindB",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "coffee",
+                          "color": "#000000"
+                        }
+                      }
                     }
-                  },
-                  {
-                    "id": 2,
-                    "kindName": "KindB",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "coffee",
-                      "color": "#000000"
-                    }
-                  }
-                ]
+                  ]
+                }
               }
             }
           },
@@ -3055,9 +3061,11 @@
                   "id": 1,
                   "kindName": "KindA",
                   "config": {
-                    "type": "font-awesome",
-                    "name": "house",
-                    "color": "#FFFFFF"
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
                   }
                 }
               }
@@ -14467,6 +14475,54 @@
         }
       }
     },
+    "/api/v2/attack-paths/details": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetAllAttackPathFindings",
+        "summary": "Get all attack path findings",
+        "description": "Fetches all attack path findings and their associated details, including documentation.",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/api.response.all-findings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/domains/{domain_id}/available-types": {
       "parameters": [
         {
@@ -18427,6 +18483,153 @@
           "unaccepted",
           "all",
           ""
+        ]
+      },
+      "model.unified-finding": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "target_id",
+              "target_kind",
+              "target_properties",
+              "finding_name",
+              "environment_id",
+              "impact_percentage",
+              "impact_count",
+              "accepted_until"
+            ],
+            "properties": {
+              "target_id": {
+                "type": "string"
+              },
+              "target_kind": {
+                "type": "string"
+              },
+              "target_properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "finding_name": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "impact_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "impact_count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "accepted_until": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "target_id",
+              "target_kind",
+              "target_properties",
+              "source_id",
+              "source_kind",
+              "source_properties",
+              "attack_path_edge_id",
+              "finding_name",
+              "environment_id",
+              "impact_percentage",
+              "impact_count",
+              "exposure_percentage",
+              "exposure_count",
+              "accepted_until"
+            ],
+            "properties": {
+              "target_id": {
+                "type": "string"
+              },
+              "target_kind": {
+                "type": "string"
+              },
+              "target_properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "source_id": {
+                "type": "string"
+              },
+              "source_kind": {
+                "type": "string"
+              },
+              "source_properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
+              },
+              "attack_path_edge_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "finding_name": {
+                "type": "string"
+              },
+              "environment_id": {
+                "type": "string"
+              },
+              "impact_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "impact_count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "exposure_percentage": {
+                "type": "number",
+                "format": "double"
+              },
+              "exposure_count": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "accepted_until": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "api.response.all-findings": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "description": "List of unified findings.",
+            "items": {
+              "$ref": "#/components/schemas/model.unified-finding"
+            }
+          },
+          "finding_assets": {
+            "type": "object",
+            "description": "Directory structure of Base64 encoded assets related to each finding organized by finding name.",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "findings",
+          "finding_assets"
         ]
       },
       "model.relationship-finding": {
