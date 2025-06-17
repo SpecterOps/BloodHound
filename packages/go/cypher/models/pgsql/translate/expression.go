@@ -529,6 +529,44 @@ func (s *ExpressionTreeTranslator) PopBinaryExpression(operator pgsql.Operator) 
 	}
 }
 
+func (s *ExpressionTreeTranslator) PopBinaryEmptyArrayExpression(operator pgsql.Operator) (pgsql.Expression, error) {
+	if _, err := s.PopOperand(); err != nil {
+		return nil, err
+	} else if leftOperand, err := s.PopOperand(); err != nil {
+		return nil, err
+	} else if leftPropertyLookup, hasLeftPropertyLookup := expressionToPropertyLookupBinaryExpression(leftOperand); !hasLeftPropertyLookup {
+		return nil, fmt.Errorf("expected left property expression, got %v", leftPropertyLookup)
+	} else if operator == pgsql.OperatorEquals {
+		var (
+			newExpression = pgsql.NewBinaryExpression(
+				pgsql.NewUnaryExpression(pgsql.OperatorNot, pgsql.NewBinaryExpression(leftPropertyLookup.LOperand, pgsql.OperatorJSONBFieldExists, leftPropertyLookup.ROperand)),
+				pgsql.OperatorOr,
+				pgsql.NewBinaryExpression(leftOperand, pgsql.OperatorEquals, pgsql.NewAnyExpressionHinted(
+					pgsql.ArrayLiteral{
+						Values:   []pgsql.Expression{pgsql.Literal{Value: "null"}, pgsql.Literal{Value: "[]"}},
+						CastType: pgsql.Text,
+					})))
+		)
+
+		return pgsql.NewParenthetical(newExpression), applyBinaryExpressionTypeHints(s.kindMapper, newExpression)
+	} else if operator == "<>" {
+		var (
+			newExpression = pgsql.NewBinaryExpression(
+				pgsql.NewBinaryExpression(leftPropertyLookup.LOperand, pgsql.OperatorJSONBFieldExists, leftPropertyLookup.ROperand),
+				pgsql.OperatorAnd,
+				pgsql.NewUnaryExpression(pgsql.OperatorNot, pgsql.NewBinaryExpression(leftOperand, pgsql.OperatorEquals, pgsql.NewAnyExpressionHinted(
+					pgsql.ArrayLiteral{
+						Values:   []pgsql.Expression{pgsql.Literal{Value: "null"}, pgsql.Literal{Value: "[]"}},
+						CastType: pgsql.Text,
+					}))))
+		)
+
+		return pgsql.NewParenthetical(newExpression), applyBinaryExpressionTypeHints(s.kindMapper, newExpression)
+	} else {
+		return nil, fmt.Errorf("expected equality operator, got %v", operator)
+	}
+}
+
 func rewriteIdentityOperands(scope *Scope, newExpression *pgsql.BinaryExpression) error {
 	switch typedLOperand := newExpression.LOperand.(type) {
 	case pgsql.Identifier:
@@ -972,6 +1010,15 @@ func (s *ExpressionTreeTranslator) CompleteBinaryExpression(scope *Scope, operat
 		}
 
 		s.disjunctionDepth -= 1
+	}
+
+	if _, isEmptyArrayLiteral := s.PeekOperand().(pgsql.EmptyArrayLiteral); isEmptyArrayLiteral {
+		if newExpression, err := s.PopBinaryEmptyArrayExpression(operator); err != nil {
+			return err
+		} else {
+			s.PushOperand(newExpression)
+			return nil
+		}
 	}
 
 	if newExpression, err := s.PopBinaryExpression(operator); err != nil {

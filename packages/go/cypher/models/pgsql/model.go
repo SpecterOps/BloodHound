@@ -843,6 +843,24 @@ func (s ArrayLiteral) NodeType() string {
 	return "array"
 }
 
+type EmptyArrayLiteral struct{}
+
+func (s EmptyArrayLiteral) TypeHint() DataType {
+	return AnyArray
+}
+
+func (s EmptyArrayLiteral) AsExpression() Expression {
+	return s
+}
+
+func (s EmptyArrayLiteral) AsSelectItem() SelectItem {
+	return s
+}
+
+func (s EmptyArrayLiteral) NodeType() string {
+	return "empty_array"
+}
+
 type MatchedUpdate struct {
 	Predicate   Expression
 	Assignments []Assignment
