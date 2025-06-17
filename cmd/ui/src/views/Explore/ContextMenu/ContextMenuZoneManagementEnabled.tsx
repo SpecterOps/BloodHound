@@ -112,7 +112,7 @@ const ContextMenu: FC<{
         return (
             <Menu
                 open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
+                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
@@ -125,7 +125,7 @@ const ContextMenu: FC<{
         return (
             <Menu
                 open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
+                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
@@ -137,7 +137,7 @@ const ContextMenu: FC<{
     return (
         <Menu
             open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
+            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
             anchorReference='anchorPosition'
             onClick={onClose}
             keepMounted>

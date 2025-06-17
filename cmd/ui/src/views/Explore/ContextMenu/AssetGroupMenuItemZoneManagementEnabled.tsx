@@ -24,7 +24,6 @@ const AssetGroupMenuItem: FC<{
     assetGroupName: string;
     isCurrentMember: boolean;
     onAddNode?: (assetGroupId: string | number) => void;
-    onRemoveNode?: () => void;
     showConfirmationOnAdd?: boolean;
     confirmationOnAddMessage?: string;
 }> = ({
@@ -32,7 +31,6 @@ const AssetGroupMenuItem: FC<{
     assetGroupName,
     isCurrentMember,
     onAddNode = () => {},
-    onRemoveNode = () => {},
     showConfirmationOnAdd = false,
     confirmationOnAddMessage = '',
 }) => {
@@ -43,8 +41,7 @@ const AssetGroupMenuItem: FC<{
         setConfirmDialogOpen(false);
     };
 
-    const handleRemoveNode = () => {
-        onRemoveNode();
+    const handleOnCancel = () => {
         setConfirmDialogOpen(false);
     };
 
@@ -57,7 +54,7 @@ const AssetGroupMenuItem: FC<{
                 </MenuItem>
                 {showConfirmationOnAdd && (
                     <ConfirmNodeChangesDialog
-                        onCancel={handleRemoveNode}
+                        onCancel={handleOnCancel}
                         onAccept={handleAddNode}
                         open={confirmDialogOpen}
                         dialogContent={confirmationOnAddMessage}

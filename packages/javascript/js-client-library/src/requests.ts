@@ -54,7 +54,7 @@ export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
     };
 
 export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
 >;
 
 export interface CreateAssetGroupRequest {
