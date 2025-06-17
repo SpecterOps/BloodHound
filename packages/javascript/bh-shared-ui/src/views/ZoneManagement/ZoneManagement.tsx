@@ -36,6 +36,7 @@ import { OWNED_ID, TIER_ZERO_ID } from './utils';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
+const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
     ROUTE_ZONE_MANAGEMENT_TIER_DETAILS,
@@ -72,7 +73,7 @@ const ZoneManagement: FC = () => {
                 authenticationRequired: true,
                 navigation: true,
             })),
-        ],
+    ],
         [savePaths]
     );
 

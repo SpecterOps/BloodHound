@@ -14,23 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector, SeedTypes } from 'js-client-library';
-import { CSSProperties, FC } from 'react';
-
-export const ItemSkeleton = (title: string, key: number, style?: CSSProperties) => {
-    return (
-        <li
-            key={key}
-            data-testid={`zone-management_details_${title.toLowerCase()}-list_loading-skeleton`}
-            style={style}
-            className='border-y-[1px] border-neutral-light-3 dark:border-neutral-dark-3 relative h-full w-full'>
-            <Skeleton className='h-10 rounded-none min-h-10' />
-        </li>
-    );
-};
-
-export const itemSkeletons = [ItemSkeleton, ItemSkeleton, ItemSkeleton];
+import { FC } from 'react';
 
 const isActive = (selected: string | undefined, itemId: string | number) => {
     if (typeof itemId === 'number') return selected === itemId.toString();

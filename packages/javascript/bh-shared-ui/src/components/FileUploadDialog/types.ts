@@ -29,6 +29,5 @@ export enum FileStatus {
 
 export enum FileUploadStep {
     ADD_FILES,
-    CONFIRMATION,
     UPLOAD,
 }

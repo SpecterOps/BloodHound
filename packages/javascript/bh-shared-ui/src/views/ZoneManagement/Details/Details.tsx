@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
+import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
@@ -104,6 +104,13 @@ const Details: FC = () => {
 
     return (
         <>
+            <TierActionBar
+                tierId={tagId}
+                labelId={labelId}
+                selectorId={selectorId}
+                showEditButton={showEditButton}
+                getSavePath={getSavePath}
+            />
             <div className='flex mt-6 gap-8'>
                 {InfoHeader && <InfoHeader />}
                 <div className='basis-1/3'>
