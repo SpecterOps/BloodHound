@@ -292,6 +292,7 @@ export const TagForm: FC = () => {
                                             <Switch
                                                 id='analysis'
                                                 checked={enabled}
+                                                disabled={tagId === TIER_ZERO_ID}
                                                 {...register('analysis_enabled')}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
