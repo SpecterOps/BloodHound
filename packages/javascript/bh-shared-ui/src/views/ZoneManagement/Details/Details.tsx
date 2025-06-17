@@ -20,11 +20,11 @@ import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { TierActionBar } from '../fragments';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
+import { Button } from '@bloodhoundenterprise/doodleui';
 
 const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
     const savePath = '/zone-management/save';
@@ -104,13 +104,6 @@ const Details: FC = () => {
 
     return (
         <>
-            <TierActionBar
-                tierId={tagId}
-                labelId={labelId}
-                selectorId={selectorId}
-                showEditButton={showEditButton}
-                getSavePath={getSavePath}
-            />
             <div className='flex mt-6 gap-8'>
                 {InfoHeader && <InfoHeader />}
                 <div className='basis-1/3'>

@@ -25,7 +25,7 @@ import VirtualizedNodeList from '../../../../components/VirtualizedNodeList';
 import { useDebouncedValue } from '../../../../hooks';
 import { useNotifications } from '../../../../providers';
 import { apiClient, cn, useAppNavigate } from '../../../../utils';
-import { getTagUrlValue } from '../../../../utils/tagUrlValue';
+import { getTagUrlValue } from '../../utils';
 import { Cypher } from '../../Cypher/Cypher';
 import { handleError } from '../utils';
 import DeleteSelectorButton from './DeleteSelectorButton';
