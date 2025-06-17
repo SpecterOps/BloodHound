@@ -790,6 +790,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
