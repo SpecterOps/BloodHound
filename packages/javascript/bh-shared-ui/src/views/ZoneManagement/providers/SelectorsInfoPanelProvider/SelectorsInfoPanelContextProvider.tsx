@@ -20,11 +20,14 @@ import { SelectorsInfoPanelContext } from './SelectorsInfoPanelContext';
 type SelectorsInfoPanelContextProviderProps = { children: React.ReactNode };
 
 export function SelectorsInfoPanelContextProvider({ children }: SelectorsInfoPanelContextProviderProps) {
-    const [isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen] = useState<boolean>(true);
+    const [isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen] = useState<boolean>(false);
     const value = useMemo(
         () => ({
             isSelectorsInfoPanelOpen,
             setIsSelectorsInfoPanelOpen,
+            collapseAllSections: () => {
+                setIsSelectorsInfoPanelOpen(false);
+            },
         }),
         [isSelectorsInfoPanelOpen]
     );
