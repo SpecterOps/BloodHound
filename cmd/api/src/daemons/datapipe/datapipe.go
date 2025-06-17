@@ -43,7 +43,7 @@ type Pipeline interface {
 }
 
 type Daemon struct {
-	start        time.Duration
+	startDelay   time.Duration
 	tickInterval time.Duration
 	pipeline     Pipeline
 	db           database.Database
@@ -53,18 +53,18 @@ func (s *Daemon) Name() string {
 	return "Data Pipe Daemon"
 }
 
-func NewDaemon(pipeline Pipeline, start time.Duration, tickInterval time.Duration, db database.Database) *Daemon {
+func NewDaemon(pipeline Pipeline, startDelay time.Duration, tickInterval time.Duration, db database.Database) *Daemon {
 	return &Daemon{
 		db:           db,
 		tickInterval: tickInterval,
 		pipeline:     pipeline,
-		start:        start,
+		startDelay:   startDelay,
 	}
 }
 
 func (s *Daemon) Start(ctx context.Context) {
 	var (
-		datapipeLoopTimer = time.NewTimer(s.start)
+		datapipeLoopTimer = time.NewTimer(s.startDelay)
 		pruningTicker     = time.NewTicker(pruningInterval)
 	)
 
