@@ -2860,7 +2860,7 @@
         }
       }
     },
-    "/api/v2/customnode": {
+    "/api/v2/custom-node": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -2893,23 +2893,22 @@
                 },
                 "example": [
                   {
-                    "id": 1,
-                    "kindName": "KindA",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "house",
-                      "color": "#FFFFFF"
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "kindName": "KindB",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "coffee",
-                      "color": "#000000"
-                    }
+                    "data": [
+                      {
+                          "id": 1,
+                          "kindName": "KindA",
+                          "config": {
+                              "icon": {
+                                  "type": "font-awesome",
+                                  "name": "house",
+                                  "color": "#FFFFFF"
+                              }
+                          }
+                      }
+                    ]
                   }
+                  
+                  
                 ]
               }
             }
@@ -3019,7 +3018,7 @@
         }
       }
     },
-    "/api/v2/customnode/{kind_name}": {
+    "/api/v2/custom-node/{kind_name}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
