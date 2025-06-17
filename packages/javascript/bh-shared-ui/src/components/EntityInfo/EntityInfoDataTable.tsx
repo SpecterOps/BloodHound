@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-import InfiniteScrollingTable from '../../../components/InfiniteScrollingTable';
-import { NODE_GRAPH_RENDER_LIMIT } from '../../../constants';
-import { useExploreParams } from '../../../hooks';
-import { SelectedNode } from '../../../types';
-import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../../utils';
+import InfiniteScrollingTable from '../../components/InfiniteScrollingTable';
+import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
+import { useExploreParams } from '../../hooks';
+import { SelectedNode } from '../../types';
+import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({

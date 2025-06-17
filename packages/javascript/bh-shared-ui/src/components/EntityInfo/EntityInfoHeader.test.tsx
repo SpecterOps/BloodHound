@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render } from '../../../test-utils';
+import { act, render } from '../../test-utils';
 
 import userEvent from '@testing-library/user-event';
-import { AzureNodeKind } from '../../../graphSchema';
-import { ObjectInfoPanelContext } from '../providers/ObjectInfoPanelProvider';
+import { AzureNodeKind } from '../../graphSchema';
+import { ObjectInfoPanelContext } from '../../views';
 import EntityInfoHeader, { HeaderProps } from './EntityInfoHeader';
 
 const testProps: HeaderProps = {
