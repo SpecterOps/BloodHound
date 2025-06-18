@@ -30,6 +30,8 @@ import (
 	"github.com/specterops/bloodhound/graphschema/ad"
 )
 
+const maxDepth = 1024
+
 func PostGPOs(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
 		return &analysis.AtomicPostProcessingStats{}, err
@@ -38,7 +40,7 @@ func PostGPOs(ctx context.Context, db graph.Database) (*analysis.AtomicPostProce
 
 		for _, domain := range domainNodes {
 			if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
-				processGPOs(ctx, tx, outC, domain, []graph.ID{}, []graph.ID{}, []graph.ID{})
+				processGPOs(ctx, tx, outC, domain, []graph.ID{}, []graph.ID{}, []graph.ID{}, 0)
 				return nil
 			}); err != nil {
 				slog.ErrorContext(ctx, fmt.Sprintf("Failed processing GPOs of domain %d: %v", domain.ID, err))
@@ -49,9 +51,14 @@ func PostGPOs(ctx context.Context, db graph.Database) (*analysis.AtomicPostProce
 	}
 }
 
-func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, node *graph.Node, gposInherited, gposInheritedEnforced, gpoAppliers []graph.ID) {
+func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, node *graph.Node, gposInherited, gposInheritedEnforced, gpoAppliers []graph.ID, depth int) {
 	// Check for context cancellation
 	if err := ctx.Err(); err != nil {
+		return
+	}
+
+	if depth > maxDepth {
+		slog.ErrorContext(ctx, fmt.Sprintf("Max recursion depth exceeded at node %d", node.ID))
 		return
 	}
 
@@ -123,7 +130,7 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching direct child container nodes of node %d: %v", node.ID, err))
 	} else {
 		for _, childContainer := range childContainers {
-			processGPOs(ctx, tx, outC, childContainer, applyingGPOs, gposInheritedEnforcedNew, gpoAppliers)
+			processGPOs(ctx, tx, outC, childContainer, applyingGPOs, gposInheritedEnforcedNew, gpoAppliers, depth+1)
 		}
 	}
 }
