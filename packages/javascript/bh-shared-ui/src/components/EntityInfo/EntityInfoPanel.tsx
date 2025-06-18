@@ -23,15 +23,13 @@ import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    selectedNode?: SelectedNode | null;
     sx?: SxProps;
 }
 
 const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
-
-    //console.log(expanded);
 
     return (
         <Box sx={sx} className={styles.container} data-testid='explore_entity-information-panel'>
