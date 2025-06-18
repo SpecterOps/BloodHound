@@ -31,11 +31,6 @@ const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {
         <Box>
             <EntityObjectInformation {...props} />
             <EntityInfoDataTableList {...props} />
-            {/* {zoneManagement && tagId !== undefined && memberId !== undefined && (
-                <SelectorsInfoPanelContextProvider>
-                    <EntitySelectorsInformation tagId={tagId} memberId={memberId} />
-                </SelectorsInfoPanelContextProvider>
-            )} */}
         </Box>
     );
 };
