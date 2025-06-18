@@ -103,25 +103,13 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 	if children, err := fetchDirectChildUsersAndComputers(tx, node.ID); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching direct child user and computer nodes of node %d: %v", node.ID, err))
 	} else {
-		var jobs []analysis.CreatePostRelationshipJob
 		for _, childId := range children {
 			for _, gpoId := range applyingGPOs {
-				jobs = append(jobs, analysis.CreatePostRelationshipJob{
-					FromID: gpoId,
-					ToID:   childId,
-					Kind:   ad.GPOAppliesTo,
-				})
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{FromID: gpoId, ToID: childId, Kind: ad.GPOAppliesTo})
 			}
 			for _, gpoApplierId := range gpoAppliers {
-				jobs = append(jobs, analysis.CreatePostRelationshipJob{
-					FromID: gpoApplierId,
-					ToID:   childId,
-					Kind:   ad.CanApplyGPO,
-				})
+				channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{FromID: gpoApplierId, ToID: childId, Kind: ad.CanApplyGPO})
 			}
-		}
-		for _, job := range jobs {
-			channels.Submit(ctx, outC, job)
 		}
 	}
 
