@@ -102,8 +102,8 @@ func handleDefaultAdminRoles(ctx context.Context, db graph.Database, outC chan<-
 				query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
 				query.Kind(query.Node(), azure.Role),
 				query.Or(
-					query.Kind(query.Node(), azure.GlobalAdmin),
-					query.Kind(query.Node(), azure.PrivilegedRoleAdmin),
+					query.Kind(query.Relationship(), azure.GlobalAdmin),
+					query.Kind(query.Relationship(), azure.PrivilegedRoleAdmin),
 				),
 			)
 		}))
