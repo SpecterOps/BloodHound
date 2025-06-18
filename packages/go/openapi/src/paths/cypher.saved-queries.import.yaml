@@ -34,7 +34,7 @@ post:
     - Community
     - Enterprise
   requestBody:
-    description: Zip or Json file
+    description: Request body should be a JSON or Zip file.
     required: true
     content:
       application/json:
@@ -57,6 +57,8 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    415:
+      $ref: './../responses/unsupported-media-type.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
