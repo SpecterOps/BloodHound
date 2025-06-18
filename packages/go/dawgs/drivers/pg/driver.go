@@ -174,3 +174,12 @@ func (s *Driver) FetchKinds(_ context.Context) (graph.Kinds, error) {
 
 	return kinds, nil
 }
+
+func (s *Driver) RefreshKinds(ctx context.Context) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	// Wipe this map to be rebuilt in the fetch call below
+	s.SchemaManager.kindIDsByKind = map[int16]graph.Kind{}
+	return s.SchemaManager.Fetch(ctx)
+}

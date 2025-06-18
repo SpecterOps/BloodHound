@@ -1619,6 +1619,26 @@ ClaimSpecialIdentity: types.#Kind & {
 	schema: "active_directory"
 }
 
+ContainsIdentity: types.#Kind & {
+	symbol: "ContainsIdentity"
+	schema: "active_directory"
+}
+
+PropagatesACEsTo: types.#Kind & {
+	symbol: "PropagatesACEsTo"
+	schema: "active_directory"
+}
+
+GPOAppliesTo: types.#Kind & {
+	symbol: "GPOAppliesTo"
+	schema: "active_directory"
+}
+
+CanApplyGPO: types.#Kind & {
+	symbol: "CanApplyGPO"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1701,6 +1721,10 @@ RelationshipKinds: [
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
+	ContainsIdentity,
+	PropagatesACEsTo,
+	GPOAppliesTo,
+	CanApplyGPO,
 	HasTrustKeys,
 ]
 
@@ -1748,7 +1772,6 @@ SharedRelationshipKinds: [
 	AllExtendedRights,
 	AddMember,
 	HasSession,
-	GPLink,
 	AllowedToDelegate,
 	CoerceToTGT,
 	AllowedToAct,
@@ -1788,17 +1811,21 @@ SharedRelationshipKinds: [
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
+	ContainsIdentity,
+	PropagatesACEsTo,
+	GPOAppliesTo,
+	CanApplyGPO,
 	HasTrustKeys,
 ]
 
 // Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains]])
+InboundRelationshipKinds: list.Concat([SharedRelationshipKinds])
 
 // Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
+OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[DCFor]])
 
 // Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
+PathfindingRelationships: list.Concat([SharedRelationshipKinds,[DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
 
 EdgeCompositionRelationships: [
 	GoldenCert,
@@ -1815,5 +1842,7 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
 	CoerceAndRelayNTLMToLDAP,
-	CoerceAndRelayNTLMToLDAPS
+	CoerceAndRelayNTLMToLDAPS,
+	GPOAppliesTo,
+	CanApplyGPO,
 ]

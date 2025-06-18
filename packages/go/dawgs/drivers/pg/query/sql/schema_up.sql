@@ -404,6 +404,35 @@ $$
   volatile
   strict;
 
+
+create or replace function public.create_unidirectional_shortest_path_tables()
+  returns void as
+$$
+begin
+  create temporary table visited
+  (
+    id int8 not null,
+    primary key (id)
+  ) on commit drop;
+
+  create temporary table paths
+  (
+    root_id   int8   not null,
+    next_id   int8   not null,
+    depth     int4   not null,
+    satisfied bool,
+    is_cycle  bool   not null,
+    path      int8[] not null,
+    primary key (path)
+  ) on commit drop;
+
+  perform create_unidirectional_pathspace_tables();
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
 create or replace function public.create_bidirectional_pathspace_tables()
   returns void as
 $$
@@ -482,6 +511,74 @@ $$
   volatile
   strict;
 
+create or replace function public.unidirectional_sp_harness(forward_primer text, forward_recursive text, max_depth int4)
+  returns table
+          (
+            root_id   int8,
+            next_id   int8,
+            depth     int4,
+            satisfied bool,
+            is_cycle  bool,
+            path      int8[]
+          )
+as
+$$
+declare
+  forward_front_depth int4 := 0;
+begin
+  raise debug 'Shortest Path Harness starting';
+
+  -- Create all tables necessary to drive traversal
+  perform create_unidirectional_shortest_path_tables();
+
+  while forward_front_depth < max_depth and (forward_front_depth = 0 or exists(select 1 from forward_front))
+    loop
+      if forward_front_depth = 0 then
+        execute forward_primer;
+
+        -- Insert all root nodes as visited
+        insert into visited (id) select distinct f.root_id from next_front f on conflict (id) do nothing;
+      else
+        execute forward_recursive;
+      end if;
+
+      forward_front_depth = forward_front_depth + 1;
+
+      -- Swap the next_front table into the forward_front
+      -- Remove cycles and non-conformant satisfaction checks
+      delete from next_front f using visited v where f.is_cycle or f.satisfied is null or f.next_id = v.id;
+
+      -- Insert new newly visited nodes into the visited table
+      insert into visited (id) select distinct on (f.next_id) f.next_id from next_front f on conflict (id) do nothing;
+
+      -- Copy pathspace over into the next front
+      truncate table forward_front;
+
+      insert into forward_front
+      select distinct on (f.next_id) f.root_id, f.next_id, f.depth, f.satisfied, f.is_cycle, f.path
+      from next_front f;
+
+      -- Copy newly satisfied paths into the path table
+      insert into paths
+      select f.root_id, f.next_id, f.depth, f.satisfied, f.is_cycle, f.path
+      from forward_front f
+      where f.satisfied;
+
+      -- Empty the next front last to capture the next expansion
+      truncate table next_front;
+    end loop;
+
+  return query select * from paths;
+
+  -- This bare return is not an error. This closes this function's resultset, and the return above will
+  -- be treated as a yield and continue execution once the result cursor is exhausted.
+  return;
+end;
+$$
+  language plpgsql
+  volatile
+  strict;
+
 create or replace function public.unidirectional_asp_harness(forward_primer text, forward_recursive text, max_depth int4)
   returns table
           (
@@ -527,8 +624,8 @@ begin
       perform swap_forward_front();
     end loop;
 
-  -- This bare return is not an error. This closes this function's result set and the return above will
-  -- be treated as a yield and continue execution once the results cursor is exhausted.
+  -- This bare return is not an error. This closes this function's resultset, and the return above will
+  -- be treated as a yield and continue execution once the result cursor is exhausted.
   return;
 end;
 $$

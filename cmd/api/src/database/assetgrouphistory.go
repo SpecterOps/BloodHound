@@ -37,5 +37,5 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actor 
 
 func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
 	var result []model.AssetGroupHistory
-	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s", (model.AssetGroupHistory{}).TableName())).Find(&result))
+	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s ORDER BY id ASC", (model.AssetGroupHistory{}).TableName())).Find(&result))
 }

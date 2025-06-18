@@ -23,17 +23,33 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 )
 
-func SearchTierZeroNodes(tieringEnabled bool) graph.Criteria {
+type SearchTierNodesCriteria struct {
+	PrimaryTierKind           graph.Kind
+	SearchTierNodes           graph.Criteria
+	SearchTierNodesRel        graph.Criteria
+	SearchPrimaryTierNodes    graph.Criteria
+	SearchPrimaryTierNodesRel graph.Criteria
+}
+
+func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Node(), KindTagTierZero)
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Node(), tierKinds...)
 	} else {
 		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}
 }
 
-func SearchTierZeroNodesRel(tieringEnabled bool) graph.Criteria {
+func SearchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteria {
 	if tieringEnabled {
-		return query.Kind(query.Start(), KindTagTierZero)
+		// Default to tier zero in the event no tierKinds are supplied
+		if len(tierKinds) == 0 {
+			tierKinds = append(tierKinds, KindTagTierZero)
+		}
+		return query.KindIn(query.Start(), tierKinds...)
 	} else {
 		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
 	}

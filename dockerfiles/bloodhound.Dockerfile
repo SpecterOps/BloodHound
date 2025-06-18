@@ -17,13 +17,13 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.6.6
-ARG AZUREHOUND_VERSION=v2.3.1
+ARG SHARPHOUND_VERSION=v2.6.7
+ARG AZUREHOUND_VERSION=v2.5.0
 
 ########
 # Golang Image
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.20 AS godeps
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.23-alpine3.22 AS godeps
 
 ########
 # Builder init

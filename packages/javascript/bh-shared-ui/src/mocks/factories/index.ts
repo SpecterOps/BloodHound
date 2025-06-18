@@ -15,4 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './initial';
-export * as tierMocks from './tierManagement';
+export * as tierMocks from './zoneManagement';

@@ -25,7 +25,13 @@ import {
     AzureRelationshipKind,
     CommonKindProperties,
 } from './graphSchema';
+import { BaseExploreLayoutOptions, MappedStringLiteral } from './types';
 import { addOpacityToHex } from './utils/colors';
+
+// Max and min length requirements for creating/updating a user
+export const MAX_NAME_LENGTH = 1000;
+export const MIN_NAME_LENGTH = 2;
+export const MAX_EMAIL_LENGTH = 319;
 
 export const NODE_GRAPH_RENDER_LIMIT = 1000;
 
@@ -446,3 +452,17 @@ export const graphSchema = (labels: string[] | undefined) => {
 
     return schema;
 };
+
+export const baseGraphLayoutOptions = {
+    sequential: 'sequential',
+    standard: 'standard',
+    table: 'table',
+} satisfies MappedStringLiteral<BaseExploreLayoutOptions, BaseExploreLayoutOptions>;
+
+export const baseGraphLayouts = [
+    baseGraphLayoutOptions.sequential,
+    baseGraphLayoutOptions.standard,
+    baseGraphLayoutOptions.table,
+] as const;
+
+export const defaultGraphLayout = baseGraphLayoutOptions.sequential;
