@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
-import { render, screen, waitForElementToBeRemoved } from '../../../test-utils';
-import { EntityKinds } from '../../../utils';
-import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
+import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
+import { EntityKinds } from '../../utils';
+import { ObjectInfoPanelContextProvider } from '../../views';
 import EntityInfoContent from './EntityInfoContent';
 
 const server = setupServer(
