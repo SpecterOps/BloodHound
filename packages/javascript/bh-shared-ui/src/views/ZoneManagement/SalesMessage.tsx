@@ -1,6 +1,6 @@
 import {
     Card,
-    CardContent,
+    CardDescription,
     CardHeader,
     CardTitle,
 } from '@bloodhoundenterprise/doodleui';
@@ -11,15 +11,23 @@ const SalesMessage: FC = () => {
 
     return (
         <Card className='p-3'>
-            <CardHeader className='flex flex-row items-end'>
+            <CardHeader className='flex flex-row items-center mb-1'>
                 <AppIcon.DataAlert size={24} className='mr-2 text-[#ED8537]' />
                 <CardTitle>Upgrade Priviledge Zones</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardDescription className='p-3 pt-0'>
                 <p>
-                    You're currently limited to analyzing a single Privilege Zone. Reach out to our sales team to upgrade to analyze and identify risks across multiple zones.
+                    You're currently limited to analyzing a single Privilege Zone. Reach out to our{' '}
+                    <a
+                        href='https://support.bloodhoundenterprise.io/hc/en-us/requests/new'
+                        target='_blank'
+                        rel='noreferrer'
+                        className='text-secondary dark:text-secondary-variant-2 underline'>
+                        sales team
+                    </a>
+                    {' '}to upgrade to analyze and identify risks across multiple zones.
                 </p>
-            </CardContent>
+            </CardDescription>
         </Card>
     )
 };
