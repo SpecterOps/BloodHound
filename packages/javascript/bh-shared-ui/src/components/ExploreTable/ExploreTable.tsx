@@ -35,18 +35,10 @@ type HasIdAndData = { id: string; data: object };
 interface ExploreTableProps<TData extends HasIdAndData> {
     open?: boolean;
     onClose?: () => void;
-    onRowClick?: (data: any) => void;
-    selectedRow: string;
     data?: Record<string, TData>;
 }
 
-const ExploreTable = <TData extends HasIdAndData>({
-    data,
-    open,
-    onClose,
-    onRowClick = () => {},
-    selectedRow,
-}: ExploreTableProps<TData>) => {
+const ExploreTable = <TData extends HasIdAndData>({ data, open, onClose }: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
@@ -105,7 +97,7 @@ const ExploreTable = <TData extends HasIdAndData>({
     const finalColumns = [...initialColumns, ...columns];
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 ${selectedRow ? 'w-[calc(100%-450px)]' : 'w-90'} max-h-1/2 h-[475px] bg-neutral-light-2`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
                     onDownloadClick={() => alert('doooownload icon clicked')}
@@ -122,8 +114,6 @@ const ExploreTable = <TData extends HasIdAndData>({
                 />
                 <DataTable
                     className='h-full'
-                    onRowClick={onRowClick}
-                    selectedRow={selectedRow}
                     TableProps={{
                         containerClassName: 'h-full bg-cyan',
                     }}

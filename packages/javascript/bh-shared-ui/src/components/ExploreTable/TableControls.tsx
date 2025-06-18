@@ -1,5 +1,5 @@
 import { Button, Input, InputProps } from '@bloodhoundenterprise/doodleui';
-import { faClose, faDownload, faExpand } from '@fortawesome/free-solid-svg-icons';
+import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { cn } from '../../utils';
@@ -39,12 +39,12 @@ export const TableControls = React.forwardRef<
             </div>
             <div className='flex justify-end items-center w-1/2 gap-3'>
                 {SearchInputProps && (
-                    <div>
+                    <div className='flex justify-center items-center relative'>
                         <Input
                             className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
                             {...SearchInputProps}
-                            isSearch
                         />
+                        <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
                     </div>
                 )}
                 {onDownloadClick && (
