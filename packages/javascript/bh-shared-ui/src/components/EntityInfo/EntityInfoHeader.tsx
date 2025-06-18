@@ -35,12 +35,12 @@ const Header: React.FC<HeaderProps> = ({ name, nodeType, onToggleExpanded, expan
     const styles = useHeaderStyles();
     const { setIsObjectInfoPanelOpen } = useObjectInfoPanelContext();
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const { isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen, collapseAllSections } =
-        useSelectorsInfoPanelContext();
+    const { isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen } = useSelectorsInfoPanelContext();
 
     const handleCollapseAll = () => {
         setIsObjectInfoPanelOpen(false);
         setIsSelectorsInfoPanelOpen(false);
+
         if (expandedPanelSections?.length) {
             setExploreParams({
                 expandedPanelSections: [],

@@ -20,7 +20,7 @@ import { EntityKinds } from '../../utils';
 import { SelectorsInfoPanelContextProvider } from '../../views/ZoneManagement/providers';
 import EntityInfoDataTableList from './EntityInfoDataTableList';
 import EntityObjectInformation from './EntityObjectInformation';
-import EntitySelectorsInformation from './EntitySelectorstInformation';
+import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export interface EntityInfoContentProps {
     id: string;

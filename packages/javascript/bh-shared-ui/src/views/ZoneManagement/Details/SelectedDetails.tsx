@@ -15,26 +15,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { SxProps } from '@mui/material';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { EntityInfoPanel } from '../../../components';
-import { useExploreSelectedItem, useNodeByObjectId } from '../../../hooks';
 import { SelectedNode } from '../../../types';
 import { EntityKinds, apiClient } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    selectedNode?: SelectedNode | null;
     sx?: SxProps;
 }
 
 export const SelectedDetails: FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
     const { tierId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
-
-    const { selectedItem, selectedItemQuery } = useExploreSelectedItem();
-    const [openNode, setOpenNode] = useState<SelectedNode | null>(null);
-    const getGraphNodeByObjectId = useNodeByObjectId(openNode?.id);
 
     const tagQuery = useQuery({
         queryKey: ['zone-management', 'tag', tagId],
