@@ -299,10 +299,10 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 
 	if tag.ToType() == "unknown" {
 		return model.AssetGroupTag{}, fmt.Errorf("unknown asset group tag")
-	}
-
-	if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
+	} else if tagType != model.AssetGroupTagTypeTier && (position.Valid || requireCertify.Valid) {
 		return model.AssetGroupTag{}, fmt.Errorf("position and require_certify are limited to tiers only")
+	} else if tagType == model.AssetGroupTagTypeTier {
+		tag.AnalysisEnabled = null.BoolFrom(false)
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {
@@ -335,8 +335,8 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			WITH inserted_kind AS (
 				INSERT INTO %s (name) VALUES (?) RETURNING id
 			)
-			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify)
-			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?)
+			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled)
+			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?)
 			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled
 			`, kindTable, tag.TableName())
 
@@ -349,6 +349,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			userIdStr,
 			tag.Position,
 			requireCertify,
+			tag.AnalysisEnabled,
 		).Scan(&tag); result.Error != nil {
 			if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"kind_name_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateKindName, result.Error)
@@ -377,8 +378,8 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 		if !tag.Position.Valid {
 			return model.AssetGroupTag{}, fmt.Errorf("position is required for an existing tier")
 		}
-	} else if tag.Position.Valid || tag.RequireCertify.Valid || tag.AnalysisEnabled.Bool {
-		return model.AssetGroupTag{}, fmt.Errorf("position, require_certify, analysis_enabled are limited to tiers only")
+	} else if tag.Position.Valid || tag.RequireCertify.Valid || tag.AnalysisEnabled.Valid {
+		return model.AssetGroupTag{}, fmt.Errorf("position, require_certify, and analysis_enabled are limited to tiers only")
 	}
 
 	if err := s.AuditableTransaction(ctx, auditEntry, func(tx *gorm.DB) error {

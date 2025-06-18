@@ -13,9 +13,9 @@
 -- limitations under the License.
 --
 -- SPDX-License-Identifier: Apache-2.0
-  
--- Add analysis_enabled flag to asset_group_tags
-ALTER TABLE asset_group_tags ADD COLUMN IF NOT EXISTS analysis_enabled BOOL NOT NULL DEFAULT false;
 
--- Set analysis_enabled for tier zero
-UPDATE asset_group_tags SET analysis_enabled = true WHERE type = 1 AND position = 1;
+-- Add analysis_enabled flag to asset_group_tags
+ALTER TABLE asset_group_tags ADD COLUMN IF NOT EXISTS analysis_enabled BOOL;
+
+-- Set analysis_enabled to true for tier zero and false for other tiers
+UPDATE asset_group_tags SET analysis_enabled = position = 1 WHERE type = 1 AND analysis_enabled IS NULL;
