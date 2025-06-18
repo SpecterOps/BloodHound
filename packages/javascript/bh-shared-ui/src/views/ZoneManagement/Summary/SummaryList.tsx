@@ -57,7 +57,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                             .sort((a, b) => {
                                 const aPos = a.position ?? 1;
                                 const bPos = b.position ?? 1;
-                                return bPos - aPos;
+                                return aPos - bPos;
                             })
                             .map((listItem) => {
                                 return (
