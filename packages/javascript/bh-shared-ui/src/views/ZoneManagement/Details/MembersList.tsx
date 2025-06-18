@@ -24,8 +24,8 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { useDebouncedValue, usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import { SelectedHighlight, getListHeight } from './utils';
 import { ItemSkeleton } from '../utils';
+import { SelectedHighlight, getListHeight } from './utils';
 
 const ITEM_SIZE = 40;
 

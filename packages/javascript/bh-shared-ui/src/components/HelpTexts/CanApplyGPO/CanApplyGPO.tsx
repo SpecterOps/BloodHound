@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import GraphButtons from './GraphButtons';
+import Abuse from './Abuse';
+import Composition from './Composition';
+import General from './General';
+import Opsec from './Opsec';
+import References from './References';
 
-export default GraphButtons;
+const CanApplyGPO = {
+    general: General,
+    abuse: Abuse,
+    opsec: Opsec,
+    references: References,
+    composition: Composition,
+};
+
+export default CanApplyGPO;

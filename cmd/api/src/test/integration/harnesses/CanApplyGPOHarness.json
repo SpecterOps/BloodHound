@@ -1,0 +1,591 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 185.789147225615,
+        "y": 410.18087469518537
+      },
+      "caption": "Domain",
+      "labels": [
+        "Domain"
+      ],
+      "properties": {
+        "collected": "BOOL:True"
+      },
+      "style": {
+        "node-color": "#68ccca"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 393.73967218783514,
+        "y": 50
+      },
+      "caption": "Container1",
+      "labels": [
+        "Container"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#cccccc"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 170.33147523119732
+      },
+      "caption": "User1",
+      "labels": [
+        "User"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 50
+      },
+      "caption": "Group1",
+      "labels": [
+        "Group"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#fcdc00"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 290.6629504623946
+      },
+      "caption": "Computer1",
+      "labels": [
+        "Computer"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 616.9591459276761,
+        "y": 841.3508733972463
+      },
+      "caption": "OU2",
+      "labels": [
+        "OU"
+      ],
+      "properties": {
+        "blocksinheritance": "BOOL:True"
+      },
+      "style": {
+        "node-color": "#fe9200"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 1398.5096073808122
+      },
+      "caption": "Computer2",
+      "labels": [
+        "Computer"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 1201.118562757661,
+        "y": 711.6645216573231
+      },
+      "caption": "User3",
+      "labels": [
+        "User"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 1252.997568083449
+      },
+      "caption": "User2",
+      "labels": [
+        "User"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 182.75226746153464,
+        "y": 1398.5096073808122
+      },
+      "caption": "Computer3",
+      "labels": [
+        "Computer"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 958.0531922990139,
+        "y": 1107.485528786086
+      },
+      "caption": "Group2",
+      "labels": [
+        "Group"
+      ],
+      "properties": {},
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#fcdc00"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 393.73967218783514,
+        "y": 618.1313996574055
+      },
+      "caption": "OU1",
+      "labels": [
+        "OU"
+      ],
+      "properties": {
+        "blocksinheritance": "BOOL:False"
+      },
+      "style": {
+        "node-color": "#fe9200"
+      }
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 516.2458156155745,
+        "y": 1187.7331582498728
+      },
+      "caption": "Group3",
+      "labels": [
+        "Group"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#fcdc00"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 1354.603387433042,
+        "y": 711.6645216573231
+      },
+      "caption": "User4",
+      "labels": [
+        "User"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#a4dd00"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 75,
+        "y": 1489.3580955287423
+      },
+      "caption": "Computer4",
+      "labels": [
+        "Computer"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#f44e3b"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 423.4522666394636,
+        "y": 1252.997568083449
+      },
+      "caption": "Group4",
+      "labels": [
+        "Group"
+      ],
+      "properties": {},
+      "style": {
+        "node-color": "#fcdc00"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n0",
+      "toId": "n1",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "fromId": "n1",
+      "toId": "n2",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n1",
+      "toId": "n3",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n1",
+      "toId": "n4",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n6",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n7",
+      "toId": "n0",
+      "type": "WriteGPLink",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n7",
+      "toId": "n2",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n7",
+      "fromId": "n7",
+      "toId": "n4",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n8",
+      "fromId": "n5",
+      "toId": "n8",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n5",
+      "toId": "n10",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n0",
+      "toId": "n11",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "fromId": "n9",
+      "toId": "n11",
+      "type": "GenericAll",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "fromId": "n9",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n13",
+      "fromId": "n9",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n14",
+      "fromId": "n11",
+      "toId": "n5",
+      "type": "Contains",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n15",
+      "fromId": "n12",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n16",
+      "fromId": "n12",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n17",
+      "fromId": "n12",
+      "toId": "n5",
+      "type": "WriteDacl",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n18",
+      "fromId": "n7",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n19",
+      "fromId": "n7",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n20",
+      "fromId": "n13",
+      "toId": "n0",
+      "type": "GenericWrite",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n21",
+      "fromId": "n13",
+      "toId": "n2",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n22",
+      "fromId": "n13",
+      "toId": "n4",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n23",
+      "fromId": "n14",
+      "toId": "n11",
+      "type": "WriteOwner",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n24",
+      "fromId": "n14",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n25",
+      "fromId": "n14",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n26",
+      "fromId": "n15",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n27",
+      "fromId": "n15",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n28",
+      "fromId": "n15",
+      "toId": "n5",
+      "type": "Owns",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n29",
+      "fromId": "n13",
+      "toId": "n8",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    },
+    {
+      "id": "n30",
+      "fromId": "n13",
+      "toId": "n6",
+      "type": "CanApplyGPO",
+      "properties": {},
+      "style": {
+        "arrow-color": "#7b64ff"
+      }
+    }
+  ]
+}

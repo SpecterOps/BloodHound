@@ -45,11 +45,23 @@ func RoleEntityDetails(ctx context.Context, db graph.Database, objectID string, 
 		} else {
 			details = NewRoleEntityDetails(node)
 			if hydrateCounts {
+				if details, err = PopulateRoleEntityApprovers(tx, node, details); err != nil {
+					return err
+				}
 				details, err = PopulateRoleEntityDetailsCounts(tx, node, details)
 			}
 			return err
 		}
 	})
+}
+
+func PopulateRoleEntityApprovers(tx graph.Transaction, node *graph.Node, details RoleDetails) (RoleDetails, error) {
+	if approvers, err := FetchRoleApprovers(tx, node, 0, 0); err != nil {
+		return details, err
+	} else {
+		details.Approvers = approvers.Len()
+		return details, nil
+	}
 }
 
 func PopulateRoleEntityDetailsCounts(tx graph.Transaction, node *graph.Node, details RoleDetails) (RoleDetails, error) {

@@ -64,7 +64,10 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Created By' value={data.created_by} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
                 <div className='mt-4' hidden>
@@ -90,14 +93,17 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Created By' value={data.created_by} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
-                    <DetailField label='Type' value={SeedTypesMap[seedType]} />
                 </div>
                 <div className='mt-4' hidden>
                     <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
                 </div>
                 <div className='mt-4'>
+                    <DetailField label='Type' value={SeedTypesMap[seedType]} />
                     <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>

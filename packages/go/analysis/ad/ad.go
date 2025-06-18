@@ -575,6 +575,11 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			pathSet, err = GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx, db, edge)
+		case ad.GPOAppliesTo:
+			pathSet, err = GetGPOAppliesToComposition(ctx, db, edge)
+		case ad.CanApplyGPO:
+			pathSet, err = GetCanApplyGPOComposition(ctx, db, edge)
+
 		}
 		return err
 	}); err != nil {

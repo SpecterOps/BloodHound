@@ -143,8 +143,18 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                         users and computers affected by the GPO. Select the target object you wish to push an evil
                         policy down to, then use the gpedit GUI to modify the GPO, using an evil policy that allows
                         item-level targeting, such as a new immediate scheduled task. Then wait for the group policy
-                        client to pick up and execute the new evil policy. See the references tab for a more detailed
-                        write up on this abuse.
+                        client to pick up and execute the new evil policy.
+                    </Typography>
+                    <Typography variant='body2'>
+                        Refer to{' '}
+                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
+                            A Red Teamer's Guide to GPOs and OUs
+                        </Link>
+                        for details about the abuse technique, and check out{' '}
+                        <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
+                            SharpGPOAbuse
+                        </Link>{' '}
+                        for practical exploitation.
                     </Typography>
                     <Typography variant='body2'>
                         This edge can be a false positive in rare scenarios. If you have GenericWrite on the GPO with
@@ -258,92 +268,48 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, t
                 </>
             );
         case 'OU':
-            return (
-                <>
-                    <Typography variant='body2'>
-                        With GenericWrite permissions over an OU, you may make modifications to the gPLink attribute of
-                        the OU. The ability to alter the gPLink attribute of an OU may allow an attacker to apply a
-                        malicious Group Policy Object (GPO) to all of the OU's child user and computer objects
-                        (including the ones located in nested sub-OUs). This can be exploited to make said child items
-                        execute arbitrary commands through an immediate scheduled task, thus compromising them.
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        Successful exploitation will require the possibility to add non-existing DNS records to the
-                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
-                        machine may be used to perform the attack. Note that the attack vector implementation is not
-                        trivial and will require some setup.
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be
-                        exploited through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to{' '}
-                        <Link
-                            target='_blank'
-                            rel='noopener'
-                            href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                            this article
-                        </Link>
-                        .
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        Be mindful of the number of users and computers that are in the given OU as they all will
-                        attempt to fetch and apply the malicious GPO.
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        Alternatively, the ability to modify the gPLink attribute of an OU can be exploited in
-                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
-                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target OU through
-                        its gPLink attribute, making all child users and computers apply the malicious GPO and execute
-                        arbitrary commands.
-                    </Typography>
-                </>
-            );
         case 'Domain':
             return (
                 <>
                     <Typography variant='body2'>
-                        With GenericWrite permission over a domain object, you may make modifications to the gPLink
-                        attribute of the domain. The ability to alter the gPLink attribute of a domain may allow an
-                        attacker to apply a malicious Group Policy Object (GPO) to all of the domain user and computer
-                        objects (including the ones located in nested OUs). This can be exploited to make said child
-                        items execute arbitrary commands through an immediate scheduled task, thus compromising them.
+                        An attacker with permission to modify the gPLink attribute can link GPOs to the object,
+                        affecting all contained users and computers. The GPO can be weaponized by injecting a malicious
+                        configuration, such as a scheduled task executing a malicious script.
                     </Typography>
-
                     <Typography variant='body2'>
-                        Successful exploitation will require the possibility to add non-existing DNS records to the
-                        domain and to create machine accounts. Alternatively, an already compromised domain-joined
-                        machine may be used to perform the attack. Note that the attack vector implementation is not
-                        trivial and will require some setup.
+                        The GPO can be linked as enforced to bypass blocked GPO inheritance. WMI or security filtering
+                        can be used to limit the impact to specific accounts, which is important in environments with
+                        many users or computers under the affected scope.
                     </Typography>
-
                     <Typography variant='body2'>
-                        From a domain-joined compromised Windows machine, the gPLink manipulation attack vector may be
-                        exploited through Powermad, PowerView and native Windows functionalities. For a detailed outline
-                        of exploit requirements and implementation, you can refer to{' '}
+                        Refer to{' '}
+                        <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
+                            A Red Teamer's Guide to GPOs and OUs
+                        </Link>
+                        for details about the abuse technique, and check out{' '}
+                        <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
+                            SharpGPOAbuse
+                        </Link>{' '}
+                        for practical exploitation.
+                    </Typography>
+                    <Typography variant='body2'>
+                        <b>Without control over a GPO</b>
+                        <br />
+                        An attacker can still execute the attack without control over a GPO by setting up a fake LDAP
+                        server to host a GPO. This approach requires the ability to add non-existent DNS records and
+                        create machine accounts, or access to a compromised domain-joined machine. However, this method
+                        is complex and requires significant setup.
+                        <br />
+                        <br />
+                        From a domain-joined compromised Windows machine, the write access to the gPLink attribute may
+                        be abused through Powermad, PowerView and native Windows functionalities. For a detailed outline
+                        of exploit requirements and implementation, you can refer to this article:{' '}
                         <Link
                             target='_blank'
                             rel='noopener'
                             href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                            this article
+                            OU having a laugh?
                         </Link>
-                        .
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        Be mindful of the number of users and computers that are in the given domain as they all will
-                        attempt to fetch and apply the malicious GPO.
-                    </Typography>
-
-                    <Typography variant='body2'>
-                        Alternatively, the ability to modify the gPLink attribute of a domain can be exploited in
-                        conjunction with write permissions on a GPO. In such a situation, an attacker could first inject
-                        a malicious scheduled task in the controlled GPO, and then link the GPO to the target domain
-                        through its gPLink attribute, making all child users and computers apply the malicious GPO and
-                        execute arbitrary commands.
                     </Typography>
                 </>
             );

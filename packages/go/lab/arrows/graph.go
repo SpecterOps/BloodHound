@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package lab
+package arrows
 
 import (
 	"context"
@@ -28,8 +28,8 @@ import (
 	"github.com/specterops/bloodhound/dawgs/graph"
 )
 
-// GraphFixture is the JSON representation of the graph we are importing.
-type GraphFixture struct {
+// Graph is the JSON representation of the graph we are importing.
+type Graph struct {
 	Nodes         []Node `json:"nodes"`
 	Relationships []Edge `json:"relationships"`
 }
@@ -71,14 +71,15 @@ type Edge struct {
 	Properties map[string]string `json:"properties"`
 }
 
-// WriteGraphFixture requires a graph.Database interface and a GraphFixture struct.
-// It will import the nodes and edges from the GraphFixture and inserts them into
-// the graph database. It uses the `ID` property of the nodes as the local
-// identifier and then maps them to database IDs, meaning that the `ID` given in
-// the GraphFixture will not be preserved.
-func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
+// WriteGraphToDatabase will import the nodes and edges from the arrows.app
+// Graph and insert them into the graph database. It uses the `ID` property
+// of the nodes as the local identifier and then maps them to database IDs,
+// meaning that the `ID` given in the Graph will not be preserved.
+func WriteGraphToDatabase(db graph.Database, g *Graph) error {
 	var nodeMap = make(map[string]graph.ID)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
+
+		//#region Write nodes
 		for _, node := range g.Nodes {
 
 			props, err := processProperties(node.Properties)
@@ -93,7 +94,9 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				nodeMap[node.ID] = dbNode.ID
 			}
 		}
+		//#endregion
 
+		//#region Write edges
 		for _, edge := range g.Relationships {
 			if startId, ok := nodeMap[edge.FromID]; !ok {
 				return fmt.Errorf("could not find start node %s", edge.FromID)
@@ -105,6 +108,8 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 				return fmt.Errorf("could not create relationship `%s` from `%s` to `%s`: %w", edge.Type, edge.FromID, edge.ToID, err)
 			}
 		}
+		//#endregion
+
 		return nil
 	}); err != nil {
 		return fmt.Errorf("error writing graph data: %w", err)
@@ -112,11 +117,10 @@ func WriteGraphFixture(db graph.Database, g *GraphFixture) error {
 	return nil
 }
 
-// LoadGraphFixtureFromFile a fs.FS interface, and a path string. It will
-// attempt to read the given path from the FS and parse the file into a
-// GraphFixture and return it.
-func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
-	var graphFixture GraphFixture
+// LoadGraphFromFile will attempt to read the given path from the
+// FS and parse the file into an arrows.app Graph.
+func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
+	var graphFixture Graph
 	fh, err := fSys.Open(path)
 	if err != nil {
 		return graphFixture, fmt.Errorf("could not open graph data file: %w", err)
@@ -132,12 +136,14 @@ func LoadGraphFixtureFromFile(fSys fs.FS, path string) (GraphFixture, error) {
 func processProperties(props map[string]string) (*graph.Properties, error) {
 	var out = graph.NewProperties()
 	for k, v := range props {
+		kLowercase := strings.ToLower(k)
+
 		switch {
 		case strings.HasPrefix(v, "NOW()"):
 			if ts, err := processTimeFunctionProperty(v); err != nil {
 				return nil, fmt.Errorf("could not process time function `%s`: %w", v, err)
 			} else {
-				out.Set(k, ts)
+				out.Set(kLowercase, ts)
 			}
 		case strings.HasPrefix(v, "BOOL:"):
 			_, val, found := strings.Cut(v, "BOOL:")
@@ -146,10 +152,10 @@ func processProperties(props map[string]string) (*graph.Properties, error) {
 			} else if boolVal, err := strconv.ParseBool(val); err != nil {
 				return nil, fmt.Errorf("could not process bool value `%s`: %w", v, err)
 			} else {
-				out.Set(k, boolVal)
+				out.Set(kLowercase, boolVal)
 			}
 		default:
-			out.Set(k, v)
+			out.Set(kLowercase, v)
 		}
 	}
 	return out, nil
@@ -160,7 +166,7 @@ func processTimeFunctionProperty(prop string) (time.Time, error) {
 	mod := strings.TrimPrefix(prop, "NOW()")
 	if mod != "" {
 		if modi, err := strconv.Atoi(mod); err != nil {
-			return ts, fmt.Errorf("could not parse %d to int", modi)
+			return ts, fmt.Errorf("could not parse %s to integer value", mod)
 		} else {
 			ts = ts.Add(time.Duration(modi) * time.Second)
 		}
