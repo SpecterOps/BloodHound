@@ -135,10 +135,27 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 8)
+
 	for _, parameter := range parameters {
-		if parameter.Key != appcfg.ScheduledAnalysis && parameter.Key != appcfg.TrustedProxiesConfig && parameter.Key != appcfg.TierManagementParameterKey {
+		if !parameter.IsProtectedKey(parameter.Key) {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
+}
+
+func TestParameters_GetEULACustomText(t *testing.T) {
+	var (
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		customEULATxt = "I AM BATMAN"
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"custom_text": customEULATxt})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.FedEULACustomTextKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
 }

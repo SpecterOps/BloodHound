@@ -30,7 +30,7 @@ func (s *BloodhoundDB) GetAllConfigurationParameters(ctx context.Context) (appcf
 	return appConfig, CheckError(s.db.WithContext(ctx).Find(&appConfig))
 }
 
-func (s *BloodhoundDB) GetConfigurationParameter(ctx context.Context, parameterKey string) (appcfg.Parameter, error) {
+func (s *BloodhoundDB) GetConfigurationParameter(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error) {
 	var parameter appcfg.Parameter
 	return parameter, CheckError(s.db.WithContext(ctx).First(&parameter, "key = ?", parameterKey))
 }
