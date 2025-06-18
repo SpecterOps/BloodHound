@@ -28,6 +28,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
+import { TableControls } from './TableControls';
 
 interface ExploreTableProps {
     open?: boolean;
@@ -100,8 +101,21 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRow
     const finalColumns = [...initialColumns, ...columns];
     return (
         <div
-            className={`border-2 overflow-hidden absolute bottom-16 left-4 right-4 ${selectedRow ? 'w-[calc(100%-450px)]' : 'w-90'} max-h-1/2 h-[475px] bg-neutral-light-2`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 ${selectedRow ? 'w-[calc(100%-450px)]' : 'w-90'} max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
+                <TableControls
+                    onDownloadClick={() => alert('doooownload icon clicked')}
+                    onExpandClick={() => alert('expand icon clicked')}
+                    onManageColumnsClick={() => alert('manage columns button clicked')}
+                    onCloseClick={onClose}
+                    tableName='Results'
+                    resultsCount={mungedData.length}
+                    SearchInputProps={{
+                        onChange: (e) => setSearchInput(e.target.value),
+                        value: searchInput,
+                        placeholder: 'Search',
+                    }}
+                />
                 <DataTable
                     className='h-full'
                     onRowClick={onRowClick}
@@ -112,19 +126,6 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRow
                     TableHeaderProps={{
                         // TODO: icons were visible over header on scroll, find solution without z-index?
                         className: 'sticky top-0 z-10',
-                    }}
-                    TableControlsProps={{
-                        onDownloadClick: () => alert('download icon clicked'),
-                        onExpandClick: () => alert('expand icon clicked'),
-                        onManageColumnsClick: () => alert('manage columns button clicked'),
-                        onCloseClick: onClose,
-                        tableName: 'Results',
-                        resultsCount: mungedData.length,
-                        SearchInputProps: {
-                            onChange: (e) => setSearchInput(e.target.value),
-                            value: searchInput,
-                            placeholder: 'Search',
-                        },
                     }}
                     tableOptions={{
                         getRowId: (row) => row?.id,
