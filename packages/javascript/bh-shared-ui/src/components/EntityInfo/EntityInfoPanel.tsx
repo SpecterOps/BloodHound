@@ -18,7 +18,6 @@ import React, { useState } from 'react';
 import { SelectedNode } from '../../types';
 import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
 import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views';
-import { SelectorsInfoPanelContextProvider } from '../../views/ZoneManagement/providers';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
@@ -66,11 +65,9 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, zon
 };
 
 const WrappedEntityInfoPanel: React.FC<EntityInfoPanelProps> = (props) => (
-    <SelectorsInfoPanelContextProvider>
-        <ObjectInfoPanelContextProvider>
-            <EntityInfoPanel {...props} />
-        </ObjectInfoPanelContextProvider>
-    </SelectorsInfoPanelContextProvider>
+    <ObjectInfoPanelContextProvider>
+        <EntityInfoPanel {...props} />
+    </ObjectInfoPanelContextProvider>
 );
 
 export default WrappedEntityInfoPanel;

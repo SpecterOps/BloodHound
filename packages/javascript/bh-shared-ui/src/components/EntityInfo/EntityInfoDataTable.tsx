@@ -33,6 +33,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
+    const zoneManagementPage = location.pathname.includes('zone-management');
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -70,14 +71,20 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
-        setExploreParams({
-            expandedPanelSections: labelList,
-            ...(isUnderRenderLimit && {
-                searchType: 'relationship',
-                relationshipQueryType: queryType,
-                relationshipQueryItemId: id,
-            }),
-        });
+        if (!zoneManagementPage) {
+            setExploreParams({
+                expandedPanelSections: labelList,
+                ...(isUnderRenderLimit && {
+                    searchType: 'relationship',
+                    relationshipQueryType: queryType,
+                    relationshipQueryItemId: id,
+                }),
+            });
+        } else {
+            setExploreParams({
+                expandedPanelSections: labelList,
+            });
+        }
     };
 
     const handleOnChange = (isOpen: boolean) => {
@@ -142,6 +149,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                         key={nestedIndex}
                         parentLabels={[...(parentLabels as string[]), label]}
                         {...nestedSection}
+                        data-testid='entity-info-data-table'
                     />
                 ))}
         </EntityInfoCollapsibleSection>
