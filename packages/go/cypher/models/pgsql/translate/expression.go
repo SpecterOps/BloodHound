@@ -557,7 +557,7 @@ func (s *ExpressionTreeTranslator) PopBinaryEmptyArrayExpression(operator pgsql.
 				pgsql.NewUnaryExpression(pgsql.OperatorNot, pgsql.NewBinaryExpression(leftOperand, pgsql.OperatorEquals, pgsql.NewAnyExpressionHinted(
 					pgsql.ArrayLiteral{
 						Values:   []pgsql.Expression{pgsql.Literal{Value: "null"}, pgsql.Literal{Value: "[]"}},
-						CastType: pgsql.Text,
+						CastType: pgsql.TextArray,
 					}))))
 		)
 
