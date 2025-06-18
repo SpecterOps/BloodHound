@@ -224,8 +224,8 @@ export const CommonSearches: CommonSearchType[] = [
                 cypher: `MATCH (d:Domain)\nWHERE d.machineaccountquota > 0\nRETURN d`,
             },
             {
-                description: 'Domains with smart card accounts where smart account passwords do not expire',
-                cypher: `MATCH (s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN s`,
+                description: 'Accounts with smart card required in domains where smart account passwords do not expire',
+                cypher: `MATCH p=(s:Domain)-[:Contains*1..]->(t:Base)\nWHERE s.expirepasswordsonsmartcardonlyaccounts = false\nAND t.enabled = true\nAND t.smartcardrequired = true\nRETURN p`,
             },
             {
                 description: 'Cross-forest trusts with abusable configuration',

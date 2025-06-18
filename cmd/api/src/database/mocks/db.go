@@ -31,11 +31,11 @@ import (
 	time "time"
 
 	uuid "github.com/gofrs/uuid"
-	graph "github.com/specterops/bloodhound/dawgs/graph"
 	database "github.com/specterops/bloodhound/src/database"
 	null "github.com/specterops/bloodhound/src/database/types/null"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
+	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
 

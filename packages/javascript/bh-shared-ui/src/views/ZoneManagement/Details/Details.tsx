@@ -26,7 +26,11 @@ import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
 
-const getSavePath = (tierId: string | undefined, labelId: string | undefined, selectorId: string | undefined) => {
+export const getSavePath = (
+    tierId: string | undefined,
+    labelId: string | undefined,
+    selectorId: string | undefined
+) => {
     const savePath = '/zone-management/save';
 
     if (selectorId && labelId) return `/zone-management/save/label/${labelId}/selector/${selectorId}`;
@@ -59,13 +63,11 @@ const getItemCount = (
     }
 };
 
-export const getEditButtonState = (
-    memberId: string | undefined,
-    selectorsQuery: UseQueryResult,
-    tagsQuery: UseQueryResult
-) => {
+export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
-        !!memberId || (selectorsQuery.isLoading && tagsQuery.isLoading) || (selectorsQuery.isError && tagsQuery.isError)
+        !!memberId ||
+        (selectorsQuery?.isLoading && tagsQuery?.isLoading) ||
+        (selectorsQuery?.isError && tagsQuery?.isError)
     );
 };
 
@@ -103,7 +105,7 @@ const Details: FC = () => {
     const showEditButton = !getEditButtonState(memberId, selectorsQuery, tagsQuery);
 
     return (
-        <>
+        <div>
             <div className='flex mt-6 gap-8'>
                 {InfoHeader && <InfoHeader />}
                 <div className='basis-1/3'>
@@ -150,7 +152,7 @@ const Details: FC = () => {
                     <SelectedDetails />
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
