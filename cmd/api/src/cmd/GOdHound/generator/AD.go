@@ -80,7 +80,7 @@ type ADComputer struct {
 	operatingsystem         string         // null,
 	Sidhistory              []string       // []
 	objectid                string
-	id                      string
+	//id                      string
 }
 
 type ADGroup struct {
@@ -95,7 +95,7 @@ type ADGroup struct {
 	whencreated       int64
 	admincount        bool
 	objectid          string
-	id                string
+	//id                string
 }
 
 type ADGPO struct {
@@ -194,7 +194,9 @@ func (d ADDomain) ToGraphNode() GenericIngestNode {
 
 func AddADUser(r *rand.Rand, x int32, prefix string) ADUser {
 
-	oid := fmt.Sprintf("%07d", x)
+	//oid := fmt.Sprintf("%07d", x)
+	rid := ""
+	sid := GenerateSID(rid)
 	uName := ""
 	displayName := ""
 
@@ -204,7 +206,7 @@ func AddADUser(r *rand.Rand, x int32, prefix string) ADUser {
 		uName = fmt.Sprintf(fmt.Sprintf("%.1s", first) + last)
 		displayName = fmt.Sprintf(first + " " + last)
 	} else {
-		uName = fmt.Sprintf(prefix + oid)
+		uName = fmt.Sprintf(prefix + fmt.Sprintf("%07d", x))
 		displayName = uName
 	}
 
@@ -213,7 +215,7 @@ func AddADUser(r *rand.Rand, x int32, prefix string) ADUser {
 		name:                  uName,
 		displayname:           displayName,
 		domainsid:             config.Domain.SID,
-		objectid:              oid,
+		objectid:              sid,
 		enabled:               true,
 		email:                 fmt.Sprintf(uName + "@" + config.Domain.Name),
 		Serviceprincipalnames: []string{},
@@ -251,13 +253,15 @@ func (u ADUser) ToGraphNode() GenericIngestNode {
 }
 
 func AddADComputer(r *rand.Rand, x int32, prefix string) ADComputer {
-	oid := fmt.Sprintf("%07d", x)
+	//oid := fmt.Sprintf("%07d", x)
+	rid := ""
+	sid := GenerateSID(rid)
 	cName := fmt.Sprintf(prefix+"%07d"+"."+config.Domain.Name, x)
 
 	computer := ADComputer{
 		domain:                config.Domain.Name,
 		name:                  cName,
-		objectid:              oid,
+		objectid:              sid,
 		domainsid:             config.Domain.SID,
 		enabled:               true,
 		Serviceprincipalnames: []string{},
@@ -319,14 +323,14 @@ func AddADGoup(x int32, name string, rid string) ADGroup {
 		objectid:          sid,
 		domainsid:         config.Domain.SID,
 		admincount:        isAdmin,
-		id:                sid,
+		//id:                sid,
 	}
 	return group
 }
 
 func (g ADGroup) ToGraphNode() GenericIngestNode {
 	return GenericIngestNode{
-		ID:    g.id,
+		ID:    g.objectid,
 		Kinds: []string{"Group", "Base"},
 		Properties: map[string]interface{}{
 			"name":              g.name,
@@ -345,7 +349,9 @@ func (g ADGroup) ToGraphNode() GenericIngestNode {
 }
 
 func AddADGPO(r *rand.Rand, x int32) ADGPO {
-	oid := fmt.Sprintf("%07d", x)
+	//oid := fmt.Sprintf("%07d", x)
+	rid := ""
+	sid := GenerateSID(rid)
 	GPO := ADGPO{
 		domain:            config.Domain.Name,
 		name:              fmt.Sprintf("GP0"+"%07d"+"@"+config.Domain.Name, x), // "USERS@PHANTOM.CORP",
@@ -355,7 +361,7 @@ func AddADGPO(r *rand.Rand, x int32) ADGPO {
 		description:       "",
 		whencreated:       0, // 1664356125,
 		gpcpath:           "",
-		objectid:          oid,
+		objectid:          sid,
 	}
 	return GPO
 }
@@ -378,7 +384,9 @@ func (g ADGPO) ToGraphNode() GenericIngestNode {
 }
 
 func AddADOU(r *rand.Rand, x int32) ADOU {
-	oid := fmt.Sprintf("%07d", x)
+	//oid := fmt.Sprintf("%07d", x)
+	rid := ""
+	sid := GenerateSID(rid)
 	OU := ADOU{
 		domain:            config.Domain.Name,
 		name:              fmt.Sprintf("GP0"+"%07d"+"@"+config.Domain.Name, x), // "USERS@PHANTOM.CORP",
@@ -388,7 +396,7 @@ func AddADOU(r *rand.Rand, x int32) ADOU {
 		description:       "",
 		whencreated:       0,     // 1664356125,
 		blocksinheritance: false, // false
-		objectid:          oid,
+		objectid:          sid,
 	}
 	return OU
 }
