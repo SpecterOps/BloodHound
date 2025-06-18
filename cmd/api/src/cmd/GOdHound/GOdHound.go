@@ -88,7 +88,7 @@ func uploadFiles(dir string) {
 					if err := apiClient.SendFileUploadPart(newFileUploadJob, fin); err != nil {
 						fatal(err)
 					}
-					fmt.Printf("File: %v uploaded", fin)
+					fmt.Printf("File: %v uploaded", fin.Name())
 					fin.Close()
 				}
 
@@ -101,38 +101,128 @@ func uploadFiles(dir string) {
 	}
 }
 
+func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.GenericIngestEdge) {
+	config.ConfDomain()
+
+	nbUsers := 100
+	nbComps := 100
+	nbGroups := nbUsers / 10
+	nbGPOs := nbUsers / 10
+	nbOUs := nbUsers / 15
+	nbEdges := nbUsers * nbComps * nbGroups * nbGPOs * nbOUs / 20000
+
+	var generatedNodes []generator.GenericIngestNode
+
+	// Generate the Domain Object
+	newObj := generator.AddADDomain()
+	generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+
+	// Generate the Users
+	for i := 1; i <= nbUsers; i++ {
+		newObj := generator.AddADUser(r, int32(i), "")
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	// Generate the Service Account
+	for i := 1; i <= nbUsers/3; i++ {
+		newObj := generator.AddADUser(r, int32(len(generatedNodes)), "SVC")
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	// Generate the Endpoints
+	for i := 1; i <= nbComps; i++ {
+		newObj := generator.AddADComputer(r, int32(len(generatedNodes)), "WORKSTATION")
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	// Generate Servers
+	for i := 1; i <= nbComps/2; i++ {
+		newObj := generator.AddADComputer(r, int32(len(generatedNodes)), "SERVER")
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	//
+	for i := 1; i <= nbGroups; i++ {
+		newObj := generator.AddADGoup(int32(len(generatedNodes)), "", "") // We don't send neither a name or a rid because we want a random one.
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	for i := 1; i <= nbGPOs; i++ {
+		newObj := generator.AddADGPO(r, int32(len(generatedNodes)))
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	for i := 1; i <= nbOUs; i++ {
+		newObj := generator.AddADOU(r, int32(len(generatedNodes)))
+		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+	}
+
+	// Array that contains all the Edges we want to create
+	var generatedEdges []generator.GenericIngestEdge
+
+	// Add Mandatory Groups
+
+	newNode := generator.AddADGoup(int32(len(generatedNodes)), "DOMAIN ADMINS", "512") // We don't send a name because we want a random one.
+	generatedNodes = append(generatedNodes, newNode.ToGraphNode())
+	sNode := generatedNodes[len(generatedNodes)-1].ID // -1 because the array starts at 0 and we want to access the last Node we created.
+	eNode := "0000000"                                // This should be our Domain node
+	rel := []string{"AllExtendedRights", "GenericWrite", "WriteDACL", "WriteOwner", "WriteOwnerRaw"}
+
+	for _, eType := range rel {
+		newEdge := generator.AddADEdge(r, eType, sNode, eNode) // r & 0 won't be used, they are place holder
+		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+	}
+
+	// select 10 random users to add to the DA group. Starting Node is a Random user, Ending Node is the DA group
+	eNode = generatedNodes[len(generatedNodes)-1].ID // -1 because the array starts at 0
+	for i := 0; i < 10; i++ {
+		x := r.Intn(nbUsers)
+		sNode = generatedNodes[x].ID
+		newEdge := generator.AddADEdge(r, "MemberOf", sNode, eNode) // r & 0 won't be used, they are place holder
+		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+	}
+
+	// Generate a bunch of random edges
+	for i := 0; i <= nbEdges; i++ {
+		// We use `len(generatedNodes) -1` to calculate the nb of objects in our graph. This is to ensure we don't create Edges to objects that don't exist
+		x := r.Intn(len(generatedNodes) - 1)
+		sNode := generatedNodes[x].ID
+		x = r.Intn(len(generatedNodes) - 1)
+		eNode := generatedNodes[x].ID
+		newEdge := generator.AddADEdge(r, "", sNode, eNode) // No edge type means it will be generated in the function.
+		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+	}
+
+	return generatedNodes, generatedEdges
+
+}
+
+func generateEntraGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.GenericIngestEdge) {
+	fmt.Printf("Entra is not yet supproted. Sorry :(")
+
+	var generatedNodes []generator.GenericIngestNode
+	var generatedEdges []generator.GenericIngestEdge
+
+	return generatedNodes, generatedEdges
+
+}
+
 func main() {
 
 	config.Validate()
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	nbUsers := 100
-	nbComps := 100
-	//nbGroups := nbUsers / 10
-	nbEdges := 25 //nbUsers * nbComps * nbGroups / 3
 
-	//var generatedUsers []generator.ADUser
 	var generatedNodes []generator.GenericIngestNode
-
-	for i := 0; i <= nbUsers; i++ {
-		newUser := generator.AddADUser(r, config.Domain.Name, int32(i))
-		generatedNodes = append(generatedNodes, newUser.ToGraphNode())
-	}
-
-	//var generatedComps []generator.ADComputer
-	for i := 1; i <= nbComps; i++ {
-		y := nbUsers + i
-		newComp := generator.AddADComputer(r, config.Domain.Name, int32(y))
-		generatedNodes = append(generatedNodes, newComp.ToGraphNode())
-	}
-
-	//var jsonNodes generator.GenericIngestNode
-	//jsonNodes := generator.ToGraphNode()
-
 	var generatedEdges []generator.GenericIngestEdge
-	for i := 0; i <= nbEdges; i++ {
-		newEdge := generator.AddADEdge(nbUsers + nbComps)
-		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+
+	switch config.Type {
+	case "AD":
+		generatedNodes, generatedEdges = generateADGraph(r)
+	case "Entra":
+		generatedNodes, generatedEdges = generateEntraGraph(r)
+	default:
+		fmt.Printf("Could not find a method to build a graph that match you selected type.")
 	}
 
 	graph := generator.GenericIngestGraph{
@@ -143,17 +233,6 @@ func main() {
 	}
 
 	fileName := "test1.json"
-	/*
-		generator.CreateHeader(file)
-		generator.AddNodes(file)
-		generator.AddEdges(file)
-		generator.CreateFooter(file)
-
-		fmt.Printf("My user is: %+v\n", generatedUsers)
-		fmt.Printf("\n\n")
-		computer := generator.AddADComputer()
-		fmt.Printf("My computer is: ", computer)
-	*/
 	outputDir := "./output/test/"
 	filePath := fmt.Sprintf(outputDir + fileName)
 	file, err := os.Create(filePath)

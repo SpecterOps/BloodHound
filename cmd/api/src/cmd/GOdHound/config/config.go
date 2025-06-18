@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 )
 
 // Edit the following section to match your configuration
@@ -28,6 +30,7 @@ var Server = ServerConfig{
 
 var Domain = DomainCongig{
 	Name:    "TESTLAB.LOCAL",
+	SID:     "",
 	NbUsers: 500,
 	NbComps: 500,
 }
@@ -58,6 +61,7 @@ type ServerConfig struct {
 
 type DomainCongig struct {
 	Name    string
+	SID     string
 	NbUsers int
 	NbComps int
 }
@@ -94,4 +98,14 @@ func Validate() {
 		fmt.Println("ℹ️  If you want to support new data creation, you can modify this check in config.go")
 		os.Exit(1)
 	}
+}
+
+func ConfDomain() {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	subAuth1 := r.Uint32()
+	subAuth2 := r.Uint32()
+	subAuth3 := r.Uint32()
+
+	Domain.SID = fmt.Sprintf("S-1-5-21-%d-%d-%d", subAuth1, subAuth2, subAuth3)
 }
