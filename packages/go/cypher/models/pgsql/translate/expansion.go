@@ -456,7 +456,7 @@ func shortestPathSearchCTE(functionName pgsql.Identifier, expansionModel *Expans
 	}
 }
 
-func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
+func (s *ExpansionBuilder) buildShortestPathsHarnessCall(harnessFunctionName pgsql.Identifier) (pgsql.Query, error) {
 	var (
 		expansionModel             = s.traversalStep.Expansion.Value
 		forwardFrontPrimerQuery    = s.prepareForwardFrontPrimerQuery(expansionModel)
@@ -501,7 +501,7 @@ func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
 		}},
 	}}
 
-	if harnessParameters, err := s.allShortestPathsParameters(expansionModel, forwardFrontPrimerQuery, forwardFrontRecursiveQuery); err != nil {
+	if harnessParameters, err := s.shortestPathsParameters(expansionModel, forwardFrontPrimerQuery, forwardFrontRecursiveQuery); err != nil {
 		return pgsql.Query{}, err
 	} else {
 		query := pgsql.Query{
@@ -509,9 +509,17 @@ func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
 			Body:                   projectionQuery,
 		}
 
-		query.AddCTE(shortestPathSearchCTE(pgsql.FunctionUnidirectionalASPHarness, expansionModel, harnessParameters))
+		query.AddCTE(shortestPathSearchCTE(harnessFunctionName, expansionModel, harnessParameters))
 		return query, nil
 	}
+}
+
+func (s *ExpansionBuilder) BuildShortestPathsRoot() (pgsql.Query, error) {
+	return s.buildShortestPathsHarnessCall(pgsql.FunctionUnidirectionalSPHarness)
+}
+
+func (s *ExpansionBuilder) BuildAllShortestPathsRoot() (pgsql.Query, error) {
+	return s.buildShortestPathsHarnessCall(pgsql.FunctionUnidirectionalASPHarness)
 }
 
 func (s *ExpansionBuilder) BuildBiDirectionalAllShortestPathsRoot() (pgsql.Query, error) {
@@ -574,7 +582,7 @@ func (s *ExpansionBuilder) BuildBiDirectionalAllShortestPathsRoot() (pgsql.Query
 	}
 }
 
-func (s *ExpansionBuilder) allShortestPathsParameters(expansionModel *Expansion, forwardFrontPrimerQuery pgsql.Select, forwardFrontRecursiveQuery pgsql.Select) ([]pgsql.Expression, error) {
+func (s *ExpansionBuilder) shortestPathsParameters(expansionModel *Expansion, forwardFrontPrimerQuery pgsql.Select, forwardFrontRecursiveQuery pgsql.Select) ([]pgsql.Expression, error) {
 	var (
 		harnessParameters []pgsql.Expression
 		formatFragment    = func(query pgsql.Select) (string, error) {
