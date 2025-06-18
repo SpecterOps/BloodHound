@@ -14,21 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SxProps } from '@mui/material';
 import { FC } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { EntityInfoPanel } from '../../../components';
-import { SelectedNode } from '../../../types';
 import { EntityKinds, apiClient } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
 
-interface EntityInfoPanelProps {
-    selectedNode?: SelectedNode | null;
-    sx?: SxProps;
-}
-
-export const SelectedDetails: FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
+export const SelectedDetails: FC = () => {
     const { tierId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
