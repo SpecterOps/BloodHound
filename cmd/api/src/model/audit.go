@@ -99,7 +99,7 @@ const (
 	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
 	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
 
-	AuditLogActionImportSavedQuery AuditLogAction = "ImportSavedQuery"
+	AuditLogActionImportSavedQuery AuditLogAction = "ImportSavedQueries"
 	AuditLogActionExportSavedQuery AuditLogAction = "ExportSavedQuery"
 )
 

@@ -417,12 +417,11 @@ func (mr *MockDatabaseMockRecorder) CreateSSOProvider(ctx, name, authProvider, c
 }
 
 // CreateSavedQueries mocks base method.
-func (m *MockDatabase) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) (int, error) {
+func (m *MockDatabase) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSavedQueries", ctx, savedQueries)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // CreateSavedQueries indicates an expected call of CreateSavedQueries.

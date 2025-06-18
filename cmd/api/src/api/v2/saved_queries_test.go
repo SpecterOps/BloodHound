@@ -2333,7 +2333,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("test error"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(fmt.Errorf("test error"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2357,7 +2357,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("duplicate key value violates unique constraint"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(fmt.Errorf("duplicate key value violates unique constraint"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2413,7 +2413,8 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 					zipWriter := zip.NewWriter(zipBuffer)
 					file, err := zipWriter.Create("failure.json")
 					require.NoError(t, err)
-					io.Copy(file, bytes.NewReader([]byte("failure")))
+					_, err = io.Copy(file, bytes.NewReader([]byte("failure")))
+					require.NoError(t, err)
 					err = zipWriter.Close()
 					require.NoError(t, err)
 					req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodPost, "/api/v2/saved-queries/import", bytes.NewReader(zipBuffer.Bytes()))
@@ -2432,7 +2433,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("duplicate key value violates unique constraint"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(fmt.Errorf("duplicate key value violates unique constraint"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2466,7 +2467,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(0, fmt.Errorf("db error"))
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(fmt.Errorf("db error"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2500,7 +2501,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(1, nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2524,7 +2525,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(3, nil)
+					mockDB.EXPECT().CreateSavedQueries(gomock.Any(), gomock.Any()).Return(nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},
@@ -2567,7 +2568,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			if request, err := tt.args.buildRequest(); err != nil {
 				require.NoError(t, err, "unexpected build request error")
 			} else {
-				s.ImportSavedQuery(response, request)
+				s.ImportSavedQueries(response, request)
 			}
 
 			assert.Equal(t, tt.expect.responseCode, response.Code)
@@ -2718,7 +2719,7 @@ func TestResources_ExportSavedQueries(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:  http.StatusBadRequest,
-				responseError: "Code: 400 - errors: invalid scope param",
+				responseError: "Code: 400 - errors: invalid scope param: invalid",
 			},
 		},
 		{

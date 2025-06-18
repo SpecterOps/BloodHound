@@ -20,6 +20,12 @@ parameters:
     required: true
     schema:
       type: string
+      "enum": [
+        "all",
+        "public",
+        "shared",
+        "owned"
+      ]
 get:
   operationId: ExportSavedQueries
   summary: Export one or more saved queries

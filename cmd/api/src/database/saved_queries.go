@@ -34,7 +34,7 @@ type SavedQueriesData interface {
 	SavedQueryBelongsToUser(ctx context.Context, userID uuid.UUID, savedQueryID int64) (bool, error)
 	GetSharedSavedQueries(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 	GetPublicSavedQueries(ctx context.Context) (model.SavedQueries, error)
-	CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) (int, error)
+	CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error
 	GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error)
 }
 
@@ -123,12 +123,14 @@ func (s *BloodhoundDB) GetPublicSavedQueries(ctx context.Context) (model.SavedQu
 // GetAllSavedQueriesByUser - Returns queries that are public, owned by, or shared to the user.
 func (s *BloodhoundDB) GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	savedQueries := model.SavedQueries{}
-	results := s.db.WithContext(ctx).Select("saved_queries.*").Joins("LEFT JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true or saved_queries.user_id = ? or sqp.shared_to_user_id = ?", userID, userID).Find(&savedQueries)
+	results := s.db.WithContext(ctx).Select("DISTINCT saved_queries.*").Joins("LEFT JOIN saved_queries_permissions sqp ON sqp.query_id = saved_queries.id").Where("sqp.public = true OR saved_queries.user_id = ? OR sqp.shared_to_user_id = ?", userID, userID).Find(&savedQueries)
 	return savedQueries, CheckError(results)
 }
 
 // CreateSavedQueries - inserts saved queries records in batches
-func (s *BloodhoundDB) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) (int, error) {
-	result := s.db.WithContext(ctx).CreateInBatches(&savedQueries, 100)
-	return int(result.RowsAffected), CheckError(result)
+func (s *BloodhoundDB) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).CreateInBatches(&savedQueries, 100)
+		return CheckError(result)
+	})
 }

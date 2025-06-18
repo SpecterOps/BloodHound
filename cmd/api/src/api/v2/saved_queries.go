@@ -26,6 +26,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -214,7 +215,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			} else {
 				auditLogEntry.Status = model.AuditLogStatusSuccess
-				api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+				api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", filepath.Base(savedQuery.Name)), http.StatusOK, response)
 			}
 		}
 	} else {
@@ -223,7 +224,7 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 		} else {
 			auditLogEntry.Status = model.AuditLogStatusSuccess
-			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", savedQuery.Name), http.StatusOK, response)
+			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", filepath.Base(savedQuery.Name)), http.StatusOK, response)
 		}
 	}
 }
@@ -269,24 +270,13 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 		err = fmt.Errorf("scope query parameter cannot be empty")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
-		switch strings.ToLower(scope) {
-		case string(model.SavedQueryScopeAll):
-			savedQueries, err = s.DB.GetAllSavedQueriesByUser(request.Context(), user.ID)
-		case string(model.SavedQueryScopePublic):
-			savedQueries, err = s.DB.GetPublicSavedQueries(request.Context())
-		case string(model.SavedQueryScopeShared):
-			savedQueries, err = s.DB.GetSharedSavedQueries(request.Context(), user.ID)
-		case string(model.SavedQueryScopeOwned):
-			savedQueries, _, err = s.DB.ListSavedQueries(request.Context(), user.ID, "id", model.SQLFilter{}, 0, 0)
-		default:
-			err = fmt.Errorf("invalid scope param: %s", scope)
+		if savedQueries, err = s.getSavedQueriesByUserAndScope(request.Context(), user.ID, scope); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "invalid scope param", request), response)
-			return
-		}
-		if err != nil {
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.HandleDatabaseError(request, response, err)
+			if strings.Contains(err.Error(), "invalid scope param") {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			} else {
+				api.HandleDatabaseError(request, response, err)
+			}
 			return
 		}
 		if zipBytes, err = createSavedQueriesZipFile(savedQueries); err != nil {
@@ -297,6 +287,27 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 			api.WriteBinaryResponse(request.Context(), zipBytes, "exported_queries.zip", http.StatusOK, response)
 		}
 	}
+}
+
+func (s Resources) getSavedQueriesByUserAndScope(ctx context.Context, userId uuid.UUID, scope string) (model.SavedQueries, error) {
+	var (
+		savedQueries model.SavedQueries
+		err          error
+	)
+
+	switch strings.ToLower(scope) {
+	case string(model.SavedQueryScopeAll):
+		savedQueries, err = s.DB.GetAllSavedQueriesByUser(ctx, userId)
+	case string(model.SavedQueryScopePublic):
+		savedQueries, err = s.DB.GetPublicSavedQueries(ctx)
+	case string(model.SavedQueryScopeShared):
+		savedQueries, err = s.DB.GetSharedSavedQueries(ctx, userId)
+	case string(model.SavedQueryScopeOwned):
+		savedQueries, _, err = s.DB.ListSavedQueries(ctx, userId, "id", model.SQLFilter{}, 0, 0)
+	default:
+		return nil, fmt.Errorf("invalid scope param: %s", scope)
+	}
+	return savedQueries, err
 }
 
 func createSavedQueriesZipFile(savedQueries []model.SavedQuery) ([]byte, error) {
@@ -313,7 +324,8 @@ func createSavedQueriesZipFile(savedQueries []model.SavedQuery) ([]byte, error) 
 				Description: query.Description,
 			}
 		)
-		if file, err = zipWriter.Create(fmt.Sprintf("%s.json", exportQuery.Name)); err != nil {
+
+		if file, err = zipWriter.Create(fmt.Sprintf("%s.json", filepath.Base(exportQuery.Name))); err != nil {
 			return nil, err
 		} else if jsonBytes, err = json.Marshal(exportQuery); err != nil {
 			return nil, err
@@ -327,14 +339,13 @@ func createSavedQueriesZipFile(savedQueries []model.SavedQuery) ([]byte, error) 
 	return zipBuffer.Bytes(), nil
 }
 
-// ImportSavedQuery - Used to import custom cypher queries.
+// ImportSavedQueries - Used to import custom cypher queries.
 // Can import a single query in a json file, or a zip file containing multiple json files.
-func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.Request) {
+func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *http.Request) {
 
 	var (
-		extractQueriesFromFileFunc func(userId uuid.UUID, file io.ReadCloser) (model.SavedQueries, error)
+		extractQueriesFromFileFunc func(userId uuid.UUID, file io.Reader) (model.SavedQueries, error)
 		auditLogEntry              model.AuditEntry
-		importedQueryCount         int
 		err                        error
 		savedQueries               model.SavedQueries
 	)
@@ -369,6 +380,8 @@ func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
+		request.Body = http.MaxBytesReader(response, request.Body, api.DefaultAPIPayloadReadLimitBytes)
+		defer request.Body.Close()
 		switch {
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 			extractQueriesFromFileFunc = extractImportQueriesFromJsonFile
@@ -391,7 +404,7 @@ func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 			}
 			return
-		} else if importedQueryCount, err = s.DB.CreateSavedQueries(request.Context(), savedQueries); err != nil {
+		} else if err = s.DB.CreateSavedQueries(request.Context(), savedQueries); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "duplicate name for saved query: please choose a different name", request), response)
@@ -399,14 +412,13 @@ func (s Resources) ImportSavedQuery(response http.ResponseWriter, request *http.
 				api.HandleDatabaseError(request, response, err)
 			}
 		} else {
-			api.WriteBasicResponse(request.Context(), fmt.Sprintf("imported %d queries", importedQueryCount), http.StatusCreated, response)
+			api.WriteBasicResponse(request.Context(), fmt.Sprintf("imported %d queries", len(savedQueries)), http.StatusCreated, response)
 			auditLogEntry.Status = model.AuditLogStatusSuccess
 		}
 	}
 }
 
-func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.ReadCloser) (model.SavedQueries, error) {
-	defer file.Close()
+func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.Reader) (model.SavedQueries, error) {
 	var (
 		savedQueries = make(model.SavedQueries, 0)
 		query        TransferableSavedQuery
@@ -426,8 +438,7 @@ func extractImportQueriesFromJsonFile(userId uuid.UUID, file io.ReadCloser) (mod
 	return savedQueries, nil
 }
 
-func extractImportQueriesFromZipFile(userId uuid.UUID, zipFile io.ReadCloser) (model.SavedQueries, error) {
-	defer zipFile.Close()
+func extractImportQueriesFromZipFile(userId uuid.UUID, zipFile io.Reader) (model.SavedQueries, error) {
 	if zipFileBytes, err := io.ReadAll(zipFile); err != nil {
 		return model.SavedQueries{}, err
 	} else if zipReader, err := zip.NewReader(bytes.NewReader(zipFileBytes), int64(len(zipFileBytes))); err != nil {

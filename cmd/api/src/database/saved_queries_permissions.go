@@ -136,6 +136,6 @@ func (s *BloodhoundDB) IsSavedQuerySharedToUser(ctx context.Context, queryID int
 
 func (s *BloodhoundDB) IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
 	rows := int64(0)
-	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND (shared_to_user_id = ? or public = true", queryID, userID).Count(&rows)
+	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND (shared_to_user_id = ? or public = true)", queryID, userID).Count(&rows)
 	return rows > 0, CheckError(result)
 }
