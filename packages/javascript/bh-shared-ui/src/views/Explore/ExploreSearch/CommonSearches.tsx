@@ -95,39 +95,33 @@ const InnerCommonSearches = ({
         });
 
     const handleFuzzySearch = (searchTerm: string) => {
-        console.log(`handle fuzzy search ${searchTerm}`);
-        console.log('queryList');
-
-        console.log(queryList);
-
         //clear filtered list
         if (searchTerm.length === 0) {
             setFilteredList([]);
             return;
         }
         if (searchTerm.length > 2) {
-            // const filteredData = queryList.map((obj) => ({
-            //     ...obj,
-            //     queries: obj.queries.filter((item) =>
-            //         item.description.toLowerCase().includes(searchTerm.toLowerCase())
-            //     ),
-            // }));
+            const filterStartingList = filteredList.length ? filteredList : queryList;
 
-            const filteredData = queryList
+            const filteredData = filterStartingList
                 .map((obj) => ({
                     ...obj,
-                    queries: obj.queries.filter((item) =>
+                    queries: obj.queries.filter((item: any) =>
                         item.description.toLowerCase().includes(searchTerm.toLowerCase())
                     ),
                 }))
                 .filter((x) => x.queries.length);
-            console.log(filteredData);
-
-            // const test = filteredData.filter((x) => x.queries.length);
-            // console.log(test);
 
             setFilteredList(filteredData);
         }
+    };
+    const handlePlatformFilter = (filterValue: string) => {
+        //resetingFilteredList for now
+        setFilteredList([]);
+
+        const filteredData = queryList.filter((obj) => obj.category.toLowerCase() === filterValue.toLowerCase());
+        console.log(filteredData);
+        setFilteredList(filteredData);
     };
 
     if (userQueries.isLoading) {
@@ -151,7 +145,9 @@ const InnerCommonSearches = ({
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
-                <QuerySearchFilter searchHandler={handleFuzzySearch}></QuerySearchFilter>
+                <QuerySearchFilter
+                    searchHandler={handleFuzzySearch}
+                    filterHandler={handlePlatformFilter}></QuerySearchFilter>
                 <PrebuiltSearchList
                     listSections={filteredList.length ? filteredList : queryList}
                     clickHandler={handleClick}
