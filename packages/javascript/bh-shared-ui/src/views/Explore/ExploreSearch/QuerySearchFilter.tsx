@@ -9,12 +9,17 @@ import { useState } from 'react';
 interface QuerySearchProps {
     searchHandler: (searchTerm: string) => void;
     filterHandler: (filterValue: string) => void;
+    categoryFilterHandler: (filterValue: string[]) => void;
+    clearCategoryFilterHandler: () => void;
+    categories: string[];
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { searchHandler, filterHandler } = props;
+    const { searchHandler, filterHandler, categoryFilterHandler, clearCategoryFilterHandler, categories } = props;
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+
     const handleInput = (val: string) => {
         setSearchTerm(val);
         doFuzzySearch(val);
@@ -29,16 +34,28 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     const handleChange = (event: SelectChangeEvent) => {
         setAge(event.target.value);
     };
-    // const handlePlatformChange = (event: SelectChangeEvent) => {
-    //     setPlatform(event.target.value);
-    // };
 
     const handleFilter = (val: string) => {
         setPlatform(val);
-        doFilter(val);
+        filterHandler(val);
     };
-    const doFilter = (platform: string) => {
-        filterHandler(platform);
+
+    const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
+        const {
+            target: { value },
+        } = event;
+
+        // clear filters
+        if (value.includes('')) {
+            setCategoryFilter([]);
+            clearCategoryFilterHandler();
+            return;
+        }
+
+        // On autofill we get a stringified value.
+        const newVal = typeof value === 'string' ? value.split(',') : value;
+        setCategoryFilter(newVal);
+        categoryFilterHandler(newVal);
     };
 
     return (
@@ -70,10 +87,9 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                 </div>
                 <div className='flex w-full items-center justify-between flex-row'>
                     <FormControl size='small' className='w-full'>
-                        <InputLabel id='demo-simple-select-helper-label'>Platforms</InputLabel>
-
+                        <InputLabel id='platforms-label'>Platforms</InputLabel>
                         <Select
-                            labelId='demo-simple-select-helper-label'
+                            labelId='platforms-label'
                             id='demo-simple-select-helper'
                             value={platform}
                             label='Platforms'
@@ -85,17 +101,21 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </Select>
                     </FormControl>
                     <FormControl size='small' className='w-full ml-2'>
+                        <InputLabel id='category-filter-label'>Categories</InputLabel>
+
                         <Select
-                            labelId='demo-simple-select-helper-label'
-                            id='demo-simple-select-helper'
-                            value={age}
-                            onChange={handleChange}>
-                            <MenuItem value=''>
-                                <em>None</em>
-                            </MenuItem>
-                            <MenuItem value={10}>Ten</MenuItem>
-                            <MenuItem value={20}>Twenty</MenuItem>
-                            <MenuItem value={30}>Thirty</MenuItem>
+                            labelId='category-filter-label'
+                            id='category-filter'
+                            value={categoryFilter}
+                            label='categories'
+                            multiple
+                            onChange={handleCategoryChange}>
+                            <MenuItem value=''>All Categories</MenuItem>
+                            {categories.map((category) => (
+                                <MenuItem key={category} value={category}>
+                                    {category}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                     <FormControl size='small' className='w-full ml-2'>

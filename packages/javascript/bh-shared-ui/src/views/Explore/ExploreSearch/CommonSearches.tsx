@@ -65,6 +65,7 @@ const InnerCommonSearches = ({
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [filteredList, setFilteredList] = useState<any[]>([]);
+
     const savedLineItems: LineItem[] =
         userQueries.data?.map((query) => ({
             description: query.name,
@@ -79,7 +80,14 @@ const InnerCommonSearches = ({
         queries: savedLineItems,
     };
 
+    //master list of pre-made queries
     const queryList = [...prebuiltSearchList, savedQueries];
+
+    //list of categories for filter dropdown
+    // const categories = queryList.
+    const allCategories = queryList.map((item) => item.subheader);
+    const uniqueCategoriesSet = new Set(allCategories);
+    const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
@@ -101,9 +109,7 @@ const InnerCommonSearches = ({
             return;
         }
         if (searchTerm.length > 2) {
-            const filterStartingList = filteredList.length ? filteredList : queryList;
-
-            const filteredData = filterStartingList
+            const filteredData = queryList
                 .map((obj) => ({
                     ...obj,
                     queries: obj.queries.filter((item: any) =>
@@ -131,6 +137,28 @@ const InnerCommonSearches = ({
             </Box>
         );
     }
+
+    const handleCategoryFilter = (filterValue: string[]) => {
+        // console.log(filterValue);
+        // if (filterValue.includes('') || !filterValue.length) {
+        //     console.log('*****');
+        //     setFilteredList([]);
+        //     return;
+        // }
+        //resetingFilteredList for now
+        // setFilteredList([]);
+        const filteredData = queryList
+            .filter((item: any) => filterValue.includes(item.subheader))
+            .filter((x) => x.queries.length);
+
+        setFilteredList(filteredData);
+        // console.log(filteredData);
+    };
+
+    const handleClearCategories = () => {
+        setFilteredList([]);
+    };
+
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
@@ -147,7 +175,10 @@ const InnerCommonSearches = ({
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     searchHandler={handleFuzzySearch}
-                    filterHandler={handlePlatformFilter}></QuerySearchFilter>
+                    filterHandler={handlePlatformFilter}
+                    categoryFilterHandler={handleCategoryFilter}
+                    clearCategoryFilterHandler={handleClearCategories}
+                    categories={categories}></QuerySearchFilter>
                 <PrebuiltSearchList
                     listSections={filteredList.length ? filteredList : queryList}
                     clickHandler={handleClick}
