@@ -49,7 +49,7 @@ const EntitySelectorsInformation: React.FC = () => {
     };
 
     const memberInfoQuery = useQuery(['asset-group-member-info'], () => {
-        return apiClient.getAssetGroupTagMemberInfo(tagId!!, memberId!!).then((res) => {
+        return apiClient.getAssetGroupTagMemberInfo(tagId!, memberId!).then((res) => {
             return res.data.data['member'];
         });
     });
