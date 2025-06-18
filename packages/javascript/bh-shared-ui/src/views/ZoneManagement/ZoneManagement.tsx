@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext, useMemo } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+import { AppNavigate } from '../../components/Navigation';
 import {
     DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
@@ -30,7 +31,7 @@ import {
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS,
     Routable,
 } from '../../routes';
-import { AppNavigate, cn, useAppNavigate } from '../../utils';
+import { cn, useAppNavigate } from '../../utils';
 import { ZoneManagementContext } from './ZoneManagementContext';
 import { OWNED_ID, TIER_ZERO_ID } from './utils';
 

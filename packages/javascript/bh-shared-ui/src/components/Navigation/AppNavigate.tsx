@@ -20,7 +20,7 @@ import {
     GloballySupportedSearchParams,
     applyPreservedParams,
     persistSearchParams,
-} from './searchParams';
+} from '../../utils/searchParams/searchParams';
 
 export const AppNavigate: React.FC<NavigateProps & AppNavigateProps> = (props) => {
     const { discardQueryParams, to, ...rest } = props;

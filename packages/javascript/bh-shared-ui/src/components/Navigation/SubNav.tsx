@@ -15,8 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AdministrationSection } from '../..';
-import { AppLink, cn } from '../../utils';
+import { AdministrationSection } from '../../types';
+import { cn } from '../../utils';
+import { AppLink } from './AppLink';
 
 const SubNavListTitle: FC<{ children: ReactNode }> = ({ children }) => {
     return (
