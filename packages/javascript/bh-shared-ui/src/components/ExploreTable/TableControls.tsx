@@ -1,4 +1,4 @@
-import { Button, Input } from '@bloodhoundenterprise/doodleui';
+import { Button, Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
@@ -42,8 +42,8 @@ export const TableControls = React.forwardRef<
                     <div>
                         <Input
                             className='border-0 w-48 rounded-none border-b-2 border-black bg-inherit'
-                            isSearch
                             {...SearchInputProps}
+                            isSearch
                         />
                     </div>
                 )}

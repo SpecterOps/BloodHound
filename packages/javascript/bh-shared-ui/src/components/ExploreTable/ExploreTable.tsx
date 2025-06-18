@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 // needed for table body level scope DnD setup
 
@@ -30,25 +30,30 @@ import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { TableControls } from './TableControls';
 
-interface ExploreTableProps {
+type HasIdAndData = { id: string; data: object };
+
+interface ExploreTableProps<TData extends HasIdAndData> {
     open?: boolean;
     onClose?: () => void;
     onRowClick?: (data: any) => void;
     selectedRow: string;
-    items?: any;
+    data?: Record<string, TData>;
 }
 
-const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRowClick = () => {}, selectedRow }) => {
+const ExploreTable = <TData extends HasIdAndData>({
+    data,
+    open,
+    onClose,
+    onRowClick = () => {},
+    selectedRow,
+}: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
-        () =>
-            items &&
-            Object.keys(items)
-                .map((id) => ({ ...items[id]?.data, id }))
-                .slice(0, 40),
-        [items]
+        () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
+        [data]
     );
 
+    console.log({ mungedData });
     const firstItem = mungedData?.[0];
 
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
@@ -80,23 +85,22 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRow
 
     const columns: ColumnDef<any, any>[] = useMemo(
         () =>
-            firstItem &&
-            // If column order exists in redux/localStorage, use that
-            Object.keys(firstItem)
-                .slice(0, 10)
-                .map((key: any) => {
-                    return {
-                        accessorKey: key,
-                        header: labelsMap?.[key]?.label || capitalize(key),
-                        cell: (info: any) => String(info.getValue()),
-                        id: key,
-                        size: 150,
-                    } as ColumnDef<any, any>;
-                }),
+            firstItem
+                ? // If column order exists in redux/localStorage, use that
+                  Object.keys(firstItem).map((key: any) => {
+                      return {
+                          accessorKey: key,
+                          header: labelsMap?.[key]?.label || capitalize(key),
+                          cell: (info: any) => String(info.getValue()),
+                          id: key,
+                          size: 150,
+                      } as ColumnDef<any, any>;
+                  })
+                : [],
         [labelsMap, firstItem]
     );
 
-    if (!open || !items) return null;
+    if (!open || !data) return null;
 
     const finalColumns = [...initialColumns, ...columns];
     return (
@@ -109,7 +113,7 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRow
                     onManageColumnsClick={() => alert('manage columns button clicked')}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={mungedData.length}
+                    resultsCount={mungedData?.length}
                     SearchInputProps={{
                         onChange: (e) => setSearchInput(e.target.value),
                         value: searchInput,
@@ -124,7 +128,6 @@ const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRow
                         containerClassName: 'h-full bg-cyan',
                     }}
                     TableHeaderProps={{
-                        // TODO: icons were visible over header on scroll, find solution without z-index?
                         className: 'sticky top-0 z-10',
                     }}
                     tableOptions={{
