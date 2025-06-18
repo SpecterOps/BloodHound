@@ -17595,6 +17595,9 @@
           },
           "require_certify": {
             "$ref": "#/components/schemas/null.boolean"
+          },
+          "analysis_enabled": {
+            "$ref": "#/components/schemas/null.boolean"
           }
         }
       },

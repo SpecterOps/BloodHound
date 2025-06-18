@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 // Graph is the JSON representation of the graph we are importing.
