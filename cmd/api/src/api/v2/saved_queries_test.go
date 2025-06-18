@@ -2062,7 +2062,7 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "12345"}, nil)
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "12345", BigSerial: model.BigSerial{ID: 1}}, nil)
 					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(1), userId).Return(false, fmt.Errorf("db error"))
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
@@ -2085,7 +2085,7 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 			fields: fields{
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
-					mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "12345"}, nil)
+					mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(model.SavedQuery{UserID: "12345", BigSerial: model.BigSerial{ID: 1}}, nil)
 					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(1), userId).Return(false, nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
@@ -2109,7 +2109,7 @@ func TestResources_ExportSavedQuery(t *testing.T) {
 				setupMocks: func(t *testing.T, mock *mocks.MockDatabase) {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 					mockDB.EXPECT().GetSavedQuery(gomock.Any(), gomock.Any()).Return(sharedTestQuery, nil)
-					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(1), userId).Return(true, nil)
+					mockDB.EXPECT().IsSavedQuerySharedToUserOrPublic(gomock.Any(), int64(2), userId).Return(true, nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil)
 				},
 			},

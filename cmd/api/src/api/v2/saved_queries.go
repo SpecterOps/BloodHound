@@ -200,33 +200,32 @@ func (s Resources) ExportSavedQuery(response http.ResponseWriter, request *http.
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		api.HandleDatabaseError(request, response, err)
-	} else if savedQuery.UserID != user.ID.String() {
-		if isAccessibleToUser, err = s.DB.IsSavedQuerySharedToUserOrPublic(request.Context(), savedQueryID, user.ID); err != nil {
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.HandleDatabaseError(request, response, err)
-		} else if !isAccessibleToUser {
-			err = fmt.Errorf("query does not exist")
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
-		} else {
-			// User does not own but has access to query
-			if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
-				auditLogEntry.Status = model.AuditLogStatusFailure
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-			} else {
-				auditLogEntry.Status = model.AuditLogStatusSuccess
-				api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", filepath.Base(savedQuery.Name)), http.StatusOK, response)
-			}
-		}
+	} else if isAccessibleToUser, err = s.canUserAccessQuery(request.Context(), savedQuery, user.ID); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.HandleDatabaseError(request, response, err)
+	} else if !isAccessibleToUser {
+		err = fmt.Errorf("query does not exist")
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, err.Error(), request), response)
+	} else if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else {
-		if data, err = api.ToJSONRawMessage(TransferableSavedQuery{Query: savedQuery.Query, Name: savedQuery.Name, Description: savedQuery.Description}); err != nil {
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		} else {
-			auditLogEntry.Status = model.AuditLogStatusSuccess
-			api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", filepath.Base(savedQuery.Name)), http.StatusOK, response)
-		}
+		auditLogEntry.Status = model.AuditLogStatusSuccess
+		api.WriteBinaryResponse(request.Context(), data, fmt.Sprintf("%s.json", filepath.Base(savedQuery.Name)), http.StatusOK, response)
 	}
+}
+
+func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuery, userId uuid.UUID) (bool, error) {
+	if userId.String() == query.UserID {
+		return true, nil
+	}
+	if isAccessibleToUser, err := s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, userId); err != nil {
+		return false, err
+	} else if !isAccessibleToUser {
+		return false, nil
+	}
+	return true, nil
 }
 
 // ExportSavedQueries - Exports one or more saved queries in a ZIP file. The scope query parameter determines which queries are exported.
@@ -270,6 +269,7 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 		err = fmt.Errorf("scope query parameter cannot be empty")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else {
+		// TODO: Cyclomatic complexity
 		if savedQueries, err = s.getSavedQueriesByUserAndScope(request.Context(), user.ID, scope); err != nil {
 			auditLogEntry.Status = model.AuditLogStatusFailure
 			if strings.Contains(err.Error(), "invalid scope param") {
