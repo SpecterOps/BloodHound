@@ -434,7 +434,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		tag.Position = null.Int32From(2)
 
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
-		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
+		require.ErrorContains(t, err, "position, require_certify, analysis_enabled are limited to tiers only")
 	})
 
 	t.Run("require_certify is invalid for non-tier", func(t *testing.T) {
@@ -452,7 +452,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		tag.RequireCertify = null.BoolFrom(false)
 
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
-		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
+		require.ErrorContains(t, err, "position, require_certify, analysis_enabled are limited to tiers only")
 	})
 
 	t.Run("blocks updating to position 1", func(t *testing.T) {
