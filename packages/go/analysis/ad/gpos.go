@@ -67,8 +67,8 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 	blocksGPOInheritance := false
 
 	if node.Kinds.ContainsOneOf(ad.Domain, ad.OU) {
-		// Find principals with permission to link GPOs to this node
-		if gpoAppliersOnThisContainer, err := fetchGPOAppliers(tx, node.ID); err != nil {
+		// Find principals with permission to link GPOs to this node that we don't already have in gpoAppliers
+		if gpoAppliersOnThisContainer, err := fetchAdditionalGPOAppliers(tx, node.ID, gpoAppliers); err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO appliers on node %d: %v", node.ID, err))
 		} else {
 			gpoAppliers = append(gpoAppliers, gpoAppliersOnThisContainer...)
@@ -78,7 +78,7 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 		if gposLinkedDirectly, err := fetchGPOLinkedDirectly(tx, node.ID, false); err != nil {
 			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO linked directly on node %d: %v", node.ID, err))
 		} else if gposLinkedDirectlyEnforced, err := fetchGPOLinkedDirectly(tx, node.ID, true); err != nil {
-			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO linked directly on node %d: %v", node.ID, err))
+			slog.ErrorContext(ctx, fmt.Sprintf("Failed fetching GPO linked directly on node (enforced) %d: %v", node.ID, err))
 		} else {
 			applyingGPOs = gposLinkedDirectly
 			gposInheritedEnforcedNew = append(gposInheritedEnforced, gposLinkedDirectlyEnforced...)
@@ -135,12 +135,13 @@ func processGPOs(ctx context.Context, tx graph.Transaction, outC chan<- analysis
 	}
 }
 
-func fetchGPOAppliers(tx graph.Transaction, containerID graph.ID) ([]graph.ID, error) {
+func fetchAdditionalGPOAppliers(tx graph.Transaction, containerID graph.ID, ignoredAppliers []graph.ID) ([]graph.ID, error) {
 	if gpoAppliers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
 			query.KindIn(query.Relationship(), ad.WriteGPLink, ad.GenericWrite, ad.GenericAll, ad.WriteDACL, ad.Owns, ad.WriteOwner),
 			query.Equals(query.EndID(), containerID),
+			query.Not(query.InIDs(query.StartID(), ignoredAppliers...)),
 		)
 	})); err != nil {
 		return nil, err
