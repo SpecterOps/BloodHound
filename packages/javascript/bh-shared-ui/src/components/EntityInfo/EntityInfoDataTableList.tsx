@@ -15,10 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Divider } from '@mui/material';
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { EntityKinds, allSections } from '../../utils';
-import { EntityInfoContentProps } from './EntityInfoContent';
 import EntityInfoDataTable from './EntityInfoDataTable';
 
 export interface EntityInfoContentProps {
@@ -33,9 +31,6 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
     const tables = allSections[type]?.(id) || [];
-
-    const { tierId, labelId, memberId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
 
     return (
         <>
