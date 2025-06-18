@@ -25,9 +25,10 @@ import Header from './EntityInfoHeader';
 interface EntityInfoPanelProps {
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
+    zoneManagement?: boolean;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, zoneManagement }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
@@ -54,6 +55,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        zoneManagement={zoneManagement}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
