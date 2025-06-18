@@ -18,6 +18,7 @@ import React from 'react';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { EntityKinds, allSections } from '../../utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
+import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export interface EntityInfoContentProps {
     id: string;
@@ -30,18 +31,26 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     let type = nodeType as EntityKinds;
     if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
+
     const tables = allSections[type]?.(id) || [];
+
+    zoneManagement && tables.push({ id, label: 'Selectors' });
 
     return (
         <>
-            {tables.map((table, index) => (
-                <React.Fragment key={index}>
-                    <Box padding={1}>
-                        <Divider />
-                    </Box>
-                    <EntityInfoDataTable {...table} />
-                </React.Fragment>
-            ))}
+            {tables.map((table, index) => {
+                if (table.label === 'Selectors') {
+                    return <EntitySelectorsInformation key='selectors' />;
+                } else
+                    return (
+                        <React.Fragment key={index}>
+                            <Box padding={1}>
+                                <Divider />
+                            </Box>
+                            <EntityInfoDataTable {...table} />
+                        </React.Fragment>
+                    );
+            })}
         </>
     );
 };

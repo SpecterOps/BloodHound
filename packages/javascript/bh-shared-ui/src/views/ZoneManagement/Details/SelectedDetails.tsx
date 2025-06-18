@@ -22,6 +22,7 @@ import { EntityInfoPanel } from '../../../components';
 import { SelectedNode } from '../../../types';
 import { EntityKinds, apiClient } from '../../../utils';
 import DynamicDetails from './DynamicDetails';
+
 interface EntityInfoPanelProps {
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
@@ -70,7 +71,7 @@ export const SelectedDetails: FC<EntityInfoPanelProps> = ({ selectedNode, sx }) 
             name: memberQuery.data.name,
             type: memberQuery.data.primary_kind as EntityKinds,
         };
-        return <EntityInfoPanel selectedNode={selectedNode} />;
+        return <EntityInfoPanel selectedNode={selectedNode} zoneManagement />;
     } else if (selectorId !== undefined) {
         return <DynamicDetails queryResult={selectorQuery} />;
     } else if (tagId !== undefined) {
