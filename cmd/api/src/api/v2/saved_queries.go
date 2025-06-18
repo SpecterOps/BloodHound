@@ -260,7 +260,7 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
-	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQuery, model.AuditLogStatusIntent, model.AuditData{"export_saved_queries_scope": scope, "user_id": user.ID.String()}); err != nil {
+	} else if auditLogEntry, err = model.NewAuditEntry(model.AuditLogActionExportSavedQueries, model.AuditLogStatusIntent, model.AuditData{"export_saved_queries_scope": scope, "user_id": user.ID.String()}); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if err = s.DB.AppendAuditLog(request.Context(), auditLogEntry); err != nil {
 		api.HandleDatabaseError(request, response, err)
@@ -268,24 +268,19 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 		auditLogEntry.Status = model.AuditLogStatusFailure
 		err = fmt.Errorf("scope query parameter cannot be empty")
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else {
-		// TODO: Cyclomatic complexity
-		if savedQueries, err = s.getSavedQueriesByUserAndScope(request.Context(), user.ID, scope); err != nil {
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			if strings.Contains(err.Error(), "invalid scope param") {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-			} else {
-				api.HandleDatabaseError(request, response, err)
-			}
-			return
-		}
-		if zipBytes, err = createSavedQueriesZipFile(savedQueries); err != nil {
-			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else if savedQueries, err = s.getSavedQueriesByUserAndScope(request.Context(), user.ID, scope); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		if strings.Contains(err.Error(), "invalid scope param") {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 		} else {
-			auditLogEntry.Status = model.AuditLogStatusSuccess
-			api.WriteBinaryResponse(request.Context(), zipBytes, "exported_queries.zip", http.StatusOK, response)
+			api.HandleDatabaseError(request, response, err)
 		}
+	} else if zipBytes, err = createSavedQueriesZipFile(savedQueries); err != nil {
+		auditLogEntry.Status = model.AuditLogStatusFailure
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+	} else {
+		auditLogEntry.Status = model.AuditLogStatusSuccess
+		api.WriteBinaryResponse(request.Context(), zipBytes, "exported_queries.zip", http.StatusOK, response)
 	}
 }
 
@@ -390,7 +385,7 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		default:
 			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
 			auditLogEntry.Status = model.AuditLogStatusFailure
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, "Content type must be application/json or application/zip", request), response)
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnsupportedMediaType, fmt.Sprintf("%s; Content type must be application/json or application/zip", err.Error()), request), response)
 			return
 		}
 		if savedQueries, err = extractQueriesFromFileFunc(user.ID, request.Body); err != nil {

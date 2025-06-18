@@ -2302,7 +2302,7 @@ func TestResources_ImportSavedQuery(t *testing.T) {
 			},
 			expect: expected{
 				responseCode:  http.StatusUnsupportedMediaType,
-				responseError: "Code: 415 - errors: Content type must be application/json or application/zip",
+				responseError: "Code: 415 - errors: invalid content-type: [application/incorrect]; Content type must be application/json or application/zip",
 			},
 		},
 		{

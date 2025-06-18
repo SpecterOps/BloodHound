@@ -101,6 +101,7 @@ const (
 
 	AuditLogActionImportSavedQuery AuditLogAction = "ImportSavedQueries"
 	AuditLogActionExportSavedQuery AuditLogAction = "ExportSavedQuery"
+	AuditLogActionExportSavedQueries AuditLogAction = "ExportSavedQueries"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration
