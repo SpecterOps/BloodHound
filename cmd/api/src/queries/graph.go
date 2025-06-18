@@ -400,14 +400,13 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 		return graphQuery, err
 	}
 
+	// Query rewriter targets certain AST elements like relationship types and may rewrite them to add additional
+	// functionality after parsing
 	queryRewriter := NewRewriter()
 
-	err = walk.Cypher(queryModel, queryRewriter)
-	if err != nil {
+	if err = walk.Cypher(queryModel, queryRewriter); err != nil {
 		return graphQuery, err
-	}
-
-	if queryRewriter.HasMutation && queryRewriter.HasRelationshipTypeShortcut {
+	} else if queryRewriter.HasMutation && queryRewriter.HasRelationshipTypeShortcut {
 		return graphQuery, fmt.Errorf("relationship type shortcuts are not supported in graph mutations")
 	}
 

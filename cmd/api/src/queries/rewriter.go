@@ -22,6 +22,14 @@ import (
 	"github.com/specterops/dawgs/cypher/models/walk"
 )
 
+const (
+	// Below are constant values for all accepted relationship type shortcuts
+	allAttackPathsRelationshipShortcutType   = "ALL_ATTACK_PATHS"
+	azureAttackPathsRelationshipShortcutType = "AZ_ATTACK_PATHS"
+	adAttackPathsRelationshipShortcutType    = "AD_ATTACK_PATHS"
+)
+
+// Rewriter rewrites certain Cypher AST elements to add additional functionality post-parsing.
 type Rewriter struct {
 	walk.Visitor[cypher.SyntaxNode]
 
@@ -41,17 +49,19 @@ func (s *Rewriter) Enter(node cypher.SyntaxNode) {
 		s.HasMutation = true
 
 	case *cypher.RelationshipPattern:
+		// The logic below handles relationship type shortcuts where the following type names expand into a collection
+		// of kinds
 		for _, kind := range typedNode.Kinds {
 			switch kind.String() {
-			case "ALL_ATTACK_PATHS":
+			case allAttackPathsRelationshipShortcutType:
 				s.HasRelationshipTypeShortcut = true
 				typedNode.Kinds = append(azure.PathfindingRelationships(), ad.PathfindingRelationships()...)
 
-			case "AZ_ATTACK_PATHS":
+			case azureAttackPathsRelationshipShortcutType:
 				s.HasRelationshipTypeShortcut = true
 				typedNode.Kinds = azure.PathfindingRelationships()
 
-			case "AD_ATTACK_PATHS":
+			case adAttackPathsRelationshipShortcutType:
 				s.HasRelationshipTypeShortcut = true
 				typedNode.Kinds = ad.PathfindingRelationships()
 			}
