@@ -25,8 +25,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
