@@ -20,16 +20,28 @@ import { FC } from 'react';
 const References: FC = () => {
     return (
         <Box sx={{ overflowX: 'auto' }}>
+            <Link target='_blank' rel='noopener' href='https://wald0.com/?p=179'>
+                A Red Teamer's Guide to GPOs and OUs
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/FSecureLABS/SharpGPOAbuse'>
+                GitHub: SharpGPOAbuse
+            </Link>
+            <br />
+            <Link target='_blank' rel='noopener' href='https://github.com/Hackndo/pyGPOAbuse'>
+                GitHub: pyGPOAbuse
+            </Link>
+            <br />
             <Link target='_blank' rel='noopener' href='https://labs.withsecure.com/publications/ou-having-a-laugh'>
-                https://labs.withsecure.com/publications/ou-having-a-laugh
+                OU having a laugh?
             </Link>
             <br />
             <Link
                 target='_blank'
                 rel='noopener'
                 href='https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory'>
-                https://www.synacktiv.com/publications/ounedpy-exploiting-hidden-organizational-units-acl-attack-vectors-in-active-directory
-            </Link>
+                OUned.py: exploiting hidden Organizational Units ACL attack vectors in Active Directory
+            </Link>{' '}
         </Box>
     );
 };

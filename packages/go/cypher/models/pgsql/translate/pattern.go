@@ -137,10 +137,21 @@ func (s *Translator) buildExpansionPattern(traversalStep *TraversalStep, expansi
 	return nil
 }
 
-func (s *Translator) buildShortestPathsExpansionPattern(traversalStep *TraversalStep, expansion *ExpansionBuilder, isRootStep bool) error {
+func (s *Translator) buildShortestPathsExpansionPattern(traversalStep *TraversalStep, expansion *ExpansionBuilder, isRootStep, allPaths bool) error {
 	if isRootStep {
-		if traversalStep.Expansion.Value.CanExecuteBidirectionalSearch() {
-			if traversalStepQuery, err := expansion.BuildBiDirectionalAllShortestPathsRoot(); err != nil {
+		if allPaths {
+			if traversalStep.Expansion.Value.CanExecuteBidirectionalSearch() {
+				if traversalStepQuery, err := expansion.BuildBiDirectionalAllShortestPathsRoot(); err != nil {
+					return err
+				} else {
+					s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
+						Alias: pgsql.TableAlias{
+							Name: traversalStep.Frame.Binding.Identifier,
+						},
+						Query: traversalStepQuery,
+					})
+				}
+			} else if traversalStepQuery, err := expansion.BuildAllShortestPathsRoot(); err != nil {
 				return err
 			} else {
 				s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
@@ -150,7 +161,7 @@ func (s *Translator) buildShortestPathsExpansionPattern(traversalStep *Traversal
 					Query: traversalStepQuery,
 				})
 			}
-		} else if traversalStepQuery, err := expansion.BuildAllShortestPathsRoot(); err != nil {
+		} else if traversalStepQuery, err := expansion.BuildShortestPathsRoot(); err != nil {
 			return err
 		} else {
 			s.query.CurrentPart().Model.AddCTE(pgsql.CommonTableExpression{
@@ -184,7 +195,7 @@ func (s *Translator) buildTraversalPatternPart(part *PatternPart) error {
 			if expansion, err := NewExpansionBuilder(s.translation.Parameters, traversalStep); err != nil {
 				return err
 			} else if part.ShortestPath || part.AllShortestPaths {
-				if err := s.buildShortestPathsExpansionPattern(traversalStep, expansion, isRootStep); err != nil {
+				if err := s.buildShortestPathsExpansionPattern(traversalStep, expansion, isRootStep, part.AllShortestPaths); err != nil {
 					return err
 				}
 			} else if err := s.buildExpansionPattern(traversalStep, expansion, isRootStep); err != nil {
