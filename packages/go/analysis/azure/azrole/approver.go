@@ -25,6 +25,10 @@ func CreateApproverEdge(
 	if err != nil {
 		return err
 	}
+	tenantObjectID, err := tenantNode.Properties.Get(common.ObjectID.String()).String()
+	if err != nil {
+		return err
+	}
 
 	var fetchedAZRoles graph.NodeSet
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -32,7 +36,7 @@ func CreateApproverEdge(
 			return query.And(
 				// Step 1: Kind = AZRole and tenantId matches
 				query.Kind(query.Node(), azure.Role),
-				query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
+				query.Equals(query.NodeProperty(azure.TenantID.String()), tenantObjectID),
 				// Step 2: isApprovalRequired == true
 				query.Equals(
 					query.NodeProperty(azure.EndUserAssignmentRequiresApproval.String()),
@@ -90,10 +94,10 @@ func CreateApproverEdge(
 	return nil
 }
 
-func handleDefaultAdminRoles(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, principalID string, fetchedAZRole *graph.Node) error {
+func handleDefaultAdminRoles(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, tenantID string, fetchedAZRole *graph.Node) error {
 	fetchedNodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
-			query.Equals(query.NodeProperty(azure.TenantID.String()), principalID),
+			query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
 			query.Kind(query.Node(), azure.Role),
 			query.Or(
 				query.Kind(query.Node(), azure.GlobalAdmin),
@@ -134,9 +138,8 @@ func handlePrincipalApprovers(ctx context.Context, tx graph.Transaction, outC ch
 			} else {
 				return err
 			}
-		} else {
-			nodeID = fetchedNode.ID
 		}
+		nodeID = fetchedNode.ID
 
 		if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
 			FromID: nodeID,
