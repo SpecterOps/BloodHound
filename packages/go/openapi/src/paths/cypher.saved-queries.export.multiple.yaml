@@ -45,7 +45,7 @@ get:
         The underlying JSON file is expected to have the following structure:
         ```json
         {
-         "name": "Return_Nodes,
+         "name": "Return_Nodes",
          "query": "MATCH (n) RETURN n",
          "description": "Returns all nodes in a given graph"
         }

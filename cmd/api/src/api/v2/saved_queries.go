@@ -256,7 +256,7 @@ func (s Resources) ExportSavedQueries(response http.ResponseWriter, request *htt
 				}
 			}
 		}
-		// did not maCke it far enough in the api request for an audit log event
+		// did not make it far enough in the api request for an audit log event
 	}()
 
 	if user, isUser := auth.GetUserFromAuthCtx(ctx2.FromRequest(request).AuthCtx); !isUser {

@@ -6995,7 +6995,7 @@
         ],
         "responses": {
           "200": {
-            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes,\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
             "headers": {
               "Content-Disposition": {
                 "schema": {
@@ -7038,7 +7038,7 @@
       "post": {
         "operationId": "ImportQuery",
         "summary": "Import a cypher query",
-        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes,\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
         "tags": [
           "Cypher",
           "Community",
@@ -7116,7 +7116,7 @@
         ],
         "responses": {
           "200": {
-            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes,\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
             "headers": {
               "Content-Disposition": {
                 "schema": {
