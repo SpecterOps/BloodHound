@@ -23,6 +23,7 @@ import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
+import SalesMessage from '../SalesMessage';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -74,6 +75,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
+            <SalesMessage />
             <ObjectCountPanel tagId={data.id.toString()} />
         </div>
     );

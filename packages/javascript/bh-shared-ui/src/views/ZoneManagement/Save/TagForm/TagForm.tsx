@@ -46,8 +46,6 @@ import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 import SalesMessage from '../../SalesMessage';
-import { parseTieringConfiguration } from 'js-client-library';
-import { useGetConfiguration } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -100,8 +98,6 @@ export const TagForm: FC = () => {
     const [position, setPosition] = useState<number | null>(null);
 
     const { TierList } = useContext(ZoneManagementContext);
-    const { data } = useGetConfiguration();
-    const tieringConfig = parseTieringConfiguration(data);
 
     const {
         register,
@@ -227,13 +223,6 @@ export const TagForm: FC = () => {
     if (tagQuery.isLoading) return <Skeleton />;
     if (tagQuery.isError) return <div>There was an error fetching the tag information.</div>;
 
-    const showSalesMessage = () => {
-        if (tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && !tieringConfig?.value.multi_tier_analysis_enabled) {
-            return true;
-        }
-        return false;
-    }
-
     return (
         <>
             <form className='flex gap-x-6 mt-6'>
@@ -290,7 +279,8 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {showSalesMessage() ? <SalesMessage /> : null}
+                    {/* {showSalesMessage() ? <SalesMessage /> : null} */}
+                    <SalesMessage />
                     <div className='flex justify-end gap-6 mt-4 w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button

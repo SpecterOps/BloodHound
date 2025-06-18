@@ -6,10 +6,27 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
+import { useParams } from 'react-router-dom';
+import { OWNED_ID, TIER_ZERO_ID } from './utils';
+import { useGetConfiguration } from '../../hooks';
+import { parseTieringConfiguration } from 'js-client-library';
 
 const SalesMessage: FC = () => {
 
-    return (
+    const { tierId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
+    const { data } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+
+    const showSalesMessage = () => {
+        if (tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && !tieringConfig?.value.multi_tier_analysis_enabled) {
+            return true;
+        }
+        return false;
+    }
+
+    return (showSalesMessage() ?
         <Card className='p-3'>
             <CardHeader className='flex flex-row items-center mb-1'>
                 <AppIcon.DataAlert size={24} className='mr-2 text-[#ED8537]' />
@@ -29,6 +46,7 @@ const SalesMessage: FC = () => {
                 </p>
             </CardDescription>
         </Card>
+        : null
     )
 };
 
