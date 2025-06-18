@@ -220,12 +220,7 @@ func (s Resources) canUserAccessQuery(ctx context.Context, query model.SavedQuer
 	if userId.String() == query.UserID {
 		return true, nil
 	}
-	if isAccessibleToUser, err := s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, userId); err != nil {
-		return false, err
-	} else if !isAccessibleToUser {
-		return false, nil
-	}
-	return true, nil
+	return s.DB.IsSavedQuerySharedToUserOrPublic(ctx, query.ID, userId)
 }
 
 // ExportSavedQueries - Exports one or more saved queries in a ZIP file. The scope query parameter determines which queries are exported.
