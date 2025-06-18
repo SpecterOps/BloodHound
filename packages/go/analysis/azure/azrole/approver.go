@@ -81,10 +81,10 @@ func CreateApproverEdge(
 			principalIDs := append(userApproversID, groupApproversID...)
 			if len(principalIDs) == 0 {
 				// Handle default admin roles...
-				return handleDefaultAdminRoles(ctx, db, tx, outC, tenantID, fetchedAZRole)
+				return handleDefaultAdminRoles(ctx, db, outC, tenantID, fetchedAZRole)
 			} else {
 				// Handle principal IDs...
-				return handlePrincipalApprovers(ctx, db, tx, outC, principalIDs, fetchedAZRole)
+				return handlePrincipalApprovers(ctx, db, outC, principalIDs, fetchedAZRole)
 			}
 		}); err != nil {
 			return err
@@ -94,7 +94,7 @@ func CreateApproverEdge(
 	return nil
 }
 
-func handleDefaultAdminRoles(ctx context.Context, db graph.Database, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, tenantID string, fetchedAZRole *graph.Node) error {
+func handleDefaultAdminRoles(ctx context.Context, db graph.Database, outC chan<- analysis.CreatePostRelationshipJob, tenantID string, fetchedAZRole *graph.Node) error {
 	var fetchedNodes graph.NodeSet
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		nodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
@@ -128,7 +128,7 @@ func handleDefaultAdminRoles(ctx context.Context, db graph.Database, tx graph.Tr
 	return nil
 }
 
-func handlePrincipalApprovers(ctx context.Context, db graph.Database, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob, principalIDs []string, fetchedAZRole *graph.Node) error {
+func handlePrincipalApprovers(ctx context.Context, db graph.Database, outC chan<- analysis.CreatePostRelationshipJob, principalIDs []string, fetchedAZRole *graph.Node) error {
 	for _, principalID := range principalIDs {
 		var fetchedNode *graph.Node
 		err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -152,11 +152,9 @@ func handlePrincipalApprovers(ctx context.Context, db graph.Database, tx graph.T
 				return err
 			}
 		}
-		var nodeID graph.ID
-		nodeID = fetchedNode.ID
 
 		if !channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
-			FromID: nodeID,
+			FromID: fetchedNode.ID,
 			ToID:   fetchedAZRole.ID,
 			Kind:   azure.AZRoleApprover,
 		}) {
