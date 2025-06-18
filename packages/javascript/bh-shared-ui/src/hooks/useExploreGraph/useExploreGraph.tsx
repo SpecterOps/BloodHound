@@ -53,13 +53,13 @@ export const useExploreGraph = (paramOptions?: Partial<ExploreQueryParams>, incl
     }
     const { addNotification } = useNotifications();
 
-    const query =
-        paramOptions?.searchType === 'cypher' ? cypherSearchQuery : exploreGraphQueryFactory(paramOptions || params);
+    const query = params?.searchType === 'cypher' ? cypherSearchQuery : exploreGraphQueryFactory(params);
 
     const queryConfig =
         paramOptions?.searchType === 'cypher'
             ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
             : query.getQueryConfig(params);
+
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {

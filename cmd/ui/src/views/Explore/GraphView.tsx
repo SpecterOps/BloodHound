@@ -28,6 +28,7 @@ import {
     useCustomNodeKinds,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
+    useFeatureFlag,
     useGraphHasData,
     useToggle,
 } from 'bh-shared-ui';
@@ -57,6 +58,7 @@ const GraphView: FC = () => {
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
     const { selectedItem, setSelectedItem } = useExploreSelectedItem();
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
@@ -196,14 +198,16 @@ const GraphView: FC = () => {
             <ContextMenu contextMenu={contextMenu} handleClose={handleCloseContextMenu} />
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
-            <ExploreTable
-                items={graphQuery.data}
-                open={displayTable}
-                onClose={() => {
-                    setAutoDisplayTable(false);
-                    dispatch(setIsExploreTableSelected(false));
-                }}
-            />
+            {tableViewFeatureFlag?.enabled && (
+                <ExploreTable
+                    items={graphQuery.data}
+                    open={displayTable}
+                    onClose={() => {
+                        setAutoDisplayTable(false);
+                        dispatch(setIsExploreTableSelected(false));
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 // needed for table body level scope DnD setup
 
@@ -33,19 +33,11 @@ interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
     onRowClick?: (data: any) => void;
-    onCloseClick?: () => void;
     selectedRow: string;
     items?: any;
 }
 
-const ExploreTable: React.FC<ExploreTableProps> = ({
-    items,
-    open,
-    onClose,
-    onRowClick = () => {},
-    onCloseClick,
-    selectedRow,
-}) => {
+const ExploreTable: React.FC<ExploreTableProps> = ({ items, open, onClose, onRowClick = () => {}, selectedRow }) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () =>
@@ -59,13 +51,6 @@ const ExploreTable: React.FC<ExploreTableProps> = ({
     const firstItem = mungedData?.[0];
 
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
-
-    useEffect(
-        () => () => {
-            if (typeof onClose === 'function') onClose();
-        },
-        [onClose]
-    );
 
     const initialColumns: ColumnDef<any, any>[] = [
         {
@@ -132,7 +117,7 @@ const ExploreTable: React.FC<ExploreTableProps> = ({
                         onDownloadClick: () => alert('download icon clicked'),
                         onExpandClick: () => alert('expand icon clicked'),
                         onManageColumnsClick: () => alert('manage columns button clicked'),
-                        onCloseClick,
+                        onCloseClick: onClose,
                         tableName: 'Results',
                         resultsCount: mungedData.length,
                         SearchInputProps: {
