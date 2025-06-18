@@ -24,35 +24,24 @@ import { getTagUrlValue, itemSkeletons } from '../../views';
 
 import { Box, Divider } from '@mui/material';
 import { useExploreParams } from '../../hooks';
-import { useSelectorsInfoPanelContext } from '../../views/ZoneManagement/providers';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
-type EntitySelectorsInformationProps = {
-    tagId: string;
-    memberId: string;
-    label?: string;
-};
-
-const EntitySelectorsInformation: React.FC<EntitySelectorsInformationProps> = ({ tagId, memberId, label, id }) => {
+const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
-    const { labelId } = useParams();
+    const { tierId, labelId, memberId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
     const [menuOpen, setMenuOpen] = useState<{ [key: number]: boolean }>({});
-    const { isSelectorsInfoPanelOpen, setIsSelectorsInfoPanelOpen } = useSelectorsInfoPanelContext();
+
     const { setExploreParams, expandedPanelSections } = useExploreParams();
-    const [isExpandedPanelSection, setIsExpandedPanelSection] = useState(false);
+    const isExpandedPanelSection = expandedPanelSections?.includes('Selectors');
 
     const handleOnChange = () => {
-        setIsSelectorsInfoPanelOpen(!isSelectorsInfoPanelOpen);
-
-        if (!isSelectorsInfoPanelOpen) {
-            setIsExpandedPanelSection(true);
+        if (!isExpandedPanelSection) {
             setExploreParams({
                 expandedPanelSections: ['Selectors'],
             });
-        }
-
-        if (isSelectorsInfoPanelOpen) {
-            setIsExpandedPanelSection(false);
+        } else {
             setExploreParams({
                 expandedPanelSections: [],
             });
@@ -108,8 +97,7 @@ const EntitySelectorsInformation: React.FC<EntitySelectorsInformationProps> = ({
                 <EntityInfoCollapsibleSection
                     label='Selectors'
                     count={memberInfoQuery.data.selectors?.length}
-                    //isExpanded={isSelectorsInfoPanelOpen}
-                    isExpanded={isExpandedPanelSection}
+                    isExpanded={!!isExpandedPanelSection}
                     onChange={handleOnChange}>
                     {memberInfoQuery.data.selectors?.map((selector, index) => {
                         return (
