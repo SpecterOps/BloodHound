@@ -14,8 +14,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 post:
-  operationId: ImportQuery
-  summary: Import a cypher query
+  operationId: ImportSavedQueries
+  summary: Import one or more cypher queries.
   description: | 
     Import one or more cypher queries.
     
