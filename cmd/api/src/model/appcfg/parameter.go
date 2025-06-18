@@ -43,9 +43,6 @@ const (
 	PruneTTL                 ParameterKey = "prune.ttl"
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 
-	DefaultTierLimit  = 1
-	DefaultLabelLimit = 0
-
 	// The below keys are not intended to be user updateable, so should not be added to IsValidKey
 	ScheduledAnalysis          ParameterKey = "analysis.scheduled"
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
@@ -55,9 +52,14 @@ const (
 
 const (
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
-	DefaultSessionTTLHours          = 8
-	DefaultPruneBaseTTL             = time.Hour * 24 * 7
-	DefaultPruneHasSessionEdgeTTL   = time.Hour * 24 * 3
+
+	DefaultSessionTTLHours = 8
+
+	DefaultPruneBaseTTL           = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
+
+	DefaultTierLimit  = 1
+	DefaultLabelLimit = 0
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
