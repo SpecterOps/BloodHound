@@ -452,10 +452,12 @@ export const graphSchema = (extraKinds?: string[]) => {
     const knownNodeKinds = new Set([...adNodeKinds, ...azureNodeKinds]);
     const knownEdgeKinds = new Set([...adEdges, ...azureEdges]);
 
-    // Best effort attempt to remove known nodes from the edges list and vice versa. Custom kinds will be present in both lists because
-    // there is not enough information to determine whether a custom kind is a node or an edge
-    const nodeKinds = extraKinds?.map((l) => `:${l}`).filter((label) => !knownEdgeKinds.has(label));
-    const edgeKinds = extraKinds?.map((l) => `:${l}`).filter((label) => !knownNodeKinds.has(label));
+    // Best effort attempt to remove known nodes from the edges list and vice versa.
+    const dynamicNodeKinds = (extraKinds ?? []).map((l) => `:${l}`).filter((label) => !knownEdgeKinds.has(label));
+    const dynamicEdgeKinds = (extraKinds ?? []).map((l) => `:${l}`).filter((label) => !knownNodeKinds.has(label));
+
+    const nodeKinds = [...knownNodeKinds, ...dynamicNodeKinds];
+    const edgeKinds = [...knownEdgeKinds, ...dynamicEdgeKinds];
 
     const propertyKeys = [
         ...Object.values(CommonKindProperties),

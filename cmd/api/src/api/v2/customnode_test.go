@@ -63,7 +63,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node",
+						Path: "/api/v2/custom-nodes",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -102,7 +102,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node",
+						Path: "/api/v2/custom-nodes",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -141,7 +141,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node",
+						Path: "/api/v2/custom-nodes",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -213,7 +213,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node",
+						Path: "/api/v2/custom-nodes",
 					},
 					Method: http.MethodPost,
 					Header: http.Header{},
@@ -268,7 +268,7 @@ func TestResources_CreateCustomNodeKindsTest(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/custom-node", resources.CreateCustomNodeKind).Methods(request.Method)
+			router.HandleFunc("/api/v2/custom-nodes", resources.CreateCustomNodeKind).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
@@ -304,7 +304,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node/kind",
+						Path: "/api/v2/custom-nodes/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -345,7 +345,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node/kind",
+						Path: "/api/v2/custom-nodes/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -386,7 +386,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 			buildRequest: func() *http.Request {
 				request := &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/custom-node/kind",
+						Path: "/api/v2/custom-nodes/kind",
 					},
 					Method: http.MethodPut,
 					Header: http.Header{
@@ -455,7 +455,7 @@ func TestResources_UpdateCustomNodeKindsTest(t *testing.T) {
 
 			response := httptest.NewRecorder()
 			router := mux.NewRouter()
-			router.HandleFunc(fmt.Sprintf("/api/v2/custom-node/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).Methods(request.Method)
+			router.HandleFunc(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

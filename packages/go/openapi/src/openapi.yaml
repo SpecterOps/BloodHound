@@ -288,9 +288,9 @@ paths:
     $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
   # custom node management
-  /api/v2/custom-node:
+  /api/v2/custom-nodes:
     $ref: './paths/custom-nodes.custom-nodes.yaml'
-  /api/v2/custom-node/{kind_name}:
+  /api/v2/custom-nodes/{kind_name}:
     $ref: './paths/custom-nodes.custom-nodes.name.yaml'
 
   # api info

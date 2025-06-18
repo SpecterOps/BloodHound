@@ -2860,7 +2860,7 @@
         }
       }
     },
-    "/api/v2/custom-node": {
+    "/api/v2/custom-nodes": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -3018,7 +3018,7 @@
         }
       }
     },
-    "/api/v2/custom-node/{kind_name}": {
+    "/api/v2/custom-nodes/{kind_name}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"

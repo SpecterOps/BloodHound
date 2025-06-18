@@ -45,7 +45,7 @@ const server = setupServer(
     rest.get(`/api/v2/search`, (req, res, ctx) => {
         return res(ctx.json(testSearchResults));
     }),
-    rest.get(`/api/v2/custom-node`, async (req, res, ctx) => {
+    rest.get(`/api/v2/custom-nodes`, async (req, res, ctx) => {
         return res(
             ctx.json({
                 data: [],
