@@ -594,6 +594,20 @@ func (mr *MockDatabaseMockRecorder) DeleteAssetGroupSelectorsForAssetGroups(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupSelectorsForAssetGroups", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupSelectorsForAssetGroups), ctx, assetGroupIds)
 }
 
+// DeleteAssetGroupTag mocks base method.
+func (m *MockDatabase) DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAssetGroupTag", ctx, user, assetGroupTag)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAssetGroupTag indicates an expected call of DeleteAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) DeleteAssetGroupTag(ctx, user, assetGroupTag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).DeleteAssetGroupTag), ctx, user, assetGroupTag)
+}
+
 // DeleteAssetGroupTagSelector mocks base method.
 func (m *MockDatabase) DeleteAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) error {
 	m.ctrl.T.Helper()
@@ -1375,6 +1389,21 @@ func (mr *MockDatabaseMockRecorder) GetLatestAssetGroupCollection(ctx, assetGrou
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestAssetGroupCollection", reflect.TypeOf((*MockDatabase)(nil).GetLatestAssetGroupCollection), ctx, assetGroupID)
 }
 
+// GetOrderedAssetGroupTagTiers mocks base method.
+func (m *MockDatabase) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderedAssetGroupTagTiers", ctx)
+	ret0, _ := ret[0].([]model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderedAssetGroupTagTiers indicates an expected call of GetOrderedAssetGroupTagTiers.
+func (mr *MockDatabaseMockRecorder) GetOrderedAssetGroupTagTiers(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderedAssetGroupTagTiers", reflect.TypeOf((*MockDatabase)(nil).GetOrderedAssetGroupTagTiers), ctx)
+}
+
 // GetPermission mocks base method.
 func (m *MockDatabase) GetPermission(ctx context.Context, id int) (model.Permission, error) {
 	m.ctrl.T.Helper()
@@ -1992,6 +2021,21 @@ func (m *MockDatabase) UpdateAssetGroupSelectors(ctx context.Context, assetGroup
 func (mr *MockDatabaseMockRecorder) UpdateAssetGroupSelectors(ctx, assetGroup, selectorSpecs, systemSelector any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupSelectors", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupSelectors), ctx, assetGroup, selectorSpecs, systemSelector)
+}
+
+// UpdateAssetGroupTag mocks base method.
+func (m *MockDatabase) UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAssetGroupTag", ctx, user, tag)
+	ret0, _ := ret[0].(model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAssetGroupTag indicates an expected call of UpdateAssetGroupTag.
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTag(ctx, user, tag any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTag), ctx, user, tag)
 }
 
 // UpdateAssetGroupTagSelector mocks base method.

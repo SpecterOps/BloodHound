@@ -180,3 +180,126 @@ func (s *IdentifierSet) Contains(other Identifier) bool {
 	_, contained := s.identifiers[other]
 	return contained
 }
+
+// SymbolTable is a symbol table that has some generic functions for negotiating unique symbols from identifiers,
+// compound identifiers, and other PgSQL AST elements.
+type SymbolTable struct {
+	table map[string]any
+}
+
+func NewSymbolTable() *SymbolTable {
+	return &SymbolTable{
+		table: map[string]any{},
+	}
+}
+
+func (s *SymbolTable) IsEmpty() bool {
+	return len(s.table) == 0
+}
+
+func (s *SymbolTable) NotIn(exclusions *SymbolTable) *SymbolTable {
+	notIn := NewSymbolTable()
+
+	for symbol, value := range s.table {
+		if _, in := exclusions.table[symbol]; !in {
+			notIn.Add(value)
+		}
+	}
+
+	return notIn
+}
+
+func (s *SymbolTable) Add(symbol any) {
+	switch typedSymbol := symbol.(type) {
+	case Identifier:
+		s.AddIdentifier(typedSymbol)
+
+	case CompoundIdentifier:
+		s.AddCompoundIdentifier(typedSymbol)
+
+	case *SymbolTable:
+		for _, nextSymbol := range typedSymbol.table {
+			switch typedInnerSymbol := nextSymbol.(type) {
+			case Identifier:
+				s.AddIdentifier(typedInnerSymbol)
+
+			case CompoundIdentifier:
+				s.AddCompoundIdentifier(typedInnerSymbol)
+			}
+		}
+	}
+}
+
+func (s *SymbolTable) Contains(symbol any) bool {
+	found := false
+
+	switch typedSymbol := symbol.(type) {
+	case Identifier:
+		_, found = s.table[typedSymbol.String()]
+
+	case CompoundIdentifier:
+		_, found = s.table[typedSymbol.String()]
+
+	case *SymbolTable:
+		for nextSymbol := range typedSymbol.table {
+			_, found = s.table[nextSymbol]
+
+			if !found {
+				return false
+			}
+		}
+	}
+
+	return found
+}
+
+func (s *SymbolTable) AddTable(symbols *SymbolTable) {
+	for key, value := range symbols.table {
+		s.table[key] = value
+	}
+}
+
+func (s *SymbolTable) AddIdentifier(identifier Identifier) {
+	s.table[identifier.String()] = identifier
+}
+
+func (s *SymbolTable) AddCompoundIdentifier(identifier CompoundIdentifier) {
+	s.table[identifier.String()] = identifier
+}
+
+func (s *SymbolTable) RootIdentifiers() *IdentifierSet {
+	identifiers := NewIdentifierSet()
+
+	for _, identifier := range s.table {
+		switch typedIdentifier := identifier.(type) {
+		case Identifier:
+			identifiers.Add(typedIdentifier)
+		case CompoundIdentifier:
+			identifiers.Add(typedIdentifier[0])
+		}
+	}
+
+	return identifiers
+}
+
+func (s *SymbolTable) EachIdentifier(each func(next Identifier) bool) {
+	for _, untypedIdentifier := range s.table {
+		switch typedIdentifier := untypedIdentifier.(type) {
+		case Identifier:
+			if !each(typedIdentifier) {
+				return
+			}
+		}
+	}
+}
+
+func (s *SymbolTable) EachCompoundIdentifier(each func(next CompoundIdentifier) bool) {
+	for _, untypedIdentifier := range s.table {
+		switch typedIdentifier := untypedIdentifier.(type) {
+		case CompoundIdentifier:
+			if !each(typedIdentifier) {
+				return
+			}
+		}
+	}
+}
