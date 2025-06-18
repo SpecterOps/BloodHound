@@ -580,7 +580,7 @@ func (s *BloodhoundDB) GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Cont
 
 	sqlStr := fmt.Sprintf(`
 		WITH selectors AS (
-			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE created_at = updated_at AND created_at < '2025-04-24' AND is_default = false
+			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE created_at = updated_at AND created_at < '2025-05-24' AND is_default = false
 		), seeds AS (
 			SELECT selector_id, type, value FROM %s WHERE type = 1
 		)
