@@ -15,5 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export * from './AppLink';
+export * from './AppNavigate';
 export * from './searchParams';
 export * from './useAppNavigate';

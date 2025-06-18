@@ -17,7 +17,7 @@
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext, useMemo } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import {
     DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
@@ -30,7 +30,7 @@ import {
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_OBJECT_DETAILS,
     Routable,
 } from '../../routes';
-import { cn, useAppNavigate } from '../../utils';
+import { AppNavigate, cn, useAppNavigate } from '../../utils';
 import { ZoneManagementContext } from './ZoneManagementContext';
 import { OWNED_ID, TIER_ZERO_ID } from './utils';
 
@@ -113,7 +113,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
                         </Routes>
                     </Suspense>
                 </div>
