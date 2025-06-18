@@ -32,17 +32,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/dawgs/cypher/models/walk"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/cypher/analyzer"
-	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -52,6 +47,13 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/cypher/analyzer"
+	"github.com/specterops/dawgs/cypher/frontend"
+	"github.com/specterops/dawgs/cypher/models/cypher/format"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util"
 )
 
 type SearchType = string
@@ -398,7 +400,17 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 		return graphQuery, err
 	}
 
-	graphQuery.HasMutation = parseCtx.HasMutation
+	// Query rewriter targets certain AST elements like relationship types and may rewrite them to add additional
+	// functionality after parsing
+	queryRewriter := NewRewriter()
+
+	if err = walk.Cypher(queryModel, queryRewriter); err != nil {
+		return graphQuery, err
+	} else if queryRewriter.HasMutation && queryRewriter.HasRelationshipTypeShortcut {
+		return graphQuery, fmt.Errorf("relationship type shortcuts are not supported in graph mutations")
+	}
+
+	graphQuery.HasMutation = queryRewriter.HasMutation
 
 	complexityMeasure, err := analyzer.QueryComplexity(queryModel)
 	if err != nil {
