@@ -1608,8 +1608,14 @@ CoerceAndRelayNTLMToLDAPS: types.#Kind & {
 	schema: "active_directory"
 }
 
+
 HasTrustKeys: types.#Kind & {
 	symbol: "HasTrustKeys"
+	schema: "active_directory"
+}
+
+ClaimSpecialIdentity: types.#Kind & {
+	symbol: "ClaimSpecialIdentity"
 	schema: "active_directory"
 }
 
@@ -1712,6 +1718,7 @@ RelationshipKinds: [
 	WriteOwnerRaw,
 	OwnsLimitedRights,
 	OwnsRaw,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,
@@ -1801,6 +1808,7 @@ SharedRelationshipKinds: [
 	CoerceAndRelayNTLMToADCS,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
+	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	ContainsIdentity,
