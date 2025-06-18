@@ -37,7 +37,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
     zoneManagement && tables.push({ id, label: 'Selectors' });
 
     return (
-        <>
+        <div data-testid='entity-info-data-table-list'>
             {tables.map((table, index) => {
                 if (table.label === 'Selectors') {
                     return <EntitySelectorsInformation key='selectors' />;
@@ -51,7 +51,7 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                         </React.Fragment>
                     );
             })}
-        </>
+        </div>
     );
 };
 
