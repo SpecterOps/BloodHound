@@ -26,11 +26,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -42,6 +41,8 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -65,9 +66,10 @@ type GetAssetGroupTagsResponse struct {
 	Tags []AssetGroupTagView `json:"tags"`
 }
 
-type PatchAssetGroupTagSelectorRequest struct {
+type patchAssetGroupTagSelectorRequest struct {
 	model.AssetGroupTagSelector
-	Disabled *bool `json:"disabled"`
+	Description *string `json:"description"`
+	Disabled    *bool   `json:"disabled"`
 }
 
 func (s Resources) GetAssetGroupTags(response http.ResponseWriter, request *http.Request) {
@@ -202,7 +204,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
-		selUpdateReq  PatchAssetGroupTagSelectorRequest
+		selUpdateReq  patchAssetGroupTagSelectorRequest
 		assetTagIdStr = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]
 		rawSelectorID = mux.Vars(request)[api.URIPathVariableAssetGroupTagSelectorID]
 	)
@@ -245,7 +247,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.AutoCertify = selUpdateReq.AutoCertify
 		}
 
-		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != "" || len(selUpdateReq.Seeds) > 0) {
+		if selector.IsDefault && (selUpdateReq.Name != "" || selUpdateReq.Description != nil || len(selUpdateReq.Seeds) > 0) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "default selectors only support modifying auto_certify and disabled_at", request), response)
 			return
 		}
@@ -254,8 +256,8 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Name = selUpdateReq.Name
 		}
 
-		if selUpdateReq.Description != "" {
-			selector.Description = selUpdateReq.Description
+		if selUpdateReq.Description != nil {
+			selector.Description = *selUpdateReq.Description
 		}
 
 		// if seeds are not included, call the DB update with them set to nil
@@ -364,6 +366,14 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 	} else if selector.AssetGroupTagId != assetTagId {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else {
+		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.CreatedBy)); err == nil {
+			selector.CreatedBy = createdByUser.EmailAddress.String
+		}
+
+		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.UpdatedBy)); err == nil {
+			selector.UpdatedBy = updatedByUser.EmailAddress.String
+		}
+
 		api.WriteBasicResponse(request.Context(), GetSelectorResponse{Selector: selector}, http.StatusOK, response)
 	}
 }
@@ -476,6 +486,14 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
+			assetGroupTag.CreatedBy = createdByUser.EmailAddress.String
+		}
+
+		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.UpdatedBy)); err == nil {
+			assetGroupTag.UpdatedBy = updatedByUser.EmailAddress.String
+		}
+
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
 	}
 }

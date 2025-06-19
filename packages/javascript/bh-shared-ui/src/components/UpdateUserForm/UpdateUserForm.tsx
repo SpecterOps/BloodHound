@@ -34,6 +34,7 @@ import { Role, SSOProvider, UpdateUserRequest } from 'js-client-library';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
+import { MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../../constants';
 import { apiClient } from '../../utils';
 
 export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'SSOProviderId'> & { SSOProviderId: string | undefined };
@@ -196,7 +197,17 @@ const UpdateUserFormInner: React.FC<{
                         <Controller
                             name='emailAddress'
                             control={control}
-                            rules={{ required: 'Email Address is required' }}
+                            rules={{
+                                required: 'Email Address is required',
+                                maxLength: {
+                                    value: MAX_EMAIL_LENGTH,
+                                    message: `Email address must be less than ${MAX_EMAIL_LENGTH} characters`,
+                                },
+                                pattern: {
+                                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                                    message: 'Please follow the example@domain.com format',
+                                },
+                            }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -217,7 +228,24 @@ const UpdateUserFormInner: React.FC<{
                         <Controller
                             name='principal'
                             control={control}
-                            rules={{ required: 'Principal Name is required' }}
+                            rules={{
+                                required: 'Principal Name is required',
+                                maxLength: {
+                                    value: MAX_NAME_LENGTH,
+                                    message: `Principal Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                },
+                                minLength: {
+                                    value: MIN_NAME_LENGTH,
+                                    message: `Principal Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                },
+                                validate: (value) => {
+                                    const trimmed = value.trim();
+                                    if (value !== trimmed) {
+                                        return 'Principal Name does not allow leading or trailing spaces';
+                                    }
+                                    return true;
+                                },
+                            }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -236,7 +264,24 @@ const UpdateUserFormInner: React.FC<{
                         <Controller
                             name='firstName'
                             control={control}
-                            rules={{ required: 'First Name is required' }}
+                            rules={{
+                                required: 'First Name is required',
+                                maxLength: {
+                                    value: MAX_NAME_LENGTH,
+                                    message: `First Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                },
+                                minLength: {
+                                    value: MIN_NAME_LENGTH,
+                                    message: `First Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                },
+                                validate: (value) => {
+                                    const trimmed = value.trim();
+                                    if (value !== trimmed) {
+                                        return 'First Name does not allow leading or trailing spaces';
+                                    }
+                                    return true;
+                                },
+                            }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
@@ -255,7 +300,24 @@ const UpdateUserFormInner: React.FC<{
                         <Controller
                             name='lastName'
                             control={control}
-                            rules={{ required: 'Last Name is required' }}
+                            rules={{
+                                required: 'Last Name is required',
+                                maxLength: {
+                                    value: MAX_NAME_LENGTH,
+                                    message: `Last Name must be less than ${MAX_NAME_LENGTH} characters`,
+                                },
+                                minLength: {
+                                    value: MIN_NAME_LENGTH,
+                                    message: `Last Name must be ${MIN_NAME_LENGTH} characters or more`,
+                                },
+                                validate: (value) => {
+                                    const trimmed = value.trim();
+                                    if (value !== trimmed) {
+                                        return 'Last Name does not allow leading or trailing spaces';
+                                    }
+                                    return true;
+                                },
+                            }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}

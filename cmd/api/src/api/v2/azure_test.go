@@ -27,9 +27,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/azure"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
-	"github.com/specterops/bloodhound/dawgs/ops"
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -1053,7 +1053,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`,
+				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

@@ -20,7 +20,7 @@ on:
   pull_request:
     branches:
       - main
-      - 'stage/**'
+      - "stage/**"
     types:
       - opened
       - synchronize

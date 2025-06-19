@@ -191,3 +191,7 @@ export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
 export * from './Navigation';
+
+export * from './ExploreTable';
+
+export * from './GraphControls';

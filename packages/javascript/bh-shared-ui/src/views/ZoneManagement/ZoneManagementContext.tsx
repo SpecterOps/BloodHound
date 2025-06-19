@@ -36,15 +36,17 @@ const savePaths = [
     ROUTE_ZONE_MANAGEMENT_LABEL_UPDATE_SELECTOR,
 ];
 
+const EmptyHeader: React.FC = () => <></>;
 export interface ZoneManagementContextValue {
     savePaths: string[];
-    InfoHeader?: FC;
+    InfoHeader: FC;
     SupportLink?: FC;
     TierList?: FC<{ tiers: AssetGroupTag[]; setPosition: (position: number) => void; name: string }>;
 }
 
 export const defaultZoneMgmtCtxValue: ZoneManagementContextValue = {
     savePaths,
+    InfoHeader: EmptyHeader,
 };
 
 export const ZoneManagementContext = createContext<ZoneManagementContextValue>(defaultZoneMgmtCtxValue);
