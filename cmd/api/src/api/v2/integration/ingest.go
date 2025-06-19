@@ -23,12 +23,12 @@ import (
 
 	"github.com/specterops/bloodhound/graphschema"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/fixtures"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 

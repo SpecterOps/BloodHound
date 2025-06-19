@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/dawgs/graph"
 )
 
 type LocalGroup struct {

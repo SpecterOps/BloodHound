@@ -31,11 +31,11 @@ import (
 	time "time"
 
 	uuid "github.com/gofrs/uuid"
-	graph "github.com/specterops/bloodhound/dawgs/graph"
 	database "github.com/specterops/bloodhound/src/database"
 	null "github.com/specterops/bloodhound/src/database/types/null"
 	model "github.com/specterops/bloodhound/src/model"
 	appcfg "github.com/specterops/bloodhound/src/model/appcfg"
+	graph "github.com/specterops/dawgs/graph"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -1225,18 +1225,18 @@ func (mr *MockDatabaseMockRecorder) GetAzureDataQualityStats(ctx, tenantId, star
 }
 
 // GetConfigurationParameter mocks base method.
-func (m *MockDatabase) GetConfigurationParameter(ctx context.Context, parameter string) (appcfg.Parameter, error) {
+func (m *MockDatabase) GetConfigurationParameter(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConfigurationParameter", ctx, parameter)
+	ret := m.ctrl.Call(m, "GetConfigurationParameter", ctx, parameterKey)
 	ret0, _ := ret[0].(appcfg.Parameter)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetConfigurationParameter indicates an expected call of GetConfigurationParameter.
-func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(ctx, parameter any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(ctx, parameterKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), ctx, parameter)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), ctx, parameterKey)
 }
 
 // GetCustomNodeKind mocks base method.

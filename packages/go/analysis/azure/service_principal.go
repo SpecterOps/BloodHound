@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 func NewServicePrincipalEntityDetails(node *graph.Node) ServicePrincipalDetails {
