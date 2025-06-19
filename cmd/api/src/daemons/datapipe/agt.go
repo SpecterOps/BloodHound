@@ -710,7 +710,8 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 	if selectorsToMigrate, err := db.GetCustomAssetGroupTagSelectorsToMigrate(ctx); err != nil {
 		return err
 	} else {
-		countUpdated := 0
+		var countUpdated, countSkipped int
+
 		for _, selector := range selectorsToMigrate {
 			if len(selector.Seeds) > 1 {
 				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", "selector", selector)
@@ -718,16 +719,19 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 			} else if len(selector.Seeds) == 1 {
 				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
 					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
-						slog.WarnContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+						countSkipped++
 					} else {
 						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
 						if name == "" {
-							slog.WarnContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							countSkipped++
 							return nil
 						}
 						selector.Name = name
 						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
 							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", "selector", selector)
+							countSkipped++
 						}
 						countUpdated++
 					}
@@ -738,7 +742,7 @@ func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Databas
 			}
 		}
 		if len(selectorsToMigrate) > 0 {
-			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countUpdated", countUpdated, "countFound", len(selectorsToMigrate))
+			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countFound", len(selectorsToMigrate), "countUpdated", countUpdated, "countSkipped", countSkipped)
 		}
 	}
 
