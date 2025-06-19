@@ -1,0 +1,283 @@
+[
+  {
+    "source": "User",
+    "target": "User",
+    "edges": [
+        "AbuseTGTDelegation",
+        "AddAllowedToAct",
+        "AddKeyCredentialLink",
+        "AddSelf",
+        "AllExtendedRights",
+        "AllowedToAct",
+        "AllowedToDelegate",
+        "CoerceToTGT",
+        "ForceChangePassword",
+        "GenericAll",
+        "GenericWrite",
+        "GetChanges",
+        "GetChangesAll",
+        "HasSIDHistory",
+        "Owns",
+        "OwnsLimitedRights",
+        "OwnsRaw",
+        "ReadGMSAPassword",
+        "ReadLAPSPassword",
+        "SpoofSIDHistory",
+        "SQLAdmin",
+        "WriteAccountRestrictions",
+        "WriteDacl",
+        "WriteGPLink",
+        "WriteOwner",
+        "WriteOwnerLimitedRights",
+        "WriteOwnerRaw",
+        "WritePKIEnrollmentFlag",
+        "WritePKINameFlag",
+        "WriteSPN"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Computer",
+    "edges": [
+      "AddAllowedToAct",
+      "HasSession",
+      "CanRDP",
+      "ReadLAPSPassword",
+      "ReadGMSAPassword"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Group",
+    "edges": [
+      "AddMember",
+      "AddKeyCredentialLink",
+      "AddSelf",
+      "AllExtendedRights",
+      "ForceChangePassword",
+      "MemberOf",
+      "Owns",
+      "OwnsRaw",
+      "GenericAll",
+      "GenericWrite",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerRaw"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "OU",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "WriteOwner"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Domain",
+    "edges": [
+      "AllExtendedRights",
+      "DCSync",
+      "GetChanges",
+      "GetChangesAll",
+      "WriteOwner",
+      "ADCSESC4",
+      "ADCSESC9a",
+      "ADCSESC9b"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "GPO",
+    "edges": [
+      "Owns",
+      "WriteGPLink"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "User",
+    "edges": [
+      "HasSession"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Computer",
+    "edges": [
+      "HasSession"
+    ]
+  },
+  {
+    "source": "Computer",
+    "target": "Domain",
+    "edges": [
+      "GoldenCert",
+      "DCSync",
+      "DCFor",
+      "CoerceToTGT"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "User",
+    "edges": [
+        "AbuseTGTDelegation",
+        "AddAllowedToAct",
+        "AddKeyCredentialLink",
+        "AddSelf",
+        "AllExtendedRights",
+        "AllowedToAct",
+        "AllowedToDelegate",
+        "CoerceToTGT",
+        "ForceChangePassword",
+        "GenericAll",
+        "GenericWrite",
+        "GetChanges",
+        "GetChangesAll",
+        "HasSIDHistory",
+        "Owns",
+        "OwnsLimitedRights",
+        "OwnsRaw",
+        "ReadGMSAPassword",
+        "ReadLAPSPassword",
+        "SpoofSIDHistory",
+        "SQLAdmin",
+        "WriteAccountRestrictions",
+        "WriteDacl",
+        "WriteGPLink",
+        "WriteOwner",
+        "WriteOwnerLimitedRights",
+        "WriteOwnerRaw",
+        "WritePKIEnrollmentFlag",
+        "WritePKINameFlag",
+        "WriteSPN"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Group",
+    "edges": [
+      "AddMember",
+      "MemberOf",
+        "AbuseTGTDelegation",
+        "AddAllowedToAct",
+        "AddKeyCredentialLink",
+        "AddSelf",
+        "AllExtendedRights",
+        "AllowedToAct",
+        "AllowedToDelegate",
+        "CoerceToTGT",
+        "ForceChangePassword",
+        "GenericAll",
+        "GenericWrite",
+        "GetChanges",
+        "GetChangesAll",
+        "HasSIDHistory",
+        "Owns",
+        "OwnsLimitedRights",
+        "OwnsRaw",
+        "ReadGMSAPassword",
+        "ReadLAPSPassword",
+        "SpoofSIDHistory",
+        "SQLAdmin",
+        "WriteAccountRestrictions",
+        "WriteDacl",
+        "WriteGPLink",
+        "WriteOwner",
+        "WriteOwnerLimitedRights",
+        "WriteOwnerRaw",
+        "WritePKIEnrollmentFlag",
+        "WritePKINameFlag",
+        "WriteSPN"  
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "OU",
+    "edges": [
+      "GenericAll",
+      "GenericWrite",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerRaw",
+      "OwnsRaw"
+    ]
+  },
+  {
+    "source": "Group",
+    "target": "Domain",
+    "edges": [
+      "AllExtendedRights",
+      "DCSync",
+      "GetChanges",
+      "GetChangesAll",
+      "GetChangesInFilteredSet",
+      "ADCSESC10b",
+      "Owns",
+      "OwnsRaw",
+      "WriteOwner",
+      "WriteOwnerRaw",
+      "WriteDacl"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "GPO",
+    "edges": [
+      "GPLink"
+    ]
+  },
+  {
+    "source": "Domain",
+    "target": "Domain",
+    "edges": [
+      "CrossForestTrust",
+      "SameForestTrust"
+    ]
+  },
+  {
+    "source": "GPO",
+    "target": "OU",
+    "edges": [
+      "GPLink"
+    ]
+  },
+    {
+    "source": "GPO",
+    "target": "Domain",
+    "edges": [
+      "GPLink"
+    ]
+  },
+    {
+    "source": "OU",
+    "target": "OU",
+    "edges": [
+      "Contains"
+    ]
+  },
+    {
+    "source": "OU",
+    "target": "Computer",
+    "edges": [
+      "Contains"
+    ]
+  },
+    {
+    "source": "OU",
+    "target": "Group",
+    "edges": [
+      "Contains"
+    ]
+  },
+  {
+    "source": "OU",
+    "target": "User",
+    "edges": [
+      "Contains"
+    ]
+  }
+]

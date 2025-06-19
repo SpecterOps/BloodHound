@@ -131,6 +131,12 @@ type ADEdge struct {
 	Properties map[string]any `json:"properties"`
 }
 
+type EdgeGroup struct {
+	Source string   `json:"source"`
+	Target string   `json:"target"`
+	Edges  []string `json:"edges"`
+}
+
 // https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers
 func GenerateSID(myrid string) string {
 	var (
@@ -176,7 +182,7 @@ func AddADDomain() ADDomain {
 
 func (d ADDomain) ToGraphNode() GenericIngestNode {
 	return GenericIngestNode{
-		ID:    "0000000",
+		ID:    d.domainsid,
 		Kinds: []string{"Domain", "Base"},
 		Properties: map[string]interface{}{
 			"domain":            d.domain,
@@ -455,6 +461,43 @@ func AddADEdge(r *rand.Rand, i int) ADEdge {
 }
 */
 
+/*
+func AddToGroup(r *rand.Rand, groupID string, nbToAdd int32, rangeStart int32, rangeStop int32) ADEdge {
+
+	//for i := rangeStart; i < rangeStop; i++ {
+	//groupID := &generatedNodes[i] // Use pointer if you want to modify group in place
+
+	// Use a map to avoid duplicates
+	added := map[int32]bool{}
+	for len(added) < int(nbToAdd) {
+		uidx := int32(r.Intn(nbToAdd)) // Random user index
+		if !added[uidx] {
+			added[uidx] = true
+
+			// Add edge from user to group (User -> MemberOf -> Group)
+			targetID := fmt.Sprintf("%d", rangeStart+int32(r.Intn(int(rangeStop-rangeStart))))
+
+			// Append edge depending on your model
+			edge := generator.GenericIngestEdge{
+				Kind: "MemberOf",
+				Start: generator.EdgeEnd{
+					Value:   user.ID,
+					MatchBy: "id",
+				},
+				End: generator.EdgeEnd{
+					Value:   targetID,
+					MatchBy: "id",
+				},
+			}
+			//generatedEdges = append(generatedEdges, edge)
+			return edge
+		}
+
+	}
+
+}
+*/
+
 func AddADEdge(r *rand.Rand, eType string, sNode string, eNode string) ADEdge {
 
 	if eType == "" {
@@ -482,6 +525,41 @@ func AddADEdge(r *rand.Rand, eType string, sNode string, eNode string) ADEdge {
 		Kind:  eType,
 		Start: sNode,
 		End:   eNode,
+	}
+	return edge
+
+}
+
+func AddValidADEdge(r *rand.Rand, eType string, sNode GenericIngestNode, eNode GenericIngestNode) ADEdge {
+
+	file, err := os.Open("./resources/AD/edges_by_group.json")
+	if err != nil {
+		fmt.Errorf("failed to open file: %w", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	var edgeGroups []EdgeGroup
+	if err := json.NewDecoder(file).Decode(&edgeGroups); err != nil {
+		fmt.Errorf("failed to decode JSON: %w", err)
+		os.Exit(1)
+	}
+
+	for _, group := range edgeGroups {
+		if group.Source == sNode.Kinds[0] && group.Target == eNode.Kinds[0] {
+			if len(group.Edges) != 0 {
+				eType = group.Edges[r.Intn(len(group.Edges))]
+			} else {
+				eType = ""
+			}
+
+		}
+	}
+
+	edge := ADEdge{
+		Kind:  eType,
+		Start: sNode.ID,
+		End:   eNode.ID,
 	}
 	return edge
 

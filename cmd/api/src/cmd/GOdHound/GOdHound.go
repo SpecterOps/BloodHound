@@ -111,7 +111,9 @@ func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.G
 	nbOUs := nbUsers / 15
 	nbEdges := nbUsers * nbComps * nbGroups * nbGPOs * nbOUs / 20000
 
+	// Arrays that contain respectively all the Nodes & Edges we want to create
 	var generatedNodes []generator.GenericIngestNode
+	var generatedEdges []generator.GenericIngestEdge
 
 	// Generate the Domain Object
 	newObj := generator.AddADDomain()
@@ -129,6 +131,7 @@ func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.G
 		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
 	}
 
+	firstComp := len(generatedNodes)
 	// Generate the Endpoints
 	for i := 1; i <= nbComps; i++ {
 		newObj := generator.AddADComputer(r, int32(len(generatedNodes)), "WORKSTATION")
@@ -140,11 +143,32 @@ func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.G
 		newObj := generator.AddADComputer(r, int32(len(generatedNodes)), "SERVER")
 		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
 	}
+	lastComp := len(generatedNodes)
 
-	//
+	//Generate Groups and add members to them
 	for i := 1; i <= nbGroups; i++ {
 		newObj := generator.AddADGoup(int32(len(generatedNodes)), "", "") // We don't send neither a name or a rid because we want a random one.
 		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
+
+		// Add Members to the group we just created
+		eNode := generatedNodes[len(generatedNodes)-1].ID              // End Node is that last group we've added.
+		nbMembers := int(float64(nbUsers) * (0.10 + r.Float64()*0.05)) // 10% to 15%
+		forCPU := r.Intn(3)                                            // We want ~25% of our group to be for computers and not users
+		if forCPU == 0 {
+			for y := 0; y < nbMembers; y++ {
+				x := firstComp + int(r.Intn(int(lastComp-firstComp+1))) // Select a random computer object
+				sNode := generatedNodes[x].ID
+				newEdge := generator.AddADEdge(r, "MemberOf", sNode, eNode) // r & 0 won't be used, they are place holder
+				generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+			}
+		} else {
+			for y := 0; y < nbMembers; y++ {
+				x := r.Intn(nbUsers) + 1
+				sNode := generatedNodes[x].ID
+				newEdge := generator.AddADEdge(r, "MemberOf", sNode, eNode) // r & 0 won't be used, they are place holder
+				generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+			}
+		}
 	}
 
 	for i := 1; i <= nbGPOs; i++ {
@@ -157,15 +181,12 @@ func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.G
 		generatedNodes = append(generatedNodes, newObj.ToGraphNode())
 	}
 
-	// Array that contains all the Edges we want to create
-	var generatedEdges []generator.GenericIngestEdge
-
 	// Add Mandatory Groups
 
 	newNode := generator.AddADGoup(int32(len(generatedNodes)), "DOMAIN ADMINS", "512") // We don't send a name because we want a random one.
 	generatedNodes = append(generatedNodes, newNode.ToGraphNode())
 	sNode := generatedNodes[len(generatedNodes)-1].ID // -1 because the array starts at 0 and we want to access the last Node we created.
-	eNode := "0000000"                                // This should be our Domain node
+	eNode := generatedNodes[0].ID                     // This should be our Domain node as it's the first object we create
 	rel := []string{"AllExtendedRights", "GenericWrite", "WriteDACL", "WriteOwner", "WriteOwnerRaw"}
 
 	for _, eType := range rel {
@@ -183,14 +204,19 @@ func generateADGraph(r *rand.Rand) ([]generator.GenericIngestNode, []generator.G
 	}
 
 	// Generate a bunch of random edges
+
 	for i := 0; i <= nbEdges; i++ {
 		// We use `len(generatedNodes) -1` to calculate the nb of objects in our graph. This is to ensure we don't create Edges to objects that don't exist
 		x := r.Intn(len(generatedNodes) - 1)
-		sNode := generatedNodes[x].ID
+		sNode := generatedNodes[x]
 		x = r.Intn(len(generatedNodes) - 1)
-		eNode := generatedNodes[x].ID
-		newEdge := generator.AddADEdge(r, "", sNode, eNode) // No edge type means it will be generated in the function.
-		generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+		eNode := generatedNodes[x]
+		newEdge := generator.AddValidADEdge(r, "", sNode, eNode) // No edge type means it will be generated in the function.
+		if newEdge.Kind != "" {                                  // If the function returned a valid edge for our objects, add it to the list of edges to generate. Otherwise select 2 new nodes
+			generatedEdges = append(generatedEdges, newEdge.ToGraphEdge())
+		} else {
+			i--
+		}
 	}
 
 	return generatedNodes, generatedEdges
