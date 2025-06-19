@@ -200,7 +200,7 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    items={graphQuery.data}
+                    data={graphQuery.data}
                     open={displayTable}
                     onClose={() => {
                         setAutoDisplayTable(false);

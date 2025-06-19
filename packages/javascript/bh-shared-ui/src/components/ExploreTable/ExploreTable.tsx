@@ -30,22 +30,21 @@ import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { TableControls } from './TableControls';
 
-type HasIdAndData = { id: string; data: object };
+type HasData = { data?: object };
 
-interface ExploreTableProps<TData extends HasIdAndData> {
+interface ExploreTableProps<TData extends HasData> {
     open?: boolean;
     onClose?: () => void;
     data?: Record<string, TData>;
 }
 
-const ExploreTable = <TData extends HasIdAndData>({ data, open, onClose }: ExploreTableProps<TData>) => {
+const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
         [data]
     );
 
-    console.log({ mungedData });
     const firstItem = mungedData?.[0];
 
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
