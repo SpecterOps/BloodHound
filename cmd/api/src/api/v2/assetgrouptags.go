@@ -846,7 +846,7 @@ func (s *Resources) GetAssetGroupTagHistory(response http.ResponseWriter, reques
 						api.WriteErrorResponse(rCtx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 						return
 					}
-					queryFilters[name][i].IsStringData = model.AssetGroupTag{}.IsStringColumn(filter.Name)
+					queryFilters[name][i].IsStringData = model.AssetGroupHistory{}.IsStringColumn(filter.Name)
 				}
 			}
 		}

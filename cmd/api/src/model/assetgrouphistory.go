@@ -68,6 +68,10 @@ func (s AssetGroupHistory) AuditData() AuditData {
 	}
 }
 
+func (s AssetGroupHistory) IsStringColumn(filter string) bool {
+	return filter == "actor" || filter == "email" || filter == "action" || filter == "target" || filter == "environment_id" || filter == "note"
+}
+
 func (s AssetGroupHistory) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
 		"created_at":         {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
