@@ -38,6 +38,8 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return relationshipSearchQuery;
         case 'composition':
             return compositionSearchQuery;
+        case 'cypher':
+            return cypherSearchQuery;
         default:
             return fallbackQuery;
     }
@@ -53,7 +55,7 @@ export const useExploreGraph = (paramOptions?: Partial<ExploreQueryParams>, incl
     }
     const { addNotification } = useNotifications();
 
-    const query = params?.searchType === 'cypher' ? cypherSearchQuery : exploreGraphQueryFactory(params);
+    const query = exploreGraphQueryFactory(params);
 
     const queryConfig =
         paramOptions?.searchType === 'cypher'
