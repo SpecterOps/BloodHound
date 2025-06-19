@@ -146,18 +146,20 @@ const ContextMenu: FC<{
             {checkPermission(Permission.GRAPH_DB_WRITE) && [
                 <AssetGroupMenuItem
                     key={tierZeroAssetGroupId}
-                    assetGroupId={tierZeroAssetGroupId || Number.NaN}
+                    assetGroupId={tierZeroAssetGroupId!}
                     assetGroupName='High Value'
                     onAddNode={handleAddNode}
+                    removeNodePath={`/zone-management/details/label/${tierZeroAssetGroupId}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                     showConfirmationOnAdd
                     confirmationOnAddMessage={`Are you sure you want to add this node to High Value? This action will initiate an analysis run to update group membership.`}
                 />,
                 <AssetGroupMenuItem
                     key={ownedAssetGroupId}
-                    assetGroupId={ownedAssetGroupId || Number.NaN}
+                    assetGroupId={ownedAssetGroupId!}
                     assetGroupName='Owned'
                     onAddNode={handleAddNode}
+                    removeNodePath={`/zone-management/details/tag/${ownedAssetGroupId}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                 />,
             ]}

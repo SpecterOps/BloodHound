@@ -68,6 +68,7 @@ describe('AssetGroupMenuItem', () => {
 
         it('handles adding to tier zero asset group', async () => {
             const testOnAddNode = vi.fn();
+            const testRemoveNodePath = '/meow';
 
             render(
                 <AssetGroupMenuItem
@@ -76,6 +77,7 @@ describe('AssetGroupMenuItem', () => {
                     isCurrentMember={false}
                     showConfirmationOnAdd={true}
                     onAddNode={testOnAddNode}
+                    removeNodePath={testRemoveNodePath}
                 />,
                 {
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -90,7 +92,7 @@ describe('AssetGroupMenuItem', () => {
             await user.click(addToHighValueButton);
 
             const confirmationDialog = screen.getByRole('dialog', { name: /confirm selection/i });
-            expect(confirmationDialog).toBeInTheDocument();
+            expect(confirmationDialog).toBeVisible();
 
             const applyButton = screen.getByRole('button', { name: /ok/i });
             await user.click(applyButton);
@@ -101,6 +103,7 @@ describe('AssetGroupMenuItem', () => {
 
         it('handles adding to non-tier-zero asset group', async () => {
             const testOnAddNode = vi.fn();
+            const testRemoveNodePath = '/meow';
 
             render(
                 <AssetGroupMenuItem
@@ -108,6 +111,7 @@ describe('AssetGroupMenuItem', () => {
                     assetGroupName={ownedAssetGroup.name}
                     isCurrentMember={false}
                     onAddNode={testOnAddNode}
+                    removeNodePath={testRemoveNodePath}
                 />,
                 {
                     route: ROUTE_WITH_SELECTED_ITEM_PARAM,
@@ -148,12 +152,14 @@ describe('AssetGroupMenuItem', () => {
         afterAll(() => server.close());
 
         it('handles removing from a tier zero asset group', async () => {
+            const testRemoveNodePath = '/meow';
             await act(async () => {
                 await render(
                     <AssetGroupMenuItem
                         assetGroupId={tierZeroAssetGroup.id}
                         assetGroupName={tierZeroAssetGroup.name}
                         isCurrentMember={true}
+                        removeNodePath={testRemoveNodePath}
                     />,
                     {
                         initialState: {
@@ -171,16 +177,18 @@ describe('AssetGroupMenuItem', () => {
 
             await user.click(removeButton);
 
-            expect(window.location.pathname).toBe(`/tier-management/details/tag/${tierZeroAssetGroup.id}`);
+            expect(window.location.pathname).toBe(testRemoveNodePath);
         });
 
         it('handles removing from a non-tier-zero asset group', async () => {
+            const testRemoveNodePath = '/meow';
             await act(async () => {
                 await render(
                     <AssetGroupMenuItem
                         assetGroupId={ownedAssetGroup.id}
                         assetGroupName={ownedAssetGroup.name}
                         isCurrentMember={true}
+                        removeNodePath={testRemoveNodePath}
                     />,
                     {
                         initialState: {
@@ -198,7 +206,7 @@ describe('AssetGroupMenuItem', () => {
 
             await user.click(removeButton);
 
-            expect(window.location.pathname).toBe(`/tier-management/details/tag/${ownedAssetGroup.id}`);
+            expect(window.location.pathname).toBe(testRemoveNodePath);
         });
     });
 });

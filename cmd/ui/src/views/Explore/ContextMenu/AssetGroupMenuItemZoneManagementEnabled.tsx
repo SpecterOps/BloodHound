@@ -14,8 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
-import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem } from '@mui/material';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from '@bloodhoundenterprise/doodleui';
+import { MenuItem } from '@mui/material';
 import { FC, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +30,7 @@ const AssetGroupMenuItem: FC<{
     assetGroupId: number;
     assetGroupName: string;
     isCurrentMember: boolean;
+    removeNodePath: string;
     onAddNode?: (assetGroupId: string | number) => void;
     showConfirmationOnAdd?: boolean;
     confirmationOnAddMessage?: string;
@@ -30,6 +38,7 @@ const AssetGroupMenuItem: FC<{
     assetGroupId,
     assetGroupName,
     isCurrentMember,
+    removeNodePath,
     onAddNode = () => {},
     showConfirmationOnAdd = false,
     confirmationOnAddMessage = '',
@@ -64,7 +73,7 @@ const AssetGroupMenuItem: FC<{
         );
     } else {
         return (
-            <MenuItem component={Link} to={`/tier-management/details/tag/${assetGroupId}`}>
+            <MenuItem component={Link} to={removeNodePath}>
                 Remove from {assetGroupName}
             </MenuItem>
         );
@@ -79,16 +88,18 @@ const ConfirmNodeChangesDialog: FC<{
 }> = ({ open, onCancel, onAccept, dialogContent }) => {
     return (
         <Dialog open={open}>
-            <DialogTitle>Confirm Selection</DialogTitle>
-            <DialogContent>{dialogContent}</DialogContent>
-            <DialogActions>
-                <Button variant='tertiary' onClick={onCancel}>
-                    Cancel
-                </Button>
-                <Button variant='primary' onClick={onAccept}>
-                    Ok
-                </Button>
-            </DialogActions>
+            <DialogContent>
+                <DialogTitle>Confirm Selection</DialogTitle>
+                <DialogDescription>{dialogContent}</DialogDescription>
+                <DialogActions>
+                    <Button variant='tertiary' onClick={onCancel}>
+                        Cancel
+                    </Button>
+                    <Button variant='primary' onClick={onAccept}>
+                        Ok
+                    </Button>
+                </DialogActions>
+            </DialogContent>
         </Dialog>
     );
 };
