@@ -36,26 +36,30 @@ import (
 type ParameterKey string
 
 const (
-	PasswordExpirationWindow        ParameterKey = "auth.password_expiration_window"
-	DefaultPasswordExpirationWindow              = time.Hour * 24 * 90
-
-	Neo4jConfigs        ParameterKey = "neo4j.configuration"
-	CitrixRDPSupportKey ParameterKey = "analysis.citrix_rdp_support"
-
-	PruneTTL                      ParameterKey = "prune.ttl"
-	DefaultPruneBaseTTL                        = time.Hour * 24 * 7
-	DefaultPruneHasSessionEdgeTTL              = time.Hour * 24 * 3
-
-	ReconciliationKey ParameterKey = "analysis.reconciliation"
-
-	DefaultTierLimit  = 1
-	DefaultLabelLimit = 0
+	PasswordExpirationWindow ParameterKey = "auth.password_expiration_window"
+	SessionTTLHours          ParameterKey = "auth.session_ttl_hours"
+	Neo4jConfigs             ParameterKey = "neo4j.configuration"
+	CitrixRDPSupportKey      ParameterKey = "analysis.citrix_rdp_support"
+	PruneTTL                 ParameterKey = "prune.ttl"
+	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 
 	// The below keys are not intended to be user updateable, so should not be added to IsValidKey
 	ScheduledAnalysis          ParameterKey = "analysis.scheduled"
 	TrustedProxiesConfig       ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey       ParameterKey = "eula.custom_text"
 	TierManagementParameterKey ParameterKey = "analysis.tiering"
+)
+
+const (
+	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
+
+	DefaultSessionTTLHours = 8
+
+	DefaultPruneBaseTTL           = time.Hour * 24 * 7
+	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
+
+	DefaultTierLimit  = 1
+	DefaultLabelLimit = 0
 )
 
 // Parameter is a runtime configuration parameter that can be fetched from the appcfg.ParameterService interface. The
@@ -88,7 +92,7 @@ func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 // IsProtectedKey These keys should not be updatable by users
 func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey:
+	case ScheduledAnalysis, TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours:
 		return true
 	default:
 		return false
@@ -127,6 +131,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &TrustedProxiesParameters{}
 	case FedEULACustomTextKey:
 		v = &FedEULACustomTextParameter{}
+	case SessionTTLHours:
+		v = &SessionTTLHoursParameter{}
 	default:
 		return utils.Errors{errors.New("invalid key")}
 	}
@@ -400,4 +406,25 @@ func GetFedRAMPCustomEULA(ctx context.Context, service ParameterService) string 
 	}
 
 	return result.CustomText
+}
+
+type SessionTTLHoursParameter struct {
+	Hours int `json:"hours,omitempty"`
+}
+
+func GetSessionTTLHours(ctx context.Context, service ParameterService) time.Duration {
+	var result = SessionTTLHoursParameter{
+		Hours: DefaultSessionTTLHours, // Default to a logged in auth session time to live of 8 hours
+	}
+
+	if sessionTTLHours, err := service.GetConfigurationParameter(ctx, SessionTTLHours); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch auth session ttl hours; returning default values")
+	} else if err = sessionTTLHours.Map(&result); err != nil {
+		slog.WarnContext(ctx, "Invalid auth session ttl hours supplied; returning default values")
+	} else if result.Hours <= 0 {
+		slog.WarnContext(ctx, "auth session ttl hours ≤ 0; returning default values")
+		result.Hours = DefaultSessionTTLHours
+	}
+
+	return time.Hour * time.Duration(result.Hours)
 }

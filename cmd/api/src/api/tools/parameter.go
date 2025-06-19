@@ -42,12 +42,12 @@ func (s ToolContainer) SetApplicationParameter(response http.ResponseWriter, req
 	if err := api.ReadJSONRequestPayloadLimited(&appConfig, request); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if parameter, err := appcfg.ConvertAppConfigUpdateRequestToParameter(appConfig); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration update request not converted to a parameter: %v", parameter), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration update request not converted to a parameter: %v", appConfig), request), response)
 	} else if errs := parameter.Validate(); errs != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, errs.Error(), request), response)
 	} else if err = s.db.SetConfigurationParameter(request.Context(), parameter); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		api.WriteBasicResponse(request.Context(), appConfig, http.StatusOK, response)
+		api.WriteBasicResponse(request.Context(), parameter, http.StatusOK, response)
 	}
 }
