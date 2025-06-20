@@ -30,7 +30,7 @@ const CHILD_TEST_ROUTE_CONTENT = 'testing_splat';
 const MOCK_GLOBAL_PARAMS = GloballySupportedSearchParams.map((p, i) => `${p}=${i}`).join('&');
 const LINK_TEXT = 'CLICK ME';
 
-export const TestRoutes = ({ children }: React.PropsWithChildren) => {
+const TestRoutes = ({ children }: React.PropsWithChildren) => {
     return (
         <Routes>
             <Route path={TEST_ROUTE_HOME} element={HOME_CONTENT} />
