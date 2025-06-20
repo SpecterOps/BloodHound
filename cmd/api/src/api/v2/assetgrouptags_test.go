@@ -30,9 +30,6 @@ import (
 
 	uuid2 "github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
@@ -47,6 +44,9 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/src/queries/mocks"
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -962,7 +962,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 					})
 				},
 				Setup: func() {
-					mockDB.EXPECT().UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any()).
+					mockDB.EXPECT().UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{}, errors.New("failure")).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{ID: 1}, nil).Times(1)
@@ -996,7 +996,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 						GetConfigurationParameter(gomock.Any(), gomock.Any()).
 						Return(appcfg.Parameter{Key: appcfg.ScheduledAnalysis, Value: value}, nil).Times(1)
 					mockDB.EXPECT().
-						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any()).
+						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)
 					mockDB.EXPECT().GetAssetGroupTag(gomock.Any(), gomock.Any()).
 						Return(model.AssetGroupTag{ID: 1}, nil).Times(1)
@@ -1033,7 +1033,7 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 						GetConfigurationParameter(gomock.Any(), gomock.Any()).
 						Return(appcfg.Parameter{Key: appcfg.ScheduledAnalysis, Value: value}, nil).Times(1)
 					mockDB.EXPECT().
-						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Cond(func(s model.AssetGroupTagSelector) bool {
+						UpdateAssetGroupTagSelector(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Cond(func(s model.AssetGroupTagSelector) bool {
 							return s.Description == ""
 						})).
 						Return(model.AssetGroupTagSelector{Name: "TestSelector"}, nil).Times(1)

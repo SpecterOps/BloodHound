@@ -25,7 +25,6 @@ import (
 
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
@@ -34,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/specterops/bloodhound/src/services/job"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (

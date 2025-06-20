@@ -27,11 +27,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -41,6 +36,11 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs"
+	"github.com/specterops/dawgs/drivers/pg"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util/size"
 )
 
 const (
