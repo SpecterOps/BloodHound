@@ -178,17 +178,17 @@ func (mr *MockDatabaseMockRecorder) CreateAssetGroupCollection(ctx, collection, 
 }
 
 // CreateAssetGroupHistoryRecord mocks base method.
-func (m *MockDatabase) CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
+func (m *MockDatabase) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", ctx, actor, target, action, assetGroupTagId, environmentId, note)
+	ret := m.ctrl.Call(m, "CreateAssetGroupHistoryRecord", ctx, actorId, email, target, action, assetGroupTagId, environmentId, note)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateAssetGroupHistoryRecord indicates an expected call of CreateAssetGroupHistoryRecord.
-func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actor, target, action, assetGroupTagId, environmentId, note any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssetGroupHistoryRecord(ctx, actorId, email, target, action, assetGroupTagId, environmentId, note any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), ctx, actor, target, action, assetGroupTagId, environmentId, note)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssetGroupHistoryRecord", reflect.TypeOf((*MockDatabase)(nil).CreateAssetGroupHistoryRecord), ctx, actorId, email, target, action, assetGroupTagId, environmentId, note)
 }
 
 // CreateAssetGroupTag mocks base method.
@@ -414,6 +414,20 @@ func (m *MockDatabase) CreateSSOProvider(ctx context.Context, name string, authP
 func (mr *MockDatabaseMockRecorder) CreateSSOProvider(ctx, name, authProvider, config any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProvider), ctx, name, authProvider, config)
+}
+
+// CreateSavedQueries mocks base method.
+func (m *MockDatabase) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSavedQueries", ctx, savedQueries)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSavedQueries indicates an expected call of CreateSavedQueries.
+func (mr *MockDatabaseMockRecorder) CreateSavedQueries(ctx, savedQueries any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueries", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueries), ctx, savedQueries)
 }
 
 // CreateSavedQuery mocks base method.
@@ -982,6 +996,21 @@ func (mr *MockDatabaseMockRecorder) GetAllSSOProviders(ctx, order, sqlFilter any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSSOProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSSOProviders), ctx, order, sqlFilter)
 }
 
+// GetAllSavedQueriesByUser mocks base method.
+func (m *MockDatabase) GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllSavedQueriesByUser", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllSavedQueriesByUser indicates an expected call of GetAllSavedQueriesByUser.
+func (mr *MockDatabaseMockRecorder) GetAllSavedQueriesByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSavedQueriesByUser", reflect.TypeOf((*MockDatabase)(nil).GetAllSavedQueriesByUser), ctx, userID)
+}
+
 // GetAllUsers mocks base method.
 func (m *MockDatabase) GetAllUsers(ctx context.Context, order string, filter model.SQLFilter) (model.Users, error) {
 	m.ctrl.T.Helper()
@@ -1237,6 +1266,21 @@ func (m *MockDatabase) GetConfigurationParameter(ctx context.Context, parameterK
 func (mr *MockDatabaseMockRecorder) GetConfigurationParameter(ctx, parameterKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigurationParameter", reflect.TypeOf((*MockDatabase)(nil).GetConfigurationParameter), ctx, parameterKey)
+}
+
+// GetCustomAssetGroupTagSelectorsToMigrate mocks base method.
+func (m *MockDatabase) GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCustomAssetGroupTagSelectorsToMigrate", ctx)
+	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCustomAssetGroupTagSelectorsToMigrate indicates an expected call of GetCustomAssetGroupTagSelectorsToMigrate.
+func (mr *MockDatabaseMockRecorder) GetCustomAssetGroupTagSelectorsToMigrate(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCustomAssetGroupTagSelectorsToMigrate", reflect.TypeOf((*MockDatabase)(nil).GetCustomAssetGroupTagSelectorsToMigrate), ctx)
 }
 
 // GetCustomNodeKind mocks base method.
@@ -1781,6 +1825,21 @@ func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUser(ctx, queryID, userI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUser", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUser), ctx, queryID, userID)
 }
 
+// IsSavedQuerySharedToUserOrPublic mocks base method.
+func (m *MockDatabase) IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSavedQuerySharedToUserOrPublic", ctx, queryID, userID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsSavedQuerySharedToUserOrPublic indicates an expected call of IsSavedQuerySharedToUserOrPublic.
+func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUserOrPublic(ctx, queryID, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUserOrPublic", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUserOrPublic), ctx, queryID, userID)
+}
+
 // ListAuditLogs mocks base method.
 func (m *MockDatabase) ListAuditLogs(ctx context.Context, before, after time.Time, offset, limit int, order string, filter model.SQLFilter) (model.AuditLogs, int, error) {
 	m.ctrl.T.Helper()
@@ -2039,18 +2098,18 @@ func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTag(ctx, user, tag any) *gom
 }
 
 // UpdateAssetGroupTagSelector mocks base method.
-func (m *MockDatabase) UpdateAssetGroupTagSelector(ctx context.Context, user model.User, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
+func (m *MockDatabase) UpdateAssetGroupTagSelector(ctx context.Context, actorId, email string, selector model.AssetGroupTagSelector) (model.AssetGroupTagSelector, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", ctx, user, selector)
+	ret := m.ctrl.Call(m, "UpdateAssetGroupTagSelector", ctx, actorId, email, selector)
 	ret0, _ := ret[0].(model.AssetGroupTagSelector)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateAssetGroupTagSelector indicates an expected call of UpdateAssetGroupTagSelector.
-func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(ctx, user, selector any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) UpdateAssetGroupTagSelector(ctx, actorId, email, selector any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), ctx, user, selector)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAssetGroupTagSelector", reflect.TypeOf((*MockDatabase)(nil).UpdateAssetGroupTagSelector), ctx, actorId, email, selector)
 }
 
 // UpdateAuthSecret mocks base method.
