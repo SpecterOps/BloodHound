@@ -44,7 +44,6 @@ export const useExploreTableAutoDisplay = ({ enabled }: UseExploreTableAutoDispl
     const isCypherSearch = searchType === 'cypher';
     const autoDisplayTableQueryCandidate = !!(
         isCypherSearch && // auto display only on cypher search
-        !hasTriggered && // check that it hasnt already triggered for this query
         graphData && // type check the response for type safety
         isGraphResponse(graphData)
     );
