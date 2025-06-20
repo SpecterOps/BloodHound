@@ -14,18 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
-
-// needed for table body level scope DnD setup
-
-// needed for table body level scope DnD setup
-
-// needed for row & cell level scope DnD setup
-// needed for table body level scope DnD setup
 import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
+import { useMemo, useState } from 'react';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { TableControls } from './TableControls';

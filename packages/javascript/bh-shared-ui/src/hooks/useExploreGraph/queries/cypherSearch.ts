@@ -60,7 +60,6 @@ const getCypherErrorMessage = (error: any): ExploreGraphQueryError => {
 };
 
 export type CypherExploreGraphQuery = ExploreGraphQuery & {
-    // TODO: make generic?
     getQueryConfig: (
         paramOptions: Partial<ExploreQueryParams>,
         includeProperties?: boolean
