@@ -81,52 +81,58 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
 
     return (
         <>
-            <List dense disablePadding>
-                {Object.entries(groupedQueries).map(([category, queryData]) => (
-                    <Box key={category}>
-                        <ListSubheader className={styles.subheader}>{category}</ListSubheader>
-                        {queryData.map((queryItem, i) => {
-                            const { subheader, queries } = queryItem;
-                            return (
-                                <li key={i}>
-                                    {queries?.map((lineItem, idx) => {
-                                        const { id, description, cypher, canEdit = false } = lineItem;
+            {listSections && (
+                <List dense disablePadding>
+                    {Object.entries(groupedQueries).map(([category, queryData]) => (
+                        <Box key={category}>
+                            <ListSubheader className={styles.subheader}>{category}</ListSubheader>
+                            {queryData.map((queryItem, i) => {
+                                const { subheader, queries } = queryItem;
+                                return (
+                                    <li key={i}>
+                                        {queries?.map((lineItem, idx) => {
+                                            const { id, description, cypher, canEdit = false } = lineItem;
 
-                                        return (
-                                            <ListItem
-                                                component='div'
-                                                disablePadding
-                                                key={`${id}-${idx}`}
-                                                sx={{ borderRadius: '8px', py: '4px' }}
-                                                secondaryAction={
-                                                    canEdit && (
-                                                        <Button
-                                                            aria-label='Delete Query'
-                                                            size='small'
-                                                            variant='secondary'
-                                                            onClick={() => {
-                                                                setQueryId(id);
-                                                                handleOpen();
-                                                            }}>
-                                                            <FontAwesomeIcon icon={faTrash} />
-                                                        </Button>
-                                                    )
-                                                }>
-                                                <ListItemButton onClick={() => clickHandler(cypher)}>
-                                                    <ListItemText primary={description} />
-                                                    {subheader && (
-                                                        <Chip label={subheader} size='small' className='ml-3'></Chip>
-                                                    )}
-                                                </ListItemButton>
-                                            </ListItem>
-                                        );
-                                    })}
-                                </li>
-                            );
-                        })}
-                    </Box>
-                ))}
-            </List>
+                                            return (
+                                                <ListItem
+                                                    component='div'
+                                                    disablePadding
+                                                    key={`${id}-${idx}`}
+                                                    sx={{ borderRadius: '8px', py: '4px' }}
+                                                    secondaryAction={
+                                                        canEdit && (
+                                                            <Button
+                                                                aria-label='Delete Query'
+                                                                size='small'
+                                                                variant='secondary'
+                                                                onClick={() => {
+                                                                    setQueryId(id);
+                                                                    handleOpen();
+                                                                }}>
+                                                                <FontAwesomeIcon icon={faTrash} />
+                                                            </Button>
+                                                        )
+                                                    }>
+                                                    <ListItemButton onClick={() => clickHandler(cypher)}>
+                                                        <ListItemText primary={description} />
+                                                        {subheader && (
+                                                            <Chip
+                                                                label={subheader}
+                                                                size='small'
+                                                                className='ml-3'></Chip>
+                                                        )}
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            );
+                                        })}
+                                    </li>
+                                );
+                            })}
+                        </Box>
+                    ))}
+                </List>
+            )}
+            {!listSections.length && <Box>No Results</Box>}
             {/* <List dense disablePadding>
                 {listSections.map((section) => {
                     const { category, subheader, lineItems } = section;

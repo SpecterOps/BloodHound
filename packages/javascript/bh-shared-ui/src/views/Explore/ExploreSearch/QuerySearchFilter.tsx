@@ -7,15 +7,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
 interface QuerySearchProps {
-    searchHandler: (searchTerm: string) => void;
-    filterHandler: (filterValue: string) => void;
-    categoryFilterHandler: (filterValue: string[]) => void;
-    clearCategoryFilterHandler: () => void;
+    queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
     categories: string[];
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { searchHandler, filterHandler, categoryFilterHandler, clearCategoryFilterHandler, categories } = props;
+    const { queryFilterHandler, categories } = props;
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -26,19 +23,21 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         doFuzzySearch(val);
     };
 
-    const doFuzzySearch = (searchTerm: string) => {
-        searchHandler(searchTerm);
-    };
-
     const [age, setAge] = useState('');
 
     const handleChange = (event: SelectChangeEvent) => {
         setAge(event.target.value);
     };
 
-    const handleFilter = (val: string) => {
+    const doFuzzySearch = (term: string) => {
+        // searchHandler(searchTerm);
+        setSearchTerm(term);
+        queryFilterHandler(term, platform, categoryFilter);
+    };
+    const handlePlatformFilter = (val: string) => {
         setPlatform(val);
-        filterHandler(val);
+        // filterHandler(val);
+        queryFilterHandler(searchTerm, val, categoryFilter);
     };
 
     const handleCategoryChange = (event: SelectChangeEvent<typeof categoryFilter>) => {
@@ -47,9 +46,10 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         } = event;
 
         // clear filters
+        //TO DO - UPDATE THIS
         if (value.includes('')) {
             setCategoryFilter([]);
-            clearCategoryFilterHandler();
+            queryFilterHandler(searchTerm, platform, []);
             setCategoriesOpen(false);
             return;
         }
@@ -57,7 +57,8 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         // On autofill we get a stringified value.
         const newVal = typeof value === 'string' ? value.split(',') : value;
         setCategoryFilter(newVal);
-        categoryFilterHandler(newVal);
+        // categoryFilterHandler(newVal);
+        queryFilterHandler(searchTerm, platform, newVal);
     };
 
     return (
@@ -95,7 +96,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             id='demo-simple-select-helper'
                             value={platform}
                             label='Platforms'
-                            onChange={(e) => handleFilter(e.target.value)}>
+                            onChange={(e) => handlePlatformFilter(e.target.value)}>
                             <MenuItem value=''>All</MenuItem>
                             <MenuItem value='Active Directory'>Active Directory</MenuItem>
                             <MenuItem value='Azure'>Azure</MenuItem>

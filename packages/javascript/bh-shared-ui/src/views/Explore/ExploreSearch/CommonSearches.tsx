@@ -64,7 +64,6 @@ const InnerCommonSearches = ({
     const { addNotification } = useNotifications();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
-    const [filteredList, setFilteredList] = useState<any[]>([]);
 
     const savedLineItems: LineItem[] =
         userQueries.data?.map((query) => ({
@@ -89,6 +88,8 @@ const InnerCommonSearches = ({
     const uniqueCategoriesSet = new Set(allCategories);
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
+    const [filteredList, setFilteredList] = useState<any[]>(queryList);
+
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
         onSetCypherQuery(query);
@@ -102,34 +103,6 @@ const InnerCommonSearches = ({
             },
         });
 
-    const handleFuzzySearch = (searchTerm: string) => {
-        //clear filtered list
-        if (searchTerm.length === 0) {
-            setFilteredList([]);
-            return;
-        }
-        if (searchTerm.length > 2) {
-            const filteredData = queryList
-                .map((obj) => ({
-                    ...obj,
-                    queries: obj.queries.filter((item: any) =>
-                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
-                    ),
-                }))
-                .filter((x) => x.queries.length);
-
-            setFilteredList(filteredData);
-        }
-    };
-    const handlePlatformFilter = (filterValue: string) => {
-        //resetingFilteredList for now
-        setFilteredList([]);
-
-        const filteredData = queryList.filter((obj) => obj.category.toLowerCase() === filterValue.toLowerCase());
-        console.log(filteredData);
-        setFilteredList(filteredData);
-    };
-
     if (userQueries.isLoading) {
         return (
             <Box mt={2}>
@@ -138,25 +111,29 @@ const InnerCommonSearches = ({
         );
     }
 
-    const handleCategoryFilter = (filterValue: string[]) => {
-        // console.log(filterValue);
-        // if (filterValue.includes('') || !filterValue.length) {
-        //     console.log('*****');
-        //     setFilteredList([]);
-        //     return;
-        // }
-        //resetingFilteredList for now
-        // setFilteredList([]);
-        const filteredData = queryList
-            .filter((item: any) => filterValue.includes(item.subheader))
-            .filter((x) => x.queries.length);
+    const handleFilter = (searchTerm: string, platform: string, categories: string[]) => {
+        //local array variable
+        let filteredData: any[] = queryList;
 
+        if (searchTerm.length > 2) {
+            filteredData = filteredData
+                .map((obj) => ({
+                    ...obj,
+                    queries: obj.queries.filter((item: any) =>
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+                    ),
+                }))
+                .filter((x) => x.queries.length);
+        }
+        if (platform) {
+            filteredData = filteredData.filter((obj) => obj.category.toLowerCase() === platform.toLowerCase());
+        }
+        if (categories.length) {
+            filteredData = filteredData
+                .filter((item: any) => categories.includes(item.subheader))
+                .filter((x) => x.queries.length);
+        }
         setFilteredList(filteredData);
-        // console.log(filteredData);
-    };
-
-    const handleClearCategories = () => {
-        setFilteredList([]);
     };
 
     return (
@@ -173,14 +150,10 @@ const InnerCommonSearches = ({
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
-                <QuerySearchFilter
-                    searchHandler={handleFuzzySearch}
-                    filterHandler={handlePlatformFilter}
-                    categoryFilterHandler={handleCategoryFilter}
-                    clearCategoryFilterHandler={handleClearCategories}
-                    categories={categories}></QuerySearchFilter>
+                <QuerySearchFilter queryFilterHandler={handleFilter} categories={categories}></QuerySearchFilter>
                 <PrebuiltSearchList
-                    listSections={filteredList.length ? filteredList : queryList}
+                    // listSections={filteredList.length ? filteredList : queryList}
+                    listSections={filteredList}
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
                 />
