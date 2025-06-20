@@ -19,6 +19,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+    const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const handleInput = (val: string) => {
         setSearchTerm(val);
@@ -49,6 +50,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         if (value.includes('')) {
             setCategoryFilter([]);
             clearCategoryFilterHandler();
+            setCategoriesOpen(false);
             return;
         }
 
@@ -108,6 +110,9 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                             id='category-filter'
                             value={categoryFilter}
                             label='categories'
+                            open={categoriesOpen}
+                            onOpen={() => setCategoriesOpen(true)}
+                            onClose={() => setCategoriesOpen(false)}
                             multiple
                             onChange={handleCategoryChange}>
                             <MenuItem value=''>All Categories</MenuItem>
