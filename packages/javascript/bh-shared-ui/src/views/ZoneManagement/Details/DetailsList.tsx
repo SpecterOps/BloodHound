@@ -14,7 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    PaginationContent,
+    PaginationNav,
+    PaginationNext,
+    PaginationPrevious,
+} from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -60,6 +66,39 @@ type DetailsListProps = {
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
+    const [page, setPage] = useState(0);
+
+    const pageSize = 25;
+
+    const listItems = listQuery.data
+        ?.sort((a, b) => {
+            if (isTag(a) && isTag(b) && title === 'Tiers') {
+                // A tag can be a tier and also have position null it seems
+                return (a.position || 0) - (b.position || 0);
+            } else {
+                switch (sortOrder) {
+                    case 'asc':
+                        return a.name.localeCompare(b.name);
+                    case 'desc':
+                        return b.name.localeCompare(a.name);
+                    default:
+                        return b.name.localeCompare(a.name);
+                }
+            }
+        })
+        .filter((listItem) => {
+            // Filters out Tier Tags when the active tab is 'Labels'
+            return !(isTag(listItem) && listItem.type === AssetGroupTagTypeTier && title !== 'Tiers');
+        })
+        .filter((listItem) => {
+            // Filters out Label and Owned Tags when the active tab is 'Tiers'
+            return !(
+                isTag(listItem) &&
+                (listItem.type === AssetGroupTagTypeLabel || listItem.type === AssetGroupTagTypeOwned) &&
+                title === 'Tiers'
+            );
+        });
+
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
             {title !== 'Tiers' ? (
@@ -100,76 +139,65 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
-                        listQuery.data
-                            ?.sort((a, b) => {
-                                if (isTag(a) && isTag(b) && title === 'Tiers') {
-                                    // A tag can be a tier and also have position null it seems
-                                    return (a.position || 0) - (b.position || 0);
-                                } else {
-                                    switch (sortOrder) {
-                                        case 'asc':
-                                            return a.name.localeCompare(b.name);
-                                        case 'desc':
-                                            return b.name.localeCompare(a.name);
-                                        default:
-                                            return b.name.localeCompare(a.name);
-                                    }
-                                }
-                            })
-                            .map((listItem) => {
-                                // Filters out Tier Tags when the active tab is 'Labels'
-                                if (isTag(listItem) && listItem.type === AssetGroupTagTypeTier && title !== 'Tiers') {
-                                    return null;
-                                }
+                        listItems?.slice(pageSize * page, pageSize * page + pageSize).map((listItem) => {
+                            const isDisabled = isSelector(listItem) && listItem.disabled_at;
 
-                                // Filters out Label and Owned Tags when the active tab is 'Tiers'
-                                if (
-                                    isTag(listItem) &&
-                                    (listItem.type === AssetGroupTagTypeLabel ||
-                                        listItem.type === AssetGroupTagTypeOwned) &&
-                                    title === 'Tiers'
-                                ) {
-                                    return null;
-                                }
-
-                                const isDisabled = isSelector(listItem) && listItem.disabled_at;
-
-                                return (
-                                    <li
-                                        key={listItem.id}
-                                        className={cn(
-                                            'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
-                                            {
-                                                'bg-neutral-light-4 dark:bg-neutral-dark-4':
-                                                    selected === listItem.id.toString(),
-                                            }
-                                        )}>
-                                        <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
-                                        <Button
-                                            variant={'text'}
-                                            className='flex justify-between w-full overflow-hidden'
-                                            onClick={() => {
-                                                onSelect(listItem.id);
-                                            }}>
-                                            <div className='flex items-center'>
-                                                <div
-                                                    className={cn(
-                                                        'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
-                                                        {
-                                                            'text-[#8E8C95] dark:text-[#919191]': isDisabled,
-                                                        }
-                                                    )}
-                                                    title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
-                                                    {listItem.name}
-                                                </div>
+                            return (
+                                <li
+                                    key={listItem.id}
+                                    className={cn(
+                                        'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',
+                                        {
+                                            'bg-neutral-light-4 dark:bg-neutral-dark-4':
+                                                selected === listItem.id.toString(),
+                                        }
+                                    )}>
+                                    <SelectedHighlight selected={selected} itemId={listItem.id} title={title} />
+                                    <Button
+                                        variant={'text'}
+                                        className='flex justify-between w-full overflow-hidden'
+                                        onClick={() => {
+                                            onSelect(listItem.id);
+                                        }}>
+                                        <div className='flex items-center'>
+                                            <div
+                                                className={cn(
+                                                    'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',
+                                                    {
+                                                        'text-[#8E8C95] dark:text-[#919191]': isDisabled,
+                                                    }
+                                                )}
+                                                title={isDisabled ? `Disabled: ${listItem.name}` : listItem.name}>
+                                                {listItem.name}
                                             </div>
-                                            {getCountElement(listItem)}
-                                        </Button>
-                                    </li>
-                                );
-                            })
+                                        </div>
+                                        {getCountElement(listItem)}
+                                    </Button>
+                                </li>
+                            );
+                        })
                     ) : null}
                 </ul>
+            </div>
+            <div className='border-red border-2'>
+                <PaginationNav className='text-sm tabular-nums'>
+                    <PaginationContent>
+                        <PaginationPrevious
+                            onClick={() => {
+                                setPage(page - 1);
+                            }}
+                            disabled={page <= 0}
+                            className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        />
+                        <PaginationNext
+                            onClick={() => {
+                                setPage(page + 1);
+                            }}
+                            disabled={pageSize * (page + 1) > (listItems?.length || 0)}
+                            className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        />
+                    </PaginationContent>
+                </PaginationNav>
             </div>
         </div>
     );
