@@ -160,13 +160,16 @@ const InnerCommonSearches = ({
                 <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
             </div>
 
-            <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
+            <div className={cn({ hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}
                     categoryFilter={categoryFilter}></QuerySearchFilter>
+            </div>
+
+            <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
                 <PrebuiltSearchList
                     listSections={filteredList}
                     clickHandler={handleClick}

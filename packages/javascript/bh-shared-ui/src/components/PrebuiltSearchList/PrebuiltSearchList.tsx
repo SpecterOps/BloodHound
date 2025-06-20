@@ -141,8 +141,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
             )}
             {!listSections.length && (
                 <Box className='min-h-40 flex flex-col items-center justify-center'>
-                    <Typography variant='h6'>No Results</Typography>
-                    <Button variant='text' onClick={clearFiltersHandler}>
+                    <Typography variant='h6' className='mb-2'>
+                        No Results
+                    </Typography>
+                    <Button variant='primary' size='small' onClick={clearFiltersHandler}>
                         Clear Filters
                     </Button>
                 </Box>
