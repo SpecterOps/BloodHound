@@ -48,17 +48,16 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
 // Hook for maintaining the top level graph query powering the explore page
 // TODO: Proposal to make this an explicit optional param in the hook? To overrwrite for table view?
 export const useExploreGraph = (paramOptions?: Partial<ExploreQueryParams>, includeProperties?: boolean) => {
-    let params = useExploreParams() as Partial<ExploreQueryParams>;
+    const urlParams = (useExploreParams() as Partial<ExploreQueryParams>) || {};
 
-    if (paramOptions) {
-        params = paramOptions as Partial<ExploreQueryParams>;
-    }
+    const params = paramOptions ? { ...urlParams, ...(paramOptions as Partial<ExploreQueryParams>) } : urlParams;
+
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
     const queryConfig =
-        paramOptions?.searchType === 'cypher'
+        params?.searchType === 'cypher'
             ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
             : query.getQueryConfig(params);
 
