@@ -32,6 +32,10 @@ const General: FC<EdgeInfoProps> = ({ sourceName, sourceType, targetName, target
                 specify <i>explicit certificate mappings</i> for a principal. An explicit certificate mapping is a
                 reference to a certificate, which can be used to authenticate as the principal.
             </Typography>
+
+            <Typography variant='body2'>
+                The servicePrincipalName (SPN) attribute is also included in the property set.
+            </Typography>
         </>
     );
 };
