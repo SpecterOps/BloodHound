@@ -9892,7 +9892,7 @@ func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
 	s.OU1 = graphTestContext.NewActiveDirectoryOU("OU1", domain1SID, false)
 	s.OU2 = graphTestContext.NewActiveDirectoryOU("OU2", domain1SID, false)
 	s.OU3 = graphTestContext.NewActiveDirectoryOU("OU3", domain1SID, false)
-	s.OU4 = graphTestContext.NewActiveDirectoryOU("OU4", domain1SID, false)
+	s.OU4 = graphTestContext.NewActiveDirectoryOU("OU4", domain2SID, false)
 	s.OU5 = graphTestContext.NewActiveDirectoryOU("OU5", domain2SID, false)
 	s.OU6 = graphTestContext.NewActiveDirectoryOU("OU6", domain2SID, false)
 
