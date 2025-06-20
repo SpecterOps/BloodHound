@@ -46,10 +46,8 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = (paramOptions?: Partial<ExploreQueryParams>, includeProperties?: boolean) => {
-    const urlParams = (useExploreParams() as Partial<ExploreQueryParams>) || {};
-
-    const params = paramOptions ? { ...urlParams, ...(paramOptions as Partial<ExploreQueryParams>) } : urlParams;
+export const useExploreGraph = (includeProperties?: boolean) => {
+    const params = useExploreParams();
 
     const { addNotification } = useNotifications();
 

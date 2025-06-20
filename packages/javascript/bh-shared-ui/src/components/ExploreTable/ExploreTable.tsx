@@ -105,9 +105,9 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
                     }}
                 />
                 <DataTable
-                    className='h-full'
+                    className='h-full *:h-[calc(100%-72px)]'
                     // TableProps={{
-                    //     containerClassName: 'h-full bg-cyan',
+                    //     containerClassName: 'h-full',
                     // }}
                     TableHeaderProps={{
                         className: 'sticky top-0 z-10',
