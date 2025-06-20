@@ -337,10 +337,10 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 
 		// Custom Node Management
-		routerInst.GET("/api/v2/customnode", resources.GetCustomNodeKinds).RequireAuth(),
-		routerInst.GET(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
-		routerInst.POST("/api/v2/customnode", resources.CreateCustomNodeKind).RequireAuth(),
-		routerInst.PUT(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
-		routerInst.DELETE(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
+		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequireAuth(),
+		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
+		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequireAuth(),
+		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
 	)
 }
