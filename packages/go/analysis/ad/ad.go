@@ -28,13 +28,13 @@ import (
 	"github.com/specterops/bloodhound/analysis/ad/wellknown"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util"
 )
 
 var (
@@ -577,6 +577,11 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			pathSet, err = GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx, db, edge)
+		case ad.GPOAppliesTo:
+			pathSet, err = GetGPOAppliesToComposition(ctx, db, edge)
+		case ad.CanApplyGPO:
+			pathSet, err = GetCanApplyGPOComposition(ctx, db, edge)
+
 		}
 		return err
 	}); err != nil {

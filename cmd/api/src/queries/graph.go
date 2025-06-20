@@ -32,17 +32,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/specterops/dawgs/cypher/models/walk"
+
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/cypher/analyzer"
-	"github.com/specterops/bloodhound/cypher/frontend"
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
@@ -52,6 +47,13 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/cypher/analyzer"
+	"github.com/specterops/dawgs/cypher/frontend"
+	"github.com/specterops/dawgs/cypher/models/cypher/format"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util"
 )
 
 type SearchType = string
@@ -138,7 +140,7 @@ type Graph interface {
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
 	GetNodesByKind(ctx context.Context, kinds ...graph.Kind) (graph.NodeSet, error)
-	GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error)
+	GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error)
 	CountFilteredNodes(ctx context.Context, filterCriteria graph.Criteria) (int64, error)
 	CountNodesByKind(ctx context.Context, kinds ...graph.Kind) (int64, error)
 	GetFilteredAndSortedNodesPaginated(sortItems query.SortItems, filterCriteria graph.Criteria, offset, limit int) ([]*graph.Node, error)
@@ -398,7 +400,17 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 		return graphQuery, err
 	}
 
-	graphQuery.HasMutation = parseCtx.HasMutation
+	// Query rewriter targets certain AST elements like relationship types and may rewrite them to add additional
+	// functionality after parsing
+	queryRewriter := NewRewriter()
+
+	if err = walk.Cypher(queryModel, queryRewriter); err != nil {
+		return graphQuery, err
+	} else if queryRewriter.HasMutation && queryRewriter.HasRelationshipTypeShortcut {
+		return graphQuery, fmt.Errorf("relationship type shortcuts are not supported in graph mutations")
+	}
+
+	graphQuery.HasMutation = queryRewriter.HasMutation
 
 	complexityMeasure, err := analyzer.QueryComplexity(queryModel)
 	if err != nil {
@@ -671,11 +683,18 @@ func (s *GraphQuery) FetchNodeByGraphId(ctx context.Context, id graph.ID) (*grap
 	}
 }
 
-func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kinds ...graph.Kind) (map[string]int, error) {
-	results := map[string]int{}
+func (s *GraphQuery) GetPrimaryNodeKindCounts(ctx context.Context, kind graph.Kind, additionalFilters ...graph.Criteria) (map[string]int, error) {
+	var (
+		results = map[string]int{}
+		filters = []graph.Criteria{query.KindIn(query.Node(), kind)}
+	)
+
+	if additionalFilters != nil {
+		filters = append(filters, additionalFilters...)
+	}
 
 	return results, s.Graph.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		return tx.Nodes().Filter(query.KindIn(query.Node(), kinds...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
+		return tx.Nodes().Filter(query.And(filters...)).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 			for next := range cursor.Chan() {
 				primaryKindStr := graphschema.PrimaryNodeKind(next.Kinds).String()
 				results[primaryKindStr] += 1

@@ -28,7 +28,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -45,6 +44,7 @@ import (
 	queriesMocks "github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

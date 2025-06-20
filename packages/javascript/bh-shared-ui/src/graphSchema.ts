@@ -150,6 +150,10 @@ export enum ActiveDirectoryRelationshipKind {
     OwnsRaw = 'OwnsRaw',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
+    ContainsIdentity = 'ContainsIdentity',
+    PropagatesACEsTo = 'PropagatesACEsTo',
+    GPOAppliesTo = 'GPOAppliesTo',
+    CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
@@ -316,6 +320,14 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
+        case ActiveDirectoryRelationshipKind.ContainsIdentity:
+            return 'ContainsIdentity';
+        case ActiveDirectoryRelationshipKind.PropagatesACEsTo:
+            return 'PropagatesACEsTo';
+        case ActiveDirectoryRelationshipKind.GPOAppliesTo:
+            return 'GPOAppliesTo';
+        case ActiveDirectoryRelationshipKind.CanApplyGPO:
+            return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
         case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
@@ -344,6 +356,8 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
+    'GPOAppliesTo',
+    'CanApplyGPO',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -770,7 +784,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AllExtendedRights,
         ActiveDirectoryRelationshipKind.AddMember,
         ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.GPLink,
         ActiveDirectoryRelationshipKind.AllowedToDelegate,
         ActiveDirectoryRelationshipKind.CoerceToTGT,
         ActiveDirectoryRelationshipKind.AllowedToAct,
@@ -810,12 +823,15 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.ContainsIdentity,
+        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
+        ActiveDirectoryRelationshipKind.GPOAppliesTo,
+        ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
-        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
@@ -1159,7 +1175,7 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
             return 'End User Assignment Requires Approval';
         case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'End User Assignment Requires CAP AuthenticationContext';
+            return 'End User Assignment Requires CAP Authentication Context';
         case AzureKindProperties.EndUserAssignmentUserApprovers:
             return 'End User Assignment User Approvers';
         case AzureKindProperties.EndUserAssignmentGroupApprovers:

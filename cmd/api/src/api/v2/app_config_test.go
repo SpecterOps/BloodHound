@@ -136,8 +136,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
 		resources = v2.Resources{DB: mockDB}
 
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.PasswordExpirationWindow,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.PasswordExpirationWindow),
 			Value: map[string]any{
 				"setting": "setting",
 			},
@@ -159,7 +159,7 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Invalid Parameters", func(t *testing.T) {
-		invalidRequest := v2.AppConfigUpdateRequest{
+		invalidRequest := appcfg.AppConfigUpdateRequest{
 			Key: "invalidKey",
 			Value: map[string]any{
 				"someKey": "someValue",
@@ -179,8 +179,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Error from DB", func(t *testing.T) {
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.ReconciliationKey,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.ReconciliationKey),
 			Value: map[string]any{
 				"enabled": true,
 			},
@@ -203,8 +203,8 @@ func Test_SetApplicationConfiguration(t *testing.T) {
 	})
 
 	t.Run("Success", func(t *testing.T) {
-		appConfigRequest = v2.AppConfigUpdateRequest{
-			Key: appcfg.ReconciliationKey,
+		appConfigRequest = appcfg.AppConfigUpdateRequest{
+			Key: string(appcfg.ReconciliationKey),
 			Value: map[string]any{
 				"enabled": true,
 			},

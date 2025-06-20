@@ -27,15 +27,15 @@ import (
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/lab"
+	"github.com/specterops/bloodhound/lab/arrows"
 
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -3629,11 +3629,11 @@ func TestADCSESC16(t *testing.T) {
 	)
 
 	// Create graph
-	fixture, err := lab.LoadGraphFixtureFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
 	require.NoError(t, err)
 
-	testEdges := []lab.Edge{}
-	otherEdges := []lab.Edge{}
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
 	for _, edge := range fixture.Relationships {
 		if edge.Type == ad.ADCSESC16.String() {
 			testEdges = append(testEdges, edge)
@@ -3643,7 +3643,7 @@ func TestADCSESC16(t *testing.T) {
 	}
 	fixture.Relationships = otherEdges
 
-	err = lab.WriteGraphFixture(graphDB, &fixture)
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
 	require.NoError(t, err)
 
 	// Run post-processing
