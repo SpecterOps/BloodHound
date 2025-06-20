@@ -27,12 +27,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/dawgs/graph"
 )
 
 // Daemon holds data relevant to the tools API daemon
@@ -92,6 +92,8 @@ func NewDaemon[DBType database.Database](ctx context.Context, connections bootst
 
 	router.Get("/analysis/schedule", toolContainer.GetScheduledAnalysisConfiguration)
 	router.Put("/analysis/schedule", toolContainer.SetScheduledAnalysisConfiguration)
+	router.Get("/parameters", toolContainer.GetApplicationConfigurations)
+	router.Put("/parameters", toolContainer.SetApplicationParameter)
 
 	for _, extension := range extensions {
 		extension(router)

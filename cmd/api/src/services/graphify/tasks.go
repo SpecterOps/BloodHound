@@ -28,10 +28,10 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util"
 )
 
 // UpdateJobFunc is passed to the graphify service to let it tell us about the tasks as they are processed
