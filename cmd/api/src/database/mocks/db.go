@@ -416,6 +416,20 @@ func (mr *MockDatabaseMockRecorder) CreateSSOProvider(ctx, name, authProvider, c
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSSOProvider", reflect.TypeOf((*MockDatabase)(nil).CreateSSOProvider), ctx, name, authProvider, config)
 }
 
+// CreateSavedQueries mocks base method.
+func (m *MockDatabase) CreateSavedQueries(ctx context.Context, savedQueries model.SavedQueries) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSavedQueries", ctx, savedQueries)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSavedQueries indicates an expected call of CreateSavedQueries.
+func (mr *MockDatabaseMockRecorder) CreateSavedQueries(ctx, savedQueries any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQueries", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQueries), ctx, savedQueries)
+}
+
 // CreateSavedQuery mocks base method.
 func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
@@ -980,6 +994,21 @@ func (m *MockDatabase) GetAllSSOProviders(ctx context.Context, order string, sql
 func (mr *MockDatabaseMockRecorder) GetAllSSOProviders(ctx, order, sqlFilter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSSOProviders", reflect.TypeOf((*MockDatabase)(nil).GetAllSSOProviders), ctx, order, sqlFilter)
+}
+
+// GetAllSavedQueriesByUser mocks base method.
+func (m *MockDatabase) GetAllSavedQueriesByUser(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllSavedQueriesByUser", ctx, userID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllSavedQueriesByUser indicates an expected call of GetAllSavedQueriesByUser.
+func (mr *MockDatabaseMockRecorder) GetAllSavedQueriesByUser(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSavedQueriesByUser", reflect.TypeOf((*MockDatabase)(nil).GetAllSavedQueriesByUser), ctx, userID)
 }
 
 // GetAllUsers mocks base method.
@@ -1794,6 +1823,21 @@ func (m *MockDatabase) IsSavedQuerySharedToUser(ctx context.Context, queryID int
 func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUser(ctx, queryID, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUser", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUser), ctx, queryID, userID)
+}
+
+// IsSavedQuerySharedToUserOrPublic mocks base method.
+func (m *MockDatabase) IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSavedQuerySharedToUserOrPublic", ctx, queryID, userID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsSavedQuerySharedToUserOrPublic indicates an expected call of IsSavedQuerySharedToUserOrPublic.
+func (mr *MockDatabaseMockRecorder) IsSavedQuerySharedToUserOrPublic(ctx, queryID, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSavedQuerySharedToUserOrPublic", reflect.TypeOf((*MockDatabase)(nil).IsSavedQuerySharedToUserOrPublic), ctx, queryID, userID)
 }
 
 // ListAuditLogs mocks base method.
