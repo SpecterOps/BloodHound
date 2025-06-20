@@ -9,17 +9,16 @@ import { useState } from 'react';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
     categories: string[];
+    searchTerm: string;
+    platform: string;
+    categoryFilter: string[];
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { queryFilterHandler, categories } = props;
-    const [searchTerm, setSearchTerm] = useState('');
-    const [platform, setPlatform] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+    const { queryFilterHandler, categories, searchTerm, platform, categoryFilter } = props;
     const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const handleInput = (val: string) => {
-        setSearchTerm(val);
         doFuzzySearch(val);
     };
 
@@ -30,13 +29,9 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
     };
 
     const doFuzzySearch = (term: string) => {
-        // searchHandler(searchTerm);
-        setSearchTerm(term);
         queryFilterHandler(term, platform, categoryFilter);
     };
     const handlePlatformFilter = (val: string) => {
-        setPlatform(val);
-        // filterHandler(val);
         queryFilterHandler(searchTerm, val, categoryFilter);
     };
 
@@ -45,10 +40,8 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
             target: { value },
         } = event;
 
-        // clear filters
-        //TO DO - UPDATE THIS
+        // clear filter
         if (value.includes('')) {
-            setCategoryFilter([]);
             queryFilterHandler(searchTerm, platform, []);
             setCategoriesOpen(false);
             return;
@@ -56,8 +49,6 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
 
         // On autofill we get a stringified value.
         const newVal = typeof value === 'string' ? value.split(',') : value;
-        setCategoryFilter(newVal);
-        // categoryFilterHandler(newVal);
         queryFilterHandler(searchTerm, platform, newVal);
     };
 

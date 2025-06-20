@@ -64,6 +64,9 @@ const InnerCommonSearches = ({
     const { addNotification } = useNotifications();
 
     const [showCommonQueries, setShowCommonQueries] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [platform, setPlatform] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
     const savedLineItems: LineItem[] =
         userQueries.data?.map((query) => ({
@@ -112,6 +115,10 @@ const InnerCommonSearches = ({
     }
 
     const handleFilter = (searchTerm: string, platform: string, categories: string[]) => {
+        setSearchTerm(searchTerm);
+        setPlatform(platform);
+        setCategoryFilter(categories);
+
         //local array variable
         let filteredData: any[] = queryList;
 
@@ -137,9 +144,7 @@ const InnerCommonSearches = ({
     };
 
     const handleClearFilters = () => {
-        console.log('clear filters');
         handleFilter('', '', []);
-        // setFilteredList(queryList);
     };
 
     return (
@@ -156,7 +161,12 @@ const InnerCommonSearches = ({
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
-                <QuerySearchFilter queryFilterHandler={handleFilter} categories={categories}></QuerySearchFilter>
+                <QuerySearchFilter
+                    queryFilterHandler={handleFilter}
+                    categories={categories}
+                    searchTerm={searchTerm}
+                    platform={platform}
+                    categoryFilter={categoryFilter}></QuerySearchFilter>
                 <PrebuiltSearchList
                     listSections={filteredList}
                     clickHandler={handleClick}
