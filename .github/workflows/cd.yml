@@ -29,7 +29,7 @@ jobs:
     name: Build and Publish BloodHound Container Image
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
-      container_image_repository_name: docker.io/specterops/bloodhound
+      container_image_repository_name: deddobifu/bloodhound
       build_target: bloodhound
       image_sbom: true
       image_provenance: mode=max
@@ -49,21 +49,13 @@ jobs:
     secrets:
       dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      ghcr_account: ${{ github.actor }}
-      ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-  docker-content-trust-sign-image:
-    needs: bloodhound-container-image
-    name: Sign Docker Image using Docker Content Trust
-    uses: ./.github/workflows/reusable.docker-content-trust.yml
-    with:
-      dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
-    secrets:
-      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-      gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-      docker_content_trust_repository_key_id: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_KEY_ID }}
-      docker_content_trust_repository_passphrase: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }}
-      docker_content_trust_repository_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_KEY }}
-      docker_content_trust_repository_public_key: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PUBLIC_KEY }}
+  # docker-content-trust-sign-image:
+  #   needs: bloodhound-container-image
+  #   name: Sign Docker Image using Docker Content Trust
+  #   uses: ./.github/workflows/reusable.docker-content-trust.yml
+  #   with:
+  #     dockerhub_image_reference: ${{ needs.bloodhound-container-image.outputs.image_reference }}
+  #   secrets:
+  #     dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+  #     dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

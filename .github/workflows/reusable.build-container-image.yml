@@ -167,12 +167,6 @@ on:
         required: true
       dockerhub_token:
         required: true
-      ghcr_account:
-        required: true
-      ghcr_token:
-        required: true
-      gh_access_token:
-        required: true
     outputs:
       image_reference:
         value: ${{ jobs.build-container-image.outputs.image_reference }}
@@ -221,8 +215,6 @@ jobs:
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
-          ghcr_account: ${{ secrets.ghcr_account }}
-          ghcr_token: ${{ secrets.ghcr_token }}
           build_args: |
             BUILDTIME=${{ fromJSON(steps.container-image-metadata.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ steps.container-image-metadata.outputs.version }}
