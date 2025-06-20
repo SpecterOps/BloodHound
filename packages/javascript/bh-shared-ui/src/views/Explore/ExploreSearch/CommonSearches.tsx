@@ -136,6 +136,12 @@ const InnerCommonSearches = ({
         setFilteredList(filteredData);
     };
 
+    const handleClearFilters = () => {
+        console.log('clear filters');
+        handleFilter('', '', []);
+        // setFilteredList(queryList);
+    };
+
     return (
         <div className='flex flex-col h-full'>
             <div className='flex items-center'>
@@ -152,10 +158,10 @@ const InnerCommonSearches = ({
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
                 <QuerySearchFilter queryFilterHandler={handleFilter} categories={categories}></QuerySearchFilter>
                 <PrebuiltSearchList
-                    // listSections={filteredList.length ? filteredList : queryList}
                     listSections={filteredList}
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
+                    clearFiltersHandler={handleClearFilters}
                 />
             </div>
         </div>

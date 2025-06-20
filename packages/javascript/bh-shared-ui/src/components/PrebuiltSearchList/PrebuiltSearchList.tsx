@@ -30,6 +30,7 @@ import {
     ListItemButton,
     ListItemText,
     ListSubheader,
+    Typography,
 } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
@@ -39,6 +40,7 @@ interface PrebuiltSearchListProps {
     listSections: ListSection[];
     clickHandler: (query: string) => void;
     deleteHandler?: (id: number) => void;
+    clearFiltersHandler: () => void;
 }
 
 type ListSection = {
@@ -63,7 +65,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHandler, deleteHandler }) => {
+const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
+    listSections,
+    clickHandler,
+    deleteHandler,
+    clearFiltersHandler,
+}) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
     const styles = useStyles();
@@ -132,7 +139,14 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({ listSections, clickHa
                     ))}
                 </List>
             )}
-            {!listSections.length && <Box>No Results</Box>}
+            {!listSections.length && (
+                <Box className='min-h-40 flex flex-col items-center justify-center'>
+                    <Typography variant='h6'>No Results</Typography>
+                    <Button variant='text' onClick={clearFiltersHandler}>
+                        Clear Filters
+                    </Button>
+                </Box>
+            )}
             {/* <List dense disablePadding>
                 {listSections.map((section) => {
                     const { category, subheader, lineItems } = section;
