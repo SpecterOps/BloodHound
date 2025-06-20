@@ -81,7 +81,7 @@ const GraphView: FC = () => {
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
-        enabled: Boolean(isExploreTableSelected && tableViewFeatureFlag?.enabled && !exploreLayout),
+        enabled: !exploreLayout,
     });
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
 
