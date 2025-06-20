@@ -26,7 +26,7 @@ const server = setupServer(
     rest.get('/api/v2/features', (_req, res, ctx) => {
         return res(ctx.json({}));
     }),
-    rest.get('/api/v2/customnode', (_, res, ctx) => {
+    rest.get('/api/v2/custom-node', (_, res, ctx) => {
         return res(ctx.json({}));
     }),
     rest.post('/api/v2/graphs/cypher', (_, res, ctx) => {

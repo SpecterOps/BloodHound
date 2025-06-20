@@ -24,8 +24,6 @@ use (
 	./packages/go/cache
 	./packages/go/conftool
 	./packages/go/crypto
-	./packages/go/cypher
-	./packages/go/dawgs
 	./packages/go/ein
 	./packages/go/graphschema
 	./packages/go/headers

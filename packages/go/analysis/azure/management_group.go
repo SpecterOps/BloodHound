@@ -19,8 +19,8 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 func NewManagementGroupEntityDetails(node *graph.Node) ManagementGroupDetails {

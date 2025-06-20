@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/serde"
 	samlmocks "github.com/specterops/bloodhound/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
@@ -1345,10 +1346,10 @@ func TestManagementResource_UpdateSAMLProviderRequest(t *testing.T) {
 					SAMLProvider: &model.SAMLProvider{},
 				}, nil)
 			}, expected: expected{
-				responseCode:   http.StatusBadRequest,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
-				responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
-			},
+			responseCode:   http.StatusBadRequest,
+			responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			responseBody:   `{"http_status":400,"timestamp":"0001-01-01T00:00:00Z","request_id":"","errors":[{"context":"","message":"request Content-Type isn't multipart/form-data"}]}`,
+		},
 		},
 		{
 			name: "Error: Empty multiform, ParseMultipartForm - Bad Request",
@@ -2747,6 +2748,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil)
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
 					Name: "POST Provider",
 					Slug: "post-provider",
@@ -2820,6 +2822,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
 					Name: "POST Provider",
 					Slug: "post-provider",
@@ -2907,6 +2910,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
 					Name: "POST Provider",
 					Slug: "post-provider",
@@ -2994,6 +2998,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				return request.WithContext(context.WithValue(context.Background(), ctx.ValueKey, bhContext))
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
+				mock.mockDatabase.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).Times(2)
 				mock.mockDatabase.EXPECT().GetSSOProviderBySlug(gomock.Any(), "slug").Return(model.SSOProvider{
 					Name: "POST Provider",
 					Slug: "post-provider",

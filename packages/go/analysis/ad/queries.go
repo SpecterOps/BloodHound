@@ -27,14 +27,14 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/tiering"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/graphcache"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/traversal"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/graphcache"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
 )
 
 func FetchGraphDBTierZeroTaggedAssets(ctx context.Context, db graph.Database, domainSID string) (graph.NodeSet, error) {
@@ -374,45 +374,50 @@ func FetchGPOAffectedContainerPaths(tx graph.Transaction, node *graph.Node) (gra
 
 func CreateGPOAffectedIntermediariesPathDelegate(targetKinds ...graph.Kind) analysis.PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-		pathSet := graph.NewPathSet()
+		return GetGPOAffectedObjectsPath(tx, node, graph.UnregisteredNodeID, targetKinds...)
+	}
+}
 
-		if gpLinks, err := getGPOLinks(tx, node); err != nil {
-			return nil, err
-		} else {
-			for _, rel := range gpLinks {
-				// It's possible the property isn't here, so lets set enforced to false and let it roll
-				enforced, _ := rel.Properties.GetOrDefault(ad.Enforced.String(), false).Bool()
+func GetGPOAffectedObjectsPath(tx graph.Transaction, gpo *graph.Node, targetID graph.ID, targetKinds ...graph.Kind) (graph.PathSet, error) {
+	pathSet := graph.NewPathSet()
 
-				if end, err := ops.FetchNode(tx, rel.EndID); err != nil {
-					return nil, err
-				} else if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
-					Root:        end,
-					Direction:   graph.DirectionOutbound,
-					BranchQuery: FilterContainsRelationship,
-					DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						if !enforced {
-							return BlocksInheritanceDescentFilter(ctx, segment)
-						}
+	if gpLinks, err := getGPOLinks(tx, gpo); err != nil {
+		return nil, err
+	} else {
+		for _, rel := range gpLinks {
+			// It's possible the property isn't here, so lets set enforced to false and let it roll
+			enforced, _ := rel.Properties.GetOrDefault(ad.Enforced.String(), false).Bool()
 
-						return true
-					},
-					PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
-						return len(targetKinds) == 0 || segment.Node.Kinds.ContainsOneOf(targetKinds...)
-					},
-				}); err != nil {
-					return nil, err
-				} else if paths.Len() > 0 {
-					pathSet.AddPathSet(paths)
-					pathSet.AddPath(graph.Path{
-						Nodes: []*graph.Node{node, end},
-						Edges: []*graph.Relationship{rel},
-					})
-				}
+			if end, err := ops.FetchNode(tx, rel.EndID); err != nil {
+				return nil, err
+			} else if paths, err := ops.TraversePaths(tx, ops.TraversalPlan{
+				Root:        end,
+				Direction:   graph.DirectionOutbound,
+				BranchQuery: FilterContainsRelationship,
+				DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+					if !enforced {
+						return BlocksInheritanceDescentFilter(ctx, segment)
+					}
+
+					return true
+				},
+				PathFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+					matchesKind := len(targetKinds) == 0 || segment.Node.Kinds.ContainsOneOf(targetKinds...)
+					matchesID := targetID == graph.UnregisteredNodeID || targetID == segment.Node.ID
+					return matchesKind && matchesID
+				},
+			}); err != nil {
+				return nil, err
+			} else if paths.Len() > 0 {
+				pathSet.AddPathSet(paths)
+				pathSet.AddPath(graph.Path{
+					Nodes: []*graph.Node{gpo, end},
+					Edges: []*graph.Relationship{rel},
+				})
 			}
-
-			return pathSet, nil
 		}
 	}
+	return pathSet, nil
 }
 
 func FetchEnforcedGPOs(tx graph.Transaction, target *graph.Node, skip, limit int) (graph.NodeSet, error) {

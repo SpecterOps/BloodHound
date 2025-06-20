@@ -23,10 +23,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/stretchr/testify/require"
 )
 
@@ -129,4 +129,13 @@ func TestParameters_GetPruneTTLParameters(t *testing.T) {
 
 func TestParameters_GetReconciliationParameter(t *testing.T) {
 	require.True(t, appcfg.GetReconciliationParameter(context.Background(), integration.SetupDB(t)))
+}
+
+func TestParameters_GetTieringParameters(t *testing.T) {
+	result := appcfg.TieringParameters{
+		TierLimit:                appcfg.DefaultTierLimit,
+		LabelLimit:               appcfg.DefaultLabelLimit,
+		MultiTierAnalysisEnabled: false,
+	}
+	require.Equal(t, result, appcfg.GetTieringParameters(context.Background(), integration.SetupDB(t)))
 }
