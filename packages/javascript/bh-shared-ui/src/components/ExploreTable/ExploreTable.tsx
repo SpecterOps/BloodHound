@@ -92,9 +92,9 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
             className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
-                    onDownloadClick={() => alert('doooownload icon clicked')}
-                    onExpandClick={() => alert('expand icon clicked')}
-                    onManageColumnsClick={() => alert('manage columns button clicked')}
+                    onDownloadClick={() => console.log('download icon clicked')}
+                    onExpandClick={() => console.log('expand icon clicked')}
+                    onManageColumnsClick={() => console.log('manage columns button clicked')}
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}
