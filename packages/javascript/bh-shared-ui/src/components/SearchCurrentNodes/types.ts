@@ -24,7 +24,7 @@ export type GraphNode = {
     isTierZero: boolean;
     isOwnedObject: boolean;
     descendent_count?: number | null;
-    properties?: Record<any, any>;
+    properties?: Record<string, any>;
 };
 
 export type GraphNodes = Record<string, GraphNode>;
