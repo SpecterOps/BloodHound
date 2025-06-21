@@ -75,13 +75,13 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
 };
 
 export const makeFormattedObjectInfoFieldsMap = (props: any) => {
-    const fieldsData = formatObjectInfoFields(props);
+    const fieldsData: { keyprop?: string }[] = formatObjectInfoFields(props);
 
     if (fieldsData.length) {
         return fieldsData.reduce(
             (acc, curr) => {
-                if (curr.keyprop) {
-                    acc[curr.keyprop] = curr;
+                if (curr?.keyprop) {
+                    acc[curr?.keyprop] = curr;
                 }
 
                 return acc;
