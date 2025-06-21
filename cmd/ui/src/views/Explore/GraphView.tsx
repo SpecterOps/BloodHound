@@ -97,7 +97,7 @@ const GraphView: FC = () => {
         const graph = new MultiDirectedGraph();
 
         const hideNodes = displayTable;
-        initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
+        if (!hideNodes) initGraph(graph, items, theme, darkMode, customIcons.data ?? {}, hideNodes);
         setExportJsonData(items);
 
         setCurrentNodes(items.nodes);
