@@ -20,10 +20,7 @@ import { Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import {
     CypherSearch,
-    ExploreQueryParams,
-    ExploreSearchTab,
     Icon,
-    MappedStringLiteral,
     NodeSearch,
     PathfindingSearch,
     cn,
@@ -31,8 +28,11 @@ import {
     useCypherSearch,
     useExploreParams,
     useNodeSearch,
-    usePathfindingFilters,
     usePathfindingSearch,
+    type ExploreQueryParams,
+    type ExploreSearchTab,
+    type MappedStringLiteral,
+    type PathfindingFilters,
 } from 'bh-shared-ui';
 import React, { useState } from 'react';
 
@@ -63,7 +63,7 @@ const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
     return 'node';
 };
 
-const ExploreSearch: React.FC = () => {
+const ExploreSearch: React.FC<{ pathfindingFilters: PathfindingFilters }> = ({ pathfindingFilters }) => {
     /* Hooks */
     const classes = useStyles();
 
@@ -76,8 +76,6 @@ const ExploreSearch: React.FC = () => {
     const nodeSearchState = useNodeSearch();
     const pathfindingSearchState = usePathfindingSearch();
     const cypherSearchState = useCypherSearch();
-    // We can move this back down into the filter modal once we remove the redux implementation
-    const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
 
@@ -188,7 +186,7 @@ const ExploreSearch: React.FC = () => {
                         <NodeSearch nodeSearchState={nodeSearchState} />,
                         <PathfindingSearch
                             pathfindingSearchState={pathfindingSearchState}
-                            pathfindingFilterState={pathfindingFilterState}
+                            pathfindingFilterState={pathfindingFilters}
                         />,
                         <CypherSearch cypherSearchState={cypherSearchState} />,
                         /* eslint-enable react/jsx-key */

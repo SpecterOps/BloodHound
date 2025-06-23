@@ -18,7 +18,9 @@ import { useState } from 'react';
 import { EdgeCheckboxType } from '../../edgeTypes';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
-import { compareEdgeTypes, extractEdgeTypes, mapParamsToFilters } from './utils';
+import { areArraysSimilar, extractEdgeTypes, mapParamsToFilters } from './utils';
+
+export type PathfindingFilters = ReturnType<typeof usePathfindingFilters>;
 
 export const usePathfindingFilters = () => {
     const [selectedFilters, updateSelectedFilters] = useState<EdgeCheckboxType[]>(INITIAL_FILTERS);
@@ -26,7 +28,7 @@ export const usePathfindingFilters = () => {
 
     // Instead of tracking this in an effect, we want to create a callback to let the consumer decide when to sync down
     // query params. This is useful for our filter form where we only want to sync once when the user opens it
-    const initialize = () => {
+    const resetFilters = () => {
         if (pathFilters?.length) {
             // Since we need to track state in the case of an empty set of filters, check for our 'empty' key here
             const incoming = pathFilters[0] === EMPTY_FILTER_VALUE ? [] : pathFilters;
@@ -38,31 +40,33 @@ export const usePathfindingFilters = () => {
         }
     };
 
-    const handleUpdateFilters = (checked: EdgeCheckboxType[]) => updateSelectedFilters(checked);
-
-    const handleApplyFilters = () => {
-        const selectedEdgeTypes = extractEdgeTypes(selectedFilters);
+    const handleApplyFilters = (filters = selectedFilters) => {
+        const selectedEdgeTypes = extractEdgeTypes(filters);
 
         if (selectedEdgeTypes.length === 0) {
             // query string stores a value indicating an empty set if every option is unselected
             setExploreParams({ pathFilters: [EMPTY_FILTER_VALUE] });
-        } else if (compareEdgeTypes(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
+        } else if (areArraysSimilar(INITIAL_FILTER_TYPES, selectedEdgeTypes)) {
             // query string is not set if user selects the default
             setExploreParams({ pathFilters: null });
         } else {
-            setExploreParams({ pathFilters: extractEdgeTypes(selectedFilters) });
+            setExploreParams({ pathFilters: selectedEdgeTypes });
         }
     };
 
-    // In our new implementation, these two functions are equivalent. Once we no longer need to support the old approach,
-    // we can consider removing this.
-    const handleCancelFilters = () => initialize();
+    const handleRemoveEdgeType = (edgeType: string) => {
+        const filteredTypes = selectedFilters.filter((item) => item.edgeType !== edgeType);
+        handleUpdateFilters(filteredTypes);
+        handleApplyFilters(filteredTypes);
+    };
+
+    const handleUpdateFilters = (checked: EdgeCheckboxType[]) => updateSelectedFilters(checked);
 
     return {
-        selectedFilters,
-        initialize,
         handleApplyFilters,
+        resetFilters,
+        handleRemoveEdgeType,
         handleUpdateFilters,
-        handleCancelFilters,
+        selectedFilters,
     };
 };

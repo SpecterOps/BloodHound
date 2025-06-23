@@ -29,11 +29,12 @@ import {
 import { SeedTypeObjectId } from 'js-client-library';
 import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
+import { type Coordinates } from 'sigma/types';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
 
 const ContextMenu: FC<{
-    contextMenu: { mouseX: number; mouseY: number } | null;
+    contextMenu: Coordinates | null;
     onClose?: () => void;
 }> = ({ contextMenu, onClose = () => {} }) => {
     const { addNotification } = useNotifications();
@@ -121,7 +122,7 @@ const ContextMenu: FC<{
         return (
             <Menu
                 open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                anchorPosition={{ left: contextMenu?.x || 0, top: contextMenu?.y || 0 }}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
@@ -134,7 +135,7 @@ const ContextMenu: FC<{
         return (
             <Menu
                 open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                anchorPosition={{ left: contextMenu?.x || 0, top: contextMenu?.y || 0 }}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>
@@ -147,7 +148,7 @@ const ContextMenu: FC<{
         <Dialog open={dialogOpen}>
             <Menu
                 open={contextMenu !== null}
-                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                anchorPosition={{ left: contextMenu?.x || 0, top: contextMenu?.y || 0 }}
                 anchorReference='anchorPosition'
                 onClick={onClose}
                 keepMounted>

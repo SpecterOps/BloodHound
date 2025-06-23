@@ -65,7 +65,7 @@ afterAll(() => server.close());
 
 describe('ContextMenu', () => {
     it('renders asset group edit options with graph write permissions', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
 
@@ -91,7 +91,7 @@ describe('ContextMenu', () => {
             })
         );
 
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
 
@@ -107,7 +107,7 @@ describe('ContextMenu', () => {
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
 
@@ -122,7 +122,7 @@ describe('ContextMenu', () => {
     });
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc&secondarySearch=def',
         });
 
@@ -136,7 +136,7 @@ describe('ContextMenu', () => {
     });
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
 
@@ -150,7 +150,7 @@ describe('ContextMenu', () => {
     });
 
     it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc&primarySearch=def',
         });
 
@@ -164,7 +164,7 @@ describe('ContextMenu', () => {
     });
 
     it('opens a submenu when user hovers over `Copy`', async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} onClose={vi.fn()} />, {
+        render(<ContextMenu contextMenu={{ x: 0, y: 0 }} onClose={vi.fn()} />, {
             route: '/test?selectedItem=abc',
         });
 

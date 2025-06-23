@@ -27,11 +27,16 @@ export const mapParamsToFilters = (params: string[], initial: EdgeCheckboxType[]
     }));
 };
 
-export const compareEdgeTypes = (initial: string[], comparison: string[]): boolean => {
-    const a = initial.slice(0).sort();
-    const b = comparison.slice(0).sort();
+/** Returns true if array `a` and `b` contain the same elements in any order */
+export const areArraysSimilar = <T>(a: T[], b: T[], compareFn = (i: T, j: T) => (i === j ? 0 : i > j ? 1 : -1)) => {
+    if (a.length !== b.length) {
+        return false;
+    }
 
-    return a.length === b.length && a.every((item, index) => item === b[index]);
+    const sortedA = [...a].sort(compareFn);
+    const sortedB = [...b].sort(compareFn);
+
+    return sortedA.every((item, index) => item === sortedB[index]);
 };
 
 // Create a list of all edge types to initialize pathfinding filter state
