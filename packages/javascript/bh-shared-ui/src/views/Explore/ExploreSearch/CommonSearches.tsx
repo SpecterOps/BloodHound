@@ -22,7 +22,9 @@ import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
-import PrebuiltSearchList, { LineItem } from '../../../components/PrebuiltSearchList';
+import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
+import { QueryLineItem, QueryListSection } from '../../../types';
+
 import { useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QuerySearchType } from '../../../types';
@@ -68,7 +70,7 @@ const InnerCommonSearches = ({
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
-    const savedLineItems: LineItem[] =
+    const savedLineItems: QueryLineItem[] =
         userQueries.data?.map((query) => ({
             description: query.name,
             cypher: query.query,
@@ -88,7 +90,7 @@ const InnerCommonSearches = ({
     const uniqueCategoriesSet = new Set(allCategories);
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
-    const [filteredList, setFilteredList] = useState<any[]>();
+    const [filteredList, setFilteredList] = useState<QueryListSection[]>([]);
 
     useEffect(() => {
         setFilteredList([...prebuiltSearchList, savedQueries]);
@@ -121,7 +123,7 @@ const InnerCommonSearches = ({
         setCategoryFilter(categories);
 
         //local array variable
-        let filteredData: any[] = queryList;
+        let filteredData: QuerySearchType[] = queryList;
 
         if (searchTerm.length > 2) {
             filteredData = filteredData

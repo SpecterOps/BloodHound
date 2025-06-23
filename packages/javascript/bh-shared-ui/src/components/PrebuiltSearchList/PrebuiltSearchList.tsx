@@ -35,26 +35,14 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useState } from 'react';
+import { QueryListSection } from '../../types';
 
 interface PrebuiltSearchListProps {
-    listSections: ListSection[];
+    listSections: QueryListSection[];
     clickHandler: (query: string) => void;
     deleteHandler?: (id: number) => void;
     clearFiltersHandler: () => void;
 }
-
-type ListSection = {
-    category?: string;
-    subheader: string;
-    queries: LineItem[];
-};
-
-export type LineItem = {
-    id?: number;
-    description: string;
-    cypher: string;
-    canEdit?: boolean;
-};
 
 const useStyles = makeStyles((theme) => ({
     subheader: {
