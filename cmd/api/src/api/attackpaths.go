@@ -25,10 +25,13 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, maybeTierIdParam []string) (int, error) {
-	if len(maybeTierIdParam) != 0 {
-		if tierIdParam, err := strconv.Atoi(maybeTierIdParam[0]); err != nil {
+func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, maybeTierId string) (int, error) {
+	if maybeTierId != "" {
+		if tierIdParam, err := strconv.Atoi(maybeTierId); err != nil {
 			return 0, err
+		} else if tierIdParam == 0 {
+			// This is a workaround to supply tiering agnostic findings
+			return 0, nil
 		} else if _, err = db.GetAssetGroupTag(ctx, tierIdParam); err != nil {
 			return 0, err
 		} else {
