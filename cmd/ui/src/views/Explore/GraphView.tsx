@@ -36,11 +36,11 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected, setVisibleExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -48,6 +48,11 @@ import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
+
+export const makeMap = (items) =>
+    items.reduce((acc, col) => {
+        return { ...acc, [col?.accessorKey || col?.id]: true };
+    }, {});
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -62,6 +67,12 @@ const GraphView: FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
+
+    const handleManageColumnsChange = useCallback((items) => {
+        const newItems = makeMap(items);
+        dispatch(setVisibleExploreTableColumns(newItems));
+    }, []);
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
@@ -207,6 +218,8 @@ const GraphView: FC = () => {
                 <ExploreTable
                     data={graphQuery.data}
                     open={displayTable}
+                    visibleColumns={visibleColumns}
+                    onManageColumnsChange={handleManageColumnsChange}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

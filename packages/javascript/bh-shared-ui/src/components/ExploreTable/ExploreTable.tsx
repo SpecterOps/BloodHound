@@ -18,25 +18,34 @@ import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
+import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
 
-type HasData = { data?: object };
-
-const makeMap = (items) =>
+export const makeMap = (items) =>
     items.reduce((acc, col) => {
         return { ...acc, [col?.accessorKey || col?.id]: true };
     }, {});
+
+type HasData = { data?: object };
 
 interface ExploreTableProps<TData extends HasData> {
     open?: boolean;
     onClose?: () => void;
     data?: Record<string, TData>;
+    visibleColumns?: Record<string, boolean>;
+    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 }
 
-const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTableProps<TData>) => {
+const ExploreTable = <TData extends HasData>({
+    data,
+    open,
+    onClose,
+    onManageColumnsChange,
+    visibleColumns,
+}: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
     const mungedData = useMemo(
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
@@ -63,15 +72,6 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
         [labelsMap, firstItem]
     );
 
-    const initialVisibleColumns = useMemo(() => makeMap(columns), [columns]);
-
-    const [visibleColumns, setVisibleColumns] = useState(initialVisibleColumns);
-
-    const handleManageColumnsChange = useCallback((items) => {
-        const newItems = makeMap(items);
-        setVisibleColumns(newItems);
-    }, []);
-
     const initialColumns: ColumnDef<any, any>[] = [
         {
             accessorKey: '',
@@ -97,6 +97,8 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
         },
     ];
 
+    const fallbackInitialColumns = makeMap(columns);
+
     if (!open || !data) return null;
 
     const finalColumns = [...initialColumns, ...columns];
@@ -106,11 +108,11 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
             <div className='explore-table-container w-full h-full'>
                 <TableControls
                     columns={columns}
-                    visibleColumns={visibleColumns}
+                    visibleColumns={visibleColumns || fallbackInitialColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
                     onExpandClick={() => console.log('expand icon clicked')}
                     onManageColumnsClick={() => console.log('manage columns button clicked')}
-                    onManageColumnsChange={handleManageColumnsChange}
+                    onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}

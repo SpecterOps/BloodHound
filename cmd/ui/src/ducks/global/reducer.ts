@@ -24,6 +24,7 @@ const initialGlobalState: types.GlobalViewState = {
     darkMode: false,
     exploreLayout: undefined,
     isExploreTableSelected: false,
+    visibleExploreTableColumns: undefined,
 };
 
 const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewActionTypes) => {
@@ -44,6 +45,8 @@ const globalViewReducer = (state = initialGlobalState, action: types.GlobalViewA
             draft.exploreLayout = action.exploreLayout;
         } else if (action.type === types.GLOBAL_SET_IS_EXPLORE_TABLE_SELECTED) {
             draft.isExploreTableSelected = action.isExploreTableSelected;
+        } else if (action.type === types.GLOBAL_SET_VISIBLE_EXPLORE_TABLE_COLUMNS) {
+            draft.visibleExploreTableColumns = action.visibleExploreTableColumns;
         }
     });
 };

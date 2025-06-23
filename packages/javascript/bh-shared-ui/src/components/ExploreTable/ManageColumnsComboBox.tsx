@@ -48,7 +48,7 @@ const ListItem = ({ isSelected, item, removeSelectedItem, itemProps }: ListItemP
 type ManageColumnsComboBoxProps = {
     allItems: ManageColumnsComboBoxOption[];
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
-    visibleColumns: Record<string, boolean>;
+    visibleColumns?: Record<string, boolean>;
     onClose: () => void;
 };
 
@@ -65,8 +65,6 @@ export const ManageColumnsComboBox = ({
         [allItems, visibleColumns]
     );
 
-    console.log({ visibleColumns });
-
     const [selectedItems, setSelectedItems] = React.useState(initialVisibleColumns);
     const unselectedItems = React.useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
@@ -82,7 +80,7 @@ export const ManageColumnsComboBox = ({
 
     useEffect(() => {
         const listener = (e: Event) => {
-            if (!ref.current || ref.current?.contains(e.target)) {
+            if (!ref.current || ref.current?.contains(e.target as Node)) {
                 return;
             }
 
@@ -171,7 +169,7 @@ export const ManageColumnsComboBox = ({
     // console.log({ pinnedItems });
 
     return (
-        <div className='w-[400px] shadow-md border-1 bg-white' ref={ref}>
+        <div className='w-[400px] shadow-md border-1 bg-white' ref={() => ref}>
             <div className='flex flex-col gap-1 justify-center'>
                 <div className='flex justify-center items-center relative'>
                     <Input

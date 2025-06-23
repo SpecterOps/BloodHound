@@ -11,7 +11,7 @@ const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
     columns: ColumnDef<TData, TValue>[];
-    visibleColumns: Record<string, boolean>;
+    visibleColumns?: Record<string, boolean>;
     pinnedColumns?: Record<string, boolean>;
     resultsCount?: number;
     tableName?: string;
