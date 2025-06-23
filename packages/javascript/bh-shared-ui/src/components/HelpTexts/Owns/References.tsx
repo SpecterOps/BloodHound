@@ -147,6 +147,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
+                href='https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9'>
+                https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
                 href='https://support.microsoft.com/en-us/topic/kb5008383-active-directory-permissions-updates-cve-2021-42291-536d5555-ffba-4248-a60e-d6cbc849cde1'>
                 https://support.microsoft.com/en-us/topic/kb5008383-active-directory-permissions-updates-cve-2021-42291-536d5555-ffba-4248-a60e-d6cbc849cde1
             </Link>
