@@ -685,6 +685,7 @@ func (s *Resources) GetAssetGroupMembersBySelector(response http.ResponseWriter,
 			}
 
 			filter := query.And(
+				// isolating all nodes to tag
 				query.KindIn(query.Node(), assetGroupTag.ToKind()),
 				query.InIDs(query.NodeID(), nodeIds...),
 			)
@@ -740,17 +741,20 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 }
 
 type SearchAssetGroupTagsResponse struct {
-	Tiers     model.AssetGroupTags         `json:"tiers"`
-	Labels    model.AssetGroupTags         `json:"labels"`
+	Tags      model.AssetGroupTags         `json:"tags"`
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
 	Nodes     []AssetGroupMember           `json:"nodes"`
 }
 
 func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var (
-		// queryParams = request.URL.Query()
-		tag      = model.AssetGroupTag{}
-		selector = model.AssetGroupTagSelector{}
+		queryParams    = request.URL.Query()
+		tag            = model.AssetGroupTag{}
+		selector       = model.AssetGroupTagSelector{}
+		tagFilter      = model.QueryParameterFilterMap{}
+		selectorFilter = model.QueryParameterFilterMap{}
+		members        = []AssetGroupMember{}
+		newSelectors   = model.AssetGroupTagSelectors{}
 	)
 
 	queryParameterFilterParser := model.NewQueryParameterFilterParser()
@@ -767,49 +771,58 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 				return
 			} else {
 				for _, filter := range filters {
-					// look up at line 404
-					if !utils.Contains(validTagPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					} else if !utils.Contains(validSelectorPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
+					if utils.Contains(validTagPredicates, string(filter.Operator)) {
+						tagFilter.AddFilter(filter)
+						tagFilter[name][len(tagFilter[name])-1].IsStringData = tag.IsStringColumn(filter.Name)
 					}
-					if slices.Contains(validTagPredicates, string(filter.Operator)) {
-
+					if utils.Contains(validSelectorPredicates, string(filter.Operator)) {
+						selectorFilter.AddFilter(filter)
+						selectorFilter[name][len(selectorFilter[name])-1].IsStringData = selector.IsStringColumn(filter.Name)
+					} else {
+						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
 					}
-					// queryFilters[name][i].IsStringData = tag.IsString(filter.Name)
 				}
 			}
+
 		}
 
-		if _, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupTagsSearchLimit); err != nil {
+		if limit, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupTagsSearchLimit); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil {
+		} else if sqlTagFilter, err := tagFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if sqlSelectorFilter, err := selectorFilter.BuildSQLFilter(); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
+		} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), sqlTagFilter); err != nil {
 			api.HandleDatabaseError(request, response, err)
-		} else if tiers, labels := tierOrLabel(tags); err != nil {
-			slog.Log(request.Context(), slog.LevelInfo, "some error")
-		} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil {
+		} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), sqlSelectorFilter, limit); err != nil {
 			api.HandleDatabaseError(request, response, err)
+		} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
 		} else {
-			api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tiers: tiers, Labels: labels, Selectors: selectors}, http.StatusOK, response)
+
+			if selectors == nil {
+				selectors = newSelectors
+			}
+
+			filter := query.And(
+				query.KindIn(query.Node(), tag.ToKind()),
+			)
+
+			if nodes, err := s.GraphQuery.GetFilteredAndSortedNodes(sort, filter); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
+			} else if nodes == nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "no nodes found", request), response)
+			} else {
+				for _, node := range nodes {
+					if node != nil {
+						members = append(members, nodeToAssetGroupMember(node, excludeProperties))
+					}
+				}
+				api.WriteBasicResponse(request.Context(), SearchAssetGroupTagsResponse{Tags: tags, Selectors: selectors, Nodes: members}, http.StatusOK, response)
+			}
+
 		}
+
 	}
 
-}
-
-func tierOrLabel(tags model.AssetGroupTags) (model.AssetGroupTags, model.AssetGroupTags) {
-	var (
-		tiers  model.AssetGroupTags
-		labels model.AssetGroupTags
-	)
-	for _, tag := range tags {
-		if tag.Type == model.AssetGroupTagTypeTier {
-			tiers = append(tiers, tag)
-		}
-		if tag.Type == model.AssetGroupTagTypeLabel {
-			labels = append(labels, tag)
-		}
-	}
-	return tiers, labels
 }

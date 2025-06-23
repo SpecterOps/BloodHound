@@ -55,7 +55,7 @@ type AssetGroupTagSelectorData interface {
 	GetAssetGroupTagSelectorCounts(ctx context.Context, tagIds []int) (map[int]int, error)
 	GetAssetGroupTagSelectorsByTagId(ctx context.Context, assetGroupTagId int, selectorSqlFilter, selectorSeedSqlFilter model.SQLFilter, skip, limit int) (model.AssetGroupTagSelectors, int, error)
 	GetCustomAssetGroupTagSelectorsToMigrate(ctx context.Context) (model.AssetGroupTagSelectors, error)
-	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error)
+	GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error)
 }
 
 // AssetGroupTagSelectorNodeData defines the methods required to interact with the asset_group_tag_selector_nodes table
@@ -239,6 +239,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	}
 
 	var tags model.AssetGroupTags
+
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
 			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE deleted_at IS NULL%s",
@@ -249,6 +250,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 	).Find(&tags); result.Error != nil {
 		return model.AssetGroupTags{}, CheckError(result)
 	}
+
 	return tags, nil
 }
 
@@ -742,23 +744,93 @@ func (s *BloodhoundDB) UpdateTierPositions(ctx context.Context, user model.User,
 	return nil
 }
 
-func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
+func (s *BloodhoundDB) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error) {
 	var selectors model.AssetGroupTagSelectors
 
 	if sqlFilter.SQLString != "" {
-		sqlFilter.SQLString = " AND " + sqlFilter.SQLString
+		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
 	}
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE deleted_at IS NULL%s",
+			"SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s%s ORDER BY name, asset_group_tag_id, id",
 			model.AssetGroupTagSelector{}.TableName(),
 			sqlFilter.SQLString,
 		),
 		sqlFilter.Params...,
-	).Find(&selectors); result.Error != nil {
+	).Scan(&selectors); result.Error != nil {
 		return model.AssetGroupTagSelectors{}, CheckError(result)
 	}
 
 	return selectors, nil
 }
+
+// func (s *BloodhoundDB) SearchAssetGroupTags(ctx context.Context, sqlTagFilter model.SQLFilter, sqlSelectorFilter model.SQLFilter, limit int) (v2.SearchAssetGroupTagsResponse, error) {
+// 	var (
+// 		nodes     []*graph.Node
+// 		tiers     model.AssetGroupTags
+// 		labels    model.AssetGroupTags
+// 		selectors model.AssetGroupTagSelectors
+// 	)
+
+// 	// Ensure WHERE clause is valid even if no filters
+// 	// if sqlTagFilter.SQLString == "" {
+// 	// 	sqlTagFilter.SQLString = "1=1"
+// 	// }
+// 	// if sqlSelectorFilter.SQLString == "" {
+// 	// 	sqlSelectorFilter.SQLString = "1=1"
+// 	// }
+
+// 	// Query nodes tagged by tiers or labels
+// 	nodeQuery := fmt.Sprintf(`
+// 		SELECT DISTINCT n.id, n.object_id, n.name
+// 		FROM nodes n
+// 		JOIN node_tags nt ON n.id = nt.node_id
+// 		JOIN tags t ON nt.tag_id = t.id
+// 		WHERE %s
+// 		AND t.type IN ('tier', 'label')
+// 		ORDER BY n.name ASC
+// 		LIMIT ?
+// 	`, sqlTagFilter.SQLString)
+
+// 	nodeParams := append(sqlTagFilter.Params, limit)
+// 	if err := s.db.WithContext(ctx).Raw(nodeQuery, nodeParams...).Scan(&nodes).Error; err != nil {
+// 		return v2.SearchAssetGroupTagsResponse{}, err
+// 	}
+
+// 	// Query selectors
+// 	selectorQuery := fmt.Sprintf(`
+// 		SELECT id, asset_group_tag_id, name
+// 		FROM asset_group_tag_selectors
+// 		WHERE %s
+// 		ORDER BY name ASC
+// 		LIMIT ?
+// 	`, sqlSelectorFilter.SQLString)
+
+// 	selectorParams := append(sqlSelectorFilter.Params, limit)
+// 	if err := s.db.WithContext(ctx).Raw(selectorQuery, selectorParams...).Scan(&selectors).Error; err != nil {
+// 		return v2.SearchAssetGroupTagsResponse{}, err
+// 	}
+
+// 	// Query tiers
+// 	if err := s.db.WithContext(ctx).
+// 		Raw(`SELECT id, name, type FROM tags WHERE type = 'tier' ORDER BY name ASC`).
+// 		Scan(&tiers).Error; err != nil {
+// 		return v2.SearchAssetGroupTagsResponse{}, err
+// 	}
+
+// 	// Query labels
+// 	if err := s.db.WithContext(ctx).
+// 		Raw(`SELECT id, name, type FROM tags WHERE type = 'label' ORDER BY name ASC`).
+// 		Scan(&labels).Error; err != nil {
+// 		return v2.SearchAssetGroupTagsResponse{}, err
+// 	}
+
+// 	// Return everything
+// 	return v2.SearchAssetGroupTagsResponse{
+// 		Tiers:     tiers,
+// 		Labels:    labels,
+// 		Nodes:     nodes,
+// 		Selectors: selectors,
+// 	}, nil
+// }
