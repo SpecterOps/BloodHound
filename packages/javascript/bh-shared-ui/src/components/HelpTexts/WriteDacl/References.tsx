@@ -158,6 +158,13 @@ const References: FC = () => {
             <Link
                 target='_blank'
                 rel='noopener'
+                href='https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9'>
+                https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9
+            </Link>
+            <br />
+            <Link
+                target='_blank'
+                rel='noopener'
                 href='https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword'>
                 https://learn.microsoft.com/en-us/powershell/module/laps/get-lapsadpassword
             </Link>
