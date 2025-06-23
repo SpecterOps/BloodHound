@@ -18,7 +18,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Skeleton } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
@@ -84,14 +84,15 @@ const InnerCommonSearches = ({
 
     //master list of pre-made queries
     const queryList = [...prebuiltSearchList, savedQueries];
-
-    //list of categories for filter dropdown
-    // const categories = queryList.
     const allCategories = queryList.map((item) => item.subheader);
     const uniqueCategoriesSet = new Set(allCategories);
     const categories = [...uniqueCategoriesSet].filter((category) => category !== '').sort();
 
-    const [filteredList, setFilteredList] = useState<any[]>(queryList);
+    const [filteredList, setFilteredList] = useState<any[]>();
+
+    useEffect(() => {
+        setFilteredList([...prebuiltSearchList, savedQueries]);
+    }, [userQueries.data]);
 
     const handleClick = (query: string) => {
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
