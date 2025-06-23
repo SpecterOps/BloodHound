@@ -1807,13 +1807,17 @@ func FetchAttackersForEscalations9and10(tx graph.Transaction, victimBitmap cardi
 	if attackers, err := ops.FetchStartNodeIDs(tx.Relationships().Filterf(func() graph.Criteria {
 		criteria := query.And(
 			query.KindIn(query.Start(), ad.Group, ad.User, ad.Computer),
-			query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
 			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(victimBitmap)...),
 		)
 		if scenarioB {
-			return query.And(criteria, query.KindIn(query.End(), ad.Computer))
+			return query.And(criteria,
+				query.KindIn(query.End(), ad.Computer),
+				query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL),
+			)
+		} else {
+			return query.And(criteria,
+				query.KindIn(query.Relationship(), ad.GenericAll, ad.GenericWrite, ad.Owns, ad.WriteOwner, ad.WriteDACL, ad.WritePublicInformation))
 		}
-		return criteria
 	})); err != nil {
 		return nil, err
 	} else {

@@ -2209,6 +2209,7 @@ type ESC9aPrincipalHarness struct {
 	Group4       *graph.Node
 	Group5       *graph.Node
 	Group6       *graph.Node
+	Group7       *graph.Node
 	NTAuthStore  *graph.Node
 	RootCA       *graph.Node
 	User1        *graph.Node
@@ -2240,6 +2241,7 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
 	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
+	s.Group7 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
 	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
 	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
@@ -2255,7 +2257,8 @@ func (s *ESC9aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.User1, ad.WriteDACL)
 	graphTestContext.NewRelationship(s.Group4, s.User1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.User1, ad.WriteOwner)
+	graphTestContext.NewRelationship(s.Group5, s.User1, ad.Owns)
+	graphTestContext.NewRelationship(s.Group6, s.User1, ad.WritePublicInformation)
 	graphTestContext.NewRelationship(s.User2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
@@ -3747,10 +3750,11 @@ type ESC10aPrincipalHarness struct {
 	User1        *graph.Node
 	Group1       *graph.Node
 	Group2       *graph.Node
-	Group6       *graph.Node
 	Group3       *graph.Node
 	Group4       *graph.Node
 	Group5       *graph.Node
+	Group6       *graph.Node
+	Group7       *graph.Node
 	User2        *graph.Node
 	Group0       *graph.Node
 }
@@ -3777,10 +3781,11 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domainSid)
 	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domainSid)
 	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domainSid)
-	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
 	s.Group3 = graphTestContext.NewActiveDirectoryGroup("Group3", domainSid)
 	s.Group4 = graphTestContext.NewActiveDirectoryGroup("Group4", domainSid)
 	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group5", domainSid)
+	s.Group6 = graphTestContext.NewActiveDirectoryGroup("Group6", domainSid)
+	s.Group5 = graphTestContext.NewActiveDirectoryGroup("Group7", domainSid)
 	s.User2 = graphTestContext.NewActiveDirectoryUser("User2", domainSid)
 	s.Group0 = graphTestContext.NewActiveDirectoryGroup("Group0", domainSid)
 	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
@@ -3794,7 +3799,8 @@ func (s *ESC10aPrincipalHarness) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Group6, s.User1, ad.AllExtendedRights)
 	graphTestContext.NewRelationship(s.Group3, s.User1, ad.WriteDACL)
 	graphTestContext.NewRelationship(s.Group4, s.User1, ad.WriteOwner)
-	graphTestContext.NewRelationship(s.Group5, s.User1, ad.WriteOwner)
+	graphTestContext.NewRelationship(s.Group5, s.User1, ad.Owns)
+	graphTestContext.NewRelationship(s.Group6, s.User1, ad.WritePublicInformation)
 	graphTestContext.NewRelationship(s.User2, s.User2, ad.GenericAll)
 	graphTestContext.NewRelationship(s.User1, s.Group0, ad.MemberOf)
 	graphTestContext.NewRelationship(s.User2, s.Group0, ad.MemberOf)
