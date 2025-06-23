@@ -288,11 +288,17 @@ with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from
 -- case: match (s) where s.prop = [] return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((not n0.properties ? 'prop' or (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
 
+-- case: match (s) where [] = s.prop return s
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((not n0.properties ? 'prop' or (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
+
+-- case: match (s) where not s.prop <> [] return s
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (not (n0.properties ? 'prop' and not (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
+
 -- case: match (s) where not s.prop = [] return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (not (not n0.properties ? 'prop' or (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
 
 -- case: match (s) where s.prop <> [] return s
 with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ? 'prop' and not (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
 
--- case: match (s) where not s.prop <> [] return s
-with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where (not (n0.properties ? 'prop' and not (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;
+-- case: match (s) where [] <> s.prop  return s
+with s0 as (select (n0.id, n0.kind_ids, n0.properties)::nodecomposite as n0 from node n0 where ((n0.properties ? 'prop' and not (n0.properties ->> 'prop') = any (array ['null', '[]']::text[])))) select s0.n0 as s from s0;

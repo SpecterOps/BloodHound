@@ -233,17 +233,13 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 		}
 
 	case *cypher.ListLiteral:
-		var numExpressions = len(typedExpression.Expressions())
-
-		if numExpressions == 0 {
-			s.treeTranslator.PushOperand(pgsql.EmptyArrayLiteral{})
-			break
-		}
-
-		var literal = pgsql.ArrayLiteral{
-			Values:   make([]pgsql.Expression, numExpressions),
-			CastType: pgsql.UnsetDataType,
-		}
+		var (
+			numExpressions = len(typedExpression.Expressions())
+			literal        = pgsql.ArrayLiteral{
+				Values:   make([]pgsql.Expression, numExpressions),
+				CastType: pgsql.UnsetDataType,
+			}
+		)
 
 		for idx := numExpressions - 1; idx >= 0; idx-- {
 			if nextExpression, err := s.treeTranslator.PopOperand(); err != nil {
@@ -261,6 +257,10 @@ func (s *Translator) Exit(expression cypher.SyntaxNode) {
 
 				literal.Values[idx] = nextExpression
 			}
+		}
+
+		if numExpressions == 0 && literal.CastType == pgsql.UnsetDataType {
+			literal.CastType = pgsql.AnyArray
 		}
 
 		if literal.CastType == pgsql.UnsetDataType {

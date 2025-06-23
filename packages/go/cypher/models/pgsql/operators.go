@@ -114,6 +114,7 @@ const (
 	OperatorCypherStartsWith Operator = "starts with"
 	OperatorCypherContains   Operator = "contains"
 	OperatorCypherEndsWith   Operator = "ends with"
+	OperatorCypherNotEquals  Operator = "<>"
 
 	OperatorPropertyLookup Operator = "property_lookup"
 	OperatorKindAssignment Operator = "kind_assignment"
