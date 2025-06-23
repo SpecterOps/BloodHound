@@ -18,12 +18,17 @@ import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { TableControls } from './TableControls';
 
 type HasData = { data?: object };
+
+const makeMap = (items) =>
+    items.reduce((acc, col) => {
+        return { ...acc, [col?.accessorKey || col?.id]: true };
+    }, {});
 
 interface ExploreTableProps<TData extends HasData> {
     open?: boolean;
@@ -37,10 +42,35 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
         [data]
     );
-
     const firstItem = mungedData?.[0];
 
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
+
+    const columns: ColumnDef<any, any>[] = useMemo(
+        () =>
+            firstItem
+                ? // If column order exists in redux/localStorage, use that
+                  Object.keys(firstItem).map((key: any) => {
+                      return {
+                          accessorKey: key,
+                          header: labelsMap?.[key]?.label || capitalize(key),
+                          cell: (info: any) => String(info.getValue()),
+                          id: key,
+                          size: 150,
+                      } as ColumnDef<any, any>;
+                  })
+                : [],
+        [labelsMap, firstItem]
+    );
+
+    const initialVisibleColumns = useMemo(() => makeMap(columns), [columns]);
+
+    const [visibleColumns, setVisibleColumns] = useState(initialVisibleColumns);
+
+    const handleManageColumnsChange = useCallback((items) => {
+        const newItems = makeMap(items);
+        setVisibleColumns(newItems);
+    }, []);
 
     const initialColumns: ColumnDef<any, any>[] = [
         {
@@ -67,23 +97,6 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
         },
     ];
 
-    const columns: ColumnDef<any, any>[] = useMemo(
-        () =>
-            firstItem
-                ? // If column order exists in redux/localStorage, use that
-                  Object.keys(firstItem).map((key: any) => {
-                      return {
-                          accessorKey: key,
-                          header: labelsMap?.[key]?.label || capitalize(key),
-                          cell: (info: any) => String(info.getValue()),
-                          id: key,
-                          size: 150,
-                      } as ColumnDef<any, any>;
-                  })
-                : [],
-        [labelsMap, firstItem]
-    );
-
     if (!open || !data) return null;
 
     const finalColumns = [...initialColumns, ...columns];
@@ -92,9 +105,12 @@ const ExploreTable = <TData extends HasData>({ data, open, onClose }: ExploreTab
             className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
+                    columns={columns}
+                    visibleColumns={visibleColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
                     onExpandClick={() => console.log('expand icon clicked')}
                     onManageColumnsClick={() => console.log('manage columns button clicked')}
+                    onManageColumnsChange={handleManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}
