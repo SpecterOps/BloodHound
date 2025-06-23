@@ -13,9 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
+import { zoneHandlers } from '../../mocks';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
@@ -71,13 +73,15 @@ const EntityInfoContentWithProvider = ({
     testId,
     nodeType,
     databaseId,
+    zoneManagement,
 }: {
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
+    zoneManagement?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
+        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} zoneManagement={zoneManagement} />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -129,5 +133,133 @@ describe('EntityObjectInformation', () => {
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
         expect(await screen.findByText('unknown kind')).toBeInTheDocument();
+    });
+});
+
+describe('EntityInfoDataTableList', () => {
+    it('Renders Selectors collapsible section if zone management is true', async () => {
+        const testId = '2';
+        const nodeType = ActiveDirectoryNodeKind.LocalUser;
+        const databaseId = '42';
+
+        const testSelector = {
+            id: 777,
+            asset_group_tag_id: 1,
+            name: 'foo',
+            allow_disable: true,
+            description: 'bar',
+            is_default: false,
+            auto_certify: true,
+            created_at: '2024-10-05T17:54:32.245Z',
+            created_by: 'Stephen64@gmail.com',
+            updated_at: '2024-07-20T11:22:18.219Z',
+            updated_by: 'Donna13@yahoo.com',
+            disabled_at: '2024-09-15T09:55:04.177Z',
+            disabled_by: 'Roberta_Morar72@hotmail.com',
+            count: 3821,
+            seeds: [{ selector_id: 777, type: SeedTypeCypher, value: 'match(n) return n limit 5' }],
+        };
+
+        const testNodes = [
+            {
+                name: 'bar',
+                objectid: '777',
+                type: 'Bat',
+            },
+        ];
+        const testSearchResults = {
+            data: testNodes,
+        };
+
+        const handlers = [
+            ...zoneHandlers,
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: testSelector,
+                    })
+                );
+            }),
+            rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+                return res(ctx.json({ data: { members: [] } }));
+            }),
+            rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
+                return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+            }),
+            rest.get(`/api/v2/search`, (_, res, ctx) => {
+                return res(ctx.json(testSearchResults));
+            }),
+        ];
+
+        server.use(...handlers);
+        render(
+            <EntityInfoContentWithProvider testId={testId} nodeType={nodeType} databaseId={databaseId} zoneManagement />
+        );
+
+        //await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        expect(await screen.findByText('Selectors')).toBeInTheDocument();
+    });
+
+    it('Renders Selectors collapsible section if zone management is true', async () => {
+        const testId = '2';
+        const nodeType = ActiveDirectoryNodeKind.LocalUser;
+        const databaseId = '42';
+
+        const testSelector = {
+            id: 777,
+            asset_group_tag_id: 1,
+            name: 'foo',
+            allow_disable: true,
+            description: 'bar',
+            is_default: false,
+            auto_certify: true,
+            created_at: '2024-10-05T17:54:32.245Z',
+            created_by: 'Stephen64@gmail.com',
+            updated_at: '2024-07-20T11:22:18.219Z',
+            updated_by: 'Donna13@yahoo.com',
+            disabled_at: '2024-09-15T09:55:04.177Z',
+            disabled_by: 'Roberta_Morar72@hotmail.com',
+            count: 3821,
+            seeds: [{ selector_id: 777, type: SeedTypeCypher, value: 'match(n) return n limit 5' }],
+        };
+
+        const testNodes = [
+            {
+                name: 'bar',
+                objectid: '777',
+                type: 'Bat',
+            },
+        ];
+        const testSearchResults = {
+            data: testNodes,
+        };
+
+        const handlers = [
+            ...zoneHandlers,
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors/777', async (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: testSelector,
+                    })
+                );
+            }),
+            rest.post(`/api/v2/asset-group-tags/preview-selectors`, (_, res, ctx) => {
+                return res(ctx.json({ data: { members: [] } }));
+            }),
+            rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
+                return res(ctx.json({ data: { nodes: {}, edges: [] } }));
+            }),
+            rest.get(`/api/v2/search`, (_, res, ctx) => {
+                return res(ctx.json(testSearchResults));
+            }),
+        ];
+
+        server.use(...handlers);
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} databaseId={databaseId} />);
+
+        //await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        expect(await screen.findByText('Selectors')).not.toBeInTheDocument();
     });
 });
