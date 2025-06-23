@@ -20,12 +20,14 @@ import (
 //
 // 1. Extracts the tenant's objectid to match against AZRole tenantid properties
 // 2. Finds all AZRole nodes in this tenant where:
-//    - tenantId matches the tenant's objectid
-//    - isApprovalRequired == true  
-//    - At least one of EndUserAssignmentUserApprovers or EndUserAssignmentGroupApprovers is not null
+//   - tenantId matches the tenant's objectid
+//   - isApprovalRequired == true
+//   - At least one of EndUserAssignmentUserApprovers or EndUserAssignmentGroupApprovers is not null
+//
 // 3. For each qualifying AZRole, determines the appropriate approvers:
-//    - If no specific approvers configured: uses default admin roles (Global Admin, Privileged Role Admin)
-//    - If specific approvers configured: uses the specified user/group GUIDs
+//   - If no specific approvers configured: uses default admin roles (Global Admin, Privileged Role Admin)
+//   - If specific approvers configured: uses the specified user/group GUIDs
+//
 // 4. Creates AZRoleApprover edges from approver nodes to the AZRole node
 //
 // Parameters:
@@ -62,11 +64,13 @@ func CreateApproverEdge(
 				),
 				// Step 2: primaryApprovers (user or group) is not null - at least one approver type configured
 				query.Or(
-					query.IsNotNull(
-						query.NodeProperty(azure.EndUserAssignmentUserApprovers.String()),
+					query.And(
+						query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentUserApprovers.String())),
+						query.Not(query.Equals(query.NodeProperty(azure.EndUserAssignmentUserApprovers.String()), []string{})),
 					),
-					query.IsNotNull(
-						query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String()),
+					query.And(
+						query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String())),
+						query.Not(query.Equals(query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String()), []string{})),
 					),
 				),
 			)
@@ -101,10 +105,10 @@ func CreateApproverEdge(
 			if err != nil {
 				return err
 			}
-			
+
 			// Combine user and group approver GUIDs into a single list
 			principalIDs := append(userApproversID, groupApproversID...)
-			
+
 			// Step 3b: Determine approver strategy based on whether specific approvers are configured
 			if len(principalIDs) == 0 {
 				// Step 3b.i-iii: No specific approvers - use default admin roles
@@ -190,7 +194,7 @@ func handlePrincipalApprovers(
 	// Step 3c.ii: Process each GUID in the primaryApprovers list
 	for _, principalID := range principalIDs {
 		var fetchedNode *graph.Node
-		
+
 		// Step 3c.ii.1: Find the AZUser or AZGroup node with matching objectid
 		err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			node, err := tx.Nodes().Filterf(func() graph.Criteria {
