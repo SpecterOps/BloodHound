@@ -26,12 +26,12 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,12 +68,12 @@ func TestDeleteTransitEdges(t *testing.T) {
 	)
 
 	// In order to validate that DeleteTransitEdges and the updated PostProcessedRelationships for both AD and Azure are correct, we need to simulate
-	// the completion of post-processing in: lib/go/analysis/azure/post.go
+	// the completion of post-processing in: bhce/cmd/api/src/analysis/azure/post.go
 	//
 	// The specific function that is responsible for creating the edges below can be found in bhce/packages/go/analysis/hybrid/hybrid.go - PostHybrid(...)
 	//
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
-	// in lib/go/analysis/azure/post.go.
+	// in bhce/cmd/api/src/analysis/azure/post.go.
 	testCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
 	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
 

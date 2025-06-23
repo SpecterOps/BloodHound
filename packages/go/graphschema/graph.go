@@ -18,7 +18,7 @@
 
 package graphschema
 
-import graph "github.com/specterops/bloodhound/dawgs/graph"
+import graph "github.com/specterops/dawgs/graph"
 
 type KindDescriptor struct {
 	Kind graph.Kind

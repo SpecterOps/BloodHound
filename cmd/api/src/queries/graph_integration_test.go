@@ -28,14 +28,14 @@ import (
 
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -236,7 +236,7 @@ func TestGetPrimaryNodeKindCounts(t *testing.T) {
 			Graph: db,
 		}
 
-		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity, azure.Entity)
+		results, err := graphQuery.GetPrimaryNodeKindCounts(context.Background(), ad.Entity)
 		require.Nil(t, err)
 
 		// While this is a very thin test, any more specificity would require constant updates each time the harness added new kind

@@ -26,7 +26,11 @@ const General: FC<EdgeInfoProps> = ({ sourceName, targetName, targetType }) => {
                 The GPO {sourceName} is linked to the {typeFormat(targetType)} {targetName}.
             </Typography>
             <Typography variant='body2'>
-                A linked GPO applies its settings to objects in the linked container.
+                The GPO's settings apply to AD accounts (users and computers) within {targetName}.
+            </Typography>
+            <Typography variant='body2'>
+                The Enforced property on the edge indicates whether the GPO link is enforced, meaning it still applies
+                if an OU has blocked GPO inheritance.
             </Typography>
         </>
     );
