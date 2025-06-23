@@ -275,17 +275,28 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
 func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
-	// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
-	// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
+	// MATCH (n:Base)-[:PropagatesACEsTo*..]->(m:Base) RETURN n
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
 		Root: node,
 		Driver: traversal.NewPattern().InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.OU),
-			)).InboundWithDepth(0, 1,
+				query.Kind(query.Relationship(), ad.PropagatesACEsTo),
+				query.Kind(query.Start(), ad.Entity),
+			)).Do(func(path *graph.PathSegment) error {
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+			})
+			return nil
+		})}); err != nil {
+		return err
+	}
+
+	// MATCH (n:GPO)-[:GPOAppliesTo]->(m:Base) RETURN n
+	if err := tx.BreadthFirst(ctx, traversal.Plan{
+		Root: node,
+		Driver: traversal.NewPattern().InboundWithDepth(0, 1,
 			query.And(
-				query.Kind(query.Relationship(), ad.GPLink),
+				query.Kind(query.Relationship(), ad.GPOAppliesTo),
 				query.Kind(query.Start(), ad.GPO),
 			)).Do(func(path *graph.PathSegment) error {
 			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
@@ -296,22 +307,6 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 		return err
 	}
 
-	// MATCH (n:Container)-[:Contains*..]->(m:Base) AND m.isaclprotected = False RETURN n
-	if isAclProtected, err := node.Properties.Get(ad.IsACLProtected.String()).Bool(); err == nil && !isAclProtected {
-		if err := tx.BreadthFirst(ctx, traversal.Plan{
-			Root: node,
-			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.Container),
-			)).Do(func(path *graph.PathSegment) error {
-				path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
-				})
-				return nil
-			})}); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
