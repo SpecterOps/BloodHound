@@ -24,12 +24,12 @@ import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
 
-export const makeMap = (items) =>
-    items.reduce((acc, col) => {
-        return { ...acc, [col?.accessorKey || col?.id]: true };
-    }, {});
-
 type HasData = { data?: object };
+
+const makeMap = (items: any[]) =>
+    items.reduce((acc, col) => {
+        return { ...acc, [col?.accessorKey || col?.id || 'accessor_key_unavailable']: true };
+    }, {});
 
 interface ExploreTableProps<TData extends HasData> {
     open?: boolean;
@@ -55,7 +55,7 @@ const ExploreTable = <TData extends HasData>({
 
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
 
-    const columns: ColumnDef<any, any>[] = useMemo(
+    const allColumnDefinitions: ColumnDef<any, any>[] = useMemo(
         () =>
             firstItem
                 ? // If column order exists in redux/localStorage, use that
@@ -71,6 +71,27 @@ const ExploreTable = <TData extends HasData>({
                 : [],
         [labelsMap, firstItem]
     );
+
+    const visibleColumnDefinitions = allColumnDefinitions.filter(
+        (columnDef) => visibleColumns?.[columnDef?.accessorKey]
+    );
+
+    const fallbackInitialVisibleColumns = makeMap(allColumnDefinitions);
+
+    const handleManageColumnsChange = (columns: ManageColumnsComboBoxOption[]) => {
+        if (typeof onManageColumnsChange === 'function') {
+            const parsedColumns =
+                // TODO: reconcile ColumnDef and ManageColumnsComboBoxOption types?
+                columns?.length > 0
+                    ? columns
+                    : (allColumnDefinitions.map((def) => ({
+                          ...def,
+                          id: def.accessorKey,
+                      })) as ManageColumnsComboBoxOption[]);
+
+            onManageColumnsChange(parsedColumns);
+        }
+    };
 
     const initialColumns: ColumnDef<any, any>[] = [
         {
@@ -97,22 +118,19 @@ const ExploreTable = <TData extends HasData>({
         },
     ];
 
-    const fallbackInitialColumns = makeMap(columns);
-
     if (!open || !data) return null;
 
-    const finalColumns = [...initialColumns, ...columns];
+    const finalColumns = [...initialColumns, ...visibleColumnDefinitions];
     return (
         <div
             className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 max-h-1/2 h-[475px] bg-neutral-light-2`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
-                    columns={columns}
-                    visibleColumns={visibleColumns || fallbackInitialColumns}
+                    columns={allColumnDefinitions}
+                    visibleColumns={visibleColumns || fallbackInitialVisibleColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
                     onExpandClick={() => console.log('expand icon clicked')}
-                    onManageColumnsClick={() => console.log('manage columns button clicked')}
-                    onManageColumnsChange={onManageColumnsChange}
+                    onManageColumnsChange={handleManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}

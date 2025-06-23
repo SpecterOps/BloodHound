@@ -49,9 +49,9 @@ import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
-export const makeMap = (items) =>
+const makeMap = (items: any[]) =>
     items.reduce((acc, col) => {
-        return { ...acc, [col?.accessorKey || col?.id]: true };
+        return { ...acc, [col?.accessorKey || col?.id || 'accessor_key_unavailable']: true };
     }, {});
 
 const GraphView: FC = () => {
@@ -71,6 +71,7 @@ const GraphView: FC = () => {
 
     const handleManageColumnsChange = useCallback((items) => {
         const newItems = makeMap(items);
+
         dispatch(setVisibleExploreTableColumns(newItems));
     }, []);
 
