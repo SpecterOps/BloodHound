@@ -17,7 +17,6 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Skeleton } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
@@ -30,26 +29,6 @@ import { useNotifications } from '../../../providers';
 import { QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
 import QuerySearchFilter from './QuerySearchFilter';
-const AD_TAB = 'Active Directory';
-const AZ_TAB = 'Azure';
-const CUSTOM_TAB = 'Custom Searches';
-
-const useStyles = makeStyles((theme) => ({
-    tabs: {
-        height: '35px',
-        minHeight: '35px',
-    },
-    tab: {
-        height: '35px',
-        minHeight: '35px',
-        color: theme.palette.color.primary,
-    },
-    list: {
-        position: 'relative',
-        overflow: 'hidden',
-        '& ul': { padding: 0 },
-    },
-}));
 
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;

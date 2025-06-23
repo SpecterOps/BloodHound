@@ -42,7 +42,6 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
     const { cypherQuery, setCypherQuery, performSearch } = cypherSearchState;
     const createSavedQueryMutation = useCreateSavedQuery();
 
-    const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [showSaveQueryDialog, setShowSaveQueryDialog] = useState(false);
 
     const cypherEditorRef = useRef<CypherEditor | null>(null);

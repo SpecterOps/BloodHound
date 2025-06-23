@@ -35,8 +35,8 @@ import {
 import makeStyles from '@mui/styles/makeStyles';
 import { groupBy } from 'lodash';
 import { FC, useState } from 'react';
+import { useCypherSearch } from '../../hooks';
 import { QueryListSection } from '../../types';
-
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
     clickHandler: (query: string) => void;
@@ -48,8 +48,12 @@ const useStyles = makeStyles((theme) => ({
     subheader: {
         color: theme.palette.color.primary,
         backgroundColor: theme.palette.neutral.tertiary,
-        borderRadius: '8px',
+        paddingLeft: '8px',
+        paddingRight: '8px',
         fontWeight: 'bold',
+    },
+    selected: {
+        backgroundColor: theme.palette.neutral.quaternary,
     },
 }));
 
@@ -62,6 +66,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
     const styles = useStyles();
+    const { cypherQuery } = useCypherSearch();
 
     const handleOpen = () => {
         setOpen(true);
@@ -73,6 +78,22 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     };
 
     const groupedQueries = groupBy(listSections, 'category');
+
+    function getSelectedQuery() {
+        for (const item of listSections) {
+            let result = null;
+
+            result = item.queries.find((query) => {
+                if (query.cypher === cypherQuery) {
+                    return query;
+                }
+            });
+            if (result) {
+                return result;
+            }
+        }
+    }
+    const selectedQuery = getSelectedQuery();
 
     return (
         <>
@@ -87,7 +108,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                     <li key={i}>
                                         {queries?.map((lineItem, idx) => {
                                             const { id, description, cypher, canEdit = false } = lineItem;
-
                                             return (
                                                 <ListItem
                                                     component='div'
@@ -108,7 +128,13 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                             </Button>
                                                         )
                                                     }>
-                                                    <ListItemButton onClick={() => clickHandler(cypher)}>
+                                                    <ListItemButton
+                                                        onClick={() => clickHandler(cypher)}
+                                                        className={
+                                                            selectedQuery?.description === description
+                                                                ? styles.selected
+                                                                : ''
+                                                        }>
                                                         <ListItemText primary={description} />
                                                         {subheader && (
                                                             <Chip
