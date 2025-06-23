@@ -32,8 +32,8 @@ import {
     AssetGroupTagTypeLabel,
     AssetGroupTagTypeTier,
     AssetGroupTagTypes,
-    parseTieringConfiguration,
     UpdateAssetGroupTagRequest,
+    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
@@ -111,10 +111,10 @@ export const TagForm: FC = () => {
         register,
         handleSubmit,
         formState: { errors },
-        setValue
+        setValue,
     } = useForm<TagFormInputs>();
 
-    // Toggle Enable Analysis 
+    // Toggle Enable Analysis
     const [enabled, setEnabled] = useState(false);
 
     const tagsQuery = useAssetGroupTags();
