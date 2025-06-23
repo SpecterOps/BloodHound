@@ -21,7 +21,6 @@ import {
     GraphControls,
     GraphProgress,
     GraphViewErrorAlert,
-    SearchCurrentNodes,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
