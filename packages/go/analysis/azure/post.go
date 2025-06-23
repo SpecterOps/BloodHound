@@ -23,11 +23,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
@@ -936,9 +931,27 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 	}
 }
 
-// CreateAZRoleApproverEdge will create AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes
-// according to the following task steps:
-// Step 0: For each AZTenant in the graph...
+// CreateAZRoleApproverEdge creates AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes.
+//
+// This function implements the AZRoleApprover edge creation logic according to the following requirements:
+//
+//  1. Identify each AZTenant labeled node in the database
+//  2. For each AZTenant, find all AZRole nodes where:
+//     - The AZRole's tenantid property matches the AZTenant's objectid property
+//     - The AZRole's isApprovalRequired property is true
+//     - The AZRole has primaryApprovers configured (user or group approvers)
+//  3. For each qualifying AZRole node:
+//     a. If primaryApprovers is empty/null:
+//     - Create AZRoleApprover edges from "Global Administrator" and "Privileged Role Administrator"
+//     roles in the same tenant to this AZRole
+//     b. If primaryApprovers contains GUIDs:
+//     - Create AZRoleApprover edges from each AZUser/AZGroup node matching those GUIDs to this AZRole
+//
+// Note: Groups for approvers can be nested as long as the root groups are not role eligible.
+// Note: If no specific approvers are selected, privileged role administrators/global administrators
+// become the default approvers (primaryApprovers array will be empty in this case).
+//
+// Returns post-processing statistics and any error encountered during processing.
 func CreateAZRoleApproverEdge(
 	ctx context.Context,
 	db graph.Database,
@@ -953,6 +966,7 @@ func CreateAZRoleApproverEdge(
 		return &operation.Stats, err
 	}
 
+	// Process each tenant to create AZRoleApprover edges for roles requiring approval
 	for _, tenantNode := range tenantNodes {
 		if err := CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
 			return &operation.Stats, err
