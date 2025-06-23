@@ -229,6 +229,7 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+            setEnabled(tagQuery.data.analysis_enabled || false);
         }
     }, [tagQuery.data]);
 
@@ -293,15 +294,11 @@ export const TagForm: FC = () => {
                                                 id='analysis'
                                                 checked={enabled}
                                                 disabled={tagId === TIER_ZERO_ID}
-                                                {...register('analysis_enabled')}
+                                                {...register('analysis_enabled', { value: tagQuery.data?.analysis_enabled || false })}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
-                                                    setEnabled((prev) => !prev);
-                                                    if (checked === true) {
-                                                        setValue('analysis_enabled', true);
-                                                    } else {
-                                                        setValue('analysis_enabled', false);
-                                                    }
+                                                    setEnabled(checked);
+                                                    setValue('analysis_enabled', checked);
                                                 }}
                                             />
                                             <p className='text-xs'>Include this tier when running analysis</p>
