@@ -98,13 +98,13 @@ func Test_UserManagement(t *testing.T) {
 
 		testCtx.SetUserSecret(newUser.ID, integration.AdminUpdatedSecret, true)
 
-		loginResponse, err := newUserClient.LoginSecret(newUser.EmailAddress.String, integration.AdminUpdatedSecret)
+		loginResponse, err := newUserClient.LoginSecret(newUser.EmailAddress.ValueOrZero(), integration.AdminUpdatedSecret)
 		require.Nilf(t, err, "Unexpected error encountered while logging in with updated secret: %v", err)
 		require.True(t, loginResponse.AuthExpired, "Expected user auth to be expired after secret reset with needsPasswordSet enabled")
 
 		testCtx.SetUserSecret(newUser.ID, otherSecret, false)
 
-		loginResponse, err = newUserClient.LoginSecret(newUser.EmailAddress.String, otherSecret)
+		loginResponse, err = newUserClient.LoginSecret(newUser.EmailAddress.ValueOrZero(), otherSecret)
 		require.Nilf(t, err, "Unexpected error encountered while logging in with updated secret: %v", err)
 		require.False(t, loginResponse.AuthExpired, "Expected user auth to not be expired after secret reset")
 
