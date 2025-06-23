@@ -133,7 +133,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                         No Results
                     </Typography>
                     <Button variant='primary' size='small' onClick={clearFiltersHandler}>
-                        Clear Filters
+                        Reset Filters
                     </Button>
                 </Box>
             )}

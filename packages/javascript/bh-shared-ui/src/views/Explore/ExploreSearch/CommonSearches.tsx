@@ -129,7 +129,7 @@ const InnerCommonSearches = ({
             filteredData = filteredData
                 .map((obj) => ({
                     ...obj,
-                    queries: obj.queries.filter((item: any) =>
+                    queries: obj.queries.filter((item: QueryLineItem) =>
                         item.description.toLowerCase().includes(searchTerm.toLowerCase())
                     ),
                 }))
@@ -140,7 +140,7 @@ const InnerCommonSearches = ({
         }
         if (categories.length) {
             filteredData = filteredData
-                .filter((item: any) => categories.includes(item.subheader))
+                .filter((item: QuerySearchType) => categories.includes(item.subheader))
                 .filter((x) => x.queries.length);
         }
         setFilteredList(filteredData);
