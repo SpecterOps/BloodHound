@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { SeedTypeCypher } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
@@ -20,8 +21,6 @@ import { zoneHandlers } from '../../mocks';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
-//import { testSelector } from '../../views/ZoneManagement/Save/SelectorForm/SelectorForm.test';
-import { SeedTypeCypher } from 'js-client-library';
 import EntityInfoContent from './EntityInfoContent';
 
 const testSelector = {
