@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/azure/azrole"
 	"github.com/specterops/bloodhound/dawgs/cardinality"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/ops"
@@ -940,7 +939,13 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 // CreateAZRoleApproverEdge will create AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes
 // according to the following task steps:
 // Step 0: For each AZTenant in the graph...
-func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+func CreateAZRoleApproverEdge(
+	ctx context.Context,
+	db graph.Database,
+) (
+	*analysis.AtomicPostProcessingStats,
+	error,
+) {
 	// Step 0: Identify each AZTenant labeled node in the database.
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)
@@ -949,7 +954,7 @@ func CreateAZRoleApproverEdge(ctx context.Context, db graph.Database) (*analysis
 	}
 
 	for _, tenantNode := range tenantNodes {
-		if err := azrole.CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
+		if err := CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
 			return &operation.Stats, err
 		}
 	}

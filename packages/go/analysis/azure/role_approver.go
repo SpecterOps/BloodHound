@@ -1,4 +1,4 @@
-package azrole
+package azure
 
 import (
 	"context"
@@ -21,10 +21,6 @@ func CreateApproverEdge(
 	tenantNode *graph.Node,
 	operation analysis.StatTrackedOperation[analysis.CreatePostRelationshipJob],
 ) error {
-	tenantID, err := tenantNode.Properties.Get(azure.TenantID.String()).String()
-	if err != nil {
-		return err
-	}
 	tenantObjectID, err := tenantNode.Properties.Get(common.ObjectID.String()).String()
 	if err != nil {
 		return err
@@ -64,7 +60,11 @@ func CreateApproverEdge(
 	}
 
 	for _, fetchedAZRole := range fetchedAZRoles {
-		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+		if err := operation.Operation.SubmitReader(func(
+			ctx context.Context,
+			tx graph.Transaction,
+			outC chan<- analysis.CreatePostRelationshipJob,
+		) error {
 			// Step 3a: Read the primaryApprovers list (group GUIDs)
 			userApproversID, err := fetchedAZRole.Properties.Get(
 				azure.EndUserAssignmentUserApprovers.String(),
@@ -81,7 +81,7 @@ func CreateApproverEdge(
 			principalIDs := append(userApproversID, groupApproversID...)
 			if len(principalIDs) == 0 {
 				// Handle default admin roles...
-				return handleDefaultAdminRoles(ctx, db, outC, tenantID, fetchedAZRole)
+				return handleDefaultAdminRoles(ctx, db, outC, tenantNode, fetchedAZRole)
 			} else {
 				// Handle principal IDs...
 				return handlePrincipalApprovers(ctx, db, outC, principalIDs, fetchedAZRole)
@@ -94,23 +94,25 @@ func CreateApproverEdge(
 	return nil
 }
 
-func handleDefaultAdminRoles(ctx context.Context, db graph.Database, outC chan<- analysis.CreatePostRelationshipJob, tenantID string, fetchedAZRole *graph.Node) error {
+func handleDefaultAdminRoles(
+	ctx context.Context,
+	db graph.Database,
+	outC chan<- analysis.CreatePostRelationshipJob,
+	tenantNode, fetchedAZRole *graph.Node,
+) error {
 	var fetchedNodes graph.NodeSet
 	err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		nodes, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Equals(query.NodeProperty(azure.TenantID.String()), tenantID),
-				query.Kind(query.Node(), azure.Role),
-				query.Or(
-					query.Kind(query.Relationship(), azure.GlobalAdmin),
-					query.Kind(query.Relationship(), azure.PrivilegedRoleAdmin),
-				),
-			)
-		}))
+		roleAssignments, err := TenantRoles(
+			tx,
+			tenantNode,
+			azure.PrivilegedRoleAdministratorRole,
+			azure.CompanyAdministratorRole,
+		)
 		if err != nil {
 			return err
 		}
-		fetchedNodes = nodes
+
+		fetchedNodes = roleAssignments
 		return nil
 	})
 	if err != nil {
@@ -128,7 +130,13 @@ func handleDefaultAdminRoles(ctx context.Context, db graph.Database, outC chan<-
 	return nil
 }
 
-func handlePrincipalApprovers(ctx context.Context, db graph.Database, outC chan<- analysis.CreatePostRelationshipJob, principalIDs []string, fetchedAZRole *graph.Node) error {
+func handlePrincipalApprovers(
+	ctx context.Context,
+	db graph.Database,
+	outC chan<- analysis.CreatePostRelationshipJob,
+	principalIDs []string,
+	fetchedAZRole *graph.Node,
+) error {
 	for _, principalID := range principalIDs {
 		var fetchedNode *graph.Node
 		err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -146,7 +154,13 @@ func handlePrincipalApprovers(ctx context.Context, db graph.Database, outC chan<
 		})
 		if err != nil {
 			if graph.IsErrNotFound(err) {
-				slog.WarnContext(ctx, fmt.Sprintf("Entity node not found for principal ID: %s, skipping edge creation", principalID))
+				slog.WarnContext(
+					ctx,
+					fmt.Sprintf(
+						"Entity node not found for principal ID: %s, skipping edge creation",
+						principalID,
+					),
+				)
 				continue
 			} else {
 				return err
