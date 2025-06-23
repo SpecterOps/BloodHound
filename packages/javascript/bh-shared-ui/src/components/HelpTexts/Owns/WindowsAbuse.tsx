@@ -160,6 +160,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                     </Typography>
 
                     <Typography variant='body2'>
+                        The permission also grants write access to the "altSecurityIdentities" attribute, which enables
+                        an ADCS ESC14 Scenario A attack.
+                    </Typography>
+
+                    <Typography variant='body2'>
                         Alternatively, GenericAll enables {sourceName} to set a ServicePrincipalName (SPN) on the
                         targeted user, which may be abused in a Targeted Kerberoast attack.
                     </Typography>
@@ -232,6 +237,115 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
 
                     <Typography variant='body2'>
                         For other optional parameters, view the Whisker documentation.
+                    </Typography>
+
+                    <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>
+                    <Typography variant='body2'>
+                        An attacker can add an explicit certificate mapping in the altSecurityIdentities of the target
+                        referring to a certificate in the attacker's possession, and then use this certificate to
+                        authenticate as the target.
+                    </Typography>
+                    <Typography variant='body2'>
+                        The certificate must meet the following requirements:
+                        <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                            <li>Chain up to trusted root CA on the DC</li>
+                            <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
+                            <li>
+                                Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry
+                                (UPN)
+                            </li>
+                        </ol>
+                        <p className='my-4'>
+                            The EKUs that enable domain authentication over Kerberos:
+                            <ul style={{ paddingLeft: '1.5em' }}>
+                                <li>Client Authentication (1.3.6.1.5.5.7.3.2)</li>
+                                <li>PKINIT Client Authentication (1.3.6.1.5.2.3.4)</li>
+                                <li>Smart Card Logon (1.3.6.1.4.1.311.20.2.2)</li>
+                                <li>Any Purpose (2.5.29.37.0)</li>
+                                <li>SubCA (no EKUs)</li>
+                            </ul>
+                        </p>
+                        <p className='my-4'>
+                            The last certificate requirement means that user certificates will not work, so the
+                            certificate typically must be of a computer. By default, the ADCS certificate template{' '}
+                            <i>Computer (Machine)</i> meets these requirements and grants Domain Computers enrollment
+                            rights. The target can still be a user.
+                        </p>
+                        The last requirement does not have to be met if a DC has UPN mapping disabled (see{' '}
+                        <Link
+                            target='_blank'
+                            rel='noopener'
+                            href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/ff520074(v=ws.10)'>
+                            How to disable the Subject Alternative Name for UPN mapping
+                        </Link>
+                        ).
+                    </Typography>
+                    <Typography variant='body2'>
+                        Obtain a certificate meeting the above requirements for example by dumping a certificate from a
+                        computer, or enrolling a new certificate as a computer:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:Machine /machine'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        If the enrollment fails with an error message stating that the Email or DNS name is unavailable
+                        and cannot be added to the Subject or Subject Alternate name, then it is because the enrollee
+                        principal does not have their mail or dNSHostName attribute set, which is required by the
+                        certificate template. The mail attribute can be set on both user and computer objects but the
+                        dNSHostName attribute can only be set on computer objects. Computers have validated write
+                        permission to their own dNSHostName attribute by default, but neither users nor computers can
+                        write to their own mail attribute by default.
+                    </Typography>
+                    <Typography variant='body2'>
+                        Save the certificate as cert.pem and the private key as cert.key. Use certutil to obtain the
+                        certificate as a PFX file:
+                    </Typography>
+                    <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
+                    <Typography variant='body2'>
+                        The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber or
+                        X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                    </Typography>
+                    <Typography variant='body2'>
+                        Get the SHA1 hash of the certificate public key using certutil:
+                    </Typography>
+                    <CodeController>
+                        {`certutil.exe -dump -v .\\cert.pfx
+…
+Cert Hash(sha1): ef9375785421d3ad286d8bdeb166f0f697266992
+…`}
+                    </CodeController>
+                    <Typography variant='body2'>
+                        Use Add-AltSecIDMapping to add the explicit certificate mapping string to the
+                        'altSecurityIdentities' attribute of the target principal:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'Add-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
+                        }
+                    </Typography>
+                    <Typography variant='body2'>
+                        Verify the that the mapping was added using Get-AltSecIDMapping:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {'Get-AltSecIDMapping -SearchBase "CN=Target,CN=Users,DC=forestroot,DC=com"'}
+                    </Typography>
+                    <Typography variant='body2'>
+                        Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the target
+                        identity, and the PFX-formatted certificate:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {'Rubeus asktgt /user:"forestroot\\target" /certificate:cert.pfx /ptt'}
+                    </Typography>
+                    <Typography variant='body2'>
+                        After the execution of the abuse, use Remove-AltSecIDMapping to remove the explicit certificate
+                        mapping string from the 'altSecurityIdentities' attribute of the target principal:
+                    </Typography>
+                    <Typography component={'pre'}>
+                        {
+                            'Remove-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
+                        }
                     </Typography>
 
                     <Typography variant='body1'> Targeted Kerberoast attack </Typography>
@@ -320,6 +434,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography variant='body2'>
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            The permission also grants write access to the "altSecurityIdentities" attribute, which
+                            enables an ADCS ESC14 Scenario A attack.
                         </Typography>
 
                         <Typography variant='body1'> Retrieve LAPS Password </Typography>
@@ -456,6 +575,116 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
                             }
                         </Typography>
+
+                        <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>
+                        <Typography variant='body2'>
+                            An attacker can add an explicit certificate mapping in the altSecurityIdentities of the
+                            target referring to a certificate in the attacker's possession, and then use this
+                            certificate to authenticate as the target.
+                        </Typography>
+                        <Typography variant='body2'>
+                            The certificate must meet the following requirements:
+                            <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                                <li>Chain up to trusted root CA on the DC</li>
+                                <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
+                                <li>
+                                    Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry
+                                    (UPN)
+                                </li>
+                            </ol>
+                            <p className='my-4'>
+                                The EKUs that enable domain authentication over Kerberos:
+                                <ul style={{ paddingLeft: '1.5em' }}>
+                                    <li>Client Authentication (1.3.6.1.5.5.7.3.2)</li>
+                                    <li>PKINIT Client Authentication (1.3.6.1.5.2.3.4)</li>
+                                    <li>Smart Card Logon (1.3.6.1.4.1.311.20.2.2)</li>
+                                    <li>Any Purpose (2.5.29.37.0)</li>
+                                    <li>SubCA (no EKUs)</li>
+                                </ul>
+                            </p>
+                            <p className='my-4'>
+                                The last certificate requirement means that user certificates will not work, so the
+                                certificate typically must be of a computer. By default, the ADCS certificate template{' '}
+                                <i>Computer (Machine)</i> meets these requirements and grants Domain Computers
+                                enrollment rights. The target can still be a user.
+                            </p>
+                            The last requirement does not have to be met if a DC has UPN mapping disabled (see{' '}
+                            <Link
+                                target='_blank'
+                                rel='noopener'
+                                href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/ff520074(v=ws.10)'>
+                                How to disable the Subject Alternative Name for UPN mapping
+                            </Link>
+                            ).
+                        </Typography>
+                        <Typography variant='body2'>
+                            Obtain a certificate meeting the above requirements for example by dumping a certificate
+                            from a computer, or enrolling a new certificate as a computer:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:Machine /machine'
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            If the enrollment fails with an error message stating that the Email or DNS name is
+                            unavailable and cannot be added to the Subject or Subject Alternate name, then it is because
+                            the enrollee principal does not have their mail or dNSHostName attribute set, which is
+                            required by the certificate template. The mail attribute can be set on both user and
+                            computer objects but the dNSHostName attribute can only be set on computer objects.
+                            Computers have validated write permission to their own dNSHostName attribute by default, but
+                            neither users nor computers can write to their own mail attribute by default.
+                        </Typography>
+                        <Typography variant='body2'>
+                            Save the certificate as cert.pem and the private key as cert.key. Use certutil to obtain the
+                            certificate as a PFX file:
+                        </Typography>
+                        <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
+                        <Typography variant='body2'>
+                            The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber
+                            or X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                        </Typography>
+                        <Typography variant='body2'>
+                            Get the SHA1 hash of the certificate public key using certutil:
+                        </Typography>
+                        <CodeController>
+                            {`certutil.exe -dump -v .\\cert.pfx
+…
+Cert Hash(sha1): ef9375785421d3ad286d8bdeb166f0f697266992
+…`}
+                        </CodeController>
+                        <Typography variant='body2'>
+                            Use Add-AltSecIDMapping to add the explicit certificate mapping string to the
+                            'altSecurityIdentities' attribute of the target principal:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Add-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            Verify the that the mapping was added using Get-AltSecIDMapping:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {'Get-AltSecIDMapping -SearchBase "CN=Target,CN=Users,DC=forestroot,DC=com"'}
+                        </Typography>
+                        <Typography variant='body2'>
+                            Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the target
+                            identity, and the PFX-formatted certificate:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {'Rubeus asktgt /user:"forestroot\\target" /certificate:cert.pfx /ptt'}
+                        </Typography>
+                        <Typography variant='body2'>
+                            After the execution of the abuse, use Remove-AltSecIDMapping to remove the explicit
+                            certificate mapping string from the 'altSecurityIdentities' attribute of the target
+                            principal:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Remove-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
+                            }
+                        </Typography>
                     </>
                 );
             } else {
@@ -498,6 +727,11 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography variant='body2'>
                             Alternatively, GenericAll on a computer object can be used to perform a Resource-Based
                             Constrained Delegation attack.
+                        </Typography>
+
+                        <Typography variant='body2'>
+                            The permission also grants write access to the "altSecurityIdentities" attribute, which
+                            enables an ADCS ESC14 Scenario A attack.
                         </Typography>
 
                         <Typography variant='body1'> Shadow Credentials attack </Typography>
@@ -582,6 +816,116 @@ const WindowsAbuse: FC<EdgeInfoProps & { targetId: string; haslaps: boolean }> =
                         <Typography component={'pre'}>
                             {
                                 'Rubeus.exe s4u /user:attackersystem$ /rc4:EF266C6B963C0BB683941032008AD47F /impersonateuser:admin /msdsspn:cifs/TARGETCOMPUTER.testlab.local /ptt'
+                            }
+                        </Typography>
+
+                        <Typography variant='body1'> ADCS ESC14 Scenario A </Typography>
+                        <Typography variant='body2'>
+                            An attacker can add an explicit certificate mapping in the altSecurityIdentities of the
+                            target referring to a certificate in the attacker's possession, and then use this
+                            certificate to authenticate as the target.
+                        </Typography>
+                        <Typography variant='body2'>
+                            The certificate must meet the following requirements:
+                            <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
+                                <li>Chain up to trusted root CA on the DC</li>
+                                <li>Enhanced Key Usage extension contains an EKU that enables domain authentication</li>
+                                <li>
+                                    Subject Alternative Name (SAN) does NOT contain a "Other Name/Principal Name" entry
+                                    (UPN)
+                                </li>
+                            </ol>
+                            <p className='my-4'>
+                                The EKUs that enable domain authentication over Kerberos:
+                                <ul style={{ paddingLeft: '1.5em' }}>
+                                    <li>Client Authentication (1.3.6.1.5.5.7.3.2)</li>
+                                    <li>PKINIT Client Authentication (1.3.6.1.5.2.3.4)</li>
+                                    <li>Smart Card Logon (1.3.6.1.4.1.311.20.2.2)</li>
+                                    <li>Any Purpose (2.5.29.37.0)</li>
+                                    <li>SubCA (no EKUs)</li>
+                                </ul>
+                            </p>
+                            <p className='my-4'>
+                                The last certificate requirement means that user certificates will not work, so the
+                                certificate typically must be of a computer. By default, the ADCS certificate template{' '}
+                                <i>Computer (Machine)</i> meets these requirements and grants Domain Computers
+                                enrollment rights. The target can still be a user.
+                            </p>
+                            The last requirement does not have to be met if a DC has UPN mapping disabled (see{' '}
+                            <Link
+                                target='_blank'
+                                rel='noopener'
+                                href='https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/ff520074(v=ws.10)'>
+                                How to disable the Subject Alternative Name for UPN mapping
+                            </Link>
+                            ).
+                        </Typography>
+                        <Typography variant='body2'>
+                            Obtain a certificate meeting the above requirements for example by dumping a certificate
+                            from a computer, or enrolling a new certificate as a computer:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Certify.exe request /ca:rootdomaindc.forestroot.com\\forestroot-RootDomainDC-CA /template:Machine /machine'
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            If the enrollment fails with an error message stating that the Email or DNS name is
+                            unavailable and cannot be added to the Subject or Subject Alternate name, then it is because
+                            the enrollee principal does not have their mail or dNSHostName attribute set, which is
+                            required by the certificate template. The mail attribute can be set on both user and
+                            computer objects but the dNSHostName attribute can only be set on computer objects.
+                            Computers have validated write permission to their own dNSHostName attribute by default, but
+                            neither users nor computers can write to their own mail attribute by default.
+                        </Typography>
+                        <Typography variant='body2'>
+                            Save the certificate as cert.pem and the private key as cert.key. Use certutil to obtain the
+                            certificate as a PFX file:
+                        </Typography>
+                        <Typography component={'pre'}>{'certutil.exe -MergePFX .\\cert.pem .\\cert.pfx'}</Typography>
+                        <Typography variant='body2'>
+                            The abuse is possible with the strong explicit certificate mappings X509IssuerSerialNumber
+                            or X509SHA1PublicKey. In this example, we use X509SHA1PublicKey.
+                        </Typography>
+                        <Typography variant='body2'>
+                            Get the SHA1 hash of the certificate public key using certutil:
+                        </Typography>
+                        <CodeController>
+                            {`certutil.exe -dump -v .\\cert.pfx
+…
+Cert Hash(sha1): ef9375785421d3ad286d8bdeb166f0f697266992
+…`}
+                        </CodeController>
+                        <Typography variant='body2'>
+                            Use Add-AltSecIDMapping to add the explicit certificate mapping string to the
+                            'altSecurityIdentities' attribute of the target principal:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Add-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
+                            }
+                        </Typography>
+                        <Typography variant='body2'>
+                            Verify the that the mapping was added using Get-AltSecIDMapping:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {'Get-AltSecIDMapping -SearchBase "CN=Target,CN=Users,DC=forestroot,DC=com"'}
+                        </Typography>
+                        <Typography variant='body2'>
+                            Use Rubeus to request a ticket granting ticket (TGT) from the domain, specifying the target
+                            identity, and the PFX-formatted certificate:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {'Rubeus asktgt /user:"forestroot\\target" /certificate:cert.pfx /ptt'}
+                        </Typography>
+                        <Typography variant='body2'>
+                            After the execution of the abuse, use Remove-AltSecIDMapping to remove the explicit
+                            certificate mapping string from the 'altSecurityIdentities' attribute of the target
+                            principal:
+                        </Typography>
+                        <Typography component={'pre'}>
+                            {
+                                'Remove-AltSecIDMapping -DistinguishedName "CN=Target,CN=Users,DC=forestroot,DC=com" -MappingString "X509:<SHA1-PUKEY>ef9375785421d3ad286d8bdeb166f0f697266992"'
                             }
                         </Typography>
                     </>
