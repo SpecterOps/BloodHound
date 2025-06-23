@@ -53,9 +53,7 @@ func NewDefaultConfiguration() (Configuration, error) {
 			DisableMigrations:            false,
 			EnableCypherMutations:        false,
 			RecreateDefaultAdmin:         false,
-			AuthSessionTTLHours:          8,     // Default to a logged in auth session time to live of 8 hours
 			GraphQueryMemoryLimit:        2,     // 2 GiB by default
-			FedRAMPEULAText:              "",    // Enterprise only
 			EnableTextLogger:             false, // Default to JSON logging
 			TLS:                          TLSConfiguration{},
 			SAML:                         SAMLConfiguration{},

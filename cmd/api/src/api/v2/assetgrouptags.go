@@ -274,7 +274,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Seeds = nil
 		}
 
-		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor, selector); err != nil {
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), actor.EmailAddress.ValueOrZero(), selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if seedsTemp != nil {
@@ -367,11 +367,11 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else {
 		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.CreatedBy)); err == nil {
-			selector.CreatedBy = createdByUser.EmailAddress.String
+			selector.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
 		}
 
 		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.UpdatedBy)); err == nil {
-			selector.UpdatedBy = updatedByUser.EmailAddress.String
+			selector.UpdatedBy = updatedByUser.EmailAddress.ValueOrZero()
 		}
 
 		api.WriteBasicResponse(request.Context(), GetSelectorResponse{Selector: selector}, http.StatusOK, response)
@@ -487,11 +487,11 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
-			assetGroupTag.CreatedBy = createdByUser.EmailAddress.String
+			assetGroupTag.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
 		}
 
 		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.UpdatedBy)); err == nil {
-			assetGroupTag.UpdatedBy = updatedByUser.EmailAddress.String
+			assetGroupTag.UpdatedBy = updatedByUser.EmailAddress.ValueOrZero()
 		}
 
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)

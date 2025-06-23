@@ -632,7 +632,7 @@ class BHEAPIClient {
 
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
-        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/customnode', options);
+        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/custom-nodes', options);
 
     /* jobs */
     getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>
