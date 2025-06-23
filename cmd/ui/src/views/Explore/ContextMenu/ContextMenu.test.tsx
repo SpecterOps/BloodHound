@@ -16,7 +16,7 @@
 
 import userEvent from '@testing-library/user-event';
 import * as bhSharedUi from 'bh-shared-ui';
-import { DeepPartial, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
+import { DeepPartial, PathfindingFilters, Permission, createAuthStateWithPermissions } from 'bh-shared-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
@@ -88,9 +88,16 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
     } as any);
 
     const screen = await act(async () => {
-        render(<ContextMenu contextMenu={{ mouseX: 0, mouseY: 0 }} handleClose={vi.fn()} />, {
-            initialState,
-        });
+        render(
+            <ContextMenu
+                contextMenu={{ x: 0, y: 0 }}
+                handleClose={vi.fn()}
+                pathfindingFilters={{} as PathfindingFilters}
+            />,
+            {
+                initialState,
+            }
+        );
     });
 
     const user = userEvent.setup();

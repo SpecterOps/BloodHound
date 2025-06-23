@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { SigmaNodeEventPayload } from 'sigma/sigma';
-import { MouseCoords, NodeDisplayData, PartialButFor } from 'sigma/types';
+import { NodeDisplayData, PartialButFor } from 'sigma/types';
 
 /** Threshold of graph zoom before labels fade out */
 export const STARTING_ZOOM_FADE_RATIO = 0.65;
@@ -129,21 +128,4 @@ export const getNodeRadius = (highlighted: boolean, inverseSqrtZoomRatio: number
     else radius = size * inverseSqrtZoomRatio;
 
     return radius;
-};
-
-/**
- * Reusable method to prevent defaults for mouse move, right click, and double click
- *
- * @param event Sigma or mouse event object used to cancel defaults
- */
-export const preventAllDefaults = (event: SigmaNodeEventPayload | MouseCoords) => {
-    if ('preventSigmaDefault' in event && typeof event.preventSigmaDefault === 'function') {
-        event.preventSigmaDefault();
-    }
-
-    // Prevent events for MouseCoords type
-    if ('original' in event && event.original instanceof MouseEvent) {
-        event.original.preventDefault();
-        event.original.stopPropagation();
-    }
 };

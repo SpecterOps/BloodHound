@@ -20,7 +20,7 @@ import { act, render, screen } from 'src/test-utils';
 import ExploreSearch from './ExploreSearch';
 
 import userEvent from '@testing-library/user-event';
-import { mockCodemirrorLayoutMethods } from 'bh-shared-ui';
+import { mockCodemirrorLayoutMethods, PathfindingFilters } from 'bh-shared-ui';
 
 const comboboxLookaheadOptions = {
     data: [
@@ -73,7 +73,7 @@ const setup = async (exploreSearchTab?: string) => {
     const url = exploreSearchTab ? `/?exploreSearchTab=${exploreSearchTab}` : '/';
 
     const screen = await act(async () => {
-        return render(<ExploreSearch />, { route: url });
+        return render(<ExploreSearch pathfindingFilters={{} as PathfindingFilters} />, { route: url });
     });
 
     const user = userEvent.setup();
