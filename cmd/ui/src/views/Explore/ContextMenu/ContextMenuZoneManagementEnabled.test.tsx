@@ -45,6 +45,7 @@ const server = setupServer(
                             id: 1,
                             type: 1,
                             kind_id: 1,
+                            position: 1,
                             name: 'Tier Zero',
                             description: 'Tier Zero',
                         },
