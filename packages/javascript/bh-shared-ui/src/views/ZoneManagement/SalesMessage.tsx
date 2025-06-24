@@ -6,21 +6,16 @@ import {
 } from '@bloodhoundenterprise/doodleui';
 import { FC } from 'react';
 import { AppIcon } from '../../components';
-import { useParams } from 'react-router-dom';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
 import { useGetConfiguration } from '../../hooks';
 import { parseTieringConfiguration } from 'js-client-library';
 
 const SalesMessage: FC = () => {
 
-    const { tierId = '', labelId } = useParams();
-    const tagId = labelId === undefined ? tierId : labelId;
-
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
 
     const showSalesMessage = () => {
-        if (tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && !tieringConfig?.value.multi_tier_analysis_enabled) {
+        if (!tieringConfig?.value.multi_tier_analysis_enabled) {
             return true;
         }
         return false;

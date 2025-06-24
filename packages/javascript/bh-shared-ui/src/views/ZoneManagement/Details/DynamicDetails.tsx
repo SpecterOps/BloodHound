@@ -24,6 +24,8 @@ import { Cypher } from '../Cypher/Cypher';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 import SalesMessage from '../SalesMessage';
+import { useParams } from 'react-router-dom';
+import { TIER_ZERO_ID, OWNED_ID } from '../utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (
@@ -50,6 +52,9 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
 const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
+    const { tierId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
     return (
         <div className='max-h-full flex flex-col gap-8'>
             <Card className='px-6 py-6 max-w-[32rem]'>
@@ -75,7 +80,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
-            <SalesMessage />
+            {tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && <SalesMessage />}
             <ObjectCountPanel tagId={data.id.toString()} />
         </div>
     );
