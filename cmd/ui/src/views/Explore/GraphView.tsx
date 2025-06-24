@@ -177,7 +177,6 @@ const GraphView: FC = () => {
         }
     };
 
-    console.log({ graphQuery });
     return (
         <div
             className='relative h-full w-full overflow-hidden'

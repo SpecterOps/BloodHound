@@ -48,7 +48,6 @@ const ExploreTable = <TData extends HasData>({
     visibleColumns,
 }: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
-    console.log(data);
     const mungedData = useMemo(
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
         [data]

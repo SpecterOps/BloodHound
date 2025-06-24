@@ -63,7 +63,6 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
         edges: [],
     };
 
-    console.log(graph);
     for (const [key, item] of Object.entries(graph)) {
         if (isNode(item)) {
             const node = item as StyledGraphNode;
@@ -118,6 +117,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 objectid: value.objectId,
                 system_tags: tags.join(' '),
                 lastseen: lastSeen,
+                ...(value?.properties || {}),
             },
         };
     }
@@ -130,7 +130,11 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...(edge.data || {}), lastseen: lastSeen },
+            data: {
+                ...(edge.data || {}),
+                lastseen: lastSeen,
+                ...(edge.data?.properties || {}),
+            },
         };
     }
     return result;
