@@ -930,3 +930,46 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		return &operation.Stats, operation.Done()
 	}
 }
+
+func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
+	if managementGroups, err := FetchManagementGroups(ctx, db); err != nil {
+		return err
+	} else if tenants, err := FetchTenants(ctx, db); err != nil {
+		return err
+	} else {
+		tenantMap := make(map[string]string)
+		for _, tenant := range tenants {
+			if id, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
+				slog.Error("Error getting tenant objectid for tenant %d: %v", tenant.ID.Int64(), err)
+				continue
+			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
+				slog.Error("Error getting tenant name for tenant %d: %v", tenant.ID.Int64(), err)
+				continue
+			} else {
+				tenantMap[id] = tenantName
+			}
+		}
+
+		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			for _, managementGroup := range managementGroups {
+				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
+					slog.Error("Error getting tenantid for management group %d: %v", managementGroup.ID.Int64(), err)
+					continue
+				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
+					slog.Error("Error getting displayName for management group %d: %v", managementGroup.ID.Int64(), err)
+					continue
+				} else if tenantName, ok := tenantMap[tenantId]; !ok {
+					slog.Warn("Could not find a tenant that matches management group %d: %v", managementGroup.ID.Int64(), err)
+					continue
+				} else {
+					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))
+					if err := tx.UpdateNode(managementGroup); err != nil {
+						return err
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+}
