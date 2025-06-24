@@ -58,6 +58,7 @@ export const useExploreGraph = (includeProperties?: boolean) => {
             ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
             : query.getQueryConfig(params);
 
+    console.log(queryConfig);
     return useQuery({
         ...queryConfig,
         onError: (error: any) => {

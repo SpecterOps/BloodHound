@@ -53,6 +53,7 @@ const ExploreTable = <TData extends HasData>({
     );
     const firstItem = mungedData?.[0];
 
+    console.log({ data });
     const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
 
     const allColumnDefinitions: ColumnDef<any, any>[] = useMemo(

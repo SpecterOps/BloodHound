@@ -476,7 +476,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, pQuery PreparedQuery, i
 
 	slog.InfoContext(
 		ctx,
-		"Executed user cypher query",
+		"Executed user cypher query BIGTIME",
 		slog.String("query", pQuery.StrippedQuery),
 		slog.Int64("fitness", pQuery.complexity.RelativeFitness),
 		slog.Duration("elapsed", time.Since(start)),

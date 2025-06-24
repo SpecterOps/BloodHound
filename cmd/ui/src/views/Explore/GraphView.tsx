@@ -73,14 +73,13 @@ const GraphView: FC = () => {
         const newItems = makeMap(items);
 
         dispatch(setVisibleExploreTableColumns(newItems));
+        // TODO: why did I keep this array empty?
     }, []);
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
     }
 
-    const includeProperties = !!isExploreTableSelected;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -96,6 +95,8 @@ const GraphView: FC = () => {
         enabled: !exploreLayout,
     });
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
+    const includeProperties = displayTable;
+    const graphQuery = useSigmaExploreGraph(includeProperties);
 
     useEffect(() => {
         let items: any = graphQuery.data;
