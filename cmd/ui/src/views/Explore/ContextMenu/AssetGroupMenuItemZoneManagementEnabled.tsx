@@ -16,14 +16,14 @@
 
 import {
     Button,
-    Dialog,
     DialogActions,
     DialogContent,
     DialogDescription,
+    DialogPortal,
     DialogTitle,
 } from '@bloodhoundenterprise/doodleui';
 import { MenuItem } from '@mui/material';
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 const AssetGroupMenuItem: FC<{
@@ -32,6 +32,8 @@ const AssetGroupMenuItem: FC<{
     isCurrentMember: boolean;
     removeNodePath: string;
     onAddNode?: (assetGroupId: string | number) => void;
+    onShowConfirmation?: () => void;
+    onCancelConfirmation?: () => void;
     showConfirmationOnAdd?: boolean;
     confirmationOnAddMessage?: string;
 }> = ({
@@ -40,37 +42,35 @@ const AssetGroupMenuItem: FC<{
     isCurrentMember,
     removeNodePath,
     onAddNode = () => {},
+    onShowConfirmation = () => {},
+    onCancelConfirmation = () => {},
     showConfirmationOnAdd = false,
     confirmationOnAddMessage = '',
 }) => {
-    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-
     const handleAddNode = () => {
         onAddNode(assetGroupId);
-        setConfirmDialogOpen(false);
     };
 
     const handleOnCancel = () => {
-        setConfirmDialogOpen(false);
+        onCancelConfirmation();
     };
 
     // selected node is not a member of the group
     if (!isCurrentMember) {
-        return (
-            <>
-                <MenuItem onClick={showConfirmationOnAdd ? () => setConfirmDialogOpen(true) : handleAddNode}>
-                    Add to {assetGroupName}
-                </MenuItem>
-                {showConfirmationOnAdd && (
+        if (showConfirmationOnAdd) {
+            return (
+                <>
+                    <MenuItem onClick={onShowConfirmation}>Add to {assetGroupName}</MenuItem>
                     <ConfirmNodeChangesDialog
                         onCancel={handleOnCancel}
                         onAccept={handleAddNode}
-                        open={confirmDialogOpen}
                         dialogContent={confirmationOnAddMessage}
                     />
-                )}
-            </>
-        );
+                </>
+            );
+        } else {
+            return <MenuItem onClick={handleAddNode}>Add to {assetGroupName}</MenuItem>;
+        }
     } else {
         return (
             <MenuItem component={Link} to={removeNodePath}>
@@ -81,13 +81,12 @@ const AssetGroupMenuItem: FC<{
 };
 
 const ConfirmNodeChangesDialog: FC<{
-    open: boolean;
     onCancel: () => void;
     onAccept: () => void;
     dialogContent: string;
-}> = ({ open, onCancel, onAccept, dialogContent }) => {
+}> = ({ onCancel, onAccept, dialogContent }) => {
     return (
-        <Dialog open={open}>
+        <DialogPortal>
             <DialogContent>
                 <DialogTitle>Confirm Selection</DialogTitle>
                 <DialogDescription>{dialogContent}</DialogDescription>
@@ -100,7 +99,7 @@ const ConfirmNodeChangesDialog: FC<{
                     </Button>
                 </DialogActions>
             </DialogContent>
-        </Dialog>
+        </DialogPortal>
     );
 };
 

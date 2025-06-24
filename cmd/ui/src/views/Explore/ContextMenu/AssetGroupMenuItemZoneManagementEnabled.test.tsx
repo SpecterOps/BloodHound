@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import { render, screen } from 'src/test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
@@ -43,6 +45,20 @@ const getAssetGroupTestProps = ({ isTierZero }: { isTierZero: boolean }) => ({
             : [{ tag: 'owned', id: ownedAssetGroup.id }],
     },
 });
+
+const AssetGroupMenuItemWithDialog = (props: any) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    return (
+        <Dialog open={dialogOpen}>
+            <AssetGroupMenuItem
+                {...props}
+                onShowConfirmation={() => setDialogOpen(true)}
+                onCancelConfirmation={() => setDialogOpen(false)}
+            />
+        </Dialog>
+    );
+};
 
 describe('AssetGroupMenuItem', () => {
     describe('adding to an asset group', () => {
@@ -71,7 +87,7 @@ describe('AssetGroupMenuItem', () => {
             const testRemoveNodePath = '/meow';
 
             render(
-                <AssetGroupMenuItem
+                <AssetGroupMenuItemWithDialog
                     assetGroupId={tierZeroAssetGroup.id}
                     assetGroupName={tierZeroAssetGroup.name}
                     isCurrentMember={false}

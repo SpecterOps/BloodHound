@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dialog } from '@bloodhoundenterprise/doodleui';
 import { Menu, MenuItem } from '@mui/material';
-
 import {
     NodeResponse,
     Permission,
@@ -27,7 +27,7 @@ import {
     usePermissions,
 } from 'bh-shared-ui';
 import { SeedTypeObjectId } from 'js-client-library';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
 import AssetGroupMenuItem from './AssetGroupMenuItemZoneManagementEnabled';
 import CopyMenuItem from './CopyMenuItem';
@@ -81,6 +81,8 @@ const ContextMenu: FC<{
         }
     };
 
+    const [dialogOpen, setDialogOpen] = useState(false);
+
     const handleSetEndingNode = () => {
         const selectedItemData = selectedItemQuery.data;
         if (selectedItemData && isNode(selectedItemData)) {
@@ -94,10 +96,17 @@ const ContextMenu: FC<{
     };
 
     const handleAddNode = (assetGroupId: string | number) => {
-        createAssetGroupTagSelectorMutation.mutate({
-            assetGroupId,
-            node: selectedItemQuery.data as NodeResponse,
-        });
+        createAssetGroupTagSelectorMutation.mutate(
+            {
+                assetGroupId,
+                node: selectedItemQuery.data as NodeResponse,
+            },
+            {
+                onSettled: () => {
+                    setDialogOpen(false);
+                },
+            }
+        );
     };
 
     const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.tags.find((value) => {
@@ -135,36 +144,44 @@ const ContextMenu: FC<{
     }
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={onClose}
-            keepMounted>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
-            {checkPermission(Permission.GRAPH_DB_WRITE) && [
-                <AssetGroupMenuItem
-                    key={tierZeroAssetGroup!.id}
-                    assetGroupId={tierZeroAssetGroup!.id}
-                    assetGroupName={tierZeroAssetGroup!.name}
-                    onAddNode={handleAddNode}
-                    removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
-                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
-                    showConfirmationOnAdd
-                    confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
-                />,
-                <AssetGroupMenuItem
-                    key={ownedAssetGroup!.id}
-                    assetGroupId={ownedAssetGroup!.id}
-                    assetGroupName={ownedAssetGroup!.name}
-                    onAddNode={handleAddNode}
-                    removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
-                    isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
-                />,
-            ]}
-            <CopyMenuItem />
-        </Menu>
+        <Dialog open={dialogOpen}>
+            <Menu
+                open={contextMenu !== null}
+                anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
+                anchorReference='anchorPosition'
+                onClick={onClose}
+                keepMounted>
+                <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
+                <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+                {checkPermission(Permission.GRAPH_DB_WRITE) && [
+                    <AssetGroupMenuItem
+                        key={tierZeroAssetGroup!.id}
+                        assetGroupId={tierZeroAssetGroup!.id}
+                        assetGroupName={tierZeroAssetGroup!.name}
+                        onAddNode={handleAddNode}
+                        removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
+                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
+                        onShowConfirmation={() => {
+                            setDialogOpen(true);
+                        }}
+                        onCancelConfirmation={() => {
+                            setDialogOpen(false);
+                        }}
+                        showConfirmationOnAdd
+                        confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
+                    />,
+                    <AssetGroupMenuItem
+                        key={ownedAssetGroup!.id}
+                        assetGroupId={ownedAssetGroup!.id}
+                        assetGroupName={ownedAssetGroup!.name}
+                        onAddNode={handleAddNode}
+                        removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
+                        isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
+                    />,
+                ]}
+                <CopyMenuItem />
+            </Menu>
+        </Dialog>
     );
 };
 
