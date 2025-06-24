@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	GraphPackageName       = "github.com/specterops/bloodhound/dawgs/graph"
+	GraphPackageName       = "github.com/specterops/dawgs/graph"
 	SchemaPackageName      = "github.com/specterops/bloodhound/graphschema"
 	ADSchemaPackageName    = "github.com/specterops/bloodhound/graphschema/ad"
 	AzureSchemaPackageName = "github.com/specterops/bloodhound/graphschema/azure"

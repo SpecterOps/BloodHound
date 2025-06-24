@@ -32,7 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/upload"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -48,6 +48,8 @@ var (
 	ErrDuplicateUserPrincipal      = errors.New("duplicate user principal name")
 	ErrDuplicateEmail              = errors.New("duplicate user email address")
 	ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
+	ErrDuplicateKindName           = errors.New("duplicate kind name")
+	ErrPositionOutOfRange          = errors.New("position out of range")
 )
 
 func IsUnexpectedDatabaseError(err error) bool {
@@ -66,7 +68,7 @@ type Database interface {
 	Close(ctx context.Context)
 
 	// Ingest
-	ingest.IngestData
+	upload.UploadData
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	CountAllIngestTasks(ctx context.Context) (int64, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error

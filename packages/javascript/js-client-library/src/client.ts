@@ -18,6 +18,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import {
     ClearDatabaseRequest,
     CreateAssetGroupRequest,
+    CreateAssetGroupTagRequest,
     CreateAzureHoundClientRequest,
     CreateAzureHoundEventRequest,
     CreateOIDCProviderRequest,
@@ -29,10 +30,12 @@ import {
     CreateUserRequest,
     LoginRequest,
     PostureRequest,
+    PreviewSelectorsRequest,
     PutUserAuthSecretRequest,
     RequestOptions,
     UpdateAssetGroupRequest,
     UpdateAssetGroupSelectorRequest,
+    UpdateAssetGroupTagRequest,
     UpdateAzureHoundClientRequest,
     UpdateAzureHoundEventRequest,
     UpdateConfigurationRequest,
@@ -72,6 +75,7 @@ import {
     PostureFindingTrendsResponse,
     PostureHistoryResponse,
     PostureResponse,
+    PreviewSelectorsResponse,
     SavedQuery,
     StartFileIngestResponse,
     UpdateConfigurationResponse,
@@ -166,6 +170,23 @@ class BHEAPIClient {
     getAssetGroupTag = (tagId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagResponse>(`/api/v2/asset-group-tags/${tagId}`, options);
 
+    createAssetGroupTag = (values: CreateAssetGroupTagRequest, options?: RequestOptions) =>
+        this.baseClient.post<BasicResponse<types.AssetGroupTag>>(`/api/v2/asset-group-tags`, values, options);
+
+    updateAssetGroupTag = (
+        tagId: number | string,
+        updatedValues: UpdateAssetGroupTagRequest,
+        options?: RequestOptions
+    ) =>
+        this.baseClient.patch<BasicResponse<types.AssetGroupTag>>(
+            `/api/v2/asset-group-tags/${tagId}`,
+            updatedValues,
+            options
+        );
+
+    deleteAssetGroupTag = (tagId: string | number, options?: RequestOptions) =>
+        this.baseClient.delete(`/api/v2/asset-group-tags/${tagId}`, options);
+
     getAssetGroupTagMemberInfo = (tagId: number | string, memberId: number | string, options?: RequestOptions) =>
         this.baseClient.get<AssetGroupTagMemberInfoResponse>(
             `/api/v2/asset-group-tags/${tagId}/members/${memberId}`,
@@ -181,11 +202,8 @@ class BHEAPIClient {
             options
         );
 
-    createAssetGroupTagSelector = (
-        tagId: number | string,
-        updatedValues: CreateSelectorRequest,
-        options?: RequestOptions
-    ) => this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, updatedValues, options);
+    createAssetGroupTagSelector = (tagId: number | string, values: CreateSelectorRequest, options?: RequestOptions) =>
+        this.baseClient.post(`/api/v2/asset-group-tags/${tagId}/selectors`, values, options);
 
     updateAssetGroupTagSelector = (
         tagId: number | string,
@@ -218,8 +236,8 @@ class BHEAPIClient {
             )
         );
 
-    getAssetGroupSelectorMembers = (
-        assetGroupId: number | string,
+    getAssetGroupTagSelectorMembers = (
+        tagId: number | string,
         selectorId: number | string,
         skip: number,
         limit: number,
@@ -227,7 +245,7 @@ class BHEAPIClient {
         options?: RequestOptions
     ) =>
         this.baseClient.get<AssetGroupTagMembersResponse>(
-            `/api/v2/asset-group-tags/${assetGroupId}/selectors/${selectorId}/members`,
+            `/api/v2/asset-group-tags/${tagId}/selectors/${selectorId}/members`,
             Object.assign(
                 {
                     params: {
@@ -245,6 +263,14 @@ class BHEAPIClient {
             `/api/v2/asset-group-tags/${tagId}/members/counts`,
             options
         );
+
+    assetGroupTagsPreviewSelectors = (seeds: PreviewSelectorsRequest, options: RequestOptions) => {
+        return this.baseClient.post<PreviewSelectorsResponse>(
+            '/api/v2/asset-group-tags/preview-selectors',
+            { ...seeds },
+            options
+        );
+    };
 
     /* */
 
@@ -606,7 +632,7 @@ class BHEAPIClient {
 
     /* custom node kinds */
     getCustomNodeKinds = (options?: RequestOptions) =>
-        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/customnode', options);
+        this.baseClient.get<GetCustomNodeKindsResponse>('/api/v2/custom-nodes', options);
 
     /* jobs */
     getJobs = (hydrateDomains?: boolean, hydrateOUs?: boolean, options?: RequestOptions) =>

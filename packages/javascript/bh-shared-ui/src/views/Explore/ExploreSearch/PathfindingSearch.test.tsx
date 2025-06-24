@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { createMemoryHistory } from 'history';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { usePathfindingFilters, usePathfindingSearch } from '../../../hooks';
@@ -54,7 +53,7 @@ describe('Pathfinding: interaction', () => {
                 })
             );
         }),
-        rest.get(`/api/v2/customnode`, async (req, res, ctx) => {
+        rest.get(`/api/v2/custom-nodes`, async (req, res, ctx) => {
             return res(
                 ctx.json({
                     data: [],
@@ -75,11 +74,10 @@ describe('Pathfinding: interaction', () => {
     };
 
     const setup = async () => {
-        const history = createMemoryHistory({ initialEntries: ['/'] });
-        const screen = await act(async () => render(<WrappedPathfindingSearch />, { history }));
+        const screen = await act(async () => render(<WrappedPathfindingSearch />));
         const user = userEvent.setup();
 
-        return { screen, history, user };
+        return { screen, user };
     };
 
     beforeAll(() => server.listen());
@@ -106,7 +104,7 @@ describe('Pathfinding: interaction', () => {
     });
 
     it('when user performs a pathfinding search, and then clicks the swap button, the start and destination inputs are swapped', async () => {
-        const { screen, user, history } = await setup();
+        const { screen, user } = await setup();
 
         const swapButton = screen.getByRole('button', { name: /right-left/i });
         expect(swapButton).toBeDisabled();
@@ -119,28 +117,28 @@ describe('Pathfinding: interaction', () => {
         await user.type(destinationInput, 'computer');
         await user.click(await screen.findByRole('option', { name: /computer/i }));
 
-        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
-        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
+        expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(window.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
 
         await user.click(swapButton);
 
-        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
-        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
+        expect(window.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
     });
 
     it('executes a primary search when only a source node is provided', async () => {
-        const { screen, user, history } = await setup();
+        const { screen, user } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin1');
         await user.click(await screen.findByRole('option', { name: /admin1/i }));
 
-        expect(history.location.search).toContain('searchType=node');
-        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(window.location.search).toContain('searchType=node');
+        expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
     });
 
     it('executes a pathfinding search when both a source and destination node are provided', async () => {
-        const { screen, user, history } = await setup();
+        const { screen, user } = await setup();
 
         const startInput = screen.getByPlaceholderText(/start node/i);
         await user.type(startInput, 'admin1');
@@ -149,8 +147,8 @@ describe('Pathfinding: interaction', () => {
         await user.click(startOption);
 
         // searchType is 'node' because a destination is not yet selected
-        expect(history.location.search).toContain('searchType=node');
-        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(window.location.search).toContain('searchType=node');
+        expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
 
         const destinationInput = screen.getByPlaceholderText(/destination node/i);
         await user.type(destinationInput, 'computer');
@@ -158,8 +156,8 @@ describe('Pathfinding: interaction', () => {
         const destinationOption = await screen.findByRole('option', { name: /computer/i });
         await user.click(destinationOption);
 
-        expect(history.location.search).toContain('searchType=pathfinding');
-        expect(history.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
-        expect(history.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
+        expect(window.location.search).toContain('searchType=pathfinding');
+        expect(window.location.search).toContain(`primarySearch=${comboboxLookaheadOptions.data[0].objectid}`);
+        expect(window.location.search).toContain(`secondarySearch=${comboboxLookaheadOptions.data[2].objectid}`);
     });
 });

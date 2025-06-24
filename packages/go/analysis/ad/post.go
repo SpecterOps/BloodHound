@@ -25,13 +25,13 @@ import (
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func PostProcessedRelationships() []graph.Kind {
@@ -67,6 +67,9 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.CoerceAndRelayNTLMToSMB,
 		ad.CoerceAndRelayNTLMToLDAP,
 		ad.CoerceAndRelayNTLMToLDAPS,
+		ad.GPOAppliesTo,
+		ad.CanApplyGPO,
+		ad.HasTrustKeys,
 	}
 }
 
@@ -137,6 +140,49 @@ func PostDCSync(ctx context.Context, db graph.Database, groupExpansions impact.P
 	}
 }
 
+func PostHasTrustKeys(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
+	if domainNodes, err := fetchCollectedDomainNodes(ctx, db); err != nil {
+		return &analysis.AtomicPostProcessingStats{}, err
+	} else {
+		operation := analysis.NewPostRelationshipOperation(ctx, db, "HasTrustKeys Post Processing")
+		if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			for _, domain := range domainNodes {
+				if netbios, err := domain.Properties.Get(ad.NetBIOS.String()).String(); err != nil {
+					// The property is new and may therefore not exist
+					slog.DebugContext(ctx, fmt.Sprintf("Skipping domain %d: missing NetBIOS property", domain.ID))
+					continue
+				} else if trustingDomains, err := getDirectOutboundTrustDomains(tx, domain); err != nil {
+					slog.ErrorContext(ctx, fmt.Sprintf("Error getting outbound trust edges from domain %d: %v", domain.ID, err))
+					continue
+				} else {
+					for _, trustingDomain := range trustingDomains {
+						if trustingDomainSid, err := trustingDomain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
+							// DomainSID is only created after we have performed collection of the domain
+							slog.DebugContext(ctx, fmt.Sprintf("Skipping trusting domain %d: missing DomainSID property", trustingDomain.ID))
+							continue
+						} else if trustAccount, err := getTrustAccount(tx, trustingDomainSid, netbios); err != nil {
+							// The account may not exist if we have not collected it
+							slog.DebugContext(ctx, fmt.Sprintf("Trust account not found for domain SID %s and NetBIOS %s", trustingDomainSid, netbios))
+							continue
+						} else {
+							channels.Submit(ctx, outC, analysis.CreatePostRelationshipJob{
+								FromID: domain.ID,
+								ToID:   trustAccount.ID,
+								Kind:   ad.HasTrustKeys,
+							})
+						}
+					}
+				}
+			}
+			return nil
+		}); err != nil {
+			return &analysis.AtomicPostProcessingStats{}, fmt.Errorf("error creating HasTrustKeys edges: %w", err)
+		}
+
+		return &operation.Stats, operation.Done()
+	}
+}
+
 func FetchComputers(ctx context.Context, db graph.Database) (*roaring64.Bitmap, error) {
 	computerNodeIds := roaring64.NewBitmap()
 
@@ -186,6 +232,32 @@ func fetchCollectedDomainNodes(ctx context.Context, db graph.Database) ([]*graph
 	})
 }
 
+func getDirectOutboundTrustDomains(tx graph.Transaction, domain *graph.Node) (graph.NodeSet, error) {
+	return ops.FetchEndNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Equals(query.StartID(), domain.ID),
+			query.KindIn(query.Relationship(), ad.SameForestTrust, ad.CrossForestTrust),
+			query.Kind(query.End(), ad.Domain),
+		)
+	}))
+}
+
+func getTrustAccount(tx graph.Transaction, domainSid, netbios string) (*graph.Node, error) {
+	nodes, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Node(), ad.User),
+			query.Equals(query.NodeProperty(ad.DomainSID.String()), domainSid),
+			query.Equals(query.NodeProperty(ad.SamAccountName.String()), netbios+"$"),
+		)
+	}).Limit(1))
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) == 0 {
+		return nil, graph.ErrNoResultsFound
+	}
+	return nodes[0], err
+}
 func getLAPSSyncers(tx graph.Transaction, domain *graph.Node, groupExpansions impact.PathAggregator) (cardinality.Duplex[uint64], error) {
 	var (
 		getChangesQuery         = analysis.FromEntityToEntityWithRelationshipKind(tx, domain, ad.GetChanges)

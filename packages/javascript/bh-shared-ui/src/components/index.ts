@@ -20,9 +20,6 @@ export { default as AppNotifications } from './AppNotifications';
 export * from './AssetGroupEdit';
 export { default as AssetGroupEdit } from './AssetGroupEdit';
 
-export * from './AssetGroupManagement/AssetGroupSelectorObjectSelect';
-export { default as AssetGroupSelectorObjectSelect } from './AssetGroupManagement/AssetGroupSelectorObjectSelect';
-
 export * from './AssetGroupMemberList';
 export { default as AssetGroupMemberList } from './AssetGroupMemberList';
 
@@ -197,3 +194,7 @@ export { default as WebGLDisabledAlert } from './WebGLDisabledAlert';
 
 export * from './AppIcon';
 export * from './Navigation';
+
+export * from './ExploreTable';
+
+export * from './GraphControls';

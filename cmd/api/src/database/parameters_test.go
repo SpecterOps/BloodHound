@@ -22,6 +22,7 @@ package database_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/src/database/types"
 	"github.com/specterops/bloodhound/src/model/appcfg"
@@ -148,10 +149,43 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-	require.Len(t, parameters, 8)
 	for _, parameter := range parameters {
-		if parameter.Key != appcfg.ScheduledAnalysis && parameter.Key != appcfg.TrustedProxiesConfig {
+		if !parameter.IsProtectedKey(parameter.Key) {
 			require.True(t, parameter.IsValidKey(parameter.Key))
 		}
 	}
+}
+
+func TestParameters_GetEULACustomText(t *testing.T) {
+	var (
+		db            = integration.SetupDB(t)
+		testCtx       = context.Background()
+		customEULATxt = "I AM BATMAN"
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"custom_text": customEULATxt})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.FedEULACustomTextKey,
+		Value: newVal,
+	}))
+
+	require.Equal(t, customEULATxt, appcfg.GetFedRAMPCustomEULA(testCtx, db))
+}
+
+func TestParameters_GetAuthSessionTTLHours(t *testing.T) {
+	var (
+		db                        = integration.SetupDB(t)
+		testCtx                   = context.Background()
+		customAuthSessionTTLHours = 77
+	)
+	newVal, err := types.NewJSONBObject(map[string]any{"hours": customAuthSessionTTLHours})
+	require.Nil(t, err)
+
+	require.Nil(t, db.SetConfigurationParameter(testCtx, appcfg.Parameter{
+		Key:   appcfg.SessionTTLHours,
+		Value: newVal,
+	}))
+
+	require.Equal(t, time.Hour*time.Duration(customAuthSessionTTLHours), appcfg.GetSessionTTLHours(testCtx, db))
 }

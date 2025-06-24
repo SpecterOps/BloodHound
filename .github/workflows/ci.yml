@@ -24,9 +24,6 @@ on:
     types:
       - opened
       - synchronize
-    paths-ignore:
-      - 'docs/**'
-      - 'rfc/**'
 
 jobs:
   cla-check:
@@ -51,6 +48,7 @@ jobs:
       build_target: bloodhound
       image_sbom: false
       image_provenance: false
+      build_context: .
       build_outputs: type=image,push=false
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=gha

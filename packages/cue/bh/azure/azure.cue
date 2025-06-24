@@ -271,7 +271,7 @@ EndUserAssignmentRequiresApproval: types.#StringEnum & {
 EndUserAssignmentRequiresCAPAuthenticationContext: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresCAPAuthenticationContext"
 	schema:         "azure"
-	name:           "End User Assignment Requires CAP AuthenticationContext"
+	name:           "End User Assignment Requires CAP Authentication Context"
 	representation: "enduserassignmentrequirescapauthenticationcontext"
 }
 
@@ -955,6 +955,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantRole,
 	SyncedToADUser,
 	AZRoleEligible,
+	AZRoleApprover
 ]
 
 PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds, [Contains]])

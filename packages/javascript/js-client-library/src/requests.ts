@@ -15,7 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AxiosRequestConfig } from 'axios';
-import { AssetGroupTagSelector, AssetGroupTagSelectorSeed, SSOProviderConfiguration } from './types';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorSeed,
+    AssetGroupTagTypes,
+    SSOProviderConfiguration,
+} from './types';
 import { ConfigurationPayload } from './utils';
 
 export type RequestOptions = AxiosRequestConfig;
@@ -27,13 +32,27 @@ export interface LoginRequest {
     otp?: string;
 }
 
+export type CreateAssetGroupTagRequest = {
+    name: string;
+    description: string;
+    position: number | null;
+    type: AssetGroupTagTypes;
+    requireCertify?: boolean;
+};
+
+export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
+
+export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
+
 // This type makes it so that `selector_id` is optional in the selector seed request shape.
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
 export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
 
-export type UpdateSelectorRequest = Partial<Omit<CreateSelectorRequest, 'id'>>;
+export type UpdateSelectorRequest = Partial<
+    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+>;
 
 export interface CreateAssetGroupRequest {
     name: string;

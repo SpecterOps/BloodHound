@@ -16,9 +16,9 @@
 
 type: object
 properties:
-  id: 
+  id:
     type: integer
-  type: 
+  type:
     type: integer
   kind_id:
     type: integer
@@ -36,11 +36,9 @@ properties:
     format: date-time
   updated_by:
     type: string
-  deleted_at: 
-    $ref: './null.time.yaml'
-  deleted_by:
-    $ref: './null.string.yaml'
   position:
     $ref: './null.int32.yaml'
   require_certify:
     $ref: './null.boolean.yaml'
+  analysis_enabled:
+      $ref: './null.boolean.yaml'

@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
@@ -31,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
+	"github.com/specterops/dawgs/graph"
 )
 
 func (s *Context) APIServerURL(paths ...string) string {

@@ -26,9 +26,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
-	"github.com/specterops/bloodhound/dawgs/ops"
+
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/utils/test"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +38,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
+func TestResources_GetAZRelatedEntities(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -50,226 +52,229 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 
 	tt := []testData{
 		{
-			name: "Error: empty relatedEntityType - Bad Request",
+			name: "Error: missing query parameter object ID - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{},
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id&related_entity_type=",
+					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
-				responseBody:   `{"errors":[{"context":"","message":"query parameter \"related_entity_type\" is malformed: missing required parameter"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseBody:   `{"errors":[{"context":"","message":"query parameter object_id is required"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
+		// Missing path parameters cannot be tested due to Gorilla Mux's strict route matching, which requires all defined path parameters to be present in the request URL for the route to match.
 		{
 			name: "Error: invalid type - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "type=invalid&related_entity_type=list",
+						Path:     "/api/v2/azure/invalid",
+						RawQuery: "type=bad&object_id=id&related_entity_type=list",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"query parameter \"type\" is malformed: invalid return type requested for related entities"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=invalid&related_entity_type=list"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: malformed query parameter skip - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=list&skip=true",
+						Path:     "/api/v2/azure/type",
+						RawQuery: "object_id=id&related_entity_type=list&skip=true",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"query parameter \"skip\" is malformed: error converting skip value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=list&skip=true"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: malformed query parameter limit - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=list&skip=1&limit=true",
+						Path:     "/api/v2/azure/type",
+						RawQuery: "object_id=id&related_entity_type=list&skip=1&limit=true",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mocks *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"query parameter \"limit\" is malformed: error converting limit value true to int: strconv.Atoi: parsing \"true\": invalid syntax"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=list&skip=1&limit=true"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: graphRelatedEntityType database error - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "type=graph&skip=0&limit=1&related_entity_type=inbound-control",
+						Path:     "/api/v2/azure/type",
+						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterSkip)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"error fetching related entity type inbound-control: invalid skip parameter"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph&skip=0&limit=1&related_entity_type=inbound-control"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: graphRelatedEntityType - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "type=graph&skip=0&limit=1&related_entity_type=inbound-control",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&type=graph&skip=0&limit=1&related_entity_type=inbound-control",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?type=graph&skip=0&limit=1&related_entity_type=inbound-control"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid skip parameter - 400",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=descendent-users&skip=0&limit=1",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterSkip)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterSkip)
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"invalid skip: 0"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: related entity type not found - Not Found",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=descendent-users&skip=0&limit=1",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(v2.ErrParameterRelatedEntityType)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for descendent-users"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: graph query memory limit - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=descendent-users&skip=0&limit=1",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"calculating the request results exceeded memory limitations due to the volume of objects involved"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: ReadTransaction database error - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=descendent-users&skip=0&limit=1",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&related_entity_type=descendent-users&skip=0&limit=1",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(errors.New("error"))
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
 				responseBody:   `{"errors":[{"context":"","message":"an unknown error occurred during the request"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=descendent-users&skip=0&limit=1"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: listRelatedEntityType - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
-						RawQuery: "related_entity_type=inbound-control&skip=0&limit=1",
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=id&related_entity_type=inbound-control&skip=0&limit=1",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
+				mocks.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?related_entity_type=inbound-control&skip=0&limit=1"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -283,7 +288,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				Graph: mocks.mockDB,
@@ -291,8 +296,9 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources.GetAZRelatedEntities(context.Background(), response, request, "id")
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 
@@ -303,7 +309,7 @@ func TestManagementResource_GetAZRelatedEntities(t *testing.T) {
 	}
 }
 
-func TestManagementResource_GetAZEntityInformation(t *testing.T) {
+func TestResources_GetAZEntityInformation(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -932,7 +938,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 	type testData struct {
 		name         string
 		buildRequest func() *http.Request
-		setupMocks   func(t *testing.T, mock *mock, req *http.Request)
+		setupMocks   func(t *testing.T, mock *mock)
 		expected     expected
 	}
 
@@ -940,121 +946,115 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		{
 			name: "Error: missing parameter object ID - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
-					URL: &url.URL{},
+				return &http.Request{
+					URL: &url.URL{
+						Path:     "/api/v2/azure/{entity_type}",
+						RawQuery: "object_id=&related_entity_type=bad",
+					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"query parameter object_id is required"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: related entity type not found - Not Found",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id=id&related_entity_type=bad",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"no matching related entity list type for bad"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&related_entity_type=bad"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: invalid query parameter counts - Bad Request",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
+						Path:     "/api/v2/azure/{entity_type}",
 						RawQuery: "object_id=id&counts=bad",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
 				responseBody:   `{"errors":[{"context":"","message":"there are errors in the query parameter filters specified"}],"http_status":400,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=bad"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Error: database error no results found - Not Found",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&counts=true",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"entity_type": "roles",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(graph.ErrNoResultsFound)
+				mock.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
 				responseBody:   `{"errors":[{"context":"","message":"not found"}],"http_status":404,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Error: GetAZEntityInformation unknown azure entity - Internal Server Error", // TODO: Should this actually be a 500 or a 400?
+			name: "Error: GetAZEntityInformation unknown azure entity - Internal Server Error",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
+						Path:     "/api/v2/azure/unknown",
 						RawQuery: "object_id=id&counts=true",
 					},
+					Method: http.MethodGet,
 				}
-
-				return request
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {},
+			setupMocks: func(t *testing.T, mock *mock) {},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"db error: unknown azure entity "}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
+				responseBody:   `{"errors":[{"context":"","message":"db error: unknown azure entity unknown"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
 			name: "Success: GetAZEntity - OK",
 			buildRequest: func() *http.Request {
-				request := &http.Request{
+				return &http.Request{
 					URL: &url.URL{
+						Path:     "/api/v2/azure/roles",
 						RawQuery: "object_id=id&counts=true",
 					},
+					Method: http.MethodGet,
 				}
-
-				param := map[string]string{
-					"entity_type": "roles",
-				}
-
-				return mux.SetURLVars(request, param)
 			},
-			setupMocks: func(t *testing.T, mocks *mock, req *http.Request) {
+			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mocks.mockDB.EXPECT().ReadTransaction(req.Context(), gomock.Any()).Return(nil)
+				mock.mockDB.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"pim_assignments":0}}`,
-				responseHeader: http.Header{"Content-Type": []string{"application/json"}, "Location": []string{"/?object_id=id&counts=true"}},
+				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "pim_assignments":0}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 	}
@@ -1068,7 +1068,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			}
 
 			request := testCase.buildRequest()
-			testCase.setupMocks(t, mocks, request)
+			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
 				Graph: mocks.mockDB,
@@ -1076,8 +1076,9 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 
 			response := httptest.NewRecorder()
 
-			resources.GetAZEntity(response, request)
-			mux.NewRouter().ServeHTTP(response, request)
+			router := mux.NewRouter()
+			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(request.Method)
+			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)
 

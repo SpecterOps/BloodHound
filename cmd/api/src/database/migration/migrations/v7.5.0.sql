@@ -18,4 +18,16 @@
 ALTER TABLE ingest_tasks
 DROP COLUMN IF EXISTS is_generic;
 
-INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ( 'analysis.restrict_outbound_ntlm_default_value','Restrict Outbound NTLM Default Value','When enabled, any computer''s Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn''t exist on that computer for NTLM edge processing. When disabled, treat the missing registry as Not Restricting.', '{ "enabled": false }',current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+-- create explore_table_view feature flag, disable it, and make it non user-updatable.
+INSERT INTO feature_flags (created_at, updated_at, key, name, description, enabled, user_updatable)
+VALUES (current_timestamp,
+        current_timestamp,
+        'explore_table_view',
+        'Explore Table View',
+        'Adds a layout option to the Explore page that will display all nodes in a table view. It also will automatically display the table when a cypher query returned only nodes.',
+        false,
+        false)
+ON CONFLICT DO NOTHING;
+
+ -- Add Tier Management Parameter
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('analysis.tiering', 'Multi-Tier Analysis Configuration', 'This configuration parameter determines the limits of tiering with respect to analysis', '{"tier_limit": 1, "label_limit": 0, "multi_tier_analysis_enabled": false}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;

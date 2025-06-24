@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/specterops/bloodhound/src/database/types"
 )
 
@@ -83,6 +84,8 @@ const (
 	AuditLogActionUpdateParameter AuditLogAction = "UpdateParameter"
 
 	AuditLogActionCreateAssetGroupTag         AuditLogAction = "CreateAssetGroupTag"
+	AuditLogActionUpdateAssetGroupTag         AuditLogAction = "UpdateAssetGroupTag"
+	AuditLogActionDeleteAssetGroupTag         AuditLogAction = "DeleteAssetGroupTag"
 	AuditLogActionCreateAssetGroupTagSelector AuditLogAction = "CreateAssetGroupTagSelector"
 	AuditLogActionUpdateAssetGroupTagSelector AuditLogAction = "UpdateAssetGroupTagSelector"
 	AuditLogActionDeleteAssetGroupTagSelector AuditLogAction = "DeleteAssetGroupTagSelector"
@@ -90,6 +93,15 @@ const (
 	AuditLogActionCreateCustomNodeKind AuditLogAction = "CreateCustomNodeKind"
 	AuditLogActionUpdateCustomNodeKind AuditLogAction = "UpdateCustomNodeKind"
 	AuditLogActionDeleteCustomNodeKind AuditLogAction = "DeleteCustomNodeKind"
+
+	AuditLogActionToggleEarlyAccessFeatureFlag AuditLogAction = "ToggleEarlyAccessFeatureFlag"
+
+	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
+	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
+
+	AuditLogActionImportSavedQuery   AuditLogAction = "ImportSavedQueries"
+	AuditLogActionExportSavedQuery   AuditLogAction = "ExportSavedQuery"
+	AuditLogActionExportSavedQueries AuditLogAction = "ExportSavedQueries"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

@@ -268,6 +268,13 @@ paths:
   /api/v2/collectors/{collector_type}/{release_tag}/checksum:
     $ref: './paths/collectors.collectors.type.tag.checksum.yaml'
 
+  /api/v2/kennel/manifest:
+    $ref: './paths/kennel.manifest.type.yaml'
+  /api/v2/kennel/enterprise-manifest:
+    $ref: './paths/kennel.enterprise-manifest.type.yaml'
+  /api/v2/kennel/download/{asset_name}:
+    $ref: './paths/kennel.download.type.yaml'
+
   # collection uploads
   /api/v2/file-upload:
     $ref: './paths/collection-uploads.file-upload.yaml'
@@ -281,9 +288,9 @@ paths:
     $ref: './paths/collection-uploads.file-upload.accepted-types.yaml'
 
   # custom node management
-  /api/v2/customnode:
+  /api/v2/custom-nodes:
     $ref: './paths/custom-nodes.custom-nodes.yaml'
-  /api/v2/customnode/{kind_name}:
+  /api/v2/custom-nodes/{kind_name}:
     $ref: './paths/custom-nodes.custom-nodes.name.yaml'
 
   # api info
@@ -327,8 +334,8 @@ paths:
     $ref: './paths/asset-isolation.asset-groups.id.members.yaml'
   /api/v2/asset-groups/{asset_group_id}/members/counts:
     $ref: './paths/asset-isolation.asset-groups.id.members.counts.yaml'
-  /api/v2/asset-group-tags/{asset_group_tag_id}/member/{asset_group_member_id}:
-    $ref: './paths/asset-isolation.asset-group-tags.id.member.id.yaml'
+  /api/v2/asset-group-tags/{asset_group_tag_id}/members/{asset_group_member_id}:
+    $ref: './paths/asset-isolation.asset-group-tags.id.members.id.yaml'
   /api/v2/asset-group-tags:
     $ref: './paths/asset-isolation.asset-group-tags.yaml'
   /api/v2/asset-group-tags/{asset_group_tag_id}:
@@ -367,6 +374,12 @@ paths:
     $ref: './paths/cypher.saved-queries.id.yaml'
   /api/v2/saved-queries/{saved_query_id}/permissions:
     $ref: './paths/cypher.saved-queries.id.permissions.yaml'
+  /api/v2/saved-queries/{saved_query_id}/export:
+    $ref: './paths/cypher.saved-queries.export.yaml'
+  /api/v2/saved-queries/import:
+    $ref: './paths/cypher.saved-queries.import.yaml'
+  /api/v2/saved-queries/export:
+    $ref: './paths/cypher.saved-queries.export.multiple.yaml'
   /api/v2/graphs/cypher:
     $ref: './paths/cypher.graphs.cypher.yaml'
 

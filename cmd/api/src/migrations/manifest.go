@@ -26,13 +26,13 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
@@ -74,7 +74,7 @@ func Version_740_Migration(ctx context.Context, db graph.Database) error {
 			edgeProperties := graph.NewProperties()
 			edgeProperties.Set(ad.IsACL.String(), false)
 			edgeProperties.Set(ad.TrustType.String(), trustType)
-			edgeProperties.Set(common.LastSeen.String(), rel.Properties.Get(common.LastSeen.String()))
+			edgeProperties.Set(common.LastSeen.String(), rel.Properties.Get(common.LastSeen.String()).Any())
 
 			// Create new edge in opposite direction
 			if err := batch.CreateRelationship(&graph.Relationship{

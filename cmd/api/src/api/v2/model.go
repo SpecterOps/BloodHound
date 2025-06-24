@@ -19,7 +19,6 @@ package v2
 import (
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
@@ -28,7 +27,9 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/services/ingest"
+	"github.com/specterops/bloodhound/src/services/fs"
+	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
 )
 
 type ListPermissionsResponse struct {
@@ -109,7 +110,8 @@ type Resources struct {
 	CollectorManifests         config.CollectorManifests
 	Authorizer                 auth.Authorizer
 	Authenticator              api.Authenticator
-	IngestSchema               ingest.IngestSchema
+	IngestSchema               upload.IngestSchema
+	FileService                fs.Service
 }
 
 func NewResources(
@@ -121,7 +123,7 @@ func NewResources(
 	collectorManifests config.CollectorManifests,
 	authorizer auth.Authorizer,
 	authenticator api.Authenticator,
-	ingestSchema ingest.IngestSchema,
+	ingestSchema upload.IngestSchema,
 ) Resources {
 	return Resources{
 		Decoder:                    schema.NewDecoder(),
@@ -135,5 +137,6 @@ func NewResources(
 		Authorizer:                 authorizer,
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
+		FileService:                &fs.Client{},
 	}
 }

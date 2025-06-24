@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { combineReducers, configureStore, PreloadedState } from '@reduxjs/toolkit';
-import { edgeinfo, searchReducer as search } from 'bh-shared-ui';
+import { edgeinfo } from 'bh-shared-ui';
 import { enableMapSet } from 'immer';
 import Cookies from 'js-cookie';
 import throttle from 'lodash/throttle';
@@ -23,6 +23,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import createSagaMiddleware from 'redux-saga';
 import * as reducers from 'src/ducks';
 import rootSaga from 'src/rootSaga';
+import { GlobalViewState } from './ducks/global/types';
 
 enableMapSet();
 
@@ -31,7 +32,6 @@ const sagaMiddleware = createSagaMiddleware();
 const appReducer = combineReducers({
     ...reducers,
     edgeinfo,
-    search,
 });
 
 export type RootState = ReturnType<typeof appReducer>;
@@ -44,7 +44,6 @@ export const rootReducer = (state: any, action: any): RootState => {
         state = { auth, global };
         return appReducer(state, action);
     }
-
     // Otherwise, return the current state
     return appReducer(state, action);
 };
@@ -64,7 +63,13 @@ const loadState = (): PreloadedState<RootState> => {
 
 type PersistedState = {
     auth: { sessionToken: string | null };
-    global: { view: { darkMode: boolean; notifications: string[] } };
+    global: {
+        view: {
+            darkMode: GlobalViewState['darkMode'];
+            notifications: GlobalViewState['notifications'];
+            exploreLayout: GlobalViewState['exploreLayout'];
+        };
+    };
 };
 
 const saveState = (state: PersistedState) => {
@@ -107,6 +112,7 @@ store.subscribe(
                 view: {
                     darkMode: state.global.view.darkMode,
                     notifications: [],
+                    exploreLayout: state.global.view.exploreLayout,
                 },
             },
         });

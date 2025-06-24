@@ -22,6 +22,8 @@ export { default as useToggle } from './useToggle';
 
 export { default as useApiVersion } from './useApiVersion';
 
+export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
+
 export * from './useAvailableEnvironments';
 
 export * from './useConfiguration';
@@ -63,3 +65,7 @@ export * from './useInitialEnvironment';
 export * from './usePreviousValue';
 
 export * from './useCustomNodeKinds';
+
+export * from './useExploreTableAutoDisplay';
+
+export * from './useGraphHasData';

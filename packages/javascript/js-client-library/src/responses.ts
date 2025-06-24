@@ -16,10 +16,8 @@
 
 import {
     AssetGroupTag,
-    AssetGroupTagCounts,
     AssetGroupTagNode,
     AssetGroupTagSelector,
-    AssetGroupTagSelectorsCounts,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -174,13 +172,7 @@ export type NewAuthToken = AuthToken & {
 
 export type CreateAuthTokenResponse = BasicResponse<NewAuthToken>;
 
-export interface AssetGroupTagsListItem extends AssetGroupTag {
-    counts?: AssetGroupTagCounts;
-}
-
-export interface AssetGroupTagSelectorsListItem extends AssetGroupTagSelector {
-    counts?: AssetGroupTagSelectorsCounts;
-}
+export type PreviewSelectorsResponse = BasicResponse<{ members: AssetGroupTagNode[] }>;
 
 export interface AssetGroupTagMemberListItem extends AssetGroupTagNode {
     source: NodeSourceTypes;
@@ -192,9 +184,9 @@ export interface AssetGroupTagMemberInfo extends AssetGroupTagNode {
 }
 
 export type AssetGroupTagResponse = BasicResponse<{ tag: AssetGroupTag }>;
-export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTagsListItem[] }>;
+export type AssetGroupTagsResponse = BasicResponse<{ tags: AssetGroupTag[] }>;
 export type AssetGroupTagSelectorResponse = BasicResponse<{ selector: AssetGroupTagSelector }>;
-export type AssetGroupTagSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelectorsListItem[] }>;
+export type AssetGroupTagSelectorsResponse = BasicResponse<{ selectors: AssetGroupTagSelector[] }>;
 export type AssetGroupTagMembersResponse = PaginatedResponse<{ members: AssetGroupTagMemberListItem[] }>;
 export type AssetGroupTagMemberInfoResponse = BasicResponse<{
     member: AssetGroupTagMemberInfo;

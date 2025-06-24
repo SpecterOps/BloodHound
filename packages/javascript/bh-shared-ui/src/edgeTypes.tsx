@@ -40,10 +40,11 @@ export const AllEdgeTypes: Category[] = [
             {
                 name: 'Active Directory Structure',
                 edgeTypes: [
-                    ActiveDirectoryRelationshipKind.Contains,
-                    ActiveDirectoryRelationshipKind.GPLink,
+                    ActiveDirectoryRelationshipKind.ContainsIdentity,
+                    ActiveDirectoryRelationshipKind.GPOAppliesTo,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
+                    ActiveDirectoryRelationshipKind.PropagatesACEsTo,
                     ActiveDirectoryRelationshipKind.SameForestTrust,
                 ],
             },
@@ -69,6 +70,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ReadGMSAPassword,
                     ActiveDirectoryRelationshipKind.ReadLAPSPassword,
                     ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+                    ActiveDirectoryRelationshipKind.HasTrustKeys,
                 ],
             },
             {
@@ -92,6 +94,7 @@ export const AllEdgeTypes: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.AddAllowedToAct,
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
+                    ActiveDirectoryRelationshipKind.CanApplyGPO,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
                     ActiveDirectoryRelationshipKind.WriteGPLink,
                     ActiveDirectoryRelationshipKind.WriteSPN,
@@ -152,6 +155,8 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.PrivilegedAuthAdmin,
                     AzureRelationshipKind.PrivilegedRoleAdmin,
                     AzureRelationshipKind.RunsAs,
+                    AzureRelationshipKind.AZRoleEligible,
+                    AzureRelationshipKind.AZRoleApprover,
                 ],
             },
             {

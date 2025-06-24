@@ -29,6 +29,7 @@ const DownloadCollectors = React.lazy(() => import('src/views/DownloadCollectors
 const Administration = React.lazy(() => import('src/views/Administration'));
 const ApiExplorer = React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.ApiExplorer })));
 const GroupManagement = React.lazy(() => import('src/views/GroupManagement/GroupManagement'));
+const ZoneManagement = React.lazy(() => import('src/views/ZoneManagement'));
 
 export const ROUTES: Routable[] = [
     {
@@ -68,6 +69,13 @@ export const ROUTES: Routable[] = [
         navigation: true,
     },
     {
+        exact: true,
+        path: routes.ROUTE_ZONE_MANAGEMENT_ROOT,
+        component: ZoneManagement,
+        authenticationRequired: true,
+        navigation: true,
+    },
+    {
         path: routes.ROUTE_MY_PROFILE,
         component: UserProfile,
         authenticationRequired: true,
@@ -101,10 +109,10 @@ export const ROUTES: Routable[] = [
     },
 ];
 
-export const TIER_MANAGEMENT_ROUTE: Routable = {
+export const ZONE_MANAGEMENT_ROUTE: Routable = {
     exact: true,
-    path: routes.ROUTE_TIER_MANAGEMENT_ROOT,
-    component: React.lazy(() => import('bh-shared-ui').then((module) => ({ default: module.TierManagement }))),
+    path: routes.ROUTE_ZONE_MANAGEMENT_ROOT,
+    component: ZoneManagement,
     authenticationRequired: true,
     navigation: true,
 };

@@ -17,3 +17,4 @@
 export { default as CypherSearch } from './CypherSearch';
 export { default as NodeSearch } from './NodeSearch';
 export { default as PathfindingSearch } from './PathfindingSearch';
+export * from './types';

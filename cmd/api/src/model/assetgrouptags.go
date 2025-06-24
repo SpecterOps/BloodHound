@@ -21,12 +21,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database/types/null"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (
-	AssetGroupActorSystem = "SYSTEM"
+	AssetGroupActorSystem      = "SYSTEM"
+	AssetGroupTierZeroPosition = 1
 )
 
 type SelectorType int
@@ -71,19 +72,20 @@ const (
 )
 
 type AssetGroupTag struct {
-	ID             int               `json:"id"`
-	Type           AssetGroupTagType `json:"type"`
-	KindId         int               `json:"kind_id"`
-	Name           string            `json:"name"`
-	Description    string            `json:"description"`
-	CreatedAt      time.Time         `json:"created_at"`
-	CreatedBy      string            `json:"created_by"`
-	UpdatedAt      time.Time         `json:"updated_at"`
-	UpdatedBy      string            `json:"updated_by"`
-	DeletedAt      null.Time         `json:"deleted_at"`
-	DeletedBy      null.String       `json:"deleted_by"`
-	Position       null.Int32        `json:"position"`
-	RequireCertify null.Bool         `json:"require_certify"`
+	ID              int               `json:"id"`
+	Type            AssetGroupTagType `json:"type" validate:"required"`
+	KindId          int               `json:"kind_id"`
+	Name            string            `json:"name" validate:"required"`
+	Description     string            `json:"description"`
+	CreatedAt       time.Time         `json:"created_at"`
+	CreatedBy       string            `json:"created_by"`
+	UpdatedAt       time.Time         `json:"updated_at"`
+	UpdatedBy       string            `json:"updated_by"`
+	DeletedAt       null.Time         `json:"deleted_at"`
+	DeletedBy       null.String       `json:"deleted_by"`
+	Position        null.Int32        `json:"position"`
+	RequireCertify  null.Bool         `json:"require_certify"`
+	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
 }
 
 type AssetGroupTags []AssetGroupTag
@@ -94,18 +96,23 @@ func (AssetGroupTag) TableName() string {
 
 func (s AssetGroupTag) AuditData() AuditData {
 	return AuditData{
-		"id":              s.ID,
-		"type":            s.Type,
-		"kind_id":         s.KindId,
-		"name":            s.Name,
-		"description":     s.Description,
-		"position":        s.Position,
-		"require_certify": s.RequireCertify,
+		"id":               s.ID,
+		"type":             s.Type,
+		"kind_id":          s.KindId,
+		"name":             s.Name,
+		"description":      s.Description,
+		"position":         s.Position,
+		"require_certify":  s.RequireCertify,
+		"analysis_enabled": s.AnalysisEnabled,
 	}
 }
 
 func (s AssetGroupTag) ToKind() graph.Kind {
-	return graph.StringKind(fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_")))
+	return graph.StringKind(s.KindName())
+}
+
+func (s AssetGroupTag) KindName() string {
+	return fmt.Sprintf("Tag_%s", strings.ReplaceAll(s.Name, " ", "_"))
 }
 
 func (s AssetGroupTag) IsStringColumn(filter string) bool {
@@ -114,16 +121,17 @@ func (s AssetGroupTag) IsStringColumn(filter string) bool {
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"type":            {Equals, NotEquals},
-		"name":            {Equals, NotEquals, ApproximatelyEquals},
-		"description":     {Equals, NotEquals, ApproximatelyEquals},
-		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_by":      {Equals, NotEquals},
-		"updated_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"updated_by":      {Equals, NotEquals},
-		"deleted_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"deleted_by":      {Equals, NotEquals},
-		"require_certify": {Equals, NotEquals},
+		"type":             {Equals, NotEquals},
+		"name":             {Equals, NotEquals, ApproximatelyEquals},
+		"description":      {Equals, NotEquals, ApproximatelyEquals},
+		"created_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":       {Equals, NotEquals},
+		"updated_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":       {Equals, NotEquals},
+		"deleted_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"deleted_by":       {Equals, NotEquals},
+		"require_certify":  {Equals, NotEquals},
+		"analysis_enabled": {Equals, NotEquals},
 	}
 }
 

@@ -38,6 +38,7 @@ export enum ConfigurationKey {
 
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
+    Tiering = 'analysis.tiering',
 }
 
 export type PasswordExpirationConfiguration = {
@@ -76,6 +77,15 @@ export type ReconciliationConfiguration = {
     };
 };
 
+export type TieringConfiguration = {
+    key: ConfigurationKey.Tiering;
+    value: {
+        tier_limit: number;
+        label_limit: number;
+        multi_tier_analysis_enabled: boolean;
+    };
+};
+
 export type PruneTTLConfiguration = {
     key: ConfigurationKey.PruneTTL;
     value: {
@@ -90,7 +100,8 @@ export type ConfigurationPayload =
     | CitrixConfiguration
     | RestrictOutboundNTLMDefaultValueConfiguration
     | ReconciliationConfiguration
-    | PruneTTLConfiguration;
+    | PruneTTLConfiguration
+    | TieringConfiguration;
 
 export const getConfigurationFromKey = (config: GetConfigurationResponse | undefined, key: ConfigurationKey) => {
     return config?.data.find((c) => c.key === key);
@@ -145,6 +156,15 @@ export const parsePruneTTLConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<PruneTTLConfiguration> | undefined => {
     const key = ConfigurationKey.PruneTTL;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseTieringConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<TieringConfiguration> | undefined => {
+    const key = ConfigurationKey.Tiering;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;

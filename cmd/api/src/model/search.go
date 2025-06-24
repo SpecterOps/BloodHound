@@ -21,10 +21,10 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -39,7 +39,7 @@ type DomainSelector struct {
 	Name        string `json:"name"`
 	ObjectID    string `json:"id"`
 	Collected   bool   `json:"collected"`
-	ImpactValue int    `json:"impactValue,omitempty"`
+	ImpactValue *int   `json:"impactValue,omitempty"`
 }
 
 type DomainSelectors []DomainSelector
