@@ -68,7 +68,6 @@ func processCypherProperties(graphResponse model.UnifiedGraph) model.UnifiedGrap
 	}
 	eSlice := slices.Sorted(maps.Keys(eKeys))
 	nSlice := slices.Sorted(maps.Keys(nKeys))
-	print('WEEEEEEEE', eSlice, nSlice)
 	return model.UnifiedGraphWPropertyKeys{NodeKeys: nSlice, EdgeKeys: eSlice, Edges: graphResponse.Edges, Nodes: graphResponse.Nodes}
 }
 
