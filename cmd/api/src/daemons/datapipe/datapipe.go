@@ -73,6 +73,7 @@ func NewDaemon(ctx context.Context, cfg config.Configuration, connections bootst
 }
 
 func (s *Daemon) analyze() {
+	defer measure.LogAndMeasure(slog.LevelDebug, "Analysis")()
 	// Ensure that the user-requested analysis switch is deleted. This is done at the beginning of the
 	// function so that any re-analysis requests are caught while analysis is in-progress.
 	if err := s.db.DeleteAnalysisRequest(s.ctx); err != nil {
