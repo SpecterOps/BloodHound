@@ -100,13 +100,13 @@ const ContextMenu: FC<{
         });
     };
 
-    const tierZeroAssetGroupId = getAssetGroupTagsQuery.data?.tags.find((value) => {
-        return value.name === 'Tier Zero';
-    })?.id;
+    const tierZeroAssetGroup = getAssetGroupTagsQuery.data?.tags.find((value) => {
+        return value.position === 1;
+    });
 
-    const ownedAssetGroupId = getAssetGroupTagsQuery.data?.tags.find((value) => {
-        return value.name === 'Owned';
-    })?.id;
+    const ownedAssetGroup = getAssetGroupTagsQuery.data?.tags.find((value) => {
+        return value.type === 3;
+    });
 
     if (getAssetGroupTagsQuery.isLoading || selectedItemQuery.isLoading) {
         return (
@@ -145,21 +145,21 @@ const ContextMenu: FC<{
             <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
             {checkPermission(Permission.GRAPH_DB_WRITE) && [
                 <AssetGroupMenuItem
-                    key={tierZeroAssetGroupId}
-                    assetGroupId={tierZeroAssetGroupId!}
-                    assetGroupName='High Value'
+                    key={tierZeroAssetGroup!.id}
+                    assetGroupId={tierZeroAssetGroup!.id}
+                    assetGroupName={tierZeroAssetGroup!.name}
                     onAddNode={handleAddNode}
-                    removeNodePath={`/zone-management/details/label/${tierZeroAssetGroupId}`}
+                    removeNodePath={`/zone-management/details/tier/${tierZeroAssetGroup!.id}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isTierZero}
                     showConfirmationOnAdd
-                    confirmationOnAddMessage={`Are you sure you want to add this node to High Value? This action will initiate an analysis run to update group membership.`}
+                    confirmationOnAddMessage={`Are you sure you want to add this node to ${tierZeroAssetGroup!.name}? This action will initiate an analysis run to update group membership.`}
                 />,
                 <AssetGroupMenuItem
-                    key={ownedAssetGroupId}
-                    assetGroupId={ownedAssetGroupId!}
-                    assetGroupName='Owned'
+                    key={ownedAssetGroup!.id}
+                    assetGroupId={ownedAssetGroup!.id}
+                    assetGroupName={ownedAssetGroup!.name}
                     onAddNode={handleAddNode}
-                    removeNodePath={`/zone-management/details/tag/${ownedAssetGroupId}`}
+                    removeNodePath={`/zone-management/details/label/${ownedAssetGroup!.id}`}
                     isCurrentMember={isNode(selectedItemQuery.data) && selectedItemQuery.data.isOwnedObject}
                 />,
             ]}
