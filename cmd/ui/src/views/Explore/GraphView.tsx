@@ -94,12 +94,13 @@ const GraphView: FC = () => {
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
         enabled: !exploreLayout,
     });
+
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
     const includeProperties = displayTable;
     const graphQuery = useSigmaExploreGraph(includeProperties);
 
     useEffect(() => {
-        let items: any = graphQuery.data;
+        let items: any = graphQuery.data?.nodes;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -116,7 +117,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -176,6 +177,7 @@ const GraphView: FC = () => {
         }
     };
 
+    console.log({ graphQuery });
     return (
         <div
             className='relative h-full w-full overflow-hidden'
@@ -218,7 +220,8 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data}
+                    data={graphQuery.data?.nodes}
+                    allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
                     visibleColumns={visibleColumns}
                     onManageColumnsChange={handleManageColumnsChange}

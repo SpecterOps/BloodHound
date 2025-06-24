@@ -19,7 +19,6 @@ import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { capitalize } from 'lodash';
 import { useMemo, useState } from 'react';
-import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
@@ -36,6 +35,7 @@ interface ExploreTableProps<TData extends HasData> {
     onClose?: () => void;
     data?: Record<string, TData>;
     visibleColumns?: Record<string, boolean>;
+    allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 }
 
@@ -44,33 +44,27 @@ const ExploreTable = <TData extends HasData>({
     open,
     onClose,
     onManageColumnsChange,
+    allColumnKeys,
     visibleColumns,
 }: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
+    console.log(data);
     const mungedData = useMemo(
         () => (data && Object.keys(data).map((id) => ({ ...data?.[id]?.data, id }))) || [],
         [data]
     );
-    const firstItem = mungedData?.[0];
-
-    console.log({ data });
-    const labelsMap = makeFormattedObjectInfoFieldsMap(firstItem);
-
     const allColumnDefinitions: ColumnDef<any, any>[] = useMemo(
         () =>
-            firstItem
-                ? // If column order exists in redux/localStorage, use that
-                  Object.keys(firstItem).map((key: any) => {
-                      return {
-                          accessorKey: key,
-                          header: labelsMap?.[key]?.label || capitalize(key),
-                          cell: (info: any) => String(info.getValue()),
-                          id: key,
-                          size: 150,
-                      } as ColumnDef<any, any>;
-                  })
-                : [],
-        [labelsMap, firstItem]
+            allColumnKeys?.map((key: any) => {
+                return {
+                    accessorKey: key,
+                    header: capitalize(key),
+                    cell: (info: any) => String(info.getValue()),
+                    id: key,
+                    size: 150,
+                } as ColumnDef<any, any>;
+            }) || [],
+        [allColumnKeys]
     );
 
     const visibleColumnDefinitions = allColumnDefinitions.filter(

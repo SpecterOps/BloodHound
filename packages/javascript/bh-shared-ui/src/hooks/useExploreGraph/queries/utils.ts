@@ -63,6 +63,7 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
         edges: [],
     };
 
+    console.log(graph);
     for (const [key, item] of Object.entries(graph)) {
         if (isNode(item)) {
             const node = item as StyledGraphNode;
@@ -146,7 +147,7 @@ const getLastSeenValue = (object: any): string => {
 };
 
 const isLink = (item: any): boolean => {
-    return item.id1 !== undefined;
+    return item?.id1 !== undefined;
 };
 
 const isNode = (item: any): boolean => {

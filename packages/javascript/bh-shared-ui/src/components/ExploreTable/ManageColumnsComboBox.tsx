@@ -136,7 +136,6 @@ export const ManageColumnsComboBox = ({
         return shouldSelectAll;
     };
 
-    console.log({ isOpen });
     return (
         <>
             <div className='mb-1'>
