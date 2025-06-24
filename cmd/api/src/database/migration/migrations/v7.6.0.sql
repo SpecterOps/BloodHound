@@ -25,3 +25,6 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at) V
 
 -- Add Auth Session TTL Hours
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('auth.session_ttl_hours', 'Auth Session TTL Hours', 'This configuration parameter determines the length of time in hours a logged in session stays active before expiration.', '{"hours": 8}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
+
+-- Add NTLM default value processing
+INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ( 'analysis.restrict_outbound_ntlm_default_value','Restrict Outbound NTLM Default Value','When enabled, any computer''s Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn''t exist on that computer for NTLM edge processing. When disabled, treat the missing registry as Not Restricting.', '{ "enabled": false }', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
