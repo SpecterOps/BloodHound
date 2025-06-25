@@ -44,7 +44,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
-	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+	record, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, record, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, record[0].Action)
@@ -63,7 +63,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionDeleteTag, 2, null.String{}, null.String{})
 	require.NoError(t, err)
 
-	records, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+	records, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, records, 4)
 
@@ -71,27 +71,28 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, records[0].Action)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[3].Action)
 
-	records, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, false, 0, 0)
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, false, 0, 0)
 	require.NoError(t, err)
 
 	// verify descending sort
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, records[3].Action)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[0].Action)
 
-	records, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 2)
+	records, totalRows, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 2)
 	require.NoError(t, err)
+	require.Equal(t, 4, totalRows)
 
 	// verify limit
 	require.Len(t, records, 2)
 
-	records, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 2, 0)
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 2, 0)
 	require.NoError(t, err)
 
 	// verify skip
 	require.Equal(t, model.AssetGroupHistoryActionCreateTag, records[0].Action)
 	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[1].Action)
 
-	records, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{SQLString: "action = ?", Params: []any{model.AssetGroupHistoryActionCreateTag}}, true, 0, 0)
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{SQLString: "action = ?", Params: []any{model.AssetGroupHistoryActionCreateTag}}, true, 0, 0)
 	require.NoError(t, err)
 
 	// verify SQL filter

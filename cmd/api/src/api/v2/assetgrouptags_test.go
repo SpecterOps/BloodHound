@@ -2299,7 +2299,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							false,
 							0,
 							100).
-						Return([]model.AssetGroupHistory{}, nil)
+						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2325,7 +2325,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							false,
 							0,
 							5).
-						Return([]model.AssetGroupHistory{}, nil)
+						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2351,7 +2351,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							false,
 							10,
 							100).
-						Return([]model.AssetGroupHistory{}, nil)
+						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
@@ -2365,7 +2365,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(expectedHistoryRecs, nil)
+						Return(expectedHistoryRecs, len(expectedHistoryRecs), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
