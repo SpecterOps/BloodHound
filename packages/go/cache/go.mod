@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/cache
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/hashicorp/golang-lru v0.6.0
 	github.com/specterops/dawgs v0.1.5

@@ -1866,11 +1866,11 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	)
 
 	// Format the incoming user and group ids to uppercase string before creating our nodes
-	for i, _ := range policyAssignment.EndUserAssignmentGroupApprovers {
+	for i := range policyAssignment.EndUserAssignmentGroupApprovers {
 		policyAssignment.EndUserAssignmentGroupApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentGroupApprovers[i])
 	}
 
-	for i, _ := range policyAssignment.EndUserAssignmentUserApprovers {
+	for i := range policyAssignment.EndUserAssignmentUserApprovers {
 		policyAssignment.EndUserAssignmentUserApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentUserApprovers[i])
 	}
 

@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/src
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61

@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/graphschema
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/specterops/dawgs v0.1.5
 	github.com/stretchr/testify v1.10.0

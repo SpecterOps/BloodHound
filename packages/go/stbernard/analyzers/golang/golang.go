@@ -39,7 +39,7 @@ func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclim
 		outb   bytes.Buffer
 
 		command        = "golangci-lint"
-		args           = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
+		args           = []string{"run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
 	)
 

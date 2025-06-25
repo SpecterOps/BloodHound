@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/ein
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
 	github.com/specterops/dawgs v0.1.5

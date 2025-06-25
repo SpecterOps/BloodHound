@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/crypto
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/shirou/gopsutil/v3 v3.23.5
 	go.uber.org/mock v0.5.2
