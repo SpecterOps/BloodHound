@@ -18,12 +18,9 @@ package neo4j
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util/size"
 )
@@ -75,7 +72,6 @@ func (s *batchTransaction) UpdateNodeBy(update graph.NodeUpdate) error {
 }
 
 func (s *batchTransaction) UpdateRelationshipBy(update graph.RelationshipUpdate) error {
-	defer measure.ContextMeasure(s.innerTx.ctx, slog.LevelDebug, "update relationship by", slog.String("pattern", fmt.Sprintf("(%d)-[%s]->(%d)", update.Start.ID, update.Relationship.Kind, update.End.ID)))()
 	if s.relationshipUpdateByBuffer = append(s.relationshipUpdateByBuffer, update); len(s.relationshipUpdateByBuffer) >= s.batchWriteSize {
 		return s.flushRelationshipUpdates()
 	}
