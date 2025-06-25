@@ -859,6 +859,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		}
 	)
 
+	test_started_at := time.Now()
 	_, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, test1Selector.Name, test1Selector.Description, isDefault, allowDisable, autoCertify, test1Selector.Seeds)
 	require.NoError(t, err)
 	created_at := time.Now()
@@ -866,7 +867,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successfully returns an array of selectors, no filters", func(t *testing.T) {
-		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{})
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 2)
@@ -903,7 +904,7 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of seed selector filters", func(t *testing.T) {
-		orig_results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}})
+		orig_results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{}, model.SQLFilter{SQLString: "type = ?", Params: []any{2}}, 0, 0)
 		require.NoError(t, err)
 
 		results := make(model.AssetGroupTagSelectors, 0, 1)
@@ -921,12 +922,32 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	})
 
 	t.Run("successfully returns an array of selector filters", func(t *testing.T) {
-		results, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{})
+		results, _, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{created_at}}, model.SQLFilter{}, 0, 0)
 		require.NoError(t, err)
 
 		require.Equal(t, 1, len(results))
 		require.True(t, results[0].CreatedAt.After(created_at))
 
+	})
+
+	t.Run("successfully returns an array using the skip param", func(t *testing.T) {
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 1, 0)
+		require.NoError(t, err)
+
+		fmt.Println(results)
+		require.Equal(t, 1, len(results))
+		require.Equal(t, 2, count)
+		require.Equal(t, test2Selector.Name, results[0].Name)
+	})
+
+	t.Run("successfully returns an array using the limit param", func(t *testing.T) {
+		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 0, 1)
+		require.NoError(t, err)
+
+		fmt.Println(results)
+		require.Equal(t, 1, len(results))
+		require.Equal(t, 2, count)
+		require.Equal(t, test1Selector.Name, results[0].Name)
 	})
 
 }
