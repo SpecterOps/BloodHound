@@ -25,9 +25,9 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 )
 
-func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, maybeTierId string) (int, error) {
-	if maybeTierId != "" {
-		if tierIdParam, err := strconv.Atoi(maybeTierId); err != nil {
+func ParseAssetGroupTagIdWithFallback(ctx context.Context, db database.Database, maybeAssetGroupTagId string) (int, error) {
+	if maybeAssetGroupTagId != "" {
+		if tierIdParam, err := strconv.Atoi(maybeAssetGroupTagId); err != nil {
 			return 0, err
 		} else if tierIdParam == 0 {
 			// This is a workaround to supply tiering agnostic findings
@@ -38,6 +38,7 @@ func ParseTierIdWithTierZeroFallback(ctx context.Context, db database.Database, 
 			return tierIdParam, nil
 		}
 	}
+	// Fallback to tier zero if not supplied
 	if agt, err := db.GetAssetGroupTags(ctx, model.SQLFilter{SQLString: "type = ? AND position = ?", Params: []any{model.AssetGroupTagTypeTier, model.AssetGroupTierZeroPosition}}); err != nil {
 		return 0, err
 	} else if len(agt) == 0 {
