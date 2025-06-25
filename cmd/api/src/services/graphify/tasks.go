@@ -27,6 +27,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/specterops/bloodhound/bhlog/measure"
 	"github.com/specterops/bloodhound/bomenc"
 	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/dawgs/util"
@@ -163,6 +164,8 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 }
 
 func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", filePath))()
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
