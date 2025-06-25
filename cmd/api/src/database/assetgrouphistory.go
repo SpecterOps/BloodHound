@@ -26,16 +26,16 @@ import (
 
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
-	CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
+	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
 	GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error)
 }
 
-func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actor model.User, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
+func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
 	return CheckError(s.db.WithContext(ctx).Exec(fmt.Sprintf("INSERT INTO %s (actor, email, target, action, asset_group_tag_id, environment_id, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())", (model.AssetGroupHistory{}).TableName()),
-		actor.ID.String(), actor.EmailAddress, target, action, assetGroupTagId, environmentId, note))
+		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
 func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context) ([]model.AssetGroupHistory, error) {
 	var result []model.AssetGroupHistory
-	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s", (model.AssetGroupHistory{}).TableName())).Find(&result))
+	return result, CheckError(s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s ORDER BY id ASC", (model.AssetGroupHistory{}).TableName())).Find(&result))
 }

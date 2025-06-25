@@ -30,13 +30,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/dawgs"
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/cmd/dawgs-harness/tests"
+	"github.com/specterops/dawgs"
+	"github.com/specterops/dawgs/drivers/neo4j"
+	"github.com/specterops/dawgs/drivers/pg"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util/size"
 )
 
 func fatalf(format string, args ...any) {

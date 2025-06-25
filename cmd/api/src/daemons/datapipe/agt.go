@@ -25,12 +25,6 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/traversal"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
@@ -38,6 +32,12 @@ import (
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 // This is a bespoke result set to contain a dedupe'd node with source info
@@ -684,6 +684,71 @@ func clearAssetGroupTags(ctx context.Context, db database.Database, graphDb grap
 	return nil
 }
 
+func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, assetGroupTag model.AssetGroupTag) error {
+	tagKind := assetGroupTag.ToKind()
+	if err := graphDb.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if taggedNodeSet, err := ops.FetchNodeSet(tx.Nodes().Filter(query.Kind(query.Node(), tagKind))); err != nil {
+			return err
+		} else {
+			for _, node := range taggedNodeSet {
+				node.DeleteKinds(tagKind)
+				if err = tx.UpdateNode(node); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Database, graphDb graph.Database) error {
+	if selectorsToMigrate, err := db.GetCustomAssetGroupTagSelectorsToMigrate(ctx); err != nil {
+		return err
+	} else {
+		var countUpdated, countSkipped int
+
+		for _, selector := range selectorsToMigrate {
+			if len(selector.Seeds) > 1 {
+				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", "selector", selector)
+				continue
+			} else if len(selector.Seeds) == 1 {
+				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
+					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
+						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+						countSkipped++
+					} else {
+						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
+						if name == "" {
+							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							countSkipped++
+							return nil
+						}
+						selector.Name = name
+						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
+							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", "selector", selector)
+							countSkipped++
+						}
+						countUpdated++
+					}
+					return nil
+				}); err != nil {
+					return err
+				}
+			}
+		}
+		if len(selectorsToMigrate) > 0 {
+			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countFound", len(selectorsToMigrate), "countUpdated", countUpdated, "countSkipped", countSkipped)
+		}
+	}
+
+	return nil
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	var errors []error
@@ -694,6 +759,12 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
 			errors = append(errors, err)
 		}
+
+		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: migrating custom selector names failed: %v", err))
+			errors = append(errors, err)
+		}
+
 		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
 			errors = append(errors, err)

@@ -2860,7 +2860,7 @@
         }
       }
     },
-    "/api/v2/customnode": {
+    "/api/v2/custom-nodes": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -2893,23 +2893,22 @@
                 },
                 "example": [
                   {
-                    "id": 1,
-                    "kindName": "KindA",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "house",
-                      "color": "#FFFFFF"
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "kindName": "KindB",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "coffee",
-                      "color": "#000000"
-                    }
+                    "data": [
+                      {
+                          "id": 1,
+                          "kindName": "KindA",
+                          "config": {
+                              "icon": {
+                                  "type": "font-awesome",
+                                  "name": "house",
+                                  "color": "#FFFFFF"
+                              }
+                          }
+                      }
+                    ]
                   }
+                  
+                  
                 ]
               }
             }
@@ -3019,7 +3018,7 @@
         }
       }
     },
-    "/api/v2/customnode/{kind_name}": {
+    "/api/v2/custom-nodes/{kind_name}": {
       "parameters": [
         {
           "$ref": "#/components/parameters/header.prefer"
@@ -5071,6 +5070,72 @@
             "$ref": "#/components/responses/internal-server-error"
           }
         }
+      },
+      "post": {
+        "operationId": "CreateAssetGroupTag",
+        "summary": "Create Asset Group Tag",
+        "description": "Creates an asset group tag ie. a tier or label",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for creating an asset group tag. Name and type fields are required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/model.asset-group-tag-request"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tag"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
       }
     },
     "/api/v2/asset-group-tags/{asset_group_tag_id}": {
@@ -5118,6 +5183,93 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateAssetGroupTag",
+        "summary": "Update Asset Group Tag",
+        "description": "Updates an asset group tag by ID",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The request body for updating an asset group tag. At least one field is required.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.asset-group-tag-update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.asset-group-tag"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteAssetGroupTag",
+        "summary": "Delete an Asset Group Tag",
+        "description": "Deletes an asset group tag",
+        "tags": [
+          "Asset Isolation",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
@@ -6818,6 +6970,193 @@
         }
       }
     },
+    "/api/v2/saved-queries/{saved_query_id}/export": {
+      "parameters": [
+        {
+          "name": "saved_query_id",
+          "description": "ID of the saved query",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQuery",
+        "summary": "Export a saved query",
+        "description": "Export an existing saved query by ID",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/import": {
+      "post": {
+        "operationId": "ImportSavedQueries",
+        "summary": "Import one or more cypher queries.",
+        "description": "Import one or more cypher queries.\n\nThe request body should be a json file containing a single query or a Zip consisting of multiple JSON files each containing a single query.\n\nThe underlying JSON file(s) is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "Request body should be a JSON or Zip file.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/zip": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/saved-queries/export": {
+      "parameters": [
+        {
+          "name": "scope",
+          "description": "Scope of saved queries, only the first scope parameter is used.",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "all",
+              "public",
+              "shared",
+              "owned"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "operationId": "ExportSavedQueries",
+        "summary": "Export one or more saved queries",
+        "description": "Export existing saved queries using the scope parameter.",
+        "tags": [
+          "Cypher",
+          "Community",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "**OK**\nThis response will contain binary content.\n\nThe response ZIP file will contain JSON files using their query name as the file name.\nThe underlying JSON file is expected to have the following structure:\n```json\n{\n \"name\": \"Return_Nodes\",\n \"query\": \"MATCH (n) RETURN n\",\n \"description\": \"Returns all nodes in a given graph\"\n}\n```\n",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "example": "[this request has a binary response]"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graphs/cypher": {
       "parameters": [
         {
@@ -6859,7 +7198,7 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/model.unified-graph.graph"
+                      "$ref": "#/components/schemas/model.unified-graph.graph.w.property.keys"
                     }
                   }
                 }
@@ -17442,6 +17781,46 @@
           },
           "require_certify": {
             "$ref": "#/components/schemas/null.boolean"
+          },
+          "analysis_enabled": {
+            "$ref": "#/components/schemas/null.boolean"
+          }
+        }
+      },
+      "model.asset-group-tag-request": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "require_certify": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "model.asset-group-tag-update": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "require_certify": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
           }
         }
       },
@@ -17862,6 +18241,35 @@
             }
           }
         ]
+      },
+      "model.unified-graph.graph.w.property.keys": {
+        "type": "object",
+        "properties": {
+          "node_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "edge_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nodes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/model.unified-graph.node"
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/model.unified-graph.edge"
+            }
+          }
+        }
       },
       "api.response.time-window": {
         "type": "object",
@@ -18823,6 +19231,27 @@
               "format": "binary"
             },
             "example": "[this request has a binary response]"
+          }
+        }
+      },
+      "unsupported-media-type": {
+        "description": "**Unsupported Media Type**\nContent-Type does not match expected formats.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/api.error-wrapper"
+            },
+            "example": {
+              "http_status": 415,
+              "timestamp": "2024-02-19T19:27:43.866Z",
+              "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "errors": [
+                {
+                  "context": "clients",
+                  "message": "invalid content-type: [application/incorrect]; Content type must be application/json or application/zip"
+                }
+              ]
+            }
           }
         }
       },

@@ -23,9 +23,9 @@ import (
 	"github.com/specterops/bloodhound/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
 	"github.com/specterops/bloodhound/analysis/hybrid"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
