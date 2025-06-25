@@ -20,7 +20,7 @@ More detailed information regarding [contributing](https://github.com/SpecterOps
     - installation using a node version manager like [nvm](https://github.com/nvm-sh/nvm) or [n](https://github.com/tj/n) is recommended
 - [Yarn v3.6](https://v3.yarnpkg.com/getting-started/install)
     - installation using `npm corepack` is recommended (instructions in the link above)
-- [Go v1.23](https://go.dev/dl/)
+- [Go v1.24](https://go.dev/dl/)
   - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) is also needed
   - make sure `$HOME/go/bin` (or wherever your Go packages are installed) is in your `$PATH`
 - [Python v3.10](https://www.python.org/downloads/)

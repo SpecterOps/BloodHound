@@ -61,7 +61,7 @@ WORKDIR /tmp/azurehound/artifacts
 RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
 RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
 
-FROM docker.io/library/golang:1.23
+FROM docker.io/library/golang:1.24.4-alpine3.22
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 ENV GOFLAGS="-buildvcs=false"
@@ -69,7 +69,7 @@ WORKDIR /bloodhound
 VOLUME [ "/go/pkg/mod" ]
 
 RUN mkdir -p /bhapi/collectors/azurehound /bhapi/collectors/sharphound /bhapi/work
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.0
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.24.4
 RUN go install github.com/air-verse/air@v1.52.3
 
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
