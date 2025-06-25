@@ -985,10 +985,10 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		tenantMap := make(map[string]string)
 		for _, tenant := range tenants {
 			if id, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
-				slog.ErrorContext(ctx, "Error getting tenant objectid for tenant %d: %v", tenant.ID.Int64(), err)
+				slog.ErrorContext(ctx, "Error getting tenant objectid", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
 				continue
 			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
-				slog.ErrorContext(ctx, "Error getting tenant name for tenant %d: %v", tenant.ID.Int64(), err)
+				slog.ErrorContext(ctx, "Error getting tenant name", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
 				continue
 			} else {
 				tenantMap[id] = tenantName
@@ -998,13 +998,13 @@ func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			for _, managementGroup := range managementGroups {
 				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
-					slog.ErrorContext(ctx, "Error getting tenantid for management group %d: %v", managementGroup.ID.Int64(), err)
+					slog.ErrorContext(ctx, "Error getting tenantid for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
 					continue
 				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
-					slog.ErrorContext(ctx, "Error getting displayName for management group %d: %v", managementGroup.ID.Int64(), err)
+					slog.ErrorContext(ctx, "Error getting display name for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
 					continue
 				} else if tenantName, ok := tenantMap[tenantId]; !ok {
-					slog.WarnContext(ctx, "Could not find a tenant that matches management group %d: %v", managementGroup.ID.Int64(), err)
+					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
 					continue
 				} else {
 					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))

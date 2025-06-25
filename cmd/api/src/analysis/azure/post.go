@@ -31,7 +31,7 @@ import (
 func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
 	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
-		slog.WarnContext(ctx, "Error fixing management group names: %v", err)
+		slog.WarnContext(ctx, "Error fixing management group names", slog.String("err", err.Error()))
 	}
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
