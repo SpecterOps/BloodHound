@@ -155,4 +155,6 @@ func TestFixManagementGroupNames(t *testing.T) {
 			return nil
 		})
 	})
+
+	require.NoError(t, err)
 }
