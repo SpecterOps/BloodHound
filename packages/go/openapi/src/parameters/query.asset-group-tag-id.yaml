@@ -1,0 +1,5 @@
+name: asset_group_tag_id
+description: The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.
+in: query
+schema:
+  type: integer
