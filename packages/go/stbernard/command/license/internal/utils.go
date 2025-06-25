@@ -74,6 +74,7 @@ func generateLicenseHeader(commentPrefix string) string {
 	return formattedHeader.String()
 }
 
+//gocyclo:ignore
 func writeFile(path string, formattedHeaderContent string) error {
 	// Open file at path in read/write mode
 	file, err := os.OpenFile(path, os.O_RDWR, 0)

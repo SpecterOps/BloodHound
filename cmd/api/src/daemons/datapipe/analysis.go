@@ -40,6 +40,8 @@ var (
 )
 
 // TODO Cleanup tieringEnabled after Tiering GA
+//
+//gocyclo:ignore
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
 		collectedErrors      []error

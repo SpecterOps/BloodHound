@@ -37,6 +37,7 @@ type DatabaseWipe struct {
 	DeleteAssetGroupSelectors []int `json:"deleteAssetGroupSelectors"`
 }
 
+//gocyclo:ignore
 func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *http.Request) {
 
 	var (

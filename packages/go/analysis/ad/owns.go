@@ -34,6 +34,7 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
+//gocyclo:ignore
 func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, groupExpansions impact.PathAggregator) (*analysis.AtomicPostProcessingStats, error) {
 	operation := analysis.NewPostRelationshipOperation(ctx, db, "PostOwnsAndWriteOwner")
 

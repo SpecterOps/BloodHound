@@ -71,6 +71,7 @@ var (
 	ErrParameterRelatedEntityType = errors.New("invalid related entity type")
 )
 
+//gocyclo:ignore
 func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, objectID string, request *http.Request) (any, int, *api.ErrorWrapper) {
 	switch relatedEntityType := azure.RelatedEntityType(entityType); relatedEntityType {
 	case azure.RelatedEntityTypeDescendentUsers, azure.RelatedEntityTypeDescendentGroups,
@@ -194,6 +195,7 @@ func nodeSetToOrderedSlice(nodeSet graph.NodeSet) []*graph.Node {
 	return nodes
 }
 
+//gocyclo:ignore
 func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, objectID string, skip, limit int) ([]azure.Node, int, error) {
 	var (
 		nodeSet graph.NodeSet
@@ -338,6 +340,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 	}
 }
 
+//gocyclo:ignore
 func GetAZEntityInformation(ctx context.Context, db graph.Database, entityType, objectID string, hydrateCounts bool) (any, error) {
 	switch entityType {
 	case entityTypeBase:

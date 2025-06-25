@@ -63,6 +63,7 @@ func ValidateDomains(ctx context.Context, queries queries.Graph, objectIDs ...st
 	}
 }
 
+//gocyclo:ignore
 func GraphStats(ctx context.Context, db graph.Database) (model.ADDataQualityStats, model.ADDataQualityAggregation, error) {
 	var (
 		aggregation model.ADDataQualityAggregation

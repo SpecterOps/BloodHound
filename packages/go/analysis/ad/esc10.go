@@ -253,6 +253,7 @@ func adcsESC10APath3Pattern() traversal.PatternContinuation {
 		))
 }
 
+//gocyclo:ignore
 func GetADCSESC10EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/* Scenario A
 	MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC10a]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})

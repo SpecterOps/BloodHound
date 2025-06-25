@@ -168,6 +168,8 @@ func getCertTemplateGroupLinks(ct *graph.Node, tx graph.Transaction) (graph.Node
 		}
 	}
 }
+
+//gocyclo:ignore
 func GetADCSESC13EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'<principal sid>'})-[:ADCSESC13]->(g:Group {objectid:'<group sid>'})

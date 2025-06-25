@@ -128,6 +128,7 @@ type BloodHoundGraphLink struct {
 	Width     int                       `json:"width,omitempty"`
 }
 
+//gocyclo:ignore
 func (s *BloodHoundGraphNode) SetIcon(nType string) {
 	switch nType {
 	case "AZApp":
@@ -275,6 +276,7 @@ func (s *BloodHoundGraphNode) SetIcon(nType string) {
 	}
 }
 
+//gocyclo:ignore
 func (s *BloodHoundGraphNode) SetBackground(nType string) {
 	switch nType {
 	case "AZApp":

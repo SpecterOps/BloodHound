@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
+//gocyclo:ignore
 func GraphStats(ctx context.Context, db graph.Database) (model.AzureDataQualityStats, model.AzureDataQualityAggregation, error) {
 	var (
 		aggregation model.AzureDataQualityAggregation

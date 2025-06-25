@@ -46,6 +46,7 @@ import (
 	bhUtils "github.com/specterops/bloodhound/src/utils"
 )
 
+//gocyclo:ignore
 func (s Resources) ListSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		order         []string

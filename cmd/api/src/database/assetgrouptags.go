@@ -367,6 +367,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 	return tag, nil
 }
 
+//gocyclo:ignore
 func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User, tag model.AssetGroupTag) (model.AssetGroupTag, error) {
 	var (
 		auditEntry = model.AuditEntry{

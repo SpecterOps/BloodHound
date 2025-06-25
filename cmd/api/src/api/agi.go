@@ -111,6 +111,7 @@ func (s AssetGroupMembers) Filter(filterMap model.QueryParameterFilterMap) (Asse
 	return result, nil
 }
 
+//gocyclo:ignore
 func (s AssetGroupMembers) BuildFilteringConditional(column string, operator model.FilterOperator, value string) (func(t AssetGroupMember) bool, error) {
 	switch column {
 	case "object_id":

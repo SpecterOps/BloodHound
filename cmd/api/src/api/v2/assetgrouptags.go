@@ -202,6 +202,7 @@ func (s *Resources) CreateAssetGroupTagSelector(response http.ResponseWriter, re
 	}
 }
 
+//gocyclo:ignore
 func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, request *http.Request) {
 	var (
 		selUpdateReq  patchAssetGroupTagSelectorRequest
@@ -378,6 +379,7 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 	}
 }
 
+//gocyclo:ignore
 func (s *Resources) GetAssetGroupTagSelectors(response http.ResponseWriter, request *http.Request) {
 	var (
 		assetTagIdStr            = mux.Vars(request)[api.URIPathVariableAssetGroupTagID]

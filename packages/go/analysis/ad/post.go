@@ -307,6 +307,7 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 	}
 }
 
+//gocyclo:ignore
 func PostLocalGroups(ctx context.Context, db graph.Database, localGroupExpansions impact.PathAggregator, enforceURA bool, citrixEnabled bool) (*analysis.AtomicPostProcessingStats, error) {
 	var (
 		adminGroupSuffix    = "-544"

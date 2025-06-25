@@ -127,6 +127,8 @@ func indirectOf(target any) reflect.Value {
 // setRawValue takes a target interface and a string value representation. This function only supports golang primitive
 // types. The type of the target is switched on which selects the appropriate parsing function for the string value. If
 // an error is encountered during parsing of the string value, the resulting parsing error is returned.
+//
+//gocyclo:ignore
 func setRawValue(targetAddr any, value string) error {
 	switch casted := targetAddr.(type) {
 	case *uint:

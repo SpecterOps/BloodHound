@@ -71,6 +71,7 @@ func NewADCSCache() ADCSCache {
 	}
 }
 
+//gocyclo:ignore
 func (s *ADCSCache) BuildCache(ctx context.Context, db graph.Database, enterpriseCertAuthorities, certTemplates []*graph.Node) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -79,6 +79,8 @@ func CanUpdateSavedQueriesPermission(user model.User, savedQueryBelongsToUser bo
 }
 
 // ShareSavedQueries allows a user to share queries between users, as well as share them publicly
+//
+//gocyclo:ignore
 func (s Resources) ShareSavedQueries(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]

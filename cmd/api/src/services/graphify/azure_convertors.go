@@ -38,6 +38,7 @@ const (
 	PrincipalTypeUser             = "User"
 )
 
+//gocyclo:ignore
 func getKindConverter(kind enums.Kind) func(json.RawMessage, *ConvertedAzureData, time.Time) {
 	switch kind {
 	case enums.KindAZApp:

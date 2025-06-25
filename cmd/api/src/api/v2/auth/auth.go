@@ -377,6 +377,7 @@ func (s ManagementResource) CreateUser(response http.ResponseWriter, request *ht
 	}
 }
 
+//gocyclo:ignore
 func (s ManagementResource) UpdateUser(response http.ResponseWriter, request *http.Request) {
 	var (
 		updateUserRequest v2.UpdateUserRequest

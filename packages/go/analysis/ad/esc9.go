@@ -172,6 +172,7 @@ func isCertTemplateValidForESC9(ct *graph.Node, scenarioB bool) (bool, error) {
 	}
 }
 
+//gocyclo:ignore
 func GetADCSESC9aEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9a]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})
@@ -511,6 +512,7 @@ func adcsESC9bPath3Pattern() traversal.PatternContinuation {
 		))
 }
 
+//gocyclo:ignore
 func GetADCSESC9bEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		MATCH (n {objectid:'S-1-5-21-3933516454-2894985453-2515407000-500'})-[:ADCSESC9b]->(d:Domain {objectid:'S-1-5-21-3933516454-2894985453-2515407000'})

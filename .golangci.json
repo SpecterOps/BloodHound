@@ -3,7 +3,8 @@
     "disable": [],
     "enable": [
       "gosimple",
-      "stylecheck"
+      "stylecheck",
+      "gocyclo"
     ]
   },
   "issues": {
@@ -29,6 +30,10 @@
       {
         "path": "dawgs/util/size/(.+)",
         "linters": ["unused"]
+      },
+      {
+        "path": "_test\\.go",
+        "linters": ["gocyclo"]
       }
     ]
   },
@@ -57,6 +62,9 @@
         "-ST1000",
         "-ST1003"
       ]
+    },
+    "gocyclo": {
+      "min-complexity": 20
     }
   }
 }

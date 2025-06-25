@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/dawgs/util/channels"
 )
 
+//gocyclo:ignore
 func PostHybrid(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	// Fetch all Azure tenants first
 	tenants, err := azure.FetchTenants(ctx, db)

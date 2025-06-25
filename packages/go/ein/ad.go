@@ -388,6 +388,8 @@ func getFromPropertyMap[T any](props map[string]any, keyName string) (T, bool) {
 //
 // Part of the goal of this function was to make it backwards compatible with older collectors (or third-party
 // collectors). As such, this function will attempt to translate data as it comes in.
+//
+//gocyclo:ignore
 func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, targetType graph.Kind) []IngestibleRelationship {
 	var (
 		ownerPrincipalInfo                   IngestibleEndpoint

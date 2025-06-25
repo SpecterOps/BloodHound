@@ -541,6 +541,7 @@ func findPathToDomainThroughEnterpriseCAsTrustedForNTAuth(
 
 }
 
+//gocyclo:ignore
 func GetADCSESC4EdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	/*
 		// 2a

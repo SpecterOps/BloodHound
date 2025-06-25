@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
 )
 
+//gocyclo:ignore
 func Run(env environment.Environment) error {
 	var (
 		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".beagle", ".yarn", "sha256"}
