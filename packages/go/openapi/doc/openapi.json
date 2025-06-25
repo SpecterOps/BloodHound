@@ -15605,6 +15605,9 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
