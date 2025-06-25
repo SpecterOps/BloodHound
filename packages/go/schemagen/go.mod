@@ -16,7 +16,7 @@
 
 module github.com/specterops/bloodhound/schemagen
 
-go 1.23.0
+go 1.24.4
 
 require (
 	cuelang.org/go v0.13.1
