@@ -27,7 +27,7 @@ import (
 func InstallGolangCiLint(path string, env environment.Environment) error {
 	var (
 		command = "go"
-		args    = []string{"install", "github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.3"}
+		args    = []string{"install", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6"}
 	)
 
 	if err := cmdrunner.Run(command, args, path, env); err != nil {

@@ -17,5 +17,3 @@
 module github.com/specterops/bloodhound/conftool
 
 go 1.24.4
-
-toolchain go1.24.4
