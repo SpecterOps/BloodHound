@@ -27,7 +27,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, int, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,11 +35,12 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, error) {
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, int, error) {
 	var (
 		historyRecs     []model.AssetGroupHistory
 		skipLimitString string
 		sortDir         string
+		rowCount        int
 	)
 
 	if sqlFilter.SQLString != "" {
@@ -60,17 +61,29 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilte
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	if result := s.db.WithContext(ctx).Raw(
-		fmt.Sprintf(
-			"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at %s %s",
-			(model.AssetGroupHistory{}).TableName(),
-			sqlFilter.SQLString,
-			sortDir,
-			skipLimitString,
-		),
-		sqlFilter.Params...,
-	).Find(&historyRecs); result.Error != nil {
-		return []model.AssetGroupHistory{{}}, CheckError(result)
+	sqlStr := fmt.Sprintf(
+		"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at %s %s",
+		(model.AssetGroupHistory{}).TableName(),
+		sqlFilter.SQLString,
+		sortDir,
+		skipLimitString)
+
+	sqlCountStr := fmt.Sprintf(
+		"SELECT COUNT(*) FROM %s%s",
+		(model.AssetGroupHistory{}).TableName(),
+		sqlFilter.SQLString)
+
+	if result := s.db.WithContext(ctx).Raw(sqlStr, sqlFilter.Params...).Find(&historyRecs); result.Error != nil {
+		return []model.AssetGroupHistory{{}}, 0, CheckError(result)
 	}
-	return historyRecs, nil
+
+	if limit > 0 || skip > 0 {
+		if result := s.db.WithContext(ctx).Raw(sqlCountStr, sqlFilter.Params...).Scan(&rowCount); result.Error != nil {
+			return []model.AssetGroupHistory{{}}, 0, CheckError(result)
+		}
+	} else {
+		rowCount = len(historyRecs)
+	}
+
+	return historyRecs, rowCount, nil
 }

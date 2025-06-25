@@ -1072,12 +1072,13 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupCollections(ctx, assetGroupID, 
 }
 
 // GetAssetGroupHistoryRecords mocks base method.
-func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, error) {
+func (m *MockDatabase) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssetGroupHistoryRecords", ctx, sqlFilter, sortDirectionAscending, skip, limit)
 	ret0, _ := ret[0].([]model.AssetGroupHistory)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetAssetGroupHistoryRecords indicates an expected call of GetAssetGroupHistoryRecords.
