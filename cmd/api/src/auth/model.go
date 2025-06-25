@@ -82,7 +82,7 @@ func (s idResolver) GetIdentity(ctx Context) (SimpleIdentity, error) {
 		return SimpleIdentity{
 			ID:    user.ID,
 			Name:  user.PrincipalName,
-			Email: user.EmailAddress.String,
+			Email: user.EmailAddress.ValueOrZero(),
 			Key:   "user_id",
 		}, nil
 	}

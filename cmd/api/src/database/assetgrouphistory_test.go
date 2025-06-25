@@ -41,7 +41,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
@@ -56,11 +56,11 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	require.Equal(t, null.String{}, record[0].Note)
 	require.False(t, record[0].CreatedAt.IsZero())
 
-	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
-	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionCreateTag, 2, null.String{}, null.String{})
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateTag, 2, null.String{}, null.String{})
 	require.NoError(t, err)
-	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionDeleteTag, 2, null.String{}, null.String{})
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteTag, 2, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	records, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)

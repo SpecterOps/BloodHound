@@ -60,8 +60,10 @@ type CreateCustomNodeRequest struct {
 }
 
 func validateCreateCustomNodeRequest(customNodeKindRequest CreateCustomNodeRequest) error {
-	for _, config := range customNodeKindRequest.CustomTypes {
-		if err := validateConfig(config); err != nil {
+	for key, config := range customNodeKindRequest.CustomTypes {
+		if key == "" {
+			return fmt.Errorf("custom_types contains an entry with an empty string as a key. please remove or replace the empty key")
+		} else if err := validateConfig(config); err != nil {
 			return err
 		}
 	}
