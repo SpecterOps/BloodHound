@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/lab
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/specterops/dawgs v0.1.3
 	github.com/stretchr/testify v1.10.0

@@ -18,8 +18,6 @@ module github.com/specterops/bloodhound/analysis
 
 go 1.24.4
 
-toolchain go1.24.4
-
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
