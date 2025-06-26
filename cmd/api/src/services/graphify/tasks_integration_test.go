@@ -80,6 +80,9 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 	err = os.CopyFS(workDir, os.DirFS(fixturesPath))
 	require.NoError(t, err)
 
+	err = os.Mkdir(path.Join(workDir, "tmp"), 0755)
+	require.NoError(t, err)
+
 	cfg := config.Configuration{
 		WorkDir: workDir,
 	}
@@ -154,6 +157,32 @@ func TestVersion6IngestJSON(t *testing.T) {
 		require.NoError(t, err)
 		require.Zero(t, failed)
 		require.Equal(t, 1, total)
+	}
+
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v6expected.json")
+	require.NoError(t, err)
+	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
+}
+
+func TestVersion6IngestZIP(t *testing.T) {
+	t.Parallel()
+	var (
+		ctx = context.Background()
+
+		testSuite = setupIntegrationTestSuite(t, path.Join("fixtures", t.Name()))
+
+		files = []string{
+			path.Join(testSuite.WorkDir, "archive.zip"),
+		}
+	)
+
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, file := range files {
+		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeZip}, time.Now())
+		require.NoError(t, err)
+		require.Zero(t, failed)
+		require.Equal(t, 8, total)
 	}
 
 	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v6expected.json")
