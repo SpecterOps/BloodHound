@@ -78,12 +78,12 @@ func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilte
 		sqlFilter.SQLString)
 
 	if result := s.db.WithContext(ctx).Raw(sqlStr, sqlFilter.Params...).Find(&historyRecs); result.Error != nil {
-		return []model.AssetGroupHistory{{}}, 0, CheckError(result)
+		return []model.AssetGroupHistory{}, 0, CheckError(result)
 	}
 
 	if limit > 0 || skip > 0 {
 		if result := s.db.WithContext(ctx).Raw(sqlCountStr, sqlFilter.Params...).Scan(&rowCount); result.Error != nil {
-			return []model.AssetGroupHistory{{}}, 0, CheckError(result)
+			return []model.AssetGroupHistory{}, 0, CheckError(result)
 		}
 	} else {
 		rowCount = len(historyRecs)
