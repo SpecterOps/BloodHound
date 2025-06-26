@@ -19,8 +19,8 @@ package upload
 import (
 	"io"
 
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 )
 
 // FileValidator defines the interface for ingest file validation.

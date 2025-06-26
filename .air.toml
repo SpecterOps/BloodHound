@@ -21,7 +21,7 @@ tmp_dir = "../tmp"
 [build]
 args_bin = ["-configfile", "/${BH_CONFIG_FILE:-build.config.json}"]
 bin = "../tmp/main"
-cmd = "go build -o ../tmp/main github.com/specterops/bloodhound/src/cmd/bhapi"
+cmd = "go build -o ../tmp/main github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi"
 delay = 1
 exclude_dir = []
 exclude_file = []

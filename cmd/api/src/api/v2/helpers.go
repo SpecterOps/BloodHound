@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 type DataType int

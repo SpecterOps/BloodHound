@@ -143,6 +143,7 @@ services:
       - traefik.http.services.bhapi.loadbalancer.server.port=8080
     volumes:
       - .:/bloodhound:ro
+      - ../dawgs:/dawgs
       - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
       - go-pkg-mod:/go/pkg/mod
     depends_on:
@@ -198,6 +199,7 @@ services:
       - traefik.http.services.debugapi.loadbalancer.server.port=8080
     volumes:
       - .:/bloodhound:ro
+      - ../dawgs:/dawgs:ro
       - ./local-harnesses/${BH_CONFIG_FILE:-build.config.json}:/build.config.json:ro
     depends_on:
       app-db:

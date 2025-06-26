@@ -26,11 +26,11 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth"
-	ctx2 "github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	ctx2 "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type ShareSavedQueriesResponse []model.SavedQueriesPermissions

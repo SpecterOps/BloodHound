@@ -24,7 +24,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/analysis"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/builder"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command/cover"

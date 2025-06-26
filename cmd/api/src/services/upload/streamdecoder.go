@@ -29,7 +29,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
-	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 )
 
 var ZipMagicBytes = []byte{0x50, 0x4b, 0x03, 0x04}

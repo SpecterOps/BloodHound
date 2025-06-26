@@ -23,9 +23,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
-	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/require"
 )
 

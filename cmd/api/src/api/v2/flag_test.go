@@ -21,11 +21,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"go.uber.org/mock/gomock"
 )
 

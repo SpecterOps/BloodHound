@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"time"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/model"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func (s Client) GetLatestAuditLogs() (v2.AuditLogsResponse, error) {

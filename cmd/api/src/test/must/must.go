@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 func MarshalJSON(value any) []byte {

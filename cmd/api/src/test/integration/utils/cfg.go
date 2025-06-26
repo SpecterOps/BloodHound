@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
 )
 
 const (

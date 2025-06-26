@@ -28,9 +28,9 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )

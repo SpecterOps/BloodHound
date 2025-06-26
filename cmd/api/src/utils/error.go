@@ -51,7 +51,7 @@ func SwitchCase(input string, format string) (string, error) {
 	case "upper":
 		return stringyInput.ToUpper(), nil
 	case "camel":
-		return stringyInput.CamelCase(), nil
+		return stringyInput.CamelCase().Get(), nil
 	case "snake":
 		return stringyInput.SnakeCase().ToLower(), nil
 	case "kebab":

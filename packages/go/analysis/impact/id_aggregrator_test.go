@@ -19,7 +19,7 @@ package impact_test
 import (
 	"testing"
 
-	"github.com/specterops/bloodhound/analysis/impact"
+	"github.com/specterops/bloodhound/packages/go/analysis/impact"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"

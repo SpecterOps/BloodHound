@@ -20,10 +20,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/specterops/bloodhound/src/api/v2/apiclient"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/test"
-	"github.com/specterops/bloodhound/src/test/fixtures"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apiclient"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/test"
+	"github.com/specterops/bloodhound/cmd/api/src/test/fixtures"
 )
 
 // Context holds integration test relevant information to be passed around to functions

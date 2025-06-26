@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"

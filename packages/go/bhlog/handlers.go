@@ -21,9 +21,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/src/auth"
-	bhctx "github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	bhctx "github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
 type contextHandler struct {

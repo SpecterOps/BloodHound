@@ -18,7 +18,7 @@ package job
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // The JobData interface is designed to manage the lifecycle of jobs in a system that processes graph-based data

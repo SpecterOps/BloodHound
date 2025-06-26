@@ -24,8 +24,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
-	"github.com/specterops/bloodhound/src/daemons/datapipe/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/mocks"
 	"go.uber.org/mock/gomock"
 )
 

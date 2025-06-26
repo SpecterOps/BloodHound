@@ -23,7 +23,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 type AnalysisRequestData interface {

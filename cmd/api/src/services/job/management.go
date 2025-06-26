@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // NOTE: These methods are all called by the frontend/http handler to do stuff. We might want to consider moving

@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/lab"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/lab"
 	"github.com/specterops/dawgs/graph"
 )
 

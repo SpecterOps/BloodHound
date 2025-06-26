@@ -73,7 +73,7 @@ RUN yarn build
 # Version Build
 ################
 FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.24.4-alpine3.22 AS ldflag-builder
-ENV VERSION_PKG="github.com/specterops/bloodhound/src/version"
+ENV VERSION_PKG="github.com/specterops/bloodhound/cmd/api/src/version"
 RUN apk add --update --no-cache git
 WORKDIR /build
 COPY .git ./.git
@@ -109,7 +109,7 @@ WORKDIR /build
 COPY --parents go* cmd/api packages/go ./
 COPY --from=ldflag-builder /build/LDFLAGS ./
 COPY --from=ui-builder /build/cmd/ui/dist ./cmd/api/src/api/static/assets
-RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/src/cmd/bhapi
+RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound -ldflags "$(cat LDFLAGS)" github.com/specterops/bloodhound/cmd/api/src/cmd/bhapi
 
 ########
 # Package Bloodhound

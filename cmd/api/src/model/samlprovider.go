@@ -24,8 +24,8 @@ import (
 	"path"
 
 	"github.com/crewjam/saml"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
 )
 
 const (

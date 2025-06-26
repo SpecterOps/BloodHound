@@ -119,9 +119,9 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 	if _, err := os.Stat(filepath.Join(cwd, "cmd", "schemagen")); !errors.Is(err, os.ErrNotExist) && err != nil {
 		return fmt.Errorf("attempted to find cmd/schemagen: %w", err)
 	} else if errors.Is(err, os.ErrNotExist) {
-		args = append(args, "github.com/specterops/bloodhound/schemagen")
+		args = append(args, "github.com/specterops/bloodhound/packages/go/schemagen")
 	} else {
-		args = append(args, "git.bloodhound-ad.net/schemagen")
+		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/graphgen")
 	}
 
 	if err := cmdrunner.Run(command, args, cwd, env); err != nil {

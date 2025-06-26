@@ -24,7 +24,7 @@ import (
 	"net/url"
 	"runtime/pprof"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 const (

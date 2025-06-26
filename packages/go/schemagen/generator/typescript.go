@@ -19,8 +19,8 @@ package generator
 import (
 	"fmt"
 
-	"github.com/specterops/bloodhound/schemagen/model"
-	"github.com/specterops/bloodhound/schemagen/tsgen"
+	"github.com/specterops/bloodhound/packages/go/schemagen/model"
+	"github.com/specterops/bloodhound/packages/go/schemagen/tsgen"
 )
 
 func generateToDisplaySwitch(root tsgen.File, typeSymbol string, values []model.StringEnum) {

@@ -20,7 +20,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // AvailableFlags has been removed and the db feature_flags table is the source of truth. Feature flag defaults should be added via migration *.sql files.

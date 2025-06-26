@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/daemons"
-	"github.com/specterops/bloodhound/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/dawgs/graph"
 )
 

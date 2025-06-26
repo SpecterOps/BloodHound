@@ -24,10 +24,10 @@ import (
 	"os/exec"
 	"path"
 
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/slicesext"
 )
 
 // Run golangci-lint for all module paths passed to it

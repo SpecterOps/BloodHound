@@ -22,13 +22,13 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	dbMocks "github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	graph_mocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"go.uber.org/mock/gomock"
 )
 
