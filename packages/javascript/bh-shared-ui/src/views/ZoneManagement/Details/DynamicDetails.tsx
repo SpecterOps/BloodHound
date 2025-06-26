@@ -19,13 +19,13 @@ import { AssetGroupTag, AssetGroupTagSelector, SeedTypeCypher, SeedTypesMap } fr
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseQueryResult } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
+import SalesMessage from '../SalesMessage';
+import { OWNED_ID, TIER_ZERO_ID } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
-import SalesMessage from '../SalesMessage';
-import { useParams } from 'react-router-dom';
-import { TIER_ZERO_ID, OWNED_ID } from '../utils';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (

@@ -40,12 +40,12 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
+import SalesMessage from '../../SalesMessage';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-import SalesMessage from '../../SalesMessage';
 
 type TagFormInputs = {
     name: string;
