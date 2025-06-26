@@ -1,70 +1,55 @@
-import { render, screen } from '@testing-library/react';
+import { ConfigurationKey } from 'js-client-library';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import { render, screen } from '../../test-utils';
 import SalesMessage from './SalesMessage';
 
-const mockUseGetConfiguration = vi.fn();
-vi.mock('../../hooks', async () => {
-    const actual = await vi.importActual('../../hooks');
-    return {
-        ...actual,
-        useGetConfiguration: () => mockUseGetConfiguration,
-    };
-});
+const configResponse = {
+    data: [
+        {
+            key: ConfigurationKey.Tiering,
+            value: { multi_tier_analysis_enabled: false, tier_limit: 3, label_limit: 10 },
+        },
+    ],
+};
 
-const mockParseTieringConfiguration = vi.fn();
-vi.mock('js-client-library', async () => {
-    const actual = await vi.importActual('js-client-library');
-    return {
-        ...actual,
-        parseTieringConfiguration: () => mockParseTieringConfiguration,
-    };
-});
+const server = setupServer();
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 describe('SalesMessage', async () => {
-    it('renders sales message when multi_tier_analysis_enabled is false', () => {
-        (mockUseGetConfiguration).mockReturnValue({
-            data: [{
-                key: "analysis.tiering",
-                name: "Multi-Tier Analysis Configuration",
-                value: {
-                    label_limit: 10,
-                    multi_tier_analysis_enabled: false,
-                    tier_limit: 3
-                }
-            }],
-        });
-
-        (mockParseTieringConfiguration).mockReturnValue({
-            value: { multi_tier_analysis_enabled: false },
-        });
+    it('renders sales message when multi_tier_analysis_enabled is false', async () => {
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
 
         render(<SalesMessage />);
 
-        expect(
-            screen.getByText(/Upgrade Privilege Zones/i)
-        ).toBeInTheDocument();
+        expect(await screen.findByText(/Upgrade Privilege Zones/i)).toBeInTheDocument();
     });
 
     it('does not render sales message when multi_tier_analysis_enabled is true', () => {
-        (mockUseGetConfiguration).mockReturnValue({
-            data: [{
-                key: "analysis.tiering",
-                name: "Multi-Tier Analysis Configuration",
-                value: {
-                    label_limit: 10,
-                    multi_tier_analysis_enabled: true,
-                    tier_limit: 3
-                }
-            }],
-        });
+        const configRes = {
+            data: [
+                {
+                    key: ConfigurationKey.Tiering,
+                    value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+                },
+            ],
+        };
 
-        (mockParseTieringConfiguration).mockReturnValue({
-            value: { multi_tier_analysis_enabled: true },
-        });
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configRes));
+            })
+        );
 
         render(<SalesMessage />);
 
-        expect(
-            screen.queryByText(/Upgrade Privilege Zones/i)
-        ).not.toBeInTheDocument();
+        expect(screen.queryByText(/Upgrade Privilege Zones/i)).not.toBeInTheDocument();
     });
 });
