@@ -56,8 +56,8 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const tagId = labelId === undefined ? tierId : labelId;
 
     return (
-        <div className='max-h-full flex flex-col gap-8'>
-            <Card className='px-6 py-6 max-w-[32rem]'>
+        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+            <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
                 </div>
@@ -91,8 +91,8 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const seedType = getSelectorSeedType(data);
 
     return (
-        <div className='max-h-full flex flex-col gap-8'>
-            <Card className='px-6 py-6 max-w-[32rem]'>
+        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+            <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
                 </div>
