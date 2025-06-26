@@ -9902,7 +9902,6 @@ func (s *AZPIMRolesHarness) Setup(graphTestContext *GraphTestContext) {
 	s.AZBaseN15 = graphTestContext.NewAzureBase("AZBase n15", "7c48ffef-4f6e-4646-b261-9b41d3761127", tenantID)
 	s.AZBaseN16 = graphTestContext.NewAzureBase("AZBase n16", "b7a61883-d1d4-4197-8c40-cb258de60f58", tenantID)
 
-	// TODO: is this the right role??
 	s.AZRoleTestRole1 = graphTestContext.NewAzureRole("PIMTestRole", "c2f27896-6c2c-4dfd-98ad-7894ad04474e@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.ContributorRole, tenantID)
 	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), true)
 	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
