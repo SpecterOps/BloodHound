@@ -22,8 +22,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/Masterminds/semver/v3"
 )
+
+const versionPrefix = "v"
 
 // Manifest is a collection of available migrations. VersionTable is used to order and store
 // all version of migrations contained in the manifest. Migrations is the actual
@@ -55,14 +57,12 @@ func (s *Manifest) AddMigration(migration Migration) {
 }
 
 // GenerateManifest is a wrapper around GenerateManifestAfterVersion, using
-// -1.-1.-1 as the version. This ensures that a full manifest of all
+// 0,0,0 as the version. This ensures that a full manifest of all
 // available migrations is generated. This is most useful for new installations.
 func (s *Migrator) GenerateManifest() (Manifest, error) {
-	return s.GenerateManifestAfterVersion(version.Version{
-		Major: -1,
-		Minor: -1,
-		Patch: -1,
-	})
+	return s.GenerateManifestAfterVersion(
+		semver.New(0, 0, 0, "", ""),
+	)
 }
 
 // GenerateManifestAfterVersion takes a version.Version argument and uses
@@ -73,7 +73,7 @@ func (s *Migrator) GenerateManifest() (Manifest, error) {
 // are versioned after the version given will be added to the manifest
 // for migration. The final step is the build and sort the VersionTable
 // that will be used for applying the migration in order by ExecuteMigrations.
-func (s *Migrator) GenerateManifestAfterVersion(lastVersion version.Version) (Manifest, error) {
+func (s *Migrator) GenerateManifestAfterVersion(lastVersion *semver.Version) (Manifest, error) {
 	const migrationSQLFilenameSuffix = ".sql"
 	var manifest = NewManifest()
 
@@ -92,17 +92,17 @@ func (s *Migrator) GenerateManifestAfterVersion(lastVersion version.Version) (Ma
 					var (
 						validMigration = false
 						migration      = Migration{
-							Version:  version.Version{},
 							Filename: filename,
 							Source:   source.FileSystem,
 						}
 					)
 					if basename == "schema"+migrationSQLFilenameSuffix {
-						// will mark the base schema file as a valid v0.0.0 base migration
+						// will mark the base schema file as a valid v0.0.1 base migration
+						migration.Version = semver.New(0, 0, 1, "", "")
 						validMigration = true
-					} else if strings.HasPrefix(basename, version.Prefix) && strings.HasSuffix(basename, migrationSQLFilenameSuffix) {
+					} else if strings.HasPrefix(basename, versionPrefix) && strings.HasSuffix(basename, migrationSQLFilenameSuffix) {
 						rawVersion := strings.TrimSuffix(basename, migrationSQLFilenameSuffix)
-						if migrationVersion, err := version.Parse(rawVersion); err != nil {
+						if migrationVersion, err := semver.NewVersion(rawVersion); err != nil {
 							return manifest, err
 						} else {
 							// will mark the file as a valid versioned migration

@@ -17,7 +17,7 @@
 package model
 
 import (
-	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/Masterminds/semver/v3"
 )
 
 type GraphMigration struct {
@@ -26,10 +26,6 @@ type GraphMigration struct {
 	Patch int64
 }
 
-func (s GraphMigration) Version() version.Version {
-	return version.Version{
-		Major: int(s.Major),
-		Minor: int(s.Minor),
-		Patch: int(s.Patch),
-	}
+func (s GraphMigration) Version() *semver.Version {
+	return semver.New(uint64(s.Major), uint64(s.Minor), uint64(s.Patch), "", "")
 }

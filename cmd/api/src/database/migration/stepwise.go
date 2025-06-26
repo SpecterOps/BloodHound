@@ -21,8 +21,8 @@ import (
 	"io/fs"
 	"log/slog"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +43,7 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 	for _, versionString := range manifest.VersionTable {
 
 		// version integrity check
-		thisVersion, err := version.Parse(versionString)
+		thisVersion, err := semver.NewVersion(versionString)
 		if err != nil {
 			return fmt.Errorf("invalid version `%s` detected: %w", thisVersion, err)
 		}
@@ -54,7 +54,7 @@ func (s *Migrator) ExecuteMigrations(manifest Manifest) error {
 
 			for _, migration := range manifest.Migrations[versionString] {
 				// version validation
-				if !thisVersion.Equals(migration.Version) {
+				if !thisVersion.Equal(migration.Version) {
 					return fmt.Errorf("migration version mismatch: expected %s, got %s", thisVersion.String(), migration.Version.String())
 				}
 

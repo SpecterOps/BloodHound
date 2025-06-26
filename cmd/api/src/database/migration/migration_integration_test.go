@@ -68,9 +68,9 @@ func TestMigrator_LatestMigration(t *testing.T) {
 
 	ver, err := migrator.LatestMigration()
 	require.Nil(t, err)
-	assert.Equal(t, 2, ver.Version().Major)
-	assert.Equal(t, 0, ver.Version().Minor)
-	assert.Equal(t, 0, ver.Version().Patch)
+	assert.Equal(t, uint64(2), ver.Version().Major())
+	assert.Equal(t, uint64(0), ver.Version().Minor())
+	assert.Equal(t, uint64(0), ver.Version().Patch())
 }
 
 // TestMigrator_ExecuteMigrations tests the integrity of the stepwise
@@ -101,10 +101,10 @@ func TestMigrator_ExecuteMigrations(t *testing.T) {
 
 	// split manifest into chunks to test different cases
 	testManifests := []migration.Manifest{
-		{VersionTable: []string{"v0.0.0", "v0.1.0"}},
-		{VersionTable: []string{"v0.1.1", "v0.2.0"}},
-		{VersionTable: []string{"v1.0.0"}},
-		{VersionTable: []string{"v2.0.0"}},
+		{VersionTable: []string{"0.0.1", "0.1.0"}},
+		{VersionTable: []string{"0.1.1", "0.2.0"}},
+		{VersionTable: []string{"1.0.0"}},
+		{VersionTable: []string{"2.0.0"}},
 	}
 	// construct 4 test manifests by hand
 	for idx, manifest := range testManifests {

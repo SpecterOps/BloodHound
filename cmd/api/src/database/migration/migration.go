@@ -20,7 +20,7 @@ import (
 	"embed"
 	"io/fs"
 
-	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/Masterminds/semver/v3"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +37,7 @@ type Source struct {
 type Migration struct {
 	Filename string
 	Source   fs.FS
-	Version  version.Version
+	Version  *semver.Version
 }
 
 // Migrator is the main SQL migration tool for BloodHound.

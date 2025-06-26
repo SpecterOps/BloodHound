@@ -19,6 +19,8 @@ package version
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/Masterminds/semver/v3"
 )
 
 var (
@@ -26,32 +28,28 @@ var (
 	minorVersion      = "999"
 	patchVersion      = "999"
 	prereleaseVersion = ""
-	version           Version
+	version           *semver.Version
 )
 
 // GetVersion returns the current version of the BH application. Since the version is returned as a value instead of a
 // reference this should maintain that the unexported version reference remains immutable external to this package.
-func GetVersion() Version {
-	return version
+func GetVersion() *semver.Version {
+	safeCopy := *version
+	return &safeCopy
 }
 
 // newVersion returns a newly created Version struct from the stamped variables set by build ldflags. If an error is
 // encountered while parsing the strings to integers, the error is returned to the caller alongside an empty Version
 // struct.
-func newVersion(major, minor, patch, prerelease string) (Version, error) {
+func newVersion(major, minor, patch, prerelease string) (*semver.Version, error) {
 	if parsedMajor, err := strconv.Atoi(major); err != nil {
-		return Version{}, fmt.Errorf("major version component %s is not a valid integer: %w", major, err)
+		return nil, fmt.Errorf("major version component %s is not a valid integer: %w", major, err)
 	} else if parsedMinor, err := strconv.Atoi(minor); err != nil {
-		return Version{}, fmt.Errorf("minor version component %s is not a valid integer: %w", minor, err)
+		return nil, fmt.Errorf("minor version component %s is not a valid integer: %w", minor, err)
 	} else if parsedPatch, err := strconv.Atoi(patch); err != nil {
-		return Version{}, fmt.Errorf("patch version component %s is not a valid integer: %w", patch, err)
+		return nil, fmt.Errorf("patch version component %s is not a valid integer: %w", patch, err)
 	} else {
-		return Version{
-			Major:      parsedMajor,
-			Minor:      parsedMinor,
-			Patch:      parsedPatch,
-			Prerelease: prerelease,
-		}, nil
+		return semver.New(uint64(parsedMajor), uint64(parsedMinor), uint64(parsedPatch), prerelease, ""), nil
 	}
 }
 

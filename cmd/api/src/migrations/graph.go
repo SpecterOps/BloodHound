@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -29,11 +30,11 @@ import (
 )
 
 type Migration struct {
-	Version version.Version
+	Version *semver.Version
 	Execute func(ctx context.Context, db graph.Database) error
 }
 
-func UpdateMigrationData(ctx context.Context, db graph.Database, target version.Version) error {
+func UpdateMigrationData(ctx context.Context, db graph.Database, target *semver.Version) error {
 	var node *graph.Node
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -69,10 +70,9 @@ var ErrNoMigrationData = errors.New("no migration data")
 // not return the raw error condition to the caller, instead the sentinel ErrNoMigrationData is returned. This is done
 // to avoid situations where a version check prevents an otherwise uninitialized database from reaching schema
 // assertion.
-func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, error) {
+func GetMigrationData(ctx context.Context, db graph.Database) (*semver.Version, error) {
 	var (
-		node             *graph.Node
-		currentMigration = version.GetVersion()
+		node *graph.Node
 	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -85,23 +85,19 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 		return err
 	}); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Unable to fetch migration data from graph: %v", err))
-		return currentMigration, ErrNoMigrationData
+		return nil, ErrNoMigrationData
 	} else if major, err := node.Properties.Get("Major").Int(); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Unable to get Major property from migration data node: %v", err))
-		return currentMigration, ErrNoMigrationData
+		return nil, ErrNoMigrationData
 	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("unable to get Minor property from migration data node: %v", err))
-		return currentMigration, ErrNoMigrationData
+		return nil, ErrNoMigrationData
 	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("unable to get Patch property from migration data node: %v", err))
-		return currentMigration, ErrNoMigrationData
+		return nil, ErrNoMigrationData
 	} else {
-		currentMigration.Major = major
-		currentMigration.Minor = minor
-		currentMigration.Patch = patch
+		return semver.New(uint64(major), uint64(minor), uint64(patch), "", ""), nil
 	}
-
-	return currentMigration, nil
 }
 
 type GraphMigrator struct {
@@ -126,12 +122,12 @@ func (s *GraphMigrator) Migrate(ctx context.Context, schema graph.Schema) error 
 	return nil
 }
 
-func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion version.Version) error {
+func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion *semver.Version) error {
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
-			"Major": currentVersion.Major,
-			"Minor": currentVersion.Minor,
-			"Patch": currentVersion.Patch,
+			"Major": currentVersion.Major(),
+			"Minor": currentVersion.Minor(),
+			"Patch": currentVersion.Patch(),
 		}), common.MigrationData); err != nil {
 			return fmt.Errorf("could not create migration data: %w", err)
 		}
@@ -139,7 +135,7 @@ func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion 
 	})
 }
 
-func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion version.Version) error {
+func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion *semver.Version) error {
 	mostRecentVersion := originalVersion
 
 	for _, nextMigration := range Manifest {
@@ -172,7 +168,7 @@ func (s *GraphMigrator) executeStepwiseMigrations(ctx context.Context) error {
 			currentVersion := version.GetVersion()
 
 			slog.InfoContext(ctx, fmt.Sprintf("This is a new graph database. Creating a migration entry for GraphDB version %s", currentVersion))
-			return CreateMigrationData(ctx, s.db, currentMigration)
+			return CreateMigrationData(ctx, s.db, currentVersion)
 		} else {
 			return fmt.Errorf("unable to get graph db migration data: %w", err)
 		}

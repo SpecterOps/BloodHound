@@ -19,7 +19,7 @@ package model
 import (
 	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/version"
+	"github.com/Masterminds/semver/v3"
 )
 
 type Migration struct {
@@ -30,19 +30,15 @@ type Migration struct {
 	Patch     int32
 }
 
-func NewMigration(target version.Version) Migration {
+func NewMigration(target *semver.Version) Migration {
 	return Migration{
 		UpdatedAt: time.Now(),
-		Major:     int32(target.Major),
-		Minor:     int32(target.Minor),
-		Patch:     int32(target.Patch),
+		Major:     int32(target.Major()),
+		Minor:     int32(target.Minor()),
+		Patch:     int32(target.Patch()),
 	}
 }
 
-func (s Migration) Version() version.Version {
-	return version.Version{
-		Major: int(s.Major),
-		Minor: int(s.Minor),
-		Patch: int(s.Patch),
-	}
+func (s Migration) Version() *semver.Version {
+	return semver.New(uint64(s.Major), uint64(s.Minor), uint64(s.Patch), "", "")
 }

@@ -132,10 +132,10 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 }
 
 func projectDirExists(cwd string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(cwd, "go.work")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("stat go.work file: %w", err)
+		return false, fmt.Errorf("stat .stbernard file: %w", err)
 	} else {
 		return true, nil
 	}

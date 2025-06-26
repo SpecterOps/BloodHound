@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -347,7 +348,7 @@ func Version_277_Migration(ctx context.Context, db graph.Database) error {
 
 var Manifest = []Migration{
 	{
-		Version: version.Version{Major: 2, Minor: 3, Patch: 0},
+		Version: semver.New(2, 3, 0, "", ""),
 		Execute: func(ctx context.Context, db graph.Database) error {
 			defer measure.Measure(slog.LevelInfo, "Deleting all existing role nodes")()
 
@@ -359,7 +360,7 @@ var Manifest = []Migration{
 		},
 	},
 	{
-		Version: version.Version{Major: 2, Minor: 6, Patch: 3},
+		Version: semver.New(2, 6, 3, "", ""),
 		Execute: func(ctx context.Context, db graph.Database) error {
 			defer measure.Measure(slog.LevelInfo, "Deleting all LocalToComputer/RemoteInteractiveLogin edges and ADLocalGroup labels")()
 
@@ -412,33 +413,33 @@ var Manifest = []Migration{
 		},
 	},
 	{
-		Version: version.Version{Major: 2, Minor: 7, Patch: 7},
+		Version: semver.New(2, 7, 7, "", ""),
 		Execute: Version_277_Migration,
 	},
 	{
-		Version: version.Version{Major: 5, Minor: 0, Patch: 8},
+		Version: semver.New(5, 0, 8, "", ""),
 		Execute: Version_508_Migration,
 	},
 	{
-		Version: version.Version{Major: 5, Minor: 13, Patch: 0},
+		Version: semver.New(5, 13, 0, "", ""),
 		Execute: Version_513_Migration,
 	},
 	{
-		Version: version.Version{Major: 6, Minor: 2, Patch: 0},
+		Version: semver.New(6, 2, 0, "", ""),
 		Execute: Version_620_Migration,
 	},
 	{
-		Version: version.Version{Major: 7, Minor: 3, Patch: 0},
+		Version: semver.New(7, 3, 0, "", ""),
 		Execute: Version_730_Migration,
 	},
 	{
-		Version: version.Version{Major: 7, Minor: 4, Patch: 0},
+		Version: semver.New(7, 4, 0, "", ""),
 		Execute: Version_740_Migration,
 	},
 }
 
-func LatestGraphMigrationVersion() version.Version {
-	var latestVersion version.Version
+func LatestGraphMigrationVersion() *semver.Version {
+	var latestVersion *semver.Version
 
 	for _, migration := range Manifest {
 		if migration.Version.GreaterThan(latestVersion) {
