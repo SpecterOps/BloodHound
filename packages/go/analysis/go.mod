@@ -22,7 +22,7 @@ toolchain go1.23.8
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
-	github.com/bloodhoundad/azurehound/v2 v2.4.1
+	github.com/bloodhoundad/azurehound/v2 v2.6.0
 	github.com/specterops/dawgs v0.1.3
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.2

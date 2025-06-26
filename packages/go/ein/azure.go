@@ -735,9 +735,9 @@ func ConvertAzureManagementGroup(data models.ManagementGroup, ingestTime time.Ti
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
-				common.Name.String():          strings.ToUpper(fmt.Sprintf("%s@%s", data.Properties.DisplayName, data.TenantName)),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
 				common.LastCollected.String(): ingestTime,
+				common.DisplayName.String():   strings.ToUpper(data.Properties.DisplayName),
 			},
 			Labels: []graph.Kind{azure.ManagementGroup},
 		}, NewIngestibleRelationship(
