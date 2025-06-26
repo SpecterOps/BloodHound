@@ -27,8 +27,9 @@ const server = setupServer(
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
-        const { container } = render(<GraphView />);
-        expect(container).toBeEmptyDOMElement();
+        render(<GraphView />);
+        const container = screen.getByTestId('explore');
+        expect(container).toBeInTheDocument();
     });
 
     it('displays an error message', async () => {
