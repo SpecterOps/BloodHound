@@ -31,6 +31,7 @@ jobs:
     with:
       container_image_repository_name: docker.io/specterops/bloodhound
       build_target: bloodhound
+      build_context: .
       image_sbom: true
       image_provenance: mode=max
       build_outputs: type=image,push=true

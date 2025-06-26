@@ -22,8 +22,8 @@ import (
 	"sync"
 
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
 )
 
 type PathAggregator interface {

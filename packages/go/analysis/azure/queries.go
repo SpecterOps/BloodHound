@@ -24,12 +24,12 @@ import (
 
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 func FetchCollectedTenants(tx graph.Transaction) (graph.NodeSet, error) {
@@ -400,6 +400,24 @@ func FetchEntityPIMAssignments(tx graph.Transaction, node *graph.Node, skip, lim
 		Skip:        skip,
 		Limit:       limit,
 		BranchQuery: FilterEntityPIMAssignments,
+	})
+}
+
+func FetchRoleApprovers(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+	return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionInbound,
+		Skip:        skip,
+		Limit:       limit,
+		BranchQuery: FilterRoleApprovers,
+	})
+}
+
+func FetchRoleApproverPaths(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+	return ops.TraversePaths(tx, ops.TraversalPlan{
+		Root:        node,
+		Direction:   graph.DirectionInbound,
+		BranchQuery: FilterRoleApprovers,
 	})
 }
 

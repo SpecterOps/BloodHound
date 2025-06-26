@@ -15,7 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AxiosRequestConfig } from 'axios';
-import { AssetGroupTagSelector, AssetGroupTagSelectorSeed, SSOProviderConfiguration } from './types';
+import {
+    AssetGroupTagSelector,
+    AssetGroupTagSelectorSeed,
+    AssetGroupTagTypes,
+    SSOProviderConfiguration,
+} from './types';
 import { ConfigurationPayload } from './utils';
 
 export type RequestOptions = AxiosRequestConfig;
@@ -26,6 +31,16 @@ export interface LoginRequest {
     username: string;
     otp?: string;
 }
+
+export type CreateAssetGroupTagRequest = {
+    name: string;
+    description: string;
+    position: number | null;
+    type: AssetGroupTagTypes;
+    requireCertify?: boolean;
+};
+
+export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
 
 export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 

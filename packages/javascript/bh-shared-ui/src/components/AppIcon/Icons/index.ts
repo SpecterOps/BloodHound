@@ -22,6 +22,7 @@ export * from './CalendarDay';
 export * from './CaretDown';
 export * from './CaretUp';
 export * from './Compass';
+export * from './DataAlert';
 export * from './Diamond';
 export * from './Download';
 export * from './EclipseCircle';

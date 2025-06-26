@@ -30,10 +30,10 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (
@@ -735,9 +735,9 @@ func ConvertAzureManagementGroup(data models.ManagementGroup, ingestTime time.Ti
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
-				common.Name.String():          strings.ToUpper(fmt.Sprintf("%s@%s", data.Properties.DisplayName, data.TenantName)),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
 				common.LastCollected.String(): ingestTime,
+				common.DisplayName.String():   strings.ToUpper(data.Properties.DisplayName),
 			},
 			Labels: []graph.Kind{azure.ManagementGroup},
 		}, NewIngestibleRelationship(

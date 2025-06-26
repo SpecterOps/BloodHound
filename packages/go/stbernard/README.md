@@ -27,6 +27,7 @@ Commands:
   build       Build commands in current workspace
   cover       Collect coverage reports
   license     Check all supported files for expected license header and add one if missing
+  graph       Ingests test files from test fixture directory and transforms the node/edge data into a generic ingestible file
 ```
 
 ### Usage
@@ -58,6 +59,22 @@ The following environment variables are supported:
 -   `SB_LOG_LEVEL`: takes a level name from among `debug`, `info`, `warn`, `error`, and `fatal`
 -   `SB_COVERAGE_PATH`: allows setting a path other than `./tmp/coverage` to store Go coverage files in
 -   Pass-through of any tool specific environment variables, such as for changing the Go path for caching purposes. Some pass-through variables have sane defaults defined, but will be overridden if you set the environment variables yourself.
+
+### Sub-Commands
+
+#### Graph
+
+The subcommand `graph` ingests json files into Postgres, retrieves the nodes and edges from the database, and then outputs the data as a generic ingestible file.
+
+The following environment variables are required:
+- `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
+  - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
+
+The following flags are required:
+- `--path`: Specifies the input directory for the consumed files.
+
+The following flags are supported:
+- `--outfile`: Specifies the output file for generic ingestible graph file. Defaults to {root}/tmp/graph.json".
 
 ### Contributing
 

@@ -5003,7 +5003,7 @@ __metadata:
     tailwind-merge: ^2.5.4
     tailwindcss: ^3.4.17
     typescript: ^5.1.6
-    vite: ^5.4.12
+    vite: ^5.4.19
     vitest: ^2.1.9
     whatwg-fetch: ^3.6.2
   peerDependencies:
@@ -5132,7 +5132,7 @@ __metadata:
     sigma: ^2.4.0
     tailwindcss: ^3.4.17
     typescript: ^5.1.6
-    vite: ^5.4.12
+    vite: ^5.4.19
     vite-plugin-glsl: ^1.3.0
     vitest: ^2.1.9
     vitest-canvas-mock: ^0.3.3
@@ -5141,12 +5141,12 @@ __metadata:
   linkType: soft
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.11
-  resolution: "brace-expansion@npm:1.1.11"
+  version: 1.1.12
+  resolution: "brace-expansion@npm:1.1.12"
   dependencies:
     balanced-match: ^1.0.0
     concat-map: 0.0.1
-  checksum: faf34a7bb0c3fcf4b59c7808bc5d2a96a40988addf2e7e09dfbb67a2251800e0d14cd2bfc1aa79174f2f5095c54ff27f46fb1289fe2d77dac755b5eb3434cc07
+  checksum: 12cb6d6310629e3048cadb003e1aca4d8c9bb5c67c3c321bafdd7e7a50155de081f78ea3e0ed92ecc75a9015e784f301efc8132383132f4f7904ad1ac529c562
   languageName: node
   linkType: hard
 
@@ -12720,9 +12720,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^5.4.12":
-  version: 5.4.14
-  resolution: "vite@npm:5.4.14"
+"vite@npm:^5.4.19":
+  version: 5.4.19
+  resolution: "vite@npm:5.4.19"
   dependencies:
     esbuild: ^0.21.3
     fsevents: ~2.3.3
@@ -12759,7 +12759,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 7360661da0415809454ff8809b6666e868ffc3e5ccfbd5fc17425341546cdc3dd3d37c68fcd6ed7305252aaecd0d251ede3745b57aaebd00b8aececc30b6697b
+  checksum: c15af65f2370b59e674c5fab22d8e05ec5c7f8f0345ed99ffec155c77feb5636b4e0680dbd096a6f06d7c386b259dc0b9c67c4f1ec08486a2f2a677c9ea6971b
   languageName: node
   linkType: hard
 
