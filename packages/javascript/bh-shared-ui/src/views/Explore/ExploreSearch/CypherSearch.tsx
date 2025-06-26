@@ -62,7 +62,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         }
     };
     const handleSavedSearch = (query: any) => {
-        if (autoRunQuery && cypherQuery) {
+        if (autoRunQuery) {
             performSearch(query);
         }
     };

@@ -37,6 +37,7 @@ import { groupBy } from 'lodash';
 import { FC, useState } from 'react';
 import { useCypherSearch } from '../../hooks';
 import { QueryListSection } from '../../types';
+import ListItemActionMenu from './ListItemActionMenu';
 interface PrebuiltSearchListProps {
     listSections: QueryListSection[];
     clickHandler: (query: string) => void;
@@ -102,6 +103,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         clickHandler(query);
         setSelected(query);
     };
+    const handleDelete = (id: number) => {
+        setQueryId(id);
+        handleOpen();
+    };
 
     return (
         <>
@@ -129,8 +134,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                                 size='small'
                                                                 variant='secondary'
                                                                 onClick={() => {
-                                                                    setQueryId(id);
-                                                                    handleOpen();
+                                                                    handleDelete(id as number);
                                                                 }}>
                                                                 <FontAwesomeIcon icon={faTrash} />
                                                             </Button>
@@ -143,6 +147,11 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                                 ? styles.selected
                                                                 : ''
                                                         }>
+                                                        <ListItemActionMenu
+                                                            canEdit={canEdit}
+                                                            id={id}
+                                                            deleteQuery={() => handleDelete(id as number)}
+                                                        />
                                                         <ListItemText primary={description} />
                                                         {subheader && (
                                                             <Chip
