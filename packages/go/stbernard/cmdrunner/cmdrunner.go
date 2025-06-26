@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 

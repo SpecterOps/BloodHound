@@ -19,9 +19,9 @@ package integration
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/test"
-	"github.com/specterops/bloodhound/src/test/integration/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/test"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/specterops/dawgs/drivers/pg"

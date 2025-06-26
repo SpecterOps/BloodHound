@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 func (s Client) GetAppConfigs() (appcfg.Parameters, error) {

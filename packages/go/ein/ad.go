@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/slicesext"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
 )
 
