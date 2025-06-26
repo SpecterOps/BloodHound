@@ -2296,7 +2296,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 							SQLString: "created_at > ?",
 							Params:    []any{"2025-06-17T00:00:00Z"},
 						},
-							false,
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
 							100).
 						Return([]model.AssetGroupHistory{}, 0, nil)
@@ -2322,7 +2322,7 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
-							false,
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							0,
 							5).
 						Return([]model.AssetGroupHistory{}, 0, nil)
@@ -2348,8 +2348,25 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 				Setup: func() {
 					mockDB.EXPECT().
 						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
-							false,
+							model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}},
 							10,
+							100).
+						Return([]model.AssetGroupHistory{}, 0, nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+				},
+			},
+			{
+				Name: "Success with sort",
+				Input: func(input *apitest.Input) {
+					apitest.AddQueryParam(input, "sort_by", "created_at")
+				},
+				Setup: func() {
+					mockDB.EXPECT().
+						GetAssetGroupHistoryRecords(gomock.Any(), gomock.Any(),
+							model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}},
+							0,
 							100).
 						Return([]model.AssetGroupHistory{}, 0, nil)
 				},
