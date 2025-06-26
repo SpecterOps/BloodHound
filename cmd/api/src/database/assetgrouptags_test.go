@@ -20,7 +20,6 @@ package database_test
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -933,7 +932,6 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 1, 0)
 		require.NoError(t, err)
 
-		fmt.Println(results)
 		require.Equal(t, 1, len(results))
 		require.Equal(t, 2, count)
 		require.Equal(t, test2Selector.Name, results[0].Name)
@@ -943,7 +941,6 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		results, count, err := dbInst.GetAssetGroupTagSelectorsByTagId(testCtx, 1, model.SQLFilter{SQLString: "created_at >= ?", Params: []any{test_started_at}}, model.SQLFilter{}, 0, 1)
 		require.NoError(t, err)
 
-		fmt.Println(results)
 		require.Equal(t, 1, len(results))
 		require.Equal(t, 2, count)
 		require.Equal(t, test1Selector.Name, results[0].Name)
