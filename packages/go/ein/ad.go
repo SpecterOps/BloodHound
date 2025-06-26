@@ -44,33 +44,44 @@ func ConvertSessionObject(session Session) IngestibleSession {
 }
 
 func ConvertObjectToNode(item IngestBase, itemType graph.Kind, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
-
-	if itemType == ad.Domain {
-		convertInvalidDomainProperties(itemProps)
-	}
-
-	convertOwnsEdgeToProperty(item, itemProps)
-
 	return IngestibleNode{
 		ObjectID:    item.ObjectIdentifier,
-		PropertyMap: itemProps,
+		PropertyMap: getBaseProperties(item, ingestTime),
 		Labels:      []graph.Kind{itemType},
 	}
 }
 
-func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-	itemProps[common.LastCollected.String()] = ingestTime
+func ConvertDomainToNode(item Domain, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+	convertInvalidDomainProperties(itemProps)
 
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.Domain},
+	}
+}
+
+func ConvertOUToNode(item OU, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
+
+	if len(item.InheritanceHashes) > 0 {
+		itemProps[ad.InheritanceHashes.String()] = item.InheritanceHashes
+	}
+
+	return IngestibleNode{
+		ObjectID:    item.ObjectIdentifier,
+		PropertyMap: itemProps,
+		Labels:      []graph.Kind{ad.OU},
+	}
+}
+
+func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	if item.IsWebClientRunning.Collected {
 		itemProps[ad.WebClientRunning.String()] = item.IsWebClientRunning.Result
@@ -117,12 +128,7 @@ func ConvertComputerToNode(item Computer, ingestTime time.Time) IngestibleNode {
 }
 
 func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) IngestibleNode {
-	itemProps := item.Properties
-	if itemProps == nil {
-		itemProps = make(map[string]any)
-	}
-
-	convertOwnsEdgeToProperty(item.IngestBase, itemProps)
+	itemProps := getBaseProperties(item.IngestBase, ingestTime)
 
 	var (
 		httpEndpoints    = make([]string, 0)
@@ -166,6 +172,19 @@ func ConvertEnterpriseCAToNode(item EnterpriseCA, ingestTime time.Time) Ingestib
 		PropertyMap: itemProps,
 		Labels:      []graph.Kind{ad.EnterpriseCA},
 	}
+}
+
+func getBaseProperties(item IngestBase, ingestTime time.Time) map[string]any {
+	itemProps := item.Properties
+	if itemProps == nil {
+		itemProps = make(map[string]any)
+	}
+
+	itemProps[common.LastCollected.String()] = ingestTime
+
+	convertOwnsEdgeToProperty(item, itemProps)
+
+	return itemProps
 }
 
 // This function is to support our new method of doing Owns edges and makes older data sets backwards compatible
