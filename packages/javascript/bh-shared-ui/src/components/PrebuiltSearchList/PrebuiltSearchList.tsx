@@ -65,6 +65,8 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 }) => {
     const [open, setOpen] = useState(false);
     const [queryId, setQueryId] = useState<number>();
+    const [selected, setSelected] = useState('');
+
     const styles = useStyles();
     const { cypherQuery } = useCypherSearch();
 
@@ -80,11 +82,13 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     const groupedQueries = groupBy(listSections, 'category');
 
     function getSelectedQuery() {
+        const comparator = selected ? selected : cypherQuery;
+
         for (const item of listSections) {
             let result = null;
 
             result = item.queries.find((query) => {
-                if (query.cypher === cypherQuery) {
+                if (query.cypher === comparator) {
                     return query;
                 }
             });
@@ -94,6 +98,10 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
         }
     }
     const selectedQuery = getSelectedQuery();
+    const handleClick = (query: string) => {
+        clickHandler(query);
+        setSelected(query);
+    };
 
     return (
         <>
@@ -129,7 +137,7 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                         )
                                                     }>
                                                     <ListItemButton
-                                                        onClick={() => clickHandler(cypher)}
+                                                        onClick={() => handleClick(cypher)}
                                                         className={
                                                             selectedQuery?.description === description
                                                                 ? styles.selected
