@@ -26,6 +26,14 @@ get:
     - Enterprise
     - Community
   parameters:
+  - $ref: './../parameters/query.skip.yaml'
+  - $ref: './../parameters/query.limit.yaml'
+  - name: sort_by
+    in: query
+    description: 
+      Sortable columns are `created_at`.
+    schema:
+      $ref: './../schemas/api.params.query.sort-by.yaml'
   - name: created_at
     in: query
     required: false
