@@ -2893,22 +2893,23 @@
                 },
                 "example": [
                   {
-                    "data": [
-                      {
-                          "id": 1,
-                          "kindName": "KindA",
-                          "config": {
-                              "icon": {
-                                  "type": "font-awesome",
-                                  "name": "house",
-                                  "color": "#FFFFFF"
-                              }
-                          }
-                      }
-                    ]
+                    "id": 1,
+                    "kindName": "KindA",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "kindName": "KindB",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
+                    }
                   }
-                  
-                  
                 ]
               }
             }
