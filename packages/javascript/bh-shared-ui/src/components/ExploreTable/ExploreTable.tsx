@@ -72,20 +72,20 @@ const ExploreTable = <TData extends HasData>({
 
     const fallbackInitialVisibleColumns = makeMap(allColumnDefinitions);
 
-    const handleManageColumnsChange = (columns: ManageColumnsComboBoxOption[]) => {
-        if (typeof onManageColumnsChange === 'function') {
-            const parsedColumns =
-                // TODO: reconcile ColumnDef and ManageColumnsComboBoxOption types?
-                columns?.length > 0
-                    ? columns
-                    : (allColumnDefinitions.map((def) => ({
-                          ...def,
-                          id: def.accessorKey,
-                      })) as ManageColumnsComboBoxOption[]);
+    // const handleManageColumnsChange = (columns: ManageColumnsComboBoxOption[]) => {
+    //     if (typeof onManageColumnsChange === 'function') {
+    //         // const parsedColumns =
+    //         //     // TODO: reconcile ColumnDef and ManageColumnsComboBoxOption types?
+    //         //     columns?.length > 0
+    //         //         ? columns
+    //         //         : (allColumnDefinitions.map((def) => ({
+    //         //               ...def,
+    //         //               id: def.accessorKey,
+    //         //           })) as ManageColumnsComboBoxOption[]);
 
-            onManageColumnsChange(parsedColumns);
-        }
-    };
+    //         onManageColumnsChange(col);
+    //     }
+    // };
 
     const initialColumns: ColumnDef<any, any>[] = [
         {
@@ -124,7 +124,7 @@ const ExploreTable = <TData extends HasData>({
                     visibleColumns={visibleColumns || fallbackInitialVisibleColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
                     onExpandClick={() => console.log('expand icon clicked')}
-                    onManageColumnsChange={handleManageColumnsChange}
+                    onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}

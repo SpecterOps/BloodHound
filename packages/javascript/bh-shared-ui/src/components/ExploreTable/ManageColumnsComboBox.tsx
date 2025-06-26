@@ -3,6 +3,7 @@ import { faMinus, faPlus, faRefresh, faSearch, faThumbTack } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { UseComboboxPropGetters, useCombobox, useMultipleSelection } from 'downshift';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useOnClickOutside } from '../../hooks';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
 
@@ -52,7 +53,13 @@ export const ManageColumnsComboBox = ({
     onChange = () => {},
     visibleColumns,
 }: ManageColumnsComboBoxProps) => {
+    const ref = useRef<HTMLDivElement>(null);
+
     const [inputValue, setInputValue] = React.useState('');
+    const [isOpen, setIsOpen] = React.useState(false);
+
+    useOnClickOutside(ref, () => setIsOpen(false));
+
     const pinnedItems = useMemo(() => allItems.filter((item) => item.isPinned), [allItems]);
     const initialVisibleColumns = useMemo(
         () => allItems.filter((item) => visibleColumns[item.id]),
@@ -70,8 +77,6 @@ export const ManageColumnsComboBox = ({
 
     const shouldSelectAll = useMemo(() => selectedItems.length !== allItems.length, [selectedItems, allItems]);
 
-    const ref = useRef<HTMLDivElement>();
-
     useEffect(() => {
         const selectedItems = allItems.filter((item) => visibleColumns[item.id]);
         setSelectedItems(selectedItems);
@@ -81,6 +86,7 @@ export const ManageColumnsComboBox = ({
         initialSelectedItems: allItems.filter((item) => visibleColumns[item.id]),
         selectedItems,
         onStateChange({ selectedItems: newSelectedItems, type }) {
+            console.log({ newSelectedItems });
             onChange(newSelectedItems || []);
 
             switch (type) {
@@ -96,7 +102,7 @@ export const ManageColumnsComboBox = ({
         },
     });
 
-    const { getMenuProps, getInputProps, getItemProps, getToggleButtonProps, isOpen } = useCombobox({
+    const { getMenuProps, getInputProps, getItemProps } = useCombobox({
         items: unselectedItems,
         itemToString: (item) => item?.value || '',
         defaultHighlightedIndex: 0, // after selection, highlight the first item.
@@ -124,87 +130,91 @@ export const ManageColumnsComboBox = ({
     });
 
     const handleResetDefault = () => {
+        console.log({ pinnedItems });
         setSelectedItems([...pinnedItems]);
+        onChange([...pinnedItems]);
     };
 
     const handleSelectAll = () => {
         if (shouldSelectAll) {
+            handleResetDefault();
+            console.log({ allItems });
             setSelectedItems([...allItems]);
+            onChange([...allItems]);
         } else {
             handleResetDefault();
         }
         return shouldSelectAll;
     };
 
+    const handleManageColumnsClick = () => setIsOpen(true);
+
     return (
         <>
             <div className='mb-1'>
                 <Button
-                    className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'
-                    {...getToggleButtonProps()}>
+                    onClick={handleManageColumnsClick}
+                    className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'>
                     Manage Columns
                 </Button>
             </div>
-            {isOpen && (
-                <div className='absolute z-20 top-3'>
-                    <div className='w-[400px] shadow-md border-1 bg-white' ref={() => ref}>
-                        <div className='flex flex-col gap-1 justify-center'>
-                            <div className='flex justify-center items-center relative'>
-                                <Input
-                                    className='border-0 focus:outline-none rounded-none border-black bg-inherit'
-                                    {...getInputProps(getDropdownProps())}
-                                />
-                                <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
-                            </div>
+
+            <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-3`} ref={ref}>
+                <div className='w-[400px] shadow-md border-1 bg-white'>
+                    <div className='flex flex-col gap-1 justify-center'>
+                        <div className='flex justify-center items-center relative'>
+                            <Input
+                                className='border-0 focus:outline-none rounded-none border-black bg-inherit'
+                                {...getInputProps(getDropdownProps())}
+                            />
+                            <FontAwesomeIcon icon={faSearch} className='absolute right-2' />
                         </div>
-                        <div className='flex justify-between p-2 border-w-10 border-y border-solid border-neutral-950'>
-                            <button className='flex items-center focus:outline-none' onClick={handleSelectAll}>
-                                <FontAwesomeIcon icon={shouldSelectAll ? faPlus : faMinus} className='mr-2' />{' '}
-                                {shouldSelectAll ? 'Select All' : 'Clear All'}
-                            </button>
-                            <button className='flex items-center focus:outline-none' onClick={handleResetDefault}>
-                                <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
-                            </button>
-                        </div>
-                        <ul
-                            className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`}
-                            {...getMenuProps()}>
-                            {isOpen && [
-                                ...pinnedItems.map((item, index) => (
-                                    <ListItem
-                                        isSelected
-                                        key={`${item?.id}${index}`}
-                                        item={item}
-                                        onClick={removeSelectedItem}
-                                        itemProps={getItemProps({ item, index })}
-                                    />
-                                )),
-                                ...selectedItems.map((item, index) => {
-                                    if (!item?.isPinned) {
-                                        return (
-                                            <ListItem
-                                                isSelected
-                                                key={`${item?.id}${index}`}
-                                                item={item}
-                                                onClick={removeSelectedItem}
-                                                itemProps={getItemProps({ item, index })}
-                                            />
-                                        );
-                                    }
-                                }),
-                                ...unselectedItems.map((item, index) => (
-                                    <ListItem
-                                        key={`${item?.id}${index}`}
-                                        item={item}
-                                        onClick={addSelectedItem}
-                                        itemProps={getItemProps({ item, index })}
-                                    />
-                                )),
-                            ]}
-                        </ul>
                     </div>
+                    <div className='flex justify-between p-2 border-w-10 border-y border-solid border-neutral-950'>
+                        <button className='flex items-center focus:outline-none' onClick={handleSelectAll}>
+                            <FontAwesomeIcon icon={shouldSelectAll ? faPlus : faMinus} className='mr-2' />{' '}
+                            {shouldSelectAll ? 'Select All' : 'Clear All'}
+                        </button>
+                        <button className='flex items-center focus:outline-none' onClick={handleResetDefault}>
+                            <FontAwesomeIcon icon={faRefresh} className='mr-2' /> Reset Default
+                        </button>
+                    </div>
+                    <ul className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
+                        {isOpen && [
+                            ...pinnedItems.map((item, index) => (
+                                <ListItem
+                                    isSelected
+                                    key={`${item?.id}${index}`}
+                                    item={item}
+                                    onClick={removeSelectedItem}
+                                    itemProps={getItemProps({ item, index })}
+                                />
+                            )),
+                            ...selectedItems.map((item, index) => {
+                                if (!item?.isPinned) {
+                                    return (
+                                        <ListItem
+                                            isSelected
+                                            key={`${item?.id}${index}`}
+                                            item={item}
+                                            onClick={removeSelectedItem}
+                                            itemProps={getItemProps({ item, index })}
+                                        />
+                                    );
+                                }
+                            }),
+                            ...unselectedItems.map((item, index) => (
+                                <ListItem
+                                    key={`${item?.id}${index}`}
+                                    item={item}
+                                    onClick={addSelectedItem}
+                                    itemProps={getItemProps({ item, index })}
+                                />
+                            )),
+                        ]}
+                    </ul>
                 </div>
-            )}
+            </div>
         </>
     );
 };
