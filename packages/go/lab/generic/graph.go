@@ -106,8 +106,10 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 		return graphFixture.Graph, fmt.Errorf("could not open graph data file: %w", err)
 	}
 	defer fh.Close()
-	// TODO: break this out so we can set the decoder to strict mode
-	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
+
+	decoder := json.NewDecoder(fh)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&graphFixture); err != nil {
 		return graphFixture.Graph, fmt.Errorf("could not parse graph data file: %w", err)
 	} else {
 		return graphFixture.Graph, nil

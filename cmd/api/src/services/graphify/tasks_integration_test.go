@@ -136,7 +136,9 @@ func TestVersion6IngestJSON(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		testSuite = setupIntegrationTestSuite(t, path.Join("fixtures", t.Name(), "v6ingest"))
+		fixturesPath = path.Join("fixtures", t.Name(), "v6ingest")
+
+		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
 			path.Join(testSuite.WorkDir, "computers.json"),
@@ -169,7 +171,9 @@ func TestVersion6IngestZIP(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		testSuite = setupIntegrationTestSuite(t, path.Join("fixtures", t.Name()))
+		fixturesPath = path.Join("fixtures", t.Name(), "v6ingest")
+
+		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
 		files = []string{
 			path.Join(testSuite.WorkDir, "archive.zip"),
