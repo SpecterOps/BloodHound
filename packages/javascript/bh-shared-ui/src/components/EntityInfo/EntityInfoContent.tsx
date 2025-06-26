@@ -23,7 +23,7 @@ export interface EntityInfoContentProps {
     id: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    zoneManagement?: boolean;
+    additionalSections?: boolean;
 }
 
 const EntityInfoContent: React.FC<EntityInfoContentProps> = (props) => {

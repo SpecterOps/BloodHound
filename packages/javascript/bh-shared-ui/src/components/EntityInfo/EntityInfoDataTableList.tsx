@@ -18,30 +18,33 @@ import React from 'react';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { EntityKinds, allSections } from '../../utils';
 import EntityInfoDataTable from './EntityInfoDataTable';
+import EntityInfoDataTableGraphed from './EntityInfoDataTableGraphed';
 import EntitySelectorsInformation from './EntitySelectorsInformation';
 
 export interface EntityInfoContentProps {
     id: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    zoneManagement?: boolean;
+    additionalSections?: boolean;
 }
 
-const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, zoneManagement }) => {
+const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, additionalSections }) => {
     let type = nodeType as EntityKinds;
     if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
 
     const tables = allSections[type]?.(id) || [];
 
-    zoneManagement && tables.push({ id, label: 'Selectors' });
+    additionalSections && tables.push({ id, label: 'Selectors' });
 
     return (
         <div data-testid='entity-info-data-table-list'>
             {tables.map((table, index) => {
                 if (table.label === 'Selectors') {
                     return <EntitySelectorsInformation key='selectors' />;
-                } else
+                }
+
+                if (additionalSections) {
                     return (
                         <React.Fragment key={index}>
                             <Box padding={1}>
@@ -50,6 +53,16 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                             <EntityInfoDataTable {...table} />
                         </React.Fragment>
                     );
+                } else {
+                    return (
+                        <React.Fragment key={index}>
+                            <Box padding={1}>
+                                <Divider />
+                            </Box>
+                            <EntityInfoDataTableGraphed {...table} />
+                        </React.Fragment>
+                    );
+                }
             })}
         </div>
     );

@@ -64,7 +64,7 @@ export const SelectedDetails: FC = () => {
             name: memberQuery.data.name,
             type: memberQuery.data.primary_kind as EntityKinds,
         };
-        return <EntityInfoPanel selectedNode={selectedNode} zoneManagement />;
+        return <EntityInfoPanel selectedNode={selectedNode} additionalSections />;
     } else if (selectorId !== undefined) {
         return <DynamicDetails queryResult={selectorQuery} />;
     } else if (tagId !== undefined) {
