@@ -21,6 +21,7 @@ package analysis_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
@@ -112,4 +113,48 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 	// The DB must not return any errors
 	require.Nil(t, err)
+}
+
+func TestFixManagementGroupNames(t *testing.T) {
+	var (
+		// This creates a new live integration test context with the graph database
+		// This call will load whatever BHE configuration the environment variable `INTEGRATION_CONFIG_PATH` points to.
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	// Management Group created with barebone details
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.DisplayName.String(): "MANAGEMENT GROUP",
+		common.ObjectID.String():    "1234",
+		azure.TenantID.String():     "ABC123",
+	}), azure.Entity, azure.ManagementGroup)
+
+	// Tenant
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.Name.String():     "SPECTERDEV",
+		common.ObjectID.String(): "ABC123",
+	}), azure.Entity, azure.Tenant)
+
+	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database)
+	require.NoError(t, err)
+
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.Kind(query.Node(), azure.ManagementGroup)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			count := 0
+			for node := range cursor.Chan() {
+				if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+					return err
+				} else {
+					count++
+					require.Equal(t, "MANAGEMENT GROUP@SPECTERDEV", name)
+				}
+			}
+
+			require.Equal(t, 1, count)
+
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
 }

@@ -22,7 +22,7 @@ toolchain go1.24.4
 
 require (
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/text v0.24.0
+	golang.org/x/text v0.25.0
 )
 
 require (
