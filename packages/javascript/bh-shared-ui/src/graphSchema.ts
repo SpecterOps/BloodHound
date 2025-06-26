@@ -56,285 +56,267 @@ return undefined
 }
 }
 export enum ActiveDirectoryRelationshipKind {
-    Owns = 'Owns',
-    GenericAll = 'GenericAll',
-    GenericWrite = 'GenericWrite',
-    WriteOwner = 'WriteOwner',
-    WriteDACL = 'WriteDacl',
-    MemberOf = 'MemberOf',
-    ForceChangePassword = 'ForceChangePassword',
-    AllExtendedRights = 'AllExtendedRights',
-    AddMember = 'AddMember',
-    HasSession = 'HasSession',
-    Contains = 'Contains',
-    GPLink = 'GPLink',
-    AllowedToDelegate = 'AllowedToDelegate',
-    CoerceToTGT = 'CoerceToTGT',
-    GetChanges = 'GetChanges',
-    GetChangesAll = 'GetChangesAll',
-    GetChangesInFilteredSet = 'GetChangesInFilteredSet',
-    CrossForestTrust = 'CrossForestTrust',
-    SameForestTrust = 'SameForestTrust',
-    SpoofSIDHistory = 'SpoofSIDHistory',
-    AbuseTGTDelegation = 'AbuseTGTDelegation',
-    AllowedToAct = 'AllowedToAct',
-    AdminTo = 'AdminTo',
-    CanPSRemote = 'CanPSRemote',
-    CanRDP = 'CanRDP',
-    ExecuteDCOM = 'ExecuteDCOM',
-    HasSIDHistory = 'HasSIDHistory',
-    AddSelf = 'AddSelf',
-    DCSync = 'DCSync',
-    ReadLAPSPassword = 'ReadLAPSPassword',
-    ReadGMSAPassword = 'ReadGMSAPassword',
-    DumpSMSAPassword = 'DumpSMSAPassword',
-    SQLAdmin = 'SQLAdmin',
-    AddAllowedToAct = 'AddAllowedToAct',
-    WriteSPN = 'WriteSPN',
-    AddKeyCredentialLink = 'AddKeyCredentialLink',
-    LocalToComputer = 'LocalToComputer',
-    MemberOfLocalGroup = 'MemberOfLocalGroup',
-    RemoteInteractiveLogonRight = 'RemoteInteractiveLogonRight',
-    SyncLAPSPassword = 'SyncLAPSPassword',
-    WriteAccountRestrictions = 'WriteAccountRestrictions',
-    WriteGPLink = 'WriteGPLink',
-    RootCAFor = 'RootCAFor',
-    DCFor = 'DCFor',
-    PublishedTo = 'PublishedTo',
-    ManageCertificates = 'ManageCertificates',
-    ManageCA = 'ManageCA',
-    DelegatedEnrollmentAgent = 'DelegatedEnrollmentAgent',
-    Enroll = 'Enroll',
-    HostsCAService = 'HostsCAService',
-    WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
-    WritePKINameFlag = 'WritePKINameFlag',
-    NTAuthStoreFor = 'NTAuthStoreFor',
-    TrustedForNTAuth = 'TrustedForNTAuth',
-    EnterpriseCAFor = 'EnterpriseCAFor',
-    IssuedSignedBy = 'IssuedSignedBy',
-    GoldenCert = 'GoldenCert',
-    EnrollOnBehalfOf = 'EnrollOnBehalfOf',
-    OIDGroupLink = 'OIDGroupLink',
-    ExtendedByPolicy = 'ExtendedByPolicy',
-    ADCSESC1 = 'ADCSESC1',
-    ADCSESC3 = 'ADCSESC3',
-    ADCSESC4 = 'ADCSESC4',
-    ADCSESC6a = 'ADCSESC6a',
-    ADCSESC6b = 'ADCSESC6b',
-    ADCSESC9a = 'ADCSESC9a',
-    ADCSESC9b = 'ADCSESC9b',
-    ADCSESC10a = 'ADCSESC10a',
-    ADCSESC10b = 'ADCSESC10b',
-    ADCSESC13 = 'ADCSESC13',
-    SyncedToEntraUser = 'SyncedToEntraUser',
-    CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
-    CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
-    WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
-    WriteOwnerRaw = 'WriteOwnerRaw',
-    OwnsLimitedRights = 'OwnsLimitedRights',
-    OwnsRaw = 'OwnsRaw',
-    CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
-    CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
-    ContainsIdentity = 'ContainsIdentity',
-    PropagatesACEsTo = 'PropagatesACEsTo',
-    GPOAppliesTo = 'GPOAppliesTo',
-    CanApplyGPO = 'CanApplyGPO',
-    HasTrustKeys = 'HasTrustKeys',
+Owns = 'Owns',
+GenericAll = 'GenericAll',
+GenericWrite = 'GenericWrite',
+WriteOwner = 'WriteOwner',
+WriteDACL = 'WriteDacl',
+MemberOf = 'MemberOf',
+ForceChangePassword = 'ForceChangePassword',
+AllExtendedRights = 'AllExtendedRights',
+AddMember = 'AddMember',
+HasSession = 'HasSession',
+Contains = 'Contains',
+GPLink = 'GPLink',
+AllowedToDelegate = 'AllowedToDelegate',
+CoerceToTGT = 'CoerceToTGT',
+GetChanges = 'GetChanges',
+GetChangesAll = 'GetChangesAll',
+GetChangesInFilteredSet = 'GetChangesInFilteredSet',
+CrossForestTrust = 'CrossForestTrust',
+SameForestTrust = 'SameForestTrust',
+SpoofSIDHistory = 'SpoofSIDHistory',
+AbuseTGTDelegation = 'AbuseTGTDelegation',
+AllowedToAct = 'AllowedToAct',
+AdminTo = 'AdminTo',
+CanPSRemote = 'CanPSRemote',
+CanRDP = 'CanRDP',
+ExecuteDCOM = 'ExecuteDCOM',
+HasSIDHistory = 'HasSIDHistory',
+AddSelf = 'AddSelf',
+DCSync = 'DCSync',
+ReadLAPSPassword = 'ReadLAPSPassword',
+ReadGMSAPassword = 'ReadGMSAPassword',
+DumpSMSAPassword = 'DumpSMSAPassword',
+SQLAdmin = 'SQLAdmin',
+AddAllowedToAct = 'AddAllowedToAct',
+WriteSPN = 'WriteSPN',
+AddKeyCredentialLink = 'AddKeyCredentialLink',
+LocalToComputer = 'LocalToComputer',
+MemberOfLocalGroup = 'MemberOfLocalGroup',
+RemoteInteractiveLogonRight = 'RemoteInteractiveLogonRight',
+SyncLAPSPassword = 'SyncLAPSPassword',
+WriteAccountRestrictions = 'WriteAccountRestrictions',
+WriteGPLink = 'WriteGPLink',
+RootCAFor = 'RootCAFor',
+DCFor = 'DCFor',
+PublishedTo = 'PublishedTo',
+ManageCertificates = 'ManageCertificates',
+ManageCA = 'ManageCA',
+DelegatedEnrollmentAgent = 'DelegatedEnrollmentAgent',
+Enroll = 'Enroll',
+HostsCAService = 'HostsCAService',
+WritePKIEnrollmentFlag = 'WritePKIEnrollmentFlag',
+WritePKINameFlag = 'WritePKINameFlag',
+NTAuthStoreFor = 'NTAuthStoreFor',
+TrustedForNTAuth = 'TrustedForNTAuth',
+EnterpriseCAFor = 'EnterpriseCAFor',
+IssuedSignedBy = 'IssuedSignedBy',
+GoldenCert = 'GoldenCert',
+EnrollOnBehalfOf = 'EnrollOnBehalfOf',
+OIDGroupLink = 'OIDGroupLink',
+ExtendedByPolicy = 'ExtendedByPolicy',
+ADCSESC1 = 'ADCSESC1',
+ADCSESC3 = 'ADCSESC3',
+ADCSESC4 = 'ADCSESC4',
+ADCSESC6a = 'ADCSESC6a',
+ADCSESC6b = 'ADCSESC6b',
+ADCSESC9a = 'ADCSESC9a',
+ADCSESC9b = 'ADCSESC9b',
+ADCSESC10a = 'ADCSESC10a',
+ADCSESC10b = 'ADCSESC10b',
+ADCSESC13 = 'ADCSESC13',
+SyncedToEntraUser = 'SyncedToEntraUser',
+CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
+CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
+WriteOwnerRaw = 'WriteOwnerRaw',
+OwnsLimitedRights = 'OwnsLimitedRights',
+OwnsRaw = 'OwnsRaw',
+CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
+CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
+ContainsIdentity = 'ContainsIdentity',
+PropagatesACEsTo = 'PropagatesACEsTo',
+GPOAppliesTo = 'GPOAppliesTo',
+CanApplyGPO = 'CanApplyGPO',
+HasTrustKeys = 'HasTrustKeys',
 }
-export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
-    switch (value) {
-        case ActiveDirectoryRelationshipKind.Owns:
-            return 'Owns';
-        case ActiveDirectoryRelationshipKind.GenericAll:
-            return 'GenericAll';
-        case ActiveDirectoryRelationshipKind.GenericWrite:
-            return 'GenericWrite';
-        case ActiveDirectoryRelationshipKind.WriteOwner:
-            return 'WriteOwner';
-        case ActiveDirectoryRelationshipKind.WriteDACL:
-            return 'WriteDACL';
-        case ActiveDirectoryRelationshipKind.MemberOf:
-            return 'MemberOf';
-        case ActiveDirectoryRelationshipKind.ForceChangePassword:
-            return 'ForceChangePassword';
-        case ActiveDirectoryRelationshipKind.AllExtendedRights:
-            return 'AllExtendedRights';
-        case ActiveDirectoryRelationshipKind.AddMember:
-            return 'AddMember';
-        case ActiveDirectoryRelationshipKind.HasSession:
-            return 'HasSession';
-        case ActiveDirectoryRelationshipKind.Contains:
-            return 'Contains';
-        case ActiveDirectoryRelationshipKind.GPLink:
-            return 'GPLink';
-        case ActiveDirectoryRelationshipKind.AllowedToDelegate:
-            return 'AllowedToDelegate';
-        case ActiveDirectoryRelationshipKind.CoerceToTGT:
-            return 'CoerceToTGT';
-        case ActiveDirectoryRelationshipKind.GetChanges:
-            return 'GetChanges';
-        case ActiveDirectoryRelationshipKind.GetChangesAll:
-            return 'GetChangesAll';
-        case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet:
-            return 'GetChangesInFilteredSet';
-        case ActiveDirectoryRelationshipKind.CrossForestTrust:
-            return 'CrossForestTrust';
-        case ActiveDirectoryRelationshipKind.SameForestTrust:
-            return 'SameForestTrust';
-        case ActiveDirectoryRelationshipKind.SpoofSIDHistory:
-            return 'SpoofSIDHistory';
-        case ActiveDirectoryRelationshipKind.AbuseTGTDelegation:
-            return 'AbuseTGTDelegation';
-        case ActiveDirectoryRelationshipKind.AllowedToAct:
-            return 'AllowedToAct';
-        case ActiveDirectoryRelationshipKind.AdminTo:
-            return 'AdminTo';
-        case ActiveDirectoryRelationshipKind.CanPSRemote:
-            return 'CanPSRemote';
-        case ActiveDirectoryRelationshipKind.CanRDP:
-            return 'CanRDP';
-        case ActiveDirectoryRelationshipKind.ExecuteDCOM:
-            return 'ExecuteDCOM';
-        case ActiveDirectoryRelationshipKind.HasSIDHistory:
-            return 'HasSIDHistory';
-        case ActiveDirectoryRelationshipKind.AddSelf:
-            return 'AddSelf';
-        case ActiveDirectoryRelationshipKind.DCSync:
-            return 'DCSync';
-        case ActiveDirectoryRelationshipKind.ReadLAPSPassword:
-            return 'ReadLAPSPassword';
-        case ActiveDirectoryRelationshipKind.ReadGMSAPassword:
-            return 'ReadGMSAPassword';
-        case ActiveDirectoryRelationshipKind.DumpSMSAPassword:
-            return 'DumpSMSAPassword';
-        case ActiveDirectoryRelationshipKind.SQLAdmin:
-            return 'SQLAdmin';
-        case ActiveDirectoryRelationshipKind.AddAllowedToAct:
-            return 'AddAllowedToAct';
-        case ActiveDirectoryRelationshipKind.WriteSPN:
-            return 'WriteSPN';
-        case ActiveDirectoryRelationshipKind.AddKeyCredentialLink:
-            return 'AddKeyCredentialLink';
-        case ActiveDirectoryRelationshipKind.LocalToComputer:
-            return 'LocalToComputer';
-        case ActiveDirectoryRelationshipKind.MemberOfLocalGroup:
-            return 'MemberOfLocalGroup';
-        case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight:
-            return 'RemoteInteractiveLogonRight';
-        case ActiveDirectoryRelationshipKind.SyncLAPSPassword:
-            return 'SyncLAPSPassword';
-        case ActiveDirectoryRelationshipKind.WriteAccountRestrictions:
-            return 'WriteAccountRestrictions';
-        case ActiveDirectoryRelationshipKind.WriteGPLink:
-            return 'WriteGPLink';
-        case ActiveDirectoryRelationshipKind.RootCAFor:
-            return 'RootCAFor';
-        case ActiveDirectoryRelationshipKind.DCFor:
-            return 'DCFor';
-        case ActiveDirectoryRelationshipKind.PublishedTo:
-            return 'PublishedTo';
-        case ActiveDirectoryRelationshipKind.ManageCertificates:
-            return 'ManageCertificates';
-        case ActiveDirectoryRelationshipKind.ManageCA:
-            return 'ManageCA';
-        case ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent:
-            return 'DelegatedEnrollmentAgent';
-        case ActiveDirectoryRelationshipKind.Enroll:
-            return 'Enroll';
-        case ActiveDirectoryRelationshipKind.HostsCAService:
-            return 'HostsCAService';
-        case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag:
-            return 'WritePKIEnrollmentFlag';
-        case ActiveDirectoryRelationshipKind.WritePKINameFlag:
-            return 'WritePKINameFlag';
-        case ActiveDirectoryRelationshipKind.NTAuthStoreFor:
-            return 'NTAuthStoreFor';
-        case ActiveDirectoryRelationshipKind.TrustedForNTAuth:
-            return 'TrustedForNTAuth';
-        case ActiveDirectoryRelationshipKind.EnterpriseCAFor:
-            return 'EnterpriseCAFor';
-        case ActiveDirectoryRelationshipKind.IssuedSignedBy:
-            return 'IssuedSignedBy';
-        case ActiveDirectoryRelationshipKind.GoldenCert:
-            return 'GoldenCert';
-        case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf:
-            return 'EnrollOnBehalfOf';
-        case ActiveDirectoryRelationshipKind.OIDGroupLink:
-            return 'OIDGroupLink';
-        case ActiveDirectoryRelationshipKind.ExtendedByPolicy:
-            return 'ExtendedByPolicy';
-        case ActiveDirectoryRelationshipKind.ADCSESC1:
-            return 'ADCSESC1';
-        case ActiveDirectoryRelationshipKind.ADCSESC3:
-            return 'ADCSESC3';
-        case ActiveDirectoryRelationshipKind.ADCSESC4:
-            return 'ADCSESC4';
-        case ActiveDirectoryRelationshipKind.ADCSESC6a:
-            return 'ADCSESC6a';
-        case ActiveDirectoryRelationshipKind.ADCSESC6b:
-            return 'ADCSESC6b';
-        case ActiveDirectoryRelationshipKind.ADCSESC9a:
-            return 'ADCSESC9a';
-        case ActiveDirectoryRelationshipKind.ADCSESC9b:
-            return 'ADCSESC9b';
-        case ActiveDirectoryRelationshipKind.ADCSESC10a:
-            return 'ADCSESC10a';
-        case ActiveDirectoryRelationshipKind.ADCSESC10b:
-            return 'ADCSESC10b';
-        case ActiveDirectoryRelationshipKind.ADCSESC13:
-            return 'ADCSESC13';
-        case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
-            return 'SyncedToEntraUser';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
-            return 'CoerceAndRelayNTLMToSMB';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
-            return 'CoerceAndRelayNTLMToADCS';
-        case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
-            return 'WriteOwnerLimitedRights';
-        case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
-            return 'WriteOwnerRaw';
-        case ActiveDirectoryRelationshipKind.OwnsLimitedRights:
-            return 'OwnsLimitedRights';
-        case ActiveDirectoryRelationshipKind.OwnsRaw:
-            return 'OwnsRaw';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP:
-            return 'CoerceAndRelayNTLMToLDAP';
-        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
-            return 'CoerceAndRelayNTLMToLDAPS';
-        case ActiveDirectoryRelationshipKind.ContainsIdentity:
-            return 'ContainsIdentity';
-        case ActiveDirectoryRelationshipKind.PropagatesACEsTo:
-            return 'PropagatesACEsTo';
-        case ActiveDirectoryRelationshipKind.GPOAppliesTo:
-            return 'GPOAppliesTo';
-        case ActiveDirectoryRelationshipKind.CanApplyGPO:
-            return 'CanApplyGPO';
-        case ActiveDirectoryRelationshipKind.HasTrustKeys:
-            return 'HasTrustKeys';
-        default:
-            return undefined;
-    }
+export function ActiveDirectoryRelationshipKindToDisplay (value : ActiveDirectoryRelationshipKind): string | undefined {
+switch (value) {
+case ActiveDirectoryRelationshipKind.Owns: 
+return 'Owns'
+case ActiveDirectoryRelationshipKind.GenericAll: 
+return 'GenericAll'
+case ActiveDirectoryRelationshipKind.GenericWrite: 
+return 'GenericWrite'
+case ActiveDirectoryRelationshipKind.WriteOwner: 
+return 'WriteOwner'
+case ActiveDirectoryRelationshipKind.WriteDACL: 
+return 'WriteDACL'
+case ActiveDirectoryRelationshipKind.MemberOf: 
+return 'MemberOf'
+case ActiveDirectoryRelationshipKind.ForceChangePassword: 
+return 'ForceChangePassword'
+case ActiveDirectoryRelationshipKind.AllExtendedRights: 
+return 'AllExtendedRights'
+case ActiveDirectoryRelationshipKind.AddMember: 
+return 'AddMember'
+case ActiveDirectoryRelationshipKind.HasSession: 
+return 'HasSession'
+case ActiveDirectoryRelationshipKind.Contains: 
+return 'Contains'
+case ActiveDirectoryRelationshipKind.GPLink: 
+return 'GPLink'
+case ActiveDirectoryRelationshipKind.AllowedToDelegate: 
+return 'AllowedToDelegate'
+case ActiveDirectoryRelationshipKind.CoerceToTGT: 
+return 'CoerceToTGT'
+case ActiveDirectoryRelationshipKind.GetChanges: 
+return 'GetChanges'
+case ActiveDirectoryRelationshipKind.GetChangesAll: 
+return 'GetChangesAll'
+case ActiveDirectoryRelationshipKind.GetChangesInFilteredSet: 
+return 'GetChangesInFilteredSet'
+case ActiveDirectoryRelationshipKind.CrossForestTrust: 
+return 'CrossForestTrust'
+case ActiveDirectoryRelationshipKind.SameForestTrust: 
+return 'SameForestTrust'
+case ActiveDirectoryRelationshipKind.SpoofSIDHistory: 
+return 'SpoofSIDHistory'
+case ActiveDirectoryRelationshipKind.AbuseTGTDelegation: 
+return 'AbuseTGTDelegation'
+case ActiveDirectoryRelationshipKind.AllowedToAct: 
+return 'AllowedToAct'
+case ActiveDirectoryRelationshipKind.AdminTo: 
+return 'AdminTo'
+case ActiveDirectoryRelationshipKind.CanPSRemote: 
+return 'CanPSRemote'
+case ActiveDirectoryRelationshipKind.CanRDP: 
+return 'CanRDP'
+case ActiveDirectoryRelationshipKind.ExecuteDCOM: 
+return 'ExecuteDCOM'
+case ActiveDirectoryRelationshipKind.HasSIDHistory: 
+return 'HasSIDHistory'
+case ActiveDirectoryRelationshipKind.AddSelf: 
+return 'AddSelf'
+case ActiveDirectoryRelationshipKind.DCSync: 
+return 'DCSync'
+case ActiveDirectoryRelationshipKind.ReadLAPSPassword: 
+return 'ReadLAPSPassword'
+case ActiveDirectoryRelationshipKind.ReadGMSAPassword: 
+return 'ReadGMSAPassword'
+case ActiveDirectoryRelationshipKind.DumpSMSAPassword: 
+return 'DumpSMSAPassword'
+case ActiveDirectoryRelationshipKind.SQLAdmin: 
+return 'SQLAdmin'
+case ActiveDirectoryRelationshipKind.AddAllowedToAct: 
+return 'AddAllowedToAct'
+case ActiveDirectoryRelationshipKind.WriteSPN: 
+return 'WriteSPN'
+case ActiveDirectoryRelationshipKind.AddKeyCredentialLink: 
+return 'AddKeyCredentialLink'
+case ActiveDirectoryRelationshipKind.LocalToComputer: 
+return 'LocalToComputer'
+case ActiveDirectoryRelationshipKind.MemberOfLocalGroup: 
+return 'MemberOfLocalGroup'
+case ActiveDirectoryRelationshipKind.RemoteInteractiveLogonRight: 
+return 'RemoteInteractiveLogonRight'
+case ActiveDirectoryRelationshipKind.SyncLAPSPassword: 
+return 'SyncLAPSPassword'
+case ActiveDirectoryRelationshipKind.WriteAccountRestrictions: 
+return 'WriteAccountRestrictions'
+case ActiveDirectoryRelationshipKind.WriteGPLink: 
+return 'WriteGPLink'
+case ActiveDirectoryRelationshipKind.RootCAFor: 
+return 'RootCAFor'
+case ActiveDirectoryRelationshipKind.DCFor: 
+return 'DCFor'
+case ActiveDirectoryRelationshipKind.PublishedTo: 
+return 'PublishedTo'
+case ActiveDirectoryRelationshipKind.ManageCertificates: 
+return 'ManageCertificates'
+case ActiveDirectoryRelationshipKind.ManageCA: 
+return 'ManageCA'
+case ActiveDirectoryRelationshipKind.DelegatedEnrollmentAgent: 
+return 'DelegatedEnrollmentAgent'
+case ActiveDirectoryRelationshipKind.Enroll: 
+return 'Enroll'
+case ActiveDirectoryRelationshipKind.HostsCAService: 
+return 'HostsCAService'
+case ActiveDirectoryRelationshipKind.WritePKIEnrollmentFlag: 
+return 'WritePKIEnrollmentFlag'
+case ActiveDirectoryRelationshipKind.WritePKINameFlag: 
+return 'WritePKINameFlag'
+case ActiveDirectoryRelationshipKind.NTAuthStoreFor: 
+return 'NTAuthStoreFor'
+case ActiveDirectoryRelationshipKind.TrustedForNTAuth: 
+return 'TrustedForNTAuth'
+case ActiveDirectoryRelationshipKind.EnterpriseCAFor: 
+return 'EnterpriseCAFor'
+case ActiveDirectoryRelationshipKind.IssuedSignedBy: 
+return 'IssuedSignedBy'
+case ActiveDirectoryRelationshipKind.GoldenCert: 
+return 'GoldenCert'
+case ActiveDirectoryRelationshipKind.EnrollOnBehalfOf: 
+return 'EnrollOnBehalfOf'
+case ActiveDirectoryRelationshipKind.OIDGroupLink: 
+return 'OIDGroupLink'
+case ActiveDirectoryRelationshipKind.ExtendedByPolicy: 
+return 'ExtendedByPolicy'
+case ActiveDirectoryRelationshipKind.ADCSESC1: 
+return 'ADCSESC1'
+case ActiveDirectoryRelationshipKind.ADCSESC3: 
+return 'ADCSESC3'
+case ActiveDirectoryRelationshipKind.ADCSESC4: 
+return 'ADCSESC4'
+case ActiveDirectoryRelationshipKind.ADCSESC6a: 
+return 'ADCSESC6a'
+case ActiveDirectoryRelationshipKind.ADCSESC6b: 
+return 'ADCSESC6b'
+case ActiveDirectoryRelationshipKind.ADCSESC9a: 
+return 'ADCSESC9a'
+case ActiveDirectoryRelationshipKind.ADCSESC9b: 
+return 'ADCSESC9b'
+case ActiveDirectoryRelationshipKind.ADCSESC10a: 
+return 'ADCSESC10a'
+case ActiveDirectoryRelationshipKind.ADCSESC10b: 
+return 'ADCSESC10b'
+case ActiveDirectoryRelationshipKind.ADCSESC13: 
+return 'ADCSESC13'
+case ActiveDirectoryRelationshipKind.SyncedToEntraUser: 
+return 'SyncedToEntraUser'
+case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB: 
+return 'CoerceAndRelayNTLMToSMB'
+case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS: 
+return 'CoerceAndRelayNTLMToADCS'
+case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights: 
+return 'WriteOwnerLimitedRights'
+case ActiveDirectoryRelationshipKind.WriteOwnerRaw: 
+return 'WriteOwnerRaw'
+case ActiveDirectoryRelationshipKind.OwnsLimitedRights: 
+return 'OwnsLimitedRights'
+case ActiveDirectoryRelationshipKind.OwnsRaw: 
+return 'OwnsRaw'
+case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP: 
+return 'CoerceAndRelayNTLMToLDAP'
+case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS: 
+return 'CoerceAndRelayNTLMToLDAPS'
+case ActiveDirectoryRelationshipKind.ContainsIdentity: 
+return 'ContainsIdentity'
+case ActiveDirectoryRelationshipKind.PropagatesACEsTo: 
+return 'PropagatesACEsTo'
+case ActiveDirectoryRelationshipKind.GPOAppliesTo: 
+return 'GPOAppliesTo'
+case ActiveDirectoryRelationshipKind.CanApplyGPO: 
+return 'CanApplyGPO'
+case ActiveDirectoryRelationshipKind.HasTrustKeys: 
+return 'HasTrustKeys'
+default:
+return undefined
 }
-export type ActiveDirectoryKind = ActiveDirectoryNodeKind | ActiveDirectoryRelationshipKind;
-export const EdgeCompositionRelationships = [
-    'GoldenCert',
-    'ADCSESC1',
-    'ADCSESC3',
-    'ADCSESC4',
-    'ADCSESC6a',
-    'ADCSESC6b',
-    'ADCSESC9a',
-    'ADCSESC9b',
-    'ADCSESC10a',
-    'ADCSESC10b',
-    'ADCSESC13',
-    'CoerceAndRelayNTLMToSMB',
-    'CoerceAndRelayNTLMToADCS',
-    'CoerceAndRelayNTLMToLDAP',
-    'CoerceAndRelayNTLMToLDAPS',
-    'GPOAppliesTo',
-    'CanApplyGPO',
-];
+}
+export type ActiveDirectoryKind = ActiveDirectoryNodeKind|ActiveDirectoryRelationshipKind
+export const EdgeCompositionRelationships = ['GoldenCert','ADCSESC1','ADCSESC3','ADCSESC4','ADCSESC6a','ADCSESC6b','ADCSESC9a','ADCSESC9b','ADCSESC10a','ADCSESC10b','ADCSESC13','CoerceAndRelayNTLMToSMB','CoerceAndRelayNTLMToADCS','CoerceAndRelayNTLMToLDAP','CoerceAndRelayNTLMToLDAPS','GPOAppliesTo','CanApplyGPO']
 export enum ActiveDirectoryKindProperties {
 AdminCount = 'admincount',
 CASecurityCollected = 'casecuritycollected',
@@ -742,66 +724,8 @@ default:
 return undefined
 }
 }
-export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKind[] {
-    return [
-        ActiveDirectoryRelationshipKind.Owns,
-        ActiveDirectoryRelationshipKind.GenericAll,
-        ActiveDirectoryRelationshipKind.GenericWrite,
-        ActiveDirectoryRelationshipKind.WriteOwner,
-        ActiveDirectoryRelationshipKind.WriteDACL,
-        ActiveDirectoryRelationshipKind.MemberOf,
-        ActiveDirectoryRelationshipKind.ForceChangePassword,
-        ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddMember,
-        ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.AllowedToDelegate,
-        ActiveDirectoryRelationshipKind.CoerceToTGT,
-        ActiveDirectoryRelationshipKind.AllowedToAct,
-        ActiveDirectoryRelationshipKind.AdminTo,
-        ActiveDirectoryRelationshipKind.CanPSRemote,
-        ActiveDirectoryRelationshipKind.CanRDP,
-        ActiveDirectoryRelationshipKind.ExecuteDCOM,
-        ActiveDirectoryRelationshipKind.HasSIDHistory,
-        ActiveDirectoryRelationshipKind.AddSelf,
-        ActiveDirectoryRelationshipKind.DCSync,
-        ActiveDirectoryRelationshipKind.ReadLAPSPassword,
-        ActiveDirectoryRelationshipKind.ReadGMSAPassword,
-        ActiveDirectoryRelationshipKind.DumpSMSAPassword,
-        ActiveDirectoryRelationshipKind.SQLAdmin,
-        ActiveDirectoryRelationshipKind.AddAllowedToAct,
-        ActiveDirectoryRelationshipKind.WriteSPN,
-        ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
-        ActiveDirectoryRelationshipKind.SyncLAPSPassword,
-        ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-        ActiveDirectoryRelationshipKind.WriteGPLink,
-        ActiveDirectoryRelationshipKind.GoldenCert,
-        ActiveDirectoryRelationshipKind.ADCSESC1,
-        ActiveDirectoryRelationshipKind.ADCSESC3,
-        ActiveDirectoryRelationshipKind.ADCSESC4,
-        ActiveDirectoryRelationshipKind.ADCSESC6a,
-        ActiveDirectoryRelationshipKind.ADCSESC6b,
-        ActiveDirectoryRelationshipKind.ADCSESC9a,
-        ActiveDirectoryRelationshipKind.ADCSESC9b,
-        ActiveDirectoryRelationshipKind.ADCSESC10a,
-        ActiveDirectoryRelationshipKind.ADCSESC10b,
-        ActiveDirectoryRelationshipKind.ADCSESC13,
-        ActiveDirectoryRelationshipKind.SyncedToEntraUser,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
-        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
-        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
-        ActiveDirectoryRelationshipKind.ContainsIdentity,
-        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
-        ActiveDirectoryRelationshipKind.GPOAppliesTo,
-        ActiveDirectoryRelationshipKind.CanApplyGPO,
-        ActiveDirectoryRelationshipKind.HasTrustKeys,
-        ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.SameForestTrust,
-        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
-        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
-    ];
+export function ActiveDirectoryPathfindingEdges (): ActiveDirectoryRelationshipKind[] {
+return [ActiveDirectoryRelationshipKind.Owns,ActiveDirectoryRelationshipKind.GenericAll,ActiveDirectoryRelationshipKind.GenericWrite,ActiveDirectoryRelationshipKind.WriteOwner,ActiveDirectoryRelationshipKind.WriteDACL,ActiveDirectoryRelationshipKind.MemberOf,ActiveDirectoryRelationshipKind.ForceChangePassword,ActiveDirectoryRelationshipKind.AllExtendedRights,ActiveDirectoryRelationshipKind.AddMember,ActiveDirectoryRelationshipKind.HasSession,ActiveDirectoryRelationshipKind.AllowedToDelegate,ActiveDirectoryRelationshipKind.CoerceToTGT,ActiveDirectoryRelationshipKind.AllowedToAct,ActiveDirectoryRelationshipKind.AdminTo,ActiveDirectoryRelationshipKind.CanPSRemote,ActiveDirectoryRelationshipKind.CanRDP,ActiveDirectoryRelationshipKind.ExecuteDCOM,ActiveDirectoryRelationshipKind.HasSIDHistory,ActiveDirectoryRelationshipKind.AddSelf,ActiveDirectoryRelationshipKind.DCSync,ActiveDirectoryRelationshipKind.ReadLAPSPassword,ActiveDirectoryRelationshipKind.ReadGMSAPassword,ActiveDirectoryRelationshipKind.DumpSMSAPassword,ActiveDirectoryRelationshipKind.SQLAdmin,ActiveDirectoryRelationshipKind.AddAllowedToAct,ActiveDirectoryRelationshipKind.WriteSPN,ActiveDirectoryRelationshipKind.AddKeyCredentialLink,ActiveDirectoryRelationshipKind.SyncLAPSPassword,ActiveDirectoryRelationshipKind.WriteAccountRestrictions,ActiveDirectoryRelationshipKind.WriteGPLink,ActiveDirectoryRelationshipKind.GoldenCert,ActiveDirectoryRelationshipKind.ADCSESC1,ActiveDirectoryRelationshipKind.ADCSESC3,ActiveDirectoryRelationshipKind.ADCSESC4,ActiveDirectoryRelationshipKind.ADCSESC6a,ActiveDirectoryRelationshipKind.ADCSESC6b,ActiveDirectoryRelationshipKind.ADCSESC9a,ActiveDirectoryRelationshipKind.ADCSESC9b,ActiveDirectoryRelationshipKind.ADCSESC10a,ActiveDirectoryRelationshipKind.ADCSESC10b,ActiveDirectoryRelationshipKind.ADCSESC13,ActiveDirectoryRelationshipKind.SyncedToEntraUser,ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,ActiveDirectoryRelationshipKind.OwnsLimitedRights,ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,ActiveDirectoryRelationshipKind.ContainsIdentity,ActiveDirectoryRelationshipKind.PropagatesACEsTo,ActiveDirectoryRelationshipKind.GPOAppliesTo,ActiveDirectoryRelationshipKind.CanApplyGPO,ActiveDirectoryRelationshipKind.HasTrustKeys,ActiveDirectoryRelationshipKind.DCFor,ActiveDirectoryRelationshipKind.SameForestTrust,ActiveDirectoryRelationshipKind.SpoofSIDHistory,ActiveDirectoryRelationshipKind.AbuseTGTDelegation]
 }
 export enum AzureNodeKind {
 Entity = 'AZBase',
@@ -1069,91 +993,91 @@ EndUserAssignmentRequiresMFA = 'enduserassignmentrequiresmfa',
 EndUserAssignmentRequiresJustification = 'enduserassignmentrequiresjustification',
 EndUserAssignmentRequiresTicketInformation = 'enduserassignmentrequiresticketinformation',
 }
-export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
-    switch (value) {
-        case AzureKindProperties.AppOwnerOrganizationID:
-            return 'App Owner Organization ID';
-        case AzureKindProperties.AppDescription:
-            return 'App Description';
-        case AzureKindProperties.AppDisplayName:
-            return 'App Display Name';
-        case AzureKindProperties.ServicePrincipalType:
-            return 'Service Principal Type';
-        case AzureKindProperties.UserType:
-            return 'User Type';
-        case AzureKindProperties.TenantID:
-            return 'Tenant ID';
-        case AzureKindProperties.ServicePrincipalID:
-            return 'Service Principal ID';
-        case AzureKindProperties.ServicePrincipalNames:
-            return 'Service Principal Names';
-        case AzureKindProperties.OperatingSystemVersion:
-            return 'Operating System Version';
-        case AzureKindProperties.TrustType:
-            return 'Trust Type';
-        case AzureKindProperties.IsBuiltIn:
-            return 'Is Built In';
-        case AzureKindProperties.AppID:
-            return 'App ID';
-        case AzureKindProperties.AppRoleID:
-            return 'App Role ID';
-        case AzureKindProperties.DeviceID:
-            return 'Device ID';
-        case AzureKindProperties.NodeResourceGroupID:
-            return 'Node Resource Group ID';
-        case AzureKindProperties.OnPremID:
-            return 'On Prem ID';
-        case AzureKindProperties.OnPremSyncEnabled:
-            return 'On Prem Sync Enabled';
-        case AzureKindProperties.SecurityEnabled:
-            return 'Security Enabled';
-        case AzureKindProperties.SecurityIdentifier:
-            return 'Security Identifier';
-        case AzureKindProperties.EnableRBACAuthorization:
-            return 'RBAC Authorization Enabled';
-        case AzureKindProperties.Scope:
-            return 'Scope';
-        case AzureKindProperties.Offer:
-            return 'Offer';
-        case AzureKindProperties.MFAEnabled:
-            return 'MFA Enabled';
-        case AzureKindProperties.License:
-            return 'License';
-        case AzureKindProperties.Licenses:
-            return 'Licenses';
-        case AzureKindProperties.LoginURL:
-            return 'Login URL';
-        case AzureKindProperties.MFAEnforced:
-            return 'MFA Enforced';
-        case AzureKindProperties.UserPrincipalName:
-            return 'User Principal Name';
-        case AzureKindProperties.IsAssignableToRole:
-            return 'Is Role Assignable';
-        case AzureKindProperties.PublisherDomain:
-            return 'Publisher Domain';
-        case AzureKindProperties.SignInAudience:
-            return 'Sign In Audience';
-        case AzureKindProperties.RoleTemplateID:
-            return 'Role Template ID';
-        case AzureKindProperties.RoleDefinitionId:
-            return 'Role Definition Id';
-        case AzureKindProperties.EndUserAssignmentRequiresApproval:
-            return 'End User Assignment Requires Approval';
-        case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'End User Assignment Requires CAP Authentication Context';
-        case AzureKindProperties.EndUserAssignmentUserApprovers:
-            return 'End User Assignment User Approvers';
-        case AzureKindProperties.EndUserAssignmentGroupApprovers:
-            return 'End User Assignment Group Approvers';
-        case AzureKindProperties.EndUserAssignmentRequiresMFA:
-            return 'End User Assignment Requires MFA';
-        case AzureKindProperties.EndUserAssignmentRequiresJustification:
-            return 'End User Assignment Requires Justification';
-        case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
-            return 'End User Assignment Requires Ticket Information';
-        default:
-            return undefined;
-    }
+export function AzureKindPropertiesToDisplay (value : AzureKindProperties): string | undefined {
+switch (value) {
+case AzureKindProperties.AppOwnerOrganizationID: 
+return 'App Owner Organization ID'
+case AzureKindProperties.AppDescription: 
+return 'App Description'
+case AzureKindProperties.AppDisplayName: 
+return 'App Display Name'
+case AzureKindProperties.ServicePrincipalType: 
+return 'Service Principal Type'
+case AzureKindProperties.UserType: 
+return 'User Type'
+case AzureKindProperties.TenantID: 
+return 'Tenant ID'
+case AzureKindProperties.ServicePrincipalID: 
+return 'Service Principal ID'
+case AzureKindProperties.ServicePrincipalNames: 
+return 'Service Principal Names'
+case AzureKindProperties.OperatingSystemVersion: 
+return 'Operating System Version'
+case AzureKindProperties.TrustType: 
+return 'Trust Type'
+case AzureKindProperties.IsBuiltIn: 
+return 'Is Built In'
+case AzureKindProperties.AppID: 
+return 'App ID'
+case AzureKindProperties.AppRoleID: 
+return 'App Role ID'
+case AzureKindProperties.DeviceID: 
+return 'Device ID'
+case AzureKindProperties.NodeResourceGroupID: 
+return 'Node Resource Group ID'
+case AzureKindProperties.OnPremID: 
+return 'On Prem ID'
+case AzureKindProperties.OnPremSyncEnabled: 
+return 'On Prem Sync Enabled'
+case AzureKindProperties.SecurityEnabled: 
+return 'Security Enabled'
+case AzureKindProperties.SecurityIdentifier: 
+return 'Security Identifier'
+case AzureKindProperties.EnableRBACAuthorization: 
+return 'RBAC Authorization Enabled'
+case AzureKindProperties.Scope: 
+return 'Scope'
+case AzureKindProperties.Offer: 
+return 'Offer'
+case AzureKindProperties.MFAEnabled: 
+return 'MFA Enabled'
+case AzureKindProperties.License: 
+return 'License'
+case AzureKindProperties.Licenses: 
+return 'Licenses'
+case AzureKindProperties.LoginURL: 
+return 'Login URL'
+case AzureKindProperties.MFAEnforced: 
+return 'MFA Enforced'
+case AzureKindProperties.UserPrincipalName: 
+return 'User Principal Name'
+case AzureKindProperties.IsAssignableToRole: 
+return 'Is Role Assignable'
+case AzureKindProperties.PublisherDomain: 
+return 'Publisher Domain'
+case AzureKindProperties.SignInAudience: 
+return 'Sign In Audience'
+case AzureKindProperties.RoleTemplateID: 
+return 'Role Template ID'
+case AzureKindProperties.RoleDefinitionId: 
+return 'Role Definition Id'
+case AzureKindProperties.EndUserAssignmentRequiresApproval: 
+return 'End User Assignment Requires Approval'
+case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext: 
+return 'End User Assignment Requires CAP Authentication Context'
+case AzureKindProperties.EndUserAssignmentUserApprovers: 
+return 'End User Assignment User Approvers'
+case AzureKindProperties.EndUserAssignmentGroupApprovers: 
+return 'End User Assignment Group Approvers'
+case AzureKindProperties.EndUserAssignmentRequiresMFA: 
+return 'End User Assignment Requires MFA'
+case AzureKindProperties.EndUserAssignmentRequiresJustification: 
+return 'End User Assignment Requires Justification'
+case AzureKindProperties.EndUserAssignmentRequiresTicketInformation: 
+return 'End User Assignment Requires Ticket Information'
+default:
+return undefined
+}
 }
 export function AzurePathfindingEdges (): AzureRelationshipKind[] {
 return [AzureRelationshipKind.AvereContributor,AzureRelationshipKind.Contributor,AzureRelationshipKind.GetCertificates,AzureRelationshipKind.GetKeys,AzureRelationshipKind.GetSecrets,AzureRelationshipKind.HasRole,AzureRelationshipKind.MemberOf,AzureRelationshipKind.Owner,AzureRelationshipKind.RunsAs,AzureRelationshipKind.VMContributor,AzureRelationshipKind.AutomationContributor,AzureRelationshipKind.KeyVaultContributor,AzureRelationshipKind.VMAdminLogin,AzureRelationshipKind.AddMembers,AzureRelationshipKind.AddSecret,AzureRelationshipKind.ExecuteCommand,AzureRelationshipKind.GlobalAdmin,AzureRelationshipKind.PrivilegedAuthAdmin,AzureRelationshipKind.Grant,AzureRelationshipKind.GrantSelf,AzureRelationshipKind.PrivilegedRoleAdmin,AzureRelationshipKind.ResetPassword,AzureRelationshipKind.UserAccessAdministrator,AzureRelationshipKind.Owns,AzureRelationshipKind.CloudAppAdmin,AzureRelationshipKind.AppAdmin,AzureRelationshipKind.AddOwner,AzureRelationshipKind.ManagedIdentity,AzureRelationshipKind.AKSContributor,AzureRelationshipKind.NodeResourceGroup,AzureRelationshipKind.WebsiteContributor,AzureRelationshipKind.LogicAppContributor,AzureRelationshipKind.AZMGAddMember,AzureRelationshipKind.AZMGAddOwner,AzureRelationshipKind.AZMGAddSecret,AzureRelationshipKind.AZMGGrantAppRoles,AzureRelationshipKind.AZMGGrantRole,AzureRelationshipKind.SyncedToADUser,AzureRelationshipKind.AZRoleEligible,AzureRelationshipKind.AZRoleApprover,AzureRelationshipKind.Contains]

@@ -52,10 +52,11 @@ func (s TypedPrincipal) Kind() graph.Kind {
 }
 
 type ACE struct {
-	PrincipalSID  string
-	PrincipalType string
-	RightName     string
-	IsInherited   bool
+	PrincipalSID    string
+	PrincipalType   string
+	RightName       string
+	IsInherited     bool
+	InheritanceHash string
 }
 
 type SPNTarget struct {
@@ -243,10 +244,11 @@ type GPLink struct {
 
 type Domain struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Trusts       []Trust
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Trusts            []Trust
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
 }
 
 type SessionAPIResult struct {
@@ -347,9 +349,10 @@ type GPOChanges struct {
 
 type OU struct {
 	IngestBase
-	ChildObjects []TypedPrincipal
-	Links        []GPLink
-	GPOChanges   GPOChanges
+	ChildObjects      []TypedPrincipal
+	Links             []GPLink
+	GPOChanges        GPOChanges
+	InheritanceHashes []string
 }
 
 type GenericNode struct {

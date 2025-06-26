@@ -5,7 +5,6 @@ package common
 
 import (
 	"errors"
-
 	ad "github.com/specterops/bloodhound/graphschema/ad"
 	azure "github.com/specterops/bloodhound/graphschema/azure"
 	graph "github.com/specterops/dawgs/graph"
