@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 
 	"github.com/bloodhoundad/azurehound/v2/enums"
-	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/packages/go/ein"
 )
 
 type ConvertedData struct {

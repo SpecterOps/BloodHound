@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"gorm.io/gorm"
 )
 

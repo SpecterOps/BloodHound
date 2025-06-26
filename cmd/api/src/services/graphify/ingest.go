@@ -25,13 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util"
 )
@@ -344,7 +344,7 @@ func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relations
 	}
 
 	for _, update := range updates {
-		if err := batch.Batch.UpdateRelationshipBy(*update); err != nil {
+		if err := batch.Batch.UpdateRelationshipBy(update); err != nil {
 			errs.Add(err)
 		}
 	}

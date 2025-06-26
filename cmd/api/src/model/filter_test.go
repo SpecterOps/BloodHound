@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 

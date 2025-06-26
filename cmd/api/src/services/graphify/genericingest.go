@@ -21,8 +21,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/specterops/dawgs/util"
@@ -153,12 +153,12 @@ func resolveAllEndpointsByName(batch graph.Batch, rels []ein.IngestibleRelations
 // Each resolved relationship is stamped with the current UTC timestamp as the "last seen" property.
 //
 // Returns a slice of valid relationship updates or an error if resolution fails.
-func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]*graph.RelationshipUpdate, error) {
+func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelationship, baseKind graph.Kind) ([]graph.RelationshipUpdate, error) {
 	if cache, err := resolveAllEndpointsByName(batch.Batch, rels); err != nil {
 		return nil, err
 	} else {
 		var (
-			updates []*graph.RelationshipUpdate
+			updates []graph.RelationshipUpdate
 			errs    = util.NewErrorCollector()
 		)
 
@@ -183,7 +183,7 @@ func resolveRelationships(batch *TimestampedBatch, rels []ein.IngestibleRelation
 			startKinds := mergeBaseKind(baseKind, rel.Source.Kind)
 			endKinds := mergeBaseKind(baseKind, rel.Target.Kind)
 
-			update := &graph.RelationshipUpdate{
+			update := graph.RelationshipUpdate{
 				Start: graph.PrepareNode(graph.AsProperties(graph.PropertyMap{
 					common.ObjectID: srcID,
 					common.LastSeen: batch.IngestTime,
