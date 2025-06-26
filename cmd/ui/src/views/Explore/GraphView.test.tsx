@@ -28,12 +28,13 @@ const server = setupServer(
 describe('GraphView', () => {
     it('renders a graph view', () => {
         const { container } = render(<GraphView />);
-        expect(container).toBeEmptyDOMElement;
+        expect(container).toBeEmptyDOMElement();
     });
 
     it('displays an error message', async () => {
         beforeEach(() => server.listen());
         afterAll(() => server.close());
+        console.error = vi.fn();
         render(<GraphView />);
         const errorAlert = await waitFor(() =>
             screen.findByText('An unexpected error has occurred. Please refresh the page and try again.')
