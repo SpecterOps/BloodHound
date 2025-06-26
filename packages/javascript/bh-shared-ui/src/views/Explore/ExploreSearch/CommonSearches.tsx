@@ -33,18 +33,20 @@ import QuerySearchFilter from './QuerySearchFilter';
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
+    onToggleCommonQueries: () => void;
+    showCommonQueries: boolean;
 };
 
 const InnerCommonSearches = ({
     onSetCypherQuery,
     onPerformCypherSearch,
+    onToggleCommonQueries,
     prebuiltSearchList,
+    showCommonQueries,
 }: CommonSearchesProps & { prebuiltSearchList: QuerySearchType[] }) => {
     const userQueries = useSavedQueries();
     const deleteQueryMutation = useDeleteSavedQuery();
     const { addNotification } = useNotifications();
-
-    const [showCommonQueries, setShowCommonQueries] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -135,9 +137,7 @@ const InnerCommonSearches = ({
                 <FontAwesomeIcon
                     className='px-2 mr-2'
                     icon={showCommonQueries ? faChevronDown : faChevronUp}
-                    onClick={() => {
-                        setShowCommonQueries((v) => !v);
-                    }}
+                    onClick={onToggleCommonQueries}
                 />
                 <h5 className='my-4 font-bold text-lg'>Pre-built Queries</h5>
             </div>
