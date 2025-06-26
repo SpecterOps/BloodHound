@@ -1,8 +1,7 @@
 github.com/RoaringBitmap/roaring/v2 v2.5.0 h1:TJ45qCM7D7fIEBwKd9zhoR0/S1egfnSSIzLU1e1eYLY=
 github.com/axiomhq/hyperloglog v0.2.5 h1:Hefy3i8nAs8zAI/tDp+wE7N+Ltr8JnwiW3875pvl0N8=
 github.com/bits-and-blooms/bitset v1.12.0 h1:U/q1fAF7xXRhFCrhROzIfffYnu+dlS38vCZtmFVPHmA=
-github.com/bloodhoundad/azurehound/v2 v2.4.1 h1:iZBNEDPp5IBnkOS8ro6wDbW6762oFYseo6UnuI/Jxvo=
-github.com/bloodhoundad/azurehound/v2 v2.4.1/go.mod h1:wTFG/rmMitRDbi2gTiIX8wpGcTmRDVZ9PHkUFSeeYT8=
+github.com/bloodhoundad/azurehound/v2 v2.6.0 h1:WrrfhD/TnU82rvF5U8niIiB8G/9Kc9bqF4D8XiBNvO8=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
