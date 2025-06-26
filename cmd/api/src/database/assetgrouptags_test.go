@@ -71,7 +71,7 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 		require.Equal(t, seed.Value, selector.Seeds[idx].Value)
 	}
 
-	history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+	history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, history, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
@@ -176,18 +176,19 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 
 func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	var (
-		testCtx             = context.Background()
-		tagTypeTier         = model.AssetGroupTagTypeTier
-		tagTypeLabel        = model.AssetGroupTagTypeLabel
-		testActor           = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
-		testName            = "test tag name"
-		testName2           = "test2 tag name"
-		testName3           = "test3 tag name"
-		testName4           = "test4 tag name"
-		testDescription     = "test tag description"
-		position            = null.Int32{}
-		requireCertifyTier  = null.BoolFrom(true)
-		requireCertifyLabel = null.Bool{}
+		testCtx                = context.Background()
+		tagTypeTier            = model.AssetGroupTagTypeTier
+		tagTypeLabel           = model.AssetGroupTagTypeLabel
+		testActor              = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testName               = "test tag name"
+		testName2              = "test2 tag name"
+		testName3              = "test3 tag name"
+		testName4              = "test4 tag name"
+		testDescription        = "test tag description"
+		position               = null.Int32{}
+		requireCertifyTier     = null.BoolFrom(true)
+		requireCertifyLabel    = null.Bool{}
+		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
 	t.Run("successfully creates tier", func(t *testing.T) {
@@ -224,7 +225,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
 
 		// verify history record was also created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 1)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -291,7 +292,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, position3, tag.Position)
 
 		// verify history record was also created and shifted
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 3)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -341,7 +342,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		require.Equal(t, toUpdate.RequireCertify, updatedTier.RequireCertify)
 
 		// verify history records were created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -483,8 +484,9 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 
 func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 	var (
-		testCtx   = context.Background()
-		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		testCtx                = context.Background()
+		testActor              = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
+		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
 	t.Run("shifts tier higher successfully", func(t *testing.T) {
@@ -531,7 +533,7 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 		)
 
 		// verify history records were created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(history), 2)
 		n := len(history) - 2
@@ -585,7 +587,7 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 		)
 
 		// verify history records were created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(history), 2)
 		n := len(history) - 2
@@ -598,22 +600,23 @@ func TestDatabase_UpdateAssetGroupTag_shifting(t *testing.T) {
 
 func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 	var (
-		testCtx            = context.Background()
-		userID, _          = uuid.NewV4()
-		userID2, _         = uuid.NewV4()
-		userID4, _         = uuid.NewV4()
-		testUser           = model.User{Unique: model.Unique{ID: userID}}
-		testUser2          = model.User{Unique: model.Unique{ID: userID2}}
-		testUser4          = model.User{Unique: model.Unique{ID: userID4}}
-		testName           = "test tag name"
-		testName2          = "test tag name2"
-		testName4          = "test tag name4"
-		testDescription    = "test tag description"
-		testDescription2   = "test tag description2"
-		testDescription4   = "test tag description4"
-		position           = null.Int32From(2)
-		position2          = null.Int32From(3)
-		requireCertifyTier = null.BoolFrom(true)
+		testCtx                = context.Background()
+		userID, _              = uuid.NewV4()
+		userID2, _             = uuid.NewV4()
+		userID4, _             = uuid.NewV4()
+		testUser               = model.User{Unique: model.Unique{ID: userID}}
+		testUser2              = model.User{Unique: model.Unique{ID: userID2}}
+		testUser4              = model.User{Unique: model.Unique{ID: userID4}}
+		testName               = "test tag name"
+		testName2              = "test tag name2"
+		testName4              = "test tag name4"
+		testDescription        = "test tag description"
+		testDescription2       = "test tag description2"
+		testDescription4       = "test tag description4"
+		position               = null.Int32From(2)
+		position2              = null.Int32From(3)
+		requireCertifyTier     = null.BoolFrom(true)
+		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
 	getTagOrder := func(orderedTags []model.AssetGroupTag) []int {
@@ -651,7 +654,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.Equal(t, []int{1, assetGroupTagTier2.ID}, getTagOrder(orderedTagsAfter))
 
 		// verify history records were created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 4)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -673,7 +676,7 @@ func TestDatabase_DeleteAssetGroupTag(t *testing.T) {
 		require.NoError(t, err)
 
 		// verify history records were created
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
@@ -995,12 +998,13 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID1234"},
 			{Type: model.SelectorTypeObjectId, Value: "ObjectID5678"},
 		}
+		sortAscendingCreatedAt = model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}
 	)
 
 	selector, err := dbInst.CreateAssetGroupTagSelector(testCtx, 1, model.User{}, testName, testDescription, isDefault, allowDisable, autoCertify, testSeeds)
 	require.NoError(t, err)
 
-	history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+	history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, history, 1)
 	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, history[0].Action)
@@ -1014,7 +1018,7 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		require.EqualError(t, err, "entity not found")
 
 		// verify a history record was created for the delete action
-		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, true, 0, 0)
+		history, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, sortAscendingCreatedAt, 0, 0)
 		require.NoError(t, err)
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)

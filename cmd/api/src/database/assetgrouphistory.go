@@ -19,6 +19,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -27,7 +28,7 @@ import (
 // AssetGroupHistoryData defines the methods required to interact with the asset_group_history table
 type AssetGroupHistoryData interface {
 	CreateAssetGroupHistoryRecord(ctx context.Context, actorId, email string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error
-	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, int, error)
+	GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error)
 }
 
 func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorId, emailAddress string, target string, action model.AssetGroupHistoryAction, assetGroupTagId int, environmentId, note null.String) error {
@@ -35,37 +36,40 @@ func (s *BloodhoundDB) CreateAssetGroupHistoryRecord(ctx context.Context, actorI
 		actorId, emailAddress, target, action, assetGroupTagId, environmentId, note))
 }
 
-func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortDirectionAscending bool, skip, limit int) ([]model.AssetGroupHistory, int, error) {
+func (s *BloodhoundDB) GetAssetGroupHistoryRecords(ctx context.Context, sqlFilter model.SQLFilter, sortItems model.Sort, skip, limit int) ([]model.AssetGroupHistory, int, error) {
 	var (
 		historyRecs     []model.AssetGroupHistory
 		skipLimitString string
-		sortDir         string
 		rowCount        int
+		sortColumns     []string
 	)
 
 	if sqlFilter.SQLString != "" {
 		sqlFilter.SQLString = " WHERE " + sqlFilter.SQLString
 	}
 
-	if sortDirectionAscending {
-		sortDir = "ASC"
-	} else {
-		sortDir = "DESC"
+	for _, item := range sortItems {
+		dirString := "ASC"
+		if item.Direction == model.DescendingSortDirection {
+			dirString = "DESC"
+		}
+		sortColumns = append(sortColumns, fmt.Sprintf("%s %s", item.Column, dirString))
 	}
+	sortString := "ORDER BY " + strings.Join(sortColumns, ", ")
 
-	if limit != 0 {
+	if limit > 0 {
 		skipLimitString += fmt.Sprintf(" LIMIT %d", limit)
 	}
 
-	if skip != 0 {
+	if skip > 0 {
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
 	sqlStr := fmt.Sprintf(
-		"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s ORDER BY created_at %s %s",
+		"SELECT id, actor, email, target, action, asset_group_tag_id, environment_id, note, created_at FROM %s%s %s %s",
 		(model.AssetGroupHistory{}).TableName(),
 		sqlFilter.SQLString,
-		sortDir,
+		sortString,
 		skipLimitString)
 
 	sqlCountStr := fmt.Sprintf(

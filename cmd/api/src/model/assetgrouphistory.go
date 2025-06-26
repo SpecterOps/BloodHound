@@ -54,6 +54,15 @@ func (AssetGroupHistory) TableName() string {
 	return "asset_group_history"
 }
 
+func (s AssetGroupHistory) IsSortable(criteria string) bool {
+	switch criteria {
+	case "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
 func (s AssetGroupHistory) AuditData() AuditData {
 	return AuditData{
 		"id":                 s.ID,
