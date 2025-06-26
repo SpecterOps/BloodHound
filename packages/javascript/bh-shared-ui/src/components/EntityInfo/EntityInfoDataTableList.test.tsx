@@ -56,15 +56,20 @@ const EntityInfoContentWithProvider = ({
     testId,
     nodeType,
     databaseId,
-    zoneManagement,
+    additionalSections,
 }: {
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    zoneManagement?: boolean;
+    additionalSections?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} zoneManagement={zoneManagement} />
+        <EntityInfoContent
+            id={testId}
+            nodeType={nodeType}
+            databaseId={databaseId}
+            additionalSections={additionalSections}
+        />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -77,7 +82,7 @@ describe('EntityInfoDataTableList', () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.LocalUser;
 
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} zoneManagement />);
+        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} additionalSections />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
 
