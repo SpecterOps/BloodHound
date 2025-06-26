@@ -279,7 +279,6 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {/* {showSalesMessage() ? <SalesMessage /> : null} */}
                     {location.pathname.includes('save/tier') && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (

@@ -14,14 +14,7 @@ const SalesMessage: FC = () => {
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
 
-    const showSalesMessage = () => {
-        if (!tieringConfig?.value.multi_tier_analysis_enabled) {
-            return true;
-        }
-        return false;
-    }
-
-    return (showSalesMessage() ?
+    return (!tieringConfig?.value.multi_tier_analysis_enabled ?
         <Card className='p-3'>
             <CardHeader className='flex flex-row items-center mb-1'>
                 <AppIcon.DataAlert size={24} className='mr-2 text-[#ED8537]' />
