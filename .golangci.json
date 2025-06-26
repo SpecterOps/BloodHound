@@ -1,14 +1,20 @@
 {
   "linters": {
-    "disable": [],
+    "disable": [
+      "errcheck"
+    ],
     "enable": [
       "gosimple",
-      "stylecheck"
+      "stylecheck",
+      "sloglint"
     ]
   },
   "issues": {
     "max-issues-per-linter": 0,
     "max-same-issues": 0,
+    "exclude-dirs": [
+      "mocks"
+    ],
     "exclude-rules": [
       {
         "path": ".go",
@@ -33,9 +39,6 @@
     ]
   },
   "run": {
-    "skip-dirs": [
-      "mocks"
-    ],
     "build-tags": [
       "integration",
       "serial_integration"

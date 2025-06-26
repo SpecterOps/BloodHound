@@ -47,10 +47,10 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 )
 
 require (
