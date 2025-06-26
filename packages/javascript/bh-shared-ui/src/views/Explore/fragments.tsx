@@ -35,6 +35,7 @@ export const exclusionList = [
     AzureKindProperties.ServicePrincipalID,
     'highvalue',
     'reconcile',
+    ActiveDirectoryKindProperties.InheritanceHashes,
 ];
 
 const filterNegatedFields = (fields: EntityField[]): EntityField[] =>
