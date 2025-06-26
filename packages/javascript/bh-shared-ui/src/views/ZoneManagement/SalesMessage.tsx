@@ -25,7 +25,7 @@ const SalesMessage: FC = () => {
         <Card className='p-3'>
             <CardHeader className='flex flex-row items-center mb-1'>
                 <AppIcon.DataAlert size={24} className='mr-2 text-[#ED8537]' />
-                <CardTitle>Upgrade Priviledge Zones</CardTitle>
+                <CardTitle>Upgrade Privilege Zones</CardTitle>
             </CardHeader>
             <CardDescription className='p-3 pt-0'>
                 <p>
