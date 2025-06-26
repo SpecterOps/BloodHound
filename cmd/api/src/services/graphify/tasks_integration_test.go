@@ -5,7 +5,7 @@ package graphify_test
 import (
 	"context"
 	"os"
-	"os/exec"
+	"path"
 	"strings"
 	"testing"
 	"time"
@@ -32,17 +32,19 @@ type IntegrationTestSuite struct {
 	GraphifyService graphify.GraphifyService
 	GraphDB         graph.Database
 	BHDatabase      *database.BloodhoundDB
+	WorkDir         string
 }
 
 // setupIntegrationTestSuite initializes and returns a test suite containing
 // all necessary dependencies for integration tests, including a connected
 // graph database instance and a configured graph service.
-func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
+func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTestSuite {
 	t.Helper()
 
 	var (
 		ctx      = context.Background()
 		connConf = pgtestdb.Custom(t, getPostgresConfig(t), pgtestdb.NoopMigrator{})
+		workDir  = t.TempDir()
 	)
 
 	//#region Setup for dbs
@@ -75,11 +77,19 @@ func setupIntegrationTestSuite(t *testing.T) IntegrationTestSuite {
 
 	//#endregion
 
+	err = os.CopyFS(workDir, os.DirFS(fixturesPath))
+	require.NoError(t, err)
+
+	cfg := config.Configuration{
+		WorkDir: workDir,
+	}
+
 	return IntegrationTestSuite{
 		Context:         ctx,
-		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, config.Configuration{}, ingestSchema),
+		GraphifyService: graphify.NewGraphifyService(ctx, db, graphDB, cfg, ingestSchema),
 		GraphDB:         graphDB,
 		BHDatabase:      db,
+		WorkDir:         workDir,
 	}
 }
 
@@ -118,36 +128,26 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	}
 }
 
-func TestVersion6Ingest(t *testing.T) {
+func TestVersion6IngestJSON(t *testing.T) {
 	t.Parallel()
 	var (
 		ctx = context.Background()
 
-		files = []string{
-			"fixtures/tmp/computers.json",
-			"fixtures/tmp/containers.json",
-			"fixtures/tmp/domains.json",
-			"fixtures/tmp/gpos.json",
-			"fixtures/tmp/groups.json",
-			"fixtures/tmp/ous.json",
-			"fixtures/tmp/sessions.json",
-			"fixtures/tmp/users.json",
-		}
+		testSuite = setupIntegrationTestSuite(t, path.Join("fixtures", t.Name(), "v6ingest"))
 
-		testSuite = setupIntegrationTestSuite(t)
+		files = []string{
+			path.Join(testSuite.WorkDir, "computers.json"),
+			path.Join(testSuite.WorkDir, "containers.json"),
+			path.Join(testSuite.WorkDir, "domains.json"),
+			path.Join(testSuite.WorkDir, "gpos.json"),
+			path.Join(testSuite.WorkDir, "groups.json"),
+			path.Join(testSuite.WorkDir, "ous.json"),
+			path.Join(testSuite.WorkDir, "sessions.json"),
+			path.Join(testSuite.WorkDir, "users.json"),
+		}
 	)
 
 	defer teardownIntegrationTestSuite(t, &testSuite)
-
-	//#region hacks until refactor for embedfs
-	cmd := exec.Command("rm", "-r", "fixtures/tmp")
-	err := cmd.Run()
-	require.NoError(t, err, "%s", cmd.Err)
-
-	cmd = exec.Command("cp", "-r", "fixtures/v6ingest/", "fixtures/tmp/")
-	err = cmd.Run()
-	require.NoError(t, err, "%s", cmd.Err)
-	//#endregion
 
 	for _, file := range files {
 		total, failed, err := testSuite.GraphifyService.ProcessIngestFile(ctx, model.IngestTask{FileName: file, FileType: model.FileTypeJson}, time.Now())
@@ -156,10 +156,7 @@ func TestVersion6Ingest(t *testing.T) {
 		require.Equal(t, 1, total)
 	}
 
-	// TODO: use an embedded filesystem instead of bodging dirfs here
-	expected, err := generic.LoadGraphFromFile(os.DirFS("fixtures"), "v6expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v6expected.json")
 	require.NoError(t, err)
-	// TODO: decide if AssertDatabaseGraph should get a DB handle or transaction (should we worry about wrapping transactions
-	// at this level or let the function do it)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
