@@ -26,56 +26,56 @@ get:
     - Enterprise
     - Community
   parameters:
-  - $ref: './../parameters/query.skip.yaml'
-  - $ref: './../parameters/query.limit.yaml'
-  - name: sort_by
-    in: query
-    description: 
-      Sortable columns are `created_at`.
-    schema:
-      $ref: './../schemas/api.params.query.sort-by.yaml'
-  - name: created_at
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.time.yaml'
-  - name: actor
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
-  - name: email
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
-  - name: action
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
-  - name: target
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
-  - name: asset_group_tag_id
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.integer.yaml'
-  - name: environment_id
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
-  - name: note
-    in: query
-    required: false
-    schema:
-      $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - $ref: './../parameters/query.skip.yaml'
+    - $ref: './../parameters/query.limit.yaml'
+    - name: sort_by
+      in: query
+      description:
+        Sortable columns are `created_at`.
+      schema:
+        $ref: './../schemas/api.params.query.sort-by.yaml'
+    - name: created_at
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+    - name: actor
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: email
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: action
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: target
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: asset_group_tag_id
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - name: environment_id
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+    - name: note
+      in: query
+      required: false
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.string.yaml'
   responses:
-    200: 
+    200:
       description: OK
       content:
         application/json:
@@ -88,7 +88,7 @@ get:
     403:
       $ref: './../responses/forbidden.yaml'
     404:
-        $ref: './../responses/not-found.yaml'
+      $ref: './../responses/not-found.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:
