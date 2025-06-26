@@ -14,17 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
-import { ZoneManagementContext } from '../ZoneManagementContext';
+import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
+import { ZoneManagementContext } from '../ZoneManagementContext';
 import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import SummaryList from './SummaryList';
-import { getSavePath } from '../Details/Details';
-import { Button } from '@bloodhoundenterprise/doodleui';
 
 export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
     return (
