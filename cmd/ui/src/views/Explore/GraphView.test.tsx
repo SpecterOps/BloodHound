@@ -27,16 +27,18 @@ const server = setupServer(
 
 describe('GraphView', () => {
     it('renders a graph view', () => {
-        render(<GraphView />);
+        const { container } = render(<GraphView />);
+        expect(container).toBeEmptyDOMElement;
     });
 
     it('displays an error message', async () => {
-        server.use;
+        beforeEach(() => server.listen());
+        afterAll(() => server.close());
         render(<GraphView />);
         const errorAlert = await waitFor(() =>
             screen.findByText('An unexpected error has occurred. Please refresh the page and try again.')
         );
 
-        expect(errorAlert).toBeInTheDocument;
+        expect(errorAlert).toBeInTheDocument();
     });
 });
