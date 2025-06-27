@@ -19,8 +19,8 @@ import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import React, { FC } from 'react';
-import FeatureFlag from '../FeatureFlag';
 import { BaseSVGProps } from '../AppIcon/Icons/utils';
+import FeatureFlag from '../FeatureFlag';
 
 type MenuItems = { title: string; onClick: () => void; Icon?: FC<BaseSVGProps> }[];
 
@@ -67,7 +67,7 @@ const MenuWithDropdown: React.FC<{
                             menuItem.onClick();
                             closeMenu();
                         }}>
-                    {menuItem.Icon && <menuItem.Icon className='mr-2' />}
+                        {menuItem.Icon && <menuItem.Icon className='mr-2' />}
                         {menuItem.title}
                     </MenuItem>
                 ))}
