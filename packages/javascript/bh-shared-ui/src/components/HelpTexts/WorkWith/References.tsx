@@ -18,21 +18,11 @@ import { Box, Link } from '@mui/material';
 import { FC } from 'react';
 
 const References: FC = () => {
-    return /*(
+    return (
         
         <Box sx={{ overflowX: 'auto' }}>
-            <Link target='_blank' rel='noopener' href='https://adsecurity.org/?tag=ad-delegation'>
-                https://adsecurity.org/?tag=ad-delegation
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener'
-                href='https://www.itprotoday.com/management-mobility/view-or-remove-active-directory-delegated-permissions '>
-                https://www.itprotoday.com/management-mobility/view-or-remove-active-directory-delegated-permissions{' '}
-            </Link>
         </Box>
-    );*/
+    );
 };
 
 export default References;
