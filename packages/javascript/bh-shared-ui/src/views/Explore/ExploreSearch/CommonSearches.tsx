@@ -24,7 +24,8 @@ import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
 import { QueryLineItem, QueryListSection } from '../../../types';
 
-import { useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import fileDownload from 'js-file-download';
+import { getExportQueries, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
@@ -130,6 +131,14 @@ const InnerCommonSearches = ({
     const handleClearFilters = () => {
         handleFilter('', '', []);
     };
+    const handleExport = () => {
+        console.log('handleExport - commonSearches');
+        getExportQueries().then((res) => {
+            const filename =
+                res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] || `exported_queries.zip`;
+            fileDownload(res.data, filename);
+        });
+    };
 
     return (
         <div className='flex flex-col h-full'>
@@ -145,6 +154,7 @@ const InnerCommonSearches = ({
             <div className={cn({ hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
+                    exportHandler={handleExport}
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}

@@ -26,6 +26,10 @@ export const getSavedQueries = (options?: RequestOptions): Promise<SavedQuery[]>
     return apiClient.getUserSavedQueries(options).then((response) => response.data.data);
 };
 
+export const getExportQueries = (): Promise<any> => {
+    return apiClient.getExportCypherQueries().then((response: any) => response);
+};
+
 export const createSavedQuery = (savedQuery: CreateUserQueryRequest, options?: RequestOptions): Promise<SavedQuery> => {
     return apiClient.createUserQuery(savedQuery, options).then((response) => response.data.data);
 };

@@ -149,6 +149,14 @@ class BHEAPIClient {
         return this.baseClient.delete(`/api/v2/saved-queries/${queryId}`, options);
     };
 
+    getExportCypherQueries = (): Promise<any> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/export?scope=all`,
+            Object.assign({
+                responseType: 'blob',
+            })
+        );
+
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 

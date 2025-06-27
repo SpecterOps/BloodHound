@@ -8,6 +8,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useState } from 'react';
 interface QuerySearchProps {
     queryFilterHandler: (searchTerm: string, platform: string, categories: string[]) => void;
+    exportHandler: () => void;
     categories: string[];
     searchTerm: string;
     platform: string;
@@ -15,7 +16,7 @@ interface QuerySearchProps {
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { queryFilterHandler, categories, searchTerm, platform, categoryFilter } = props;
+    const { queryFilterHandler, exportHandler, categories, searchTerm, platform, categoryFilter } = props;
     const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const handleInput = (val: string) => {
@@ -71,7 +72,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         <Button variant='secondary' size='medium'>
                             Import
                         </Button>
-                        <Button className='ml-2' variant='secondary' size='medium'>
+                        <Button className='ml-2' variant='secondary' size='medium' onClick={exportHandler}>
                             Export
                         </Button>
                         <Button className='ml-2' variant='icon'>
