@@ -18,16 +18,20 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
-import React from 'react';
+import React, { FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
+import { BaseSVGProps } from '../AppIcon/Icons/utils';
 
-type MenuItems = { title: string; onClick: () => void }[];
+type MenuItems = { title: string; onClick: () => void; Icon?: FC<BaseSVGProps> }[];
 
-const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
-    menuTitle,
-    menuItems,
-    disabled,
-}) => {
+const MenuWithDropdown: React.FC<{
+    menuTitle: string;
+    menuItems: MenuItems;
+    CustomIcon?: FC<BaseSVGProps>;
+    customStyles?: string;
+    variant?: any;
+    disabled: boolean;
+}> = ({ menuTitle, menuItems, CustomIcon, customStyles, variant, disabled }) => {
     const buttonRef = React.useRef(null);
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -45,9 +49,12 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
                 aria-controls='create-menu'
                 aria-haspopup='true'
                 ref={buttonRef}
+                variant={variant}
+                className={customStyles}
                 onClick={openMenu}
                 disabled={disabled}>
                 <Box display='flex' alignItems={'center'}>
+                    {CustomIcon && <CustomIcon className='mr-2' />}
                     <Typography mr='8px'>{menuTitle}</Typography>
                     <FontAwesomeIcon icon={faCaretDown} />
                 </Box>
@@ -60,6 +67,7 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
                             menuItem.onClick();
                             closeMenu();
                         }}>
+                    {menuItem.Icon && <menuItem.Icon className='mr-2' />}
                         {menuItem.title}
                     </MenuItem>
                 ))}
@@ -68,13 +76,25 @@ const MenuWithDropdown: React.FC<{ menuTitle: string; menuItems: MenuItems; disa
     );
 };
 
-const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled: boolean }> = ({
-    menuTitle,
-    menuItems,
-    disabled,
-}) => {
+const MenuOrButton: React.FC<{
+    menuTitle: string;
+    menuItems: MenuItems;
+    CustomIcon?: FC<BaseSVGProps>;
+    customStyles?: string;
+    variant?: any;
+    disabled: boolean;
+}> = ({ menuTitle, menuItems, CustomIcon, customStyles, variant, disabled }) => {
     if (menuItems.length > 1) {
-        return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} disabled={disabled} />;
+        return (
+            <MenuWithDropdown
+                menuItems={menuItems}
+                menuTitle={menuTitle}
+                disabled={disabled}
+                CustomIcon={CustomIcon}
+                customStyles={customStyles}
+                variant={variant}
+            />
+        );
     } else if (menuItems.length === 1) {
         return (
             <Button
@@ -92,15 +112,43 @@ const MenuOrButton: React.FC<{ menuTitle: string; menuItems: MenuItems; disabled
 const CreateMenu: React.FC<{
     createMenuTitle: string;
     menuItems: MenuItems;
+    CustomIcon?: FC<BaseSVGProps>;
+    customStyles?: string;
+    variant?: any;
     disabled?: boolean;
     featureFlag?: string;
     featureFlagEnabledMenuItems?: MenuItems;
-}> = ({ createMenuTitle, menuItems, featureFlag, featureFlagEnabledMenuItems, disabled = false }) => {
-    const menuOrButton = <MenuOrButton menuTitle={createMenuTitle} menuItems={menuItems} disabled={disabled} />;
+}> = ({
+    createMenuTitle,
+    menuItems,
+    CustomIcon,
+    customStyles,
+    variant,
+    featureFlag,
+    featureFlagEnabledMenuItems,
+    disabled = false,
+}) => {
+    const menuOrButton = (
+        <MenuOrButton
+            menuTitle={createMenuTitle}
+            menuItems={menuItems}
+            CustomIcon={CustomIcon}
+            customStyles={customStyles}
+            variant={variant}
+            disabled={disabled}
+        />
+    );
 
     if (featureFlag !== undefined && !!featureFlagEnabledMenuItems) {
         const featureFlagEnabledMenuOrButton = (
-            <MenuOrButton menuTitle={createMenuTitle} menuItems={featureFlagEnabledMenuItems} disabled={disabled} />
+            <MenuOrButton
+                menuTitle={createMenuTitle}
+                menuItems={featureFlagEnabledMenuItems}
+                CustomIcon={CustomIcon}
+                customStyles={customStyles}
+                variant={variant}
+                disabled={disabled}
+            />
         );
 
         return <FeatureFlag flagKey={featureFlag} enabled={featureFlagEnabledMenuOrButton} disabled={menuOrButton} />;

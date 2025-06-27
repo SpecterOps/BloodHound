@@ -41,3 +41,6 @@ export * from './TierZero';
 export * from './User';
 export * from './UserCog';
 export * from './VerticalEllipsis';
+export * from './Zones';
+export * from './Shield';
+export * from './Upgrade';
