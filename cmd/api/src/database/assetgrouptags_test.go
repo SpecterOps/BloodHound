@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1011,7 +1012,8 @@ func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 	for i := range 5 {
 		tag, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, user, fmt.Sprintf("tag %d", i), "", null.Int32From(int32(i+2)), null.Bool{})
 		require.NoError(t, err)
-		if i%3 == 0 {
+		// Delete the fourth entry to ensure positions are changed
+		if i == 3 {
 			tagToDelete = tag
 		}
 	}
@@ -1023,8 +1025,8 @@ func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 	orderedTags, err := dbInst.GetOrderedAssetGroupTagTiers(testCtx)
 	require.NoError(t, err)
 	for i, tag := range orderedTags {
-		require.Equal(t, model.AssetGroupTagTypeTier, tag.Type)
-		require.True(t, tag.DeletedAt.IsZero())
-		require.EqualValues(t, i+1, tag.Position.ValueOrZero())
+		assert.Equal(t, model.AssetGroupTagTypeTier, tag.Type)
+		assert.True(t, tag.DeletedAt.IsZero())
+		assert.EqualValues(t, i+1, tag.Position.ValueOrZero())
 	}
 }
