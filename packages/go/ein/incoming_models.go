@@ -74,7 +74,8 @@ func (s ACE) GetCachedValue() WriteOwnerLimitedPrincipal {
 			Value: s.PrincipalSID,
 			Kind:  s.Kind(),
 		},
-		IsInherited: s.IsInherited,
+		IsInherited:     s.IsInherited,
+		InheritanceHash: s.InheritanceHash,
 	}
 }
 
