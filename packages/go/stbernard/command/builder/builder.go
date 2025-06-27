@@ -109,7 +109,7 @@ func (s *command) runJSBuild(cwd string, buildPath string) error {
 }
 
 func (s command) runGoBuild(cwd string, modPaths []string) error {
-	s.env.SetIfEmpty("CGO_ENABLED", "v0.0.0")
+	s.env.SetIfEmpty("CGO_ENABLED", "0")
 
 	if err := golang.BuildMainPackages(cwd, modPaths, s.env); err != nil {
 		return fmt.Errorf("building main packages: %w", err)

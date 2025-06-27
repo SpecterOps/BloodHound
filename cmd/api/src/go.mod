@@ -79,3 +79,5 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/bloodhoundad/azurehound/v2 => github.com/certmichelin/Azurehound/v2 v2.5.1-demo
