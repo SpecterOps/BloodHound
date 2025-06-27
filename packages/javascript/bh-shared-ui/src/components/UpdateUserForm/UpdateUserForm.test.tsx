@@ -379,10 +379,18 @@ describe('UpdateUserForm', () => {
         const user = userEvent.setup();
         const button = screen.getByRole('button', { name: 'Save' });
 
-        await user.type(screen.getByLabelText(/email/i), 'a'.repeat(309) + '@domain.com');
-        await user.type(screen.getByLabelText(/principal/i), 'a'.repeat(1001));
-        await user.type(screen.getByLabelText(/first/i), 'a'.repeat(1001));
-        await user.type(screen.getByLabelText(/last/i), 'a'.repeat(1001));
+        await user.click(screen.getByLabelText(/email/i));
+        await user.paste('a'.repeat(309) + '@domain.com');
+
+        await user.click(screen.getByLabelText(/principal/i));
+        await user.paste('a'.repeat(1001));
+
+        await user.click(screen.getByLabelText(/first/i));
+        await user.paste('a'.repeat(1001));
+
+        await user.click(screen.getByLabelText(/last/i));
+        await user.paste('a'.repeat(1001));
+        
         await user.click(button);
 
         expect(await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`))
