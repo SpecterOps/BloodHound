@@ -21,8 +21,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/packages/go/headers"
 )
 
 func NewJoinedURL(base string, extensions ...string) (string, error) {

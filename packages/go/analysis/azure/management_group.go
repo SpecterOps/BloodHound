@@ -19,7 +19,7 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"

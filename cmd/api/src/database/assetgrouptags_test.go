@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )

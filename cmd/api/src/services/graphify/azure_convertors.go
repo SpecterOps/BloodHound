@@ -27,8 +27,8 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azureModels "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 )
 
 const (

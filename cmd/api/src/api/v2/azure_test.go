@@ -25,14 +25,14 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 
-	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
+	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/utils/test"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"

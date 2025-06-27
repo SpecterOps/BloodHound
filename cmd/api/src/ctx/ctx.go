@@ -23,8 +23,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // Use our own type rather than a primitive to avoid collisions

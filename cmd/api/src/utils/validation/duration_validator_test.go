@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/utils"
-	"github.com/specterops/bloodhound/src/utils/validation"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 )
 
 func TestDurationValidator(t *testing.T) {

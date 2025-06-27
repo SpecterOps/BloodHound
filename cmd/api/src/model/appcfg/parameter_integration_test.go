@@ -23,9 +23,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/database/types"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/dawgs/drivers/neo4j"
 	"github.com/stretchr/testify/require"
 )

@@ -28,17 +28,17 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/headers"
+	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/auth"
-	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/queries"
-	"github.com/specterops/bloodhound/src/queries/mocks"
-	"github.com/specterops/bloodhound/src/utils/test"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 )
 
 func TestResources_CypherQuery(t *testing.T) {

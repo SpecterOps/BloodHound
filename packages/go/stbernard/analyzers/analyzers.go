@@ -66,7 +66,7 @@ func Run(cwd string, modPaths []string, jsPaths []string, env environment.Enviro
 			codeClimateReport[idx].Location.Path = path
 		}
 
-		if entry.Severity == "error" {
+		if entry.Severity == "error" || entry.Severity == "major" || entry.Severity == "critical" || entry.Severity == "blocker" {
 			severityError = true
 		}
 	}

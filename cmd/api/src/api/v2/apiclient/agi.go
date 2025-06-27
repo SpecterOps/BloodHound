@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"net/http"
 
-	v2 "github.com/specterops/bloodhound/src/api/v2"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func (s Client) GetAssetGroup(assetGroupID int32) (model.AssetGroup, error) {

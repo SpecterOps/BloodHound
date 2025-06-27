@@ -19,8 +19,8 @@ package apiclient
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 )
 
 func (s Client) HandleDatabaseWipe(request v2.DatabaseWipe) error {

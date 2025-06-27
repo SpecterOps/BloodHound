@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 

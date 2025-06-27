@@ -24,10 +24,10 @@ import (
 	"os/exec"
 	"path"
 
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/slicesext"
 )
 
 // Run golangci-lint for all module paths passed to it
@@ -39,7 +39,7 @@ func Run(cwd string, modPaths []string, env environment.Environment) ([]codeclim
 		outb   bytes.Buffer
 
 		command        = "golangci-lint"
-		args           = []string{"run", "--out-format", "code-climate", "--config", ".golangci.json", "--"}
+		args           = []string{"run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 		redirectStdout = func(c *exec.Cmd) { c.Stdout = &outb }
 	)
 

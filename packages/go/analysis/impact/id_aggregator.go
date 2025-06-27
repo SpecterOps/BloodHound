@@ -21,7 +21,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 )

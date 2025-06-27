@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 const (

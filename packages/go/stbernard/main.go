@@ -24,8 +24,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/bhlog/level"
+	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/bhlog/level"
 	"github.com/specterops/bloodhound/packages/go/stbernard/command"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )

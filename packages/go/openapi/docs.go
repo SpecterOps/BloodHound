@@ -20,8 +20,8 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 //go:embed doc/openapi.json

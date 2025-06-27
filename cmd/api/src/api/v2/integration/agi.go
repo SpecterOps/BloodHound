@@ -17,8 +17,8 @@
 package integration
 
 import (
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/model"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/require"
 )
 

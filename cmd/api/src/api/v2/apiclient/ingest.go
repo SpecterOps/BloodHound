@@ -24,10 +24,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 )
 
 func (s Client) SendIngestObject(payload map[string]any, userAgent string) error {

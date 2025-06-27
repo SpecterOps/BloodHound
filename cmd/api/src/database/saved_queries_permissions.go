@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // SavedQueriesPermissionsData methods representing the database interactions pertaining to the saved_queries_permissions model
