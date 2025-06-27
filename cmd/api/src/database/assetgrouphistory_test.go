@@ -41,13 +41,13 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
-	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
+	record, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
 	require.NoError(t, err)
 	require.Len(t, record, 1)
-	require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, record[0].Action)
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, record[0].Action)
 	require.Equal(t, testActor.ID.String(), record[0].Actor)
 	require.Equal(t, testActor.EmailAddress, record[0].Email)
 	require.Equal(t, testTarget, record[0].Target)
@@ -55,4 +55,48 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 	require.Equal(t, null.String{}, record[0].EnvironmentId)
 	require.Equal(t, null.String{}, record[0].Note)
 	require.False(t, record[0].CreatedAt.IsZero())
+
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	require.NoError(t, err)
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionCreateTag, 2, null.String{}, null.String{})
+	require.NoError(t, err)
+	err = dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteTag, 2, null.String{}, null.String{})
+	require.NoError(t, err)
+
+	records, _, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+	require.NoError(t, err)
+	require.Len(t, records, 4)
+
+	// verify ascending sort
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, records[0].Action)
+	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[3].Action)
+
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.DescendingSortDirection}}, 0, 0)
+	require.NoError(t, err)
+
+	// verify descending sort
+	require.Equal(t, model.AssetGroupHistoryActionCreateSelector, records[3].Action)
+	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[0].Action)
+
+	records, totalRows, err := dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 2)
+	require.NoError(t, err)
+	require.Equal(t, 4, totalRows)
+
+	// verify limit
+	require.Len(t, records, 2)
+
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 2, 0)
+	require.NoError(t, err)
+
+	// verify skip
+	require.Equal(t, model.AssetGroupHistoryActionCreateTag, records[0].Action)
+	require.Equal(t, model.AssetGroupHistoryActionDeleteTag, records[1].Action)
+
+	records, _, err = dbInst.GetAssetGroupHistoryRecords(testCtx, model.SQLFilter{SQLString: "action = ?", Params: []any{model.AssetGroupHistoryActionCreateTag}}, model.Sort{{Column: "created_at", Direction: model.AscendingSortDirection}}, 0, 0)
+	require.NoError(t, err)
+
+	// verify SQL filter
+	require.Len(t, records, 1)
+	require.Equal(t, model.AssetGroupHistoryActionCreateTag, records[0].Action)
+
 }
