@@ -2891,32 +2891,26 @@
                     }
                   }
                 },
-                "example": {
-                  "data": [
-                    {
-                      "id": 1,
-                      "kindName": "KindA",
-                      "config": {
-                        "icon": {
-                          "type": "font-awesome",
-                          "name": "house",
-                          "color": "#FFFFFF"
-                        }
-                      }
-                    },
-                    {
-                      "id": 2,
-                      "kindName": "KindB",
-                      "config": {
-                        "icon": {
-                          "type": "font-awesome",
-                          "name": "coffee",
-                          "color": "#000000"
-                        }
-                      }
+                "example": [
+                  {
+                    "id": 1,
+                    "kindName": "KindA",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
                     }
-                  ]
-                }
+                  },
+                  {
+                    "id": 2,
+                    "kindName": "KindB",
+                    "config": {
+                      "type": "font-awesome",
+                      "name": "coffee",
+                      "color": "#000000"
+                    }
+                  }
+                ]
               }
             }
           },
@@ -6542,6 +6536,86 @@
         "responses": {
           "200": {
             "description": "Returns graph data that contains a collection of nodes that are valid relay targets related to the composition of the edge queried.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.unified-graph.graph"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graphs/ace-inheritance": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetAceInheritancePath",
+        "summary": "Get ACE inheritance path",
+        "description": "Returns a graph representing the path that an ACE is inherited through for a given edge.",
+        "tags": [
+          "Graph",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "name": "source_node",
+            "description": "The ID of the starting node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "target_node",
+            "description": "The ID of the ending node.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "edge_type",
+            "description": "The type of edge the ACE inheritance path is being fetched for.",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns graph data that contains a collection of nodes and edges that make up the ACE inheritance path.",
             "content": {
               "application/json": {
                 "schema": {

@@ -10072,11 +10072,6 @@ type ACEInheritedFrom struct {
 	Domain1 *graph.Node
 	Domain2 *graph.Node
 
-	Computer1 *graph.Node
-	Computer2 *graph.Node
-	Computer3 *graph.Node
-	Computer4 *graph.Node
-
 	OU1 *graph.Node
 	OU2 *graph.Node
 	OU3 *graph.Node
@@ -10084,7 +10079,15 @@ type ACEInheritedFrom struct {
 	OU5 *graph.Node
 	OU6 *graph.Node
 
+	Computer1 *graph.Node
+	Computer2 *graph.Node
+	Computer3 *graph.Node
+	Computer4 *graph.Node
+
 	Group1 *graph.Node
+	Group2 *graph.Node
+
+	User1 *graph.Node
 }
 
 func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
@@ -10101,22 +10104,23 @@ func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
 	s.OU5 = graphTestContext.NewActiveDirectoryOU("OU5", domain2SID, false)
 	s.OU6 = graphTestContext.NewActiveDirectoryOU("OU6", domain2SID, false)
 
-	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1SID)
-
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domain1SID)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domain1SID)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domain1SID)
 	s.Computer4 = graphTestContext.NewActiveDirectoryComputer("Computer4", domain2SID)
 
+	s.Group1 = graphTestContext.NewActiveDirectoryGroup("Group1", domain1SID)
+	s.Group2 = graphTestContext.NewActiveDirectoryGroup("Group2", domain2SID)
+
+	s.User1 = graphTestContext.NewActiveDirectoryUser("User1", domain1SID)
+
 	s.Domain1.Properties.Set(ad.InheritanceHashes.String(), []string{"my_hash", "some_other_hash"})
 	s.OU4.Properties.Set(ad.InheritanceHashes.String(), []string{"my_hash_2", "some_other_hash_2"})
 
-	s.OU1.Properties.Set(ad.IsACLProtected.String(), false)
 	s.OU3.Properties.Set(ad.IsACLProtected.String(), true)
 
 	graphTestContext.UpdateNode(s.Domain1)
 	graphTestContext.UpdateNode(s.OU4)
-	graphTestContext.UpdateNode(s.OU1)
 	graphTestContext.UpdateNode(s.OU3)
 
 	graphTestContext.NewRelationship(s.Domain1, s.OU1, ad.Contains)
@@ -10124,27 +10128,29 @@ func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.NewRelationship(s.Domain1, s.Group1, ad.Contains)
 	graphTestContext.NewRelationship(s.OU1, s.OU2, ad.Contains)
 	graphTestContext.NewRelationship(s.OU3, s.OU2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU2, s.User1, ad.Contains)
 	graphTestContext.NewRelationship(s.Domain2, s.OU4, ad.Contains)
 	graphTestContext.NewRelationship(s.Domain2, s.OU5, ad.Contains)
 	graphTestContext.NewRelationship(s.OU4, s.OU6, ad.Contains)
 	graphTestContext.NewRelationship(s.OU5, s.OU6, ad.Contains)
+	graphTestContext.NewRelationship(s.OU6, s.Group2, ad.Contains)
 
-	graphTestContext.NewRelationship(s.Group1, s.OU2, ad.GetChanges)
+	graphTestContext.NewRelationship(s.Group1, s.OU2, ad.GenericWrite)
 
-	graphTestContext.NewRelationship(s.OU2, s.Computer1, ad.Contains, graph.AsProperties(graph.PropertyMap{
+	graphTestContext.NewRelationship(s.User1, s.Computer1, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
 		ad.IsACL:           true,
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash",
 	}))
-	graphTestContext.NewRelationship(s.OU2, s.Computer2, ad.Contains, graph.AsProperties(graph.PropertyMap{
+	graphTestContext.NewRelationship(s.User1, s.Computer2, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
 		ad.IsACL:           false,
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash",
 	}))
-	graphTestContext.NewRelationship(s.OU2, s.Computer3, ad.Contains, graph.AsProperties(graph.PropertyMap{
+	graphTestContext.NewRelationship(s.User1, s.Computer3, ad.GenericAll, graph.AsProperties(graph.PropertyMap{
 		ad.IsACL: true,
 	}))
-	graphTestContext.NewRelationship(s.OU6, s.Computer4, ad.Contains, graph.AsProperties(graph.PropertyMap{
+	graphTestContext.NewRelationship(s.Group2, s.Computer4, ad.ReadLAPSPassword, graph.AsProperties(graph.PropertyMap{
 		ad.IsACL:           true,
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash_2",
