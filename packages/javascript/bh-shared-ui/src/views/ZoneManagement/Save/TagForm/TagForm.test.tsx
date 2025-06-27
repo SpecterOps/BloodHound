@@ -90,6 +90,9 @@ const handlers = [
             })
         );
     }),
+    rest.get('/api/v2/config', async (_, res, ctx) => {
+        return res(ctx.json(configResponse));
+    }),
 ];
 
 const configResponse = {
@@ -183,12 +186,6 @@ describe('Tag Form', () => {
 
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
 
-        server.use(
-            rest.get('/api/v2/config', async (_, res, ctx) => {
-                return res(ctx.json(configResponse));
-            })
-        );
-
         render(
             <Routes>
                 <Route path={createNewLabelPath} element={<TagForm />} />
@@ -247,12 +244,6 @@ describe('Tag Form', () => {
         // and so this tier's data is filled into the form for the user to edit
 
         vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
-
-        server.use(
-            rest.get('/api/v2/config', async (_, res, ctx) => {
-                return res(ctx.json(configResponse));
-            })
-        );
 
         render(
             <Routes>
