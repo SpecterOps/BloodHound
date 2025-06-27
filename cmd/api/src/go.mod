@@ -21,7 +21,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/bloodhoundad/azurehound/v2 v2.4.1
+	github.com/bloodhoundad/azurehound/v2 v2.6.0
 	github.com/channelmeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/crewjam/saml v0.4.14
@@ -35,13 +35,13 @@ require (
 	github.com/gorilla/schema v1.4.1
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/jedib0t/go-pretty/v6 v6.4.6
-	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.1
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.4.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
-	github.com/specterops/dawgs v0.1.3
+	github.com/specterops/dawgs v0.1.5
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
@@ -77,7 +77,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/kamstrup/intmap v0.5.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -88,11 +87,11 @@ require (
 	github.com/prometheus/procfs v0.11.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

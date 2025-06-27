@@ -64,14 +64,8 @@ func CreateApproverEdge(
 				),
 				// Step 2: primaryApprovers (user or group) is not null - at least one approver type configured
 				query.Or(
-					query.And(
-						query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentUserApprovers.String())),
-						query.Not(query.Equals(query.NodeProperty(azure.EndUserAssignmentUserApprovers.String()), []string{})),
-					),
-					query.And(
-						query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String())),
-						query.Not(query.Equals(query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String()), []string{})),
-					),
+					query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentUserApprovers.String())),
+					query.IsNotNull(query.NodeProperty(azure.EndUserAssignmentGroupApprovers.String())),
 				),
 			)
 		}))

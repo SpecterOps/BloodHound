@@ -18,6 +18,7 @@ package azure
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/specterops/bloodhound/analysis"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
@@ -29,6 +30,9 @@ import (
 
 func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessingStats, error) {
 	aggregateStats := analysis.NewAtomicPostProcessingStats()
+	if err := azureAnalysis.FixManagementGroupNames(ctx, db); err != nil {
+		slog.WarnContext(ctx, "Error fixing management group names", slog.String("err", err.Error()))
+	}
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azureAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if userRoleStats, err := azureAnalysis.UserRoleAssignments(ctx, db); err != nil {
@@ -39,12 +43,15 @@ func Post(ctx context.Context, db graph.Database) (*analysis.AtomicPostProcessin
 		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
+	} else if pimRolesStats, err := azureAnalysis.CreateAZRoleApproverEdge(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(userRoleStats)
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
 		aggregateStats.Merge(hybridStats)
+		aggregateStats.Merge(pimRolesStats)
 		return &aggregateStats, nil
 	}
 }

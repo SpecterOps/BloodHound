@@ -25,9 +25,9 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/specterops/bloodhound/bhlog v0.0.0-00010101000000-000000000000
 	github.com/specterops/bloodhound/slicesext v0.0.0-00010101000000-000000000000
-	github.com/specterops/dawgs v0.1.3
+	github.com/specterops/dawgs v0.1.5
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/mod v0.24.0
+	golang.org/x/mod v0.25.0
 )
 
 require (
@@ -44,20 +44,19 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/kamstrup/intmap v0.5.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.9.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.1 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/tools v0.32.0
+	golang.org/x/tools v0.34.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
