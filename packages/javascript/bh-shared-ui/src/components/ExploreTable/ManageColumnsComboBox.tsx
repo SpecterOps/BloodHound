@@ -18,14 +18,15 @@ type ListItemProps = {
 
 const ListItem = ({ isSelected, item, onClick, itemProps }: ListItemProps) => (
     <li
-        className='p-2 hover:bg-gray-100 w-full'
+        className={`p-2 w-full hover:bg-gray-100 ${isSelected ? 'cursor-default' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : ''}`}
         {...itemProps}
         disabled={item?.isPinned}
         onClick={(e) => {
             e.stopPropagation();
             onClick(item);
         }}>
-        <button className='w-full text-left flex justify-between items-center cursor-default'>
+        <button
+            className={`w-full text-left flex justify-between items-center ${isSelected ? 'cursor-default' : 'cursor-pointer'}`}>
             <div>
                 <Checkbox className={`mr-2 ${isSelected ? `&:*['bg-blue-800']` : ''}`} checked={isSelected} />
                 <span>{item.value}</span>
@@ -61,24 +62,22 @@ export const ManageColumnsComboBox = ({
     useOnClickOutside(ref, () => setIsOpen(false));
 
     const pinnedItems = useMemo(() => allItems.filter((item) => item.isPinned), [allItems]);
-    const initialVisibleColumns = useMemo(
-        () => allItems.filter((item) => visibleColumns[item.id]),
-        [allItems, visibleColumns]
-    );
-
-    const [selectedItems, setSelectedItems] = React.useState(initialVisibleColumns);
+    const [selectedItems, setSelectedItems] = React.useState([]);
     const unselectedItems = React.useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
 
         return allItems.filter(
-            (item) => !selectedItems.includes(item) && item.value.toLowerCase().includes(lowerCasedInputValue)
+            (item) =>
+                !item.isPinned &&
+                !selectedItems.includes(item) &&
+                item.value.toLowerCase().includes(lowerCasedInputValue)
         );
     }, [allItems, selectedItems, inputValue]);
 
     const shouldSelectAll = useMemo(() => selectedItems.length !== allItems.length, [selectedItems, allItems]);
 
     useEffect(() => {
-        const selectedItems = allItems.filter((item) => visibleColumns[item.id]);
+        const selectedItems = allItems.filter((item) => visibleColumns[item.id] && !item.isPinned);
         setSelectedItems(selectedItems);
     }, [visibleColumns, allItems]);
 
@@ -86,7 +85,6 @@ export const ManageColumnsComboBox = ({
         initialSelectedItems: allItems.filter((item) => visibleColumns[item.id]),
         selectedItems,
         onStateChange({ selectedItems: newSelectedItems, type }) {
-            console.log({ newSelectedItems });
             onChange(newSelectedItems || []);
 
             switch (type) {
@@ -130,7 +128,6 @@ export const ManageColumnsComboBox = ({
     });
 
     const handleResetDefault = () => {
-        console.log({ pinnedItems });
         setSelectedItems([...pinnedItems]);
         onChange([...pinnedItems]);
     };
@@ -138,7 +135,6 @@ export const ManageColumnsComboBox = ({
     const handleSelectAll = () => {
         if (shouldSelectAll) {
             handleResetDefault();
-            console.log({ allItems });
             setSelectedItems([...allItems]);
             onChange([...allItems]);
         } else {

@@ -3,7 +3,7 @@ import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
 import React, { ForwardedRef, useMemo } from 'react';
-import { cn } from '../../utils';
+import { cn, formatPotentiallUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
@@ -39,16 +39,11 @@ const TableControlsInner = <TData, TValue>(
     }: TableControlsProps<TData, TValue>,
     ref: ForwardedRef<HTMLDivElement>
 ) => {
-    const camelCaseToWords = (s: string) => {
-        const result = s.replace(/([A-Z])/g, ' $1');
-        return result.charAt(0).toUpperCase() + result?.slice(1);
-    };
-
     const parsedColumns = useMemo(
         () =>
             columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
-                value: camelCaseToWords(columnDef?.id || ''),
+                value: formatPotentiallUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
             })),
         []
