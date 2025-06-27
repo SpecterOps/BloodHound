@@ -204,6 +204,8 @@ jobs:
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
+          ghcr_account: ""
+          ghcr_token: ""
           build_args: |
             BUILDTIME=${{ fromJSON(steps.container-image-metadata.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ steps.container-image-metadata.outputs.version }}
