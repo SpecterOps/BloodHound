@@ -42,7 +42,6 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
-import SalesMessage from '../../SalesMessage';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
@@ -107,7 +106,7 @@ export const TagForm: FC = () => {
     const [position, setPosition] = useState<number | null>(null);
     const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
 
-    const { TierList } = useContext(ZoneManagementContext);
+    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
@@ -284,14 +283,13 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-                                {tieringConfig?.value.multi_tier_analysis_enabled && tierId ? (
+                                {tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID ? (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
                                                 checked={toggleEnabled}
-                                                disabled={tierId === TIER_ZERO_ID}
                                                 {...register('analysis_enabled')}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
@@ -311,7 +309,7 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {location.pathname.includes('save/tier') && <SalesMessage />}
+                    {location.pathname.includes('save/tier') && SalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
