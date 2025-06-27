@@ -78,9 +78,9 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityInfoDataTableList', () => {
-    it('Displays selector information if zone management is true', async () => {
+    it('Displays selector information if additionalSections is true', async () => {
         const testId = '1';
-        const nodeType = ActiveDirectoryNodeKind.LocalUser;
+        const nodeType = ActiveDirectoryNodeKind.User;
 
         render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} additionalSections />);
 
@@ -90,7 +90,7 @@ describe('EntityInfoDataTableList', () => {
         expect(selectorsInfoSectionTitle).toBeInTheDocument();
     });
 
-    it('Hides selector information if zone management is false', async () => {
+    it('Hides selector information if additionalSections is false', async () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
 
