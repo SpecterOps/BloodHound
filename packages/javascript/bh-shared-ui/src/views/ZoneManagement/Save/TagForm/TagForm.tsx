@@ -97,6 +97,7 @@ export const TagForm: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
     const location = useLocation();
+    const isEditPage = location.pathname.includes('save/tier');
 
     const tagsQuery = useAssetGroupTags();
     const tagQuery = useAssetGroupTagInfo(tagId);
@@ -110,6 +111,7 @@ export const TagForm: FC = () => {
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
+    const showAnalysisToggle = tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
     const {
         register,
@@ -283,7 +285,7 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-                                {tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID ? (
+                                {isEditPage && showAnalysisToggle ? (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
@@ -291,7 +293,7 @@ export const TagForm: FC = () => {
                                                 id='analysis'
                                                 checked={toggleEnabled}
                                                 {...register('analysis_enabled')}
-                                                data-testid='tag-form_switch-enable-analysis'
+                                                data-testid='analysis_enabled'
                                                 onCheckedChange={(checked: boolean) => {
                                                     setToggleEnabled(checked);
                                                     setValue('analysis_enabled', checked);
@@ -309,7 +311,7 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {location.pathname.includes('save/tier') && SalesMessage && <SalesMessage />}
+                    {isEditPage && SalesMessage && <SalesMessage />}
                     <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button

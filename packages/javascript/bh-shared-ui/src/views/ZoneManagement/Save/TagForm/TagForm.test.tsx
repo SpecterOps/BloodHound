@@ -138,11 +138,11 @@ vi.mock('../../../../providers', async () => {
 
 describe('Tag Form', () => {
     const user = userEvent.setup();
-    const createNewTierPath = '/tier-management/save/tier/';
-    const createNewLabelPath = '/tier-management/save/label/';
-    const editExistingTierPath = '/tier-management/save/tier/1';
-    const editExistingLabelPath = '/tier-management/save/label/2';
-    const deletionTestsPath = '/tier-management/save/label/3';
+    const createNewTierPath = '/zone-management/save/tier/';
+    const createNewLabelPath = '/zone-management/save/label/';
+    const editExistingTierPath = '/zone-management/save/tier/1';
+    const editExistingLabelPath = '/zone-management/save/label/2';
+    const deletionTestsPath = '/zone-management/save/label/3';
 
     it('renders the form for creating a new tier', async () => {
         // Because there is no id path parameter in the url, the form is a create form
@@ -211,7 +211,7 @@ describe('Tag Form', () => {
     });
 
     it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
-        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
 
         const configResponse = {
             data: [
@@ -237,7 +237,23 @@ describe('Tag Form', () => {
 
         expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
-    })
+    });
+
+    it('renders the analysis toggle when multi tier analysis enabled is true and when editing an existing tier', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
+
+        render(
+            <Routes>
+                <Route path={editExistingTierPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingTierPath }
+        );
+
+        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).toBeInTheDocument();
+    });
+
+
 
     it('renders the form for editing an existing tier', async () => {
         // This url has the tier id of 1 in the path
@@ -270,7 +286,6 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        expect(screen.getByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
     it('renders the form for editing an existing label', async () => {
@@ -306,7 +321,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId('analysis_enabled')).not.toBeInTheDocument();
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
@@ -389,7 +404,6 @@ describe('Tag Form', () => {
             expect(mockNavigate).toBeCalled();
             expect(mockAddNotification).toBeCalled();
         });
-        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
     it('handles creating a new label', async () => {
