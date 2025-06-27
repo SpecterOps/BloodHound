@@ -21,6 +21,12 @@ const References: FC = () => {
     return (
         
         <Box sx={{ overflowX: 'auto' }}>
+            <Link
+                target='_blank'
+                rel='noopener'
+                href='https://learn.microsoft.com/en-us/graph/api/user-list-people?view=graph-rest-1.0&tabs=http'>
+                Microsoft Graph API: List People
+            </Link>
         </Box>
     );
 };
