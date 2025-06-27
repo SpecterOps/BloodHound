@@ -12,9 +12,11 @@ coverage
 
 # Dependency directory
 node_modules
+**/node_modules
 
 # kubernetes manifests
 ./k8s
 
-# misc. tools
+# misc.
 ./tools
+./cmd/api/src/api/static/assets/*

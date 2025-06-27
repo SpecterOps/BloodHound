@@ -21,17 +21,18 @@ package analysis_test
 
 import (
 	"context"
+	"github.com/specterops/bloodhound/graphschema/common"
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
 	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,12 +69,12 @@ func TestDeleteTransitEdges(t *testing.T) {
 	)
 
 	// In order to validate that DeleteTransitEdges and the updated PostProcessedRelationships for both AD and Azure are correct, we need to simulate
-	// the completion of post-processing in: lib/go/analysis/azure/post.go
+	// the completion of post-processing in: bhce/cmd/api/src/analysis/azure/post.go
 	//
 	// The specific function that is responsible for creating the edges below can be found in bhce/packages/go/analysis/hybrid/hybrid.go - PostHybrid(...)
 	//
 	// Here, we are choosing to create these edges such that the data describes what we would expect to see after a successful execution of the logic
-	// in lib/go/analysis/azure/post.go.
+	// in bhce/cmd/api/src/analysis/azure/post.go.
 	testCtx.NewRelationship(adUser, azureUser, ad.SyncedToEntraUser)
 	testCtx.NewRelationship(azureUser, adUser, azure.SyncedToADUser)
 
@@ -112,4 +113,48 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 	// The DB must not return any errors
 	require.Nil(t, err)
+}
+
+func TestFixManagementGroupNames(t *testing.T) {
+	var (
+		// This creates a new live integration test context with the graph database
+		// This call will load whatever BHE configuration the environment variable `INTEGRATION_CONFIG_PATH` points to.
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	// Management Group created with barebone details
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.DisplayName.String(): "MANAGEMENT GROUP",
+		common.ObjectID.String():    "1234",
+		azure.TenantID.String():     "ABC123",
+	}), azure.Entity, azure.ManagementGroup)
+
+	// Tenant
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.Name.String():     "SPECTERDEV",
+		common.ObjectID.String(): "ABC123",
+	}), azure.Entity, azure.Tenant)
+
+	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database)
+	require.NoError(t, err)
+
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.Kind(query.Node(), azure.ManagementGroup)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			count := 0
+			for node := range cursor.Chan() {
+				if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+					return err
+				} else {
+					count++
+					require.Equal(t, "MANAGEMENT GROUP@SPECTERDEV", name)
+				}
+			}
+
+			require.Equal(t, 1, count)
+
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
 }
