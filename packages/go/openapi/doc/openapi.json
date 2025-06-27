@@ -2891,26 +2891,32 @@
                     }
                   }
                 },
-                "example": [
-                  {
-                    "id": 1,
-                    "kindName": "KindA",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "house",
-                      "color": "#FFFFFF"
+                "example": {
+                  "data": [
+                    {
+                      "id": 1,
+                      "kindName": "KindA",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "house",
+                          "color": "#FFFFFF"
+                        }
+                      }
+                    },
+                    {
+                      "id": 2,
+                      "kindName": "KindB",
+                      "config": {
+                        "icon": {
+                          "type": "font-awesome",
+                          "name": "coffee",
+                          "color": "#000000"
+                        }
+                      }
                     }
-                  },
-                  {
-                    "id": 2,
-                    "kindName": "KindB",
-                    "config": {
-                      "type": "font-awesome",
-                      "name": "coffee",
-                      "color": "#000000"
-                    }
-                  }
-                ]
+                  ]
+                }
               }
             }
           },
@@ -3055,9 +3061,11 @@
                   "id": 1,
                   "kindName": "KindA",
                   "config": {
-                    "type": "font-awesome",
-                    "name": "house",
-                    "color": "#FFFFFF"
+                    "icon": {
+                      "type": "font-awesome",
+                      "name": "house",
+                      "color": "#FFFFFF"
+                    }
                   }
                 }
               }
@@ -4557,8 +4565,9 @@
       ],
       "get": {
         "operationId": "ListAssetGroupMembers",
+        "deprecated": true,
         "summary": "List all asset isolation group members",
-        "description": "List all members of an asset isolation group.",
+        "description": "**Deprecated**: This endpoint will no longer be supported in a future release. Please use `GET /api/v2/asset-group-tags/{asset_group_tag_id}/members` or `GET /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members` instead.\n",
         "tags": [
           "Asset Isolation",
           "Community",
