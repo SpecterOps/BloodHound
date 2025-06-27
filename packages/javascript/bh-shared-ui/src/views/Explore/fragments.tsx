@@ -36,6 +36,7 @@ export const exclusionList = [
     'highvalue',
     'reconcile',
     ActiveDirectoryKindProperties.InheritanceHashes,
+    ActiveDirectoryKindProperties.InheritanceHash,
 ];
 
 const filterNegatedFields = (fields: EntityField[]): EntityField[] =>

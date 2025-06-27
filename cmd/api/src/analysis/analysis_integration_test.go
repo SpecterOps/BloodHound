@@ -203,11 +203,11 @@ func TestFetchACEInheritancePath(t *testing.T) {
 		harness.ACEInheritedFrom.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
-		// First positive case
-		startId := harness.ACEInheritedFrom.OU2.ID
+		// Positive case 1
+		startId := harness.ACEInheritedFrom.User1.ID
 		endId := harness.ACEInheritedFrom.Computer1.ID
 
-		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
+		edge, err := analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
 		test.RequireNilErr(t, err)
 
 		pathSet, err := adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
@@ -218,14 +218,15 @@ func TestFetchACEInheritancePath(t *testing.T) {
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Domain1))
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU1))
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU2))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.User1))
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Computer1))
-		assert.Len(t, nodesInPath, 4)
+		assert.Len(t, nodesInPath, 5)
 
-		// Second positive case
-		startId = harness.ACEInheritedFrom.OU6.ID
+		// Positive case 2
+		startId = harness.ACEInheritedFrom.Group2.ID
 		endId = harness.ACEInheritedFrom.Computer4.ID
 
-		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.Contains)
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.ReadLAPSPassword)
 		test.RequireNilErr(t, err)
 
 		pathSet, err = adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
@@ -235,7 +236,44 @@ func TestFetchACEInheritancePath(t *testing.T) {
 
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU4))
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.OU6))
+		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Group2))
 		assert.True(t, nodesInPath.Contains(harness.ACEInheritedFrom.Computer4))
-		assert.Len(t, nodesInPath, 3)
+		assert.Len(t, nodesInPath, 4)
+
+		// Negative cases should all return empty result sets
+		startId = harness.ACEInheritedFrom.User1.ID
+		endId = harness.ACEInheritedFrom.Computer2.ID
+
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
+		test.RequireNilErr(t, err)
+
+		pathSet, err = adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		assert.Len(t, pathSet.AllNodes(), 0)
+
+		// Negative case 2
+		startId = harness.ACEInheritedFrom.User1.ID
+		endId = harness.ACEInheritedFrom.Computer3.ID
+
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericAll)
+		test.RequireNilErr(t, err)
+
+		pathSet, err = adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		assert.Len(t, pathSet.AllNodes(), 0)
+
+		// Negative case 3
+		startId = harness.ACEInheritedFrom.Group1.ID
+		endId = harness.ACEInheritedFrom.OU2.ID
+
+		edge, err = analysis.FetchEdgeByStartAndEnd(testContext.Context(), db, startId, endId, ad.GenericWrite)
+		test.RequireNilErr(t, err)
+
+		pathSet, err = adAnalysis.FetchACEInheritancePath(testContext.Context(), db, edge)
+		test.RequireNilErr(t, err)
+
+		assert.Len(t, pathSet.AllNodes(), 0)
 	})
 }
