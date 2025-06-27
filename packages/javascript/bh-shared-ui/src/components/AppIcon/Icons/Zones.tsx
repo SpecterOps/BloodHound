@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useId } from 'react';
 import { BaseSVG, BaseSVGProps } from './utils';
 
 export const Zones: React.FC<BaseSVGProps> = (props) => {
+    const uid = useId();
     return (
         <BaseSVG name='zones' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14' fill='none' {...props}>
-            <mask id='path-1-inside-1_2573_4201' fill='white'>
+            <mask id={`${uid}-a`} fill='white'>
                 <rect y='7.58826' width='9.41177' height='5.88235' rx='1' />
             </mask>
             <rect
@@ -30,9 +31,9 @@ export const Zones: React.FC<BaseSVGProps> = (props) => {
                 rx='1'
                 stroke='currentColor'
                 strokeWidth='3'
-                mask='url(#path-1-inside-1_2573_4201)'
+                mask={`url(#${uid}-a)`}
             />
-            <mask id='path-2-inside-2_2573_4201' fill='white'>
+            <mask id={`${uid}-b`} fill='white'>
                 <rect x='10.5879' y='7.58826' width='9.41177' height='5.88235' rx='1' />
             </mask>
             <rect
@@ -43,9 +44,9 @@ export const Zones: React.FC<BaseSVGProps> = (props) => {
                 rx='1'
                 stroke='currentColor'
                 strokeWidth='3'
-                mask='url(#path-2-inside-2_2573_4201)'
+                mask={`url(#${uid}-b)`}
             />
-            <mask id='path-3-inside-3_2573_4201' fill='white'>
+            <mask id={`${uid}-c`} fill='white'>
                 <rect x='4.70605' y='0.529419' width='10.5882' height='5.88235' rx='1' />
             </mask>
             <rect
@@ -56,7 +57,7 @@ export const Zones: React.FC<BaseSVGProps> = (props) => {
                 rx='1'
                 stroke='currentColor'
                 strokeWidth='3'
-                mask='url(#path-3-inside-3_2573_4201)'
+                mask={`url(#${uid}-c)`}
             />
         </BaseSVG>
     );
