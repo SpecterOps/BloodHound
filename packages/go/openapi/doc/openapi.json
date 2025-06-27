@@ -12177,6 +12177,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -12237,6 +12240,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14508,6 +14514,7 @@
         "operationId": "ExportAttackPathFindings",
         "summary": "Export attack path findings",
         "description": "Export the finding table for a given attack path",
+        "deprecated": true,
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -14608,6 +14615,9 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -14829,6 +14839,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -14909,6 +14922,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15340,6 +15356,9 @@
           "schema": {
             "type": "string"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15586,6 +15605,9 @@
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/query.asset-group-tag-id"
           }
         ],
         "responses": {
@@ -15651,6 +15673,9 @@
           "schema": {
             "$ref": "#/components/schemas/enum.posture-history-type"
           }
+        },
+        {
+          "$ref": "#/components/parameters/query.asset-group-tag-id"
         }
       ],
       "get": {
@@ -15961,6 +15986,14 @@
         "description": "Sort by column. Can be used multiple times; prepend a hyphen for descending order. Columns available\nfor sorting are dependent on the entity object kind.\n",
         "schema": {
           "$ref": "#/components/schemas/api.params.query.sort-by"
+        }
+      },
+      "query.asset-group-tag-id": {
+        "name": "asset_group_tag_id",
+        "description": "The asset group tag id of the zone requested. If not supplied, the asset group tag id associated with 'Tier Zero' is used.",
+        "in": "query",
+        "schema": {
+          "type": "integer"
         }
       },
       "query.clients.hydrate-domains": {

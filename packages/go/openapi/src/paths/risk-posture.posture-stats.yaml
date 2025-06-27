@@ -68,6 +68,7 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+    - $ref: './../parameters/query.asset-group-tag-id.yaml'
   responses:
     200:
       description: OK
