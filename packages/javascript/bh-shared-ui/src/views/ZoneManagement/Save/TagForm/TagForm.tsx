@@ -99,9 +99,13 @@ export const TagForm: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
 
+    const tagsQuery = useAssetGroupTags();
+    const tagQuery = useAssetGroupTagInfo(tagId);
+
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
+    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled || false);
 
     const { TierList } = useContext(ZoneManagementContext);
 
@@ -114,12 +118,6 @@ export const TagForm: FC = () => {
         formState: { errors },
         setValue,
     } = useForm<TagFormInputs>();
-
-    // Toggle Enable Analysis
-    const [enabled, setEnabled] = useState(false);
-
-    const tagsQuery = useAssetGroupTags();
-    const tagQuery = useAssetGroupTagInfo(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -230,7 +228,6 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
-            setEnabled(tagQuery.data.analysis_enabled || false);
         }
     }, [tagQuery.data]);
 
@@ -286,20 +283,23 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
-
                                 {tieringConfig?.value.multi_tier_analysis_enabled && tierId ? (
                                     <div>
                                         <Label htmlFor='analysis'>Enable Analysis</Label>
                                         <div className='flex gap-3'>
                                             <Switch
                                                 id='analysis'
-                                                checked={enabled}
-                                                disabled={tagId === TIER_ZERO_ID}
-                                                {...register('analysis_enabled', { value: tagQuery.data?.analysis_enabled || false })}
+                                                checked={toggleEnabled}
+                                                disabled={tierId === TIER_ZERO_ID}
+                                                {...register('analysis_enabled')}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
-                                                    setEnabled(checked);
-                                                    setValue('analysis_enabled', checked);
+                                                    setToggleEnabled((prev) => !prev)
+                                                    if (checked) {
+                                                        setValue('analysis_enabled', true);
+                                                    } else {
+                                                        setValue('analysis_enabled', false);
+                                                    }
                                                 }}
                                             />
                                             <p className='text-xs'>Include this tier when running analysis</p>
@@ -315,7 +315,7 @@ export const TagForm: FC = () => {
                         </CardContent>
                     </Card>
                     {location.pathname.includes('save/tier') && <SalesMessage />}
-                    <div className='flex justify-end gap-6 mt-4 w-[672px]'>
+                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
                                 variant={'text'}
