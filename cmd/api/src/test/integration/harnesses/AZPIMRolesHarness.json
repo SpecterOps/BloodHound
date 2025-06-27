@@ -1,0 +1,492 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 320.152171827136,
+        "y": 368.5809253615741
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "right"
+      },
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "Global Administrator",
+        "objectid": "62e90394-69f5-4237-9190-012177145e10@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "False",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "",
+        "EndUserAssignmentGroupApprovers": "",
+        "EndUserAssignmentRequiresMFA": "True",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "False"
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": -50.00000000000006,
+        "y": 217.92611452747423
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "03e9a7b2-9508-4e24-8248-16672f5f1377"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -50.00000000000006,
+        "y": 368.5809253615741
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "296fc845-c2fb-4977-8fcf-c0952d744349"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": -50.00000000000006,
+        "y": 519.2357361956741
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "f7d75245-e14d-4f19-97e2-fd5c18c80a0f"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 320.152171827136,
+        "y": 715.3984129583703
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "right"
+      },
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "PIMTestRole3",
+        "objectid": "15f590f2-004b-48e3-b66c-4bf5525b2e5f@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "True",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "80af2d04-44bc-4c52-8272-a30edc0cf8e2",
+        "EndUserAssignmentGroupApprovers": "2c1b9e24-af0b-42e3-ac11-f70fe1f58e71",
+        "EndUserAssignmentRequiresMFA": "False",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "False"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -50,
+        "y": 715.3984129583703
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "8793f86f-aa8c-459b-968d-617e4d1e7db8"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": -50,
+        "y": 958.1420150826407
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "903b27ef-5d90-4634-92ee-e8bf8fa7c790"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": -50,
+        "y": 1146.00675227512
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "2c1b9e24-af0b-42e3-ac11-f70fe1f58e71 "
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 320.152171827136,
+        "y": -91.0445293723065
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "Privileged Role Administrator",
+        "objectid": "e8611ab8-c189-46e8-94e1-60213ab1f814@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "False",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "",
+        "EndUserAssignmentGroupApprovers": "",
+        "EndUserAssignmentRequiresMFA": "True",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "False"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 887.247016212498,
+        "y": 41.16856429963667
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "right"
+      },
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "PIMTestRole4",
+        "objectid": "ad3017fa-4a30-405a-92e8-fcc13896d389@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "True",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "",
+        "EndUserAssignmentGroupApprovers": "",
+        "EndUserAssignmentRequiresMFA": "False",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "False"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": -50,
+        "y": 1333.8714894675995
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "80af2d04-44bc-4c52-8272-a30edc0cf8e2"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 320.152171827136,
+        "y": 1513.5624463804481
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "right"
+      },
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "PIMTestRole2",
+        "objectid": "9dfd6edd-9d00-48c5-9a48-5933f9f5b984@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "True",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "",
+        "EndUserAssignmentGroupApprovers": "[309767d2-60b1-4b3c-9172-806c998a8ce3, 5a23e49f-3190-437d-a513-80107c005658]",
+        "EndUserAssignmentRequiresMFA": "False",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "True"
+      }
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": -50,
+        "y": 1521.736226660079
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "309767d2-60b1-4b3c-9172-806c998a8ce3"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": -50,
+        "y": 1727.2699024259698
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "5a23e49f-3190-437d-a513-80107c005658"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 340.9467413171292,
+        "y": 1839.2425236440763
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "right"
+      },
+      "labels": [
+        "AZRole"
+      ],
+      "properties": {
+        "name": "PIMTestRole",
+        "objectid": "c2f27896-6c2c-4dfd-98ad-7894ad04474e@6c12b0b0-b2cc-4a73-8252-0b94bfca2145",
+        "EndUserAssignmentRequiresApproval": "True",
+        "EndUserAssignmentRequiresCAPAuthenticationContext": "False",
+        "EndUserAssignmentUserApprovers": "[8793f86f-aa8c-459b-968d-617e4d1e7db8, 7c48ffef-4f6e-4646-b261-9b41d3761127, b7a61883-d1d4-4197-8c40-cb258de60f58]",
+        "EndUserAssignmentGroupApprovers": "2c1b9e24-af0b-42e3-ac11-f70fe1f58e71",
+        "EndUserAssignmentRequiresMFA": "True",
+        "EndUserAssignmentRequiresJustification": "True",
+        "EndUserAssignmentRequiresTicketInformation": "False"
+      }
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": -50,
+        "y": 1932.8035781918607
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "7c48ffef-4f6e-4646-b261-9b41d3761127"
+      }
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": -50,
+        "y": 2108.3307340804768
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "AZBase"
+      ],
+      "properties": {
+        "objectid": "b7a61883-d1d4-4197-8c40-cb258de60f58"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "AZRoleEligible",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n0"
+    },
+    {
+      "id": "n1",
+      "type": "AZRoleEligible",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n0"
+    },
+    {
+      "id": "n2",
+      "type": "AZRoleEligible",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n0"
+    },
+    {
+      "id": "n3",
+      "type": "AZRoleEligible",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n4"
+    },
+    {
+      "id": "n4",
+      "type": "AZRoleEligible",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n4"
+    },
+    {
+      "id": "n5",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n4"
+    },
+    {
+      "id": "n6",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n9"
+    },
+    {
+      "id": "n7",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n9"
+    },
+    {
+      "id": "n8",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n4"
+    },
+    {
+      "id": "n9",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n11"
+    },
+    {
+      "id": "n10",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n13",
+      "toId": "n11"
+    },
+    {
+      "id": "n11",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n14"
+    },
+    {
+      "id": "n12",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n14"
+    },
+    {
+      "id": "n13",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n15",
+      "toId": "n14"
+    },
+    {
+      "id": "n14",
+      "type": "AZRoleApprover",
+      "style": {},
+      "properties": {},
+      "fromId": "n16",
+      "toId": "n14"
+    }
+  ]
+}

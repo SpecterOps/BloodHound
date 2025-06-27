@@ -40,6 +40,7 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
+import SalesMessage from '../../SalesMessage';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
@@ -225,8 +226,8 @@ export const TagForm: FC = () => {
     return (
         <>
             <form className='flex gap-x-6 mt-6'>
-                <div className='flex flex-col justify-between'>
-                    <Card className='min-w-96 w-[672px] p-3'>
+                <div className='flex flex-col justify-between min-w-96 w-[672px]'>
+                    <Card className='p-3 mb-4'>
                         <CardHeader>
                             <CardTitle>{formTitleFromPath(labelId, tierId, location)}</CardTitle>
                         </CardHeader>
@@ -278,7 +279,8 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    <div className='flex justify-end gap-6 mt-6 w-[672px]'>
+                    {location.pathname.includes('save/tier') && <SalesMessage />}
+                    <div className='flex justify-end gap-6 mt-4 w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
                                 variant={'text'}

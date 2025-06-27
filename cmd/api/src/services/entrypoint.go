@@ -102,7 +102,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if collectorManifests, err := cfg.SaveCollectorManifests(); err != nil {
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
-		return nil, fmt.Errorf("failed to load ingest schema")
+		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
 	} else {
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)

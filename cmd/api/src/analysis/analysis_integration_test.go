@@ -34,7 +34,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFetchRDPEnsurenodesInPathcent(t *testing.T) {
+func TestFetchRDPEnsureNoDescent(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
 		harness.RDPB.Setup(testContext)

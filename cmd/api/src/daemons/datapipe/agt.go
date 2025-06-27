@@ -576,6 +576,11 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			// 4. Tag the new nodes
 			newTaggedNodes.Each(func(nodeId uint64) bool {
 				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				// Temporarily include this for backwards compatibility with old asset group system
+				if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
+					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+				}
+
 				node.AddKinds(tagKind)
 				err = tx.UpdateNode(node)
 				return err == nil

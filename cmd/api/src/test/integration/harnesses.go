@@ -9950,6 +9950,107 @@ func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash_2",
 	}))
+type AZPIMRolesHarness struct {
+	TenantNode *graph.Node
+
+	AZBaseN1  *graph.Node
+	AZBaseN2  *graph.Node
+	AZBaseN3  *graph.Node
+	AZBaseN5  *graph.Node
+	AZBaseN6  *graph.Node
+	AZBaseN7  *graph.Node
+	AZBaseN10 *graph.Node
+	AZBaseN12 *graph.Node
+	AZBaseN13 *graph.Node
+	AZBaseN15 *graph.Node
+	AZBaseN16 *graph.Node
+
+	AZRoleGlobalAdmin *graph.Node
+	AZRolePrivAdmin   *graph.Node
+	AZRoleTestRole1   *graph.Node
+	AZRoleTestRole2   *graph.Node
+	AZRoleTestRole3   *graph.Node
+	AZRoleTestRole4   *graph.Node
+}
+
+func (s *AZPIMRolesHarness) Setup(graphTestContext *GraphTestContext) {
+	tenantID := RandomDomainSID()
+	s.TenantNode = graphTestContext.NewAzureTenant(tenantID)
+
+	s.AZBaseN1 = graphTestContext.NewAzureBase("AZBase n1", "03e9a7b2-9508-4e24-8248-16672f5f1377", tenantID)
+	s.AZBaseN2 = graphTestContext.NewAzureBase("AZBase n2", "296fc845-c2fb-4977-8fcf-c0952d744349", tenantID)
+	s.AZBaseN3 = graphTestContext.NewAzureBase("AZBase n3", "f7d75245-e14d-4f19-97e2-fd5c18c80a0f", tenantID)
+	s.AZBaseN5 = graphTestContext.NewAzureBase("AZBase n5", "8793f86f-aa8c-459b-968d-617e4d1e7db8", tenantID)
+	s.AZBaseN6 = graphTestContext.NewAzureBase("AZBase n6", "903b27ef-5d90-4634-92ee-e8bf8fa7c790", tenantID)
+	s.AZBaseN7 = graphTestContext.NewAzureBase("AZBase n7", "2c1b9e24-af0b-42e3-ac11-f70fe1f58e71", tenantID)
+	s.AZBaseN10 = graphTestContext.NewAzureBase("AZBase n10", "80af2d04-44bc-4c52-8272-a30edc0cf8e2", tenantID)
+	s.AZBaseN12 = graphTestContext.NewAzureBase("AZBase n12", "309767d2-60b1-4b3c-9172-806c998a8ce3", tenantID)
+	s.AZBaseN13 = graphTestContext.NewAzureBase("AZBase n13", "5a23e49f-3190-437d-a513-80107c005658", tenantID)
+	s.AZBaseN15 = graphTestContext.NewAzureBase("AZBase n15", "7c48ffef-4f6e-4646-b261-9b41d3761127", tenantID)
+	s.AZBaseN16 = graphTestContext.NewAzureBase("AZBase n16", "b7a61883-d1d4-4197-8c40-cb258de60f58", tenantID)
+
+	s.AZRoleTestRole1 = graphTestContext.NewAzureRole("PIMTestRole", "c2f27896-6c2c-4dfd-98ad-7894ad04474e@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.ContributorRole, tenantID)
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), true)
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{"8793f86f-aa8c-459b-968d-617e4d1e7db8", "7c48ffef-4f6e-4646-b261-9b41d3761127", "b7a61883-d1d4-4197-8c40-cb258de60f58"})
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{"2c1b9e24-af0b-42e3-ac11-f70fe1f58e71"})
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), false)
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRoleTestRole1.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), false)
+	graphTestContext.UpdateNode(s.AZRoleTestRole1)
+
+	s.AZRoleTestRole2 = graphTestContext.NewAzureRole("PIMTestRole2", "9dfd6edd-9d00-48c5-9a48-5933f9f5b984@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.ContributorRole, tenantID)
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), true)
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{})
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{"309767d2-60b1-4b3c-9172-806c998a8ce3", "5a23e49f-3190-437d-a513-80107c005658"})
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), false)
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRoleTestRole2.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), true)
+	graphTestContext.UpdateNode(s.AZRoleTestRole2)
+
+	s.AZRoleTestRole3 = graphTestContext.NewAzureRole("PIMTestRole3", "15f590f2-004b-48e3-b66c-4bf5525b2e5f@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.ContributorRole, tenantID)
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), true)
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{"80af2d04-44bc-4c52-8272-a30edc0cf8e2"})
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{"2c1b9e24-af0b-42e3-ac11-f70fe1f58e71"})
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), false)
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRoleTestRole3.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), false)
+	graphTestContext.UpdateNode(s.AZRoleTestRole3)
+
+	s.AZRoleTestRole4 = graphTestContext.NewAzureRole("PIMTestRole4", "ad3017fa-4a30-405a-92e8-fcc13896d389@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.ContributorRole, tenantID)
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), true)
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{})
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{})
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), false)
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRoleTestRole4.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), false)
+	graphTestContext.UpdateNode(s.AZRoleTestRole4)
+
+	s.AZRolePrivAdmin = graphTestContext.NewAzureRole("Privileged Role Administrator", "e8611ab8-c189-46e8-94e1-60213ab1f814@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.PrivilegedRoleAdministratorRole, tenantID)
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), false)
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{})
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{})
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), true)
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRolePrivAdmin.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), false)
+	graphTestContext.UpdateNode(s.AZRolePrivAdmin)
+
+	s.AZRoleGlobalAdmin = graphTestContext.NewAzureRole("Global Administrator", "62e90394-69f5-4237-9190-012177145e10@6c12b0b0-b2cc-4a73-8252-0b94bfca2145", azure.CompanyAdministratorRole, tenantID)
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentRequiresApproval.String(), false)
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(), false)
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentUserApprovers.String(), []string{})
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentGroupApprovers.String(), []string{})
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentRequiresMFA.String(), true)
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentRequiresJustification.String(), true)
+	s.AZRoleGlobalAdmin.Properties.Set(azure.EndUserAssignmentRequiresTicketInformation.String(), false)
+	graphTestContext.UpdateNode(s.AZRoleGlobalAdmin)
+
+	graphTestContext.NewRelationship(s.TenantNode, s.AZRoleGlobalAdmin, azure.Contains)
+	graphTestContext.NewRelationship(s.TenantNode, s.AZRolePrivAdmin, azure.Contains)
 }
 
 type HarnessDetails struct {
@@ -10063,6 +10164,7 @@ type HarnessDetails struct {
 	GenericIngest                                   GenericIngest
 	ResolveEndpointsByName                          ResolveEndpointsByName
 	IngestRelationships                             IngestRelationships
+	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
 	ACEInheritedFrom                                ACEInheritedFrom
 }
