@@ -331,6 +331,16 @@ func (s *GraphTestContext) NewAzureTenant(tenantID string) *graph.Node {
 	}), azure.Entity, azure.Tenant)
 }
 
+// NewAzureBase creates a new AZBase (azure.Entity) node
+func (s *GraphTestContext) NewAzureBase(name, objectID, tenantID string) *graph.Node {
+	return s.NewNode(graph.AsProperties(graph.PropertyMap{
+		common.Name:     name,
+		common.ObjectID: objectID,
+		azure.TenantID:  tenantID,
+		azure.License:   "license",
+	}), azure.Entity)
+}
+
 func (s *GraphTestContext) NewActiveDirectoryDomain(name, objectID string, blocksInheritance, collected bool) *graph.Node {
 	if collected {
 		s.Harness.NumCollectedActiveDirectoryDomains++
@@ -569,13 +579,13 @@ func (s *GraphTestContext) SetupActiveDirectory() {
 	s.Harness.RDP.Setup(s)
 	s.Harness.RDPB.Setup(s)
 
-	//startServer Session Harness
+	// startServer Session Harness
 	s.Harness.Session.Setup(s)
 
-	//startServer localgroup harness
+	// startServer localgroup harness
 	s.Harness.LocalGroupSQL.Setup(s)
 
-	//startServer control harnesses
+	// startServer control harnesses
 	s.Harness.OutboundControl.Setup(s)
 	s.Harness.InboundControl.Setup(s)
 
