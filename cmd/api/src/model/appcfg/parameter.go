@@ -53,7 +53,8 @@ const (
 const (
 	DefaultPasswordExpirationWindow = time.Hour * 24 * 90
 
-	DefaultSessionTTLHours = 8
+	RestrictOutboundNTLMDefaultValue = "analysis.restrict_outbound_ntlm_default_value"
+	DefaultSessionTTLHours           = 8
 
 	DefaultPruneBaseTTL           = time.Hour * 24 * 7
 	DefaultPruneHasSessionEdgeTTL = time.Hour * 24 * 3
@@ -82,7 +83,7 @@ func (s *Parameter) Map(value any) error {
 
 func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
 	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey:
+	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, RestrictOutboundNTLMDefaultValue:
 		return true
 	default:
 		return false
@@ -123,6 +124,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &CitrixRDPSupport{}
 	case ReconciliationKey:
 		v = &ReconciliationParameter{}
+	case RestrictOutboundNTLMDefaultValue:
+		v = &RestrictOutboundNTLMDefault{}
 	case TierManagementParameterKey:
 		v = &TieringParameters{}
 	case ScheduledAnalysis:
@@ -263,6 +266,24 @@ func GetCitrixRDPSupport(ctx context.Context, service ParameterService) bool {
 		slog.WarnContext(ctx, "Failed to fetch CitrixRDPSupport configuration; returning default values")
 	} else if err := cfg.Map(&result); err != nil {
 		slog.WarnContext(ctx, fmt.Sprintf("Invalid CitrixRDPSupport configuration supplied, %v. returning default values.", err))
+	}
+
+	return result.Enabled
+}
+
+// RestrictOutboundNTLMDefault
+
+type RestrictOutboundNTLMDefault struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+func GetRestrictOutboundNTLMDefaultValue(ctx context.Context, service ParameterService) bool {
+	var result RestrictOutboundNTLMDefault
+
+	if cfg, err := service.GetConfigurationParameter(ctx, RestrictOutboundNTLMDefaultValue); err != nil {
+		slog.WarnContext(ctx, "Failed to fetch RestrictOutboundNTLMDefaultValue configuration; returning default values")
+	} else if err := cfg.Map(&result); err != nil {
+		slog.WarnContext(ctx, fmt.Sprintf("Invalid RestrictOutboundNTLMDefaultValue configuration supplied, %v. returning default values.", err))
 	}
 
 	return result.Enabled

@@ -304,15 +304,15 @@ type NTLMRegistryDataAPIResult struct {
 }
 
 type NTLMRegistryInfo struct {
-	RestrictSendingNtlmTraffic   uint
-	RequireSecuritySignature     uint
-	EnableSecuritySignature      uint
-	RestrictReceivingNTLMTraffic uint
-	NtlmMinServerSec             uint
-	NtlmMinClientSec             uint
-	LmCompatibilityLevel         uint
-	UseMachineId                 uint
-	ClientAllowedNTLMServers     []string
+	RestrictSendingNtlmTraffic   *uint
+	RequireSecuritySignature     *uint
+	EnableSecuritySignature      *uint
+	RestrictReceivingNTLMTraffic *uint
+	NtlmMinServerSec             *uint
+	NtlmMinClientSec             *uint
+	LmCompatibilityLevel         *uint
+	UseMachineId                 *uint
+	ClientAllowedNTLMServers     *[]string
 }
 
 type Computer struct {

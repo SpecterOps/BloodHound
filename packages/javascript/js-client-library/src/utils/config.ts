@@ -34,6 +34,8 @@ export enum ConfigurationKey {
     PasswordExpiration = 'auth.password_expiration_window',
     Neo4j = 'neo4j.configuration',
     Citrix = 'analysis.citrix_rdp_support',
+    RestrictOutboundNTLMDefaultValue = 'analysis.restrict_outbound_ntlm_default_value',
+
     Reconciliation = 'analysis.reconciliation',
     PruneTTL = 'prune.ttl',
     Tiering = 'analysis.tiering',
@@ -56,6 +58,13 @@ export type Neo4jConfiguration = {
 
 export type CitrixConfiguration = {
     key: ConfigurationKey.Citrix;
+    value: {
+        enabled: boolean;
+    };
+};
+
+export type RestrictOutboundNTLMDefaultValueConfiguration = {
+    key: ConfigurationKey.RestrictOutboundNTLMDefaultValue;
     value: {
         enabled: boolean;
     };
@@ -89,6 +98,7 @@ export type ConfigurationPayload =
     | PasswordExpirationConfiguration
     | Neo4jConfiguration
     | CitrixConfiguration
+    | RestrictOutboundNTLMDefaultValueConfiguration
     | ReconciliationConfiguration
     | PruneTTLConfiguration
     | TieringConfiguration;
@@ -119,6 +129,15 @@ export const parseCitrixConfiguration = (
     response: GetConfigurationResponse | undefined
 ): ConfigurationWithMetadata<CitrixConfiguration> | undefined => {
     const key = ConfigurationKey.Citrix;
+    const config = getConfigurationFromKey(response, key);
+
+    return config?.key === key ? config : undefined;
+};
+
+export const parseRestrictOutboundNTLMDefaultValueConfiguration = (
+    response: GetConfigurationResponse | undefined
+): ConfigurationWithMetadata<RestrictOutboundNTLMDefaultValueConfiguration> | undefined => {
+    const key = ConfigurationKey.RestrictOutboundNTLMDefaultValue;
     const config = getConfigurationFromKey(response, key);
 
     return config?.key === key ? config : undefined;

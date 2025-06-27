@@ -127,6 +127,19 @@ func TestParameters_GetConfigurationParameter(t *testing.T) {
 		require.Equal(t, expected.Name, parameter.Name)
 		require.Equal(t, expected.Description, parameter.Description)
 	})
+
+	t.Run("get Restrict Outbound NTLM Default Value parameter", func(t *testing.T) {
+		parameter, err := dbInst.GetConfigurationParameter(testCtx, appcfg.RestrictOutboundNTLMDefaultValue)
+		require.Nil(t, err)
+		expected := &appcfg.Parameter{
+			Key:         appcfg.RestrictOutboundNTLMDefaultValue,
+			Name:        "Restrict Outbound NTLM Default Value",
+			Description: "When enabled, any computer's Restrict Outbound NTLM registry value is treated as Restricting if the registry doesn't exist on that computer for NTLM edge processing. When disabled, treat the missing registry as Not Restricting.",
+		}
+		require.Equal(t, expected.Key, parameter.Key)
+		require.Equal(t, expected.Name, parameter.Name)
+		require.Equal(t, expected.Description, parameter.Description)
+	})
 }
 
 func TestParameters_GetAllConfigurationParameter(t *testing.T) {
@@ -136,7 +149,6 @@ func TestParameters_GetAllConfigurationParameter(t *testing.T) {
 	)
 	parameters, err := dbInst.GetAllConfigurationParameters(testCtx)
 	require.Nil(t, err)
-
 	for _, parameter := range parameters {
 		if !parameter.IsProtectedKey(parameter.Key) {
 			require.True(t, parameter.IsValidKey(parameter.Key))
