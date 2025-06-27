@@ -20,7 +20,7 @@ import {
     AssetGroupTagTypeTier,
 } from 'js-client-library';
 import { useQuery } from 'react-query';
-import { apiClient } from '../utils';
+import { apiClient } from '../../utils';
 
 export const useAssetGroupTags = () =>
     useQuery({

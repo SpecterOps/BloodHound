@@ -16,7 +16,7 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { setParamsFactory } from '../../utils';
-import { useHighestPrivilegeTag } from '../useAssetGroupTags';
+import { useHighestPrivilegeTag } from '../useAssetGroupTags/useAssetGroupTags';
 
 export type ZoneQueryParams = {
     assetGroupTagId: number | undefined;

@@ -40,7 +40,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags';
+import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
