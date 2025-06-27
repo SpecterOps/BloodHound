@@ -184,6 +184,8 @@ jobs:
       - name: Checkout Source Code Repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          fetch-tags: true
           submodules: recursive
 
       # TODO: don't pull actions but instead reference them from the source repo
