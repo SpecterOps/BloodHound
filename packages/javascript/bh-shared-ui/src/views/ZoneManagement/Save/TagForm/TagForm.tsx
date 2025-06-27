@@ -295,12 +295,8 @@ export const TagForm: FC = () => {
                                                 {...register('analysis_enabled')}
                                                 data-testid='tag-form_switch-enable-analysis'
                                                 onCheckedChange={(checked: boolean) => {
-                                                    setToggleEnabled((prev) => !prev)
-                                                    if (checked) {
-                                                        setValue('analysis_enabled', true);
-                                                    } else {
-                                                        setValue('analysis_enabled', false);
-                                                    }
+                                                    setToggleEnabled(checked);
+                                                    setValue('analysis_enabled', checked);
                                                 }}
                                             />
                                             <p className='text-xs'>Include this tier when running analysis</p>
