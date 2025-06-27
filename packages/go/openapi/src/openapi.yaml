@@ -366,6 +366,8 @@ paths:
     $ref: './paths/graph.graphs.edge-composition.yaml'
   /api/v2/graphs/relay-targets:
     $ref: './paths/graph.graphs.relay-targets.yaml'
+  /api/v2/graphs/ace-inheritance:
+    $ref: './paths/graph.graphs.ace-inheritance.yaml'
 
   # cypher
   /api/v2/saved-queries:

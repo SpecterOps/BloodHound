@@ -1,3 +1,18 @@
+// Copyright 2025 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
 
 export enum ActiveDirectoryNodeKind {
 Entity = 'Base',
@@ -343,6 +358,8 @@ Sensitive = 'sensitive',
 BlocksInheritance = 'blocksinheritance',
 IsACL = 'isacl',
 IsACLProtected = 'isaclprotected',
+InheritanceHash = 'inheritancehash',
+InheritanceHashes = 'inheritancehashes',
 IsDeleted = 'isdeleted',
 Enforced = 'enforced',
 Department = 'department',
@@ -502,6 +519,10 @@ case ActiveDirectoryKindProperties.IsACL:
 return 'Is ACL'
 case ActiveDirectoryKindProperties.IsACLProtected: 
 return 'ACL Inheritance Denied'
+case ActiveDirectoryKindProperties.InheritanceHash: 
+return 'ACL Inheritance Hash'
+case ActiveDirectoryKindProperties.InheritanceHashes: 
+return 'ACL Inheritance Hashes'
 case ActiveDirectoryKindProperties.IsDeleted: 
 return 'Is Deleted'
 case ActiveDirectoryKindProperties.Enforced: 
