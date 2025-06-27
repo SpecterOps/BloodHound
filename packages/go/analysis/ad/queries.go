@@ -599,7 +599,7 @@ func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph
 				},
 				ExpansionFilter: func(segment *graph.PathSegment) bool {
 					// Check that our hash is included in the current node
-					hashes, _ := segment.Node.Properties.Get(ad.InheritanceHashes.String()).StringSlice()
+					hashes, _ := segment.Node.Properties.GetOrDefault(ad.InheritanceHashes.String(), []string{}).StringSlice()
 
 					if slices.Contains(hashes, hash) {
 						isInheritable := true
