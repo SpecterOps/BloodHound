@@ -3,36 +3,11 @@
     "source": "User",
     "target": "User",
     "edges": [
-        "AbuseTGTDelegation",
-        "AddAllowedToAct",
         "AddKeyCredentialLink",
-        "AddSelf",
         "AllExtendedRights",
-        "AllowedToAct",
-        "AllowedToDelegate",
-        "CoerceToTGT",
         "ForceChangePassword",
         "GenericAll",
-        "GenericWrite",
-        "GetChanges",
-        "GetChangesAll",
-        "HasSIDHistory",
-        "Owns",
-        "OwnsLimitedRights",
-        "OwnsRaw",
-        "ReadGMSAPassword",
-        "ReadLAPSPassword",
-        "SpoofSIDHistory",
-        "SQLAdmin",
-        "WriteAccountRestrictions",
-        "WriteDacl",
-        "WriteGPLink",
-        "WriteOwner",
-        "WriteOwnerLimitedRights",
-        "WriteOwnerRaw",
-        "WritePKIEnrollmentFlag",
-        "WritePKINameFlag",
-        "WriteSPN"
+        "OwnsRaw"
     ]
   },
   {
@@ -40,10 +15,31 @@
     "target": "Computer",
     "edges": [
       "AddAllowedToAct",
-      "HasSession",
+      "AddKeyCredentialLink",
+      "AdminTo",
+      "AllowedToDelegate",
       "CanRDP",
+      "CanPSRemote",
+      "ExecuteDCOM",
+      "GenericAll",
+      "Owns",
+      "OwnsRaw",
       "ReadLAPSPassword",
-      "ReadGMSAPassword"
+      "ReadGMSAPassword",
+      "SQLAdmin",
+      "WriteAccountRestrictions"
+    ]
+  },
+  {
+    "source": "User",
+    "target": "Container",
+    "edges": [
+      "GenericAll",
+      "Owns",
+      "OwnsRaw",
+      "WriteDacl",
+      "WriteOwner",  
+      "WriteOwnerRaw"
     ]
   },
   {
@@ -51,73 +47,83 @@
     "target": "Group",
     "edges": [
       "AddMember",
-      "AddKeyCredentialLink",
       "AddSelf",
-      "AllExtendedRights",
-      "ForceChangePassword",
       "MemberOf",
       "Owns",
       "OwnsRaw",
       "GenericAll",
-      "GenericWrite",
-      "WriteDacl",
-      "WriteOwner",
-      "WriteOwnerRaw"
+      "GenericWrite"
     ]
   },
   {
     "source": "User",
     "target": "OU",
     "edges": [
+      "Contains",  
       "GenericAll",
-      "GenericWrite",
-      "WriteOwner"
+        "GenericWrite",
+        "WriteOwner"
     ]
   },
   {
     "source": "User",
     "target": "Domain",
     "edges": [
-      "AllExtendedRights",
+      "CoerceToTGT",  
       "DCSync",
       "GetChanges",
       "GetChangesAll",
-      "WriteOwner",
+      "ADCSESC1",
+      "ADCSESC3",
       "ADCSESC4",
+      "ADCSESC6a",
+      "ADCSESC6b",
       "ADCSESC9a",
-      "ADCSESC9b"
+      "ADCSESC9b",
+      "ADCSESC10a",
+      "ADCSESC10b"
     ]
   },
   {
     "source": "User",
     "target": "GPO",
     "edges": [
+      "GenericWrite",
       "Owns",
-      "WriteGPLink"
+      "OwnsRaw",
+      "WriteDacl",
+      "WriteOwner",
+      "WriteOwnerRaw"
     ]
   },
   {
     "source": "Computer",
     "target": "User",
     "edges": [
-      "HasSession"
+      "DumpSMSAPassword",
+      "ForceChangePassword",  
+      "HasSession",
+      "Owns",
+      "OwnsRaw",
+      "ReadGMSAPassword"
     ]
   },
   {
     "source": "Computer",
     "target": "Computer",
     "edges": [
-      "HasSession"
+      "AllowedToAct",
+      "AllowedToDelegate"
     ]
   },
   {
     "source": "Computer",
     "target": "Domain",
     "edges": [
-      "GoldenCert",
+      "ADCSESC4",
+      "CoerceToTGT",  
       "DCSync",
-      "DCFor",
-      "CoerceToTGT"
+      "DCFor"
     ]
   },
   {
