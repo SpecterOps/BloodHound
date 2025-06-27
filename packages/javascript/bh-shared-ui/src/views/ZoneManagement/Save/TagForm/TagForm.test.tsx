@@ -20,6 +20,7 @@ import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
 import { longWait, render, screen, waitFor } from '../../../../test-utils';
+import { ConfigurationKey } from 'js-client-library';
 
 const testTierZero = {
     id: 1,
@@ -35,6 +36,7 @@ const testTierZero = {
     deleted_by: null,
     position: 1,
     require_certify: false,
+    analysis_enabled: true,
 };
 
 const testOwned = {
@@ -51,6 +53,7 @@ const testOwned = {
     deleted_by: null,
     position: null,
     require_certify: false,
+    analysis_enabled: false,
 };
 
 const handlers = [
@@ -88,6 +91,15 @@ const handlers = [
         );
     }),
 ];
+
+const configResponse = {
+    data: [
+        {
+            key: ConfigurationKey.Tiering,
+            value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+        },
+    ],
+};
 
 const server = setupServer(...handlers);
 
@@ -135,6 +147,12 @@ describe('Tag Form', () => {
 
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
 
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
+
         render(
             <Routes>
                 <Route path={createNewTierPath} element={<TagForm />} />
@@ -156,6 +174,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
     it('renders the form for creating a new label', async () => {
@@ -163,6 +182,12 @@ describe('Tag Form', () => {
         // This means that none of the input fields should have any value aside from default values
 
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
 
         render(
             <Routes>
@@ -185,13 +210,49 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
+
+    it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+
+        const configResponse = {
+            data: [
+                {
+                    key: ConfigurationKey.Tiering,
+                    value: { multi_tier_analysis_enabled: false, tier_limit: 3, label_limit: 10 },
+                },
+            ],
+        };
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
+
+        render(
+            <Routes>
+                <Route path={editExistingTierPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingTierPath }
+        );
+
+        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
+    })
 
     it('renders the form for editing an existing tier', async () => {
         // This url has the tier id of 1 in the path
         // and so this tier's data is filled into the form for the user to edit
 
         vi.mocked(useParams).mockReturnValue({ tierId: '1', labelId: undefined });
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
 
         render(
             <Routes>
@@ -218,6 +279,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.getByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
     it('renders the form for editing an existing label', async () => {
@@ -253,6 +315,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
@@ -335,6 +398,7 @@ describe('Tag Form', () => {
             expect(mockNavigate).toBeCalled();
             expect(mockAddNotification).toBeCalled();
         });
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
     it('handles creating a new label', async () => {
