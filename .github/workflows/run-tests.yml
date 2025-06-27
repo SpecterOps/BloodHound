@@ -48,15 +48,11 @@ jobs:
         with:
           go-version: "~1.24.4"
 
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
       - name: Run Tests
         run: |
           export INTEGRATION_CONFIG_PATH=$(pwd)/.github/config/integration.config.json
-          python packages/python/beagle/main.py test -avi
+          go tool stbernard deps
+          go tool stbernard test -i
 
       - name: Neo4j Debug Logs
         if: failure()

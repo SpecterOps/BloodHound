@@ -49,8 +49,8 @@ jobs:
 
       - name: Install Deps
         run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard deps
+          go tool stbernard deps
 
       - name: Run Analysis
         run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard analysis
+          go tool stbernard analysis
