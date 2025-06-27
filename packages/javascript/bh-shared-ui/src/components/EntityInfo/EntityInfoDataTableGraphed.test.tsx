@@ -123,7 +123,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('EntityInfoDataTable', () => {
+describe('EntityInfoDataTableGraphed', () => {
     describe('Node count for nested table that counts all sections', () => {
         it('sums nested section node counts', async () => {
             render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);

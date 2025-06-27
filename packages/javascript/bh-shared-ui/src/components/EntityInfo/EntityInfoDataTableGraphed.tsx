@@ -149,7 +149,7 @@ const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
                         key={nestedIndex}
                         parentLabels={[...(parentLabels as string[]), label]}
                         {...nestedSection}
-                        data-testid='entity-info-data-table'
+                        data-testid='entity-info-data-table-graphed'
                     />
                 ))}
         </EntityInfoCollapsibleSection>
