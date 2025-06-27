@@ -9950,6 +9950,8 @@ func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
 		common.IsInherited: true,
 		ad.InheritanceHash: "my_hash_2",
 	}))
+}
+
 type AZPIMRolesHarness struct {
 	TenantNode *graph.Node
 
