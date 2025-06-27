@@ -43,7 +43,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
-	"gorm.io/gorm/utils"
 )
 
 const (
@@ -743,61 +742,93 @@ func (s *Resources) PreviewSelectors(response http.ResponseWriter, request *http
 type SearchAssetGroupTagsResponse struct {
 	Tags      model.AssetGroupTags         `json:"tags"`
 	Selectors model.AssetGroupTagSelectors `json:"selectors"`
-	Nodes     []AssetGroupMember           `json:"nodes"`
+	Members   []AssetGroupMember           `json:"members"`
+}
+
+type AssetGroupTagSearchRequest struct {
+	Query   string                  `json:"query"`
+	TagType model.AssetGroupTagType `json:"tag_type,omitempty"`
 }
 
 func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
 	var (
-		queryParams    = request.URL.Query()
-		tag            = model.AssetGroupTag{}
-		selector       = model.AssetGroupTagSelector{}
-		tagFilter      = model.QueryParameterFilterMap{}
-		selectorFilter = model.QueryParameterFilterMap{}
-		members        = []AssetGroupMember{}
-		newSelectors   = model.AssetGroupTagSelectors{}
+		reqBody          = AssetGroupTagSearchRequest{}
+		queryParams      = request.URL.Query()
+		members          = []AssetGroupMember{}
+		matchedTags      = model.AssetGroupTags{}
+		matchedSelectors = model.AssetGroupTagSelectors{}
 	)
 
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
+	if err := json.NewDecoder(request.Body).Decode(&reqBody); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
+	} else if !model.IsValidTagType(reqBody.TagType) {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
+	} else if reqBody.Query == "" {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "query"), request), response)
+	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}, assetGroupTagsSearchLimit); err != nil {
+		api.HandleDatabaseError(request, response, err)
+	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
+		api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterSkip, err), response)
 	} else {
-		for name, filters := range queryFilters {
-			if validTagPredicates, err := api.GetValidFilterPredicatesAsStrings(tag, name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			} else if validSelectorPredicates, err := api.GetValidFilterPredicatesAsStrings(selector, name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			} else {
-				for _, filter := range filters {
-					if utils.Contains(validTagPredicates, string(filter.Operator)) {
-						tagFilter.AddFilter(filter)
-						tagFilter[name][len(tagFilter[name])-1].IsStringData = tag.IsStringColumn(filter.Name)
-					}
-					if utils.Contains(validSelectorPredicates, string(filter.Operator)) {
-						selectorFilter.AddFilter(filter)
-						selectorFilter[name][len(selectorFilter[name])-1].IsStringData = selector.IsStringColumn(filter.Name)
-					} else {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
+		var (
+			kinds []graph.Kind
+			count int
+		)
+
+		for _, s := range selectors {
+			if match := strings.Contains(strings.ToLower(s.Name), strings.ToLower(reqBody.Query)); match && len(matchedSelectors) < assetGroupTagsSearchLimit {
+				matchedSelectors = append(matchedSelectors, s)
+			}
+			count++
+			if count >= assetGroupTagsSearchLimit {
+				break
+			}
+		}
+
+		for _, t := range tags {
+			isLabelType := t.Type == model.AssetGroupTagTypeLabel
+			isOwnedType := t.Type == model.AssetGroupTagTypeOwned
+
+			// group owned with labels
+			if reqBody.TagType == model.AssetGroupTagTypeLabel && (isLabelType || isOwnedType) {
+				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
+					matchedTags = append(matchedTags, t)
+					kinds = append(kinds, t.ToKind())
+
+					count++
+					if count >= assetGroupTagsSearchLimit {
+						break
 					}
 				}
 			}
 
+			if reqBody.TagType == model.AssetGroupTagTypeTier && t.Type == model.AssetGroupTagTypeTier {
+				if strings.Contains(strings.ToLower(t.Name), strings.ToLower(reqBody.Query)) {
+					matchedTags = append(matchedTags, t)
+					kinds = append(kinds, t.ToKind())
+
+					count++
+					if count >= assetGroupTagsSearchLimit {
+						break
+					}
+				}
+			}
 		}
 
-		if limit, err := ParseLimitQueryParameter(request.URL.Query(), assetGroupTagsSearchLimit); err != nil {
-			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, model.PaginationQueryParameterLimit, err), response)
-		} else if sqlTagFilter, err := tagFilter.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if sqlSelectorFilter, err := selectorFilter.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), sqlTagFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), sqlSelectorFilter, limit); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
+		filter := query.And(
+			query.Or(
+				query.StringContains(query.NodeProperty(common.Name.String()), strings.ToLower(reqBody.Query)),
+				query.StringContains(query.NodeProperty(common.ObjectID.String()), strings.ToLower(reqBody.Query)),
+			),
+			query.KindIn(query.Node(), kinds...),
+		)
+
+		if nodes, err := s.GraphQuery.GetFilteredAndSortedNodesPaginated(sort, filter, skip, assetGroupTagsSearchLimit); err != nil {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting members: %v", err), request), response)
 		} else {
 
 			if selectors == nil {

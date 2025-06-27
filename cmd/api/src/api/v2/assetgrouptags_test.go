@@ -25,6 +25,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -2248,4 +2249,112 @@ func TestResources_PreviewSelectors(t *testing.T) {
 				},
 			},
 		})
+}
+
+func TestDatabase_SearchAssetGroupTags(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
+		resources = v2.Resources{DB: mockDB}
+		handler   = http.HandlerFunc(resources.SearchAssetGroupTags)
+		endpoint  = "/api/v2/asset-group-tags/search"
+
+		// selector        = model.AssetGroupTagSelector{
+		// 	AssetGroupTagId: 5,
+		// 	ID:              7,
+		// 	Name:            "Selector 7",
+		// 	Description:     "777",
+		// 	CreatedBy:       "spam@exaple.com",
+		// 	UpdatedBy:       "spam@exaple.com",
+		// }
+	)
+
+	defer mockCtrl.Finish()
+
+	userId, err := uuid2.NewV4()
+	require.Nil(t, err)
+
+	req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), "POST", endpoint, nil)
+	require.Nil(t, err)
+	req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
+
+	t.Run("cannot decode request body error", func(t *testing.T) {
+
+		reqBody := `{"query":`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+	t.Run("invalid tag type error", func(t *testing.T) {
+
+		reqBody := `{"query": "test", "tag_type": 5}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, api.ErrorResponseAssetGroupTagInvalid, "valid tag type is required")
+	})
+	t.Run("empty query error", func(t *testing.T) {
+
+		reqBody := `{"query": "", "tag_type": 2}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+		require.Contains(t, api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "missing required query parameter")
+	})
+	t.Run("get tags db error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{}, errors.New("db error"))
+
+		reqBody := `{"query": "test", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+	t.Run("get selectors db error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), 20).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
+
+		reqBody := `{"query": "test", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
+	t.Run("parse graph sort error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), 20).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+
+		reqBody := `{"query": "test", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusInternalServerError, response.Code)
+	})
 }
