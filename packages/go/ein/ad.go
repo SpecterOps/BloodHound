@@ -382,8 +382,9 @@ func ParseGroupMembershipData(group Group) ParsedGroupMembershipData {
 }
 
 type WriteOwnerLimitedPrincipal struct {
-	SourceData  IngestibleEndpoint
-	IsInherited bool
+	SourceData      IngestibleEndpoint
+	IsInherited     bool
+	InheritanceHash string
 }
 
 // getFromPropertyMap attempts to look up a given key in the given properties map. If the value does not exist this
@@ -457,8 +458,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): ace.IsInherited},
-					RelType:  rightKind,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): ace.IsInherited,
+						ad.InheritanceHash.String(): ace.InheritanceHash,
+					},
+					RelType: rightKind,
 				},
 			))
 		}
@@ -498,8 +503,13 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 
 					// Create an edge property containing an array of all INHERITED abusable permissions granted to the OWNER RIGHTS SID
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited, "privileges": writeOwnerLimitedPrivs},
-						RelType:  ad.WriteOwnerLimitedRights,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							"privileges":                writeOwnerLimitedPrivs,
+						},
+						RelType: ad.WriteOwnerLimitedRights,
 					},
 				))
 			}
@@ -525,8 +535,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 						Kind:  targetType,
 					},
 					IngestibleRel{
-						RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-						RelType:  ad.WriteOwnerRaw,
+						RelProps: map[string]any{
+							ad.IsACL.String():           true,
+							common.IsInherited.String(): limitedPrincipal.IsInherited,
+							ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+						},
+						RelType: ad.WriteOwnerRaw,
 					},
 				))
 			}
@@ -552,8 +566,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 							Kind:  targetType,
 						},
 						IngestibleRel{
-							RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-							RelType:  ad.WriteOwnerRaw,
+							RelProps: map[string]any{
+								ad.IsACL.String():           true,
+								common.IsInherited.String(): limitedPrincipal.IsInherited,
+								ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+							},
+							RelType: ad.WriteOwnerRaw,
 						},
 					))
 				}
@@ -592,8 +610,12 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 					Kind:  targetType,
 				},
 				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, common.IsInherited.String(): limitedPrincipal.IsInherited},
-					RelType:  ad.WriteOwnerRaw,
+					RelProps: map[string]any{
+						ad.IsACL.String():           true,
+						common.IsInherited.String(): limitedPrincipal.IsInherited,
+						ad.InheritanceHash.String(): limitedPrincipal.InheritanceHash,
+					},
+					RelType: ad.WriteOwnerRaw,
 				},
 			))
 		}
