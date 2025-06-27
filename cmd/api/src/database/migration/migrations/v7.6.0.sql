@@ -52,7 +52,7 @@ INSERT INTO asset_group_tag_selectors (
   auto_certify
 )
 SELECT
-  (SELECT id FROM asset_group_tags WHERE type = 1 and position = 1),
+  (SELECT id FROM asset_group_tags WHERE type = 1 and position = 1 LIMIT 1),
   current_timestamp,
   'SYSTEM',
   current_timestamp,
