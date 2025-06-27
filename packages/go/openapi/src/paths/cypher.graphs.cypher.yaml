@@ -43,7 +43,7 @@ post:
             type: object
             properties:
               data:
-                $ref: './../schemas/model.unified-graph.graph.yaml'
+                $ref: './../schemas/model.unified-graph.graph.w.property.keys.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

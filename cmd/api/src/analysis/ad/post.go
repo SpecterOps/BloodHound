@@ -21,9 +21,9 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 )
 
 func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, ntlmEnabled bool, compositionCounter *analysis.CompositionCounter) (*analysis.AtomicPostProcessingStats, error) {
@@ -31,6 +31,8 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 	if stats, err := analysis.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, adAnalysis.PostProcessedRelationships()...); err != nil {
 		return &aggregateStats, err
 	} else if groupExpansions, err := adAnalysis.ExpandAllRDPLocalGroups(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if gpoSyncStats, err := adAnalysis.PostGPOs(ctx, db); err != nil {
 		return &aggregateStats, err
 	} else if dcSyncStats, err := adAnalysis.PostDCSync(ctx, db, groupExpansions); err != nil {
 		return &aggregateStats, err
@@ -49,6 +51,7 @@ func Post(ctx context.Context, db graph.Database, adcsEnabled, citrixEnabled, nt
 	} else {
 		aggregateStats.Merge(stats)
 		aggregateStats.Merge(syncLAPSStats)
+		aggregateStats.Merge(gpoSyncStats)
 		aggregateStats.Merge(hasTrustKeyStats)
 		aggregateStats.Merge(dcSyncStats)
 		aggregateStats.Merge(localGroupStats)

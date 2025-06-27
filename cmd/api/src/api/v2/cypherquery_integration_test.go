@@ -23,18 +23,18 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/models/cypher/format"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/dawgs/cypher/models/cypher/format"
 
-	"github.com/specterops/bloodhound/cypher/frontend"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/lab"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/test/integration/utils"
 	"github.com/specterops/bloodhound/src/test/lab/fixtures"
 	"github.com/specterops/bloodhound/src/test/lab/harnesses"
+	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/stretchr/testify/require"
 )
 

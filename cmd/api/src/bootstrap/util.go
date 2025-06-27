@@ -25,13 +25,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/bhlog"
 	"github.com/specterops/bloodhound/bhlog/level"
-	"github.com/specterops/bloodhound/dawgs"
-	"github.com/specterops/bloodhound/dawgs/drivers/neo4j"
-	"github.com/specterops/bloodhound/dawgs/drivers/pg"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util/size"
 	"github.com/specterops/bloodhound/src/api/tools"
 	"github.com/specterops/bloodhound/src/config"
+	"github.com/specterops/dawgs"
+	"github.com/specterops/dawgs/drivers/neo4j"
+	"github.com/specterops/dawgs/drivers/pg"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util/size"
 )
 
 func ensureDirectory(path string) error {

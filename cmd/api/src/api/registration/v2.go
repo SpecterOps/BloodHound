@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+
 	"github.com/specterops/bloodhound/openapi"
 	"github.com/specterops/bloodhound/params"
 	"github.com/specterops/bloodhound/src/api"
@@ -187,7 +188,7 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.POST("/api/v2/asset-group-tags/preview-selectors", resources.PreviewSelectors).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBWrite),
 		routerInst.GET(fmt.Sprintf("/api/v2/asset-group-tags/{%s}/selectors/{%s}/members", api.URIPathVariableAssetGroupTagID, api.URIPathVariableAssetGroupTagSelectorID), resources.GetAssetGroupMembersBySelector).CheckFeatureFlag(resources.DB, appcfg.FeatureTierManagement).RequirePermissions(permissions.GraphDBRead),
 
-		//QA API
+		// QA API
 		routerInst.GET("/api/v2/completeness", resources.GetDatabaseCompleteness).RequirePermissions(permissions.GraphDBRead),
 
 		routerInst.GET("/api/v2/pathfinding", resources.GetPathfindingResult).Queries("start_node", "{start_node}", "end_node", "{end_node}").RequirePermissions(permissions.GraphDBRead),
@@ -207,6 +208,9 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}", api.URIPathVariableSavedQueryID), resources.DeleteSavedQuery).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.DELETE(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.DeleteSavedQueryPermissions).RequirePermissions(permissions.SavedQueriesWrite),
 		routerInst.PUT(fmt.Sprintf("/api/v2/saved-queries/{%s}/permissions", api.URIPathVariableSavedQueryID), resources.ShareSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
+		routerInst.GET(fmt.Sprintf("/api/v2/saved-queries/{%s}/export", api.URIPathVariableSavedQueryID), resources.ExportSavedQuery).RequirePermissions(permissions.SavedQueriesRead),
+		routerInst.GET("/api/v2/saved-queries/export", resources.ExportSavedQueries).RequirePermissions(permissions.SavedQueriesRead),
+		routerInst.POST("/api/v2/saved-queries/import", resources.ImportSavedQueries).RequirePermissions(permissions.SavedQueriesWrite),
 
 		// Azure Entity API
 		routerInst.GET("/api/v2/azure/{entity_type}", resources.GetAZEntity).RequirePermissions(permissions.GraphDBRead),
@@ -316,27 +320,27 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 		routerInst.GET(fmt.Sprintf("/api/v2/groups/{%s}/controllables", api.URIPathVariableObjectID), resources.ListADEntityControllables).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/groups/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 
-		//IssuancePolicy Entity API
+		// IssuancePolicy Entity API
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}", api.URIPathVariableObjectID), resources.GetIssuancePolicyEntityInfo).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/controllers", api.URIPathVariableObjectID), resources.ListADEntityControllers).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/issuancepolicies/{%s}/linkedtemplates", api.URIPathVariableObjectID), resources.ListADIssuancePolicyLinkedCertTemplates).RequirePermissions(permissions.GraphDBRead),
 
-		//Data Quality Stats API
+		// Data Quality Stats API
 		routerInst.GET(fmt.Sprintf("/api/v2/ad-domains/{%s}/data-quality-stats", api.URIPathVariableDomainID), resources.GetADDataQualityStats).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead),
 		routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead),
 
 		// Datapipe API
 		routerInst.GET("/api/v2/datapipe/status", resources.GetDatapipeStatus).RequireAuth(),
-		//TODO: Update the permission on this once we get something more concrete
+		// TODO: Update the permission on this once we get something more concrete
 		routerInst.GET("/api/v2/analysis/status", resources.GetAnalysisRequest).RequirePermissions(permissions.GraphDBRead),
 		routerInst.PUT("/api/v2/analysis", resources.RequestAnalysis).RequirePermissions(permissions.GraphDBWrite),
 
 		// Custom Node Management
-		routerInst.GET("/api/v2/customnode", resources.GetCustomNodeKinds).RequireAuth(),
-		routerInst.GET(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
-		routerInst.POST("/api/v2/customnode", resources.CreateCustomNodeKind).RequireAuth(),
-		routerInst.PUT(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
-		routerInst.DELETE(fmt.Sprintf("/api/v2/customnode/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
+		routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequireAuth(),
+		routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequireAuth(),
+		routerInst.POST("/api/v2/custom-nodes", resources.CreateCustomNodeKind).RequireAuth(),
+		routerInst.PUT(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.UpdateCustomNodeKind).RequireAuth(),
+		routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequireAuth(),
 	)
 }

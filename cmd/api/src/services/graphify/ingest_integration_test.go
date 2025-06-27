@@ -25,8 +25,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/ein"
 	"github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/graphschema/ad"
@@ -34,6 +32,8 @@ import (
 	"github.com/specterops/bloodhound/src/services/graphify"
 	"github.com/specterops/bloodhound/src/services/upload"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,11 +56,8 @@ func Test_IngestRelationships(t *testing.T) {
 				rels := []ein.IngestibleRelationship{ingestibleRel}
 
 				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
-					// TODO: CI uses neo4j as the graph driver. this forces us to pass a non-empty
-					// kind to the identityKind parameter of IngestRelationships(). PG can handle empty kinds, neo cannot
-					// may want to update CI to run on the pg graph driver
 					timestampedBatch := graphify.NewTimestampedBatch(batch, time.Now().UTC())
-					err := graphify.IngestRelationships(timestampedBatch, graph.StringKind("Generic"), rels)
+					err := graphify.IngestRelationships(timestampedBatch, graph.EmptyKind, rels)
 					require.Nil(t, err)
 					return nil
 				})

@@ -28,9 +28,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 // fileContentContainsGenerationDirective uses a bufio.Scanner to search a given reader line-by-line

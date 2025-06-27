@@ -18,17 +18,7 @@ import { Typography } from '@mui/material';
 import { FC } from 'react';
 
 const Opsec: FC = () => {
-    return (
-        <Typography variant='body2'>
-            The present attack vector relies on the execution of a malicious Group Policy Object. In case some objects
-            in the target Organizational Unit are unable to apply said Group Policy Object (for instance, because these
-            objects cannot reach the attacker's machine in the internal network), events related to failed GPO
-            application will be created. Furthermore, the execution of this attack will result in the modification of
-            the gPLink property of the target Organizational Unit. The property should be reset to its original value
-            after attack execution to avoid detection and ensure the OU child items can apply their legitimate Group
-            Policy Objects again.
-        </Typography>
-    );
+    return <Typography variant='body2'>There is no opsec information for this edge.</Typography>;
 };
 
 export default Opsec;

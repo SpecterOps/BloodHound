@@ -25,13 +25,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
 	azure2 "github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 const (
@@ -103,7 +103,12 @@ func graphRelatedEntityType(ctx context.Context, db graph.Database, entityType, 
 		} else {
 			return bloodhoundgraph.PathSetToBloodHoundGraph(assignments), assignments.Len(), nil
 		}
-
+	case azure.RelatedEntityTypeRoleApprovers:
+		if approvers, err := azure.ListRoleApproverPaths(ctx, db, objectID); err != nil {
+			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
+		} else {
+			return bloodhoundgraph.PathSetToBloodHoundGraph(approvers), approvers.Len(), nil
+		}
 	case azure.RelatedEntityTypeVaultKeyReaders, azure.RelatedEntityTypeVaultSecretReaders, azure.RelatedEntityTypeVaultCertReaders, azure.RelatedEntityTypeVaultAllReaders:
 		if groupMembers, err := azure.ListKeyVaultReaderPaths(ctx, db, relatedEntityType, objectID); err != nil {
 			return nil, 0, api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("error fetching related entity type %s: %v", entityType, err), request)
@@ -217,6 +222,10 @@ func listRelatedEntityType(ctx context.Context, db graph.Database, entityType, o
 
 	case azure.RelatedEntityTypePIMAssignments:
 		if nodeSet, err = azure.ListEntityPIMAssignments(ctx, db, objectID, 0, 0); err != nil {
+			return nil, 0, err
+		}
+	case azure.RelatedEntityTypeRoleApprovers:
+		if nodeSet, err = azure.ListRoleApprovers(ctx, db, objectID, 0, 0); err != nil {
 			return nil, 0, err
 		}
 	case azure.RelatedEntityTypeVaultKeyReaders, azure.RelatedEntityTypeVaultSecretReaders, azure.RelatedEntityTypeVaultCertReaders, azure.RelatedEntityTypeVaultAllReaders:

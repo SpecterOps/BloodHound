@@ -19,8 +19,11 @@ import { AssetGroupTag, AssetGroupTagSelector, SeedTypeCypher, SeedTypesMap } fr
 import { DateTime } from 'luxon';
 import { FC } from 'react';
 import { UseQueryResult } from 'react-query';
+import { useParams } from 'react-router-dom';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
+import SalesMessage from '../SalesMessage';
+import { OWNED_ID, TIER_ZERO_ID } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 
@@ -49,9 +52,12 @@ const DescriptionField: FC<{ description: string }> = ({ description }) => {
 const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const lastUpdated = DateTime.fromISO(data.updated_at).toFormat(LuxonFormat.YEAR_MONTH_DAY_SLASHES);
 
+    const { tierId = '', labelId } = useParams();
+    const tagId = labelId === undefined ? tierId : labelId;
+
     return (
-        <div className='max-h-full flex flex-col gap-8'>
-            <Card className='px-6 py-6 max-w-[32rem]'>
+        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+            <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
                 </div>
@@ -64,13 +70,17 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Created By' value={data.created_by} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
                 </div>
                 <div className='mt-4' hidden>
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
+            {tagId !== TIER_ZERO_ID && tagId !== OWNED_ID && <SalesMessage />}
             <ObjectCountPanel tagId={data.id.toString()} />
         </div>
     );
@@ -81,8 +91,8 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
     const seedType = getSelectorSeedType(data);
 
     return (
-        <div className='max-h-full flex flex-col gap-8'>
-            <Card className='px-6 py-6 max-w-[32rem]'>
+        <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
+            <Card className='px-6 py-6'>
                 <div className='text-xl font-bold truncate' title={data.name}>
                     {data.name}
                 </div>
@@ -90,14 +100,17 @@ const SelectorDetails: FC<{ data: AssetGroupTagSelector }> = ({ data }) => {
                     <DescriptionField description={data.description} />
                 </div>
                 <div className='mt-4'>
-                    <DetailField label='Created by' value={data.created_by} />
+                    <DetailField label='Created By' value={data.created_by} />
+                </div>
+                <div className='mt-4'>
+                    <DetailField label='Last Updated By' value={data.updated_by} />
                     <DetailField label='Last Updated' value={lastUpdated} />
-                    <DetailField label='Type' value={SeedTypesMap[seedType]} />
                 </div>
                 <div className='mt-4' hidden>
                     <DetailField label='Automatic Certification' value={data.auto_certify ? 'Enabled' : 'Disabled'} />
                 </div>
                 <div className='mt-4'>
+                    <DetailField label='Type' value={SeedTypesMap[seedType]} />
                     <DetailField label='Selector Status' value={data.disabled_at ? 'Disabled' : 'Enabled'} />
                 </div>
             </Card>

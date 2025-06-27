@@ -20,9 +20,10 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/specterops/bloodhound/src/model"
 )
 
 // SavedQueriesPermissionsData methods representing the database interactions pertaining to the saved_queries_permissions model
@@ -33,6 +34,7 @@ type SavedQueriesPermissionsData interface {
 	GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (SavedQueryScopeMap, error)
 	IsSavedQueryPublic(ctx context.Context, savedQueryID int64) (bool, error)
 	IsSavedQuerySharedToUser(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
+	IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error)
 }
 
 // SavedQueryScopeMap holds the information of a saved query's scope [IE: owned, shared, public]
@@ -129,5 +131,11 @@ func (s *BloodhoundDB) IsSavedQuerySharedToUser(ctx context.Context, queryID int
 	rows := int64(0)
 	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND shared_to_user_id = ?", queryID, userID).Count(&rows)
 
+	return rows > 0, CheckError(result)
+}
+
+func (s *BloodhoundDB) IsSavedQuerySharedToUserOrPublic(ctx context.Context, queryID int64, userID uuid.UUID) (bool, error) {
+	rows := int64(0)
+	result := s.db.WithContext(ctx).Table("saved_queries_permissions").Where("query_id = ? AND (shared_to_user_id = ? or public = true)", queryID, userID).Count(&rows)
 	return rows > 0, CheckError(result)
 }

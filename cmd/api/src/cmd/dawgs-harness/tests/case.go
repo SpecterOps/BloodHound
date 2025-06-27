@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 type TestDelegate func(testCase *TestCase) any

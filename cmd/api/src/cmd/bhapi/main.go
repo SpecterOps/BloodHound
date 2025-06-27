@@ -24,12 +24,12 @@ import (
 	"os"
 
 	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/bootstrap"
 	"github.com/specterops/bloodhound/src/config"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/services"
 	"github.com/specterops/bloodhound/src/version"
+	"github.com/specterops/dawgs/graph"
 )
 
 func printVersion() {

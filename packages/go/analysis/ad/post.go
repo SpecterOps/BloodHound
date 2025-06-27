@@ -25,13 +25,13 @@ import (
 	"github.com/RoaringBitmap/roaring/roaring64"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/impact"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func PostProcessedRelationships() []graph.Kind {
@@ -67,6 +67,8 @@ func PostProcessedRelationships() []graph.Kind {
 		ad.CoerceAndRelayNTLMToSMB,
 		ad.CoerceAndRelayNTLMToLDAP,
 		ad.CoerceAndRelayNTLMToLDAPS,
+		ad.GPOAppliesTo,
+		ad.CanApplyGPO,
 		ad.HasTrustKeys,
 	}
 }

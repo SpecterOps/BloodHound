@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	LogLevelVarName = "SB_LOG_LEVEL"
-	VersionVarName  = "SB_VERSION"
+	LogLevelVarName           = "SB_LOG_LEVEL"
+	VersionVarName            = "SB_VERSION"
+	PostgresConnectionVarName = "SB_PG_CONNECTION"
 )
 
 // Environment is a string map representation of env vars

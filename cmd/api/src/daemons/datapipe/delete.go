@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func DeleteCollectedGraphData(ctx context.Context, graphDB graph.Database) error {

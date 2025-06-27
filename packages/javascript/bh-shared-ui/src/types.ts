@@ -38,7 +38,6 @@ type AdministrationItem = {
     path: string;
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
-    supportedSearchParams?: string[];
 };
 
 export type AdministrationSection = {
@@ -69,3 +68,7 @@ export type SelectedNode = {
     name: string;
     graphId?: string;
 };
+
+export type BaseGraphLayoutOptions = 'standard' | 'sequential';
+
+export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';

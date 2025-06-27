@@ -17,8 +17,8 @@
 package integration
 
 import (
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/test"
+	"github.com/specterops/dawgs/graph"
 )
 
 type GraphContext struct {

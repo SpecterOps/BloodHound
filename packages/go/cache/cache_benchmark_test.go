@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 type OUCacheEntry struct {

@@ -24,7 +24,8 @@ import { NodeIcon, SortableHeader } from '../../../components';
 import { useDebouncedValue, usePreviousValue } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { apiClient, cn } from '../../../utils';
-import { ItemSkeleton, SelectedHighlight, getListHeight } from './utils';
+import { ItemSkeleton } from '../utils';
+import { SelectedHighlight, getListHeight } from './utils';
 
 const ITEM_SIZE = 40;
 
@@ -42,7 +43,7 @@ const Row = ({
     const listItem = items[index];
 
     if (listItem === undefined) {
-        return ItemSkeleton(title, index, { ...style, whiteSpace: 'nowrap', padding: '0 8px' });
+        return ItemSkeleton(title, index, undefined, { ...style, whiteSpace: 'nowrap', padding: '0 8px' });
     }
 
     return (

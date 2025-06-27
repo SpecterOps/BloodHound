@@ -24,7 +24,6 @@ import (
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/analysis/ad"
 	"github.com/specterops/bloodhound/src/analysis/azure"
 	"github.com/specterops/bloodhound/src/config"
@@ -32,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/services/agi"
 	"github.com/specterops/bloodhound/src/services/dataquality"
+	"github.com/specterops/dawgs/graph"
 )
 
 var (
@@ -39,6 +39,7 @@ var (
 	ErrAnalysisPartiallyCompleted = errors.New("analysis partially completed")
 )
 
+// TODO Cleanup tieringEnabled after Tiering GA
 func RunAnalysisOperations(ctx context.Context, db database.Database, graphDB graph.Database, _ config.Configuration) error {
 	var (
 		collectedErrors      []error

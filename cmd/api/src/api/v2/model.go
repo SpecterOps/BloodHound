@@ -19,7 +19,6 @@ package v2
 import (
 	"github.com/gorilla/schema"
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
 	"github.com/specterops/bloodhound/src/config"
@@ -30,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/src/serde"
 	"github.com/specterops/bloodhound/src/services/fs"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
 )
 
 type ListPermissionsResponse struct {

@@ -18,6 +18,7 @@ import { SNACKBAR_DURATION_LONG } from '../../constants';
 import { useNotifications } from '../../providers';
 import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
+    CypherExploreGraphQuery,
     ExploreGraphQuery,
     compositionSearchQuery,
     cypherSearchQuery,
@@ -33,26 +34,32 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return nodeSearchQuery;
         case 'pathfinding':
             return pathfindingSearchQuery;
-        case 'cypher':
-            return cypherSearchQuery;
         case 'relationship':
             return relationshipSearchQuery;
         case 'composition':
             return compositionSearchQuery;
+        case 'cypher':
+            return cypherSearchQuery;
         default:
             return fallbackQuery;
     }
 }
 
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = () => {
+export const useExploreGraph = (includeProperties?: boolean) => {
     const params = useExploreParams();
+
     const { addNotification } = useNotifications();
 
     const query = exploreGraphQueryFactory(params);
 
+    const queryConfig =
+        params?.searchType === 'cypher'
+            ? (query as CypherExploreGraphQuery).getQueryConfig(params, includeProperties)
+            : query.getQueryConfig(params);
+
     return useQuery({
-        ...query.getQueryConfig(params),
+        ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
             addNotification(message, key, {

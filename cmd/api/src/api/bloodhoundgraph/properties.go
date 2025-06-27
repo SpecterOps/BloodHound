@@ -19,7 +19,7 @@ package bloodhoundgraph
 import (
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/analysis/tiering"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 func getNodeDisplayProperties(target *graph.Node) map[string]any {

@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/dawgs/graph"
 )
 
 func NewBaseEntityDetails(node *graph.Node) azure.BaseDetails {

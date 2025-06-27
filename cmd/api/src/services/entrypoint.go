@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/cache"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	schema "github.com/specterops/bloodhound/graphschema"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/api/registration"
@@ -40,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/dawgs/graph"
 )
 
 // ConnectPostgres initializes a connection to PG, and returns errors if any
@@ -102,7 +102,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 	} else if collectorManifests, err := cfg.SaveCollectorManifests(); err != nil {
 		return nil, fmt.Errorf("failed to save collector manifests: %w", err)
 	} else if ingestSchema, err := upload.LoadIngestSchema(); err != nil {
-		return nil, fmt.Errorf("failed to load ingest schema")
+		return nil, fmt.Errorf("failed to load OpenGraph schema: %w", err)
 	} else {
 		var (
 			graphQuery     = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)

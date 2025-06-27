@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/src/database"
 	"github.com/specterops/bloodhound/src/database/types/null"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
@@ -149,7 +149,7 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 	selector.Seeds = updateSeeds
 
 	// call the update function
-	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor, selector)
+	_, err = dbInst.UpdateAssetGroupTagSelector(testCtx, updateActor.ID.String(), updateActor.EmailAddress.ValueOrZero(), selector)
 	require.NoError(t, err)
 
 	readBackSelector, err := dbInst.GetAssetGroupTagSelectorBySelectorId(testCtx, selector.ID)
@@ -173,8 +173,6 @@ func TestDatabase_UpdateAssetGroupTagSelector(t *testing.T) {
 
 func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	var (
-		dbInst = integration.SetupDB(t)
-
 		testCtx             = context.Background()
 		tagTypeTier         = model.AssetGroupTagTypeTier
 		tagTypeLabel        = model.AssetGroupTagTypeLabel
@@ -185,13 +183,13 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		testName4           = "test4 tag name"
 		testDescription     = "test tag description"
 		position            = null.Int32{}
-		shiftedPosition     = null.Int32From(2)
-		shiftedPosition2    = null.Int32From(3)
 		requireCertifyTier  = null.BoolFrom(true)
 		requireCertifyLabel = null.Bool{}
 	)
 
 	t.Run("successfully creates tier", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
 		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName, testDescription, position, requireCertifyTier)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeTier, tag.Type)
@@ -205,6 +203,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
+		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
@@ -219,6 +218,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32From(2), tag.Position)
 		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
+		require.Equal(t, null.BoolFrom(false), tag.AnalysisEnabled)
 
 		// verify history record was also created
 		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
@@ -228,6 +228,8 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("successfully creates label", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
 		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeLabel, testActor, testName2, testDescription, position, requireCertifyLabel)
 		require.NoError(t, err)
 		require.Equal(t, tagTypeLabel, tag.Type)
@@ -241,6 +243,7 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
+		require.Equal(t, null.Bool{}, tag.AnalysisEnabled)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
@@ -255,78 +258,47 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 		require.Equal(t, testDescription, tag.Description)
 		require.Equal(t, null.Int32{}, tag.Position)
 		require.Equal(t, null.Bool{}, tag.RequireCertify)
+		require.Equal(t, null.Bool{}, tag.AnalysisEnabled)
 	})
 
 	t.Run("successfully creates and shifts tiers", func(t *testing.T) {
-		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName3, testDescription, shiftedPosition, requireCertifyTier)
+		var (
+			position2 = null.Int32From(2)
+			position3 = null.Int32From(3)
+			dbInst    = integration.SetupDB(t)
+		)
+
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName3, testDescription, position2, requireCertifyTier)
 		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, tag.Type)
-		require.False(t, tag.CreatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag.CreatedBy)
-		require.False(t, tag.UpdatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
-		require.Empty(t, tag.DeletedAt)
-		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName3, tag.Name)
-		require.Equal(t, testDescription, tag.Description)
-		require.Equal(t, null.Int32From(2), tag.Position)
-		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
 
 		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
 		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, tag.Type)
-		require.False(t, tag.CreatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag.CreatedBy)
-		require.False(t, tag.UpdatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag.UpdatedBy)
-		require.Empty(t, tag.DeletedAt)
-		require.Empty(t, tag.DeletedBy)
-		require.Equal(t, testName3, tag.Name)
-		require.Equal(t, testDescription, tag.Description)
-		require.Equal(t, null.Int32From(2), tag.Position)
-		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
+		require.Equal(t, position2, tag.Position)
 
-		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName4, testDescription, shiftedPosition2, requireCertifyTier)
+		// Create another tag at an existing position, forcing the first tag down
+		tag2, err := dbInst.CreateAssetGroupTag(testCtx, tagTypeTier, testActor, testName4, testDescription, position2, requireCertifyTier)
 		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, tag2.Type)
-		require.False(t, tag2.CreatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag2.CreatedBy)
-		require.False(t, tag2.UpdatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag2.UpdatedBy)
-		require.Empty(t, tag2.DeletedAt)
-		require.Empty(t, tag2.DeletedBy)
-		require.Equal(t, testName4, tag2.Name)
-		require.Equal(t, testDescription, tag.Description)
-		require.Equal(t, null.Int32From(3), tag2.Position)
-		require.Equal(t, null.BoolFrom(true), tag.RequireCertify)
 
 		tag2, err = dbInst.GetAssetGroupTag(testCtx, tag2.ID)
 		require.NoError(t, err)
-		require.Equal(t, tagTypeTier, tag2.Type)
-		require.False(t, tag2.CreatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag.CreatedBy)
-		require.False(t, tag2.UpdatedAt.IsZero())
-		require.Equal(t, testActor.ID.String(), tag2.UpdatedBy)
-		require.Empty(t, tag2.DeletedAt)
-		require.Empty(t, tag2.DeletedBy)
-		require.Equal(t, testName4, tag2.Name)
-		require.Equal(t, testDescription, tag2.Description)
-		require.Equal(t, null.Int32From(3), tag2.Position)
-		require.Equal(t, null.BoolFrom(true), tag2.RequireCertify)
+		require.Equal(t, position2, tag2.Position)
+
+		tag, err = dbInst.GetAssetGroupTag(testCtx, tag.ID)
+		require.NoError(t, err)
+		require.Equal(t, position3, tag.Position)
 
 		// verify history record was also created and shifted
 		history, err := dbInst.GetAssetGroupHistoryRecords(testCtx)
 		require.NoError(t, err)
-		require.Len(t, history, 6)
+		require.Len(t, history, 3)
 		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[0].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[1].Action)
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[2].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[3].Action)
-		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[4].Action)
-		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[5].Action)
+		require.Equal(t, model.AssetGroupHistoryActionUpdateTag, history[1].Action)
+		require.Equal(t, model.AssetGroupHistoryActionCreateTag, history[2].Action)
 	})
 
 	t.Run("Non existant tag errors out", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
 		_, err := dbInst.GetAssetGroupTag(testCtx, 1234)
 		require.Error(t, err)
 	})
@@ -335,12 +307,13 @@ func TestDatabase_CreateAssetGroupTag(t *testing.T) {
 
 func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 	var (
-		dbInst    = integration.SetupDB(t)
 		testCtx   = context.Background()
 		testActor = model.User{Unique: model.Unique{ID: uuid.FromStringOrNil("01234567-9012-4567-9012-456789012345")}}
 	)
 
 	t.Run("updates regular fields successfully", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
+
 		origTier, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeTier,
@@ -373,6 +346,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("returns error for duplicate name", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		_, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeTier,
@@ -402,6 +376,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("requires position set for tier", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		tier, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeTier,
@@ -420,6 +395,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("position is invalid for non-tier", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		tag, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeLabel,
@@ -434,10 +410,11 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		tag.Position = null.Int32From(2)
 
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
-		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
+		require.ErrorContains(t, err, "position, require_certify, and analysis_enabled are limited to tiers only")
 	})
 
 	t.Run("require_certify is invalid for non-tier", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		tag, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeLabel,
@@ -452,10 +429,11 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 		tag.RequireCertify = null.BoolFrom(false)
 
 		_, err = dbInst.UpdateAssetGroupTag(testCtx, testActor, tag)
-		require.ErrorContains(t, err, "position and require_certify are limited to tiers only")
+		require.ErrorContains(t, err, "position, require_certify, and analysis_enabled are limited to tiers only")
 	})
 
 	t.Run("blocks updating to position 1", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		tag, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeTier,
@@ -474,6 +452,7 @@ func TestDatabase_UpdateAssetGroupTag(t *testing.T) {
 	})
 
 	t.Run("blocks updating to invalid positions", func(t *testing.T) {
+		dbInst := integration.SetupDB(t)
 		tag, err := dbInst.CreateAssetGroupTag(
 			testCtx,
 			model.AssetGroupTagTypeTier,

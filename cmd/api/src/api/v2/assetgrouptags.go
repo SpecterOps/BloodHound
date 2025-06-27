@@ -26,11 +26,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/analysis"
 	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/auth"
@@ -42,6 +41,8 @@ import (
 	"github.com/specterops/bloodhound/src/model/appcfg"
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/utils/validation"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 )
 
 const (
@@ -273,7 +274,7 @@ func (s *Resources) UpdateAssetGroupTagSelector(response http.ResponseWriter, re
 			selector.Seeds = nil
 		}
 
-		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor, selector); err != nil {
+		if selector, err := s.DB.UpdateAssetGroupTagSelector(request.Context(), actor.ID.String(), actor.EmailAddress.ValueOrZero(), selector); err != nil {
 			api.HandleDatabaseError(request, response, err)
 		} else {
 			if seedsTemp != nil {
@@ -365,6 +366,14 @@ func (s *Resources) GetAssetGroupTagSelector(response http.ResponseWriter, reque
 	} else if selector.AssetGroupTagId != assetTagId {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "selector is not part of asset group tag", request), response)
 	} else {
+		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.CreatedBy)); err == nil {
+			selector.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
+		}
+
+		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(selector.UpdatedBy)); err == nil {
+			selector.UpdatedBy = updatedByUser.EmailAddress.ValueOrZero()
+		}
+
 		api.WriteBasicResponse(request.Context(), GetSelectorResponse{Selector: selector}, http.StatusOK, response)
 	}
 }
@@ -477,6 +486,14 @@ func (s *Resources) GetAssetGroupTag(response http.ResponseWriter, request *http
 	} else if assetGroupTag, err := s.DB.GetAssetGroupTag(request.Context(), tagId); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
+		if createdByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.CreatedBy)); err == nil {
+			assetGroupTag.CreatedBy = createdByUser.EmailAddress.ValueOrZero()
+		}
+
+		if updatedByUser, err := s.DB.GetUser(request.Context(), uuid.FromStringOrNil(assetGroupTag.UpdatedBy)); err == nil {
+			assetGroupTag.UpdatedBy = updatedByUser.EmailAddress.ValueOrZero()
+		}
+
 		api.WriteBasicResponse(request.Context(), getAssetGroupTagResponse{Tag: assetGroupTag}, http.StatusOK, response)
 	}
 }

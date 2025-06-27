@@ -1353,7 +1353,7 @@ func TestCreateUser_Failure(t *testing.T) {
 					Principal:    badUser.PrincipalName,
 					FirstName:    badUser.FirstName.String,
 					LastName:     badUser.LastName.String,
-					EmailAddress: badUser.EmailAddress.String,
+					EmailAddress: badUser.EmailAddress.ValueOrZero(),
 				},
 			}},
 			api.ErrorWrapper{

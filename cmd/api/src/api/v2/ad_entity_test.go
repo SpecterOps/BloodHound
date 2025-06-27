@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
 	"github.com/specterops/bloodhound/src/api"
@@ -33,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/src/api/v2/apitest"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

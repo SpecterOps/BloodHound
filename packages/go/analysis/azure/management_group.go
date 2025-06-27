@@ -19,8 +19,10 @@ package azure
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 )
 
 func NewManagementGroupEntityDetails(node *graph.Node) ManagementGroupDetails {
@@ -61,4 +63,22 @@ func PopulateManagementGroupEntityDetailsCounts(tx graph.Transaction, node *grap
 	}
 
 	return details, nil
+}
+
+func FetchManagementGroups(ctx context.Context, db graph.Database) (graph.NodeSet, error) {
+	var nodeSet graph.NodeSet
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		var err error
+		if nodeSet, err = ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
+			return query.Kind(query.Node(), azure.ManagementGroup)
+		})); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return nodeSet, nil
+	}
 }

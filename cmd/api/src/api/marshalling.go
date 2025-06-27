@@ -28,6 +28,7 @@ import (
 
 	"github.com/specterops/bloodhound/headers"
 	"github.com/specterops/bloodhound/mediatypes"
+
 	"github.com/specterops/bloodhound/src/api/stream"
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/utils"

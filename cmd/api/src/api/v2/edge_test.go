@@ -25,9 +25,9 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	graphmocks "github.com/specterops/bloodhound/dawgs/graph/mocks"
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/utils/test"
+	graphmocks "github.com/specterops/bloodhound/src/vendormocks/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

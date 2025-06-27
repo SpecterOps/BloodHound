@@ -186,7 +186,6 @@ func Test_FileUploadWorkFlowVersion6(t *testing.T) { //***
 		"v6/ingest/groups.json",
 		"v6/ingest/ous.json",
 		"v6/ingest/users.json",
-		"v6/ingest/deleted.json",
 		"v6/ingest/sessions.json",
 	})
 
@@ -261,7 +260,6 @@ func Test_CompressedFileUploadWorkFlowVersion6(t *testing.T) { //***
 		"v6/ingest/groups.json",
 		"v6/ingest/ous.json",
 		"v6/ingest/users.json",
-		"v6/ingest/deleted.json",
 		"v6/ingest/sessions.json",
 	})
 

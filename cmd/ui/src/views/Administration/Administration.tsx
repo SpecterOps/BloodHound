@@ -17,6 +17,7 @@
 import { Box, CircularProgress, Container } from '@mui/material';
 import {
     AdministrationSection,
+    AppNavigate,
     GenericErrorBoundaryFallback,
     Permission,
     SubNav,
@@ -25,7 +26,7 @@ import {
 } from 'bh-shared-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import {
     DEFAULT_ADMINISTRATION_ROUTE,
     ROUTE_ADMINISTRATION,
@@ -179,7 +180,7 @@ const Administration: React.FC = () => {
                                     <Route
                                         path='*'
                                         element={
-                                            <Navigate
+                                            <AppNavigate
                                                 to={getSubRoute(ROUTE_ADMINISTRATION, DEFAULT_ADMINISTRATION_ROUTE)}
                                                 replace
                                             />

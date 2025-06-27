@@ -54,7 +54,8 @@ export const initGraph = (
     items: GraphData,
     theme: Theme,
     darkMode: boolean,
-    customIcons: IconDictionary
+    customIcons: IconDictionary,
+    hideNodes: boolean
 ) => {
     const { nodes, edges } = items;
 
@@ -76,7 +77,7 @@ export const initGraph = (
         },
     };
 
-    initGraphNodes(graph, nodes, themedOptions, customIcons);
+    initGraphNodes(graph, nodes, themedOptions, customIcons, hideNodes);
     initGraphEdges(graph, edges, themedOptions);
 
     random.assign(graph, { scale: 1000 });
@@ -89,7 +90,8 @@ const initGraphNodes = (
     graph: MultiDirectedGraph,
     nodes: GraphNodes,
     themedOptions: ThemedOptions,
-    customIcons: IconDictionary
+    customIcons: IconDictionary,
+    hideNodes: boolean
 ) => {
     Object.keys(nodes).forEach((key: string) => {
         const node = nodes[key];
@@ -98,6 +100,7 @@ const initGraphNodes = (
             type: 'combined',
             label: node.label,
             forceLabel: true,
+            hidden: hideNodes,
             ...themedOptions.labels,
         };
 

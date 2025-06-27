@@ -20,10 +20,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/specterops/bloodhound/cypher/models/cypher"
-	"github.com/specterops/bloodhound/dawgs/query"
 	"github.com/specterops/bloodhound/src/api"
 	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/dawgs/cypher/models/cypher"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 

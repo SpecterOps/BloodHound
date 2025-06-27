@@ -29,6 +29,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/headers"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
+
 	v2 "github.com/specterops/bloodhound/src/api/v2"
 	"github.com/specterops/bloodhound/src/auth"
 	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
@@ -36,8 +39,6 @@ import (
 	"github.com/specterops/bloodhound/src/queries"
 	"github.com/specterops/bloodhound/src/queries/mocks"
 	"github.com/specterops/bloodhound/src/utils/test"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/mock/gomock"
 )
 
 func TestResources_CypherQuery(t *testing.T) {
@@ -60,6 +61,57 @@ func TestResources_CypherQuery(t *testing.T) {
 	}
 
 	tt := []testData{
+		{
+			name: "Test Ordered node keys",
+			buildRequest: func() *http.Request {
+				payload := &v2.CypherQueryPayload{
+					Query:             "query",
+					IncludeProperties: true,
+				}
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					t.Fatalf("error occurred while marshaling payload necessary for test: %v", err)
+				}
+
+				return &http.Request{
+					URL: &url.URL{
+						Path: "/api/v2/graphs/cypher",
+					},
+					Body: io.NopCloser(bytes.NewReader(jsonPayload)),
+					Header: http.Header{
+						headers.ContentType.String(): []string{
+							"application/json",
+						},
+					},
+					Method: http.MethodPost,
+				}
+			},
+			setupMocks: func(t *testing.T, mocks *mock) {
+				t.Helper()
+				mocks.mockGraphQuery.EXPECT().PrepareCypherQuery("query", int64(queries.DefaultQueryFitnessLowerBoundExplore)).Return(queries.PreparedQuery{
+					HasMutation: false,
+				}, nil)
+				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
+					Nodes: map[string]model.UnifiedNode{
+						"1": {
+							Label:      "label",
+							Properties: map[string]any{"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},
+						},
+					},
+					Edges: []model.UnifiedEdge{
+						{
+							Properties: map[string]any{"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},
+							Source:     "source",
+						},
+					},
+				}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"node_keys": ["apple", "ball", "key", "zebra"], "edge_keys": ["apple", "ball", "key", "zebra"], "nodes":{"1":{"label":"label","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","properties": {"apple": "snake", "zebra": "elmo", "key": "value", "ball": "value"},"kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
 		{
 			name: "Error: empty request body - Bad Request",
 			buildRequest: func() *http.Request {
@@ -259,7 +311,8 @@ func TestResources_CypherQuery(t *testing.T) {
 				mocks.mockGraphQuery.EXPECT().RawCypherQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(model.UnifiedGraph{
 					Nodes: map[string]model.UnifiedNode{
 						"1": {
-							Label: "label",
+							Label:      "label",
+							Properties: map[string]any{"key": "value"},
 						},
 					},
 					Edges: []model.UnifiedEdge{
@@ -271,7 +324,7 @@ func TestResources_CypherQuery(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusOK,
-				responseBody:   `{"data":{"nodes":{"1":{"label":"label","kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
+				responseBody:   `{"data":{"node_keys": ["key"], "nodes":{"1":{"label":"label","properties": {"key": "value"},"kind":"","objectId":"","isTierZero":false,"isOwnedObject":false,"lastSeen":"0001-01-01T00:00:00Z"}},"edges":[{"source":"source","target":"","label":"","kind":"","lastSeen":"0001-01-01T00:00:00Z"}]}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},

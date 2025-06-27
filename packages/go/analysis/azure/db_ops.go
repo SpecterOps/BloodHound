@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
 	"github.com/specterops/bloodhound/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 func ListEntityDescendentPaths(ctx context.Context, db graph.Database, relatedEntityType RelatedEntityType, objectID string) (graph.PathSet, error) {
@@ -444,6 +444,32 @@ func ListEntityPIMAssignments(ctx context.Context, db graph.Database, objectID s
 			return err
 		} else {
 			nodes, err = FetchEntityPIMAssignments(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
+func ListRoleApprovers(ctx context.Context, db graph.Database, objectID string, skip, limit int) (graph.NodeSet, error) {
+	var nodes graph.NodeSet
+
+	return nodes, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			nodes, err = FetchRoleApprovers(tx, node, skip, limit)
+			return err
+		}
+	})
+}
+
+func ListRoleApproverPaths(ctx context.Context, db graph.Database, objectID string) (graph.PathSet, error) {
+	var paths graph.PathSet
+
+	return paths, db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		if node, err := FetchEntityByObjectID(tx, objectID); err != nil {
+			return err
+		} else {
+			paths, err = FetchRoleApproverPaths(tx, node)
 			return err
 		}
 	})

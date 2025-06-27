@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/analysis/ad/internal/nodeprops"
-	"github.com/specterops/bloodhound/dawgs/graph"
 	"github.com/specterops/bloodhound/graphschema/ad"
 	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

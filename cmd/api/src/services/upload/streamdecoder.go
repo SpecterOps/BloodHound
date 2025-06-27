@@ -17,6 +17,7 @@
 package upload
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
+
 	"github.com/specterops/bloodhound/src/model/ingest"
 )
 
@@ -373,6 +375,16 @@ func isHomogeneousArray(arr []any) bool {
 		}
 	}
 	return true
+}
+
+// ReadZippedFile - Util Function to help read zipped files
+func ReadZippedFile(zf *zip.File) ([]byte, error) {
+	f, err := zf.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return io.ReadAll(f)
 }
 
 func ValidateZipFile(reader io.Reader) error {

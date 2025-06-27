@@ -36,6 +36,7 @@ type IngestSchema struct {
 	EdgeSchema *jsonschema.Schema
 }
 
+// LoadIngestSchema constructs the JSON schema for OpenGraph ingest payloads
 func LoadIngestSchema() (IngestSchema, error) {
 	var schema IngestSchema
 	if nodeSchema, err := loadSchema("node.json"); err != nil {
