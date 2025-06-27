@@ -48,8 +48,8 @@ RUN go run github.com/specterops/bloodhound/packages/go/stbernard deps
 # Build
 ################
 FROM deps AS builder
-ARG TARGETOS
-ARG TARGETARCH
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 ENV CGO_ENABLED=0
 ENV SB_VERSION=${version}
 WORKDIR /bloodhound
