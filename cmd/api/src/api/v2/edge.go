@@ -89,13 +89,13 @@ func parseEdgeFromParams(response http.ResponseWriter, request *http.Request, gr
 		return nil, fmt.Errorf("%s parameter missing", edgeParameterTargetNode)
 	} else if len(edgeType) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterEdgeType), request), response)
-		return nil, fmt.Errorf("%s parameter empty", edgeParameterEdgeType)
+		return nil, fmt.Errorf("multiple values for %s parameter", edgeParameterEdgeType)
 	} else if len(sourceNode) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterSourceNode), request), response)
-		return nil, fmt.Errorf("%s parameter empty", edgeParameterSourceNode)
+		return nil, fmt.Errorf("multiple values for %s parameter", edgeParameterSourceNode)
 	} else if len(targetNode) > 1 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Expected only one %s.", edgeParameterTargetNode), request), response)
-		return nil, fmt.Errorf("%s parameter missing", edgeParameterTargetNode)
+		return nil, fmt.Errorf("multiple values for %s parameter", edgeParameterTargetNode)
 	} else if kind, err := analysis.ParseKind(edgeType[0]); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid edge requested: %s", edgeType[0]), request), response)
 		return nil, err
