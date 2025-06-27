@@ -131,7 +131,7 @@ func (s *Resources) GetEdgeACEInheritancePath(response http.ResponseWriter, requ
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
 	} else if pathSet, err := ad.FetchACEInheritancePath(request.Context(), s.Graph, edge); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Error getting ACE inheritance path for edge: %v", err), request), response)
 	} else {
 		unifiedGraph := model.NewUnifiedGraph()
 		unifiedGraph.AddPathSet(pathSet, true)
