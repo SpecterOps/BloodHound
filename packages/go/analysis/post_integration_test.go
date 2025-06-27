@@ -21,8 +21,9 @@ package analysis_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/graphschema/common"
 	"testing"
+
+	"github.com/specterops/bloodhound/graphschema/common"
 
 	"github.com/specterops/bloodhound/analysis"
 	adAnalysis "github.com/specterops/bloodhound/analysis/ad"

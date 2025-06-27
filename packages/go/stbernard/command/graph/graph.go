@@ -73,6 +73,7 @@ func (s *command) Name() string {
 
 // Parse command flags
 func (s *command) Parse(cmdIndex int) error {
+	var err error
 	cmd := flag.NewFlagSet(Name, flag.ContinueOnError)
 
 	cmd.StringVar(&s.outfile, "outfile", "/tmp/graph.json", "destination path for generic graph file, default is {root}/tmp/graph.json")
@@ -95,6 +96,11 @@ func (s *command) Parse(cmdIndex int) error {
 		return fmt.Errorf("path flag is required")
 	}
 
+	s.path, err = filepath.Abs(s.path)
+	if err != nil {
+		return fmt.Errorf("could not convert path to absolute path: %w", err)
+	}
+
 	return nil
 }
 
@@ -106,7 +112,7 @@ func (s *command) Run() error {
 	if database, err := s.initializeDatabase(ctx); err != nil {
 		return fmt.Errorf("error connecting to database: %w", err)
 	} else if ingestFilePaths, err := s.getIngestFilePaths(); err != nil {
-		return fmt.Errorf("error getting ingest file paths from test directory %w", err)
+		return fmt.Errorf("error getting ingest file paths from directory %w", err)
 	} else if err = ingestData(ctx, ingestFilePaths, database); err != nil {
 		return fmt.Errorf("error ingesting data %w", err)
 	} else if nodes, edges, err := getNodesAndEdges(ctx, database); err != nil {

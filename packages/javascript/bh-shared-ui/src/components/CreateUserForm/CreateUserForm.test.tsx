@@ -109,8 +109,9 @@ describe('CreateUserForm', () => {
         await user.type(screen.getByLabelText(/Initial password/i), ' ');
         await user.click(button);
 
-        expect(await screen.findByText(`Principal Name must be ${MIN_NAME_LENGTH} characters or more`))
-            .toBeInTheDocument();
+        expect(
+            await screen.findByText(`Principal Name must be ${MIN_NAME_LENGTH} characters or more`)
+        ).toBeInTheDocument();
         expect(await screen.findByText(`First Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument();
         expect(await screen.findByText(`Last Name must be ${MIN_NAME_LENGTH} characters or more`)).toBeInTheDocument();
         expect(await screen.findByText('Password must be at least 12 characters long')).toBeInTheDocument();
@@ -148,12 +149,18 @@ describe('CreateUserForm', () => {
 
         await user.click(button);
 
-        expect(await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`))
-            .toBeInTheDocument();
-        expect(await screen.findByText(`Principal Name must be less than ${MAX_NAME_LENGTH} characters`))
-            .toBeInTheDocument();
-        expect(await screen.findByText(`First Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument();
-        expect(await screen.findByText(`Last Name must be less than ${MAX_NAME_LENGTH} characters`)).toBeInTheDocument();
+        expect(
+            await screen.findByText(`Email address must be less than ${MAX_EMAIL_LENGTH} characters`)
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText(`Principal Name must be less than ${MAX_NAME_LENGTH} characters`)
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText(`First Name must be less than ${MAX_NAME_LENGTH} characters`)
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByText(`Last Name must be less than ${MAX_NAME_LENGTH} characters`)
+        ).toBeInTheDocument();
         expect(await screen.findByText('Password must be less than 1000 characters')).toBeInTheDocument();
     });
 
