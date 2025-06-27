@@ -26,5 +26,8 @@ INSERT INTO parameters (key, name, description, value, created_at, updated_at) V
 -- Add Auth Session TTL Hours
 INSERT INTO parameters (key, name, description, value, created_at, updated_at) VALUES ('auth.session_ttl_hours', 'Auth Session TTL Hours', 'This configuration parameter determines the length of time in hours a logged in session stays active before expiration.', '{"hours": 8}', current_timestamp, current_timestamp) ON CONFLICT DO NOTHING;
 
--- retire auto_tag_t0_parent_objects EA setting
+-- Set the `auto_tag_t0_parent_objects` feature flag to true
+UPDATE feature_flags SET enabled = true WHERE key = 'auto_tag_t0_parent_objects';
+
+-- Retire auto_tag_t0_parent_objects EA setting
 UPDATE feature_flags SET user_updatable = false WHERE key = 'auto_tag_t0_parent_objects';
