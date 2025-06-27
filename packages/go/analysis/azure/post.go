@@ -132,6 +132,7 @@ func PostProcessedRelationships() []graph.Kind {
 		azure.AZMGGrantAppRoles,
 		azure.AZMGGrantRole,
 		azure.SyncedToADUser,
+		azure.AZRoleApprover,
 	}
 }
 

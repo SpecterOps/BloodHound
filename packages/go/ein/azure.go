@@ -1897,6 +1897,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		return targetAZRole, rels
 	}
 
+	// TODO: Verify the edge creation here. The logic looks identical to the post processing for this edge and we could remove the edge creation here
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
 		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
