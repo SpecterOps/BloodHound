@@ -24,6 +24,8 @@ export { default as useApiVersion } from './useApiVersion';
 
 export { default as useCreateDisableZoomRef } from './useCreateDisableZoomRef';
 
+export * from './useAssetGroupTags';
+
 export * from './useAvailableEnvironments';
 
 export * from './useConfiguration';
