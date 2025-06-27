@@ -13,10 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useSearchParams } from 'react-router-dom';
 import InfiniteScrollingTable from '../../components/InfiniteScrollingTable';
-import { SelectedNode } from '../../types';
 import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
@@ -26,11 +26,11 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     queryType,
     countLabel,
     sections,
-    additionalSections,
     parentLabels = [],
 }) => {
-    //const { setEntityPanelParams, expandedPanelSections } = useEntityPanelParams();
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const [onClick, setOnClick] = useState(false);
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
@@ -53,8 +53,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         { refetchOnWindowFocus: false, retry: false }
     );
 
-    //const isUnderRenderLimit = countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT;
-
     const removeExpandedPanelSectionParams = () => {
         setSearchParams({ expandedPanelSections: parentLabels });
     };
@@ -69,37 +67,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         const labelList = [...(parentLabels as string[]), label];
 
         setSearchParams({ expandedPanelSections: labelList });
-
-        {
-            /*
-        if (!additionalSections) {
-            /*
-            setEntityPanelParams({
-                expandedPanelSections: labelList,
-                ...(isUnderRenderLimit && {
-                    searchType: 'relationship',
-                    relationshipQueryType: queryType,
-                    relationshipQueryItemId: id,
-                }),
-            });
-            setSearchParams({
-                expandedPanelSections: labelList,
-                ...(isUnderRenderLimit && {
-                    searchType: 'relationship',
-                    relationshipQueryType: queryType,
-                    relationshipQueryItemId: id,
-                }),
-            });
-        } else {
-            /*
-            setEntityPanelParams({
-                expandedPanelSections: labelList,
-            });
-
-            setSearchParams({ expandedPanelSections: labelList });
-        }
-        */
-        }
     };
 
     const handleOnChange = (isOpen: boolean) => {
@@ -114,7 +81,8 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    const setNodeSearchParams = (item: SelectedNode) => {
+    /*
+        const setNodeSearchParams = (item: SelectedNode) => {
         setSearchParams({
             primarySearch: item.id,
             searchType: 'node',
@@ -125,6 +93,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     const handleOnClick = (item: SelectedNode) => {
         setNodeSearchParams(item);
     };
+    */
 
     let count: number | undefined;
     if (Array.isArray(countQuery.data)) {
@@ -155,7 +124,7 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                 <InfiniteScrollingTable
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
-                    onClick={handleOnClick}
+                    //onClick={handleOnClick}
                 />
             )}
             {sections &&

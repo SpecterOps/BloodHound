@@ -90,9 +90,19 @@ const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
         type: item.label || item.kind || '',
     };
 
+    //const hasClickHandler = !!onClick; // Converts to boolean
+
+    const emptyOnClick = () => {};
+
+    console.log(onClick);
+    //console.log(emptyOnClick.toString());
+    //console.log(emptyOnClick);
+
     return (
         <ListItem
-            button
+            //button
+            button={!!onClick ? true : false}
+            //{...(hasClickHandler ? { button: true } : { button: false })}
             className={itemClass}
             onClick={() => {
                 onClick(normalizedItem);
@@ -115,7 +125,8 @@ const Row = memo(function Row({ data, index, style }: ListChildComponentProps) {
 const InfiniteScrollingTable: React.FC<InfiniteScrollingTableProps> = ({
     fetchDataCallback,
     itemCount = 1000,
-    onClick = () => {},
+    onClick,
+    //onClick = () => {},
 }) => {
     const [isFetching, setIsFetching] = useState(false);
     const [items, setItems] = useState<Record<number, any>>({});
