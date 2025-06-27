@@ -15,20 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faPlay, faQuestion, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faSave } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
 import { useRef, useState } from 'react';
 import { useQuery } from 'react-query';
+import { AppIcon } from '../../../components';
 import { graphSchema } from '../../../constants';
 import { useCreateSavedQuery } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { apiClient, cn } from '../../../utils';
 import CommonSearches from './CommonSearches';
 import SaveQueryDialog from './SaveQueryDialog';
-
 type CypherSearchState = {
     cypherQuery: string;
     setCypherQuery: (query: string) => void;
@@ -163,14 +163,14 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                             </div>
                         </Button>
 
-                        <Button asChild variant='secondary' size={'small'}>
+                        <Button asChild variant='secondary' size={'small'} className='px-1.5'>
                             <a
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noreferrer'
-                                target='_blank'>
-                                <div className='flex items-center'>
-                                    <FontAwesomeIcon icon={faQuestion} />
-                                    <p className='ml-2 text-base'>Help</p>
+                                target='_blank'
+                                className='group'>
+                                <div>
+                                    <AppIcon.Info size={24} />
                                 </div>
                             </a>
                         </Button>
