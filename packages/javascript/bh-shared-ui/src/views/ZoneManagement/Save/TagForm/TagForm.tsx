@@ -105,7 +105,7 @@ export const TagForm: FC = () => {
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
-    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled || false);
+    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
 
     const { TierList } = useContext(ZoneManagementContext);
 
@@ -228,6 +228,7 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+            setToggleEnabled(tagQuery.data.analysis_enabled);
         }
     }, [tagQuery.data]);
 
