@@ -19,7 +19,7 @@ graphify-ingest:
 
 # run st bernard directly
 stbernard *ARGS:
-  @go run github.com/specterops/bloodhound/packages/go/stbernard {{ARGS}}
+  @go tool stbernard {{ARGS}}
 
 # ensure dependencies are up to date
 ensure-deps *FLAGS:

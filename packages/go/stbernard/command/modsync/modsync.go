@@ -75,7 +75,7 @@ func (s *command) Parse(cmdIndex int) error {
 func (s command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace root: %w", err)
-	} else if err := golang.DownloadModules(paths.GoModules, s.env); err != nil {
+	} else if err := golang.TidyModules(paths.GoModules, s.env); err != nil {
 		return fmt.Errorf("downloading go modules: %w", err)
 	} else if err := golang.SyncWorkspace(paths.Root, s.env); err != nil {
 		return fmt.Errorf("syncing go workspace: %w", err)

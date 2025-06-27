@@ -29,7 +29,7 @@ require (
 	github.com/russellhaering/goxmldsig v1.5.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/specterops/dawgs v0.1.4-0.20250626181253-eb64a510f6dc
+	github.com/specterops/dawgs v0.1.5
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
@@ -99,3 +99,5 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+tool github.com/specterops/bloodhound/packages/go/stbernard

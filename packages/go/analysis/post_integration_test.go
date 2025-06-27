@@ -21,7 +21,6 @@ package analysis_test
 
 import (
 	"context"
-	"github.com/specterops/bloodhound/graphschema/common"
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -31,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"

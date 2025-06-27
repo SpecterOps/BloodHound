@@ -138,7 +138,7 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	// For each known module path attempt generation of each module package
 	for _, modPath := range modPaths {
 		if modulePackages, err := moduleListPackages(modPath); err != nil {
-			return fmt.Errorf("listing packages for module %s: %w", modPath, err)
+			return fmt.Errorf("getting module packages for %s: %w", modPath, err)
 		} else {
 			for _, modulePackage := range modulePackages {
 				if !channels.Submit(context.Background(), jobC, modulePackage) {
