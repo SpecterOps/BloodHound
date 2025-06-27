@@ -15,8 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button } from '@bloodhoundenterprise/doodleui';
-import { faPlay, faSave } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Checkbox, FormControlLabel, useTheme } from '@mui/material';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
@@ -156,10 +154,22 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                             onClick={() => {
                                 setShowSaveQueryDialog(true);
                             }}
-                            size={'small'}>
+                            size={'small'}
+                            className='rounded-r-none'>
                             <div className='flex items-center'>
-                                <FontAwesomeIcon icon={faSave} />
-                                <p className='ml-2 text-base'>Save Query</p>
+                                <p className='ml-2 text-base'>Save </p>
+                            </div>
+                        </Button>
+
+                        <Button
+                            variant='secondary'
+                            onClick={() => {
+                                setShowSaveQueryDialog(true);
+                            }}
+                            size={'small'}
+                            className='rounded-l-none pl-2 -ml-1'>
+                            <div className='flex items-center'>
+                                <AppIcon.CaretDown size={10} />
                             </div>
                         </Button>
 
@@ -177,8 +187,7 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
 
                         <Button onClick={() => handleCypherSearch()} size={'small'}>
                             <div className='flex items-center'>
-                                <FontAwesomeIcon icon={faPlay} />
-                                <p className='ml-2 text-base'>Run</p>
+                                <p className='text-base'>Run</p>
                             </div>
                         </Button>
                     </div>
