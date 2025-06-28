@@ -13,14 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useQuery } from 'react-query';
-import { apiClient } from '../../utils';
-
-export const useAssetGroupTags = () =>
-    useQuery({
-        queryKey: ['zone-management', 'tags'],
-        queryFn: async ({ signal }) => {
-            const response = await apiClient.getAssetGroupTags({ signal });
-            return response.data.data.tags;
-        },
-    });
+export const useZonePathParams = {};
