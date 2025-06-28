@@ -31,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/graphschema/common"
 	"github.com/specterops/bloodhound/src/test"
 	"github.com/specterops/bloodhound/src/test/integration/harnesses"
-	"github.com/specterops/bloodhound/src/test/must"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -9997,19 +9996,19 @@ func NewGPOAppliesToHarness(testContext *GraphTestContext) *GPOAppliesToHarness 
 func (s *GPOAppliesToHarness) Setup(graphTestContext *GraphTestContext) {
 	domainSid := RandomDomainSID()
 
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+
 	s.Computer1 = graphTestContext.NewActiveDirectoryComputer("Computer1", domainSid)
 	s.Computer2 = graphTestContext.NewActiveDirectoryComputer("Computer2", domainSid)
 	s.Computer3 = graphTestContext.NewActiveDirectoryComputer("Computer3", domainSid)
 
 	s.Container1 = graphTestContext.NewNode(
 		graph.AsProperties(graph.PropertyMap{
-			common.ObjectID: must.NewUUIDv4(),
+			common.ObjectID: RandomObjectID(graphTestContext.testCtx),
 			common.Name:     "Container1",
 		}),
 		ad.Entity, ad.Container,
 	)
-
-	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
 
 	s.GPO1 = graphTestContext.NewActiveDirectoryGPO("GPO1", domainSid)
 	s.GPO2 = graphTestContext.NewActiveDirectoryGPO("GPO2", domainSid)
@@ -10028,43 +10027,47 @@ func (s *GPOAppliesToHarness) Setup(graphTestContext *GraphTestContext) {
 	s.User3 = graphTestContext.NewActiveDirectoryUser("User3", domainSid)
 
 	graphTestContext.NewRelationship(s.Domain, s.Container1, ad.Contains)
+	graphTestContext.NewRelationship(s.Domain, s.OU1, ad.Contains)
 	graphTestContext.NewRelationship(s.Container1, s.User1, ad.Contains)
 	graphTestContext.NewRelationship(s.Container1, s.Group1, ad.Contains)
 	graphTestContext.NewRelationship(s.Container1, s.Computer1, ad.Contains)
+	graphTestContext.NewRelationship(s.OU1, s.OU2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU1, s.User2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU1, s.Computer2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU1, s.Group2, ad.Contains)
+	graphTestContext.NewRelationship(s.OU2, s.OU3, ad.Contains)
 	graphTestContext.NewRelationship(s.OU3, s.Computer3, ad.Contains)
+	graphTestContext.NewRelationship(s.OU3, s.User3, ad.Contains)
+	graphTestContext.NewRelationship(s.OU3, s.Group3, ad.Contains)
+
 	graphTestContext.NewRelationship(s.GPO1, s.Domain, ad.GPLink)
+	graphTestContext.NewRelationship(s.GPO2, s.OU1, ad.GPLink)
+	graphTestContext.NewRelationship(s.GPO3, s.OU2, ad.GPLink)
+
 	graphTestContext.NewRelationship(s.GPO1, s.User1, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO1, s.Computer1, ad.GPOAppliesTo)
-	graphTestContext.NewRelationship(s.OU3, s.User3, ad.Contains)
-	graphTestContext.NewRelationship(s.OU2, s.OU3, ad.Contains)
-	graphTestContext.NewRelationship(s.OU3, s.Group3, ad.Contains)
-	graphTestContext.NewRelationship(s.Domain, s.OU1, ad.Contains)
-	graphTestContext.NewRelationship(s.OU1, s.OU2, ad.Contains)
-	graphTestContext.NewRelationship(s.GPO2, s.OU1, ad.GPLink)
 	graphTestContext.NewRelationship(s.GPO2, s.Computer3, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO2, s.User3, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO3, s.Computer3, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO3, s.User3, ad.GPOAppliesTo)
-	graphTestContext.NewRelationship(s.GPO3, s.OU2, ad.GPLink)
-	graphTestContext.NewRelationship(s.OU1, s.User2, ad.Contains)
-	graphTestContext.NewRelationship(s.OU1, s.Computer2, ad.Contains)
-	graphTestContext.NewRelationship(s.OU1, s.Group2, ad.Contains)
+
 	graphTestContext.NewRelationship(s.GPO1, s.User2, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO1, s.Computer2, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO2, s.Computer2, ad.GPOAppliesTo)
 	graphTestContext.NewRelationship(s.GPO2, s.User2, ad.GPOAppliesTo)
+
+	graphTestContext.NewRelationship(s.Domain, s.Container1, ad.PropagatesACEsTo)
+	graphTestContext.NewRelationship(s.Domain, s.OU1, ad.PropagatesACEsTo)
+	graphTestContext.NewRelationship(s.Container1, s.Group1, ad.PropagatesACEsTo)
+	graphTestContext.NewRelationship(s.Container1, s.User1, ad.PropagatesACEsTo)
+	graphTestContext.NewRelationship(s.Container1, s.Computer1, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU1, s.Group2, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU1, s.Computer2, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU1, s.User2, ad.PropagatesACEsTo)
-	graphTestContext.NewRelationship(s.Domain, s.OU1, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU2, s.OU3, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU3, s.Group3, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU3, s.User3, ad.PropagatesACEsTo)
 	graphTestContext.NewRelationship(s.OU3, s.Computer3, ad.PropagatesACEsTo)
-	graphTestContext.NewRelationship(s.Container1, s.Group1, ad.PropagatesACEsTo)
-	graphTestContext.NewRelationship(s.Container1, s.User1, ad.PropagatesACEsTo)
-	graphTestContext.NewRelationship(s.Container1, s.Computer1, ad.PropagatesACEsTo)
-	graphTestContext.NewRelationship(s.Domain, s.Container1, ad.PropagatesACEsTo)
 }
 
 type HarnessDetails struct {
