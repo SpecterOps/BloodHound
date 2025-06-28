@@ -23,6 +23,7 @@ import {
     Input,
     Label,
     Skeleton,
+    Switch,
 } from '@bloodhoundenterprise/doodleui';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -32,6 +33,7 @@ import {
     AssetGroupTagTypeTier,
     AssetGroupTagTypes,
     UpdateAssetGroupTagRequest,
+    parseTieringConfiguration,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useContext, useEffect, useState } from 'react';
@@ -40,18 +42,20 @@ import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
-import SalesMessage from '../../SalesMessage';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { useAssetGroupTags } from '../../hooks';
 import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
+import { useGetConfiguration } from '../../../../hooks';
+
 type TagFormInputs = {
     name: string;
     description: string;
     position: number | null;
     type: AssetGroupTagTypes;
+    analysis_enabled: boolean;
 };
 
 const MAX_NAME_LENGTH = 250;
@@ -83,6 +87,7 @@ const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs):
     if (data.name !== workingCopy.name) diffed.name = workingCopy.name;
     if (data.description !== workingCopy.description) diffed.description = workingCopy.description;
     if (data.position !== workingCopy.position) diffed.position = workingCopy.position;
+    if (data.analysis_enabled !== workingCopy.analysis_enabled) diffed.analysis_enabled = workingCopy.analysis_enabled;
 
     return diffed;
 };
@@ -92,21 +97,28 @@ export const TagForm: FC = () => {
     const tagId = labelId === undefined ? tierId : labelId;
     const navigate = useAppNavigate();
     const location = useLocation();
+    const isEditPage = location.pathname.includes('save/tier');
+
+    const tagsQuery = useAssetGroupTags();
+    const tagQuery = useAssetGroupTagInfo(tagId);
 
     const { addNotification } = useNotifications();
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [position, setPosition] = useState<number | null>(null);
+    const [toggleEnabled, setToggleEnabled] = useState(tagQuery.data?.analysis_enabled);
 
-    const { TierList } = useContext(ZoneManagementContext);
+    const { TierList, SalesMessage } = useContext(ZoneManagementContext);
+
+    const { data } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+    const showAnalysisToggle = tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
     const {
         register,
         handleSubmit,
         formState: { errors },
+        setValue,
     } = useForm<TagFormInputs>();
-
-    const tagsQuery = useAssetGroupTags();
-    const tagQuery = useAssetGroupTagInfo(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -217,6 +229,7 @@ export const TagForm: FC = () => {
     useEffect(() => {
         if (tagQuery.data) {
             setPosition(tagQuery.data.position);
+            setToggleEnabled(tagQuery.data.analysis_enabled);
         }
     }, [tagQuery.data]);
 
@@ -272,6 +285,25 @@ export const TagForm: FC = () => {
                                         )}
                                     />
                                 </div>
+                                {isEditPage && showAnalysisToggle ? (
+                                    <div>
+                                        <Label htmlFor='analysis'>Enable Analysis</Label>
+                                        <div className='flex gap-3'>
+                                            <Switch
+                                                id='analysis'
+                                                checked={toggleEnabled}
+                                                {...register('analysis_enabled')}
+                                                data-testid='analysis_enabled'
+                                                onCheckedChange={(checked: boolean) => {
+                                                    setToggleEnabled(checked);
+                                                    setValue('analysis_enabled', checked);
+                                                }}
+                                            />
+                                            <p className='text-xs'>Include this tier when running analysis</p>
+                                        </div>
+                                    </div>
+                                ) : null}
+
                                 <div className='hidden'>
                                     <Label htmlFor='position'>Position</Label>
                                     <Input id='position' type='number' {...register('position', { value: position })} />
@@ -279,8 +311,8 @@ export const TagForm: FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    {location.pathname.includes('save/tier') && <SalesMessage />}
-                    <div className='flex justify-end gap-6 mt-4 w-[672px]'>
+                    {isEditPage && SalesMessage && <SalesMessage />}
+                    <div className='flex justify-end gap-6 mt-4 min-w-96 max-w-[672px]'>
                         {showDeleteButton(labelId, tierId) && (
                             <Button
                                 variant={'text'}

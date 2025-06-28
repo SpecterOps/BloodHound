@@ -38,6 +38,7 @@ export type CreateAssetGroupTagRequest = {
     position: number | null;
     type: AssetGroupTagTypes;
     requireCertify?: boolean;
+    analysis_enabled?: boolean;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
