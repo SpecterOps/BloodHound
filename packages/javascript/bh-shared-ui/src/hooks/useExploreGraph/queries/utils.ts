@@ -117,6 +117,7 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 objectid: value.objectId,
                 system_tags: tags.join(' '),
                 lastseen: lastSeen,
+                isTierZero: value.isTierZero,
                 ...(value?.properties || {}),
             },
         };

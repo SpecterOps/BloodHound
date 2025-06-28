@@ -18,7 +18,7 @@ import { Button, ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Checkbox } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
 import { format, formatPotentiallUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
@@ -48,6 +48,8 @@ const requiredColumns = {
     lastlogontimestamp: true,
 } as Record<string, boolean>;
 
+const MemoDataTable = memo(DataTable);
+
 const makeColumnDef = (key: any) =>
     ({
         accessorKey: key,
@@ -66,9 +68,16 @@ const ExploreTable = <TData extends HasData>({
 }: ExploreTableProps<TData>) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
-    const mungedData = useMemo(
-        () => (data && Object.keys(data).map((key) => ({ ...data?.[key]?.data, id: key }))) || [],
+
+    const unfilteredData = useMemo(
+        () => data && Object.entries(data).map(([key, value]) => ({ ...value.data, id: key })),
         [data]
+    );
+
+    const mungedData = useMemo(
+        () =>
+            unfilteredData?.filter((item) => item?.displayname?.toLowerCase?.()?.includes(searchInput?.toLowerCase())),
+        [searchInput, unfilteredData]
     );
 
     const nonRequiredColumnDefinitions: ColumnDef<any, any>[] = useMemo(
@@ -115,7 +124,7 @@ const ExploreTable = <TData extends HasData>({
                 },
                 cell: (cell) => <Checkbox checked={cell.getValue()} />,
             },
-            ...['objectid', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(makeColumnDef),
+            ...['objectid', 'displayname', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(makeColumnDef),
         ],
         []
     );
@@ -123,10 +132,47 @@ const ExploreTable = <TData extends HasData>({
     const tableColumns = useMemo(
         () => [...requiredColumnDefinitions, ...visibleColumnDefinitions],
         [requiredColumnDefinitions, visibleColumnDefinitions]
-    );
+    ) as DataTableProps['columns'];
+
     const columnOptionsForDropdown = useMemo(
         () => [...requiredColumnDefinitions, ...nonRequiredColumnDefinitions],
         [requiredColumnDefinitions, nonRequiredColumnDefinitions]
+    );
+
+    const handleSearchInputChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value),
+        []
+    );
+
+    const searchInputProps = useMemo(
+        () => ({
+            onChange: handleSearchInputChange,
+            value: searchInput,
+            placeholder: 'Search',
+        }),
+        [handleSearchInputChange, searchInput]
+    );
+    type DataTableProps = React.ComponentProps<typeof DataTable>;
+
+    const tableHeaderProps: DataTableProps['TableHeaderProps'] = useMemo(
+        () => ({
+            className: 'sticky top-0 z-10',
+        }),
+        []
+    );
+
+    const tableHeadProps: DataTableProps['TableHeadProps'] = useMemo(
+        () => ({
+            className: 'pr-4',
+        }),
+        []
+    );
+
+    const tableOptions: DataTableProps['tableOptions'] = useMemo(
+        () => ({
+            getRowId: (row) => row?.id,
+        }),
+        []
     );
 
     if (!open || !data) return null;
@@ -146,24 +192,14 @@ const ExploreTable = <TData extends HasData>({
                     onCloseClick={onClose}
                     tableName='Results'
                     resultsCount={mungedData?.length}
-                    SearchInputProps={{
-                        onChange: (e) => setSearchInput(e.target.value),
-                        value: searchInput,
-                        placeholder: 'Search',
-                    }}
+                    SearchInputProps={searchInputProps}
                 />
-                <DataTable
+                <MemoDataTable
                     className={`h-full *:h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]`}
-                    TableHeaderProps={{
-                        className: 'sticky top-0 z-10',
-                    }}
-                    TableHeadProps={{
-                        className: 'pr-4 pl-0',
-                    }}
-                    tableOptions={{
-                        getRowId: (row) => row?.id,
-                    }}
-                    data={mungedData}
+                    TableHeaderProps={tableHeaderProps}
+                    TableHeadProps={tableHeadProps}
+                    tableOptions={tableOptions}
+                    data={mungedData as unknown[]}
                     columns={tableColumns}
                 />
             </div>

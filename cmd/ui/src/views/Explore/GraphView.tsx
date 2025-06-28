@@ -69,12 +69,14 @@ const GraphView: FC = () => {
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
     const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
 
-    const handleManageColumnsChange = useCallback((items) => {
-        const newItems = makeMap(items);
+    const handleManageColumnsChange = useCallback(
+        (items: any) => {
+            const newItems = makeMap(items);
 
-        dispatch(setVisibleExploreTableColumns(newItems));
-        // TODO: why did I keep this array empty?
-    }, []);
+            dispatch(setVisibleExploreTableColumns(newItems));
+        },
+        [dispatch]
+    );
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;

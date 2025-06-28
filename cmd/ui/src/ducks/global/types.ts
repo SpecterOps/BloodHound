@@ -53,7 +53,7 @@ export interface GlobalViewState {
     // Future dev: exploreLayout and isExploreTableSelected are undefined until a user selects a layout. After that, the layout is persisted in localStorage (until cache clears)
     exploreLayout?: BaseGraphLayoutOptions;
     isExploreTableSelected?: boolean;
-    visibleExploreTableColumns?: Record<string, { isPinned?: boolean }>;
+    visibleExploreTableColumns?: Record<string, boolean>;
 }
 
 export interface GlobalOptionsState {
