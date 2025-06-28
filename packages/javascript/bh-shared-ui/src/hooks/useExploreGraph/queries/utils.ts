@@ -117,6 +117,8 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 objectid: value.objectId,
                 system_tags: tags.join(' '),
                 lastseen: lastSeen,
+                isTierZero: value.isTierZero,
+                ...(value?.properties || {}),
             },
         };
     }
@@ -129,7 +131,11 @@ export const transformToFlatGraphResponse = (graph: GraphResponse) => {
                 text: edge.label,
             },
             lastSeen: lastSeen,
-            data: { ...(edge.data || {}), lastseen: lastSeen },
+            data: {
+                ...(edge.data || {}),
+                lastseen: lastSeen,
+                ...(edge.data?.properties || {}),
+            },
         };
     }
     return result;
@@ -146,7 +152,7 @@ const getLastSeenValue = (object: any): string => {
 };
 
 const isLink = (item: any): boolean => {
-    return item.id1 !== undefined;
+    return item?.id1 !== undefined;
 };
 
 const isNode = (item: any): boolean => {

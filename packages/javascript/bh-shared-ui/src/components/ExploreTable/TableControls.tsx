@@ -13,41 +13,60 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Button, Input, InputProps } from '@bloodhoundenterprise/doodleui';
+
+import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react';
-import { cn } from '../../utils';
+import { ColumnDef } from '@tanstack/react-table';
+import React, { ForwardedRef, useMemo } from 'react';
+import { cn, formatPotentiallUnknownLabel } from '../../utils';
+import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
 
-export const TableControls = React.forwardRef<
-    HTMLTableSectionElement,
-    React.HTMLAttributes<HTMLTableSectionElement> & {
-        SearchInputProps?: InputProps;
-        resultsCount?: number;
-        tableName?: string;
-        className?: string;
-        onDownloadClick?: () => void;
-        onManageColumnsClick?: () => void;
-        onExpandClick?: () => void;
-        onCloseClick?: () => void;
-    }
->(
-    (
-        {
-            className,
-            resultsCount,
-            tableName = 'Results',
-            SearchInputProps,
-            onDownloadClick,
-            onCloseClick,
-            onExpandClick,
-            onManageColumnsClick,
-        },
-        ref
-    ) => (
-        <div ref={ref} className={cn('flex p-3 justify-between', className)}>
+type TableControlsProps<TData, TValue> = {
+    SearchInputProps?: InputProps;
+    columns: ColumnDef<TData, TValue>[];
+    visibleColumns: Record<string, boolean>;
+    pinnedColumns?: Record<string, boolean>;
+    resultsCount?: number;
+    tableName?: string;
+    className?: string;
+    onDownloadClick?: () => void;
+    onManageColumnsClick?: () => void;
+    onExpandClick?: () => void;
+    onCloseClick?: () => void;
+    onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
+};
+
+const TableControlsInner = <TData, TValue>(
+    {
+        className,
+        resultsCount,
+        columns,
+        pinnedColumns = {},
+        tableName = 'Results',
+        visibleColumns,
+        SearchInputProps,
+        onDownloadClick,
+        onCloseClick,
+        onExpandClick,
+        onManageColumnsChange,
+    }: TableControlsProps<TData, TValue>,
+    ref: ForwardedRef<HTMLDivElement>
+) => {
+    const parsedColumns = useMemo(
+        () =>
+            columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
+                id: columnDef?.id || '',
+                value: formatPotentiallUnknownLabel(columnDef?.id || ''),
+                isPinned: pinnedColumns[columnDef?.id || ''] || false,
+            })),
+        []
+    );
+
+    return (
+        <div ref={ref} className={cn('flex p-3 justify-between relative', className)}>
             <div>
                 <div className='font-bold text-lg'>{tableName}</div>
                 {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
@@ -72,14 +91,12 @@ export const TableControls = React.forwardRef<
                         <FontAwesomeIcon onClick={onExpandClick} className={ICON_CLASSES} icon={faExpand} />
                     </div>
                 )}
-                {onManageColumnsClick && (
-                    <div className='mb-1'>
-                        <Button
-                            className='hover:bg-gray-300 cursor-pointer bg-slate-200 h-8 text-black rounded-full text-sm text-center'
-                            onClick={onManageColumnsClick}>
-                            Manage Columns
-                        </Button>
-                    </div>
+                {onManageColumnsChange && (
+                    <ManageColumnsComboBox
+                        allItems={parsedColumns}
+                        visibleColumns={visibleColumns}
+                        onChange={onManageColumnsChange}
+                    />
                 )}
                 {onCloseClick && (
                     <div>
@@ -88,6 +105,11 @@ export const TableControls = React.forwardRef<
                 )}
             </div>
         </div>
-    )
-);
-TableControls.displayName = 'TableControls';
+    );
+};
+
+export const TableControls = React.forwardRef(TableControlsInner) as <TData, TValue>(
+    props: React.HTMLAttributes<HTMLTableSectionElement> & TableControlsProps<TData, TValue>
+) => ReturnType<typeof TableControlsInner>;
+
+TableControlsInner.displayName = 'TableControls';

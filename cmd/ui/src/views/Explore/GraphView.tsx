@@ -36,11 +36,11 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected, setVisibleExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -48,6 +48,11 @@ import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
+
+const makeMap = (items: any[]) =>
+    items.reduce((acc, col) => {
+        return { ...acc, [col?.accessorKey || col?.id || 'accessor_key_unavailable']: true };
+    }, {});
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -62,13 +67,25 @@ const GraphView: FC = () => {
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
+    const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
+
+    const handleManageColumnsChange = useCallback(
+        (items: any) => {
+            const newItems = makeMap(items);
+
+            dispatch(setVisibleExploreTableColumns(newItems));
+        },
+        [dispatch]
+    );
 
     if (!tableViewFeatureFlag?.enabled) {
         isExploreTableSelected = false;
     }
 
-    const includeProperties = !!isExploreTableSelected;
-    const graphQuery = useSigmaExploreGraph(includeProperties);
+    if (!tableViewFeatureFlag?.enabled) {
+        isExploreTableSelected = false;
+    }
+
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
@@ -83,10 +100,13 @@ const GraphView: FC = () => {
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
         enabled: !exploreLayout,
     });
+
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
+    const includeProperties = displayTable;
+    const graphQuery = useSigmaExploreGraph(includeProperties);
 
     useEffect(() => {
-        let items: any = graphQuery.data;
+        let items: any = graphQuery.data?.nodes;
 
         if (!items && !graphQuery.isError) return;
         if (!items) items = {};
@@ -103,7 +123,7 @@ const GraphView: FC = () => {
         setCurrentNodes(items.nodes);
 
         setGraphologyGraph(graph);
-    }, [graphQuery.data, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
+    }, [graphQuery.data?.nodes, theme, darkMode, graphQuery.isError, customIcons.data, displayTable]);
 
     // Changes highlighted item when browser back/forward is used
     useEffect(() => {
@@ -205,8 +225,11 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data}
+                    data={graphQuery.data?.nodes}
+                    allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
+                    visibleColumns={visibleColumns}
+                    onManageColumnsChange={handleManageColumnsChange}
                     onClose={() => {
                         setAutoDisplayTable(false);
                         dispatch(setIsExploreTableSelected(false));

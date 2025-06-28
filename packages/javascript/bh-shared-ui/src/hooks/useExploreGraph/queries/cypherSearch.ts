@@ -37,9 +37,15 @@ export const cypherSearchGraphQuery = (
 
     const decoded = decodeCypherQuery(cypherSearch);
 
+    const queryKey = [ExploreGraphQueryKey, searchType, cypherSearch];
+
+    if (includeProperties) {
+        queryKey.push('includeProperties');
+    }
+
     return {
         ...sharedGraphQueryOptions,
-        queryKey: [ExploreGraphQueryKey, searchType, cypherSearch],
+        queryKey: [ExploreGraphQueryKey, searchType, cypherSearch, includeProperties ? 'includeProperties' : ''],
         queryFn: ({ signal }) => apiClient.cypherSearch(decoded, { signal }, includeProperties).then((res) => res.data),
         retry: false,
         enabled: !!(searchType && cypherSearch),
