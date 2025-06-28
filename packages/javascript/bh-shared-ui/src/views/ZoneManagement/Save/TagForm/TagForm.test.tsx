@@ -15,12 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
 import TagForm from '.';
 import { longWait, render, screen, waitFor } from '../../../../test-utils';
-import { ConfigurationKey } from 'js-client-library';
 
 const testTierZero = {
     id: 1,
@@ -252,8 +252,6 @@ describe('Tag Form', () => {
         expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
         expect(screen.queryByText(/Enable Analysis/i)).toBeInTheDocument();
     });
-
-
 
     it('renders the form for editing an existing tier', async () => {
         // This url has the tier id of 1 in the path
