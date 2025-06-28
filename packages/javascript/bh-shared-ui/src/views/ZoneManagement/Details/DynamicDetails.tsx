@@ -22,10 +22,10 @@ import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
+import { ZoneManagementContext } from '../ZoneManagementContext';
 import { OWNED_ID, TIER_ZERO_ID } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
-import { ZoneManagementContext } from '../ZoneManagementContext';
 
 const DetailField: FC<{ label: string; value: string }> = ({ label, value }) => {
     return (

@@ -111,7 +111,8 @@ export const TagForm: FC = () => {
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
-    const showAnalysisToggle = tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
+    const showAnalysisToggle =
+        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
 
     const {
         register,
