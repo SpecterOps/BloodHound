@@ -341,7 +341,7 @@ func (s *GraphTestContext) NewAzureBase(name, objectID, tenantID string) *graph.
 	}), azure.Entity)
 }
 
-func (s *GraphTestContext) NewActiveDirectoryDomain(name, objectID string, blocksInheritance, collected bool) *graph.Node {
+func (s *GraphTestContext) NewActiveDirectoryDomain(name, objectID string, blocksInheritance, collected bool, additionalKinds ...graph.Kind) *graph.Node {
 	if collected {
 		s.Harness.NumCollectedActiveDirectoryDomains++
 	}
@@ -352,7 +352,7 @@ func (s *GraphTestContext) NewActiveDirectoryDomain(name, objectID string, block
 		ad.DomainSID:         objectID,
 		common.Collected:     collected,
 		ad.BlocksInheritance: blocksInheritance,
-	}), ad.Entity, ad.Domain)
+	}), append(additionalKinds, ad.Entity, ad.Domain)...)
 }
 
 func (s *GraphTestContext) NewActiveDirectoryComputer(name, domainSID string) *graph.Node {
