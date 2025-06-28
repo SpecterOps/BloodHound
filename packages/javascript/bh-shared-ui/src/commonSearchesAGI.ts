@@ -27,6 +27,10 @@ const adTransitEdgeTypes = ActiveDirectoryPathfindingEdges().join('|');
 const highPrivilegedRoleDisplayNameRegex =
     '^(Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator).*$';
 
+/*
+    NOTE: temporarily there exists 2 common searches files, edits here should be reflected in ./commonSearchesAGT.ts as well
+ */
+
 export const CommonSearches: CommonSearchType[] = [
     {
         subheader: 'Domain Information',
