@@ -19,6 +19,7 @@ import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
 import ADCSESC13 from './ADCSESC13/ADCSESC13';
+import ADCSESC16 from './ADCSESC16/ADCSESC16';
 import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import ADCSESC4 from './ADCSESC4/ADCSESC4';
 import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
@@ -131,6 +132,7 @@ import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
 import SyncedToEntraUser from './SyncedToEntraUser/SyncedToEntraUser';
 import TrustedForNTAuth from './TrustedForNTAuth/TrustedForNTAuth';
 import WriteAccountRestrictions from './WriteAccountRestrictions/WriteAccountRestrictions';
+import WriteAltSecurityIdentities from './WriteAltSecurityIdentities/WriteAltSecurityIdentities';
 import WriteDacl from './WriteDacl/WriteDacl';
 import WriteGPLink from './WriteGPLink/WriteGPLink';
 import WriteOwner from './WriteOwner/WriteOwner';
@@ -138,6 +140,7 @@ import WriteOwnerLimitedRights from './WriteOwnerLimitedRights/WriteOwnerLimited
 import WriteOwnerRaw from './WriteOwnerRaw/WriteOwnerRaw';
 import WritePKIEnrollmentFlag from './WritePKIEnrollmentFlag/WritePKIEnrollmentFlag';
 import WritePKINameFlag from './WritePKINameFlag/WritePKINameFlag';
+import WritePublicInformation from './WritePublicInformation/WritePublicInformation';
 import WriteSPN from './WriteSPN/WriteSPN';
 
 export type EdgeInfoProps = {
@@ -258,6 +261,7 @@ const EdgeInfoComponents = {
     ADCSESC10a: ADCSESC10a,
     ADCSESC10b: ADCSESC10b,
     ADCSESC13: ADCSESC13,
+    ADCSESC16: ADCSESC16,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
@@ -276,6 +280,8 @@ const EdgeInfoComponents = {
     CanApplyGPO: CanApplyGPO,
     GPOAppliesTo: GPOAppliesTo,
     HasTrustKeys: HasTrustKeys,
+    WriteAltSecurityIdentities: WriteAltSecurityIdentities,
+    WritePublicInformation: WritePublicInformation,
 };
 
 export default EdgeInfoComponents;

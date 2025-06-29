@@ -129,6 +129,7 @@
       "labels": [],
       "properties": {
         "IsUserSpecifiesSanEnabled": "True",
+        "IsUserSpecifiesSanEnabledCollected": "True",
         "kind": "EnterpriseCA"
       },
       "style": {
@@ -226,6 +227,7 @@
       "caption": "EnterpriseCA1",
       "labels": [],
       "properties": {
+        "IsUserSpecifiesSanEnabledCollected": "False",
         "kind": "EnterpriseCA"
       },
       "style": {
@@ -325,6 +327,7 @@
       "labels": [],
       "properties": {
         "IsUserSpecifiesSanEnabled": "True",
+        "IsUserSpecifiesSanEnabledCollected": "True",
         "kind": "EnterpriseCA"
       },
       "style": {
@@ -424,6 +427,7 @@
       "labels": [],
       "properties": {
         "IsUserSpecifiesSanEnabled": "True",
+        "IsUserSpecifiesSanEnabledCollected": "True",
         "kind": "EnterpriseCA"
       },
       "style": {
@@ -523,6 +527,7 @@
       "labels": [],
       "properties": {
         "IsUserSpecifiesSanEnabled": "True",
+        "IsUserSpecifiesSanEnabledCollected": "True",
         "kind": "EnterpriseCA"
       },
       "style": {

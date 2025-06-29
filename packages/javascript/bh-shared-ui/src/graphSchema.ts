@@ -140,6 +140,7 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
+    ADCSESC16 = 'ADCSESC16',
     SyncedToEntraUser = 'SyncedToEntraUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
@@ -154,6 +155,8 @@ export enum ActiveDirectoryRelationshipKind {
     GPOAppliesTo = 'GPOAppliesTo',
     CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
+    WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
+    WritePublicInformation = 'WritePublicInformation',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -297,6 +300,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
+        case ActiveDirectoryRelationshipKind.ADCSESC16:
+            return 'ADCSESC16';
         case ActiveDirectoryRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
@@ -325,6 +330,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
+        case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
+            return 'WriteAltSecurityIdentities';
+        case ActiveDirectoryRelationshipKind.WritePublicInformation:
+            return 'WritePublicInformation';
         default:
             return undefined;
     }
@@ -342,6 +351,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
+    'ADCSESC16',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
@@ -481,6 +491,10 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    RPCEncryptionEnforced = 'rpcencryptionenforced',
+    RPCEncryptionCollected = 'rpcencryptioncollected',
+    DisabledExtensions = 'disabledextensions',
+    DisabledExtensionsCollected = 'disabledextensionscollected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -746,6 +760,14 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.RPCEncryptionEnforced:
+            return 'RPC Encryption Enforced';
+        case ActiveDirectoryKindProperties.RPCEncryptionCollected:
+            return 'RPC Encryption Collected';
+        case ActiveDirectoryKindProperties.DisabledExtensions:
+            return 'Disabled Extensions';
+        case ActiveDirectoryKindProperties.DisabledExtensionsCollected:
+            return 'Disabled Extensions Collected';
         default:
             return undefined;
     }
@@ -793,6 +815,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.ADCSESC16,
         ActiveDirectoryRelationshipKind.SyncedToEntraUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
@@ -805,6 +828,10 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.GPOAppliesTo,
         ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,

@@ -27,6 +27,7 @@ import (
 	ad2 "github.com/specterops/bloodhound/analysis/ad"
 	"github.com/specterops/bloodhound/analysis/impact"
 	"github.com/specterops/bloodhound/graphschema"
+	"github.com/specterops/bloodhound/lab/arrows"
 
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -1272,13 +1273,14 @@ func TestADCSESC9a(t *testing.T) {
 			})); err != nil {
 				t.Fatalf("error fetching esc9a edges in integration test; %v", err)
 			} else {
-				assert.Equal(t, 6, len(results))
+				assert.Equal(t, 7, len(results))
 
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group1))
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group2))
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group3))
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group4))
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group5))
+				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.Group6))
 				assert.True(t, results.Contains(harness.ESC9aPrincipalHarness.User2))
 			}
 			return nil
@@ -2658,13 +2660,14 @@ func TestADCSESC10a(t *testing.T) {
 			})); err != nil {
 				t.Fatalf("error fetching esc10a edges in integration test; %v", err)
 			} else {
-				require.Equal(t, 6, len(results))
+				require.Equal(t, 7, len(results))
 
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group1))
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group2))
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group3))
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group4))
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group5))
+				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.Group6))
 				require.True(t, results.Contains(harness.ESC10aPrincipalHarness.User2))
 
 			}
@@ -3619,4 +3622,90 @@ func TestExtendedByPolicyBinding(t *testing.T) {
 			return nil
 		})
 	})
+}
+
+func TestADCSESC16(t *testing.T) {
+	var (
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+		graphDB = testCtx.Graph.Database
+	)
+
+	// Create graph
+	fixture, err := arrows.LoadGraphFromFile(integration.Harnesses, "harnesses/ADCSESC16Harness.json")
+	require.NoError(t, err)
+
+	testEdges := []arrows.Edge{}
+	otherEdges := []arrows.Edge{}
+	for _, edge := range fixture.Relationships {
+		if edge.Type == ad.ADCSESC16.String() {
+			testEdges = append(testEdges, edge)
+		} else {
+			otherEdges = append(otherEdges, edge)
+		}
+	}
+	fixture.Relationships = otherEdges
+
+	err = arrows.WriteGraphToDatabase(graphDB, &fixture)
+	require.NoError(t, err)
+
+	// Run post-processing
+	operation := analysis.NewPostRelationshipOperation(context.Background(), graphDB, "ADCS Post Process Test - ADCSESC16")
+	groupExpansions, enterpriseCertAuthorities, _, domains, cache, err := FetchADCSPrereqs(graphDB)
+	require.NoError(t, err)
+
+	for _, enterpriseCA := range enterpriseCertAuthorities {
+		innerEnterpriseCA := enterpriseCA
+		targetDomains := &graph.NodeSet{}
+		for _, domain := range domains {
+			innerDomain := domain
+
+			if cache.DoesCAChainProperlyToDomain(innerEnterpriseCA, innerDomain) {
+				targetDomains.Add(innerDomain)
+			}
+		}
+
+		operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- analysis.CreatePostRelationshipJob) error {
+			if err := ad2.PostADCSESC16(ctx, tx, outC, groupExpansions, innerEnterpriseCA, targetDomains, cache); err != nil {
+				t.Logf("failed post processing for %s: %v", ad.ADCSESC16.String(), err)
+			}
+			return nil
+		})
+	}
+	err = operation.Done()
+	require.Nil(t, err)
+
+	// Verify edges
+	if err = graphDB.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		if results, err := ops.FetchRelationshipIDs(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), ad.ADCSESC16)
+		})); err != nil {
+			t.Fatalf("error fetching ADCSESC16 edges in integration test; %v", err)
+		} else {
+			require.Equal(t, len(testEdges), len(results))
+		}
+
+		for _, testEdge := range testEdges {
+			if fromNode, found := findNodeByID(fixture.Nodes, testEdge.FromID); !found {
+				t.Fatalf("error finding source node with ID %s; %v", testEdge.FromID, err)
+			} else if toNode, found := findNodeByID(fixture.Nodes, testEdge.ToID); !found {
+				t.Fatalf("error finding destination node with ID %s; %v", testEdge.ToID, err)
+			} else if fromGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), fromNode.Caption)
+			})); err != nil || len(fromGraphNodeId) != 1 {
+				t.Fatalf("error fetching node with name %s in integration test; %v", fromNode.Caption, err)
+			} else if toGraphNodeId, err := ops.FetchNodeIDs(tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Equals(query.NodeProperty(common.Name.String()), toNode.Caption)
+			})); err != nil || len(toGraphNodeId) != 1 {
+				t.Fatalf("error fetching node with name %s in integration test; %v", toNode.Caption, err)
+			} else if edge, err := analysis.FetchEdgeByStartAndEnd(testCtx.Context(), graphDB, fromGraphNodeId[0], toGraphNodeId[0], ad.ADCSESC16); err != nil {
+				t.Fatalf("error fetching ADCSESC16 edge from node %s (ID: %d) to node %s (ID: %d) in integration test; %v", fromNode.Caption, fromGraphNodeId[0], toNode.Caption, toGraphNodeId[0], err)
+			} else {
+				require.NotNil(t, edge)
+			}
+		}
+
+		return nil
+	}); err != nil {
+		t.Fatalf("error in ADCSESC16 integration test; %v", err)
+	}
 }

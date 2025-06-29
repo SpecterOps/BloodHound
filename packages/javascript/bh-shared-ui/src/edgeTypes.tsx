@@ -96,7 +96,9 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
                     ActiveDirectoryRelationshipKind.CanApplyGPO,
                     ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+                    ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
                     ActiveDirectoryRelationshipKind.WriteGPLink,
+                    ActiveDirectoryRelationshipKind.WritePublicInformation,
                     ActiveDirectoryRelationshipKind.WriteSPN,
                 ],
             },
@@ -104,6 +106,8 @@ export const AllEdgeTypes: Category[] = [
                 name: 'Active Directory Certificate Services',
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.GoldenCert,
+                    ActiveDirectoryRelationshipKind.ManageCA,
+                    ActiveDirectoryRelationshipKind.ManageCertificates,
                     ActiveDirectoryRelationshipKind.ADCSESC1,
                     ActiveDirectoryRelationshipKind.ADCSESC3,
                     ActiveDirectoryRelationshipKind.ADCSESC4,
@@ -114,6 +118,7 @@ export const AllEdgeTypes: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,
+                    ActiveDirectoryRelationshipKind.ADCSESC16,
                 ],
             },
             {
