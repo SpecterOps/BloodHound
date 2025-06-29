@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../../graphSchema';
-import { render, screen, waitForElementToBeRemoved } from '../../../test-utils';
-import { EntityKinds } from '../../../utils';
-import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
+import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
+import { EntityKinds } from '../../utils';
+import { ObjectInfoPanelContextProvider } from '../../views';
 import EntityInfoContent from './EntityInfoContent';
 
 const server = setupServer(
@@ -71,13 +71,15 @@ const EntityInfoContentWithProvider = ({
     testId,
     nodeType,
     databaseId,
+    zoneManagement,
 }: {
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
+    zoneManagement?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
+        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} zoneManagement={zoneManagement} />
     </ObjectInfoPanelContextProvider>
 );
 
@@ -104,6 +106,9 @@ describe('EntityObjectInformation', () => {
         render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} />);
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        const objectInfoSectionTitle = await screen.findByText(/object information/i);
+        expect(objectInfoSectionTitle).toBeInTheDocument();
 
         expect(await screen.findByText('test')).toBeInTheDocument();
     });

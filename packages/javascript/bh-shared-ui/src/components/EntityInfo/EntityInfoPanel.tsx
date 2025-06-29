@@ -15,20 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React, { useState } from 'react';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../../utils';
-import { usePaneStyles } from '../InfoStyles';
-import { ObjectInfoPanelContextProvider } from '../providers/ObjectInfoPanelProvider';
-
-import { SelectedNode } from '../../../types';
+import { SelectedNode } from '../../types';
+import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
+import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 interface EntityInfoPanelProps {
-    selectedNode: SelectedNode | null;
+    selectedNode?: SelectedNode | null;
     sx?: SxProps;
+    zoneManagement?: boolean;
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, zoneManagement }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
@@ -55,6 +54,7 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx }) =
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
+                        zoneManagement={zoneManagement}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>
