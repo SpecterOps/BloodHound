@@ -566,7 +566,7 @@ func FetchEnforcedGPOsPaths(ctx context.Context, db graph.Database, target *grap
 	})
 }
 
-func FetchACEInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
 	pathSet := graph.NewPathSet()
 
 	return pathSet, db.ReadTransaction(ctx, func(tx graph.Transaction) error {

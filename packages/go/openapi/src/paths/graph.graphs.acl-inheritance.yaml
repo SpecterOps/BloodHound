@@ -16,8 +16,8 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
-  operationId: GetAceInheritancePath
-  summary: Get ACE inheritance path
+  operationId: GetACLInheritancePath
+  summary: Get ACL inheritance path
   description: Returns a graph representing the path that an ACE is inherited through for a given edge.
   tags:
     - Graph
@@ -39,7 +39,7 @@ get:
         type: integer
         format: int32
     - name: edge_type
-      description: The type of edge the ACE inheritance path is being fetched for.
+      description: The type of edge the ACL inheritance path is being fetched for.
       in: query
       required: true
       schema:
@@ -47,7 +47,7 @@ get:
   responses:
     200:
       description: Returns graph data that contains a collection of nodes and edges
-        that make up the ACE inheritance path.
+        that make up the ACL inheritance path.
       content:
         application/json:
           schema:
