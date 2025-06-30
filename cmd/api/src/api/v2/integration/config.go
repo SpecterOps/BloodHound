@@ -17,9 +17,9 @@
 package integration
 
 import (
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/serde"
-	"github.com/specterops/bloodhound/src/test/integration/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 )
 
 func (s *Context) loadConfiguration() {

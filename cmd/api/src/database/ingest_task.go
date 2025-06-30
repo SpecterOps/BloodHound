@@ -21,7 +21,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 func (s *BloodhoundDB) CreateIngestTask(ctx context.Context, ingestTask model.IngestTask) (model.IngestTask, error) {

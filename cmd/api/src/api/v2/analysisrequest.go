@@ -22,11 +22,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 )
 
 const ErrAnalysisScheduledMode = "analysis is configured to run on a schedule, unable to run just in time"

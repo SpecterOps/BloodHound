@@ -28,8 +28,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/specterops/bloodhound/crypto"
-	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/packages/go/crypto"
 )
 
 const (

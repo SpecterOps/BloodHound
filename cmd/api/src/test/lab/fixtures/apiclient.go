@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/specterops/bloodhound/lab"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/api/v2/apiclient"
-	"github.com/specterops/bloodhound/src/api/v2/integration"
-	"github.com/specterops/bloodhound/src/config"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apiclient"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/packages/go/lab"
 )
 
 const UserUpdateSecret = "userUser123***"
