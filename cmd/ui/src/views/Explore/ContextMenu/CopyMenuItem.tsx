@@ -48,7 +48,7 @@ const CopyMenuItem = () => {
     const handleCopyObjectId = () => {
         if (selectedItemQuery.data) {
             navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
-            addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
+            addNotification(`Object ID copied to clipboard`, 'copyToClipboard');
         }
     };
 
