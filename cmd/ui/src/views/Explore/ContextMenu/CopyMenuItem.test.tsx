@@ -43,7 +43,7 @@ describe('CopyMenuItem', () => {
         const tooltip = await screen.findByRole('tooltip');
         expect(tooltip).toBeInTheDocument();
 
-        // the tooltip container and the menu item for `name` have the same accesible name, so return the second element here (which is the menu item)
+        // the tooltip container and the menu item for `name` have the same accessible name, so return the second element here (which is the menu item)
         const nameOption = screen.getAllByRole('menuitem', { name: /name/i })[1];
         await user.click(nameOption);
 
