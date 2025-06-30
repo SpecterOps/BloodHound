@@ -116,6 +116,7 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 }
 
 func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, expected *Graph) {
+	t.Helper()
 	var (
 		actualNodes      = make(map[string]*graph.Node, 100)
 		nodeIDToObjectID = make(map[graph.ID]string, 100)
