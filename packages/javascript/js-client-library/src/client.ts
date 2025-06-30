@@ -530,27 +530,17 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: RequestOptions) => {
-        return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
-            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
-            paramsSerializer: { indexes: null },
+    getPostureFindingTrends = (options?: RequestOptions) =>
+        this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
             ...options,
+            paramsSerializer: { indexes: null },
         });
-    };
 
-    getPostureHistory = (
-        environments: string[],
-        dataType: string,
-        start?: Date,
-        end?: Date,
-        options?: RequestOptions
-    ) => {
-        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
-            params: { environments, start: start?.toISOString(), end: end?.toISOString() },
-            paramsSerializer: { indexes: null },
+    getPostureHistory = (dataType: string, options?: RequestOptions) =>
+        this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             ...options,
+            paramsSerializer: { indexes: null },
         });
-    };
 
     /* explore search */
 

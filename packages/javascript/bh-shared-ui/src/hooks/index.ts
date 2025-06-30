@@ -72,4 +72,6 @@ export * from './useExploreTableAutoDisplay';
 
 export * from './useGraphHasData';
 
+export * from './useSelectedTagName';
+
 export * from './useZoneParams';

@@ -63,7 +63,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                 </div>
                 {data.position !== null && (
                     <div className='mt-4'>
-                        <DetailField label='Tier' value={data.position.toString()} />
+                        <DetailField label='Position' value={data.position.toString()} />
                     </div>
                 )}
                 <div className='mt-4'>
