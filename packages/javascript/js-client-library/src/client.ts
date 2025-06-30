@@ -530,47 +530,17 @@ class BHEAPIClient {
         );
     };
 
-    getPostureFindingTrends = (environments: string[], start?: Date, end?: Date, options?: RequestOptions) => {
-        const baseParams = {
-            environments,
-            start: start?.toISOString(),
-            end: end?.toISOString(),
-        };
-        const mergedParams = {
-            ...baseParams,
-            ...options?.params,
-        };
-        return this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
+    getPostureFindingTrends = (options?: RequestOptions) =>
+        this.baseClient.get<PostureFindingTrendsResponse>(`/api/v2/attack-paths/finding-trends`, {
             ...options,
-            params: mergedParams,
             paramsSerializer: { indexes: null },
         });
-    };
 
-    getPostureHistory = (
-        environments: string[],
-        dataType: string,
-        start?: Date,
-        end?: Date,
-        options?: RequestOptions
-    ) => {
-        const baseParams = {
-            environments,
-            start: start?.toISOString(),
-            end: end?.toISOString(),
-        };
-
-        const mergedParams = {
-            ...baseParams,
-            ...options?.params,
-        };
-
-        return this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
+    getPostureHistory = (dataType: string, options?: RequestOptions) =>
+        this.baseClient.get<PostureHistoryResponse>(`/api/v2/posture-history/${dataType}`, {
             ...options,
-            params: mergedParams,
             paramsSerializer: { indexes: null },
         });
-    };
 
     /* explore search */
 

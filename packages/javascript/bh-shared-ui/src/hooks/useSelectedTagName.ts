@@ -13,21 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useAssetGroupTags } from './useAssetGroupTags';
+import { useZoneQueryParams } from './useZoneParams';
 
-import React from 'react';
-import { BasePath, BaseSVG, BaseSVGProps } from './utils';
+export const HYGIENE_AGT_ID = 0;
+export const HYGIENE_TAG_NAME = 'Hygiene';
 
-export const Upgrade: React.FC<BaseSVGProps> = (props) => {
-    return (
-        <BaseSVG
-            viewBox='0 0 20 20'
-            style={{ color: '#ED8537' }}
-            xmlns='http://www.w3.org/2000/svg'
-            name='upgrade'
-            {...props}>
-            <BasePath d='M14 0H6L0.02 6L0 18C0 19.1 0.9 20 2 20H14C15.1 20 16 19.1 16 18V2C16 0.9 15.1 0 14 0ZM14 18H2V6.83L6.83 2H14V18Z' />
-            <BasePath d='M9 13H7V15H9V13Z' />
-            <BasePath d='M9 6H7V11H9V6Z' />
-        </BaseSVG>
-    );
+export const useSelectedTagName = () => {
+    const tags = useAssetGroupTags().data ?? [];
+    const { assetGroupTagId } = useZoneQueryParams();
+    if (assetGroupTagId === HYGIENE_AGT_ID) return HYGIENE_TAG_NAME;
+
+    const selectedTag = tags.find((tag) => tag.id === assetGroupTagId);
+    return selectedTag ? selectedTag.name : 'Tier Zero';
 };

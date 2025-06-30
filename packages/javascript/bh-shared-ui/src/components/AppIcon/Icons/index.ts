@@ -39,7 +39,6 @@ export * from './SortAsc';
 export * from './SortDesc';
 export * from './SortEmpty';
 export * from './TierZero';
-export * from './Upgrade';
 export * from './User';
 export * from './UserCog';
 export * from './VerticalEllipsis';

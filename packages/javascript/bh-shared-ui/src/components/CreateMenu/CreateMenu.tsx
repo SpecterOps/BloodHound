@@ -18,20 +18,16 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
-import React, { FC } from 'react';
-import { BaseSVGProps } from '../AppIcon/Icons/utils';
+import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
-type MenuItems = { title: string; onClick: () => void; Icon?: FC<BaseSVGProps> }[];
+type MenuItems = { title: string; onClick: () => void }[];
 
 const MenuWithDropdown: React.FC<{
     menuTitle: string;
     menuItems: MenuItems;
-    CustomIcon?: FC<BaseSVGProps>;
-    customStyles?: string;
-    variant?: any;
     disabled: boolean;
-}> = ({ menuTitle, menuItems, CustomIcon, customStyles, variant, disabled }) => {
+}> = ({ menuTitle, menuItems, disabled }) => {
     const buttonRef = React.useRef(null);
     const [isOpen, setIsOpen] = React.useState(false);
 
@@ -49,12 +45,9 @@ const MenuWithDropdown: React.FC<{
                 aria-controls='create-menu'
                 aria-haspopup='true'
                 ref={buttonRef}
-                variant={variant}
-                className={customStyles}
                 onClick={openMenu}
                 disabled={disabled}>
                 <Box display='flex' alignItems={'center'}>
-                    {CustomIcon && <CustomIcon className='mr-2' />}
                     <Typography mr='8px'>{menuTitle}</Typography>
                     <FontAwesomeIcon icon={faCaretDown} />
                 </Box>
@@ -67,7 +60,6 @@ const MenuWithDropdown: React.FC<{
                             menuItem.onClick();
                             closeMenu();
                         }}>
-                        {menuItem.Icon && <menuItem.Icon className='mr-2' />}
                         {menuItem.title}
                     </MenuItem>
                 ))}
@@ -79,22 +71,10 @@ const MenuWithDropdown: React.FC<{
 const MenuOrButton: React.FC<{
     menuTitle: string;
     menuItems: MenuItems;
-    CustomIcon?: FC<BaseSVGProps>;
-    customStyles?: string;
-    variant?: any;
     disabled: boolean;
-}> = ({ menuTitle, menuItems, CustomIcon, customStyles, variant, disabled }) => {
+}> = ({ menuTitle, menuItems, disabled }) => {
     if (menuItems.length > 1) {
-        return (
-            <MenuWithDropdown
-                menuItems={menuItems}
-                menuTitle={menuTitle}
-                disabled={disabled}
-                CustomIcon={CustomIcon}
-                customStyles={customStyles}
-                variant={variant}
-            />
-        );
+        return <MenuWithDropdown menuItems={menuItems} menuTitle={menuTitle} disabled={disabled} />;
     } else if (menuItems.length === 1) {
         return (
             <Button
@@ -112,43 +92,18 @@ const MenuOrButton: React.FC<{
 const CreateMenu: React.FC<{
     createMenuTitle: string;
     menuItems: MenuItems;
-    CustomIcon?: FC<BaseSVGProps>;
+    CustomIcon?: FC<{ className: string }>;
     customStyles?: string;
-    variant?: any;
+    variant?: ComponentPropsWithoutRef<typeof Button>['variant'];
     disabled?: boolean;
     featureFlag?: string;
     featureFlagEnabledMenuItems?: MenuItems;
-}> = ({
-    createMenuTitle,
-    menuItems,
-    CustomIcon,
-    customStyles,
-    variant,
-    featureFlag,
-    featureFlagEnabledMenuItems,
-    disabled = false,
-}) => {
-    const menuOrButton = (
-        <MenuOrButton
-            menuTitle={createMenuTitle}
-            menuItems={menuItems}
-            CustomIcon={CustomIcon}
-            customStyles={customStyles}
-            variant={variant}
-            disabled={disabled}
-        />
-    );
+}> = ({ createMenuTitle, menuItems, featureFlag, featureFlagEnabledMenuItems, disabled = false }) => {
+    const menuOrButton = <MenuOrButton menuTitle={createMenuTitle} menuItems={menuItems} disabled={disabled} />;
 
     if (featureFlag !== undefined && !!featureFlagEnabledMenuItems) {
         const featureFlagEnabledMenuOrButton = (
-            <MenuOrButton
-                menuTitle={createMenuTitle}
-                menuItems={featureFlagEnabledMenuItems}
-                CustomIcon={CustomIcon}
-                customStyles={customStyles}
-                variant={variant}
-                disabled={disabled}
-            />
+            <MenuOrButton menuTitle={createMenuTitle} menuItems={featureFlagEnabledMenuItems} disabled={disabled} />
         );
 
         return <FeatureFlag flagKey={featureFlag} enabled={featureFlagEnabledMenuOrButton} disabled={menuOrButton} />;
