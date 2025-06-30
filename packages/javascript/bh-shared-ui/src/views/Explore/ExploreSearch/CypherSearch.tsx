@@ -81,6 +81,12 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
         );
     };
 
+    const handleClickSave = () => {
+        console.log('handleClickSave');
+        // -- get selected query
+        // -- -- get canEdit / id
+    };
+
     const handleCloseSaveQueryDialog = () => {
         setShowSaveQueryDialog(false);
         createSavedQueryMutation.reset();
@@ -152,7 +158,8 @@ const CypherSearch = ({ cypherSearchState }: { cypherSearchState: CypherSearchSt
                         <Button
                             variant='secondary'
                             onClick={() => {
-                                setShowSaveQueryDialog(true);
+                                // setShowSaveQueryDialog(true);
+                                handleClickSave();
                             }}
                             size={'small'}
                             className='rounded-r-none'>

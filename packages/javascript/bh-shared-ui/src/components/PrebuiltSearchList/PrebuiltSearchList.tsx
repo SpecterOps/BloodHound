@@ -87,7 +87,6 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
 
         for (const item of listSections) {
             let result = null;
-
             result = item.queries.find((query) => {
                 if (query.cypher === comparator) {
                     return query;
@@ -100,8 +99,14 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
     }
     const selectedQuery = getSelectedQuery();
     const handleClick = (query: string) => {
-        clickHandler(query);
-        setSelected(query);
+        if (selected === query) {
+            //deselect
+            setSelected('');
+            clickHandler('');
+        } else {
+            setSelected(query);
+            clickHandler(query);
+        }
     };
     const handleDelete = (id: number) => {
         setQueryId(id);
