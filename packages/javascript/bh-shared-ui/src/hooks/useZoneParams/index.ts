@@ -1,4 +1,4 @@
-// Copyright 2024 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useZonePathParams } from './useZonePathParams';
+import { useZoneQueryParams } from './useZoneQueryParams';
 
-module github.com/specterops/bloodhound/openapi
-
-go 1.23
+export { useZonePathParams, useZoneQueryParams };

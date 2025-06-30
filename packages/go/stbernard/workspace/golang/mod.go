@@ -18,6 +18,7 @@ package golang
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +31,21 @@ import (
 // ParseModulesAbsPaths parses the modules listed in the go.work file from the given
 // directory and returns a list of absolute paths to those modules
 func ParseModulesAbsPaths(cwd string) ([]string, error) {
-	var workfilePath = filepath.Join(cwd, "go.work")
+	var (
+		workfilePath = filepath.Join(cwd, "go.work")
+		absPath, err = filepath.Abs(cwd)
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("absolute path for workspace: %w", err)
+	}
+
+	if _, err := os.Stat(workfilePath); errors.Is(err, os.ErrNotExist) {
+		return []string{absPath}, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("checking if go.work exists: %w", err)
+	}
+
 	// go.work files aren't particularly heavy, so we'll just read into memory
 	if data, err := os.ReadFile(workfilePath); err != nil {
 		return nil, fmt.Errorf("reading go.work file: %w", err)

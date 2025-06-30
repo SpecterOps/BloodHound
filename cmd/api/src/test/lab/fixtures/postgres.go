@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/specterops/bloodhound/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 
-	"github.com/specterops/bloodhound/lab"
-	"github.com/specterops/bloodhound/src/bootstrap"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/bootstrap"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/lab"
 )
 
 var PostgresFixture = lab.NewFixture(func(harness *lab.Harness) (*database.BloodhoundDB, error) {

@@ -6,7 +6,7 @@ St Bernard is a multi-purpose tool for working with BloodHound repositories. It 
 dependency syncing, and much more!
 
 ```
-$ go run github.com/specterops/bloodhound/packages/go/stbernard -h
+$ go tool stbernard -h
 
 A BloodHound Swiss Army Knife
 
@@ -32,22 +32,22 @@ Commands:
 
 ### Usage
 
-St Bernard can be run most easily with `go run`:
+St Bernard can be run most easily with `go tool`:
 
 ```
-$ go run github.com/specterops/bloodhound/packages/go/stbernard
+$ go tool stbernard
 ```
 
 You can find current usage help and available commands by passing the `-h` or `-help` flag. If you'd like to know what additional options are supported by a specific subcommand, you can run the subcommand with `-h` or `-help` to get subcommand specific options:
 
 ```
-$ go run github.com/specterops/bloodhound/packages/go/stbernard test -h
+$ go tool stbernard test -h
 ```
 
 The options available to stbernard should be used _before_ the subcommand. Subcommand options always come after the subcommand:
 
 ```
-$ go run github.com/specterops/bloodhound/packages/go/stbernard -vv test -g
+$ go tool stbernard -vv test -g
 ```
 
 ### Configuration
@@ -67,14 +67,17 @@ The following environment variables are supported:
 The subcommand `graph` ingests json files into Postgres, retrieves the nodes and edges from the database, and then outputs the data as a generic ingestible file.
 
 The following environment variables are required:
-- `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
-  - Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
+
+-   `SB_PG_CONNECTION`: This environment variable should contain the Postgres connection string for the database you want to interact with.
+    -   Example: `SB_PG_CONNECTION="user=XYZ password=XYZ dbname=XYZ host=XYZ port=XYZ" just stbernard graph`
 
 The following flags are required:
-- `--path`: Specifies the input directory for the consumed files.
+
+-   `--path`: Specifies the input directory for the consumed files.
 
 The following flags are supported:
-- `--outfile`: Specifies the output file for generic ingestible graph file. Defaults to {root}/tmp/graph.json".
+
+-   `--outfile`: Specifies the output file for generic ingestible graph file. Defaults to {root}/tmp/graph.json".
 
 ### Contributing
 

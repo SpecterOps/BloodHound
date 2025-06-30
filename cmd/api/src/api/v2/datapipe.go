@@ -19,7 +19,7 @@ package v2
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func (s Resources) GetDatapipeStatus(response http.ResponseWriter, request *http.Request) {
