@@ -87,13 +87,17 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
         secondarySearch,
     } as any);
 
+    const pathfindingFilters: PathfindingFilters = {
+        handleApplyFilters: vi.fn(),
+        handleRemoveEdgeType: vi.fn(),
+        handleUpdateFilters: vi.fn(),
+        resetFilters: vi.fn(),
+        selectedFilters: [],
+    };
+
     const screen = await act(async () => {
         render(
-            <ContextMenu
-                contextMenu={{ x: 0, y: 0 }}
-                handleClose={vi.fn()}
-                pathfindingFilters={{} as PathfindingFilters}
-            />,
+            <ContextMenu contextMenu={{ x: 0, y: 0 }} handleClose={vi.fn()} pathfindingFilters={pathfindingFilters} />,
             {
                 initialState,
             }
