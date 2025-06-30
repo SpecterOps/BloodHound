@@ -49,7 +49,7 @@ import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
 import { useGetConfiguration, useHighestPrivilegeTag } from '../../../../hooks';
-import { useOwnedId } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
+import { useOwnedTag } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 
 type TagFormInputs = {
     name: string;
@@ -72,7 +72,7 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
 };
 
 const topTagId = useHighestPrivilegeTag()?.id;
-const ownedId = useOwnedId();
+const ownedId = useOwnedTag()?.id;
 const showDeleteButton = (labelId: string | undefined, tierId: string) => {
     if (tierId === '' && !labelId) return false;
     if (labelId === ownedId) return false;

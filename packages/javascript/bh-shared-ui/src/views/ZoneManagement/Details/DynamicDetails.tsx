@@ -20,7 +20,7 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { useHighestPrivilegeTag, useOwnedId } from '../../../hooks';
+import { useHighestPrivilegeTag, useOwnedTag } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -55,7 +55,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const topTagId = useHighestPrivilegeTag()?.id;
-    const ownedId = useOwnedId();
+    const ownedId = useOwnedTag()?.id;
 
     return (
         <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
