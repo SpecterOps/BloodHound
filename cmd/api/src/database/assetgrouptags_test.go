@@ -20,6 +20,7 @@ package database_test
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -30,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/src/model"
 	"github.com/specterops/bloodhound/src/test/integration"
 	"github.com/specterops/dawgs/graph"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -997,4 +999,34 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 		require.Len(t, history, 2)
 		require.Equal(t, model.AssetGroupHistoryActionDeleteSelector, history[1].Action)
 	})
+}
+
+func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
+	var (
+		testCtx      = context.Background()
+		dbInst, user = initAndCreateUser(t)
+		tagToDelete  model.AssetGroupTag
+	)
+
+	// Create tiers
+	for i := range 5 {
+		tag, err := dbInst.CreateAssetGroupTag(testCtx, model.AssetGroupTagTypeTier, user, fmt.Sprintf("tag %d", i), "", null.Int32From(int32(i+2)), null.Bool{})
+		require.NoError(t, err)
+		// Delete the fourth entry to ensure positions are changed
+		if i == 3 {
+			tagToDelete = tag
+		}
+	}
+
+	// Delete a tier to ensure deleted tiers are skipped
+	err := dbInst.DeleteAssetGroupTag(testCtx, user, tagToDelete)
+	require.NoError(t, err)
+
+	orderedTags, err := dbInst.GetOrderedAssetGroupTagTiers(testCtx)
+	require.NoError(t, err)
+	for i, tag := range orderedTags {
+		assert.Equal(t, model.AssetGroupTagTypeTier, tag.Type)
+		assert.True(t, tag.DeletedAt.IsZero())
+		assert.EqualValues(t, i+1, tag.Position.ValueOrZero())
+	}
 }

@@ -17,7 +17,7 @@
 import { ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { capitalize } from 'lodash';
+import capitalize from 'lodash/capitalize';
 import { useMemo, useState } from 'react';
 import { makeFormattedObjectInfoFieldsMap } from '../../utils';
 import NodeIcon from '../NodeIcon';
