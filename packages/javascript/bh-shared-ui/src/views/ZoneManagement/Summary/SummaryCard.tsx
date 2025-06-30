@@ -24,6 +24,8 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
+import { AppIcon } from '../../../components';
+import { useAssetGroupTagInfo } from '../Save/TagForm/hooks';
 
 type SummaryCardProps = {
     title: string;
@@ -35,9 +37,16 @@ type SummaryCardProps = {
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id }) => {
     const navigate = useAppNavigate();
+    const tagId = id.toString();
+    const tagQuery = useAssetGroupTagInfo(tagId);
+    const analysisEnabled = tagQuery.data?.analysis_enabled;
+
     return (
         <Card className='w-full flex px-6 py-4 rounded-xl'>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
+                {!analysisEnabled &&
+                    <AppIcon.DataAlert size={24} className='mr-2 mb-0.5 text-[#ED8537]' />
+                }
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
             <LargeRightArrow className='w-8 h-16' />
