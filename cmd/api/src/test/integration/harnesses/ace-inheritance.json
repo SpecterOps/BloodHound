@@ -1,0 +1,474 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": -1871.227921814959,
+        "y": -1609.5395008368089
+      },
+      "caption": "OU 2",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": -993.7239519308317,
+        "y": -1609.53152582526
+      },
+      "caption": "Computer 1",
+      "style": {
+        "border-color": "#000000",
+        "node-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -2183.7430347799072,
+        "y": -940.8628454411507
+      },
+      "caption": "OU 4",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[HASH_VALUE, ...]"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": -2183.742987238143,
+        "y": -1609.537186234094
+      },
+      "caption": "OU 1",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": -2590.642728189477,
+        "y": -1609.5372756741472
+      },
+      "caption": "Domain 1",
+      "style": {
+        "node-color": "#a4dd00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[HASH_VALUE, ...]"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -2183.742987238143,
+        "y": -705.9391979179592
+      },
+      "caption": "OU 5",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[]"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": -1068.6012028589855,
+        "y": -1344.4601983254329
+      },
+      "caption": "Computer 2",
+      "style": {
+        "node-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": -1271.0964258310544,
+        "y": -1157.7382230719281
+      },
+      "caption": "Computer 3",
+      "style": {
+        "node-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": -2183.742987238143,
+        "y": -1374.6136007027053
+      },
+      "caption": "OU 3",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {
+        "isaclprotected": "true"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": -2183.742987238143,
+        "y": -1157.7382230719281
+      },
+      "caption": "Group 1",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": -2558.9965721131393,
+        "y": -1210.345137387294
+      },
+      "caption": "ACE Inherited From:",
+      "style": {
+        "radius": 1,
+        "border-color": "#ffffff",
+        "caption-font-size": 36,
+        "label-display": "bare",
+        "label-font-size": 24,
+        "label-position": "outside",
+        "label-margin": 0,
+        "label-padding": 0,
+        "caption-position": "outside",
+        "caption-max-width": 1000,
+        "caption-font-weight": "bold"
+      },
+      "labels": [
+        "Domain 1"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": -2590.642728189477,
+        "y": -823.4011040242997
+      },
+      "caption": "Domain 2",
+      "style": {
+        "node-color": "#a4dd00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[]"
+      }
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": -1776.843341370337,
+        "y": -823.4011040243012
+      },
+      "caption": "OU 6",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[]"
+      }
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": -993.7239519308317,
+        "y": -823.4011040243013
+      },
+      "caption": "Computer 4",
+      "style": {
+        "node-color": "#73d8ff"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": -2558.9965721131393,
+        "y": -595.4305094152187
+      },
+      "caption": "ACE Inherited From:",
+      "style": {
+        "radius": 1,
+        "border-color": "#ffffff",
+        "caption-font-size": 36,
+        "label-display": "bare",
+        "label-font-size": 24,
+        "label-position": "outside",
+        "label-margin": 0,
+        "label-padding": 0,
+        "caption-position": "outside",
+        "caption-max-width": 1000,
+        "caption-font-weight": "bold"
+      },
+      "labels": [
+        "OU4"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": -1500.3654984190196,
+        "y": -1609.5361303311347
+      },
+      "caption": "User 1",
+      "style": {
+        "node-color": "#fb9e00"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": -1500.3654984190196,
+        "y": -823.4011040243012
+      },
+      "caption": "Group 2",
+      "style": {
+        "node-color": "#fda1ff"
+      },
+      "labels": [],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n2",
+      "type": "Contains",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n0"
+    },
+    {
+      "id": "n3",
+      "type": "Contains",
+      "style": {},
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n3"
+    },
+    {
+      "id": "n8",
+      "type": "Contains",
+      "fromId": "n9",
+      "toId": "n0",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {}
+    },
+    {
+      "id": "n11",
+      "type": "GenericWrite",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n0"
+    },
+    {
+      "id": "n12",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n9"
+    },
+    {
+      "id": "n13",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n10"
+    },
+    {
+      "id": "n14",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n2"
+    },
+    {
+      "id": "n15",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n12",
+      "toId": "n5"
+    },
+    {
+      "id": "n16",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n5",
+      "toId": "n13"
+    },
+    {
+      "id": "n17",
+      "type": "Contains",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n13"
+    },
+    {
+      "id": "n19",
+      "type": "Contains",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n16"
+    },
+    {
+      "id": "n20",
+      "type": "GenericAll",
+      "style": {},
+      "properties": {
+        "isacl": "true",
+        "inheritancehash": "HASH_VALUE"
+      },
+      "fromId": "n16",
+      "toId": "n1"
+    },
+    {
+      "id": "n21",
+      "type": "GenericAll",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {
+        "isacl": "false",
+        "inheritancehash": "HASH_VALUE"
+      },
+      "fromId": "n16",
+      "toId": "n6"
+    },
+    {
+      "id": "n22",
+      "type": "GenericAll",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {
+        "isacl": "true"
+      },
+      "fromId": "n16",
+      "toId": "n7"
+    },
+    {
+      "id": "n23",
+      "type": "Contains",
+      "style": {},
+      "properties": {},
+      "fromId": "n13",
+      "toId": "n17"
+    },
+    {
+      "id": "n24",
+      "type": "ReadLAPSPassword",
+      "style": {},
+      "properties": {
+        "isacl": "true",
+        "inheritancehash": "HASH_VALUE"
+      },
+      "fromId": "n17",
+      "toId": "n14"
+    }
+  ]
+}
