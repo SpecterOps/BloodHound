@@ -116,9 +116,11 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 }
 
 func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, expected *Graph) {
-	actualNodes := make(map[string]*graph.Node, 100)
-	nodeIDToObjectID := make(map[graph.ID]string, 100)
-	actualEdges := make(map[string]*graph.Relationship, 100)
+	var (
+		actualNodes      = make(map[string]*graph.Node, 100)
+		nodeIDToObjectID = make(map[graph.ID]string, 100)
+		actualEdges      = make(map[string]*graph.Relationship, 100)
+	)
 
 	//#region Reading from DB
 	_ = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
