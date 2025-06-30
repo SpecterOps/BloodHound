@@ -23,6 +23,7 @@ import {
     useExploreSelectedItem,
     useFeatureFlag,
     usePermissions,
+    type NodeResponse,
     type PathfindingFilters,
 } from 'bh-shared-ui';
 import { type FC } from 'react';
@@ -32,7 +33,19 @@ import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
+type EdgeMenuItemsProps = {
+    id: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
+type NodeMenuItemsProps = {
+    objectId: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
 const NAV_MENU_WIDTH = 56;
+
+const RX_EDGE_TYPE = /^[^_]+_([^_]+)_[^_]+$/;
 
 /** Return position to show context menu, with nav menu offset */
 const getPosition = (coordinates: Coordinates) => ({
@@ -40,22 +53,14 @@ const getPosition = (coordinates: Coordinates) => ({
     top: coordinates.y,
 });
 
-type MenuItemsProps = {
-    objectId: string;
-    pathfindingFilters: PathfindingFilters;
-};
-
-const RX_EDGE_TYPE = /_(.*?)_/;
-
-const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => {
+const EdgeMenuItems: FC<EdgeMenuItemsProps> = ({ id, pathfindingFilters }) => {
     const { handleRemoveEdgeType } = pathfindingFilters;
 
-    const edgeType = objectId.match(RX_EDGE_TYPE)?.[1];
+    const edgeType = id.match(RX_EDGE_TYPE)?.[1];
 
     const filterEdge = () => {
-        if (edgeType) {
-            handleRemoveEdgeType(edgeType);
-        }
+        // edgeType will exist otherwise this method could't be executed
+        handleRemoveEdgeType(edgeType!);
     };
 
     if (!edgeType) {
@@ -63,7 +68,7 @@ const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => 
     }
 
     // Prevent filtering for edge types not found in AllEdgeTypes array
-    const item = isEdgeType(edgeType) ? (
+    return isEdgeType(edgeType) ? (
         <MenuItem key='filter-edge' onClick={filterEdge}>
             Filter out Edge
         </MenuItem>
@@ -72,11 +77,9 @@ const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => 
             Non-filterable Edge
         </MenuItem>
     );
-
-    return [item];
 };
 
-const NodeMenuItems: FC<Omit<MenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
+const NodeMenuItems: FC<Omit<NodeMenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
     const { checkPermission } = usePermissions();
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
@@ -84,36 +87,40 @@ const NodeMenuItems: FC<Omit<MenuItemsProps, 'pathfindingFilters'>> = ({ objectI
     const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
     const ownedId = useAppSelector(selectOwnedAssetGroupId);
 
-    return [
-        <MenuItem
-            key='starting-node'
-            onClick={() =>
-                setExploreParams({
-                    exploreSearchTab: 'pathfinding',
-                    searchType: secondarySearch ? 'pathfinding' : 'node',
-                    primarySearch: objectId,
-                })
-            }>
-            Set as starting node
-        </MenuItem>,
-        <MenuItem
-            key='ending-node'
-            onClick={() =>
-                setExploreParams({
-                    exploreSearchTab: 'pathfinding',
-                    searchType: primarySearch ? 'pathfinding' : 'node',
-                    secondarySearch: objectId,
-                })
-            }>
-            Set as ending node
-        </MenuItem>,
-        ...(!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE)
-            ? [
-                  <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />,
-                  <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />,
-              ]
-            : []),
-    ];
+    return (
+        <>
+            <MenuItem
+                key='starting-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: secondarySearch ? 'pathfinding' : 'node',
+                        primarySearch: objectId,
+                    })
+                }>
+                Set as starting node
+            </MenuItem>
+
+            <MenuItem
+                key='ending-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: primarySearch ? 'pathfinding' : 'node',
+                        secondarySearch: objectId,
+                    })
+                }>
+                Set as ending node
+            </MenuItem>
+
+            {!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE) && (
+                <>
+                    <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />
+                    <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />
+                </>
+            )}
+        </>
+    );
 };
 
 const ContextMenu: FC<{
@@ -128,14 +135,14 @@ const ContextMenu: FC<{
         return null;
     }
 
-    const isEdgeSelected = selectedItemType === 'edge' && exploreSearchTab === 'pathfinding';
+    const isEdgeSelected =
+        selectedItemType === 'edge' && exploreSearchTab === 'pathfinding' && selectedItemQuery.data.id?.includes('_');
     const isNodeSelected = selectedItemType === 'node';
-    const objectId = selectedItemQuery.data.id;
 
     return (
         <Menu open anchorPosition={getPosition(contextMenu)} anchorReference='anchorPosition' onClick={handleClose}>
-            {isEdgeSelected && <EdgeMenuItems objectId={objectId} pathfindingFilters={pathfindingFilters} />}
-            {isNodeSelected && <NodeMenuItems objectId={objectId} />}
+            {isEdgeSelected && <EdgeMenuItems id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />}
+            {isNodeSelected && <NodeMenuItems objectId={(selectedItemQuery.data as NodeResponse).objectId} />}
             <CopyMenuItem />
         </Menu>
     );

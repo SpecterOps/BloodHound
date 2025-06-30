@@ -33,7 +33,7 @@ describe('usePathfindingFilters', () => {
 
         expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
 
-        await act(() => hook.result.current.resetFilters());
+        await act(() => hook.result.current.initialize());
 
         const edgeTypesInFilter = extractEdgeTypes(hook.result.current.selectedFilters);
         expect(edgeTypesInFilter).toEqual([TEST_FILTER.edgeType]);
@@ -57,7 +57,7 @@ describe('usePathfindingFilters', () => {
         const hook = renderHook(() => usePathfindingFilters());
 
         await act(() => hook.result.current.handleUpdateFilters([TEST_FILTER]));
-        await act(() => hook.result.current.resetFilters());
+        await act(() => hook.result.current.initialize());
 
         expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
         expect(window.location.search).toEqual('');

@@ -28,13 +28,30 @@ const mockUseExploreParams = vi.spyOn(bhSharedUi, 'useExploreParams');
 const mockSelectedItemQuery = vi.spyOn(bhSharedUi, 'useExploreSelectedItem');
 
 const fakeSelectedItemId = 'abc';
-mockSelectedItemQuery.mockReturnValue({
+const fakeSelectedNode = {
     selectedItemQuery: {
         data: {
             objectId: fakeSelectedItemId,
         },
     },
-} as any);
+    selectedItemType: 'node',
+} as any;
+
+const fakeSelectedEdge = {
+    selectedItemQuery: {
+        data: {
+            objectId: fakeSelectedItemId,
+            id: '123_MemberOf_456',
+        },
+    },
+    selectedItemType: 'edge',
+} as any;
+
+const fakeSelectedNonFilterable = JSON.parse(JSON.stringify(fakeSelectedEdge));
+fakeSelectedNonFilterable.selectedItemQuery.data.id = '123_CrossForestTrust_456';
+
+const fakeSelectedNonEdge = JSON.parse(JSON.stringify(fakeSelectedEdge));
+fakeSelectedNonEdge.selectedItemQuery.data.id = '345';
 
 const server = setupServer(
     rest.get('/api/v2/self', (req, res, ctx) => {
@@ -66,7 +83,14 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const setup = async (permissions?: Permission[], primarySearch?: string, secondarySearch?: string) => {
+interface SetupOptions {
+    exploreSearchTab?: string;
+    permissions?: Permission[];
+    primarySearch?: string;
+    secondarySearch?: string;
+}
+
+const setup = async ({ exploreSearchTab, permissions, primarySearch, secondarySearch }: SetupOptions) => {
     const initialState: DeepPartial<AppState> = {
         assetgroups: {
             assetGroups: [
@@ -85,14 +109,23 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
         setExploreParams: mockSetExploreParams,
         primarySearch,
         secondarySearch,
+        exploreSearchTab,
     } as any);
+
+    const mockPathfindingFilters: PathfindingFilters = {
+        handleApplyFilters: vi.fn(),
+        handleRemoveEdgeType: vi.fn(),
+        handleUpdateFilters: vi.fn(),
+        initialize: vi.fn(),
+        selectedFilters: [],
+    };
 
     const screen = await act(async () => {
         render(
             <ContextMenu
                 contextMenu={{ x: 0, y: 0 }}
                 handleClose={vi.fn()}
-                pathfindingFilters={{} as PathfindingFilters}
+                pathfindingFilters={mockPathfindingFilters}
             />,
             {
                 initialState,
@@ -101,12 +134,14 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
     });
 
     const user = userEvent.setup();
-    return { screen, user, mockSetExploreParams };
+    return { screen, user, mockSetExploreParams, mockPathfindingFilters };
 };
 
-describe('ContextMenu', async () => {
+describe('ContextMenu - Nodes', async () => {
+    beforeEach(() => mockSelectedItemQuery.mockReturnValue(fakeSelectedNode));
+
     it('renders asset group edit options with graph write permissions', async () => {
-        await setup([Permission.GRAPH_DB_WRITE]);
+        await setup({ permissions: [Permission.GRAPH_DB_WRITE] });
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
@@ -120,7 +155,7 @@ describe('ContextMenu', async () => {
     });
 
     it('renders no asset group edit options without graph write permissions', async () => {
-        await setup();
+        await setup({});
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
@@ -132,7 +167,7 @@ describe('ContextMenu', async () => {
     });
 
     it('sets a primarySearch=id and searchType=node when secondarySearch is falsey', async () => {
-        const { user, mockSetExploreParams } = await setup(undefined);
+        const { user, mockSetExploreParams } = await setup({});
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
@@ -146,7 +181,7 @@ describe('ContextMenu', async () => {
 
     it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truthy', async () => {
         const secondarySearch = 'cdf';
-        const { user, mockSetExploreParams } = await setup(undefined, undefined, secondarySearch);
+        const { user, mockSetExploreParams } = await setup({ secondarySearch });
 
         const startNodeOption = screen.getByRole('menuitem', { name: /set as starting node/i });
         await user.click(startNodeOption);
@@ -159,7 +194,7 @@ describe('ContextMenu', async () => {
     });
 
     it('sets secondarySearch=id and searchType=node when primarySearch is falsey', async () => {
-        const { user, mockSetExploreParams } = await setup(undefined);
+        const { user, mockSetExploreParams } = await setup({});
 
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(endNodeOption);
@@ -173,7 +208,7 @@ describe('ContextMenu', async () => {
 
     it('sets a secondary=id and searchType=pathfinding when primary is truthy', async () => {
         const secondarySearch = 'cdf';
-        const { user, mockSetExploreParams } = await setup(undefined, secondarySearch);
+        const { user, mockSetExploreParams } = await setup({ primarySearch: secondarySearch });
 
         const endNodeOption = screen.getByRole('menuitem', { name: /set as ending node/i });
         await user.click(endNodeOption);
@@ -186,7 +221,7 @@ describe('ContextMenu', async () => {
     });
 
     it('opens a submenu when user hovers over `Copy`', async () => {
-        await setup();
+        await setup({});
 
         const user = userEvent.setup();
 
@@ -213,5 +248,51 @@ describe('ContextMenu', async () => {
             expect(screen.queryByText(/object id/i)).not.toBeInTheDocument();
             expect(screen.queryByText(/cypher/i)).not.toBeInTheDocument();
         });
+    });
+});
+
+describe('ContextMenu - Edges', () => {
+    it('shows edge filtering options on pathfinding tab', async () => {
+        mockSelectedItemQuery.mockReturnValue(fakeSelectedEdge);
+        await setup({ exploreSearchTab: 'pathfinding' });
+
+        const filterEdgeOption = screen.getByRole('menuitem', { name: /Filter out Edge/i });
+        expect(filterEdgeOption).toBeInTheDocument();
+    });
+
+    it('does not show edge filtering on non-pathfinding tab', async () => {
+        mockSelectedItemQuery.mockReturnValue(fakeSelectedEdge);
+        await setup({ exploreSearchTab: 'cypher' });
+
+        const filterEdgeOption = screen.queryByText('Filter out Edge');
+        expect(filterEdgeOption).not.toBeInTheDocument();
+    });
+
+    it('does not show edge filtering when bad edge id', async () => {
+        mockSelectedItemQuery.mockReturnValue(fakeSelectedNonEdge);
+        await setup({ exploreSearchTab: 'pathfinding' });
+
+        const filterEdgeOption = screen.queryByText('Filter out Edge');
+        expect(filterEdgeOption).not.toBeInTheDocument();
+    });
+
+    it('shows edge as non-filterable where there is no edge id', async () => {
+        mockSelectedItemQuery.mockReturnValue(fakeSelectedNonFilterable);
+        await setup({ exploreSearchTab: 'pathfinding' });
+
+        const filterEdgeOption = screen.queryByText('Filter out Edge');
+        const nonFilterEdgeOption = screen.getByRole('menuitem', { name: /Non-filterable Edge/i });
+        expect(filterEdgeOption).not.toBeInTheDocument();
+        expect(nonFilterEdgeOption).toBeInTheDocument();
+    });
+
+    it('filters out the selected edge', async () => {
+        mockSelectedItemQuery.mockReturnValue(fakeSelectedEdge);
+        const { user, mockPathfindingFilters } = await setup({ exploreSearchTab: 'pathfinding' });
+
+        const filterEdgeOption = screen.getByRole('menuitem', { name: /Filter out Edge/i });
+        await user.click(filterEdgeOption);
+
+        expect(mockPathfindingFilters.handleRemoveEdgeType).toBeCalled();
     });
 });

@@ -71,9 +71,16 @@ afterAll(() => server.close());
 
 const setup = async (exploreSearchTab?: string) => {
     const url = exploreSearchTab ? `/?exploreSearchTab=${exploreSearchTab}` : '/';
+    const pathfindingFilters: PathfindingFilters = {
+        handleApplyFilters: vi.fn(),
+        handleRemoveEdgeType: vi.fn(),
+        handleUpdateFilters: vi.fn(),
+        initialize: vi.fn(),
+        selectedFilters: [],
+    };
 
     const screen = await act(async () => {
-        return render(<ExploreSearch pathfindingFilters={{} as PathfindingFilters} />, { route: url });
+        return render(<ExploreSearch pathfindingFilters={pathfindingFilters} />, { route: url });
     });
 
     const user = userEvent.setup();
