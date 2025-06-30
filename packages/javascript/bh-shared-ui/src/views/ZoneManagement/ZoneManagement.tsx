@@ -18,10 +18,8 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { AppNavigate } from '../../components/Navigation';
 import { useHighestPrivilegeTag, useOwnedTag } from '../../hooks';
 import {
-    DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS,
@@ -36,8 +34,8 @@ import {
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
+import DetailsRoot from './DetailsRoot';
 import { ZoneManagementContext } from './ZoneManagementContext';
-
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
@@ -119,7 +117,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<DetailsRoot />} />
                         </Routes>
                     </Suspense>
                 </div>
