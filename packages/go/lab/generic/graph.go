@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"slices"
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -29,9 +28,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var excludedProperties = []string{
-	"lastseen",
-	"lastcollected",
+var excludedProperties = map[string]struct{}{
+	"lastseen":      {},
+	"lastcollected": {},
 }
 
 type Node struct {
@@ -179,7 +178,7 @@ func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, e
 				value, ok := node.Properties.Map[expectedProperty]
 				assert.Truef(t, ok, "could not find expected property `%s` on node `%s`", expectedProperty, node.ID)
 
-				if ok && !slices.Contains(excludedProperties, expectedProperty) {
+				if _, isExcludedProperty := excludedProperties[expectedProperty]; ok && !isExcludedProperty {
 					assert.Equalf(t, expectedValue, value, "mismatched property `%s` on node `%s`: have %v, want %v", expectedProperty, node.ID, value, expectedValue)
 				}
 			}
@@ -203,7 +202,7 @@ func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, e
 				value, ok := edge.Properties.Map[expectedProperty]
 				assert.Truef(t, ok, "could not find expected property `%s` on edge (%s)->(%s)", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value)
 
-				if ok && !slices.Contains(excludedProperties, expectedProperty) {
+				if _, isExcludedProperty := excludedProperties[expectedProperty]; ok && !isExcludedProperty {
 					assert.Equalf(t, expectedValue, value, "mismatched property `%s` on edge (%s)->(%s): have %v, want %v", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value, value, expectedValue)
 				}
 			}
