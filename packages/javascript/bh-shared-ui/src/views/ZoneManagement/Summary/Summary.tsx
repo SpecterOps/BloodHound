@@ -18,12 +18,13 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
+import { useHighestPrivilegeTag } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
 import { SelectedDetails } from '../Details/SelectedDetails';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { getTagUrlValue } from '../utils';
 import SummaryList from './SummaryList';
 
 export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryResult, tagsQuery?: UseQueryResult) => {
@@ -36,7 +37,8 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const topTagId = useHighestPrivilegeTag()?.id;
+    const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);

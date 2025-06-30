@@ -19,6 +19,7 @@ import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { AppNavigate } from '../../components/Navigation';
+import { useHighestPrivilegeTag } from '../../hooks';
 import {
     DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
@@ -36,7 +37,7 @@ import {
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { ZoneManagementContext } from './ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
+import { OWNED_ID } from './utils';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
@@ -80,6 +81,7 @@ const ZoneManagement: FC = () => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
     ];
+    const topTagId = useHighestPrivilegeTag()?.id;
 
     return (
         <main>
@@ -99,7 +101,7 @@ const ZoneManagement: FC = () => {
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? TIER_ZERO_ID : OWNED_ID;
+                            const id = value === 'tier' ? topTagId : OWNED_ID;
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>

@@ -44,11 +44,11 @@ import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetG
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
+import { OWNED_ID, getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
-import { useGetConfiguration } from '../../../../hooks';
+import { useGetConfiguration, useHighestPrivilegeTag } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -70,10 +70,11 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
     return 'Tag Details';
 };
 
+const topTagId = useHighestPrivilegeTag()?.id;
 const showDeleteButton = (labelId: string | undefined, tierId: string) => {
     if (tierId === '' && !labelId) return false;
     if (labelId === OWNED_ID) return false;
-    if (tierId === TIER_ZERO_ID) return false;
+    if (tierId === topTagId?.toString()) return false;
     return true;
 };
 
@@ -112,7 +113,7 @@ export const TagForm: FC = () => {
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
     const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
+        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
@@ -208,7 +209,7 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : OWNED_ID}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -255,7 +256,7 @@ export const TagForm: FC = () => {
                                     <Input
                                         id='name'
                                         type='text'
-                                        disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
+                                        disabled={tagId === topTagId?.toString() || tagId === OWNED_ID}
                                         {...register('name', {
                                             required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                             value: tagQuery.data?.name,

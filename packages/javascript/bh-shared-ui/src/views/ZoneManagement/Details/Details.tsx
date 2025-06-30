@@ -20,9 +20,10 @@ import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
+import { useHighestPrivilegeTag } from '../../../hooks';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
+import { getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
@@ -75,7 +76,8 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const { tierId = TIER_ZERO_ID, labelId, selectorId, memberId } = useParams();
+    const topTagId = useHighestPrivilegeTag()?.id.toString();
+    const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
     const context = useContext(ZoneManagementContext);
