@@ -71,12 +71,10 @@ const EntityInfoContentWithProvider = ({
     testId,
     nodeType,
     databaseId,
-    zoneManagement,
 }: {
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    zoneManagement?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
         <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
