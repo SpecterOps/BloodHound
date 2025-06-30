@@ -553,7 +553,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 	}
 }
 
-func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
+func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 	t.Parallel()
 
 	type mock struct {
@@ -577,7 +577,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path: "/api/v2/graphs/ace-inheritance",
+						Path: "/api/v2/graphs/acl-inheritance",
 					},
 					Method: http.MethodGet,
 				}
@@ -594,7 +594,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test",
 					},
 					Method: http.MethodGet,
@@ -612,7 +612,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test&source_node=test",
 					},
 					Method: http.MethodGet,
@@ -630,7 +630,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test&edge_type=test2&source_node=test&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -648,7 +648,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test&source_node=test2&source_node=test&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -666,7 +666,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test&target_node=test2&source_node=test&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -684,7 +684,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=test&source_node=test&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -702,7 +702,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=GenericAll&source_node=test&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -720,7 +720,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=GenericAll&source_node=1&target_node=test",
 					},
 					Method: http.MethodGet,
@@ -738,7 +738,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
 					},
 					Method: http.MethodGet,
@@ -755,11 +755,11 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: database error getting ace inheritance path - Internal Server Error",
+			name: "Error: database error getting ACL inheritance path - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
 					},
 					Method: http.MethodGet,
@@ -772,16 +772,16 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
-				responseBody:   `{"errors":[{"context":"","message":"Error getting ACE inheritance path for edge: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
+				responseBody:   `{"errors":[{"context":"","message":"Error getting ACL inheritance path for edge: error"}],"http_status":500,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
 		},
 		{
-			name: "Success: retrieved ace inheritance - OK",
+			name: "Success: retrieved ACL inheritance - OK",
 			buildRequest: func() *http.Request {
 				return &http.Request{
 					URL: &url.URL{
-						Path:     "/api/v2/graphs/ace-inheritance",
+						Path:     "/api/v2/graphs/acl-inheritance",
 						RawQuery: "edge_type=GenericAll&source_node=1&target_node=2",
 					},
 					Method: http.MethodGet,
@@ -818,7 +818,7 @@ func TestResources_GetEdgeACEInheritancePath(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			router.HandleFunc("/api/v2/graphs/ace-inheritance", resources.GetEdgeACEInheritancePath).Methods(request.Method)
+			router.HandleFunc("/api/v2/graphs/acl-inheritance", resources.GetEdgeACLInheritancePath).Methods(request.Method)
 			router.ServeHTTP(response, request)
 
 			status, header, body := test.ProcessResponse(t, response)

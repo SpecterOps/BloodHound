@@ -9863,7 +9863,7 @@ func (s *Version730_Migration_Harness) Setup(graphTestContext *GraphTestContext)
 	graphTestContext.UpdateNode(s.Computer1)
 }
 
-type ACEInheritedFrom struct {
+type ACLInheritanceHarness struct {
 	Domain1 *graph.Node
 	Domain2 *graph.Node
 
@@ -9885,7 +9885,7 @@ type ACEInheritedFrom struct {
 	User1 *graph.Node
 }
 
-func (s *ACEInheritedFrom) Setup(graphTestContext *GraphTestContext) {
+func (s *ACLInheritanceHarness) Setup(graphTestContext *GraphTestContext) {
 	domain1SID := RandomDomainSID()
 	domain2SID := RandomDomainSID()
 
@@ -10273,5 +10273,5 @@ type HarnessDetails struct {
 	IngestRelationships                             IngestRelationships
 	AZPIMRolesHarness                               AZPIMRolesHarness
 	Version730_Migration                            Version730_Migration_Harness
-	ACEInheritedFrom                                ACEInheritedFrom
+	ACLInheritanceHarness                           ACLInheritanceHarness
 }
