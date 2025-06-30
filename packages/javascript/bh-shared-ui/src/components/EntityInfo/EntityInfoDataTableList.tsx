@@ -35,7 +35,9 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
 
     const tables = allSections[type]?.(id) || [];
 
-    additionalSections && tables.push({ id, label: 'Selectors' });
+    if (additionalSections) {
+        tables.push({ id, label: 'Selectors' });
+    }
 
     return (
         <div data-testid='entity-info-data-table-list'>
@@ -44,25 +46,15 @@ const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeTyp
                     return <EntitySelectorsInformation key='selectors' />;
                 }
 
-                if (additionalSections) {
-                    return (
-                        <React.Fragment key={index}>
-                            <Box padding={1}>
-                                <Divider />
-                            </Box>
-                            <EntityInfoDataTable {...table} />
-                        </React.Fragment>
-                    );
-                } else {
-                    return (
-                        <React.Fragment key={index}>
-                            <Box padding={1}>
-                                <Divider />
-                            </Box>
-                            <EntityInfoDataTableGraphed {...table} />
-                        </React.Fragment>
-                    );
-                }
+                const TableComponent = additionalSections ? EntityInfoDataTable : EntityInfoDataTableGraphed;
+                return (
+                    <React.Fragment key={index}>
+                        <Box padding={1}>
+                            <Divider />
+                        </Box>
+                        <TableComponent {...table} />
+                    </React.Fragment>
+                );
             })}
         </div>
     );
