@@ -1,19 +1,3 @@
-// Copyright 2025 Specter Ops, Inc.
-//
-// Licensed under the Apache License, Version 2.0
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// SPDX-License-Identifier: Apache-2.0
-
 export enum ActiveDirectoryNodeKind {
     Entity = 'Base',
     User = 'User',
@@ -808,8 +792,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.ContainsIdentity,
+        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
+        ActiveDirectoryRelationshipKind.GPOAppliesTo,
+        ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
-        ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
@@ -1168,7 +1155,6 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return undefined;
     }
 }
-
 export function AzurePathfindingEdges(): AzureRelationshipKind[] {
     return [
         AzureRelationshipKind.AvereContributor,
