@@ -15,12 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, DataTable } from '@bloodhoundenterprise/doodleui';
-import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
+import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Checkbox } from '@mui/material';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { useToggle } from '../../hooks';
-import { format, formatPotentiallUnknownLabel } from '../../utils';
+import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
@@ -63,8 +62,24 @@ const MemoDataTable = memo(DataTable);
 
 const makeColumnDef = (key: any) =>
     columnhelper.accessor(key, {
-        header: formatPotentiallUnknownLabel(key),
-        cell: (info: any) => format({ keyprop: key, value: info.getValue(), label: key }) || '--',
+        header: formatPotentiallyUnknownLabel(key),
+        cell: (info) => {
+            const value = info.getValue() as EntityField['value'];
+
+            if (typeof value === 'boolean') {
+                return value ? (
+                    <div className='h-full w-full flex justify-center items-center text-center'>
+                        <FontAwesomeIcon icon={faCheck} color='green' className='scale-125' />{' '}
+                    </div>
+                ) : (
+                    <div className='h-full w-full flex justify-center items-center text-center'>
+                        <FontAwesomeIcon icon={faCancel} color='lightgray' className='scale-125' />{' '}
+                    </div>
+                );
+            }
+
+            return format({ keyprop: key, value, label: key }) || '--';
+        },
         id: key,
     });
 
@@ -126,15 +141,9 @@ const ExploreTable = <TData extends HasData>({
                     );
                 },
             },
-            {
-                accessorKey: 'isTierZero',
-                id: 'isTierZero',
-                header: () => {
-                    return <span className='dark:text-neutral-light-1'>Is Tier Zero</span>;
-                },
-                cell: (cell) => <Checkbox checked={Boolean(cell.getValue())} />,
-            },
-            ...['objectid', 'displayname', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(makeColumnDef),
+            ...['isTierZero', 'objectid', 'displayname', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(
+                makeColumnDef
+            ),
         ],
         []
     );
@@ -180,7 +189,6 @@ const ExploreTable = <TData extends HasData>({
 
     if (!open || !data) return null;
 
-    console.log({ isExpanded });
     return (
         <div
             className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]` : 'h-1/2'}`}>

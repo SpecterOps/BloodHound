@@ -29,7 +29,7 @@ import {
 } from '../graphSchema';
 import { LuxonFormat } from './datetime';
 
-export const formatPotentiallUnknownLabel = (propKey: string) => {
+export const formatPotentiallyUnknownLabel = (propKey: string) => {
     const { kind, isKnownProperty } = validateProperty(propKey);
 
     return isKnownProperty ? getFieldLabel(kind!, propKey) : `${startCase(propKey)}`;
@@ -54,7 +54,7 @@ export const formatObjectInfoFields = (props: any): EntityField[] => {
 
         mappedFields.push({
             kind: kind,
-            label: `${formatPotentiallUnknownLabel(propKeys[i])}:`,
+            label: `${formatPotentiallyUnknownLabel(propKeys[i])}:`,
             value: value,
             keyprop: propKeys[i],
         });

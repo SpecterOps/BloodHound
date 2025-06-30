@@ -19,7 +19,7 @@ import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
 import React, { ForwardedRef, useMemo } from 'react';
-import { cn, formatPotentiallUnknownLabel } from '../../utils';
+import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
@@ -59,7 +59,7 @@ const TableControlsInner = <TData, TValue>(
         () =>
             columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',
-                value: formatPotentiallUnknownLabel(columnDef?.id || ''),
+                value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
             })),
         []
