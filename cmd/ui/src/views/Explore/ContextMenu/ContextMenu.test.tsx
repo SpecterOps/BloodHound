@@ -137,7 +137,7 @@ describe('ContextMenu', async () => {
         });
     });
 
-    it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truethy', async () => {
+    it('sets a primarySearch=id and searchType=pathfinding when secondarySearch is truthy', async () => {
         const secondarySearch = 'cdf';
         const { user, mockSetExploreParams } = await setup(undefined, undefined, secondarySearch);
 
@@ -164,7 +164,7 @@ describe('ContextMenu', async () => {
         });
     });
 
-    it('sets a secondary=id and searchType=pathfinding when primary is truethy', async () => {
+    it('sets a secondary=id and searchType=pathfinding when primary is truthy', async () => {
         const secondarySearch = 'cdf';
         const { user, mockSetExploreParams } = await setup(undefined, secondarySearch);
 

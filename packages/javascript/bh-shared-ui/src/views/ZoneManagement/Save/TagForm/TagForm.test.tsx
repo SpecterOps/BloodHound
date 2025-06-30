@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { ConfigurationKey } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Route, Routes, useParams } from 'react-router-dom';
@@ -35,6 +36,7 @@ const testTierZero = {
     deleted_by: null,
     position: 1,
     require_certify: false,
+    analysis_enabled: true,
 };
 
 const testOwned = {
@@ -51,6 +53,7 @@ const testOwned = {
     deleted_by: null,
     position: null,
     require_certify: false,
+    analysis_enabled: false,
 };
 
 const handlers = [
@@ -87,7 +90,19 @@ const handlers = [
             })
         );
     }),
+    rest.get('/api/v2/config', async (_, res, ctx) => {
+        return res(ctx.json(configResponse));
+    }),
 ];
+
+const configResponse = {
+    data: [
+        {
+            key: ConfigurationKey.Tiering,
+            value: { multi_tier_analysis_enabled: true, tier_limit: 1, label_limit: 0 },
+        },
+    ],
+};
 
 const server = setupServer(...handlers);
 
@@ -123,17 +138,23 @@ vi.mock('../../../../providers', async () => {
 
 describe('Tag Form', () => {
     const user = userEvent.setup();
-    const createNewTierPath = '/tier-management/save/tier/';
-    const createNewLabelPath = '/tier-management/save/label/';
-    const editExistingTierPath = '/tier-management/save/tier/1';
-    const editExistingLabelPath = '/tier-management/save/label/2';
-    const deletionTestsPath = '/tier-management/save/label/3';
+    const createNewTierPath = '/zone-management/save/tier/';
+    const createNewLabelPath = '/zone-management/save/label/';
+    const editExistingTierPath = '/zone-management/save/tier/1';
+    const editExistingLabelPath = '/zone-management/save/label/2';
+    const deletionTestsPath = '/zone-management/save/label/3';
 
     it('renders the form for creating a new tier', async () => {
         // Because there is no id path parameter in the url, the form is a create form
         // This means that none of the input fields should have any value aside from default values
 
         vi.mocked(useParams).mockReturnValue({ tierId: '', labelId: undefined });
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
 
         render(
             <Routes>
@@ -156,6 +177,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
     });
 
     it('renders the form for creating a new label', async () => {
@@ -185,6 +207,50 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Define Selector/ })).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
+    });
+
+    it('does not render the analysis toggle when multi tier analysis enabled is false', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
+
+        const configResponse = {
+            data: [
+                {
+                    key: ConfigurationKey.Tiering,
+                    value: { multi_tier_analysis_enabled: false, tier_limit: 1, label_limit: 0 },
+                },
+            ],
+        };
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            })
+        );
+
+        render(
+            <Routes>
+                <Route path={editExistingTierPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingTierPath }
+        );
+
+        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).not.toBeInTheDocument();
+    });
+
+    it('renders the analysis toggle when multi tier analysis enabled is true and when editing an existing tier', async () => {
+        vi.mocked(useParams).mockReturnValue({ tierId: '2', labelId: undefined });
+
+        render(
+            <Routes>
+                <Route path={editExistingTierPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingTierPath }
+        );
+
+        expect(await screen.findByText('Edit Tier Details')).toBeInTheDocument();
+        expect(screen.queryByText(/Enable Analysis/i)).toBeInTheDocument();
     });
 
     it('renders the form for editing an existing tier', async () => {
@@ -253,6 +319,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
+        expect(screen.queryByTestId('analysis_enabled')).not.toBeInTheDocument();
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {

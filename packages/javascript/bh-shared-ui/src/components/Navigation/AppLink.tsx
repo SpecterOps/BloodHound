@@ -20,7 +20,7 @@ import {
     GloballySupportedSearchParams,
     applyPreservedParams,
     persistSearchParams,
-} from './searchParams';
+} from '../../utils/searchParams/searchParams';
 
 export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
     if (discardQueryParams) {

@@ -45,18 +45,20 @@ export const setSingleParamFactory = <T>(updatedParams: T, searchParams: URLSear
         const value = (updatedParams as Record<string, string>)[key];
 
         // only set keys that have been passed via updatedParams
-        if (key in (updatedParams as Record<string, string>)) {
-            if (isEmptyParam(value)) {
-                searchParams.delete(key);
-            } else {
-                if (Array.isArray(value)) {
-                    searchParams.delete(key);
-                    value.forEach((item) => searchParams.append(key, item));
-                } else {
-                    searchParams.set(key, value);
-                }
-            }
+        if (!(key in (updatedParams as Record<string, string>))) return;
+
+        if (isEmptyParam(value)) {
+            searchParams.delete(key);
+            return;
         }
+
+        if (Array.isArray(value)) {
+            searchParams.delete(key);
+            value.forEach((item) => searchParams.append(key, item));
+            return;
+        }
+
+        searchParams.set(key, value);
     };
 };
 

@@ -16,7 +16,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, fireEvent, render } from '../../test-utils';
+import { act, render, screen } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
 import GraphControls from './GraphControls';
 
@@ -26,7 +26,7 @@ const server = setupServer(
     rest.get('/api/v2/features', (_req, res, ctx) => {
         return res(ctx.json({}));
     }),
-    rest.get('/api/v2/custom-node', (_, res, ctx) => {
+    rest.get('/api/v2/custom-nodes', (_, res, ctx) => {
         return res(ctx.json({}));
     }),
     rest.post('/api/v2/graphs/cypher', (_, res, ctx) => {
@@ -69,7 +69,7 @@ describe('GraphControls', () => {
     });
 
     const setup = ({ showNodeLabels = true, showEdgeLabels = true, json = mockJsonData } = {}) => {
-        const screen = render(
+        render(
             <GraphControls
                 onReset={onResetFn}
                 onLayoutChange={onLayoutChangeFn}
@@ -87,12 +87,12 @@ describe('GraphControls', () => {
 
         const user = userEvent.setup();
 
-        return { screen, user };
+        return { user };
     };
 
     describe('Resetting graph', () => {
         it('calls the onReset prop when the crop button is clicked', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const crop = screen.getByText('crop-simple');
             await user.click(crop);
@@ -103,7 +103,7 @@ describe('GraphControls', () => {
 
     describe('Toggling labels', () => {
         it('calls onToggleNodeLabels when click show all node labels', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
             const labelMenu = screen.getByText('Hide Labels');
             await user.click(labelMenu);
 
@@ -113,7 +113,7 @@ describe('GraphControls', () => {
             expect(onToggleNodeLabelsFn).toBeCalled();
         });
         it('calls onToggleEdgeLabels when click show all edge labels', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
             const labelMenu = screen.getByText('Hide Labels');
             await user.click(labelMenu);
 
@@ -130,7 +130,7 @@ describe('GraphControls', () => {
         ])(
             'Toggles node and edge labels on/off depending on their existing state',
             async ({ showEdgeLabels, showNodeLabels }) => {
-                const { screen, user } = setup({ showEdgeLabels, showNodeLabels });
+                const { user } = setup({ showEdgeLabels, showNodeLabels });
                 const labelMenu = screen.getByText('Hide Labels');
                 await user.click(labelMenu);
 
@@ -150,7 +150,7 @@ describe('GraphControls', () => {
 
     describe('Selecting a layout', () => {
         it('calls onLayoutChange with the selected layout', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const layoutMenu = screen.getByText('Layout');
             await user.click(layoutMenu);
@@ -168,7 +168,7 @@ describe('GraphControls', () => {
                 })
             );
 
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const layoutMenu = screen.getByText('Layout');
             await user.click(layoutMenu);
@@ -179,7 +179,7 @@ describe('GraphControls', () => {
     });
     describe('Exporting json', () => {
         it('disables the JSON button if the JSON is empty', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const exportMenu = screen.getByText('Export');
             await user.click(exportMenu);
@@ -193,7 +193,7 @@ describe('GraphControls', () => {
             exportToJsonSpy.mockImplementationOnce(() => undefined);
 
             const json = { test: 'data' };
-            const { screen, user } = setup({ json });
+            const { user } = setup({ json });
 
             const exportMenu = screen.getByText('Export');
             await user.click(exportMenu);
@@ -205,16 +205,15 @@ describe('GraphControls', () => {
         });
     });
     describe('Searching current results', () => {
-        it('renders GraphButton with correct text', () => {
-            const { screen } = setup();
-
-            const searchResultsMenu = screen.getByText('Search Current Results');
+        it('renders GraphButton with correct text', async () => {
+            setup();
+            const searchResultsMenu = await screen.findByText('Search Current Results');
 
             expect(searchResultsMenu).toBeInTheDocument();
         });
 
         it('disables GraphButton when isCurrentSearchOpen is true', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const searchResultsMenu = screen.getByText('Search Current Results');
             await user.click(searchResultsMenu);
@@ -223,7 +222,7 @@ describe('GraphControls', () => {
         });
 
         it('shows Popper when isCurrentSearchOpen is true', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();
 
@@ -234,18 +233,20 @@ describe('GraphControls', () => {
         });
 
         it('sets the selectedItem param and closes popper when a node is selected', async () => {
-            const { screen, user } = setup();
+            const { user } = setup();
 
             const searchResultsMenu = screen.getByText('Search Current Results');
+
             await user.click(searchResultsMenu);
 
             const searchInput = await screen.findByPlaceholderText('Search Current Results');
+
             await user.type(searchInput, currentNodes[1].label);
 
             const searchedNode = await screen.findByTestId('explore_search_result-list-item');
-            // Something about fireEvent.click triggers the correct event within SearchCurrentNodes.
-            // This is a known issue in downshift and seems to be resolved in newer versions
-            act(() => fireEvent.click(searchedNode));
+            await act(async () => {
+                await user.click(searchedNode);
+            });
 
             expect(onSearchedNodeClickFn).toBeCalled();
             expect(screen.queryByTestId('explore_graph-controls')).not.toBeInTheDocument();

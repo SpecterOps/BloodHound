@@ -82,6 +82,7 @@ export interface AssetGroupTag extends Created, Updated, Deleted {
     requireCertify: boolean | null;
     description: string;
     counts?: AssetGroupTagCounts;
+    analysis_enabled?: boolean;
 }
 
 export const SeedTypeObjectId = 1 as const;
@@ -270,6 +271,7 @@ export type GraphNode = {
     isTierZero: boolean;
     isOwnedObject: boolean;
     descendent_count?: number | null;
+    properties?: Record<string, any>;
 };
 
 export type GraphNodes = Record<string, GraphNode>;

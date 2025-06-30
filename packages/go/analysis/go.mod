@@ -23,7 +23,7 @@ toolchain go1.23.8
 require (
 	github.com/RoaringBitmap/roaring v1.9.4
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
-	github.com/specterops/dawgs v0.1.3
+	github.com/specterops/dawgs v0.1.5
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.2
 )
@@ -39,9 +39,8 @@ require (
 	github.com/jackc/pgtype v1.14.4 // indirect
 	github.com/kamstrup/intmap v0.5.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.9.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

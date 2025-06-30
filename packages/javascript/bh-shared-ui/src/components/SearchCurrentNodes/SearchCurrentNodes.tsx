@@ -16,7 +16,7 @@
 
 import { Box, List, ListItem, Paper, SxProps, TextField } from '@mui/material';
 import { useCombobox } from 'downshift';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { FixedSizeList } from 'react-window';
 import { useOnClickOutside } from '../../hooks';
 import SearchResultItem from '../SearchResultItem';
@@ -29,13 +29,12 @@ const LIST_ITEM_HEIGHT = 38;
 const MAX_CONTAINER_HEIGHT = 350;
 
 const SearchCurrentNodes: FC<{
-    sx?: SxProps;
     currentNodes: GraphNodes;
     onSelect: (node: FlatNode) => void;
     onClose?: () => void;
+    sx?: SxProps;
 }> = ({ sx, currentNodes, onSelect, onClose }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
 
     const [items, setItems] = useState<FlatNode[]>([]);
 
@@ -43,8 +42,6 @@ const SearchCurrentNodes: FC<{
     const flatNodeList: FlatNode[] = Object.entries(currentNodes).map(([key, value]) => {
         return { id: key, ...value };
     });
-
-    useEffect(() => inputRef.current?.focus(), []);
 
     // Since we are using a virtualized results container, we need to calculate the height for shorter
     // lists to avoid whitespace
@@ -124,7 +121,7 @@ const SearchCurrentNodes: FC<{
                     </List>
                 </Box>
                 <TextField
-                    inputRef={inputRef}
+                    autoFocus
                     placeholder={PLACEHOLDER_TEXT}
                     variant='outlined'
                     size='small'

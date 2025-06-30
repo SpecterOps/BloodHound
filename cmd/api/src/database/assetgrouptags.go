@@ -219,14 +219,13 @@ func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int
 	}
 }
 
-// TODO Add databases tests for this
 func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error) {
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE type = 1 AND deleted_at IS NULL ORDER BY position ASC",
+			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
 			model.AssetGroupTag{}.TableName(),
-		),
+		), model.AssetGroupTagTypeTier,
 	).Find(&tags); result.Error != nil {
 		return model.AssetGroupTags{}, CheckError(result)
 	}

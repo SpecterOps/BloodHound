@@ -41,6 +41,7 @@ export interface ZoneManagementContextValue {
     savePaths: string[];
     InfoHeader: FC;
     SupportLink?: FC;
+    SalesMessage?: FC;
     TierList?: FC<{ tiers: AssetGroupTag[]; setPosition: (position: number) => void; name: string }>;
 }
 

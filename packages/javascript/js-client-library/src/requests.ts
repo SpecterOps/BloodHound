@@ -23,7 +23,7 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils';
 
-export type RequestOptions = AxiosRequestConfig;
+export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
 export interface LoginRequest {
     login_method: string;
@@ -38,6 +38,7 @@ export type CreateAssetGroupTagRequest = {
     position: number | null;
     type: AssetGroupTagTypes;
     requireCertify?: boolean;
+    analysis_enabled?: boolean;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
