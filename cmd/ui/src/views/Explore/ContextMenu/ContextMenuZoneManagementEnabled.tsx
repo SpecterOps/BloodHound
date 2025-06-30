@@ -76,7 +76,7 @@ const ContextMenu: FC<{
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                primarySearch: selectedItemData?.objectId as string,
+                primarySearch: selectedItemData?.objectId,
             });
         }
     };
@@ -90,7 +90,7 @@ const ContextMenu: FC<{
             setExploreParams({
                 exploreSearchTab: 'pathfinding',
                 searchType,
-                secondarySearch: selectedItemData?.objectId as string,
+                secondarySearch: selectedItemData?.objectId,
             });
         }
     };
