@@ -27,9 +27,9 @@ import (
 	"regexp"
 
 	"github.com/gofrs/uuid"
+	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
-	"github.com/specterops/bloodhound/slicesext"
 	"golang.org/x/mod/modfile"
 )
 
