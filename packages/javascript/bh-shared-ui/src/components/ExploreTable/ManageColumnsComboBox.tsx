@@ -2,7 +2,7 @@ import { Button, Checkbox, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch, faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { UseComboboxPropGetters, useCombobox, useMultipleSelection } from 'downshift';
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../hooks';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
@@ -56,14 +56,14 @@ export const ManageColumnsComboBox = ({
 }: ManageColumnsComboBoxProps) => {
     const ref = useRef<HTMLDivElement>(null);
 
-    const [inputValue, setInputValue] = React.useState('');
-    const [isOpen, setIsOpen] = React.useState(false);
+    const [inputValue, setInputValue] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
 
     useOnClickOutside(ref, () => setIsOpen(false));
 
     const pinnedItems = useMemo(() => allItems.filter((item) => item.isPinned), [allItems]);
-    const [selectedItems, setSelectedItems] = React.useState([]);
-    const unselectedItems = React.useMemo(() => {
+    const [selectedItems, setSelectedItems] = useState<ManageColumnsComboBoxOption[]>([]);
+    const unselectedItems = useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
 
         return allItems.filter(
