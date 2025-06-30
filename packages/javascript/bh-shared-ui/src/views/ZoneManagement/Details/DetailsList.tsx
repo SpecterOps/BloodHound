@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -161,9 +161,20 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                             }}>
                                             <div className='flex items-center'>
                                                 {multiTierAnalysisEnabled && isTag(listItem) && !listItem?.analysis_enabled &&
-                                                    <div className='flex flex-row items-center mb-0.5'>
-                                                        <AppIcon.DataAlert size={16} className='mr-2 text-[#ED8537]' />
-                                                    </div>
+                                                    <TooltipProvider>
+                                                        <TooltipRoot>
+                                                            <TooltipTrigger>
+                                                                <div className='flex flex-row items-center mb-0.5'>
+                                                                    <AppIcon.DataAlert size={16} className='mr-2 text-[#ED8537]' />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipPortal>
+                                                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                                                                    Analysis disabled
+                                                                </TooltipContent>
+                                                            </TooltipPortal>
+                                                        </TooltipRoot>
+                                                    </TooltipProvider>
                                                 }
                                                 <div
                                                     className={cn(

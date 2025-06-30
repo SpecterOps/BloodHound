@@ -13,8 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import { Button, Card } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    Card,
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+} from '@bloodhoundenterprise/doodleui';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -45,7 +52,20 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
         <Card className='w-full flex px-6 py-4 rounded-xl'>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
                 {!analysisEnabled &&
-                    <AppIcon.DataAlert size={24} className='mr-2 mb-0.5 text-[#ED8537]' />
+                    <TooltipProvider>
+                        <TooltipRoot>
+                            <TooltipTrigger>
+                                <div>
+                                    <AppIcon.DataAlert size={24} className='mr-2 mb-0.5 text-[#ED8537]' />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipPortal>
+                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                                    Analysis disabled
+                                </TooltipContent>
+                            </TooltipPortal>
+                        </TooltipRoot>
+                    </TooltipProvider>
                 }
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
