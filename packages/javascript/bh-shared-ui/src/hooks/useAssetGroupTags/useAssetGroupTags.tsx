@@ -61,3 +61,8 @@ export const useLabels = () => {
 
     return tagsQuery.data?.filter((tag) => labelTypes.includes(tag.type));
 };
+
+export const useOwnedId = () => {
+    const tagsQuery = useAssetGroupTags();
+    return tagsQuery.data?.filter((tag) => tag.type === AssetGroupTagTypeOwned)[0].id;
+};

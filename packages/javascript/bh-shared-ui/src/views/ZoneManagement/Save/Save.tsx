@@ -26,8 +26,7 @@ import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTag } from '../../../hooks';
-import { OWNED_ID } from '../utils';
+import { useHighestPrivilegeTag, useOwnedId } from '../../../hooks';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -40,7 +39,7 @@ const Save: FC = () => {
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
     const topTagId = useHighestPrivilegeTag()?.id;
-
+    const ownedId = useOwnedId();
     return (
         <div>
             <Breadcrumb className='my-6'>
@@ -48,7 +47,7 @@ const Save: FC = () => {
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
                             <AppLink
-                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : OWNED_ID}`}>
+                                to={`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`}>
                                 {captitalizedPluralTagValue}
                             </AppLink>
                         </BreadcrumbLink>

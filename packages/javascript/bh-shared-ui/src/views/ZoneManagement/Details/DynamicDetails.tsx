@@ -20,11 +20,10 @@ import { DateTime } from 'luxon';
 import { FC, useContext } from 'react';
 import { UseQueryResult } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { useHighestPrivilegeTag } from '../../../hooks';
+import { useHighestPrivilegeTag, useOwnedId } from '../../../hooks';
 import { LuxonFormat } from '../../../utils';
 import { Cypher } from '../Cypher/Cypher';
 import { ZoneManagementContext } from '../ZoneManagementContext';
-import { OWNED_ID } from '../utils';
 import ObjectCountPanel from './ObjectCountPanel';
 import { getSelectorSeedType, isSelector, isTag } from './utils';
 
@@ -56,6 +55,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
     const { tierId = '', labelId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
     const topTagId = useHighestPrivilegeTag()?.id;
+    const ownedId = useOwnedId();
 
     return (
         <div className='max-h-full flex flex-col gap-8 max-w-[32rem]'>
@@ -82,7 +82,7 @@ const TagDetails: FC<{ data: AssetGroupTag }> = ({ data }) => {
                     <DetailField label='Certification' value={data.requireCertify ? 'Required' : 'Not Required'} />
                 </div>
             </Card>
-            {tagId !== topTagId?.toString() && tagId !== OWNED_ID && SalesMessage && <SalesMessage />}
+            {tagId !== topTagId?.toString() && tagId !== ownedId?.toString() && SalesMessage && <SalesMessage />}
             <ObjectCountPanel tagId={data.id.toString()} />
         </div>
     );

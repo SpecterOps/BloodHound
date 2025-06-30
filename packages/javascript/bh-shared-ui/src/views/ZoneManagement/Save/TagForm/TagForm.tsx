@@ -44,11 +44,12 @@ import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetG
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { OWNED_ID, getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
 
 import { useGetConfiguration, useHighestPrivilegeTag } from '../../../../hooks';
+import { useOwnedId } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 
 type TagFormInputs = {
     name: string;
@@ -71,9 +72,10 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
 };
 
 const topTagId = useHighestPrivilegeTag()?.id;
+const ownedId = useOwnedId();
 const showDeleteButton = (labelId: string | undefined, tierId: string) => {
     if (tierId === '' && !labelId) return false;
-    if (labelId === OWNED_ID) return false;
+    if (labelId === ownedId) return false;
     if (tierId === topTagId?.toString()) return false;
     return true;
 };
@@ -209,7 +211,7 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -256,7 +258,7 @@ export const TagForm: FC = () => {
                                     <Input
                                         id='name'
                                         type='text'
-                                        disabled={tagId === topTagId?.toString() || tagId === OWNED_ID}
+                                        disabled={tagId === topTagId?.toString() || tagId === ownedId?.toString()}
                                         {...register('name', {
                                             required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                             value: tagQuery.data?.name,
