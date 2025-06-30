@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useSearchParams } from 'react-router-dom';
 import InfiniteScrollingTable from '../../components/InfiniteScrollingTable';
@@ -29,8 +28,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     parentLabels = [],
 }) => {
     const [searchParams, setSearchParams] = useSearchParams();
-
-    const [onClick, setOnClick] = useState(false);
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
     const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
@@ -81,20 +78,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
         }
     };
 
-    /*
-        const setNodeSearchParams = (item: SelectedNode) => {
-        setSearchParams({
-            primarySearch: item.id,
-            searchType: 'node',
-            exploreSearchTab: 'node',
-        });
-    };
-
-    const handleOnClick = (item: SelectedNode) => {
-        setNodeSearchParams(item);
-    };
-    */
-
     let count: number | undefined;
     if (Array.isArray(countQuery.data)) {
         if (countLabel !== undefined) {
@@ -124,7 +107,6 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
                 <InfiniteScrollingTable
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
-                    //onClick={handleOnClick}
                 />
             )}
             {sections &&

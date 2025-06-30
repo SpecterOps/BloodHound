@@ -46,4 +46,29 @@ describe('EntityInfoCollapsibleSection', () => {
             expect(screen.getByText('An unknown error occurred during the request.')).toBeInTheDocument()
         );
     });
+
+    it('renders section when no errors occur', async () => {
+        const user = userEvent.setup();
+        const testLabel = 'Section';
+        const testCount = 100;
+        const testOnChange = vi.fn();
+        const testIsLoading = false;
+        const isExpanded = true;
+
+        render(
+            <EntityInfoCollapsibleSection
+                label={testLabel}
+                count={testCount}
+                onChange={testOnChange}
+                isLoading={testIsLoading}
+                isExpanded={isExpanded}
+            />
+        );
+
+        expect(screen.getByText(testLabel)).toBeInTheDocument();
+        user.click(screen.getByText(testLabel));
+        expect(screen.queryByText('An unknown error occurred during the request.')).not.toBeInTheDocument();
+        expect(screen.getByText('Section')).toBeInTheDocument();
+        expect(screen.getByText('100')).toBeInTheDocument();
+    });
 });

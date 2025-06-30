@@ -79,7 +79,7 @@ const EntityInfoContentWithProvider = ({
     zoneManagement?: boolean;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} zoneManagement={zoneManagement} />
+        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
     </ObjectInfoPanelContextProvider>
 );
 
