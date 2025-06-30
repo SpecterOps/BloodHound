@@ -177,9 +177,10 @@ const ExploreTable = <TData extends HasData>({
 
     if (!open || !data) return null;
 
+    console.log({ isExpanded });
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 h-[475px] bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]` : 'h-1/2'}`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
                     className={`h-[${TABLE_CONTROLS_HEIGHT}]`}

@@ -13,9 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useZonePathParams } from './useZonePathParams';
+import { useZoneQueryParams } from './useZoneQueryParams';
 
-import ZoneManagement from './ZoneManagement';
-
-export * from './ZoneManagementContext';
-export * from './utils';
-export default ZoneManagement;
+export { useZonePathParams, useZoneQueryParams };

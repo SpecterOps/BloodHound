@@ -13,9 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-import ZoneManagement from './ZoneManagement';
-
-export * from './ZoneManagementContext';
-export * from './utils';
-export default ZoneManagement;
+export * from './useAssetGroupTags';

@@ -87,6 +87,7 @@ const ZoneManagement: FC = () => {
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
                     Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <br />
                     {SupportLink && <SupportLink />}
                 </p>
 
