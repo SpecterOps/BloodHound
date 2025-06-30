@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ColumnDef, DataTable } from '@bloodhoundenterprise/doodleui';
+import { Button, DataTable } from '@bloodhoundenterprise/doodleui';
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Checkbox } from '@mui/material';
@@ -25,7 +25,7 @@ import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
 
-type HasData = { data?: object };
+type HasData = { data?: CoreTableItem };
 
 interface ExploreTableProps<TData extends HasData> {
     open?: boolean;
@@ -38,25 +38,35 @@ interface ExploreTableProps<TData extends HasData> {
 
 const TABLE_CONTROLS_HEIGHT = '72px';
 
-const requiredColumns = {
-    nodetype: true,
-    displayname: true,
-    objectid: true,
-    isTierZero: true,
-    enabled: true,
-    pwdlastset: true,
-    lastlogontimestamp: true,
-} as Record<string, boolean>;
+const requiredColumnKeys = [
+    'nodetype',
+    'displayname',
+    'objectid',
+    'isTierZero',
+    'enabled',
+    'pwdlastset',
+    'lastlogontimestamp',
+] as const;
+
+const requiredColumns = requiredColumnKeys.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}) as Record<
+    string,
+    boolean
+>;
+
+type CoreTableItem = Record<(typeof requiredColumnKeys)[number], any> & { [key: string]: any };
+
+import { createColumnHelper } from '@bloodhoundenterprise/doodleui';
+
+const columnhelper = createColumnHelper();
 
 const MemoDataTable = memo(DataTable);
 
 const makeColumnDef = (key: any) =>
-    ({
-        accessorKey: key,
+    columnhelper.accessor(key, {
         header: formatPotentiallUnknownLabel(key),
         cell: (info: any) => format({ keyprop: key, value: info.getValue(), label: key }) || '--',
         id: key,
-    }) as ColumnDef<any, any>;
+    });
 
 const ExploreTable = <TData extends HasData>({
     data,
@@ -80,18 +90,18 @@ const ExploreTable = <TData extends HasData>({
         [searchInput, unfilteredData]
     );
 
-    const nonRequiredColumnDefinitions: ColumnDef<any, any>[] = useMemo(
+    const nonRequiredColumnDefinitions = useMemo(
         () => allColumnKeys?.filter((key) => !requiredColumns[key]).map(makeColumnDef) || [],
         [allColumnKeys]
     );
 
+    console.log({ nonRequiredColumnDefinitions });
     const visibleColumnDefinitions = useMemo(
-        // TODO: import AccessorColumnDef type from doodleui for complete typing
-        () => nonRequiredColumnDefinitions.filter((columnDef) => visibleColumns?.[columnDef?.accessorKey]),
+        () => nonRequiredColumnDefinitions.filter((columnDef) => visibleColumns?.[columnDef?.id || '']),
         [nonRequiredColumnDefinitions, visibleColumns]
     );
 
-    const requiredColumnDefinitions: ColumnDef<any, any>[] = useMemo(
+    const requiredColumnDefinitions = useMemo(
         () => [
             {
                 accessorKey: '',
@@ -108,10 +118,10 @@ const ExploreTable = <TData extends HasData>({
                 header: () => {
                     return <span className='dark:text-neutral-light-1'>Type</span>;
                 },
-                cell: ({ row }) => {
+                cell: (info) => {
                     return (
                         <div className='flex justify-center items-center relative'>
-                            <NodeIcon nodeType={row?.original?.nodetype} />
+                            <NodeIcon nodeType={(info.getValue() as string) || ''} />
                         </div>
                     );
                 },
@@ -122,7 +132,7 @@ const ExploreTable = <TData extends HasData>({
                 header: () => {
                     return <span className='dark:text-neutral-light-1'>Is Tier Zero</span>;
                 },
-                cell: (cell) => <Checkbox checked={cell.getValue()} />,
+                cell: (cell) => <Checkbox checked={Boolean(cell.getValue())} />,
             },
             ...['objectid', 'displayname', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(makeColumnDef),
         ],
@@ -168,13 +178,6 @@ const ExploreTable = <TData extends HasData>({
         []
     );
 
-    const tableOptions: DataTableProps['tableOptions'] = useMemo(
-        () => ({
-            getRowId: (row) => row?.id,
-        }),
-        []
-    );
-
     if (!open || !data) return null;
 
     console.log({ isExpanded });
@@ -199,7 +202,6 @@ const ExploreTable = <TData extends HasData>({
                     className={`h-full *:h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]`}
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
-                    tableOptions={tableOptions}
                     data={mungedData as unknown[]}
                     columns={tableColumns}
                 />
