@@ -546,14 +546,15 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 		skipLimitString += fmt.Sprintf(" OFFSET %d", skip)
 	}
 
-	sqlStr := fmt.Sprintf(`
+	baseSqlStr := fmt.Sprintf(`
 		WITH selectors AS (
 			SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
 		), seeds AS (
 			SELECT selector_id, type, value FROM %s %s
-		)
-		SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY selectors.id %s`,
-		model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr, skipLimitString)
+		)`,
+		model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
+
+	sqlStr := fmt.Sprintf("%s SELECT * FROM seeds JOIN selectors ON seeds.selector_id = selectors.id ORDER BY selectors.id %s", baseSqlStr, skipLimitString)
 
 	if rows, err := s.db.WithContext(ctx).Raw(sqlStr, append(append([]any{assetGroupTagId}, selectorSqlFilter.Params...), selectorSeedSqlFilter.Params...)...).Rows(); err != nil {
 		return model.AssetGroupTagSelectors{}, 0, err
@@ -584,14 +585,7 @@ func (s *BloodhoundDB) GetAssetGroupTagSelectorsByTagId(ctx context.Context, ass
 
 		// we need an overall count of the rows if pagination is supplied
 		if limit > 0 || skip > 0 {
-			countSqlStr := fmt.Sprintf(`
-				WITH selectors AS (
-					SELECT id, asset_group_tag_id, created_at, created_by, updated_at, updated_by, disabled_at, disabled_by, name, description, is_default, allow_disable, auto_certify FROM %s WHERE asset_group_tag_id = ?%s
-				), seeds AS (
-					SELECT selector_id, type, value FROM %s %s
-				)
-				SELECT COUNT(*) FROM seeds JOIN selectors ON seeds.selector_id = selectors.id`,
-				model.AssetGroupTagSelector{}.TableName(), selectorSqlFilterStr, model.SelectorSeed{}.TableName(), selectorSeedSqlFilterStr)
+			countSqlStr := baseSqlStr + " SELECT COUNT(*) FROM seeds JOIN selectors ON seeds.selector_id = selectors.id"
 			if err := s.db.WithContext(ctx).Raw(countSqlStr, append(append([]any{assetGroupTagId}, selectorSqlFilter.Params...), selectorSeedSqlFilter.Params...)...).Scan(&totalRowCount).Error; err != nil {
 				return model.AssetGroupTagSelectors{}, 0, err
 			}
