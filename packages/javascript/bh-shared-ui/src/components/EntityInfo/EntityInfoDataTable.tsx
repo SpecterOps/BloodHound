@@ -111,15 +111,13 @@ const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
             )}
             {sections &&
                 sections.map((nestedSection: EntityInfoDataTableProps, nestedIndex: number) => (
-                    <>
-                        <EntityInfoDataTable
-                            {...nestedSection}
-                            additionalSections
-                            data-testid='entity-info-data-table'
-                            key={nestedIndex}
-                            parentLabels={[...(parentLabels as string[]), label]}
-                        />
-                    </>
+                    <EntityInfoDataTable
+                        {...nestedSection}
+                        additionalSections
+                        data-testid='entity-info-data-table'
+                        key={nestedIndex}
+                        parentLabels={[...(parentLabels as string[]), label]}
+                    />
                 ))}
         </EntityInfoCollapsibleSection>
     );
