@@ -5,8 +5,7 @@ import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
 
 const DetailsRoot: FC = () => {
     const topTagId = useHighestPrivilegeTag()?.id;
-
-    return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + topTagId} replace />;
+    return <AppNavigate to={'/zone-management/' + DEFAULT_ZONE_MANAGEMENT_ROUTE + topTagId} replace />;
 };
 
 export default DetailsRoot;
