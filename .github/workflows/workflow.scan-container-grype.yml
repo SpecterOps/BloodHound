@@ -60,7 +60,7 @@ jobs:
       - name: Download Build Automation Tool
         shell: bash
         run: |
-          docker pull corpsegod/cli-tools:main
+          docker pull specterops/build-automation:clitools-main
 
       - name: Execute Scan
         id: execute-scan
@@ -68,5 +68,5 @@ jobs:
         run: |
           docker run --rm \
             --volume $GITHUB_WORKSPACE:/app \
-            corpsegod/cli-tools:main \
+            specterops/build-automation:clitools-main \
             grype ${{ inputs.docker_image }}

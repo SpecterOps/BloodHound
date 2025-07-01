@@ -32,7 +32,7 @@ jobs:
       - name: Download Build Automation Tool
         shell: bash
         run: |
-          docker pull corpsegod/cli-tools:main
+          docker pull specterops/build-automation:clitools-main
 
       - name: Find Filepaths
         id: find-files
@@ -40,7 +40,7 @@ jobs:
         run: |
           docker run --rm \
             --volume $GITHUB_WORKSPACE:/app \
-            corpsegod/cli-tools:main \
+            specterops/build-automation:clitools-main \
             git ls-files --exclude-standard | \
               grep -E "(^|/)Dockerfile$|\.dockerfile$|\.Dockerfile$" | \
               jq -R -s 'split("\n") | map(select(length > 0))' > /app/filepaths.txt
