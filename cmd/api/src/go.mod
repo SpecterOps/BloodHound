@@ -41,7 +41,7 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/russellhaering/goxmldsig v1.4.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
-	github.com/specterops/dawgs v0.1.5
+	github.com/specterops/dawgs v0.1.6
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	github.com/ulule/limiter/v3 v3.11.2
