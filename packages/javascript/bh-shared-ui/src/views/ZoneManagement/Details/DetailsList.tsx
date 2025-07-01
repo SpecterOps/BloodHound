@@ -14,7 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, TooltipContent, TooltipPortal, TooltipProvider, TooltipRoot, TooltipTrigger } from '@bloodhoundenterprise/doodleui';
+import {
+    Button,
+    TooltipContent,
+    TooltipPortal,
+    TooltipProvider,
+    TooltipRoot,
+    TooltipTrigger,
+} from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -26,11 +33,11 @@ import {
 import { FC, useState } from 'react';
 import { UseQueryResult } from 'react-query';
 import { AppIcon, SortableHeader } from '../../../components';
+import { useGetConfiguration } from '../../../hooks';
 import { SortOrder } from '../../../types';
 import { cn } from '../../../utils';
 import { itemSkeletons } from '../utils';
 import { SelectedHighlight, getListHeight, isSelector, isTag } from './utils';
-import { useGetConfiguration } from '../../../hooks';
 
 const getCountElement = (listItem: AssetGroupTag | AssetGroupTagSelector): React.ReactNode => {
     if (listItem.counts === undefined) {
@@ -64,9 +71,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
-    const multiTierAnalysisEnabled = tieringConfig &&
-        tieringConfig?.value.multi_tier_analysis_enabled;
-
+    const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
 
     return (
         <div data-testid={`zone-management_details_${title.toLowerCase()}-list`}>
@@ -160,22 +165,27 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                 onSelect(listItem.id);
                                             }}>
                                             <div className='flex items-center'>
-                                                {multiTierAnalysisEnabled && isTag(listItem) && !listItem?.analysis_enabled &&
-                                                    <TooltipProvider>
-                                                        <TooltipRoot>
-                                                            <TooltipTrigger>
-                                                                <div className='flex flex-row items-center mb-0.5'>
-                                                                    <AppIcon.DataAlert size={16} className='mr-2 text-[#ED8537]' />
-                                                                </div>
-                                                            </TooltipTrigger>
-                                                            <TooltipPortal>
-                                                                <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
-                                                                    Analysis disabled
-                                                                </TooltipContent>
-                                                            </TooltipPortal>
-                                                        </TooltipRoot>
-                                                    </TooltipProvider>
-                                                }
+                                                {multiTierAnalysisEnabled &&
+                                                    isTag(listItem) &&
+                                                    !listItem?.analysis_enabled && (
+                                                        <TooltipProvider>
+                                                            <TooltipRoot>
+                                                                <TooltipTrigger>
+                                                                    <div className='flex flex-row items-center mb-0.5'>
+                                                                        <AppIcon.DataAlert
+                                                                            size={16}
+                                                                            className='mr-2 text-[#ED8537]'
+                                                                        />
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipPortal>
+                                                                    <TooltipContent className='max-w-80 dark:bg-neutral-dark-5 border-0'>
+                                                                        Analysis disabled
+                                                                    </TooltipContent>
+                                                                </TooltipPortal>
+                                                            </TooltipRoot>
+                                                        </TooltipProvider>
+                                                    )}
                                                 <div
                                                     className={cn(
                                                         'text-base dark:text-white truncate sm:max-w-[50px] lg:max-w-[100px] xl:max-w-[150px] 2xl:max-w-[300px]',

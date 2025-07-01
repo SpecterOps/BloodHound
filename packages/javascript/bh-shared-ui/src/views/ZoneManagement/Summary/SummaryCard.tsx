@@ -27,11 +27,11 @@ import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
 import { FC } from 'react';
+import { AppIcon } from '../../../components';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { AppIcon } from '../../../components';
 import { useAssetGroupTagInfo } from '../Save/TagForm/hooks';
 
 type SummaryCardProps = {
@@ -46,12 +46,12 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
     const navigate = useAppNavigate();
     const tagId = id.toString();
     const tagQuery = useAssetGroupTagInfo(tagId);
-    const analysisEnabled = tagQuery.data?.analysis_enabled;
+    const analysisEnabled = tagQuery.isSuccess ? tagQuery.data?.analysis_enabled : true;
 
     return (
         <Card className='w-full flex px-6 py-4 rounded-xl'>
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {!analysisEnabled &&
+                {!analysisEnabled && (
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>
@@ -66,7 +66,7 @@ const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberC
                             </TooltipPortal>
                         </TooltipRoot>
                     </TooltipProvider>
-                }
+                )}
                 <div className='text-2xl font-bold truncate min-w-0'>{title}</div>
             </div>
             <LargeRightArrow className='w-8 h-16' />
