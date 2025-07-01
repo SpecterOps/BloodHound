@@ -1,0 +1,31 @@
+---
+name: Lint Container Images
+run-name: Lint Container Images by @${{ github.actor }}
+
+on:
+  workflow_call:
+    inputs:
+      filepaths:
+        type: string
+        description: |-
+          JSON array of Dockerfile paths to lint with hadolint.
+          Each element should be a string containing the relative path
+          from the repository root to a Dockerfile.
+          Example: '["Dockerfile", "docker/api/Dockerfile", "services/web/Dockerfile"]'
+
+jobs:
+  hadolint:
+    name: Lint Dockerfile(s)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        paths: ${{ fromJson(inputs.filepaths) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.paths }}
+          recursive: false
