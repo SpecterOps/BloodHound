@@ -19,6 +19,8 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/specterops/dawgs/cypher/models/pgsql"
+	"github.com/specterops/dawgs/cypher/models/pgsql/format"
 	"net/http"
 	"regexp"
 	"slices"

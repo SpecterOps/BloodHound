@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBuildSQLFilter(t *testing.T) {
