@@ -24,10 +24,14 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
-	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var excludedProperties = map[string]struct{}{
+	"lastseen":      {},
+	"lastcollected": {},
+}
 
 type Node struct {
 	ID         string         `json:"id"`
@@ -50,6 +54,10 @@ type Edge struct {
 type Graph struct {
 	Nodes []Node `json:"nodes"`
 	Edges []Edge `json:"edges"`
+}
+
+type GenericObject struct {
+	Graph Graph `json:"graph"`
 }
 
 func WriteGraphToDatabase(db graph.Database, g *Graph) error {
@@ -90,76 +98,115 @@ func WriteGraphToDatabase(db graph.Database, g *Graph) error {
 }
 
 func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
-	var graphFixture Graph
+	var graphFixture GenericObject
 	fh, err := fSys.Open(path)
 	if err != nil {
-		return graphFixture, fmt.Errorf("could not open graph data file: %w", err)
+		return graphFixture.Graph, fmt.Errorf("could not open graph data file: %w", err)
 	}
 	defer fh.Close()
-	if err := json.NewDecoder(fh).Decode(&graphFixture); err != nil {
-		return graphFixture, fmt.Errorf("could not parse graph data file: %w", err)
+
+	decoder := json.NewDecoder(fh)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&graphFixture); err != nil {
+		return graphFixture.Graph, fmt.Errorf("could not parse graph data file: %w", err)
 	} else {
-		return graphFixture, nil
+		return graphFixture.Graph, nil
 	}
 }
 
-func AssertDatabaseGraph(t *testing.T, tx graph.Transaction, expected *Graph) {
+func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, expected *Graph) {
+	t.Helper()
+	var (
+		actualNodes      = make(map[string]*graph.Node, 100)
+		nodeIDToObjectID = make(map[graph.ID]string, 100)
+		actualEdges      = make(map[string]*graph.Relationship, 100)
+	)
+
+	//#region Reading from DB
+	_ = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		err := tx.Nodes().Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			for node := range cursor.Chan() {
+				objectId, err := node.Properties.Get(common.ObjectID.String()).String()
+
+				if err == nil {
+					actualNodes[objectId] = node
+					nodeIDToObjectID[node.ID] = objectId
+				}
+			}
+
+			return cursor.Error()
+		})
+
+		require.NoError(t, err)
+
+		err = tx.Relationships().Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
+			for edge := range cursor.Chan() {
+
+				fingerprint := nodeIDToObjectID[edge.StartID] + nodeIDToObjectID[edge.EndID] + edge.Kind.String()
+				actualEdges[fingerprint] = edge
+			}
+
+			return cursor.Error()
+		})
+
+		require.NoError(t, err)
+
+		return nil
+	})
+	//#endregion
 
 	//#region Node Assertions
-
 	for _, expectedNode := range expected.Nodes {
-		// assert existence
-		node, err := tx.Nodes().Filterf(func() graph.Criteria {
-			return query.Equals(query.NodeProperty(common.ObjectID.String()), expectedNode.ID)
-		}).First()
-		assert.NoErrorf(t, err, "failed to find node %s", expectedNode.ID)
+		t.Run(fmt.Sprintf("AssertNode_%s", expectedNode.ID), func(t *testing.T) {
+			t.Parallel()
 
-		// assert kinds
-		kindMap := make(map[string]struct{})
-		for _, kind := range node.Kinds.Strings() {
-			kindMap[kind] = struct{}{}
-		}
-		for _, kind := range expectedNode.Kinds {
-			_, ok := kindMap[kind]
-			assert.Truef(t, ok, "expected kind `%s` does not exist on node `%s`", kind, expectedNode.ID)
-		}
+			// assert existence
+			node, ok := actualNodes[expectedNode.ID]
+			require.True(t, ok)
 
-		// assert properties
-		for expectedProperty, expectedValue := range expectedNode.Properties {
-			value, ok := node.Properties.Map[expectedProperty]
-			assert.Truef(t, ok, "could not find expected property `%s` on node `%s`", expectedProperty, node.ID)
-
-			if ok {
-				assert.Equalf(t, expectedValue, value, "mismatched property `%s` on node `%s`: have %v, want %v", expectedProperty, node.ID, value, expectedValue)
+			// assert kinds
+			kindMap := make(map[string]struct{})
+			for _, kind := range node.Kinds.Strings() {
+				kindMap[kind] = struct{}{}
 			}
-		}
-	}
+			for _, kind := range expectedNode.Kinds {
+				assert.Contains(t, kindMap, kind)
+			}
 
+			// assert properties
+			for expectedProperty, expectedValue := range expectedNode.Properties {
+				value, ok := node.Properties.Map[expectedProperty]
+				assert.Truef(t, ok, "could not find expected property `%s` on node `%s`", expectedProperty, node.ID)
+
+				if _, isExcludedProperty := excludedProperties[expectedProperty]; ok && !isExcludedProperty {
+					assert.Equalf(t, expectedValue, value, "mismatched property `%s` on node `%s`: have %v, want %v", expectedProperty, node.ID, value, expectedValue)
+				}
+			}
+		})
+	}
 	//#endregion
 
 	//#region Edge Assertions
-
 	for _, expectedEdge := range expected.Edges {
-		// assert existence
-		edge, err := tx.Relationships().Filterf(func() graph.Criteria {
-			return query.And(
-				query.Equals(query.StartProperty(common.ObjectID.String()), expectedEdge.Start.Value),
-				query.Kind(query.Relationship(), graph.StringKind(expectedEdge.Kind)),
-				query.Equals(query.EndProperty(common.ObjectID.String()), expectedEdge.End.Value),
-			)
-		}).First()
-		require.NoErrorf(t, err, "expected edge `(%s)-[%s]->(%s)` is missing", expectedEdge.Start.Value, expectedEdge.Kind, expectedEdge.End.Value)
+		t.Run(fmt.Sprintf("AssertEdge_%s-%s-%s", expectedEdge.Start.Value, expectedEdge.Kind, expectedEdge.End.Value), func(t *testing.T) {
+			t.Parallel()
 
-		// assert properties
-		for expectedProperty, expectedValue := range expectedEdge.Properties {
-			value, ok := edge.Properties.Map[expectedProperty]
-			assert.Truef(t, ok, "could not find expected property `%s` on edge (%s)->(%s)", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value)
+			// assert existence
+			fingerprint := expectedEdge.Start.Value + expectedEdge.End.Value + expectedEdge.Kind
+			edge, ok := actualEdges[fingerprint]
 
-			if ok {
-				assert.Equalf(t, expectedValue, value, "mismatched property `%s` on edge (%s)->(%s): have %v, want %v", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value, value, expectedValue)
+			require.True(t, ok, "expected edge `(%s)-[%s]->(%s)` is missing", expectedEdge.Start.Value, expectedEdge.Kind, expectedEdge.End.Value)
+
+			// assert properties
+			for expectedProperty, expectedValue := range expectedEdge.Properties {
+				value, ok := edge.Properties.Map[expectedProperty]
+				assert.Truef(t, ok, "could not find expected property `%s` on edge (%s)->(%s)", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value)
+
+				if _, isExcludedProperty := excludedProperties[expectedProperty]; ok && !isExcludedProperty {
+					assert.Equalf(t, expectedValue, value, "mismatched property `%s` on edge (%s)->(%s): have %v, want %v", expectedProperty, expectedEdge.Start.Value, expectedEdge.End.Value, value, expectedValue)
+				}
 			}
-		}
+		})
 	}
-
 	//#endregion
 }

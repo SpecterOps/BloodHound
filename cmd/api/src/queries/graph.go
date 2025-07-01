@@ -35,7 +35,6 @@ import (
 	"github.com/specterops/dawgs/cypher/models/walk"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -43,6 +42,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
