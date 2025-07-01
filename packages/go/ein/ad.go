@@ -758,12 +758,9 @@ func ParseGPOChanges(changes GPOChanges) ParsedLocalGroupData {
 			groupID := computer.ObjectIdentifier + "-" + group.RID
 			if len(group.Members) > 0 {
 				parsedData.Nodes = append(parsedData.Nodes, IngestibleNode{
-					ObjectID: groupID,
-					// TODO: look up computer name?
-					PropertyMap: map[string]any{
-						"name": groupID,
-					},
-					Labels: []graph.Kind{ad.LocalGroup},
+					ObjectID:    groupID,
+					PropertyMap: map[string]any{},
+					Labels:      []graph.Kind{ad.LocalGroup},
 				})
 
 				parsedData.Relationships = append(parsedData.Relationships, NewIngestibleRelationship(

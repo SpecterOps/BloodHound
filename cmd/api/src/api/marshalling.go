@@ -26,8 +26,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/stream"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
