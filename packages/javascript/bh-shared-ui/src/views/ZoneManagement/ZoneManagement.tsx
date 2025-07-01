@@ -61,6 +61,7 @@ const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
     const ownedId = useOwnedTag()?.id;
+    const topTagId = useHighestPrivilegeTag()?.id;
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -79,7 +80,6 @@ const ZoneManagement: FC = () => {
             return { path, component: Summary, authenticationRequired: true, navigation: true };
         }),
     ];
-    const topTagId = useHighestPrivilegeTag()?.id;
 
     return (
         <main>
@@ -90,9 +90,8 @@ const ZoneManagement: FC = () => {
                     <br />
                     {SupportLink && <SupportLink />}
                 </p>
-
-                <div className='flex flex-col'>
-                    {topTagId && (
+                {topTagId && ownedId && (
+                    <div className='flex flex-col'>
                         <Tabs
                             defaultValue='tier'
                             className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
@@ -108,21 +107,21 @@ const ZoneManagement: FC = () => {
                                 <TabsTrigger value='label'>Labels</TabsTrigger>
                             </TabsList>
                         </Tabs>
-                    )}
-                    <Suspense
-                        fallback={
-                            <div className='absolute inset-0 flex items-center justify-center'>
-                                <CircularProgress color='primary' size={80} />
-                            </div>
-                        }>
-                        <Routes>
-                            {childRoutes.map((route) => {
-                                return <Route path={route.path} element={<route.component />} key={route.path} />;
-                            })}
-                            <Route path='*' element={<DetailsRoot />} />
-                        </Routes>
-                    </Suspense>
-                </div>
+                        <Suspense
+                            fallback={
+                                <div className='absolute inset-0 flex items-center justify-center'>
+                                    <CircularProgress color='primary' size={80} />
+                                </div>
+                            }>
+                            <Routes>
+                                {childRoutes.map((route) => {
+                                    return <Route path={route.path} element={<route.component />} key={route.path} />;
+                                })}
+                                <Route path='*' element={<DetailsRoot />} />
+                            </Routes>
+                        </Suspense>
+                    </div>
+                )}
             </div>
         </main>
     );
