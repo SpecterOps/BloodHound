@@ -21,44 +21,13 @@ import (
 	"context"
 	"os"
 	"path"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/lab/generic"
 	"github.com/stretchr/testify/require"
 )
-
-// getPostgresConfig reads key/value pairs from the default integration
-// config file and creates a pgtestdb configuration object.
-func getPostgresConfig(t *testing.T) pgtestdb.Config {
-	t.Helper()
-
-	config, err := utils.LoadIntegrationTestConfig()
-	require.NoError(t, err)
-
-	entries := strings.Split(config.Database.Connection, " ")
-
-	environmentMap := make(map[string]string)
-	for _, entry := range entries {
-		parts := strings.Split(entry, "=")
-		environmentMap[parts[0]] = parts[1]
-	}
-
-	return pgtestdb.Config{
-		DriverName:                "pgx",
-		Host:                      environmentMap["host"],
-		Port:                      environmentMap["port"],
-		User:                      environmentMap["user"],
-		Password:                  environmentMap["password"],
-		Database:                  environmentMap["dbname"],
-		Options:                   "sslmode=disable",
-		ForceTerminateConnections: true,
-	}
-}
 
 func TestVersion6IngestJSON(t *testing.T) {
 	t.Parallel()

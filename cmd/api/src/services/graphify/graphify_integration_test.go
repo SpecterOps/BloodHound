@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
@@ -32,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
