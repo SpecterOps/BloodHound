@@ -1,0 +1,72 @@
+---
+name: Find Dockerfile Filepaths
+run-name: Find Dockerfile Filepaths executed by @${{ github.actor }}
+
+on:
+  workflow_call:
+    inputs:
+      docker_image:
+        type: string
+        required: true
+        description: |-
+          The full reference to the Docker container image to scan for vulnerabilities with Grype.
+          This should include the registry, repository name, and tag or digest.
+          
+          Grype will analyze this image for:
+          - Known security vulnerabilities (CVEs) in installed packages
+          - Operating system vulnerabilities
+          - Language-specific package vulnerabilities (npm, pip, gem, etc.)
+          - Application dependencies and libraries
+          - Base image vulnerabilities
+          
+          The image must be accessible from the runner environment, either:
+          - Publicly available (e.g., from Docker Hub)
+          - Accessible with the provided DockerHub credentials
+          - Previously built and available locally
+          
+          Grype supports scanning images from various sources including:
+          - Container registries (Docker Hub, ECR, GCR, etc.)
+          - Local Docker daemon
+          - Archived images (tar files)
+          - OCI layout directories
+          
+          Examples:
+          - 'docker.io/specterops/bloodhound:latest'
+          - 'myregistry.com/myapp:v1.2.3'
+          - 'nginx@sha256:abc123...' (using digest)
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+
+jobs:
+  scan-container-dockle:
+    name: Scan Container Image (Dockle)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        name: Authenticate with DockerHub Registry
+        if: ${{ inputs.dockerhub_account != '' }}
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - name: Download Build Automation Tool
+        shell: bash
+        run: |
+          docker pull corpsegod/cli-tools:main
+
+      - name: Execute Scan
+        id: execute-scan
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume $GITHUB_WORKSPACE:/app \
+            corpsegod/cli-tools:main \
+            dockle ${{ inputs.docker_image }}
