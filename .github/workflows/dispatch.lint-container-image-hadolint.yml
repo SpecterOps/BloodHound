@@ -34,6 +34,6 @@ on:
 jobs:
   hadolint:
     name: Lint Dockerfile(s)
-    uses: ./.github/workflows/workflow.lint-container-image.yml
+    uses: ./.github/workflows/workflow.lint-container-image-hadolint.yml
     with:
       filepaths: ${{ inputs.filepaths }}
