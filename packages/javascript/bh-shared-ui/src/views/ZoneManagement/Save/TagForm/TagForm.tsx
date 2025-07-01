@@ -40,16 +40,18 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
+import { useGetConfiguration } from '../../../../hooks';
+import {
+    useAssetGroupTags,
+    useHighestPrivilegeTag,
+    useOwnedTag,
+} from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
 import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-
-import { useGetConfiguration, useHighestPrivilegeTag } from '../../../../hooks';
-import { useOwnedTag } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 
 type TagFormInputs = {
     name: string;
@@ -69,15 +71,6 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
 
     // We should never reach this default return
     return 'Tag Details';
-};
-
-const topTagId = useHighestPrivilegeTag()?.id;
-const ownedId = useOwnedTag()?.id;
-const showDeleteButton = (labelId: string | undefined, tierId: string) => {
-    if (tierId === '' && !labelId) return false;
-    if (labelId === ownedId) return false;
-    if (tierId === topTagId?.toString()) return false;
-    return true;
 };
 
 const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
@@ -114,6 +107,10 @@ export const TagForm: FC = () => {
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
+
+    const topTagId = useHighestPrivilegeTag()?.id;
+    const ownedId = useOwnedTag()?.id;
+
     const showAnalysisToggle =
         tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
 
@@ -127,6 +124,13 @@ export const TagForm: FC = () => {
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
+
+    const showDeleteButton = (labelId: string | undefined, tierId: string) => {
+        if (tierId === '' && !labelId) return false;
+        if (labelId === ownedId?.toString()) return false;
+        if (tierId === topTagId?.toString()) return false;
+        return true;
+    };
 
     const handleCreateTag = useCallback(
         async (formData: TagFormInputs) => {

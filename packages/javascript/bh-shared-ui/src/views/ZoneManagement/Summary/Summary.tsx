@@ -37,7 +37,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const topTagId = useHighestPrivilegeTag()?.id;
+    const topTagId = useHighestPrivilegeTag()?.id.toString();
     const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 
@@ -75,7 +75,7 @@ const Summary: FC = () => {
                 <div className='basis-1/3'>
                     {showEditButton && (
                         <Button asChild variant={'secondary'} disabled={showEditButton}>
-                            <Link to={getSavePath(tierId, labelId, selectorId)}>Edit</Link>
+                            <Link to={getSavePath(tierId?.toString(), labelId, selectorId)}>Edit</Link>
                         </Button>
                     )}
                 </div>
@@ -85,7 +85,7 @@ const Summary: FC = () => {
                     <SummaryList
                         title={labelId ? 'Labels' : 'Tiers'}
                         listQuery={tagsQuery}
-                        selected={tagId}
+                        selected={tagId as string}
                         onSelect={(id) => {
                             navigate(
                                 `/zone-management/${ROUTE_ZONE_MANAGEMENT_SUMMARY}/${getTagUrlValue(labelId)}/${id}`
