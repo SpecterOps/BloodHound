@@ -14,13 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    Button,
-    PaginationContent,
-    PaginationNav,
-    PaginationNext,
-    PaginationPrevious,
-} from '@bloodhoundenterprise/doodleui';
+import { Button } from '@bloodhoundenterprise/doodleui';
 import {
     AssetGroupTag,
     AssetGroupTagSelector,
@@ -65,10 +59,6 @@ type DetailsListProps = {
  */
 export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, onSelect }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
-    const [page, setPage] = useState(0);
-
-    const pageSize = 25;
 
     const listItems = listQuery.data
         ?.sort((a, b) => {
@@ -139,7 +129,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                             <span className='text-base'>There was an error fetching this data</span>
                         </li>
                     ) : listQuery.isSuccess ? (
-                        listItems?.slice(pageSize * page, pageSize * page + pageSize).map((listItem) => {
+                        listItems?.map((listItem) => {
                             const isDisabled = isSelector(listItem) && listItem.disabled_at;
 
                             return (
@@ -178,26 +168,6 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                         })
                     ) : null}
                 </ul>
-            </div>
-            <div className='border-red border-2'>
-                <PaginationNav className='text-sm tabular-nums'>
-                    <PaginationContent>
-                        <PaginationPrevious
-                            onClick={() => {
-                                setPage(page - 1);
-                            }}
-                            disabled={page <= 0}
-                            className='disabled:text-gray-400 px-1 py-2 mx-2'
-                        />
-                        <PaginationNext
-                            onClick={() => {
-                                setPage(page + 1);
-                            }}
-                            disabled={pageSize * (page + 1) > (listItems?.length || 0)}
-                            className='disabled:text-gray-400 px-1 py-2 mx-2'
-                        />
-                    </PaginationContent>
-                </PaginationNav>
             </div>
         </div>
     );

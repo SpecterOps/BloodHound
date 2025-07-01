@@ -17,7 +17,7 @@
 import { Button } from '@bloodhoundenterprise/doodleui';
 import { AssetGroupTag, AssetGroupTagSelector } from 'js-client-library';
 import { FC, useContext } from 'react';
-import { UseQueryResult, useQuery } from 'react-query';
+import { UseInfiniteQueryResult, UseQueryResult, useInfiniteQuery, useQuery } from 'react-query';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
@@ -25,6 +25,7 @@ import { TIER_ZERO_ID, getTagUrlValue } from '../utils';
 import { DetailsList } from './DetailsList';
 import { MembersList } from './MembersList';
 import { SelectedDetails } from './SelectedDetails';
+import { SelectorsList } from './SelectorsList';
 
 export const getSavePath = (
     tierId: string | undefined,
@@ -46,18 +47,19 @@ const getItemCount = (
     tagId: string | undefined,
     tagsQuery: UseQueryResult<AssetGroupTag[]>,
     selectorId: string | undefined,
-    selectorsQuery: UseQueryResult<AssetGroupTagSelector[]>
+    selectorsQuery: UseInfiniteQueryResult<{ items: AssetGroupTagSelector[] }>
 ) => {
     if (selectorId !== undefined) {
-        const selectedSelector = selectorsQuery.data?.find((selector) => {
+        const allSelectors = selectorsQuery.data?.pages.flatMap((page) => page.items) || [];
+        const selectedSelector = allSelectors.find((selector) => {
             return selectorId === selector.id.toString();
         });
-        return selectedSelector?.counts?.members || 0;
+        return selectedSelector?.counts?.members ?? 0;
     } else if (tagId !== undefined) {
         const selectedTag = tagsQuery.data?.find((tag) => {
             return tagId === tag.id.toString();
         });
-        return selectedTag?.counts?.members || 0;
+        return selectedTag?.counts?.members ?? 0;
     } else {
         return 0;
     }
@@ -92,13 +94,28 @@ const Details: FC = () => {
         },
     });
 
-    const selectorsQuery = useQuery({
+    const selectorsQuery = useInfiniteQuery<{
+        items: AssetGroupTagSelector[];
+        nextPageParam?: { skip: number; limit: number };
+    }>({
         queryKey: ['zone-management', 'tags', tagId, 'selectors'],
-        queryFn: async () => {
-            if (!tagId) return [];
-            return apiClient.getAssetGroupTagSelectors(tagId, { params: { counts: true } }).then((res) => {
-                return res.data.data['selectors'];
+        queryFn: async ({ pageParam = { skip: 0, limit: 25 } }) => {
+            if (!tagId)
+                return {
+                    items: [],
+                };
+            return apiClient.getAssetGroupTagSelectors(tagId, pageParam.skip, pageParam.limit, true).then((res) => {
+                const items = res.data.data['selectors'];
+                const hasMore = items.length === pageParam.limit;
+
+                return {
+                    items,
+                    nextPageParam: hasMore ? { skip: pageParam.skip + 25, limit: 25 } : undefined,
+                };
             });
+        },
+        getNextPageParam: (lastPage) => {
+            return lastPage.nextPageParam;
         },
     });
 
@@ -126,8 +143,7 @@ const Details: FC = () => {
                             navigate(`/zone-management/details/${getTagUrlValue(labelId)}/${id}`);
                         }}
                     />
-                    <DetailsList
-                        title='Selectors'
+                    <SelectorsList
                         listQuery={selectorsQuery}
                         selected={selectorId}
                         onSelect={(id) => {
