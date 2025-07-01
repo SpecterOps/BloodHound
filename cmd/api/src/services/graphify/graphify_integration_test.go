@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/peterldowns/pgtestdb"
@@ -30,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphify"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
@@ -103,6 +105,34 @@ func setupIntegrationTestSuite(t *testing.T, fixturesPath string) IntegrationTes
 		GraphDB:         graphDB,
 		BHDatabase:      db,
 		WorkDir:         workDir,
+	}
+}
+
+// getPostgresConfig reads key/value pairs from the default integration
+// config file and creates a pgtestdb configuration object.
+func getPostgresConfig(t *testing.T) pgtestdb.Config {
+	t.Helper()
+
+	config, err := utils.LoadIntegrationTestConfig()
+	require.NoError(t, err)
+
+	entries := strings.Split(config.Database.Connection, " ")
+
+	environmentMap := make(map[string]string)
+	for _, entry := range entries {
+		parts := strings.Split(entry, "=")
+		environmentMap[parts[0]] = parts[1]
+	}
+
+	return pgtestdb.Config{
+		DriverName:                "pgx",
+		Host:                      environmentMap["host"],
+		Port:                      environmentMap["port"],
+		User:                      environmentMap["user"],
+		Password:                  environmentMap["password"],
+		Database:                  environmentMap["dbname"],
+		Options:                   "sslmode=disable",
+		ForceTerminateConnections: true,
 	}
 }
 
