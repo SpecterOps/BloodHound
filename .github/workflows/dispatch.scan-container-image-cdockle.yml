@@ -48,7 +48,7 @@ on:
 jobs:
   scan-image:
     name: Scan Container Image (Dockle)
-    uses: ./.github/workflows/workflow_call.scan-container-dockle.yml
+    uses: ./.github/workflows/workflow.scan-container-dockle.yml
     with:
       docker_image: ${{ inputs.docker_image }}
     secrets:

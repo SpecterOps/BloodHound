@@ -55,7 +55,7 @@ on:
 jobs:
   scan-image:
     name: Scan Container Image (Grype)
-    uses: ./.github/workflows/workflow_call.scan-container-grype.yml
+    uses: ./.github/workflows/workflow.scan-container-grype.yml
     with:
       docker_image: ${{ inputs.docker_image }}
     secrets:
