@@ -165,9 +165,9 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 			query.KindIn(query.End(), azure.Entity),
 		))
 	case node.Kinds.ContainsOneOf(azure.Role):
-		// MATCH (n:AZRole)<-[:AZHasRole]-(m:AZBase) RETURN m
+		// MATCH (n:AZRole)<-[:AZHasRole|AZRoleEligible]-(m:AZBase) RETURN m
 		pattern = traversal.NewPattern().InboundWithDepth(0, 1, query.And(
-			query.KindIn(query.Relationship(), azure.HasRole),
+			query.KindIn(query.Relationship(), azure.HasRole, azure.AZRoleEligible),
 			query.KindIn(query.End(), azure.Entity),
 		))
 	default:
