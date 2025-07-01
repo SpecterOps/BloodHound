@@ -16,9 +16,10 @@
 
 import { useState } from 'react';
 import { EdgeCheckboxType } from '../../edgeTypes';
+import { areArraysSimilar } from '../../utils';
 import { useExploreParams } from '../useExploreParams';
 import { EMPTY_FILTER_VALUE, INITIAL_FILTERS, INITIAL_FILTER_TYPES } from './queries';
-import { areArraysSimilar, extractEdgeTypes, mapParamsToFilters } from './utils';
+import { extractEdgeTypes, mapParamsToFilters } from './utils';
 
 export type PathfindingFilters = ReturnType<typeof usePathfindingFilters>;
 
