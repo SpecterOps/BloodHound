@@ -1,0 +1,48 @@
+---
+name: Find Dockerfile Filepaths
+run-name: Find Dockerfile Filepaths executed by @${{ github.actor }}
+
+on:
+  workflow_call:
+    secrets:
+      dockerhub_account:
+        required: true
+      dockerhub_token:
+        required: true
+
+jobs:
+  find-dockerfiles:
+    name: Find Dockerfiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      filepaths: ${{ steps.find-filepaths.outputs.filepaths }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        name: Authenticate with DockerHub Registry
+        if: ${{ inputs.dockerhub_account != '' }}
+        with:
+          registry: docker.io
+          username: ${{ secrets.dockerhub_account }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - name: Download Build Automation Tool
+        shell: bash
+        run: |
+          docker pull corpsegod/cli-tools:main
+
+      - name: Find Filepaths
+        id: find-files
+        shell: bash
+        run: |
+          docker run --rm \
+            --volume $GITHUB_WORKSPACE:/app \
+            corpsegod/cli-tools:main \
+            git ls-files --exclude-standard | \
+              grep -E "(^|/)Dockerfile$|\.dockerfile$|\.Dockerfile$" | \
+              jq -R -s 'split("\n") | map(select(length > 0))' > /app/filepaths.txt
+
+          echo "filepaths=$(cat $GITHUB_WORKSPACE/filepaths.txt)" >> $GITHUB_OUTPUT
