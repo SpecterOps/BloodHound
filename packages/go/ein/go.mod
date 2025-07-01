@@ -22,7 +22,7 @@ toolchain go1.23.8
 
 require (
 	github.com/bloodhoundad/azurehound/v2 v2.6.0
-	github.com/specterops/dawgs v0.1.5
+	github.com/specterops/dawgs v0.1.6
 	github.com/stretchr/testify v1.10.0
 )
 

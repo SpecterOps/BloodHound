@@ -21,7 +21,7 @@ go 1.23.0
 toolchain go1.24.4
 
 require (
-	github.com/specterops/dawgs v0.1.5
+	github.com/specterops/dawgs v0.1.6
 	github.com/stretchr/testify v1.10.0
 )
 
