@@ -2253,11 +2253,15 @@ func TestResources_PreviewSelectors(t *testing.T) {
 
 func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	var (
-		mockCtrl  = gomock.NewController(t)
-		mockDB    = mocks_db.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{DB: mockDB}
-		handler   = http.HandlerFunc(resources.SearchAssetGroupTags)
-		endpoint  = "/api/v2/asset-group-tags/search"
+		mockCtrl    = gomock.NewController(t)
+		mockDB      = mocks_db.NewMockDatabase(mockCtrl)
+		mockGraphDb = mocks_graph.NewMockGraph(mockCtrl)
+		resources   = v2.Resources{
+			DB:         mockDB,
+			GraphQuery: mockGraphDb,
+		}
+		handler  = http.HandlerFunc(resources.SearchAssetGroupTags)
+		endpoint = "/api/v2/asset-group-tags/search"
 
 		// selector        = model.AssetGroupTagSelector{
 		// 	AssetGroupTagId: 5,
@@ -2267,7 +2271,11 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		// 	CreatedBy:       "spam@exaple.com",
 		// 	UpdatedBy:       "spam@exaple.com",
 		// }
+
 	)
+	type WrappedResponse struct {
+		Data v2.SearchAssetGroupTagsResponse `json:"data"`
+	}
 
 	defer mockCtrl.Finish()
 
@@ -2331,7 +2339,7 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("get selectors db error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), 20).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{}, errors.New("db error"))
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2345,7 +2353,52 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 	})
 	t.Run("parse graph sort error", func(t *testing.T) {
 		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
-		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any(), 20).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+
+		reqBody := `{"query": "test", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search?sort_by='notSortable'", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+	t.Run("parse skip error", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+
+		reqBody := `{"query": "test", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search?skip='notSkippable'", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+	t.Run("success - query by name type tier", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "test1",
+					})},
+				{
+					ID:    2,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-2",
+						"name":     "test2",
+					})},
+			}, nil)
 
 		reqBody := `{"query": "test", "tag_type": 1}`
 
@@ -2355,6 +2408,195 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 		response := httptest.NewRecorder()
 		handler.ServeHTTP(response, req)
 
-		require.Equal(t, http.StatusInternalServerError, response.Code)
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags:      model.AssetGroupTags{{Name: "test tier", Type: 1}},
+			Selectors: model.AssetGroupTagSelectors{{Name: "test selector"}},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:      1,
+					ObjectID:    "ID-1",
+					PrimaryKind: "Unknown",
+					Name:        "test1",
+				},
+				{
+					NodeId:      2,
+					ObjectID:    "ID-2",
+					PrimaryKind: "Unknown",
+					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+	t.Run("success - query by name type label", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test label", Type: 2}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "test1",
+					})},
+				{
+					ID:    2,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-2",
+						"name":     "test2",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "test", "tag_type": 2}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags:      model.AssetGroupTags{{Name: "test label", Type: 2}},
+			Selectors: model.AssetGroupTagSelectors{{Name: "test selector"}},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:      1,
+					ObjectID:    "ID-1",
+					PrimaryKind: "Unknown",
+					Name:        "test1",
+				},
+				{
+					NodeId:      2,
+					ObjectID:    "ID-2",
+					PrimaryKind: "Unknown",
+					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+	t.Run("success - query by name and type label and include owned type", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test owned label", Type: 2}, {Name: "owned", Type: 3}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_owned_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-1",
+						"name":     "test1",
+					})},
+				{
+					ID:    2,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_owned_label")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-2",
+						"name":     "test2",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "owned", "tag_type": 2}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags:      model.AssetGroupTags{{Name: "test owned label", Type: 2}, {Name: "owned", Type: 3}},
+			Selectors: model.AssetGroupTagSelectors{},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:      1,
+					ObjectID:    "ID-1",
+					PrimaryKind: "Unknown",
+					Name:        "test1",
+				},
+				{
+					NodeId:      2,
+					ObjectID:    "ID-2",
+					PrimaryKind: "Unknown",
+					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
+	})
+	t.Run("success - query by object id", func(t *testing.T) {
+		mockDB.EXPECT().GetAssetGroupTags(gomock.Any(), gomock.Any()).Return(model.AssetGroupTags{{Name: "test tier", Type: 1}}, nil)
+		mockDB.EXPECT().GetAssetGroupTagSelectors(gomock.Any(), gomock.Any()).Return(model.AssetGroupTagSelectors{{Name: "test selector"}}, nil)
+		mockGraphDb.EXPECT().GetFilteredAndSortedNodesPaginated(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return([]*graph.Node{
+				{
+					ID:    1,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-123",
+						"name":     "test1",
+					})},
+				{
+					ID:    2,
+					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
+					Properties: graph.AsProperties(map[string]any{
+						"objectid": "ID-12",
+						"name":     "test2",
+					})},
+			}, nil)
+
+		reqBody := `{"query": "12", "tag_type": 1}`
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, req)
+
+		expected := WrappedResponse{v2.SearchAssetGroupTagsResponse{
+			Tags:      model.AssetGroupTags{},
+			Selectors: model.AssetGroupTagSelectors{},
+			Members: []v2.AssetGroupMember{
+				{
+					NodeId:      1,
+					ObjectID:    "ID-123",
+					PrimaryKind: "Unknown",
+					Name:        "test1",
+				},
+				{
+					NodeId:      2,
+					ObjectID:    "ID-12",
+					PrimaryKind: "Unknown",
+					Name:        "test2",
+				},
+			},
+		},
+		}
+
+		wrappedResp := WrappedResponse{}
+		err := json.Unmarshal(response.Body.Bytes(), &wrappedResp)
+		require.NoError(t, err)
+		require.Equal(t, expected, wrappedResp)
+		require.Equal(t, http.StatusOK, response.Code)
 	})
 }

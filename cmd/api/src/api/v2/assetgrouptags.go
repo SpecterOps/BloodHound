@@ -763,11 +763,11 @@ func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
 	} else if !model.IsValidTagType(reqBody.TagType) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseAssetGroupTagInvalid, request), response)
-	} else if reqBody.Query == "" {
+	} else if reqBody.Query == "" || len(reqBody.Query) < 3 {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, "query"), request), response)
 	} else if tags, err := s.DB.GetAssetGroupTags(request.Context(), model.SQLFilter{}); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}, assetGroupTagsSearchLimit); err != nil {
+	} else if selectors, err := s.DB.GetAssetGroupTagSelectors(request.Context(), model.SQLFilter{}); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if sort, err := api.ParseGraphSortParameters(AssetGroupMember{}, queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsColumnNotFilterable, request), response)
