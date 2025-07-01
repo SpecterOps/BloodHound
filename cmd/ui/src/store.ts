@@ -68,6 +68,7 @@ type PersistedState = {
             darkMode: GlobalViewState['darkMode'];
             notifications: GlobalViewState['notifications'];
             exploreLayout: GlobalViewState['exploreLayout'];
+            visibleExploreTableColumns: GlobalViewState['visibleExploreTableColumns'];
         };
     };
 };

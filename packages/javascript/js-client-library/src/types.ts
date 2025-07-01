@@ -289,7 +289,7 @@ export type GraphEdge = {
 
 export type GraphEdges = GraphEdge[];
 
-export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
+export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
 
 export type StyledGraphNode = {
     color: string;

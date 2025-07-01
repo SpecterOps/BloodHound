@@ -129,7 +129,7 @@ export interface SetIsExploreTableSelectedAction {
 
 export interface SetVisibleExploreTableColumns {
     type: typeof GLOBAL_SET_VISIBLE_EXPLORE_TABLE_COLUMNS;
-    visibleExploreTableColumns: Record<string, { isPinned?: boolean }>;
+    visibleExploreTableColumns: Record<string, boolean>;
 }
 
 export type GlobalOptionsActionTypes =
