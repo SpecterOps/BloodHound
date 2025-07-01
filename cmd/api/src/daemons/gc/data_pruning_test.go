@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

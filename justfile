@@ -14,12 +14,13 @@ export SB_PG_CONNECTION := env_var_or_default("SB_PG_CONNECTION", "user=bloodhou
 set positional-arguments
 
 # generate generic ingestible file with default CLI arguments
-graphify-ingest:
-  @just stbernard graph --path=cmd/api/src/test/fixtures/fixtures/v6/ingest
+[no-cd]
+graphify-ingest path="" outfile="":
+  @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
 
 # run st bernard directly
 stbernard *ARGS:
-  @go run github.com/specterops/bloodhound/packages/go/stbernard {{ARGS}}
+  @go tool stbernard {{ARGS}}
 
 # ensure dependencies are up to date
 ensure-deps *FLAGS:
@@ -179,6 +180,15 @@ run-bhce-container platform='linux/amd64' tag='custom' version='v5.0.0' *ARGS=''
 init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
+
+  if [[ ! -L "../dawgs" && ! -d "../dawgs" ]]; then
+    echo "Cloning dawgs repo"
+    git clone git@github.com:specterops/dawgs ../dawgs
+  elif [[ -L "../dawgs" && ! -e "../dawgs" ]]; then
+    echo "Cloning dawgs repo to symlink target"
+    git clone git@github.com:specterops/dawgs ../$(readlink ../dawgs)
+  fi
+
   echo "Make local copies of configuration files"
     if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"
@@ -226,6 +236,17 @@ init wipe="":
     echo "Backing up existing environment file"
     mv ./.env ./.env.bak
   fi
+
+  if [[ -f "./go.work" ]]; then
+    echo "Backing up existing go.work file"
+    mv ./go.work ./go.work.bak
+  fi
+
+  echo "Removing go.work.sum file"
+  rm -f ./go.work.sum
+
+  echo "Copying go.work template"
+  cp ./go.work.template ./go.work
 
   echo "Run modsync to ensure workspace is up to date"
   just modsync

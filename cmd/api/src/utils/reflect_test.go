@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 )
 
 func TestGenericClone(t *testing.T) {

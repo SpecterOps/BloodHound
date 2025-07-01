@@ -30,9 +30,9 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -1866,11 +1866,11 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	)
 
 	// Format the incoming user and group ids to uppercase string before creating our nodes
-	for i, _ := range policyAssignment.EndUserAssignmentGroupApprovers {
+	for i := range policyAssignment.EndUserAssignmentGroupApprovers {
 		policyAssignment.EndUserAssignmentGroupApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentGroupApprovers[i])
 	}
 
-	for i, _ := range policyAssignment.EndUserAssignmentUserApprovers {
+	for i := range policyAssignment.EndUserAssignmentUserApprovers {
 		policyAssignment.EndUserAssignmentUserApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentUserApprovers[i])
 	}
 

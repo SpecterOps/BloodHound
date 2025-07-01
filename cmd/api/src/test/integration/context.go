@@ -17,7 +17,7 @@
 package integration
 
 import (
-	"github.com/specterops/bloodhound/src/test"
+	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/dawgs/graph"
 )
 

@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/daemons/datapipe"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/stretchr/testify/require"
 )
 

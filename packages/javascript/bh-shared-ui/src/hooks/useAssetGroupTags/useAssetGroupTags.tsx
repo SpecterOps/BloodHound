@@ -36,7 +36,7 @@ export const useOrderedTags = () => {
 
     if (tagsQuery.isLoading || tagsQuery.isError) return [];
 
-    return tagsQuery.data
+    return (tagsQuery.data ?? [])
         ?.filter((tag) => tag.type === AssetGroupTagTypeTier)
         .sort((a, b) => {
             const aPos = a.position ?? 0;
