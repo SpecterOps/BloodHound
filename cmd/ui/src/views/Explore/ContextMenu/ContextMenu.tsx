@@ -63,7 +63,7 @@ const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => 
     }
 
     // Prevent filtering for edge types not found in AllEdgeTypes array
-    const item = isEdgeType(edgeType) ? (
+    return isEdgeType(edgeType) ? (
         <MenuItem key='filter-edge' onClick={filterEdge}>
             Filter out Edge
         </MenuItem>
@@ -72,8 +72,6 @@ const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => 
             Non-filterable Edge
         </MenuItem>
     );
-
-    return [item];
 };
 
 const NodeMenuItems: FC<Omit<MenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
@@ -84,36 +82,40 @@ const NodeMenuItems: FC<Omit<MenuItemsProps, 'pathfindingFilters'>> = ({ objectI
     const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
     const ownedId = useAppSelector(selectOwnedAssetGroupId);
 
-    return [
-        <MenuItem
-            key='starting-node'
-            onClick={() =>
-                setExploreParams({
-                    exploreSearchTab: 'pathfinding',
-                    searchType: secondarySearch ? 'pathfinding' : 'node',
-                    primarySearch: objectId,
-                })
-            }>
-            Set as starting node
-        </MenuItem>,
-        <MenuItem
-            key='ending-node'
-            onClick={() =>
-                setExploreParams({
-                    exploreSearchTab: 'pathfinding',
-                    searchType: primarySearch ? 'pathfinding' : 'node',
-                    secondarySearch: objectId,
-                })
-            }>
-            Set as ending node
-        </MenuItem>,
-        ...(!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE)
-            ? [
-                  <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />,
-                  <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />,
-              ]
-            : []),
-    ];
+    return (
+        <>
+            <MenuItem
+                key='starting-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: secondarySearch ? 'pathfinding' : 'node',
+                        primarySearch: objectId,
+                    })
+                }>
+                Set as starting node
+            </MenuItem>
+
+            <MenuItem
+                key='ending-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: primarySearch ? 'pathfinding' : 'node',
+                        secondarySearch: objectId,
+                    })
+                }>
+                Set as ending node
+            </MenuItem>
+
+            {!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE) && (
+                <>
+                    <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />
+                    <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />
+                </>
+            )}
+        </>
+    );
 };
 
 const ContextMenu: FC<{

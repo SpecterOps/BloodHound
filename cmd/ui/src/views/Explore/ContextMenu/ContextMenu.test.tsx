@@ -91,7 +91,7 @@ const setup = async (permissions?: Permission[], primarySearch?: string, seconda
         handleApplyFilters: vi.fn(),
         handleRemoveEdgeType: vi.fn(),
         handleUpdateFilters: vi.fn(),
-        resetFilters: vi.fn(),
+        initialize: vi.fn(),
         selectedFilters: [],
     };
 

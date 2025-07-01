@@ -75,7 +75,7 @@ const setup = async (exploreSearchTab?: string) => {
         handleApplyFilters: vi.fn(),
         handleRemoveEdgeType: vi.fn(),
         handleUpdateFilters: vi.fn(),
-        resetFilters: vi.fn(),
+        initialize: vi.fn(),
         selectedFilters: [],
     };
 

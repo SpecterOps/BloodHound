@@ -28,7 +28,7 @@ export const usePathfindingFilters = () => {
 
     // Instead of tracking this in an effect, we want to create a callback to let the consumer decide when to sync down
     // query params. This is useful for our filter form where we only want to sync once when the user opens it
-    const resetFilters = () => {
+    const initialize = () => {
         if (pathFilters?.length) {
             // Since we need to track state in the case of an empty set of filters, check for our 'empty' key here
             const incoming = pathFilters[0] === EMPTY_FILTER_VALUE ? [] : pathFilters;
@@ -64,9 +64,9 @@ export const usePathfindingFilters = () => {
 
     return {
         handleApplyFilters,
-        resetFilters,
         handleRemoveEdgeType,
         handleUpdateFilters,
+        initialize,
         selectedFilters,
     };
 };
