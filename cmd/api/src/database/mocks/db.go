@@ -1162,18 +1162,18 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectorCounts(ctx, tagIds a
 }
 
 // GetAssetGroupTagSelectors mocks base method.
-func (m *MockDatabase) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter, limit int) (model.AssetGroupTagSelectors, error) {
+func (m *MockDatabase) GetAssetGroupTagSelectors(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTagSelectors, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectors", ctx, sqlFilter, limit)
+	ret := m.ctrl.Call(m, "GetAssetGroupTagSelectors", ctx, sqlFilter)
 	ret0, _ := ret[0].(model.AssetGroupTagSelectors)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAssetGroupTagSelectors indicates an expected call of GetAssetGroupTagSelectors.
-func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectors(ctx, sqlFilter, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagSelectors(ctx, sqlFilter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectors", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectors), ctx, sqlFilter, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagSelectors", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagSelectors), ctx, sqlFilter)
 }
 
 // GetAssetGroupTagSelectorsByTagId mocks base method.
