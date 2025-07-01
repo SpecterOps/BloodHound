@@ -24,11 +24,11 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"

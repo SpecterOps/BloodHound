@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"

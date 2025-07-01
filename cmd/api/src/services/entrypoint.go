@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/registration"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -38,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	schema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 )

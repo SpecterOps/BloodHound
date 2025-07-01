@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -31,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/dawgs/graph"
 )
 
