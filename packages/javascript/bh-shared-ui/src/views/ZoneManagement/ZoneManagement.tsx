@@ -92,21 +92,23 @@ const ZoneManagement: FC = () => {
                 </p>
 
                 <div className='flex flex-col'>
-                    <Tabs
-                        defaultValue='tier'
-                        className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
-                        value={location.pathname.includes('label') ? 'label' : 'tier'}
-                        onValueChange={(value) => {
-                            const isSummary = location.pathname.includes('summary');
-                            const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? topTagId : ownedId;
-                            navigate(`/zone-management/${path}/${value}/${id}`);
-                        }}>
-                        <TabsList className='w-full flex justify-start'>
-                            <TabsTrigger value='tier'>Tiers</TabsTrigger>
-                            <TabsTrigger value='label'>Labels</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    {topTagId && (
+                        <Tabs
+                            defaultValue='tier'
+                            className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
+                            value={location.pathname.includes('label') ? 'label' : 'tier'}
+                            onValueChange={(value) => {
+                                const isSummary = location.pathname.includes('summary');
+                                const path = isSummary ? 'summary' : 'details';
+                                const id = value === 'tier' ? topTagId : ownedId;
+                                navigate(`/zone-management/${path}/${value}/${id}`);
+                            }}>
+                            <TabsList className='w-full flex justify-start'>
+                                <TabsTrigger value='tier'>Tiers</TabsTrigger>
+                                <TabsTrigger value='label'>Labels</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    )}
                     <Suspense
                         fallback={
                             <div className='absolute inset-0 flex items-center justify-center'>

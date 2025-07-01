@@ -20,6 +20,7 @@ import { useHighestPrivilegeTag } from '../../hooks';
 import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
 const DetailsRoot: FC = () => {
     const topTagId = useHighestPrivilegeTag()?.id;
+    console.log(topTagId);
     if (topTagId) {
         return <AppNavigate to={'/zone-management/' + DEFAULT_ZONE_MANAGEMENT_ROUTE + topTagId} replace />;
     } else {
