@@ -93,7 +93,11 @@ const ExploreTable = ({
         () =>
             mungedData?.filter((item) => {
                 const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
-                const filterTagets = filterKeys.map((filterKey) => item?.[filterKey]?.toLowerCase());
+                const filterTagets = filterKeys.map((filterKey) => {
+                    const stringyValue = String(item?.[filterKey]);
+
+                    return stringyValue?.toLowerCase();
+                });
 
                 return filterTagets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
             }),
