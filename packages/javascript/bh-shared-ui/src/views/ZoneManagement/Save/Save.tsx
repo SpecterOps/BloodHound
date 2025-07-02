@@ -26,7 +26,7 @@ import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTagId, useOwnedTag } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../../hooks';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -39,7 +39,7 @@ const Save: FC = () => {
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
     const topTagId = useHighestPrivilegeTagId();
-    const ownedId = useOwnedTag()?.id;
+    const ownedId = useOwnedTagId();
     return (
         <div>
             <Breadcrumb className='my-6'>

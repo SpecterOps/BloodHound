@@ -44,7 +44,7 @@ import { useGetConfiguration } from '../../../../hooks';
 import {
     useAssetGroupTags,
     useHighestPrivilegeTagId,
-    useOwnedTag,
+    useOwnedTagId,
 } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
@@ -109,7 +109,7 @@ export const TagForm: FC = () => {
     const tieringConfig = parseTieringConfiguration(data);
 
     const topTagId = useHighestPrivilegeTagId();
-    const ownedId = useOwnedTag()?.id;
+    const ownedId = useOwnedTagId();
 
     const showAnalysisToggle =
         tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';

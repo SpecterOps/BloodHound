@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useHighestPrivilegeTagId, useOwnedTag } from '../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../hooks';
 import {
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
@@ -60,7 +60,7 @@ const summaryPaths = [
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const ownedId = useOwnedTag()?.id;
+    const ownedId = useOwnedTagId();
     const topTagId = useHighestPrivilegeTagId();
 
     const context = useContext(ZoneManagementContext);
