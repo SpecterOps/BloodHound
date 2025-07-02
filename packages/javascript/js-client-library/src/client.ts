@@ -323,7 +323,7 @@ class BHEAPIClient {
      * getAttackPathsGraph returns the graph data that is rendered in the attack paths page for a given environment
      */
     getAttackPathsGraph = (environmentId: string, nodeId: string | null = null, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
+        this.baseClient.get<BasicResponse<types.SigmaFlatGraphData>>(
             `/api/v2/meta-trees/${environmentId}`,
             Object.assign({ params: nodeId && { node_id: nodeId } }, options)
         );
@@ -332,7 +332,7 @@ class BHEAPIClient {
      * getLatestMetaNode returns Meta node data from the most recent analysis for a given environment
      */
     getLatestMetaNode = (environmentId: string, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(`/api/v2/meta-nodes/${environmentId}`, options);
+        this.baseClient.get<BasicResponse<types.SigmaFlatGraphData>>(`/api/v2/meta-nodes/${environmentId}`, options);
 
     /**
      * getFindingDetails returns data associated with a finding for a given environment
@@ -423,7 +423,7 @@ class BHEAPIClient {
         );
 
     getAssetGroupComboNode = (assetGroupId: string, domainsid?: string, options?: RequestOptions) => {
-        return this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
+        return this.baseClient.get<BasicResponse<types.SigmaFlatGraphData>>(
             `/api/v2/asset-groups/${assetGroupId}/combo-node`,
             Object.assign(
                 {
@@ -559,7 +559,7 @@ class BHEAPIClient {
         );
 
     getSearchResult = (query: string, searchType: string, options?: RequestOptions) =>
-        this.baseClient.get<BasicResponse<types.FlatGraphResponse>>(
+        this.baseClient.get<BasicResponse<types.SigmaFlatGraphData>>(
             '/api/v2/graph-search',
             Object.assign(
                 {

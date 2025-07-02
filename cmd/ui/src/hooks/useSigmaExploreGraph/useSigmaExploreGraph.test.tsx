@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as bhSharedUI from 'bh-shared-ui';
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
+import { GraphResponse, SigmaFlatGraphData } from 'js-client-library';
 import { normalizeGraphDataForSigma } from '.';
 
-const transformToFlatGraphResponseSpy = vitest.spyOn(bhSharedUI, 'transformToFlatGraphResponse');
-transformToFlatGraphResponseSpy.mockReturnValue({});
+const transformToSigmaFlatGraphDataSpy = vitest.spyOn(bhSharedUI, 'transformToSigmaFlatGraphData');
+transformToSigmaFlatGraphDataSpy.mockReturnValue({});
 
 const typicalGraphResponse: GraphResponse = {
     data: {
@@ -28,21 +28,10 @@ const typicalGraphResponse: GraphResponse = {
     },
 };
 
-const typicalFlatGraphResponse: FlatGraphResponse = {
+const typicalSigmaFlatGraphData: SigmaFlatGraphData = {
     '1234': {
         color: '#DBE617',
         data: {
-            admincount: false,
-            description:
-                'Users are prevented from making accidental or intentional system-wide changes and can run most applications',
-            domain: 'FAKEDOMAIN.CORP',
-            isaclprotected: false,
-            lastseen: '2025-03-26T20:45:30.715175335Z',
-            nodetype: 'Group',
-            samaccountname: 'Users',
-            whencreated: 1668394808,
-            source: '',
-            target: '',
             label: '',
             kind: '',
             lastSeen: '',
@@ -72,13 +61,13 @@ describe('normalizeGraphDataForSigma', () => {
         expect(actual).toBeUndefined();
     });
 
-    it('calls transformToFlatGraphResponse when graphData matches GraphResponse interface', () => {
+    it('calls transformToSigmaFlatGraphData when graphData matches GraphResponse interface', () => {
         normalizeGraphDataForSigma(typicalGraphResponse);
-        expect(transformToFlatGraphResponseSpy).toBeCalled();
+        expect(transformToSigmaFlatGraphDataSpy).toBeCalled();
     });
 
     it('returns graphData as is if it doesnt match the GraphResponse interface', () => {
-        normalizeGraphDataForSigma(typicalFlatGraphResponse);
-        expect(transformToFlatGraphResponseSpy).not.toBeCalled();
+        normalizeGraphDataForSigma(typicalSigmaFlatGraphData);
+        expect(transformToSigmaFlatGraphDataSpy).not.toBeCalled();
     });
 });
