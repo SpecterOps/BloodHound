@@ -116,13 +116,19 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	config, err := utils.LoadIntegrationTestConfig()
 	require.NoError(t, err)
 
-	entries := strings.Split(config.Database.Connection, " ")
-
 	environmentMap := make(map[string]string)
-	for _, entry := range entries {
-		parts := strings.Split(entry, "=")
-		environmentMap[parts[0]] = parts[1]
+	for _, entry := range strings.Fields(config.Database.Connection) {
+		if parts := strings.SplitN(entry, "=", 2); len(parts) == 2 {
+			environmentMap[parts[0]] = parts[1]
+		}
 	}
+
+	requiredKeys := []string{"host", "port", "user", "password", "dbname"}
+    for _, key := range requiredKeys {
+        if _, exists := environmentMap[key]; !exists {
+            t.Fatalf("Missing required database connection parameter: %s", key)
+        }
+    }
 
 	return pgtestdb.Config{
 		DriverName:                "pgx",
@@ -139,6 +145,12 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 func teardownIntegrationTestSuite(t *testing.T, suite *IntegrationTestSuite) {
 	t.Helper()
 
-	suite.GraphDB.Close(suite.Context)
-	suite.BHDatabase.Close(suite.Context)
+	if suite.GraphDB != nil {
+		if err := suite.GraphDB.Close(suite.Context); err != nil {
+			t.Logf("Failed to close GraphDB: %v", err)
+		}
+	}
+	if suite.BHDatabase != nil {
+		suite.BHDatabase.Close(suite.Context)
+	}
 }
