@@ -14,19 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, DataTable } from '@bloodhoundenterprise/doodleui';
+import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
+import { REQUIRED_EXPLORE_TABLE_COLUMN_KEYS } from '../../constants';
 import { useToggle } from '../../hooks';
+import { WrappedExploreTableItem } from '../../types';
 import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
 
-type HasData = { data?: CoreTableItem };
+const TABLE_CONTROLS_HEIGHT = '72px';
 
-interface ExploreTableProps<TData extends HasData> {
+const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
+    (acc, curr) => ({ ...acc, [curr]: true }),
+    {}
+) as Record<string, boolean>;
+
+const columnhelper = createColumnHelper();
+
+interface ExploreTableProps<TData extends WrappedExploreTableItem> {
     open?: boolean;
     onClose?: () => void;
     data?: Record<string, TData>;
@@ -34,29 +43,6 @@ interface ExploreTableProps<TData extends HasData> {
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 }
-
-const TABLE_CONTROLS_HEIGHT = '72px';
-
-const requiredColumnKeys = [
-    'nodetype',
-    'displayname',
-    'objectid',
-    'isTierZero',
-    'enabled',
-    'pwdlastset',
-    'lastlogontimestamp',
-] as const;
-
-const requiredColumns = requiredColumnKeys.reduce((acc, curr) => ({ ...acc, [curr]: true }), {}) as Record<
-    string,
-    boolean
->;
-
-type CoreTableItem = Record<(typeof requiredColumnKeys)[number], any> & { [key: string]: any };
-
-import { createColumnHelper } from '@bloodhoundenterprise/doodleui';
-
-const columnhelper = createColumnHelper();
 
 const MemoDataTable = memo(DataTable);
 
@@ -83,7 +69,7 @@ const makeColumnDef = (key: any) =>
         id: key,
     });
 
-const ExploreTable = <TData extends HasData>({
+const ExploreTable = <TData extends WrappedExploreTableItem>({
     data,
     open,
     onClose,
@@ -110,7 +96,6 @@ const ExploreTable = <TData extends HasData>({
         [allColumnKeys]
     );
 
-    console.log({ nonRequiredColumnDefinitions });
     const visibleColumnDefinitions = useMemo(
         () => nonRequiredColumnDefinitions.filter((columnDef) => visibleColumns?.[columnDef?.id || '']),
         [nonRequiredColumnDefinitions, visibleColumns]
@@ -210,7 +195,7 @@ const ExploreTable = <TData extends HasData>({
                     className={`h-full *:h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]`}
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
-                    data={mungedData as unknown[]}
+                    data={mungedData as WrappedExploreTableItem['data'][]}
                     columns={tableColumns}
                 />
             </div>

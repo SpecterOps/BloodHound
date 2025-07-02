@@ -22,6 +22,7 @@ import {
     GraphControls,
     GraphProgress,
     WebGLDisabledAlert,
+    WrappedExploreTableItem,
     baseGraphLayouts,
     defaultGraphLayout,
     isNode,
@@ -251,7 +252,7 @@ const GraphView: FC = () => {
             <GraphProgress loading={graphQuery.isLoading} />
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
-                <ExploreTable
+                <ExploreTable<WrappedExploreTableItem>
                     data={graphQuery.data?.nodes}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
