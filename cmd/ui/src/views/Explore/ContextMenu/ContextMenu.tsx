@@ -23,6 +23,7 @@ import {
     useExploreSelectedItem,
     useFeatureFlag,
     usePermissions,
+    type NodeResponse,
     type PathfindingFilters,
 } from 'bh-shared-ui';
 import { type FC } from 'react';
@@ -32,7 +33,19 @@ import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
+type EdgeMenuItemsProps = {
+    id: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
+type NodeMenuItemsProps = {
+    objectId: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
 const NAV_MENU_WIDTH = 56;
+
+const RX_EDGE_TYPE = /_(.*?)_/;
 
 /** Return position to show context menu, with nav menu offset */
 const getPosition = (coordinates: Coordinates) => ({
@@ -40,22 +53,14 @@ const getPosition = (coordinates: Coordinates) => ({
     top: coordinates.y,
 });
 
-type MenuItemsProps = {
-    objectId: string;
-    pathfindingFilters: PathfindingFilters;
-};
-
-const RX_EDGE_TYPE = /_(.*?)_/;
-
-const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => {
+const EdgeMenuItems: FC<EdgeMenuItemsProps> = ({ id, pathfindingFilters }) => {
     const { handleRemoveEdgeType } = pathfindingFilters;
 
-    const edgeType = objectId.match(RX_EDGE_TYPE)?.[1];
+    const edgeType = id.match(RX_EDGE_TYPE)?.[1];
 
     const filterEdge = () => {
-        if (edgeType) {
-            handleRemoveEdgeType(edgeType);
-        }
+        // edgeType will exist otherwise this method could't be executed
+        handleRemoveEdgeType(edgeType!);
     };
 
     if (!edgeType) {
@@ -74,7 +79,7 @@ const EdgeMenuItems: FC<MenuItemsProps> = ({ objectId, pathfindingFilters }) => 
     );
 };
 
-const NodeMenuItems: FC<Omit<MenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
+const NodeMenuItems: FC<Omit<NodeMenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
     const { checkPermission } = usePermissions();
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
@@ -132,12 +137,11 @@ const ContextMenu: FC<{
 
     const isEdgeSelected = selectedItemType === 'edge' && exploreSearchTab === 'pathfinding';
     const isNodeSelected = selectedItemType === 'node';
-    const objectId = selectedItemQuery.data.id;
 
     return (
         <Menu open anchorPosition={getPosition(contextMenu)} anchorReference='anchorPosition' onClick={handleClose}>
-            {isEdgeSelected && <EdgeMenuItems objectId={objectId} pathfindingFilters={pathfindingFilters} />}
-            {isNodeSelected && <NodeMenuItems objectId={objectId} />}
+            {isEdgeSelected && <EdgeMenuItems id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />}
+            {isNodeSelected && <NodeMenuItems objectId={(selectedItemQuery.data as NodeResponse).objectId} />}
             <CopyMenuItem />
         </Menu>
     );
