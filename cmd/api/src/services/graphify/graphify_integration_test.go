@@ -19,6 +19,8 @@ package graphify_test
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -122,6 +124,21 @@ func getPostgresConfig(t *testing.T) pgtestdb.Config {
 	for _, entry := range entries {
 		parts := strings.Split(entry, "=")
 		environmentMap[parts[0]] = parts[1]
+	}
+
+	if strings.HasPrefix(environmentMap["host"], "/") {
+		return pgtestdb.Config{
+			DriverName: "pgx",
+			User:       environmentMap["user"],
+			Password:   environmentMap["password"],
+			Database:   environmentMap["dbname"],
+			Options:    fmt.Sprintf("host=%s", url.PathEscape(environmentMap["host"])),
+			TestRole: &pgtestdb.Role{
+				Username:     environmentMap["user"],
+				Password:     environmentMap["password"],
+				Capabilities: "NOSUPERUSER NOCREATEROLE",
+			},
+		}
 	}
 
 	return pgtestdb.Config{
