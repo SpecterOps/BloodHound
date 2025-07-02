@@ -34,7 +34,7 @@ func TestVersion5IngestJSON(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		fixturesPath = path.Join("fixtures", "v5", "json")
+		fixturesPath = path.Join("fixtures", t.Name(), "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
@@ -59,7 +59,7 @@ func TestVersion5IngestJSON(t *testing.T) {
 		require.Equal(t, 1, total)
 	}
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "v5")), "v5expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v5expected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
@@ -69,7 +69,7 @@ func TestVersion6IngestJSON(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		fixturesPath = path.Join("fixtures", "v6", "json")
+		fixturesPath = path.Join("fixtures", t.Name(), "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
@@ -94,7 +94,7 @@ func TestVersion6IngestJSON(t *testing.T) {
 		require.Equal(t, 1, total)
 	}
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "v6")), "v6expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v6expected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
@@ -104,7 +104,7 @@ func TestVersion5IngestZIP(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		fixturesPath = path.Join("fixtures", "v5", "zip")
+		fixturesPath = path.Join("fixtures", t.Name(), "ingest")
 
 		testSuite = setupIntegrationTestSuite(t, fixturesPath)
 
@@ -122,7 +122,7 @@ func TestVersion5IngestZIP(t *testing.T) {
 		require.Equal(t, 8, total)
 	}
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "v5")), "v5expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v5expected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
@@ -132,7 +132,7 @@ func TestVersion6IngestZIP(t *testing.T) {
 	var (
 		ctx = context.Background()
 
-		fixturesPath = path.Join("fixtures", "v6", "zip")
+		fixturesPath = path.Join("fixtures", t.Name(), "ingest")
 
 		testSuite    = setupIntegrationTestSuite(t, fixturesPath)
 
@@ -150,7 +150,7 @@ func TestVersion6IngestZIP(t *testing.T) {
 		require.Equal(t, 8, total)
 	}
 
-	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", "v6")), "v6expected.json")
+	expected, err := generic.LoadGraphFromFile(os.DirFS(path.Join("fixtures", t.Name())), "v6expected.json")
 	require.NoError(t, err)
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
