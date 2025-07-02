@@ -51,7 +51,5 @@ export const useCustomNodeKinds = (
         staleTime: 2 * (60 * 1000),
         cacheTime: 5 * (60 * 1000),
         ...queryOptions,
-        // TODO: remove this! Custom-nodes call kept failing and causing rerenders
-        enabled: false,
     });
 };
