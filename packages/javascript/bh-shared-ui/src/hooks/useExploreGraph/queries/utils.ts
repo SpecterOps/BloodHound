@@ -22,6 +22,8 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
 export type ExploreGraphQueryOptions = UseQueryOptions<
+    // TODO: does this query ever actually give us the FlatGraphResponse? If so, maybe we want a different type,
+    // since it's different enough?
     GraphResponse | FlatGraphResponse,
     unknown,
     GraphResponse | FlatGraphResponse,
@@ -69,8 +71,8 @@ export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData 
             const lastSeen = getLastSeenValue(node);
             result.nodes[key] = {
                 label: node.label.text || '',
-                kind: node.data.nodetype,
-                objectId: node.data.objectid,
+                kind: node.data.nodetype || '',
+                objectId: node.data.objectid || '',
                 isTierZero: !!(node.data.system_tags && node.data.system_tags.indexOf('admin_tier_0') !== -1),
                 isOwnedObject: !!(node.data.system_tags && node.data.system_tags.indexOf('owned') !== -1),
                 lastSeen: lastSeen,

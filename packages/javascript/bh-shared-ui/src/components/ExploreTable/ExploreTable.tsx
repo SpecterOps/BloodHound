@@ -47,7 +47,7 @@ interface ExploreTableProps {
 
 const MemoDataTable = memo(DataTable);
 
-const makeColumnDef = (key: any) =>
+const makeColumnDef = (key: string) =>
     columnhelper.accessor(key, {
         header: formatPotentiallyUnknownLabel(key),
         cell: (info) => {
