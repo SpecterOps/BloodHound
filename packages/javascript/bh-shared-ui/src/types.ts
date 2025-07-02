@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { REQUIRED_EXPLORE_TABLE_COLUMN_KEYS } from './constants';
+import { GraphNode } from 'js-client-library';
 import { EntityKinds } from './utils/content';
 
 // recursively applies Partial<T> to nested object types
@@ -74,8 +74,4 @@ export type BaseGraphLayoutOptions = 'standard' | 'sequential';
 
 export type BaseExploreLayoutOptions = BaseGraphLayoutOptions | 'table';
 
-export type CoreExploreTableItem = Record<(typeof REQUIRED_EXPLORE_TABLE_COLUMN_KEYS)[number], any> & {
-    [key: string]: any;
-};
-
-export type WrappedExploreTableItem = { data?: CoreExploreTableItem };
+export type WrappedExploreTableItem = { data?: GraphNode };

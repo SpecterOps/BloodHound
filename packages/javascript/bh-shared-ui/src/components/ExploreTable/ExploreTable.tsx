@@ -17,6 +17,7 @@
 import { Button, DataTable, createColumnHelper } from '@bloodhoundenterprise/doodleui';
 import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { GraphNode } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
 import { REQUIRED_EXPLORE_TABLE_COLUMN_KEYS } from '../../constants';
 import { useToggle } from '../../hooks';
@@ -26,19 +27,19 @@ import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 import { TableControls } from './TableControls';
 
-const TABLE_CONTROLS_HEIGHT = '72px';
-
 const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
     (acc, curr) => ({ ...acc, [curr]: true }),
     {}
 ) as Record<string, boolean>;
 
+type MungedTableRowWithId = WrappedExploreTableItem['data'] & { id: string };
+
 const columnhelper = createColumnHelper();
 
-interface ExploreTableProps<TData extends WrappedExploreTableItem> {
+interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
-    data?: Record<string, TData>;
+    data?: Record<string, WrappedExploreTableItem>;
     visibleColumns?: Record<string, boolean>;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
@@ -69,26 +70,34 @@ const makeColumnDef = (key: any) =>
         id: key,
     });
 
-const ExploreTable = <TData extends WrappedExploreTableItem>({
+const ExploreTable = ({
     data,
     open,
     onClose,
     onManageColumnsChange,
     allColumnKeys,
     visibleColumns,
-}: ExploreTableProps<TData>) => {
+}: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
 
-    const unfilteredData = useMemo(
-        () => data && Object.entries(data).map(([key, value]) => ({ ...value.data, id: key })),
+    const mungedData = useMemo(
+        () =>
+            // TODO: remove id and just use objectid for onRowClick/getRowId?
+            ((data && Object.entries(data).map(([key, value]) => ({ ...value.data, id: key }))) ||
+                []) as MungedTableRowWithId[],
         [data]
     );
 
-    const mungedData = useMemo(
+    const filteredData = useMemo(
         () =>
-            unfilteredData?.filter((item) => item?.displayname?.toLowerCase?.()?.includes(searchInput?.toLowerCase())),
-        [searchInput, unfilteredData]
+            mungedData?.filter((item) => {
+                const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
+                const filterTagets = filterKeys.map((filterKey) => item?.[filterKey]?.toLowerCase());
+
+                return filterTagets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
+            }),
+        [searchInput, mungedData]
     );
 
     const nonRequiredColumnDefinitions = useMemo(
@@ -126,9 +135,7 @@ const ExploreTable = <TData extends WrappedExploreTableItem>({
                     );
                 },
             },
-            ...['isTierZero', 'objectid', 'displayname', 'enabled', 'pwdlastset', 'lastlogontimestamp'].map(
-                makeColumnDef
-            ),
+            ...['objectid', 'displayname'].map(makeColumnDef),
         ],
         []
     );
@@ -176,10 +183,10 @@ const ExploreTable = <TData extends WrappedExploreTableItem>({
 
     return (
         <div
-            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]` : 'h-1/2'}`}>
+            className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
-                    className={`h-[${TABLE_CONTROLS_HEIGHT}]`}
+                    className={`h-[72px]`}
                     columns={columnOptionsForDropdown}
                     visibleColumns={visibleColumns || requiredColumns}
                     pinnedColumns={requiredColumns}
@@ -188,14 +195,14 @@ const ExploreTable = <TData extends WrappedExploreTableItem>({
                     onManageColumnsChange={onManageColumnsChange}
                     onCloseClick={onClose}
                     tableName='Results'
-                    resultsCount={mungedData?.length}
+                    resultsCount={filteredData?.length}
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
-                    className={`h-full *:h-[calc(100%-${TABLE_CONTROLS_HEIGHT})]`}
+                    className={`h-full *:h-[calc(100%-72px)]`}
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
-                    data={mungedData as WrappedExploreTableItem['data'][]}
+                    data={filteredData}
                     columns={tableColumns}
                 />
             </div>
