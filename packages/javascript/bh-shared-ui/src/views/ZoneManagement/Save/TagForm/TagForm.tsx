@@ -43,7 +43,7 @@ import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationD
 import { useGetConfiguration } from '../../../../hooks';
 import {
     useAssetGroupTags,
-    useHighestPrivilegeTag,
+    useHighestPrivilegeTagId,
     useOwnedTag,
 } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -108,7 +108,7 @@ export const TagForm: FC = () => {
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
 
-    const topTagId = useHighestPrivilegeTag()?.id;
+    const topTagId = useHighestPrivilegeTagId();
     const ownedId = useOwnedTag()?.id;
 
     const showAnalysisToggle =

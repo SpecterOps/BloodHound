@@ -26,7 +26,7 @@ import capitalize from 'lodash/capitalize';
 import { FC } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTag, useOwnedTag } from '../../../hooks';
+import { useHighestPrivilegeTagId, useOwnedTag } from '../../../hooks';
 import SelectorForm from './SelectorForm';
 import TagForm from './TagForm';
 
@@ -38,7 +38,7 @@ const Save: FC = () => {
     const tagValue = location.pathname.includes('label') ? 'label' : 'tier';
     const capitalizedTagValue = capitalize(tagValue);
     const captitalizedPluralTagValue = capitalizedTagValue + 's';
-    const topTagId = useHighestPrivilegeTag()?.id;
+    const topTagId = useHighestPrivilegeTagId();
     const ownedId = useOwnedTag()?.id;
     return (
         <div>

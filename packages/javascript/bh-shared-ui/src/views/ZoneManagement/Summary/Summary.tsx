@@ -18,7 +18,7 @@ import { Button } from '@bloodhoundenterprise/doodleui';
 import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { Link, useParams } from 'react-router-dom';
-import { useHighestPrivilegeTag } from '../../../hooks';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { ROUTE_ZONE_MANAGEMENT_SUMMARY } from '../../../routes';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { getSavePath } from '../Details/Details';
@@ -37,7 +37,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 
 const Summary: FC = () => {
     const navigate = useAppNavigate();
-    const topTagId = useHighestPrivilegeTag()?.id.toString();
+    const topTagId = useHighestPrivilegeTagId()?.toString();
     const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 

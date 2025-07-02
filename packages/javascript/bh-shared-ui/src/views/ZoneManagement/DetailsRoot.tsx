@@ -16,10 +16,10 @@
 import { Skeleton } from '@mui/material';
 import { FC } from 'react';
 import { AppNavigate } from '../../components';
-import { useHighestPrivilegeTag } from '../../hooks';
+import { useHighestPrivilegeTagId } from '../../hooks';
 import { DEFAULT_ZONE_MANAGEMENT_ROUTE } from '../../routes';
 const DetailsRoot: FC = () => {
-    const topTagId = useHighestPrivilegeTag()?.id;
+    const topTagId = useHighestPrivilegeTagId();
     if (topTagId) {
         return <AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE + topTagId} replace />;
     } else {

@@ -20,7 +20,7 @@ import { FC, useContext } from 'react';
 import { UseQueryResult, useQuery } from 'react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../../components/Navigation';
-import { useHighestPrivilegeTag } from '../../../hooks';
+import { useHighestPrivilegeTagId } from '../../../hooks';
 import { apiClient, useAppNavigate } from '../../../utils';
 import { ZoneManagementContext } from '../ZoneManagementContext';
 import { getTagUrlValue } from '../utils';
@@ -76,7 +76,7 @@ export const getEditButtonState = (memberId?: string, selectorsQuery?: UseQueryR
 const Details: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
-    const topTagId = useHighestPrivilegeTag()?.id.toString();
+    const topTagId = useHighestPrivilegeTagId()?.toString();
     const { tierId = topTagId, labelId, selectorId, memberId } = useParams();
     const tagId = labelId === undefined ? tierId : labelId;
 

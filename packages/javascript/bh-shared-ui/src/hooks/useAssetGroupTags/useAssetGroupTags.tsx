@@ -47,9 +47,9 @@ export const useOrderedTags = () => {
 
 const HighestPrivilegePosition = 1 as const;
 
-export const useHighestPrivilegeTag = () => {
+export const useHighestPrivilegeTagId = () => {
     const orderedTags = useOrderedTags();
-    return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+    return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;
 };
 
 export const useLabels = () => {
