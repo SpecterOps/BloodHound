@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'details/tier/';
+export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'summary/tier/';
 
 export const ROUTE_ZONE_MANAGEMENT_DETAILS = '/details';
 export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
