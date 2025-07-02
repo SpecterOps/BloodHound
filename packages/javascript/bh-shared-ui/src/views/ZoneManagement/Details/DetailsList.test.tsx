@@ -14,9 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { AssetGroupTag, AssetGroupTagTypeTier } from 'js-client-library';
+import { AssetGroupTag, AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
-import { render, screen } from '../../../test-utils';
+import { longWait, render, screen } from '../../../test-utils';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
 import { DetailsList } from './DetailsList';
 
 const testQuery = {
@@ -66,11 +68,25 @@ const testQuery = {
     ],
 } as unknown as UseQueryResult<AssetGroupTag[]>;
 
+const configResponse = {
+    data: [
+        {
+            key: ConfigurationKey.Tiering,
+            value: { multi_tier_analysis_enabled: true, tier_limit: 3, label_limit: 10 },
+        },
+    ],
+};
+const server = setupServer();
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
 describe('List', async () => {
     it('shows a loading view when data is fetching', async () => {
         const testQuery = { isLoading: true, isError: false, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(screen.getAllByTestId('zone-management_selectors-list_loading-skeleton')).toHaveLength(3);
     });
@@ -78,34 +94,76 @@ describe('List', async () => {
     it('handles data fetching errors', async () => {
         const testQuery = { isLoading: false, isError: true, data: [] } as unknown as UseQueryResult<AssetGroupTag[]>;
 
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByText('There was an error fetching this data')).toBeInTheDocument();
     });
 
     it('renders a sortable list for Selectors', async () => {
-        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Selectors' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
         expect(screen.queryByTestId('zone-management_details_selectors-list_static-order')).not.toBeInTheDocument();
     });
 
     it('renders a sortable list for Labels', async () => {
-        render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Labels' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByText('app-icon-sort-asc')).toBeInTheDocument();
         expect(screen.queryByTestId('zone-management_details_labels-list_static-order')).not.toBeInTheDocument();
     });
 
     it('renders a non sortable list for Tiers', async () => {
-        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByTestId('zone-management_details_tiers-list_static-order')).toBeInTheDocument();
         expect(screen.queryByText('app-icon-sort-empty')).not.toBeInTheDocument();
     });
 
+    it('does not render tier icon tooltip when multi tier analysis is disabled', async () => {
+        const configRes = {
+            data: [
+                {
+                    key: ConfigurationKey.Tiering,
+                    value: { multi_tier_analysis_enabled: false, tier_limit: 3, label_limit: 10 },
+                },
+            ],
+        };
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configRes));
+            })
+        );
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
+
+        expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+
+        longWait(() => {
+            expect(screen.findByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+        })
+    });
+
+    it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
+
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            }),
+        );
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
+
+        expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
+
+        longWait(() => {
+            expect(screen.findByTestId('analysis_disabled_icon')).toBeInTheDocument();
+        })
+    });
+
     it('handles rendering a selected item', async () => {
-        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => {}} />);
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />);
 
         expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
     });

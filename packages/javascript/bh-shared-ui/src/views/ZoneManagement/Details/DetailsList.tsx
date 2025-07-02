@@ -173,6 +173,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
                                                                     <div className='flex flex-row items-center mb-0.5'>
                                                                         <AppIcon.DataAlert
                                                                             size={16}
+                                                                            data-testid='analysis_disabled_icon'
                                                                             className='mr-2 text-[#ED8537]'
                                                                         />
                                                                     </div>
