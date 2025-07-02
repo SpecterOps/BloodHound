@@ -36,7 +36,7 @@ import {
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
-import { GraphNodes } from 'js-client-library';
+import { GraphNodes, StyledGraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
@@ -252,7 +252,7 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable
-                    data={graphQuery.data?.nodes}
+                    data={graphQuery.data?.nodes as Record<string, StyledGraphNode>}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
                     visibleColumns={visibleColumns}
