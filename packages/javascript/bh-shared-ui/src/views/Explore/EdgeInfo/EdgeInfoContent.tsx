@@ -16,7 +16,7 @@
 import { Box, Divider, Typography, useTheme } from '@mui/material';
 import { ElementType, FC, Fragment } from 'react';
 import EdgeInfoComponents from '../../../components/HelpTexts';
-import ACLInheritance from '../../../components/HelpTexts/shared/AclInheritance';
+import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
 import { useExploreParams, useFetchEntityProperties } from '../../../hooks';
 import { EdgeSections, SelectedEdge } from '../../../store';
@@ -99,7 +99,7 @@ const EdgeInfoContent: FC<{ selectedEdge: NonNullable<SelectedEdge> }> = ({ sele
         const setExpandedPanelSectionsParam = () => {
             setExploreParams({
                 expandedPanelSections: ['aclinheritance'],
-                // searchType: 'aclinheritance',
+                searchType: 'aclinheritance',
                 relationshipQueryItemId: selectedEdge.id,
             });
         };

@@ -20,6 +20,7 @@ import { ExploreQueryParams, useExploreParams } from '../useExploreParams';
 import {
     CypherExploreGraphQuery,
     ExploreGraphQuery,
+    aclInheritanceSearchQuery,
     compositionSearchQuery,
     cypherSearchQuery,
     fallbackQuery,
@@ -40,6 +41,8 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
             return compositionSearchQuery;
         case 'cypher':
             return cypherSearchQuery;
+        case 'aclinheritance':
+            return aclInheritanceSearchQuery;
         default:
             return fallbackQuery;
     }
