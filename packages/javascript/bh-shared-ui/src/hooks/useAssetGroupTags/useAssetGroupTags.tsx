@@ -47,6 +47,11 @@ export const useOrderedTags = () => {
 
 const HighestPrivilegePosition = 1 as const;
 
+export const useHighestPrivilegeTag = () => {
+    const orderedTags = useOrderedTags();
+    return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition);
+};
+
 export const useHighestPrivilegeTagId = () => {
     const orderedTags = useOrderedTags();
     return orderedTags?.find((tag) => tag.position === HighestPrivilegePosition)?.id;

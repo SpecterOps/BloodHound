@@ -95,7 +95,7 @@ describe('the useAssetGroupTags utilities', () => {
                 );
             })
         );
-        const { result } = renderHook(() => agtHook.useHighestPrivilegeTagId());
+        const { result } = renderHook(() => agtHook.useHighestPrivilegeTag());
 
         await waitFor(() => {
             expect(result.current.position).toBe(1);
