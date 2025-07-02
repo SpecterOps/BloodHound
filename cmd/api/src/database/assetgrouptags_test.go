@@ -1001,7 +1001,6 @@ func TestDatabase_DeleteAssetGroupTagSelector(t *testing.T) {
 	})
 }
 
-<<<<<<< HEAD
 func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 	var (
 		testCtx      = context.Background()
@@ -1030,7 +1029,8 @@ func TestDatabase_GetOrderedAssetGroupTagTiers(t *testing.T) {
 		assert.True(t, tag.DeletedAt.IsZero())
 		assert.EqualValues(t, i+1, tag.Position.ValueOrZero())
 	}
-=======
+}
+
 func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 	var (
 		dbInst        = integration.SetupDB(t)
@@ -1064,6 +1064,4 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(items), 2)
 	})
-
->>>>>>> 339291ed9 (finished adding tests)
 }
