@@ -162,7 +162,7 @@ func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, e
 
 			// assert existence
 			node, ok := actualNodes[expectedNode.ID]
-			require.True(t, ok)
+			require.True(t, ok, "expected node `%s`", expectedNode.ID)
 
 			// assert kinds
 			kindMap := make(map[string]struct{})
