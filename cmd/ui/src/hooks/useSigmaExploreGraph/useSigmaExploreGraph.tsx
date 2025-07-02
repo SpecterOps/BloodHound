@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isGraphResponse, transformToFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
+import { FlatGraphResponse, GraphData, GraphResponse } from 'js-client-library';
 import { useMemo } from 'react';
 
 export const normalizeGraphDataForSigma = (
@@ -39,7 +39,7 @@ export const useSigmaExploreGraph = (includeProperties: boolean) => {
         ...graphQuery,
         data: {
             nodes: normalizedGraphData,
-            node_keys: graphQuery?.data?.data?.node_keys,
+            node_keys: (graphQuery?.data?.data as GraphData)?.node_keys,
         },
     };
 };

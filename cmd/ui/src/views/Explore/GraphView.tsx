@@ -253,7 +253,7 @@ const GraphView: FC = () => {
             <NoDataDialogWithLinks open={!graphHasData} />
             {tableViewFeatureFlag?.enabled && (
                 <ExploreTable<WrappedExploreTableItem>
-                    data={graphQuery.data?.nodes}
+                    data={graphQuery.data?.nodes as Record<string, WrappedExploreTableItem>}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
                     visibleColumns={visibleColumns}
