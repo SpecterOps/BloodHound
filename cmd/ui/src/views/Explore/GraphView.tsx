@@ -38,7 +38,7 @@ import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { GraphNodes, StyledGraphNode } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
@@ -52,9 +52,11 @@ import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
-const makeMap = (items: any[]) =>
+const makeMap = (items: Record<string, any>[]) =>
     items.reduce((acc, col) => {
-        return { ...acc, [col?.accessorKey || col?.id || 'accessor_key_unavailable']: true };
+        acc[col?.accessorKey || col?.id || 'accessor_key_unavailable'] = true;
+
+        return acc;
     }, {});
 
 const GraphView: FC = () => {
@@ -64,58 +66,38 @@ const GraphView: FC = () => {
     const theme = useTheme();
 
     const { data: graphHasData, isLoading, isError } = useGraphHasData();
+    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const { selectedItem, setSelectedItem, selectedItemQuery } = useExploreSelectedItem();
 
     const [highlightedItem, setHighlightedItem] = useState<string | null>(selectedItem);
-    const { data: tableViewFeatureFlag } = useFeatureFlag('explore_table_view');
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
-
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
     const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
-
-    const handleManageColumnsChange = useCallback(
-        (items: any) => {
-            const newItems = makeMap(items);
-
-            dispatch(setVisibleExploreTableColumns(newItems));
-        },
-        [dispatch]
-    );
-
-    if (!tableViewFeatureFlag?.enabled) {
-        isExploreTableSelected = false;
-    }
-
-    if (!tableViewFeatureFlag?.enabled) {
-        isExploreTableSelected = false;
-    }
-
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-
-    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
-    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
-
-    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
-
-    const [exportJsonData, setExportJsonData] = useState();
-
-    const sigmaChartRef = useRef<any>(null);
-
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
 
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
         enabled: !exploreLayout,
     });
 
+    if (!tableViewFeatureFlag?.enabled) {
+        isExploreTableSelected = false;
+    }
+
     const displayTable = autoDisplayTable || !!isExploreTableSelected;
     const includeProperties = displayTable;
     const graphQuery = useSigmaExploreGraph(includeProperties);
+
+    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
+    const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
+    const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
+    const [exportJsonData, setExportJsonData] = useState();
+
+    const sigmaChartRef = useRef<any>(null);
 
     useEffect(() => {
         let items: any = graphQuery.data?.nodes;
@@ -177,6 +159,12 @@ const GraphView: FC = () => {
 
     const handleCloseContextMenu = () => {
         setContextMenu(null);
+    };
+
+    const handleManageColumnsChange = (items: Record<string, any>[]) => {
+        const newItems = makeMap(items);
+
+        dispatch(setVisibleExploreTableColumns(newItems));
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {

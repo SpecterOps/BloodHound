@@ -19,13 +19,14 @@ import { faCancel, faCheck, faEllipsis } from '@fortawesome/free-solid-svg-icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { GraphNode } from 'js-client-library';
 import { ChangeEvent, memo, useCallback, useMemo, useState } from 'react';
-import { REQUIRED_EXPLORE_TABLE_COLUMN_KEYS } from '../../constants';
 import { useToggle } from '../../hooks';
 import { WrappedExploreTableItem } from '../../types';
 import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
-import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
+import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 import { TableControls } from './TableControls';
+
+const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
 
 const requiredColumns = REQUIRED_EXPLORE_TABLE_COLUMN_KEYS.reduce(
     (acc, curr) => ({ ...acc, [curr]: true }),

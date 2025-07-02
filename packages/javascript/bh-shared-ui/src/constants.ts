@@ -487,13 +487,3 @@ export const baseGraphLayouts = [
 ] as const;
 
 export const defaultGraphLayout = baseGraphLayoutOptions.sequential;
-
-export const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = [
-    'nodetype',
-    'displayname',
-    'objectid',
-    'isTierZero',
-    'enabled',
-    'pwdlastset',
-    'lastlogontimestamp',
-] as const;

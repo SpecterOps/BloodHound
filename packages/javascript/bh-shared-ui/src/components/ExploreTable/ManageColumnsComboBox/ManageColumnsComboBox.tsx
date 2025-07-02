@@ -1,47 +1,12 @@
-import { Button, Checkbox, Input } from '@bloodhoundenterprise/doodleui';
-import { faMinus, faPlus, faRefresh, faSearch, faThumbTack } from '@fortawesome/free-solid-svg-icons';
+import { Button, Input } from '@bloodhoundenterprise/doodleui';
+import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { UseComboboxPropGetters, useCombobox, useMultipleSelection } from 'downshift';
+import { useCombobox, useMultipleSelection } from 'downshift';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useOnClickOutside } from '../../hooks';
+import { useOnClickOutside } from '../../../hooks';
+import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
-
-type ListItemProps = {
-    isSelected?: boolean;
-    item: ManageColumnsComboBoxOption;
-    onClick:
-        | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['removeSelectedItem']
-        | ReturnType<typeof useMultipleSelection<ManageColumnsComboBoxOption>>['addSelectedItem'];
-    itemProps: ReturnType<UseComboboxPropGetters<ManageColumnsComboBoxOption>['getItemProps']>;
-};
-
-const ListItem = ({ isSelected, item, onClick, itemProps }: ListItemProps) => (
-    <li
-        className={`p-2 w-full hover:bg-gray-100 ${isSelected ? 'cursor-default' : 'cursor-pointer'} ${item.isPinned ? 'bg-gray-100' : ''}`}
-        {...itemProps}
-        disabled={item?.isPinned}
-        onClick={(e) => {
-            e.stopPropagation();
-            onClick(item);
-        }}>
-        <button
-            className={`w-full text-left flex justify-between items-center ${isSelected ? 'cursor-default' : 'cursor-pointer'}`}>
-            <div>
-                <Checkbox className={`mr-2 ${isSelected ? `&:*['bg-blue-800']` : ''}`} checked={isSelected} />
-                <span>{item.value}</span>
-            </div>
-            {item.isPinned && (
-                <FontAwesomeIcon
-                    fill='white'
-                    stroke=''
-                    className='justify-self-end stroke-cyan-300'
-                    icon={faThumbTack}
-                />
-            )}
-        </button>
-    </li>
-);
 
 type ManageColumnsComboBoxProps = {
     allItems: ManageColumnsComboBoxOption[];
@@ -178,9 +143,9 @@ export const ManageColumnsComboBox = ({
                     <ul className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
                             ...pinnedItems.map((item, index) => (
-                                <ListItem
+                                <ManageColumnsListItem
                                     isSelected
-                                    key={`${item?.id}${index}`}
+                                    key={item?.id}
                                     item={item}
                                     onClick={removeSelectedItem}
                                     itemProps={getItemProps({ item, index })}
@@ -189,9 +154,9 @@ export const ManageColumnsComboBox = ({
                             ...selectedItems.map((item, index) => {
                                 if (!item?.isPinned) {
                                     return (
-                                        <ListItem
+                                        <ManageColumnsListItem
                                             isSelected
-                                            key={`${item?.id}${index}`}
+                                            key={item?.id}
                                             item={item}
                                             onClick={removeSelectedItem}
                                             itemProps={getItemProps({ item, index })}
@@ -200,8 +165,8 @@ export const ManageColumnsComboBox = ({
                                 }
                             }),
                             ...unselectedItems.map((item, index) => (
-                                <ListItem
-                                    key={`${item?.id}${index}`}
+                                <ManageColumnsListItem
+                                    key={item?.id}
                                     item={item}
                                     onClick={addSelectedItem}
                                     itemProps={getItemProps({ item, index })}

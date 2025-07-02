@@ -20,7 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
 import React, { ForwardedRef, useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
-import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
+import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
 const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
 
