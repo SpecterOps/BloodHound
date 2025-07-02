@@ -16,7 +16,7 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { setParamsFactory } from '../../utils';
-import { useHighestPrivilegeTag } from '../useAssetGroupTags/useAssetGroupTags';
+import { useHighestPrivilegeTagId } from '../useAssetGroupTags/useAssetGroupTags';
 
 export type ZoneQueryParams = {
     assetGroupTagId: number | undefined;
@@ -32,7 +32,7 @@ const parseAssetGroupTagId = (assetGroupTagId: string | null, topTagId: number |
 
 export const useZoneQueryParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const topTagId = useHighestPrivilegeTag()?.id;
+    const topTagId = useHighestPrivilegeTagId();
 
     const assetGroupTagId = parseAssetGroupTagId(searchParams.get('assetGroupTagId'), topTagId);
 

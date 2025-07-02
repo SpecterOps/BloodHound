@@ -40,15 +40,18 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Location, useLocation, useParams } from 'react-router-dom';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
-import { useAssetGroupTags } from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
+import { useGetConfiguration } from '../../../../hooks';
+import {
+    useAssetGroupTags,
+    useHighestPrivilegeTagId,
+    useOwnedTagId,
+} from '../../../../hooks/useAssetGroupTags/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
 import { cn, useAppNavigate } from '../../../../utils';
 import { ZoneManagementContext } from '../../ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID, getTagUrlValue } from '../../utils';
+import { getTagUrlValue } from '../../utils';
 import { handleError } from '../utils';
 import { useAssetGroupTagInfo, useCreateAssetGroupTag, useDeleteAssetGroupTag, usePatchAssetGroupTag } from './hooks';
-
-import { useGetConfiguration } from '../../../../hooks';
 
 type TagFormInputs = {
     name: string;
@@ -68,13 +71,6 @@ const formTitleFromPath = (labelId: string | undefined, tierId: string, location
 
     // We should never reach this default return
     return 'Tag Details';
-};
-
-const showDeleteButton = (labelId: string | undefined, tierId: string) => {
-    if (tierId === '' && !labelId) return false;
-    if (labelId === OWNED_ID) return false;
-    if (tierId === TIER_ZERO_ID) return false;
-    return true;
 };
 
 const diffValues = (data: AssetGroupTag | undefined, formValues: TagFormInputs): UpdateAssetGroupTagRequest => {
@@ -111,8 +107,12 @@ export const TagForm: FC = () => {
 
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
+
+    const topTagId = useHighestPrivilegeTagId();
+    const ownedId = useOwnedTagId();
+
     const showAnalysisToggle =
-        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== TIER_ZERO_ID && tierId !== '';
+        tieringConfig?.value.multi_tier_analysis_enabled && tierId !== topTagId?.toString() && tierId !== '';
 
     const {
         register,
@@ -124,6 +124,13 @@ export const TagForm: FC = () => {
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
+
+    const showDeleteButton = (labelId: string | undefined, tierId: string) => {
+        if (tierId === '' && !labelId) return false;
+        if (labelId === ownedId?.toString()) return false;
+        if (tierId === topTagId?.toString()) return false;
+        return true;
+    };
 
     const handleCreateTag = useCallback(
         async (formData: TagFormInputs) => {
@@ -208,7 +215,7 @@ export const TagForm: FC = () => {
             const tagValue = getTagUrlValue(labelId);
 
             setDeleteDialogOpen(false);
-            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? TIER_ZERO_ID : OWNED_ID}`);
+            navigate(`/zone-management/details/${tagValue}/${tagValue === 'tier' ? topTagId : ownedId}`);
         } catch (error) {
             handleError(error, 'deleting', getTagUrlValue(labelId), addNotification);
         }
@@ -255,7 +262,7 @@ export const TagForm: FC = () => {
                                     <Input
                                         id='name'
                                         type='text'
-                                        disabled={tagId === TIER_ZERO_ID || tagId === OWNED_ID}
+                                        disabled={tagId === topTagId?.toString() || tagId === ownedId?.toString()}
                                         {...register('name', {
                                             required: `Please provide a name for the ${labelId ? 'label' : 'tier'}`,
                                             value: tagQuery.data?.name,

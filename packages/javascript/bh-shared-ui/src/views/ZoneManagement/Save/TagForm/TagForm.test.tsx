@@ -316,7 +316,9 @@ describe('Tag Form', () => {
         });
 
         // The delete button should not render when editing Owned
-        expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        longWait(() => {
+            expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+        });
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
         expect(screen.queryByTestId('analysis_enabled')).not.toBeInTheDocument();

@@ -18,9 +18,8 @@ import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
 import React, { FC, Suspense, useContext } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { AppNavigate } from '../../components/Navigation';
+import { useHighestPrivilegeTagId, useOwnedTagId } from '../../hooks';
 import {
-    DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS,
@@ -35,9 +34,8 @@ import {
     Routable,
 } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
+import DetailsRoot from './DetailsRoot';
 import { ZoneManagementContext } from './ZoneManagementContext';
-import { OWNED_ID, TIER_ZERO_ID } from './utils';
-
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
 const Summary = React.lazy(() => import('./Summary/Summary'));
@@ -62,6 +60,8 @@ const summaryPaths = [
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
+    const ownedId = useOwnedTagId();
+    const topTagId = useHighestPrivilegeTagId();
 
     const context = useContext(ZoneManagementContext);
     if (!context) {
@@ -90,7 +90,6 @@ const ZoneManagement: FC = () => {
                     <br />
                     {SupportLink && <SupportLink />}
                 </p>
-
                 <div className='flex flex-col'>
                     <Tabs
                         defaultValue='tier'
@@ -99,7 +98,7 @@ const ZoneManagement: FC = () => {
                         onValueChange={(value) => {
                             const isSummary = location.pathname.includes('summary');
                             const path = isSummary ? 'summary' : 'details';
-                            const id = value === 'tier' ? TIER_ZERO_ID : OWNED_ID;
+                            const id = value === 'tier' ? topTagId : ownedId;
                             navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
@@ -117,7 +116,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<DetailsRoot />} />
                         </Routes>
                     </Suspense>
                 </div>

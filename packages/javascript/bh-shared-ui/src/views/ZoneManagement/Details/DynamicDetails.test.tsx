@@ -39,6 +39,16 @@ describe('DynamicDetails', () => {
                 })
             );
         }),
+        rest.get(`/api/v2/asset-group-tags`, async (req, res, ctx) => {
+            return res(
+                ctx.json({
+                    data: {
+                        total_count: 0,
+                        counts: [],
+                    },
+                })
+            );
+        }),
         rest.get(`/api/v2/graphs/kinds`, async (req, res, ctx) => {
             return res(
                 ctx.json({

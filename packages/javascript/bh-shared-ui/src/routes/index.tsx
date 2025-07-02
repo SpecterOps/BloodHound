@@ -13,9 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { TIER_ZERO_ID } from '../views/ZoneManagement/utils';
 
-export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'summary/tier/' + TIER_ZERO_ID;
+export const DEFAULT_ZONE_MANAGEMENT_ROUTE = 'summary/tier/';
 
 export const ROUTE_ZONE_MANAGEMENT_DETAILS = '/details';
 export const ROUTE_ZONE_MANAGEMENT_TIER_DETAILS = '/details/tier/:tierId';
