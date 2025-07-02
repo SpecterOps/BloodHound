@@ -187,6 +187,19 @@ func FetchAzureAttackPathRoots(tx graph.Transaction, tenant *graph.Node) (graph.
 		return nil, err
 	}
 
+	// Any group or user that has an AZRoleEligible edge
+	if err := ops.ForEachStartNode(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.KindIn(query.Start(), azure.User, azure.Group),
+			query.Kind(query.Relationship(), azure.AZRoleEligible),
+		)
+	}), func(_ *graph.Relationship, node *graph.Node) error {
+		attackPathRoots.Add(node)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	// Any ManagementGroup that contains a critical Subscription is also a critical attack path root
 	for _, criticalSubscription := range attackPathRoots.Get(azure.Subscription) {
 		walkBitmap := roaring64.New()
