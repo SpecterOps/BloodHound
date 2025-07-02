@@ -148,6 +148,7 @@ export const DetailsList: FC<DetailsListProps> = ({ title, listQuery, selected, 
 
                                 return (
                                     <li
+                                        data-testid={`zone-management_details_${title.toLowerCase()}-list_item-${listItem.id}`}
                                         key={listItem.id}
                                         className={cn(
                                             'border-y border-neutral-light-3 dark:border-neutral-dark-3 relative h-10',

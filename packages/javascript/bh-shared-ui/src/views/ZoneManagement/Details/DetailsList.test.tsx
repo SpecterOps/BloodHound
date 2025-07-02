@@ -16,7 +16,7 @@
 
 import { AssetGroupTag, AssetGroupTagTypeTier, ConfigurationKey } from 'js-client-library';
 import { UseQueryResult } from 'react-query';
-import { longWait, render, screen } from '../../../test-utils';
+import { longWait, render, screen, within } from '../../../test-utils';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { DetailsList } from './DetailsList';
@@ -38,6 +38,7 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: true,
         },
         {
             name: 'b',
@@ -51,6 +52,7 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: false,
         },
         {
             name: 'c',
@@ -64,6 +66,7 @@ const testQuery = {
             created: '',
             updated: '',
             deleted: false,
+            analysis_enabled: false,
         },
     ],
 } as unknown as UseQueryResult<AssetGroupTag[]>;
@@ -76,6 +79,7 @@ const configResponse = {
         },
     ],
 };
+
 const server = setupServer();
 
 beforeAll(() => server.listen());
@@ -159,6 +163,27 @@ describe('List', async () => {
 
         longWait(() => {
             expect(screen.findByTestId('analysis_disabled_icon')).toBeInTheDocument();
+        })
+    });
+
+    it.only('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
+        server.use(
+            rest.get('/api/v2/config', async (_, res, ctx) => {
+                return res(ctx.json(configResponse));
+            }),
+        );
+
+
+        render(<DetailsList title='Tiers' listQuery={testQuery} selected={'1'} onSelect={() => { }} />)
+
+        const listItem1 = await screen.findByTestId('zone-management_details_tiers-list_item-1');
+        expect(listItem1).toBeInTheDocument();
+        expect(within(listItem1).queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+
+        const listItem2 = await screen.findByTestId('zone-management_details_tiers-list_item-2');
+        expect(listItem2).toBeInTheDocument();
+        longWait(() => {
+            expect(within(listItem2).getByTestId('analysis_disabled_icon')).toBeInTheDocument();
         })
     });
 
