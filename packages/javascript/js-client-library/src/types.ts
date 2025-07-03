@@ -267,12 +267,18 @@ export type GraphNode = {
     label: string;
     kind: string;
     objectId: string;
+    objectid?: string;
     lastSeen: string;
     isTierZero: boolean;
     isOwnedObject: boolean;
+    nodetype?: string;
+    displayname?: string;
+    enabled?: boolean;
+    pwdlastset?: number;
+    lastlogontimestamp?: number;
     descendent_count?: number | null;
     properties?: Record<string, any>;
-};
+} & Record<string, any>;
 
 export type GraphNodes = Record<string, GraphNode>;
 
@@ -285,15 +291,15 @@ export type GraphEdge = {
     impactPercent?: number;
     exploreGraphId?: string;
     data?: Record<string, any>;
-};
+} & Record<string, any>;
 
 export type GraphEdges = GraphEdge[];
 
-export type GraphData = { nodes: GraphNodes; edges: GraphEdges };
+export type GraphData = { nodes: GraphNodes; edges: GraphEdges; node_keys?: string[] };
 
 export type StyledGraphNode = {
     color: string;
-    data: Record<string, any>;
+    data: GraphNode;
     border: {
         color: string;
     };
@@ -311,7 +317,7 @@ export type StyledGraphNode = {
 
 export type StyledGraphEdge = {
     color: string;
-    data: Record<string, any>;
+    data: GraphEdge;
     end1?: {
         arrow: boolean;
     };
@@ -325,7 +331,7 @@ export type StyledGraphEdge = {
     };
 };
 
-export type FlatGraphResponse = Record<string, StyledGraphNode | StyledGraphEdge>;
+export type SigmaFlatGraphData = Record<string, StyledGraphNode | StyledGraphEdge>;
 
 export type CustomNodeKindType = {
     id: number;

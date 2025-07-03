@@ -14,17 +14,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { isGraphResponse, transformToFlatGraphResponse, useExploreGraph } from 'bh-shared-ui';
-import { FlatGraphResponse, GraphResponse } from 'js-client-library';
+import { isGraphResponse, transformToSigmaFlatGraphData, useExploreGraph } from 'bh-shared-ui';
+import { GraphData, GraphResponse, SigmaFlatGraphData } from 'js-client-library';
 import { useMemo } from 'react';
 
 export const normalizeGraphDataForSigma = (
-    graphData: GraphResponse | FlatGraphResponse | undefined
-): FlatGraphResponse | undefined => {
+    graphData: GraphResponse | SigmaFlatGraphData | undefined
+): SigmaFlatGraphData | undefined => {
     if (!graphData) return;
 
     if (isGraphResponse(graphData)) {
-        return transformToFlatGraphResponse(graphData);
+        return transformToSigmaFlatGraphData(graphData);
     } else {
         return graphData;
     }
@@ -35,5 +35,11 @@ export const useSigmaExploreGraph = (includeProperties: boolean) => {
     const normalizedGraphData = useMemo(() => normalizeGraphDataForSigma(graphQuery.data), [graphQuery.data]);
 
     // return the full query so we can know loading/error state, and use react-query tools. But override the data field with the normalized value
-    return { ...graphQuery, data: normalizedGraphData };
+    return {
+        ...graphQuery,
+        data: {
+            nodes: normalizedGraphData,
+            node_keys: (graphQuery?.data?.data as GraphData)?.node_keys,
+        },
+    };
 };
