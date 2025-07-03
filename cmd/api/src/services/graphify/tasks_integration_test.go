@@ -139,7 +139,6 @@ func TestVersion6AllJSON(t *testing.T) {
 	generic.AssertDatabaseGraph(t, ctx, testSuite.GraphDB, &expected)
 }
 
-// TODO: look into why this is failing
 func TestVersion6ADCSJSON(t *testing.T) {
 	t.Parallel()
 	var (
