@@ -19,6 +19,7 @@ import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
 import { EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
+import { EntityInfoDataTableGraphed } from '../EntityInfoDataTableGraphed/EntityInfoDataTableGraphed';
 import EntityInfoContent from './EntityInfoContent';
 
 const server = setupServer(
@@ -77,7 +78,12 @@ const EntityInfoContentWithProvider = ({
     databaseId?: string;
 }) => (
     <ObjectInfoPanelContextProvider>
-        <EntityInfoContent id={testId} nodeType={nodeType} databaseId={databaseId} />
+        <EntityInfoContent
+            id={testId}
+            nodeType={nodeType}
+            databaseId={databaseId}
+            DataTable={EntityInfoDataTableGraphed}
+        />
     </ObjectInfoPanelContextProvider>
 );
 

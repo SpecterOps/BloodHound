@@ -14,26 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useQuery } from 'react-query';
-import InfiniteScrollingTable from '../../components/InfiniteScrollingTable';
-import { NODE_GRAPH_RENDER_LIMIT } from '../../constants';
-import { useExploreParams } from '../../hooks';
-import { SelectedNode } from '../../types';
+import { useSearchParams } from 'react-router-dom';
 import { EntityInfoDataTableProps, entityRelationshipEndpoints } from '../../utils';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import EntityInfoCollapsibleSection from '../EntityInfo/EntityInfoCollapsibleSection';
+import InfiniteScrollingTable from '../InfiniteScrollingTable';
 
-const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
+export const EntityInfoDataTable: React.FC<EntityInfoDataTableProps> = ({
     id,
     label,
     queryType,
     countLabel,
     sections,
-    additionalSections,
     parentLabels = [],
 }) => {
-    const { setExploreParams, expandedPanelSections } = useExploreParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const endpoint = queryType ? entityRelationshipEndpoints[queryType] : undefined;
-    const isExpandedPanelSection = (expandedPanelSections as string[]).includes(label);
+    const isExpandedPanelSection = (searchParams.getAll('expandedPanelSections') as string[]).includes(label);
 
     const countQuery = useQuery(
         ['relatedCount', label, id],
@@ -52,39 +49,21 @@ const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         },
         { refetchOnWindowFocus: false, retry: false }
     );
-    const isUnderRenderLimit = countQuery.data?.count < NODE_GRAPH_RENDER_LIMIT;
 
     const removeExpandedPanelSectionParams = () => {
-        setExploreParams({
-            expandedPanelSections: parentLabels,
-        });
+        setSearchParams({ expandedPanelSections: parentLabels });
     };
 
     const setParentExpandedSectionParam = () => {
         const labelList = [...(parentLabels as string[]), label];
 
-        setExploreParams({
-            expandedPanelSections: labelList,
-        });
+        setSearchParams({ expandedPanelSections: labelList });
     };
 
     const setExpandedPanelSectionsParams = () => {
         const labelList = [...(parentLabels as string[]), label];
 
-        if (!additionalSections) {
-            setExploreParams({
-                expandedPanelSections: labelList,
-                ...(isUnderRenderLimit && {
-                    searchType: 'relationship',
-                    relationshipQueryType: queryType,
-                    relationshipQueryItemId: id,
-                }),
-            });
-        } else {
-            setExploreParams({
-                expandedPanelSections: labelList,
-            });
-        }
+        setSearchParams({ expandedPanelSections: labelList });
     };
 
     const handleOnChange = (isOpen: boolean) => {
@@ -97,18 +76,6 @@ const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         } else {
             setExpandedPanelSectionsParams();
         }
-    };
-
-    const setNodeSearchParams = (item: SelectedNode) => {
-        setExploreParams({
-            primarySearch: item.id,
-            searchType: 'node',
-            exploreSearchTab: 'node',
-        });
-    };
-
-    const handleOnClick = (item: SelectedNode) => {
-        setNodeSearchParams(item);
     };
 
     let count: number | undefined;
@@ -129,25 +96,24 @@ const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
 
     return (
         <EntityInfoCollapsibleSection
-            label={label}
             count={count}
+            error={countQuery.error}
+            isError={countQuery.isError}
             isExpanded={isExpandedPanelSection}
             isLoading={countQuery.isLoading}
-            isError={countQuery.isError}
-            error={countQuery.error}
+            label={label}
             onChange={handleOnChange}>
             {endpoint && (
                 <InfiniteScrollingTable
                     itemCount={count}
                     fetchDataCallback={(params: { skip: number; limit: number }) => endpoint({ id, ...params })}
-                    onClick={handleOnClick}
                 />
             )}
             {sections &&
                 sections.map((nestedSection: EntityInfoDataTableProps, nestedIndex: number) => (
-                    <EntityInfoDataTableGraphed
+                    <EntityInfoDataTable
                         {...nestedSection}
-                        data-testid='entity-info-data-table-graphed'
+                        data-testid='entity-info-data-table'
                         key={nestedIndex}
                         parentLabels={[...(parentLabels as string[]), label]}
                     />
@@ -155,5 +121,3 @@ const EntityInfoDataTableGraphed: React.FC<EntityInfoDataTableProps> = ({
         </EntityInfoCollapsibleSection>
     );
 };
-
-export default EntityInfoDataTableGraphed;

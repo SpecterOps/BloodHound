@@ -18,13 +18,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@bloodhoundenterprise/d
 import { useCallback, useState } from 'react';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router-dom';
-import { AppIcon } from '../../components/AppIcon';
-import { apiClient, cn, useAppNavigate } from '../../utils';
-import { getTagUrlValue, itemSkeletons } from '../../views';
+import { AppIcon } from '../../../components';
+import { apiClient, cn, useAppNavigate } from '../../../utils';
+import { getTagUrlValue, itemSkeletons } from '../../../views';
 
-import { Box, Divider } from '@mui/material';
-import { useExploreParams } from '../../hooks';
-import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
+import EntityInfoCollapsibleSection from '../../../components/EntityInfo/EntityInfoCollapsibleSection';
+import { useExploreParams } from '../../../hooks';
 
 const EntitySelectorsInformation: React.FC = () => {
     const navigate = useAppNavigate();
@@ -91,9 +90,6 @@ const EntitySelectorsInformation: React.FC = () => {
     if (memberInfoQuery.isSuccess) {
         return (
             <>
-                <Box padding={1}>
-                    <Divider />
-                </Box>
                 <EntityInfoCollapsibleSection
                     label='Selectors'
                     count={memberInfoQuery.data.selectors?.length}
