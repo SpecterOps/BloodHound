@@ -19,9 +19,9 @@ package cmdrunner
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -45,10 +45,7 @@ type ExecutionResult struct {
 }
 
 func (s *ExecutionResult) Error() string {
-	output := strings.Builder{}
-	output.WriteString(fmt.Sprintf("Command: %s\n", strings.Join(append([]string{s.Command}, s.Arguments...), " ")))
-	output.WriteString(fmt.Sprintf("CombinedOutput: %s\n", s.CombinedOutput.String()))
-	return output.String()
+	return "command execution failed: " + s.Command
 }
 
 func newExecutionResult(command string, args []string) *ExecutionResult {
@@ -100,6 +97,12 @@ func logCommand(result *ExecutionResult) func() {
 			formattedArgs = strings.Join(result.Arguments, " ")
 			elapsed       = time.Since(started)
 		)
+
+		if result.ReturnCode != 0 {
+			if _, err := io.Copy(os.Stderr, result.CombinedOutput); err != nil {
+				slog.Error("failed to copy result to stderr", slog.String("error", err.Error()))
+			}
+		}
 
 		slog.Debug("exec result",
 			slog.String("command", commandStr),
