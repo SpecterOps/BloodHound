@@ -101,7 +101,7 @@ func (s JSONBObject) Value() (driver.Value, error) {
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
 func (s JSONBObject) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch dbDialect := db.Dialector.Name(); dbDialect {
+	switch dbDialect := db.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"
 
@@ -132,7 +132,7 @@ func (s JSONUntypedObject) Value() (driver.Value, error) {
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
 func (s JSONUntypedObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
-	switch dbDialect := db.Dialector.Name(); dbDialect {
+	switch dbDialect := db.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"
 
@@ -163,7 +163,7 @@ func (s JSONBBoolObject) Value() (driver.Value, error) {
 
 // GormDBDataType returns JSONB if postgres, otherwise panics due to lack of DB type support
 func (s JSONBBoolObject) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
-	switch dbDialect := db.Dialector.Name(); dbDialect {
+	switch dbDialect := db.Name(); dbDialect {
 	case "postgres":
 		return "JSONB"
 

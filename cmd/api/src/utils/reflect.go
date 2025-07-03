@@ -149,13 +149,14 @@ func GenericMap(args []reflect.Value) []reflect.Value {
 	case reflect.Map:
 		for entry := collection.MapRange(); entry.Next(); {
 			var item reflect.Value
-			if numParams == 0 {
+			switch numParams {
+			case 0:
 				item = iteratee.Call([]reflect.Value{})[0]
-			} else if numParams == 1 {
+			case 1:
 				item = iteratee.Call([]reflect.Value{entry.Value()})[0]
-			} else if numParams == 2 {
+			case 2:
 				item = iteratee.Call([]reflect.Value{entry.Value(), entry.Key()})[0]
-			} else {
+			default:
 				item = iteratee.Call([]reflect.Value{entry.Value(), entry.Key(), collection})[0]
 			}
 			result = reflect.Append(result, item)
@@ -163,13 +164,14 @@ func GenericMap(args []reflect.Value) []reflect.Value {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < collection.Len(); i++ {
 			var item reflect.Value
-			if numParams == 0 {
+			switch numParams {
+			case 0:
 				item = iteratee.Call([]reflect.Value{})[0]
-			} else if numParams == 1 {
+			case 1:
 				item = iteratee.Call([]reflect.Value{collection.Index(i)})[0]
-			} else if numParams == 2 {
+			case 2:
 				item = iteratee.Call([]reflect.Value{collection.Index(i), reflect.ValueOf(i)})[0]
-			} else {
+			default:
 				item = iteratee.Call([]reflect.Value{collection.Index(i), reflect.ValueOf(i), collection})[0]
 			}
 			result = reflect.Append(result, item)
