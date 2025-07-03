@@ -16,18 +16,24 @@
 import { Box, Paper, SxProps, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import { SelectedNode } from '../../types';
-import { NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
+import { EntityInfoDataTableProps, NoEntitySelectedHeader, NoEntitySelectedMessage } from '../../utils';
 import { ObjectInfoPanelContextProvider, usePaneStyles } from '../../views';
 import EntityInfoContent from './EntityInfoContent';
 import Header from './EntityInfoHeader';
 
 interface EntityInfoPanelProps {
+    DataTable: React.FC<EntityInfoDataTableProps>;
     selectedNode?: SelectedNode | null;
     sx?: SxProps;
-    additionalSections?: boolean;
+    additionalTables?: [
+        {
+            sectionProps: EntityInfoDataTableProps;
+            TableComponent: React.FC<EntityInfoDataTableProps>;
+        },
+    ];
 }
 
-const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalSections }) => {
+const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, additionalTables, DataTable }) => {
     const styles = usePaneStyles();
     const [expanded, setExpanded] = useState(true);
 
@@ -51,10 +57,11 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({ selectedNode, sx, add
                 }}>
                 {selectedNode ? (
                     <EntityInfoContent
+                        DataTable={DataTable}
                         id={selectedNode.id}
                         nodeType={selectedNode.type}
                         databaseId={selectedNode.graphId}
-                        additionalSections={additionalSections}
+                        additionalTables={additionalTables}
                     />
                 ) : (
                     <Typography variant='body2'>{NoEntitySelectedMessage}</Typography>

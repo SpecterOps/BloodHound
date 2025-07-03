@@ -19,7 +19,7 @@ import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { act, render, screen } from '../../test-utils';
 import { allSections } from '../../utils';
-import EntityInfoDataTable from './EntityInfoDataTable';
+import { EntityInfoDataTableGraphed } from './EntityInfoDataTableGraphed';
 
 const objectId = 'fake-object-id';
 const adGpoSections = allSections[ActiveDirectoryNodeKind.GPO]!(objectId);
@@ -123,10 +123,10 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('EntityInfoDataTable', () => {
+describe('EntityInfoDataTableGraphed', () => {
     describe('Node count for nested table that counts all sections', () => {
         it('sums nested section node counts', async () => {
-            render(<EntityInfoDataTable {...adGpoSections[0]} />);
+            render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
             const sum = await screen.findByText('5,064');
             expect(sum).not.toBeNull();
         });
@@ -139,7 +139,7 @@ describe('EntityInfoDataTable', () => {
                 })
             );
 
-            render(<EntityInfoDataTable {...adGpoSections[0]} />);
+            render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
 
             const errorIcon = await screen.findByTestId('ErrorOutlineIcon');
 
@@ -155,7 +155,7 @@ describe('EntityInfoDataTable', () => {
             );
 
             const user = userEvent.setup();
-            render(<EntityInfoDataTable {...adGpoSections[0]} />);
+            render(<EntityInfoDataTableGraphed {...adGpoSections[0]} />);
 
             const sum = await screen.findAllByText('5,056');
             expect(sum).not.toBeNull();
@@ -172,7 +172,7 @@ describe('EntityInfoDataTable', () => {
         it('Verify Vault Reader count is the count returned by All Readers', async () => {
             const url = `?expandedPanelSections=${azKeyVaultSections[0].label}`;
 
-            render(<EntityInfoDataTable {...azKeyVaultSections[0]} />, { route: url });
+            render(<EntityInfoDataTableGraphed {...azKeyVaultSections[0]} />, { route: url });
 
             // wait for the total count to be available - this holds off all following tests until the counts have been returned
             const sum = await screen.findByText('1,998');

@@ -19,8 +19,10 @@ import { setupServer } from 'msw/node';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
 import { zoneHandlers } from '../../mocks';
 import { render, screen, waitForElementToBeRemoved } from '../../test-utils';
-import { EntityKinds } from '../../utils';
+import { EntityInfoDataTableProps, EntityKinds } from '../../utils';
 import { ObjectInfoPanelContextProvider } from '../../views';
+import EntitySelectorsInformation from '../../views/ZoneManagement/Details/EntitySelectorsInformation';
+import { EntityInfoDataTable } from '../EntityInfoDataTable';
 import EntityInfoContent from './EntityInfoContent';
 
 const testSelector = {
@@ -56,19 +58,25 @@ const EntityInfoContentWithProvider = ({
     testId,
     nodeType,
     databaseId,
-    additionalSections,
+    additionalTables,
 }: {
     testId: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    additionalSections?: boolean;
+    additionalTables?: [
+        {
+            sectionProps: EntityInfoDataTableProps;
+            TableComponent: React.FC<EntityInfoDataTableProps>;
+        },
+    ];
 }) => (
     <ObjectInfoPanelContextProvider>
         <EntityInfoContent
+            DataTable={EntityInfoDataTable}
             id={testId}
             nodeType={nodeType}
             databaseId={databaseId}
-            additionalSections={additionalSections}
+            additionalTables={additionalTables}
         />
     </ObjectInfoPanelContextProvider>
 );
@@ -82,9 +90,22 @@ describe('EntityInfoDataTableList', () => {
         const testId = '1';
         const nodeType = ActiveDirectoryNodeKind.User;
 
-        render(<EntityInfoContentWithProvider testId={testId} nodeType={nodeType} additionalSections />);
+        render(
+            <EntityInfoContentWithProvider
+                testId={testId}
+                nodeType={nodeType}
+                additionalTables={[
+                    {
+                        sectionProps: { label: 'Selectors', id: '1' },
+                        TableComponent: EntitySelectorsInformation,
+                    },
+                ]}
+            />
+        );
 
         await waitForElementToBeRemoved(() => screen.getByTestId('entity-object-information-skeleton'));
+
+        screen.debug(undefined, Infinity);
 
         const selectorsInfoSectionTitle = await screen.findByText(/selectors/i);
         expect(selectorsInfoSectionTitle).toBeInTheDocument();

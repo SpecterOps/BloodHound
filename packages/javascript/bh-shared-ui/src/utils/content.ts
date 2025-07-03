@@ -35,7 +35,6 @@ export interface EntityInfoDataTableProps {
     sections?: EntityInfoDataTableProps[];
     parentLabels?: string[];
     queryType?: EntityRelationshipQueryTypes;
-    additionalSections?: boolean;
 }
 
 let controller = new AbortController();
