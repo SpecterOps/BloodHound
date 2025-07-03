@@ -21,6 +21,7 @@ import {
     FeatureFlag,
     GraphControls,
     GraphProgress,
+    ManageColumnsComboBoxOption,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
@@ -155,7 +156,7 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleManageColumnsChange = (columnOptions: makeStoreMapFromColumnOptions[]) => {
+    const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
         const newItems = makeStoreMapFromColumnOptions(columnOptions);
 
         dispatch(setVisibleExploreTableColumns(newItems));
