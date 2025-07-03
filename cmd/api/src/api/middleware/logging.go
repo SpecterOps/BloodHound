@@ -136,7 +136,7 @@ func LoggingMiddleware(idResolver auth.IdentityResolver) func(http.Handler) http
 			timeout, err := RequestWaitDuration(request)
 			if err != nil {
 				slog.ErrorContext(request.Context(), fmt.Sprintf("Error parsing prefer header for timeout: %v", err))
-			} else if err == nil && timeout > 0 {
+			} else if timeout > 0 {
 				deadline = time.Now().Add(timeout * time.Second)
 			}
 
