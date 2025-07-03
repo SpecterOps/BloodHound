@@ -37,7 +37,7 @@ func Run(cwd string, modPaths []string, env environment.Environment) (codeclimat
 		lintEntries []codeclimate.Entry
 		output      *bytes.Buffer
 		command     = "go"
-		args        = []string{"tool", "golangci-lint", "run", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
+		args        = []string{"tool", "golangci-lint", "run", "--fix", "--config", ".golangci.json", "--output.code-climate.path", "stdout", "--"}
 	)
 
 	args = append(args, slicesext.Map(modPaths, func(modPath string) string {
