@@ -181,14 +181,6 @@ init wipe="":
   #!/usr/bin/env bash
   echo "Init BloodHound CE"
 
-  if [[ ! -L "../dawgs" && ! -d "../dawgs" ]]; then
-    echo "Cloning dawgs repo"
-    git clone git@github.com:specterops/dawgs ../dawgs
-  elif [[ -L "../dawgs" && ! -e "../dawgs" ]]; then
-    echo "Cloning dawgs repo to symlink target"
-    git clone git@github.com:specterops/dawgs ../$(readlink ../dawgs)
-  fi
-
   echo "Make local copies of configuration files"
     if [[ -f "./local-harnesses/build.config.json" ]] && [[ "{{wipe}}" != "clean" ]]; then
     echo "Not copying build.config.json since it already exists"

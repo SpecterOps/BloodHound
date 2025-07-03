@@ -22,12 +22,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/dawgs/util/channels"
@@ -118,6 +120,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
 func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
+	defer measure.LogAndMeasure(slog.LevelDebug, "WorkspaceGenerate")()
 	var (
 		errs     []error
 		errsLock = &sync.Mutex{}

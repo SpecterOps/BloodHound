@@ -121,7 +121,7 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 	} else if errors.Is(err, os.ErrNotExist) {
 		args = append(args, "github.com/specterops/bloodhound/packages/go/schemagen")
 	} else {
-		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/graphgen")
+		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
 	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
@@ -132,10 +132,10 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 }
 
 func projectDirExists(cwd string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(cwd, ".stbernard")); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(cwd, "go.mod")); errors.Is(err, os.ErrNotExist) {
 		return false, nil
 	} else if err != nil {
-		return false, fmt.Errorf("stat .stbernard file: %w", err)
+		return false, fmt.Errorf("stat go.mod file: %w", err)
 	} else {
 		return true, nil
 	}

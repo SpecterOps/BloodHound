@@ -24,7 +24,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace"
-	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/workspace/yarn"
 )
 
@@ -76,10 +75,6 @@ func (s *command) Parse(cmdIndex int) error {
 func (s *command) Run() error {
 	if paths, err := workspace.FindPaths(s.env); err != nil {
 		return fmt.Errorf("finding workspace paths: %w", err)
-	} else if err := golang.InstallGolangCiLint(paths.Root, s.env); err != nil {
-		return fmt.Errorf("installing golangci-lint: %w", err)
-	} else if err := golang.InstallGoimports(paths.Root, s.env); err != nil {
-		return fmt.Errorf("installing goimports: %w", err)
 	} else if err := yarn.InstallWorkspaceDeps(paths.Root, paths.YarnWorkspaces, s.env); err != nil {
 		return fmt.Errorf("installing yarn dependencies: %w", err)
 	} else {
