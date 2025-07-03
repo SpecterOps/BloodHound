@@ -2544,19 +2544,19 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 					ID:    1,
 					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
 					Properties: graph.AsProperties(map[string]any{
-						"objectid": "ID-123",
+						"objectid": "ID-1234",
 						"name":     "test1",
 					})},
 				{
 					ID:    2,
 					Kinds: []graph.Kind{graph.StringKind("Tag_test_tier")},
 					Properties: graph.AsProperties(map[string]any{
-						"objectid": "ID-12",
+						"objectid": "ID-123456",
 						"name":     "test2",
 					})},
 			}, nil)
 
-		reqBody := `{"query": "12", "tag_type": 1}`
+		reqBody := `{"query": "123", "tag_type": 1}`
 
 		req := httptest.NewRequest(http.MethodPost, "/api/v2/asset-group-tags/search", strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
@@ -2570,13 +2570,13 @@ func TestDatabase_SearchAssetGroupTags(t *testing.T) {
 			Members: []v2.AssetGroupMember{
 				{
 					NodeId:      1,
-					ObjectID:    "ID-123",
+					ObjectID:    "ID-1234",
 					PrimaryKind: "Unknown",
 					Name:        "test1",
 				},
 				{
 					NodeId:      2,
-					ObjectID:    "ID-12",
+					ObjectID:    "ID-123456",
 					PrimaryKind: "Unknown",
 					Name:        "test2",
 				},

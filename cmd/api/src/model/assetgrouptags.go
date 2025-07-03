@@ -122,7 +122,6 @@ func (s AssetGroupTag) IsStringColumn(filter string) bool {
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"id":              {Equals, NotEquals},
 		"type":            {Equals, NotEquals},
 		"name":            {Equals, NotEquals, ApproximatelyEquals},
 		"description":     {Equals, NotEquals, ApproximatelyEquals},

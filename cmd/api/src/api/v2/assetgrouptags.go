@@ -747,7 +747,7 @@ type SearchAssetGroupTagsResponse struct {
 
 type AssetGroupTagSearchRequest struct {
 	Query   string                  `json:"query"`
-	TagType model.AssetGroupTagType `json:"tag_type,omitempty"`
+	TagType model.AssetGroupTagType `json:"tag_type"`
 }
 
 func (s *Resources) SearchAssetGroupTags(response http.ResponseWriter, request *http.Request) {
