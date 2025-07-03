@@ -152,5 +152,5 @@ func (s Time) Equal(other Time) bool {
 // ExactEqual returns false for times that are in different locations or
 // have a different monotonic clock reading.
 func (s Time) ExactEqual(other Time) bool {
-	return s.Valid == other.Valid && (!s.Valid || s.Time.Equal(other.Time))
+	return s.Valid == other.Valid && (!s.Valid || s.Time == other.Time)
 }
