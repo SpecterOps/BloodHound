@@ -166,7 +166,7 @@ describe('List', async () => {
         })
     });
 
-    it.only('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
+    it('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configResponse));

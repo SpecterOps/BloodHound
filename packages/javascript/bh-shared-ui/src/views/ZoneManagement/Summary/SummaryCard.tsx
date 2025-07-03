@@ -26,7 +26,7 @@ import {
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { AssetGroupTagTypeTier, AssetGroupTagTypes } from 'js-client-library';
+import { AssetGroupTagTypeTier, AssetGroupTagTypes, parseTieringConfiguration } from 'js-client-library';
 import { FC } from 'react';
 import { AppIcon } from '../../../components';
 import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
@@ -34,6 +34,7 @@ import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
 import { useAssetGroupTagInfo } from '../Save/TagForm/hooks';
+import { useGetConfiguration } from '../../../hooks';
 
 type SummaryCardProps = {
     title: string;
@@ -45,14 +46,21 @@ type SummaryCardProps = {
 
 const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id }) => {
     const navigate = useAppNavigate();
+    const { data } = useGetConfiguration();
+    const tieringConfig = parseTieringConfiguration(data);
+    const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
     const tagId = id.toString();
     const tagQuery = useAssetGroupTagInfo(tagId);
     const analysisEnabled = tagQuery.isSuccess ? tagQuery.data?.analysis_enabled : true;
 
+    console.log(type, title);
     return (
-        <Card className='w-full flex px-6 py-4 rounded-xl'>
+        <Card
+            className='w-full flex px-6 py-4 rounded-xl'
+            data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
+        >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {!analysisEnabled && (
+                {multiTierAnalysisEnabled && !analysisEnabled && (
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>
