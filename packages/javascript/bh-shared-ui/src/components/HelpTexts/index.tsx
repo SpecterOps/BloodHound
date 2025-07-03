@@ -63,7 +63,7 @@ import AZPrivilegedAuthAdmin from './AZPrivilegedAuthAdmin/AZPrivilegedAuthAdmin
 import AZPrivilegedRoleAdmin from './AZPrivilegedRoleAdmin/AZPrivilegedRoleAdmin';
 import AZResetPassword from './AZResetPassword/AZResetPassword';
 import AZRoleApprover from './AZRoleApprover/AZRoleApprover';
-import AZRoleEligible from "./AZRoleEligible/AZRoleEligible";
+import AZRoleEligible from './AZRoleEligible/AZRoleEligible';
 import AZRunsAs from './AZRunsAs/AZRunsAs';
 import AZUserAccessAdministrator from './AZUserAccessAdministrator/AZUserAccessAdministrator';
 import AZVMAdminLogin from './AZVMAdminLogin/AZVMAdminLogin';
