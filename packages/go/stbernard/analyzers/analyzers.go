@@ -25,7 +25,6 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/golang"
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/js"
-	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
@@ -43,16 +42,12 @@ func Run(cwd string, modPaths []string, jsPaths []string, env environment.Enviro
 	)
 
 	golint, err := golang.Run(cwd, modPaths, env)
-	if errors.Is(err, cmdrunner.ErrNonZeroExit) {
-		slog.Debug("Ignoring golangci-lint exit code")
-	} else if err != nil {
+	if err != nil {
 		return "", fmt.Errorf("golangci-lint: %w", err)
 	}
 
 	eslint, err := js.Run(jsPaths, env)
-	if errors.Is(err, cmdrunner.ErrNonZeroExit) {
-		slog.Debug("Ignoring eslint exit code")
-	} else if err != nil {
+	if err != nil {
 		return "", fmt.Errorf("eslint: %w", err)
 	}
 
