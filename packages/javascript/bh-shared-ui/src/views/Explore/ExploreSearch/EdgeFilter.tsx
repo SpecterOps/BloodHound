@@ -22,18 +22,16 @@ import { EdgeCheckboxType } from '../../..';
 import EdgeFilteringDialog from './EdgeFilteringDialog';
 
 export type PathfindingFilterState = {
-    selectedFilters: EdgeCheckboxType[];
-    initialize: () => void;
     handleApplyFilters: () => void;
     handleUpdateFilters: (checked: EdgeCheckboxType[]) => void;
-    handleCancelFilters: () => void;
+    initialize: () => void;
+    selectedFilters: EdgeCheckboxType[];
 };
 
 export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState: PathfindingFilterState }) => {
     const [isOpenDialog, setIsOpenDialog] = useState(false);
 
-    const { selectedFilters, initialize, handleApplyFilters, handleUpdateFilters, handleCancelFilters } =
-        pathfindingFilterState;
+    const { selectedFilters, handleApplyFilters, handleUpdateFilters, initialize } = pathfindingFilterState;
 
     return (
         <>
@@ -41,7 +39,7 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
                 className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
                 onClick={() => {
                     setIsOpenDialog(true);
-                    // what is the initial state of edge filters?  save it
+                    // Save the initial edge filter state
                     initialize();
                 }}>
                 <FontAwesomeIcon icon={faFilter} />
@@ -56,7 +54,7 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
                 handleUpdate={handleUpdateFilters}
                 handleCancel={() => {
                     setIsOpenDialog(false);
-                    handleCancelFilters();
+                    initialize();
                 }}
             />
         </>

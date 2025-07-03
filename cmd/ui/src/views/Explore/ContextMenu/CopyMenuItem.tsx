@@ -35,20 +35,21 @@ const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
 
 const CopyMenuItem = () => {
     const { addNotification } = useNotifications();
+    const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
 
-    const { selectedItemQuery } = useExploreSelectedItem();
+    const isNodeSelected = selectedItemType === 'node';
 
     const handleCopyDisplayName = () => {
         if (selectedItemQuery.data) {
             navigator.clipboard.writeText(selectedItemQuery.data.label);
-            addNotification(`Display name copied to clipboard`, 'copyToClipboard');
+            addNotification('Display name copied to clipboard', 'copyToClipboard');
         }
     };
 
     const handleCopyObjectId = () => {
         if (selectedItemQuery.data) {
             navigator.clipboard.writeText((selectedItemQuery.data as NodeResponse).objectId);
-            addNotification(`Object ID name copied to clipboard`, 'copyToClipboard');
+            addNotification('Object ID name copied to clipboard', 'copyToClipboard');
         }
     };
 
@@ -56,7 +57,7 @@ const CopyMenuItem = () => {
         if (selectedItemQuery.data) {
             const cypher = `MATCH (n:${selectedItemQuery.data.kind}) WHERE n.objectid = '${(selectedItemQuery.data as NodeResponse).objectId}' RETURN n`;
             navigator.clipboard.writeText(cypher);
-            addNotification(`Cypher copied to clipboard`, 'copyToClipboard');
+            addNotification('Cypher copied to clipboard', 'copyToClipboard');
         }
     };
 
@@ -67,11 +68,13 @@ const CopyMenuItem = () => {
                 title={
                     <>
                         <MenuItem onClick={handleCopyDisplayName}>Display Name</MenuItem>
-                        <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>
-                        <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>
+                        {isNodeSelected && <MenuItem onClick={handleCopyObjectId}>Object ID</MenuItem>}
+                        {isNodeSelected && <MenuItem onClick={handleCopyCypher}>Cypher</MenuItem>}
                     </>
                 }>
-                <MenuItem sx={{ justifyContent: 'space-between' }} onClick={(e) => e.stopPropagation()}>
+                <MenuItem
+                    sx={{ justifyContent: 'space-between', minWidth: '8rem' }}
+                    onClick={(e) => e.stopPropagation()}>
                     Copy <FontAwesomeIcon icon={faCaretRight} />
                 </MenuItem>
             </StyledTooltip>

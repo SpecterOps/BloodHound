@@ -218,3 +218,11 @@ export const AllEdgeTypes: Category[] = [
         ],
     },
 ];
+
+// Used to quickly determine if a given string is an edge type
+const EDGE_TYPE_SET = new Set(
+    AllEdgeTypes.flatMap((category) => category.subcategories.flatMap((sub) => sub.edgeTypes))
+);
+
+/** Returns true if given string is an edge type */
+export const isEdgeType = (str: string) => EDGE_TYPE_SET.has(str);

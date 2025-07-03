@@ -32,6 +32,7 @@ import {
     useExploreTableAutoDisplay,
     useFeatureFlag,
     useGraphHasData,
+    usePathfindingFilters,
     useToggle,
 } from 'bh-shared-ui';
 import { MultiDirectedGraph } from 'graphology';
@@ -39,12 +40,14 @@ import { Attributes } from 'graphology-types';
 import { GraphNodes } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
 import { FC, useEffect, useRef, useState } from 'react';
-import { SigmaNodeEventPayload } from 'sigma/sigma';
+import type { SigmaEdgeEventPayload, SigmaNodeEventPayload } from 'sigma/sigma';
+import type { Coordinates } from 'sigma/types';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
 import { setExploreLayout, setIsExploreTableSelected } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
+import { isNodeEvent } from 'src/utils';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ContextMenuZoneManagementEnabled from './ContextMenu/ContextMenuZoneManagementEnabled';
@@ -81,9 +84,7 @@ const GraphView: FC = () => {
     const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
 
     const [currentNodes, setCurrentNodes] = useState<GraphNodes>({});
-
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
-
+    const [contextMenu, setContextMenu] = useState<Coordinates | null>(null);
     const [showNodeLabels, toggleShowNodeLabels] = useToggle(true);
 
     const [showEdgeLabels, toggleShowEdgeLabels] = useToggle(true);
@@ -93,6 +94,7 @@ const GraphView: FC = () => {
     const sigmaChartRef = useRef<any>(null);
 
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+    const pathfindingFilters = usePathfindingFilters();
 
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
         enabled: !exploreLayout,
@@ -152,9 +154,9 @@ const GraphView: FC = () => {
         setHighlightedItem(null);
     };
 
-    const handleContextMenu = (event: SigmaNodeEventPayload) => {
-        selectItem(event.node);
-        setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+    const handleContextMenu = (event: SigmaNodeEventPayload | SigmaEdgeEventPayload) => {
+        setContextMenu(contextMenu === null ? event.event : null);
+        selectItem(isNodeEvent(event) ? event.node : event.edge);
     };
 
     const handleCloseContextMenu = () => {
@@ -195,7 +197,7 @@ const GraphView: FC = () => {
             />
 
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
-                <ExploreSearch />
+                <ExploreSearch pathfindingFilters={pathfindingFilters} />
                 <GraphControls
                     layoutOptions={baseGraphLayouts}
                     selectedLayout={exploreLayout ?? defaultGraphLayout}
@@ -224,8 +226,9 @@ const GraphView: FC = () => {
                 }
                 disabled={
                     <ContextMenu
-                        contextMenu={isNode(selectedItemQuery.data) ? contextMenu : null}
+                        contextMenu={contextMenu}
                         handleClose={handleCloseContextMenu}
+                        pathfindingFilters={pathfindingFilters}
                     />
                 }
             />

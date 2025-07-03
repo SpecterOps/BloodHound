@@ -18,77 +18,130 @@ import { Menu, MenuItem } from '@mui/material';
 
 import {
     Permission,
-    isNode,
+    isEdgeType,
     useExploreParams,
     useExploreSelectedItem,
     useFeatureFlag,
     usePermissions,
+    type NodeResponse,
+    type PathfindingFilters,
 } from 'bh-shared-ui';
-import { FC } from 'react';
+import { type FC } from 'react';
+import type { Coordinates } from 'sigma/types';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 import CopyMenuItem from './CopyMenuItem';
 
-const ContextMenu: FC<{
-    contextMenu: { mouseX: number; mouseY: number } | null;
-    handleClose: () => void;
-}> = ({ contextMenu, handleClose }) => {
+type EdgeMenuItemsProps = {
+    id: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
+type NodeMenuItemsProps = {
+    objectId: string;
+    pathfindingFilters: PathfindingFilters;
+};
+
+const NAV_MENU_WIDTH = 56;
+
+const RX_EDGE_TYPE = /_(.*?)_/;
+
+/** Return position to show context menu, with nav menu offset */
+const getPosition = (coordinates: Coordinates) => ({
+    left: coordinates.x + NAV_MENU_WIDTH,
+    top: coordinates.y,
+});
+
+const EdgeMenuItems: FC<EdgeMenuItemsProps> = ({ id, pathfindingFilters }) => {
+    const { handleRemoveEdgeType } = pathfindingFilters;
+
+    const edgeType = id.match(RX_EDGE_TYPE)?.[1];
+
+    const filterEdge = () => {
+        // edgeType will exist otherwise this method could't be executed
+        handleRemoveEdgeType(edgeType!);
+    };
+
+    if (!edgeType) {
+        return null;
+    }
+
+    // Prevent filtering for edge types not found in AllEdgeTypes array
+    return isEdgeType(edgeType) ? (
+        <MenuItem key='filter-edge' onClick={filterEdge}>
+            Filter out Edge
+        </MenuItem>
+    ) : (
+        <MenuItem key='non-filterable' disabled>
+            Non-filterable Edge
+        </MenuItem>
+    );
+};
+
+const NodeMenuItems: FC<Omit<NodeMenuItemsProps, 'pathfindingFilters'>> = ({ objectId }) => {
+    const { checkPermission } = usePermissions();
     const { primarySearch, secondarySearch, setExploreParams } = useExploreParams();
-    const { selectedItemQuery } = useExploreSelectedItem();
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
 
-    const ownedAssetGroupId = useAppSelector(selectOwnedAssetGroupId);
-    const tierZeroAssetGroupId = useAppSelector(selectTierZeroAssetGroupId);
-
-    const { checkPermission } = usePermissions();
-
-    const handleSetStartingNode = () => {
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            const searchType = secondarySearch ? 'pathfinding' : 'node';
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                primarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
-
-    const handleSetEndingNode = () => {
-        const searchType = primarySearch ? 'pathfinding' : 'node';
-        const selectedItemData = selectedItemQuery.data;
-        if (selectedItemData && isNode(selectedItemData)) {
-            setExploreParams({
-                exploreSearchTab: 'pathfinding',
-                searchType,
-                secondarySearch: selectedItemData?.objectId as string,
-            });
-        }
-    };
+    const tierZeroId = useAppSelector(selectTierZeroAssetGroupId);
+    const ownedId = useAppSelector(selectOwnedAssetGroupId);
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <>
+            <MenuItem
+                key='starting-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: secondarySearch ? 'pathfinding' : 'node',
+                        primarySearch: objectId,
+                    })
+                }>
+                Set as starting node
+            </MenuItem>
 
-            {!tierFlag?.enabled &&
-                checkPermission(Permission.GRAPH_DB_WRITE) && [
-                    <AssetGroupMenuItem
-                        key={tierZeroAssetGroupId}
-                        assetGroupId={tierZeroAssetGroupId}
-                        assetGroupName='High Value'
-                    />,
-                    <AssetGroupMenuItem
-                        key={ownedAssetGroupId}
-                        assetGroupId={ownedAssetGroupId}
-                        assetGroupName='Owned'
-                    />,
-                ]}
+            <MenuItem
+                key='ending-node'
+                onClick={() =>
+                    setExploreParams({
+                        exploreSearchTab: 'pathfinding',
+                        searchType: primarySearch ? 'pathfinding' : 'node',
+                        secondarySearch: objectId,
+                    })
+                }>
+                Set as ending node
+            </MenuItem>
+
+            {!tierFlag?.enabled && checkPermission(Permission.GRAPH_DB_WRITE) && (
+                <>
+                    <AssetGroupMenuItem key='tier-zero' assetGroupId={tierZeroId} assetGroupName='High Value' />
+                    <AssetGroupMenuItem key='owned' assetGroupId={ownedId} assetGroupName='Owned' />
+                </>
+            )}
+        </>
+    );
+};
+
+const ContextMenu: FC<{
+    contextMenu: Coordinates | null;
+    handleClose: () => void;
+    pathfindingFilters: PathfindingFilters;
+}> = ({ contextMenu, handleClose, pathfindingFilters }) => {
+    const { selectedItemQuery, selectedItemType } = useExploreSelectedItem();
+    const { exploreSearchTab } = useExploreParams();
+
+    if (!contextMenu || !selectedItemQuery.data) {
+        return null;
+    }
+
+    const isEdgeSelected = selectedItemType === 'edge' && exploreSearchTab === 'pathfinding';
+    const isNodeSelected = selectedItemType === 'node';
+
+    return (
+        <Menu open anchorPosition={getPosition(contextMenu)} anchorReference='anchorPosition' onClick={handleClose}>
+            {isEdgeSelected && <EdgeMenuItems id={selectedItemQuery.data.id} pathfindingFilters={pathfindingFilters} />}
+            {isNodeSelected && <NodeMenuItems objectId={(selectedItemQuery.data as NodeResponse).objectId} />}
             <CopyMenuItem />
         </Menu>
     );
