@@ -82,6 +82,10 @@ export { default as EnterpriseIcon } from './EnterpriseIcon';
 export * from './EntityInfo';
 export { default as EntityInfoPanel } from './EntityInfo';
 
+export * from './EntityInfoDataTable';
+
+export * from './EntityInfoDataTableGraphed';
+
 export * from './ExploreSearchCombobox';
 export { default as ExploreSearchCombobox } from './ExploreSearchCombobox';
 

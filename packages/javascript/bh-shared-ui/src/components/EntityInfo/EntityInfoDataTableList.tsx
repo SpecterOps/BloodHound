@@ -16,43 +16,49 @@
 import { Box, Divider } from '@mui/material';
 import React from 'react';
 import { ActiveDirectoryNodeKind } from '../../graphSchema';
-import { EntityKinds, allSections } from '../../utils';
-import EntityInfoDataTable from './EntityInfoDataTable';
-import EntityInfoDataTableGraphed from './EntityInfoDataTableGraphed';
-import EntitySelectorsInformation from './EntitySelectorsInformation';
+import { EntityInfoDataTableProps, EntityKinds, allSections } from '../../utils';
 
 export interface EntityInfoContentProps {
+    DataTable: React.FC<EntityInfoDataTableProps>;
     id: string;
     nodeType: EntityKinds | string;
     databaseId?: string;
-    additionalSections?: boolean;
+    additionalTables?: [
+        {
+            sectionProps: EntityInfoDataTableProps;
+            TableComponent: React.FC<EntityInfoDataTableProps>;
+        },
+    ];
 }
 
-const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, additionalSections }) => {
+const EntityInfoDataTableList: React.FC<EntityInfoContentProps> = ({ id, nodeType, additionalTables, DataTable }) => {
     let type = nodeType as EntityKinds;
     if (nodeType === ActiveDirectoryNodeKind.LocalGroup || nodeType === ActiveDirectoryNodeKind.LocalUser)
         type = ActiveDirectoryNodeKind.Entity;
 
     const tables = allSections[type]?.(id) || [];
 
-    if (additionalSections) {
-        tables.push({ id, label: 'Selectors' });
-    }
-
     return (
         <div data-testid='entity-info-data-table-list'>
             {tables.map((table, index) => {
-                if (table.label === 'Selectors') {
-                    return <EntitySelectorsInformation key='selectors' />;
-                }
-
-                const TableComponent = additionalSections ? EntityInfoDataTable : EntityInfoDataTableGraphed;
                 return (
                     <React.Fragment key={index}>
                         <Box padding={1}>
                             <Divider />
                         </Box>
-                        <TableComponent {...table} />
+                        <DataTable {...table} />
+                    </React.Fragment>
+                );
+            })}
+
+            {additionalTables?.map((table, index) => {
+                const { sectionProps, TableComponent } = table;
+                return (
+                    <React.Fragment key={index}>
+                        <Box padding={1}>
+                            <Divider />
+                        </Box>
+                        <TableComponent {...sectionProps} />
                     </React.Fragment>
                 );
             })}
