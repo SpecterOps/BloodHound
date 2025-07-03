@@ -68,7 +68,7 @@ const GraphView: FC = () => {
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
+    const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
     let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
@@ -237,7 +237,7 @@ const GraphView: FC = () => {
                     data={graphQuery.data?.nodes as Record<string, StyledGraphNode>}
                     allColumnKeys={graphQuery.data.node_keys}
                     open={displayTable}
-                    visibleColumns={visibleColumns}
+                    selectedColumns={selectedColumns}
                     onManageColumnsChange={handleManageColumnsChange}
                     onClose={() => {
                         setAutoDisplayTable(false);

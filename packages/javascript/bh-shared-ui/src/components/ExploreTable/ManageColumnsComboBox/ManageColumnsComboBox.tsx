@@ -2,7 +2,7 @@ import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faMinus, faPlus, faRefresh, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
 import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
@@ -12,12 +12,12 @@ export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?
 type ManageColumnsComboBoxProps = {
     allColumns: ManageColumnsComboBoxOption[];
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
-    visibleColumns: Record<string, boolean>;
+    selectedColumns: Record<string, boolean>;
 };
 export const ManageColumnsComboBox = ({
     allColumns,
     onChange = () => {},
-    visibleColumns,
+    selectedColumns: selectedColumnsProp,
 }: ManageColumnsComboBoxProps) => {
     const ref = useRef<HTMLDivElement>(null);
 
@@ -26,62 +26,47 @@ export const ManageColumnsComboBox = ({
 
     useOnClickOutside(ref, () => setIsOpen(false));
 
-    const pinnedItems = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
-    const [selectedItems, setSelectedItems] = useState<ManageColumnsComboBoxOption[]>([]);
-    const selectedItemsMap = useMemo(() => makeStoreMapFromColumnOptions(selectedItems), [selectedItems]);
+    const pinnedColumns = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
+    const [selectedColumns, setSelectedColumns] = useState<ManageColumnsComboBoxOption[]>([]);
+    const selectedColumnMap = useMemo(() => makeStoreMapFromColumnOptions(selectedColumns), [selectedColumns]);
 
-    const unselectedItems = useMemo(() => {
+    const unselectedColumns = useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
 
-        return allColumns.filter((item) => {
-            const passesFilter = item.value.toLowerCase().includes(lowerCasedInputValue);
+        return allColumns.filter((column) => {
+            const passesFilter = !lowerCasedInputValue || column.value.toLowerCase().includes(lowerCasedInputValue);
 
-            return passesFilter && !item.isPinned && !selectedItemsMap[item.id];
+            return passesFilter && !column.isPinned && !selectedColumnMap[column.id];
         });
-    }, [allColumns, selectedItemsMap, inputValue]);
+    }, [allColumns, selectedColumnMap, inputValue]);
 
     const shouldSelectAll = useMemo(
-        () => selectedItems.length + pinnedItems.length !== allColumns.length,
-        [selectedItems, allColumns, pinnedItems]
+        () => selectedColumns.length + pinnedColumns.length !== allColumns.length,
+        [selectedColumns, allColumns, pinnedColumns]
     );
 
-    useEffect(() => {
-        const selectedItems = allColumns.filter((item) => visibleColumns[item.id] && !item.isPinned);
-        setSelectedItems(selectedItems);
-    }, [visibleColumns, allColumns]);
-
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
-        initialSelectedItems: allColumns.filter((item) => visibleColumns[item.id]),
-        selectedItems,
-        onStateChange({ selectedItems: newSelectedItems, type }) {
-            onChange(newSelectedItems || []);
-
-            switch (type) {
-                case useMultipleSelection.stateChangeTypes.SelectedItemKeyDownBackspace:
-                case useMultipleSelection.stateChangeTypes.SelectedItemKeyDownDelete:
-                case useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace:
-                case useMultipleSelection.stateChangeTypes.FunctionRemoveSelectedItem:
-                    setSelectedItems(newSelectedItems || []);
-                    break;
-                default:
-                    break;
+        initialSelectedItems: allColumns.filter((item) => selectedColumnsProp[item.id]),
+        selectedItems: selectedColumns,
+        onStateChange({ selectedItems: newSelectedColumns, type }) {
+            if (type !== useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace) {
+                setSelectedColumns(newSelectedColumns || []);
+                onChange(newSelectedColumns || []);
             }
         },
     });
 
     const { getMenuProps, getInputProps, getItemProps, getComboboxProps } = useCombobox({
-        items: unselectedItems,
-        itemToString: (item) => item?.value || '',
+        items: unselectedColumns,
+        itemToString: (column) => column?.value || '',
         defaultHighlightedIndex: 0, // after selection, highlight the first item.
         selectedItem: null,
         inputValue,
         onStateChange({ inputValue: newInputValue, type, selectedItem: newSelectedItem }) {
             switch (type) {
-                case useCombobox.stateChangeTypes.InputKeyDownEnter:
                 case useCombobox.stateChangeTypes.ItemClick:
-                case useCombobox.stateChangeTypes.InputBlur:
                     if (newSelectedItem) {
-                        setSelectedItems([...selectedItems, newSelectedItem]);
+                        setSelectedColumns([...selectedColumns, newSelectedItem]);
                         setInputValue('');
                     }
                     break;
@@ -97,14 +82,14 @@ export const ManageColumnsComboBox = ({
     });
 
     const handleResetDefault = () => {
-        setSelectedItems([...pinnedItems]);
-        onChange([...pinnedItems]);
+        setSelectedColumns([...pinnedColumns]);
+        onChange([...pinnedColumns]);
     };
 
     const handleSelectAll = () => {
         if (shouldSelectAll) {
             handleResetDefault();
-            setSelectedItems([...allColumns]);
+            setSelectedColumns([...allColumns]);
             onChange([...allColumns]);
         } else {
             handleResetDefault();
@@ -146,34 +131,34 @@ export const ManageColumnsComboBox = ({
                     </div>
                     <ul className={`w-inherit mt-1 max-h-80 overflow-auto ${!isOpen && 'hidden'}`} {...getMenuProps()}>
                         {isOpen && [
-                            ...pinnedItems.map((item, index) => (
+                            ...pinnedColumns.map((column, index) => (
                                 <ManageColumnsListItem
                                     isSelected
-                                    key={item?.id}
-                                    item={item}
+                                    key={`${column?.id}-${index}`}
+                                    item={column}
                                     onClick={removeSelectedItem}
-                                    itemProps={getItemProps({ item, index })}
+                                    itemProps={getItemProps({ item: column, index })}
                                 />
                             )),
-                            ...selectedItems.map((item, index) => {
-                                if (!item?.isPinned) {
+                            ...selectedColumns.map((column, index) => {
+                                if (!column?.isPinned) {
                                     return (
                                         <ManageColumnsListItem
                                             isSelected
-                                            key={item?.id}
-                                            item={item}
+                                            key={`${column?.id}-${index}`}
+                                            item={column}
                                             onClick={removeSelectedItem}
-                                            itemProps={getItemProps({ item, index })}
+                                            itemProps={getItemProps({ item: column, index })}
                                         />
                                     );
                                 }
                             }),
-                            ...unselectedItems.map((item, index) => (
+                            ...unselectedColumns.map((column, index) => (
                                 <ManageColumnsListItem
-                                    key={item?.id}
-                                    item={item}
+                                    key={`${column?.id}-${index}`}
+                                    item={column}
                                     onClick={addSelectedItem}
-                                    itemProps={getItemProps({ item, index })}
+                                    itemProps={getItemProps({ item: column, index })}
                                 />
                             )),
                         ]}

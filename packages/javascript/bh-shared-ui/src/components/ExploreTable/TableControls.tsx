@@ -27,7 +27,7 @@ const ICON_CLASSES = 'cursor-pointer bg-slate-200 p-2 h-4 w-4 rounded-full';
 type TableControlsProps<TData, TValue> = {
     SearchInputProps?: InputProps;
     columns: ColumnDef<TData, TValue>[];
-    visibleColumns: Record<string, boolean>;
+    selectedColumns: Record<string, boolean>;
     pinnedColumns?: Record<string, boolean>;
     resultsCount?: number;
     tableName?: string;
@@ -45,7 +45,7 @@ const TableControls = <TData, TValue>({
     columns,
     pinnedColumns = {},
     tableName = 'Results',
-    visibleColumns,
+    selectedColumns,
     SearchInputProps,
     onDownloadClick,
     onCloseClick,
@@ -91,7 +91,7 @@ const TableControls = <TData, TValue>({
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
                         allColumns={parsedColumns}
-                        visibleColumns={visibleColumns}
+                        selectedColumns={selectedColumns}
                         onChange={onManageColumnsChange}
                     />
                 )}

@@ -41,7 +41,7 @@ interface ExploreTableProps {
     open?: boolean;
     onClose?: () => void;
     data?: Record<string, WrappedExploreTableItem>;
-    visibleColumns?: Record<string, boolean>;
+    selectedColumns?: Record<string, boolean>;
     allColumnKeys?: string[];
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 }
@@ -77,7 +77,7 @@ const ExploreTable = ({
     onClose,
     onManageColumnsChange,
     allColumnKeys,
-    visibleColumns,
+    selectedColumns,
 }: ExploreTableProps) => {
     const [searchInput, setSearchInput] = useState('');
     const [isExpanded, toggleIsExpanded] = useToggle(false);
@@ -110,9 +110,9 @@ const ExploreTable = ({
         [allColumnKeys]
     );
 
-    const visibleColumnDefinitions = useMemo(
-        () => nonRequiredColumnDefinitions.filter((columnDef) => visibleColumns?.[columnDef?.id || '']),
-        [nonRequiredColumnDefinitions, visibleColumns]
+    const selectedColumnDefinitions = useMemo(
+        () => nonRequiredColumnDefinitions.filter((columnDef) => selectedColumns?.[columnDef?.id || '']),
+        [nonRequiredColumnDefinitions, selectedColumns]
     );
 
     const requiredColumnDefinitions = useMemo(
@@ -146,8 +146,8 @@ const ExploreTable = ({
     );
 
     const tableColumns = useMemo(
-        () => [...requiredColumnDefinitions, ...visibleColumnDefinitions],
-        [requiredColumnDefinitions, visibleColumnDefinitions]
+        () => [...requiredColumnDefinitions, ...selectedColumnDefinitions],
+        [requiredColumnDefinitions, selectedColumnDefinitions]
     ) as DataTableProps['columns'];
 
     const columnOptionsForDropdown = useMemo(
@@ -193,7 +193,7 @@ const ExploreTable = ({
                 <TableControls
                     className='h-[72px]'
                     columns={columnOptionsForDropdown}
-                    visibleColumns={visibleColumns || requiredColumns}
+                    selectedColumns={selectedColumns || requiredColumns}
                     pinnedColumns={requiredColumns}
                     onDownloadClick={() => console.log('download icon clicked')}
                     onExpandClick={toggleIsExpanded}
