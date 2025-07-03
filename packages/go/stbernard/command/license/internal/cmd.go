@@ -129,7 +129,12 @@ func Run(env environment.Environment) error {
 		if ext == "" {
 			ext = filepath.Base(path)
 		}
-		if !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
+
+		// Ensure that we're not attempting to scan symbolic links
+		if lstatInfo, err := os.Lstat(path); err != nil {
+			return err
+		} else if lstatInfo.Mode()&os.ModeSymlink != os.ModeSymlink && !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
+			slog.Info("rendering path to scan", slog.String("path", path))
 			pathChan <- path
 		}
 		return nil
