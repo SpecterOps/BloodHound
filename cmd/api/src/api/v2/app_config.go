@@ -40,7 +40,7 @@ func (s Resources) GetApplicationConfigurations(response http.ResponseWriter, re
 		parameterFilterValue := appcfg.ParameterKey(parameterFilter.Value)
 		if parameterFilter.Operator != model.Equals {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, parameterFilter.Name, parameterFilter.Operator), request), response)
-		} else if !(cfgParameter.IsValidKey(parameterFilterValue) || cfgParameter.IsProtectedKey(parameterFilterValue)) {
+		} else if !cfgParameter.IsValidKey(parameterFilterValue) || cfgParameter.IsProtectedKey(parameterFilterValue) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Configuration parameter %s is not valid.", parameterFilter.Value), request), response)
 		} else if cfgParameter, err = s.DB.GetConfigurationParameter(request.Context(), parameterFilterValue); err != nil {
 			api.HandleDatabaseError(request, response, err)
