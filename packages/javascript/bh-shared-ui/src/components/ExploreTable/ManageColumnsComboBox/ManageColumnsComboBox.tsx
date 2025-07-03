@@ -4,18 +4,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCombobox, useMultipleSelection } from 'downshift';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnClickOutside } from '../../../hooks';
+import { makeStoreMapFromColumnOptions } from '../explore-table-utils';
 import ManageColumnsListItem from './ManageColumnsListItem';
 
 export type ManageColumnsComboBoxOption = { id: string; value: string; isPinned?: boolean };
 
 type ManageColumnsComboBoxProps = {
-    allItems: ManageColumnsComboBoxOption[];
+    allColumns: ManageColumnsComboBoxOption[];
     onChange: (items: ManageColumnsComboBoxOption[]) => void;
     visibleColumns: Record<string, boolean>;
 };
-
 export const ManageColumnsComboBox = ({
-    allItems,
+    allColumns,
     onChange = () => {},
     visibleColumns,
 }: ManageColumnsComboBoxProps) => {
@@ -26,28 +26,32 @@ export const ManageColumnsComboBox = ({
 
     useOnClickOutside(ref, () => setIsOpen(false));
 
-    const pinnedItems = useMemo(() => allItems.filter((item) => item.isPinned), [allItems]);
+    const pinnedItems = useMemo(() => allColumns.filter((item) => item.isPinned), [allColumns]);
     const [selectedItems, setSelectedItems] = useState<ManageColumnsComboBoxOption[]>([]);
+    const selectedItemsMap = useMemo(() => makeStoreMapFromColumnOptions(selectedItems), [selectedItems]);
+
     const unselectedItems = useMemo(() => {
         const lowerCasedInputValue = inputValue.toLowerCase();
 
-        return allItems.filter(
-            (item) =>
-                !item.isPinned &&
-                !selectedItems.includes(item) &&
-                item.value.toLowerCase().includes(lowerCasedInputValue)
-        );
-    }, [allItems, selectedItems, inputValue]);
+        return allColumns.filter((item) => {
+            const passesFilter = item.value.toLowerCase().includes(lowerCasedInputValue);
 
-    const shouldSelectAll = useMemo(() => selectedItems.length !== allItems.length, [selectedItems, allItems]);
+            return passesFilter && !item.isPinned && !selectedItemsMap[item.id];
+        });
+    }, [allColumns, selectedItemsMap, inputValue]);
+
+    const shouldSelectAll = useMemo(
+        () => selectedItems.length + pinnedItems.length !== allColumns.length,
+        [selectedItems, allColumns, pinnedItems]
+    );
 
     useEffect(() => {
-        const selectedItems = allItems.filter((item) => visibleColumns[item.id] && !item.isPinned);
+        const selectedItems = allColumns.filter((item) => visibleColumns[item.id] && !item.isPinned);
         setSelectedItems(selectedItems);
-    }, [visibleColumns, allItems]);
+    }, [visibleColumns, allColumns]);
 
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
-        initialSelectedItems: allItems.filter((item) => visibleColumns[item.id]),
+        initialSelectedItems: allColumns.filter((item) => visibleColumns[item.id]),
         selectedItems,
         onStateChange({ selectedItems: newSelectedItems, type }) {
             onChange(newSelectedItems || []);
@@ -65,7 +69,7 @@ export const ManageColumnsComboBox = ({
         },
     });
 
-    const { getMenuProps, getInputProps, getItemProps } = useCombobox({
+    const { getMenuProps, getInputProps, getItemProps, getComboboxProps } = useCombobox({
         items: unselectedItems,
         itemToString: (item) => item?.value || '',
         defaultHighlightedIndex: 0, // after selection, highlight the first item.
@@ -100,8 +104,8 @@ export const ManageColumnsComboBox = ({
     const handleSelectAll = () => {
         if (shouldSelectAll) {
             handleResetDefault();
-            setSelectedItems([...allItems]);
-            onChange([...allItems]);
+            setSelectedItems([...allColumns]);
+            onChange([...allColumns]);
         } else {
             handleResetDefault();
         }
@@ -121,7 +125,7 @@ export const ManageColumnsComboBox = ({
             </div>
 
             <div className={`${isOpen ? '' : 'hidden'} absolute z-20 top-3`} ref={ref}>
-                <div className='w-[400px] shadow-md border-1 bg-white'>
+                <div className='w-[400px] shadow-md border-1 bg-white' {...getComboboxProps()}>
                     <div className='flex flex-col gap-1 justify-center'>
                         <div className='flex justify-center items-center relative'>
                             <Input

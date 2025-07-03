@@ -18,7 +18,7 @@ import { Input, InputProps } from '@bloodhoundenterprise/doodleui';
 import { faClose, faDownload, faExpand, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
-import React, { ForwardedRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import { cn, formatPotentiallyUnknownLabel } from '../../utils';
 import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
 
@@ -39,22 +39,19 @@ type TableControlsProps<TData, TValue> = {
     onManageColumnsChange?: (columns: ManageColumnsComboBoxOption[]) => void;
 };
 
-const TableControlsInner = <TData, TValue>(
-    {
-        className,
-        resultsCount,
-        columns,
-        pinnedColumns = {},
-        tableName = 'Results',
-        visibleColumns,
-        SearchInputProps,
-        onDownloadClick,
-        onCloseClick,
-        onExpandClick,
-        onManageColumnsChange,
-    }: TableControlsProps<TData, TValue>,
-    ref: ForwardedRef<HTMLDivElement>
-) => {
+const TableControls = <TData, TValue>({
+    className,
+    resultsCount,
+    columns,
+    pinnedColumns = {},
+    tableName = 'Results',
+    visibleColumns,
+    SearchInputProps,
+    onDownloadClick,
+    onCloseClick,
+    onExpandClick,
+    onManageColumnsChange,
+}: TableControlsProps<TData, TValue>) => {
     const parsedColumns = useMemo(
         () =>
             columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
@@ -62,11 +59,11 @@ const TableControlsInner = <TData, TValue>(
                 value: formatPotentiallyUnknownLabel(columnDef?.id || ''),
                 isPinned: pinnedColumns[columnDef?.id || ''] || false,
             })),
-        []
+        [columns, pinnedColumns]
     );
 
     return (
-        <div ref={ref} className={cn('flex p-3 justify-between relative', className)}>
+        <div className={cn('flex p-3 justify-between relative', className)}>
             <div>
                 <div className='font-bold text-lg'>{tableName}</div>
                 {typeof resultsCount === 'number' && <div className='text-sm'>{resultsCount} results</div>}
@@ -93,7 +90,7 @@ const TableControlsInner = <TData, TValue>(
                 )}
                 {onManageColumnsChange && (
                     <ManageColumnsComboBox
-                        allItems={parsedColumns}
+                        allColumns={parsedColumns}
                         visibleColumns={visibleColumns}
                         onChange={onManageColumnsChange}
                     />
@@ -108,8 +105,6 @@ const TableControlsInner = <TData, TValue>(
     );
 };
 
-export const TableControls = React.forwardRef(TableControlsInner) as <TData, TValue>(
-    props: React.HTMLAttributes<HTMLTableSectionElement> & TableControlsProps<TData, TValue>
-) => ReturnType<typeof TableControlsInner>;
+TableControls.displayName = 'TableControls';
 
-TableControlsInner.displayName = 'TableControls';
+export default TableControls;

@@ -26,6 +26,7 @@ import {
     defaultGraphLayout,
     isNode,
     isWebGLEnabled,
+    makeStoreMapFromColumnOptions,
     transformSigmaFlatGraphData,
     useCustomNodeKinds,
     useExploreSelectedItem,
@@ -52,13 +53,6 @@ import ExploreSearch from './ExploreSearch/ExploreSearch';
 import GraphItemInformationPanel from './GraphItemInformationPanel';
 import { transformIconDictionary } from './svgIcons';
 
-const makeMap = (items: Record<string, any>[]) =>
-    items.reduce((acc, col) => {
-        acc[col?.accessorKey || col?.id || 'accessor_key_unavailable'] = true;
-
-        return acc;
-    }, {});
-
 const GraphView: FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
@@ -74,9 +68,9 @@ const GraphView: FC = () => {
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
     const visibleColumns = useAppSelector((state) => state.global.view.visibleExploreTableColumns);
     const customIcons = useCustomNodeKinds({ select: transformIconDictionary });
+    let isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
 
     const [autoDisplayTable, setAutoDisplayTable] = useExploreTableAutoDisplay({
         enabled: !exploreLayout,
@@ -161,8 +155,8 @@ const GraphView: FC = () => {
         setContextMenu(null);
     };
 
-    const handleManageColumnsChange = (items: Record<string, any>[]) => {
-        const newItems = makeMap(items);
+    const handleManageColumnsChange = (columnOptions: makeStoreMapFromColumnOptions[]) => {
+        const newItems = makeStoreMapFromColumnOptions(columnOptions);
 
         dispatch(setVisibleExploreTableColumns(newItems));
     };

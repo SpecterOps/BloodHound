@@ -45,7 +45,7 @@ export const cypherSearchGraphQuery = (
 
     return {
         ...sharedGraphQueryOptions,
-        queryKey: [ExploreGraphQueryKey, searchType, cypherSearch, includeProperties ? 'includeProperties' : ''],
+        queryKey,
         queryFn: ({ signal }) => apiClient.cypherSearch(decoded, { signal }, includeProperties).then((res) => res.data),
         retry: false,
         enabled: !!(searchType && cypherSearch),

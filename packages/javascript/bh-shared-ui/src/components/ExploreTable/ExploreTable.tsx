@@ -24,7 +24,7 @@ import { WrappedExploreTableItem } from '../../types';
 import { EntityField, format, formatPotentiallyUnknownLabel } from '../../utils';
 import NodeIcon from '../NodeIcon';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox/ManageColumnsComboBox';
-import { TableControls } from './TableControls';
+import TableControls from './TableControls';
 
 const REQUIRED_EXPLORE_TABLE_COLUMN_KEYS = ['nodetype', 'objectid', 'displayname'];
 
@@ -94,13 +94,13 @@ const ExploreTable = ({
         () =>
             mungedData?.filter((item) => {
                 const filterKeys: (keyof GraphNode)[] = ['displayname', 'objectid'];
-                const filterTagets = filterKeys.map((filterKey) => {
+                const filterTargets = filterKeys.map((filterKey) => {
                     const stringyValue = String(item?.[filterKey]);
 
                     return stringyValue?.toLowerCase();
                 });
 
-                return filterTagets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
+                return filterTargets.some((filterTarget) => filterTarget?.includes(searchInput?.toLowerCase()));
             }),
         [searchInput, mungedData]
     );
@@ -191,7 +191,7 @@ const ExploreTable = ({
             className={`border-2 overflow-hidden absolute z-10 bottom-16 left-4 right-4 bg-neutral-light-2 ${isExpanded ? `h-[calc(100%-72px)]` : 'h-1/2'}`}>
             <div className='explore-table-container w-full h-full'>
                 <TableControls
-                    className={`h-[72px]`}
+                    className='h-[72px]'
                     columns={columnOptionsForDropdown}
                     visibleColumns={visibleColumns || requiredColumns}
                     pinnedColumns={requiredColumns}
@@ -204,7 +204,7 @@ const ExploreTable = ({
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
-                    className={`h-full *:h-[calc(100%-72px)]`}
+                    className='h-full *:h-[calc(100%-72px)]'
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     data={filteredData}
