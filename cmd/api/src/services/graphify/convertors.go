@@ -145,7 +145,7 @@ func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime
 }
 
 func convertDomainData(domain ein.Domain, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(domain.IngestBase, ad.Domain, ingestTime)
+	baseNodeProp := ein.ConvertDomainToNode(domain, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, domain.Aces, domain.ObjectIdentifier, ad.Domain)...)
 	if len(domain.ChildObjects) > 0 {
@@ -172,7 +172,7 @@ func convertGPOData(gpo ein.GPO, converted *ConvertedData, ingestTime time.Time)
 }
 
 func convertOUData(ou ein.OU, converted *ConvertedData, ingestTime time.Time) {
-	baseNodeProp := ein.ConvertObjectToNode(ou.IngestBase, ad.OU, ingestTime)
+	baseNodeProp := ein.ConvertOUToNode(ou, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
 	converted.RelProps = append(converted.RelProps, ein.ParseACEData(baseNodeProp, ou.Aces, ou.ObjectIdentifier, ad.OU)...)
 	converted.RelProps = append(converted.RelProps, ein.ParseObjectContainer(ou.IngestBase, ad.OU, baseNodeProp)...)
