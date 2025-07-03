@@ -523,8 +523,9 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 
 			tagKind = tag.ToKind()
 
-			oldTaggedNodes = cardinality.NewBitmap64()
-			newTaggedNodes = cardinality.NewBitmap64()
+			oldTaggedNodes         = cardinality.NewBitmap64()
+			newTaggedNodes         = cardinality.NewBitmap64()
+			missingSystemTagsNodes = cardinality.NewBitmap64()
 		)
 
 		for _, selector := range selectors {
@@ -545,26 +546,31 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 				return err
 			} else {
 				oldTaggedNodes = oldTaggedNodeSet.IDBitmap()
-			}
 
-			// 3. Diff the sets filling the respective sets for later db updates
-			for _, nodeDb := range selectedNodes {
-				if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
-					// Skip any that are not certified when tag requires certification or are selected by disabled selectors
-					if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
-						continue
-					}
+				// 3. Diff the sets filling the respective sets for later db updates
+				for _, nodeDb := range selectedNodes {
+					if !nodesSeen.Contains(nodeDb.NodeId.Uint64()) {
+						// Skip any that are not certified when tag requires certification or are selected by disabled selectors
+						if tag.RequireCertify.Bool && nodeDb.Certified <= 0 {
+							continue
+						}
 
-					// If the id is not present, we must queue it for tagging
-					if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
-						newTaggedNodes.Add(nodeDb.NodeId.Uint64())
-					} else {
-						// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
-						oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
+						// If the id is not present, we must queue it for tagging
+						if !oldTaggedNodes.Contains(nodeDb.NodeId.Uint64()) {
+							newTaggedNodes.Add(nodeDb.NodeId.Uint64())
+						} else {
+							// TODO Cleanup system tagging after Tiering GA
+							if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition && oldTaggedNodeSet.Get(nodeDb.NodeId).Properties.Get(common.SystemTags.String()).IsNil() {
+								missingSystemTagsNodes.Add(nodeDb.NodeId.Uint64())
+							}
+
+							// If it is present, we don't need to update anything and will remove tags from any nodes left in this bitmap
+							oldTaggedNodes.Remove(nodeDb.NodeId.Uint64())
+						}
+						// Once a node is processed, we can skip future duplicates that might be selected by other selectors
+						nodesSeen.Add(nodeDb.NodeId.Uint64())
+						countTotal++
 					}
-					// Once a node is processed, we can skip future duplicates that might be selected by other selectors
-					nodesSeen.Add(nodeDb.NodeId.Uint64())
-					countTotal++
 				}
 			}
 
@@ -577,6 +583,18 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 				}
 
 				node.AddKinds(tagKind)
+				err = tx.UpdateNode(node)
+				return err == nil
+			})
+			if err != nil {
+				return err
+			}
+			/// TODO Cleanup system tagging after Tiering GA
+			// 4.5 Update already tagged nodes missing system tags
+			missingSystemTagsNodes.Each(func(nodeId uint64) bool {
+				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+
 				err = tx.UpdateNode(node)
 				return err == nil
 			})
