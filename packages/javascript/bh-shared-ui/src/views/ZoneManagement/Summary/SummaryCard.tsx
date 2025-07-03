@@ -33,7 +33,6 @@ import LargeRightArrow from '../../../components/AppIcon/Icons/LargeRightArrow';
 import { ROUTE_ZONE_MANAGEMENT_DETAILS } from '../../../routes';
 import { useAppNavigate } from '../../../utils';
 import { abbreviatedNumber } from '../../../utils/abbreviatedNumber';
-import { useAssetGroupTagInfo } from '../Save/TagForm/hooks';
 import { useGetConfiguration } from '../../../hooks';
 
 type SummaryCardProps = {
@@ -42,25 +41,22 @@ type SummaryCardProps = {
     selectorCount: number | undefined;
     memberCount: number | undefined;
     id: number;
+    analysis: boolean | undefined;
 };
 
-const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id }) => {
+const SummaryCard: FC<SummaryCardProps> = ({ title, type, selectorCount, memberCount, id, analysis }) => {
     const navigate = useAppNavigate();
     const { data } = useGetConfiguration();
     const tieringConfig = parseTieringConfiguration(data);
     const multiTierAnalysisEnabled = tieringConfig?.value.multi_tier_analysis_enabled;
-    const tagId = id.toString();
-    const tagQuery = useAssetGroupTagInfo(tagId);
-    const analysisEnabled = tagQuery.isSuccess ? tagQuery.data?.analysis_enabled : true;
 
-    console.log(type, title);
     return (
         <Card
             className='w-full flex px-6 py-4 rounded-xl'
             data-testid={`zone-management_summary_${title.toLowerCase().replace(/ /g, "_")}-list_item-${id}`}
         >
             <div className='flex-1 flex items-center justify-center truncate min-w-0'>
-                {multiTierAnalysisEnabled && !analysisEnabled && (
+                {multiTierAnalysisEnabled && !analysis && (
                     <TooltipProvider>
                         <TooltipRoot>
                             <TooltipTrigger>

@@ -145,7 +145,7 @@ describe('List', async () => {
         expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
 
         longWait(() => {
-            expect(screen.findByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
         })
     });
 
@@ -162,7 +162,7 @@ describe('List', async () => {
         expect(await screen.findByTestId('zone-management_details_tiers-list_active-tiers-item-1')).toBeInTheDocument();
 
         longWait(() => {
-            expect(screen.findByTestId('analysis_disabled_icon')).toBeInTheDocument();
+            expect(screen.getByTestId('analysis_disabled_icon')).toBeInTheDocument();
         })
     });
 

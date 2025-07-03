@@ -76,6 +76,7 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                                 id={listItem.id}
                                                 selectorCount={listItem.counts?.selectors}
                                                 memberCount={listItem.counts?.members}
+                                                analysis={listItem?.analysis_enabled}
                                             />
                                         </li>
                                         {listItem.type === AssetGroupTagTypeTier ? (

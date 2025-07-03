@@ -59,7 +59,7 @@ describe('SummaryCard', () => {
         selectorCount: 7,
         memberCount: 13,
         id: 99,
-        analysis_enabled: true
+        analysis: true,
     };
 
     const user = userEvent.setup();
@@ -91,7 +91,7 @@ describe('SummaryCard', () => {
 
         await user.click(screen.getByText('View Details'));
 
-        longWait(() => {
+        await longWait(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/zone-management/details/tier/99');
         })
     });
@@ -124,35 +124,19 @@ describe('SummaryCard', () => {
         expect(await screen.findByTestId('zone-management_summary_test_tier-list_item-99')).toBeInTheDocument();
 
         longWait(() => {
-            expect(screen.findByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
-        })
-    });
-
-    it('does not render tier icon tooltip when multi tier analysis is disabled', async () => {
-        const configRes = {
-            data: [
-                {
-                    key: ConfigurationKey.Tiering,
-                    value: { multi_tier_analysis_enabled: false, tier_limit: 3, label_limit: 10 },
-                },
-            ],
-        };
-
-        server.use(
-            rest.get('/api/v2/config', async (_, res, ctx) => {
-                return res(ctx.json(configRes));
-            })
-        );
-
-        render(<SummaryCard {...props} />);
-
-        longWait(() => {
-            expect(screen.findByTestId('zone-management_summary_tier_one-list_item-3')).toBeInTheDocument();
-            expect(screen.findByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
         })
     });
 
     it('renders tier icon tooltip when multi tier analysis is enabled but tier analysis is off', async () => {
+        const props = {
+            title: 'Test Tier',
+            type: AssetGroupTagTypeTier,
+            selectorCount: 7,
+            memberCount: 13,
+            id: 99,
+            analysis: false,
+        };
 
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
@@ -162,22 +146,14 @@ describe('SummaryCard', () => {
 
         render(<SummaryCard {...props} />);
 
+        expect(await screen.findByTestId('zone-management_summary_test_tier-list_item-99')).toBeInTheDocument();
+
         longWait(() => {
-            expect(screen.findByTestId('zone-management_summary_tier_one-list_item-3')).toBeInTheDocument();
-            expect(screen.findByTestId('analysis_disabled_icon')).not.toBeInTheDocument();
+            expect(screen.getByTestId('analysis_disabled_icon')).toBeInTheDocument();
         })
     });
 
     it('does not render tier icon tooltip when multi tier analysis is enabled and tier analysis is on', async () => {
-        const props = {
-            title: 'Test Tier',
-            type: AssetGroupTagTypeTier,
-            selectorCount: 7,
-            memberCount: 13,
-            id: 99,
-            analysis_enabled: true
-        };
-
         server.use(
             rest.get('/api/v2/config', async (_, res, ctx) => {
                 return res(ctx.json(configResponse));
