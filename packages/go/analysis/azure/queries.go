@@ -423,6 +423,15 @@ func FetchRoleApprovers(tx graph.Transaction, node *graph.Node, skip, limit int)
 		Skip:        skip,
 		Limit:       limit,
 		BranchQuery: FilterRoleApprovers,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 0 && segment.Edge.Kind.Is(azure.MemberOf) {
+				return false
+			} else if segment.Depth() > 2 {
+				return false
+			} else {
+				return true
+			}
+		},
 	})
 }
 
@@ -431,6 +440,15 @@ func FetchRoleApproverPaths(tx graph.Transaction, node *graph.Node) (graph.PathS
 		Root:        node,
 		Direction:   graph.DirectionInbound,
 		BranchQuery: FilterRoleApprovers,
+		DescentFilter: func(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
+			if segment.Depth() == 0 && segment.Edge.Kind.Is(azure.MemberOf) {
+				return false
+			} else if segment.Depth() > 2 {
+				return false
+			} else {
+				return true
+			}
+		},
 	})
 }
 
