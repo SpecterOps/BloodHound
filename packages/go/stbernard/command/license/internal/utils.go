@@ -36,9 +36,10 @@ func generateLicenseHeader(commentPrefix string) string {
 	)
 
 	// XML and CSS style comments require special rules, this first check handles creating the top of the comment
-	if commentPrefix == "<!--" {
+	switch commentPrefix {
+	case "<!--":
 		formattedHeader.WriteString("<!--\n")
-	} else if commentPrefix == "/*" {
+	case "/*":
 		formattedHeader.WriteString("/*\n")
 	}
 
@@ -65,9 +66,10 @@ func generateLicenseHeader(commentPrefix string) string {
 	}
 
 	// XML style comments must be properly ended on a new line
-	if commentPrefix == "<!--" {
+	switch commentPrefix {
+	case "<!--":
 		formattedHeader.WriteString("-->\n")
-	} else if commentPrefix == "/*" {
+	case "/*":
 		formattedHeader.WriteString("*/\n")
 	}
 
