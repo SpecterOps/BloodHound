@@ -121,17 +121,16 @@ func (s AssetGroupTag) IsStringColumn(filter string) bool {
 
 func (s AssetGroupTag) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"type":             {Equals, NotEquals},
-		"name":             {Equals, NotEquals, ApproximatelyEquals},
-		"description":      {Equals, NotEquals, ApproximatelyEquals},
-		"created_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_by":       {Equals, NotEquals},
-		"updated_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"updated_by":       {Equals, NotEquals},
-		"deleted_at":       {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"deleted_by":       {Equals, NotEquals},
-		"require_certify":  {Equals, NotEquals},
-		"analysis_enabled": {Equals, NotEquals},
+		"type":            {Equals, NotEquals},
+		"name":            {Equals, NotEquals, ApproximatelyEquals},
+		"description":     {Equals, NotEquals, ApproximatelyEquals},
+		"created_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"created_by":      {Equals, NotEquals},
+		"updated_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"updated_by":      {Equals, NotEquals},
+		"deleted_at":      {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
+		"deleted_by":      {Equals, NotEquals},
+		"require_certify": {Equals, NotEquals},
 	}
 }
 
@@ -146,6 +145,10 @@ func (s AssetGroupTag) ToType() string {
 	default:
 		return "unknown"
 	}
+}
+
+func IsValidTagType(tagType AssetGroupTagType) bool {
+	return tagType == AssetGroupTagTypeTier || tagType == AssetGroupTagTypeLabel || tagType == AssetGroupTagTypeOwned
 }
 
 func (s AssetGroupTag) GetExpansionMethod() AssetGroupExpansionMethod {
