@@ -42,7 +42,6 @@ export const AllEdgeTypes: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
                     ActiveDirectoryRelationshipKind.ContainsIdentity,
-                    ActiveDirectoryRelationshipKind.DCFor,
                     ActiveDirectoryRelationshipKind.GPOAppliesTo,
                     ActiveDirectoryRelationshipKind.HasSIDHistory,
                     ActiveDirectoryRelationshipKind.MemberOf,
