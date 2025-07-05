@@ -1,4 +1,4 @@
-// Copyright 2025 Specter Ops, Inc.
+// Copyright 2024 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export { default as CypherSearch } from './CypherSearch';
-export { default as GraphViewErrorAlert } from './GraphViewErrorAlert';
-export { default as NodeSearch } from './NodeSearch';
-export { default as PathfindingSearch } from './PathfindingSearch';
-export * from './types';
+import { Alert, AlertTitle, Box, useTheme } from '@mui/material';
+
+const GraphViewErrorAlert = () => {
+    const theme = useTheme();
+    return (
+        <Box display={'flex'} justifyContent={'center'} mt={theme.spacing(8)} mx={theme.spacing(4)}>
+            <Alert severity={'error'}>
+                <AlertTitle>Error</AlertTitle>
+                <p>An unexpected error has occurred. Please refresh the page and try again.</p>
+            </Alert>
+        </Box>
+    );
+};
+
+export default GraphViewErrorAlert;
