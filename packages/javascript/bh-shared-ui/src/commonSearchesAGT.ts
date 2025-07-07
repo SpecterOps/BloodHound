@@ -279,7 +279,7 @@ export const CommonSearches: CommonSearchType[] = [
         queries: [
             {
                 description: 'All Global Administrators',
-                cypher: `\`MATCH p=(:AZBase)-[:AZHasRole*1..]->(t:AZRole)\\nWHERE t.name =~ '(?i)Global Administrator.*'\\nRETURN p\\nLIMIT 1000\``,
+                cypher: `MATCH p=(:AZBase)-[:AZHasRole*1..]->(t:AZRole)\nWHERE t.name =~ '(?i)Global Administrator.*'\nRETURN p\nLIMIT 1000`,
             },
             {
                 description: 'All members of high privileged roles',
