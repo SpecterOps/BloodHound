@@ -29,8 +29,8 @@ import {
 } from './queries';
 
 type UseExploreGraphParams = {
-    includeProperties: boolean;
-    enabled: boolean;
+    includeProperties?: boolean;
+    enabled?: boolean;
 };
 
 export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
