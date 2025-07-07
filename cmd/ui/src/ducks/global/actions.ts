@@ -72,11 +72,11 @@ export const setIsExploreTableSelected = (isExploreTableSelected: boolean): type
     };
 };
 
-export const setVisibleExploreTableColumns = (
+export const setSelectedExploreTableColumns = (
     selectedExploreTableColumns: Record<string, boolean>
 ): types.GlobalViewActionTypes => {
     return {
-        type: types.GLOBAL_SET_VISIBLE_EXPLORE_TABLE_COLUMNS,
+        type: types.GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS,
         selectedExploreTableColumns,
     };
 };

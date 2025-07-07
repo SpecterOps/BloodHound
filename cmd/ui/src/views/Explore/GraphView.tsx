@@ -44,7 +44,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataDialogWithLinks } from 'src/components/NoDataDialogWithLinks';
 import SigmaChart from 'src/components/SigmaChart';
-import { setExploreLayout, setIsExploreTableSelected, setVisibleExploreTableColumns } from 'src/ducks/global/actions';
+import { setExploreLayout, setIsExploreTableSelected, setSelectedExploreTableColumns } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
@@ -159,7 +159,7 @@ const GraphView: FC = () => {
     const handleManageColumnsChange = (columnOptions: ManageColumnsComboBoxOption[]) => {
         const newItems = makeStoreMapFromColumnOptions(columnOptions);
 
-        dispatch(setVisibleExploreTableColumns(newItems));
+        dispatch(setSelectedExploreTableColumns(newItems));
     };
 
     const handleLayoutChange = (layout: BaseExploreLayoutOptions) => {
