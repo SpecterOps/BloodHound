@@ -38,7 +38,7 @@ const Abuse: FC = () => {
                 certificate requests that were denied because lack of enrollment rights on the certificate template or
                 on the enterprise CA. A common action is therefore to grant this permission, enroll in an ESC1 template
                 that the attacker does not have enrollment rights on, issue the certificate of the denied request. This
-                attack fail if role separation is enabled on the CA, as it enforces that users cannot have both ManageCA
+                attack fails if role separation is enabled on the CA, as it enforces that users cannot have both ManageCA
                 and ManageCertificates. However, this setting is very rare.
             </Typography>
             <Typography variant='body1'>Grant CA officer (ManageCertificates)</Typography>
