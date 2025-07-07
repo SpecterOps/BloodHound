@@ -17,20 +17,17 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, Skeleton } from '@mui/material';
+import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
-import { QueryLineItem, QueryListSection } from '../../../types';
-
-import fileDownload from 'js-file-download';
-import { getExportQueries, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import { getExportQuery, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
-import { QuerySearchType } from '../../../types';
+import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
 import QuerySearchFilter from './QuerySearchFilter';
-
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
@@ -131,11 +128,14 @@ const InnerCommonSearches = ({
     const handleClearFilters = () => {
         handleFilter('', '', []);
     };
-    const handleExport = () => {
+
+    const handleExport = (queryId: number) => {
         console.log('handleExport - commonSearches');
-        getExportQueries().then((res) => {
+        getExportQuery(queryId).then((res: any) => {
+            console.log(res);
             const filename =
                 res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] || `exported_queries.zip`;
+            console.log(filename);
             fileDownload(res.data, filename);
         });
     };
@@ -154,7 +154,7 @@ const InnerCommonSearches = ({
             <div className={cn({ hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
-                    exportHandler={handleExport}
+                    exportHandler={() => handleExport(1)}
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}

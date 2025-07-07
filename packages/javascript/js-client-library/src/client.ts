@@ -157,6 +157,14 @@ class BHEAPIClient {
             })
         );
 
+    getExportCypherQuery = (id: number): Promise<any> =>
+        this.baseClient.get(
+            `/api/v2/saved-queries/${id}/export`,
+            Object.assign({
+                responseType: 'blob',
+            })
+        );
+
     getKinds = (options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<{ kinds: string[] }>>('/api/v2/graphs/kinds', options);
 

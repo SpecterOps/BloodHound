@@ -1,7 +1,7 @@
-import { Button } from '@bloodhoundenterprise/doodleui';
+import { Button, Input } from '@bloodhoundenterprise/doodleui';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, InputLabel, TextField } from '@mui/material';
+import { InputLabel } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -55,15 +55,22 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
 
     return (
         <>
-            <Box className='mb-2'>
+            <div className='mb-2'>
                 <div className='mb-4 flex w-full'>
                     <div className='flex-grow'>
-                        <TextField
+                        {/* <TextField
                             id='query-search'
                             label='Search'
                             variant='standard'
                             value={searchTerm}
                             className='w-full'
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
+                        /> */}
+                        <Input
+                            type='text'
+                            id='query-search'
+                            value={searchTerm}
+                            className='w-full bg-transparent rounded-none border-t-0 border-x-0'
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                     </div>
@@ -131,7 +138,7 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         </Select>
                     </FormControl>
                 </div>
-            </Box>
+            </div>
         </>
     );
 };
