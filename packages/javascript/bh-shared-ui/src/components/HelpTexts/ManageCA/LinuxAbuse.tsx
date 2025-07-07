@@ -21,7 +21,7 @@ const Abuse: FC = () => {
     return (
         <>
             <Typography variant='body2'>
-                CA administrators can perform the following actions that may enable and ADCS escalation:
+                CA administrators can perform the following actions that may enable an ADCS escalation:
                 <ol style={{ listStyleType: 'decimal', paddingLeft: '1.5em' }}>
                     <li>Grant CA officer (ManageCertificates) on enterprise CA</li>
                     <li>Publish certificate templates</li>
