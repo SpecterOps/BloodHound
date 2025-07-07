@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as bhSharedUI from 'bh-shared-ui';
-import { GraphResponse, SigmaFlatGraphData } from 'js-client-library';
+import { FlatGraphResponse, GraphResponse } from 'js-client-library';
 import { normalizeGraphDataForSigma } from '.';
 
-const transformToSigmaFlatGraphDataSpy = vitest.spyOn(bhSharedUI, 'transformToSigmaFlatGraphData');
-transformToSigmaFlatGraphDataSpy.mockReturnValue({});
+const transformToFlatGraphResponseSpy = vitest.spyOn(bhSharedUI, 'transformToFlatGraphResponse');
+transformToFlatGraphResponseSpy.mockReturnValue({});
 
 const typicalGraphResponse: GraphResponse = {
     data: {
@@ -28,7 +28,7 @@ const typicalGraphResponse: GraphResponse = {
     },
 };
 
-const typicalSigmaFlatGraphData: SigmaFlatGraphData = {
+const typicalFlatGraphResponse: FlatGraphResponse = {
     '1234': {
         color: '#DBE617',
         data: {
@@ -61,13 +61,13 @@ describe('normalizeGraphDataForSigma', () => {
         expect(actual).toBeUndefined();
     });
 
-    it('calls transformToSigmaFlatGraphData when graphData matches GraphResponse interface', () => {
+    it('calls transformToFlatGraphResponse when graphData matches GraphResponse interface', () => {
         normalizeGraphDataForSigma(typicalGraphResponse);
-        expect(transformToSigmaFlatGraphDataSpy).toBeCalled();
+        expect(transformToFlatGraphResponseSpy).toBeCalled();
     });
 
     it('returns graphData as is if it doesnt match the GraphResponse interface', () => {
-        normalizeGraphDataForSigma(typicalSigmaFlatGraphData);
-        expect(transformToSigmaFlatGraphDataSpy).not.toBeCalled();
+        normalizeGraphDataForSigma(typicalFlatGraphResponse);
+        expect(transformToFlatGraphResponseSpy).not.toBeCalled();
     });
 });

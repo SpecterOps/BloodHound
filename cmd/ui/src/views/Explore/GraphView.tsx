@@ -28,7 +28,7 @@ import {
     isNode,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
-    transformSigmaFlatGraphData,
+    transformFlatGraphResponse,
     useCustomNodeKinds,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
@@ -101,7 +101,7 @@ const GraphView: FC = () => {
         if (!items) items = {};
 
         // `items` may be empty, or it may contain an empty `nodes` object
-        if (isEmpty(items) || isEmpty(items.nodes)) items = transformSigmaFlatGraphData(items);
+        if (isEmpty(items) || isEmpty(items.nodes)) items = transformFlatGraphResponse(items);
 
         const graph = new MultiDirectedGraph();
 

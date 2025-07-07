@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { GraphData, GraphResponse, SigmaFlatGraphData, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
+import { FlatGraphResponse, GraphData, GraphResponse, StyledGraphEdge, StyledGraphNode } from 'js-client-library';
 import { UseQueryOptions } from 'react-query';
 import { ExploreQueryParams } from '../../useExploreParams';
 import { extractEdgeTypes, getInitialPathFilters } from '../utils';
@@ -22,9 +22,9 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
 export type ExploreGraphQueryOptions = UseQueryOptions<
-    GraphResponse | SigmaFlatGraphData,
+    GraphResponse | FlatGraphResponse,
     unknown,
-    GraphResponse | SigmaFlatGraphData,
+    GraphResponse | FlatGraphResponse,
     QueryKeys
 >;
 
@@ -57,7 +57,7 @@ export const createPathFilterString = (types: string[]) => {
 };
 
 // Converts between two different respresentations of graph data returned by our API for endpoints that feed the explore page
-export const transformSigmaFlatGraphData = (graph: SigmaFlatGraphData): GraphData => {
+export const transformFlatGraphResponse = (graph: FlatGraphResponse): GraphData => {
     const result: GraphData = {
         nodes: {},
         edges: [],
@@ -95,7 +95,7 @@ export const transformSigmaFlatGraphData = (graph: SigmaFlatGraphData): GraphDat
 };
 
 // Converts the same data types in the opposite direction. We have some typing issues here due to the "lastSeen" property we are adding that should be addressed
-export const transformToSigmaFlatGraphData = (graph: GraphResponse) => {
+export const transformToFlatGraphResponse = (graph: GraphResponse) => {
     const result: any = {};
     for (const [key, value] of Object.entries(graph.data.nodes)) {
         const lastSeen = getLastSeenValue(value);
@@ -159,6 +159,6 @@ const isNode = (item: any): boolean => {
     return !isLink(item);
 };
 
-export const isGraphResponse = (graphData: GraphResponse | SigmaFlatGraphData): graphData is GraphResponse => {
+export const isGraphResponse = (graphData: GraphResponse | FlatGraphResponse): graphData is GraphResponse => {
     return !!(graphData as GraphResponse)?.data?.nodes && !!(graphData as GraphResponse)?.data?.edges;
 };
