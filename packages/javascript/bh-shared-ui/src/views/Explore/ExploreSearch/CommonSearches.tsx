@@ -181,7 +181,7 @@ const InnerCommonSearches = ({
             <div className={cn({ hidden: !showCommonQueries })}>
                 <QuerySearchFilter
                     queryFilterHandler={handleFilter}
-                    exportHandler={() => handleExport(1)}
+                    exportHandler={handleExport}
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}
