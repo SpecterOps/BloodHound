@@ -110,6 +110,7 @@
       "labels": [],
       "properties": {
         "IsUserSpecifiesSanEnabled": "True",
+        "IsUserSpecifiesSanEnabledCollected": "True",
         "kind": "EnterpriseCA"
       },
       "style": {
