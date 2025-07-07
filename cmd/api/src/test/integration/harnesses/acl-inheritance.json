@@ -240,14 +240,12 @@
         "x": -1776.843341370337,
         "y": -823.4011040243012
       },
-      "caption": "OU 6",
+      "caption": "Container 1",
       "style": {
-        "node-color": "#fcdc00"
+        "node-color": "#aea1ff"
       },
       "labels": [],
-      "properties": {
-        "inheritancehashes": "[]"
-      }
+      "properties": {}
     },
     {
       "id": "n14",
@@ -334,7 +332,7 @@
         "x": -2045.5041133042482,
         "y": -295.4305094152187
       },
-      "caption": "OU 7",
+      "caption": "OU 6",
       "style": {
         "node-color": "#fcdc00"
       },

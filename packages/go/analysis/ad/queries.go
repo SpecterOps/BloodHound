@@ -586,16 +586,13 @@ func FetchACLInheritancePath(ctx context.Context, db graph.Database, edge *graph
 				Root:      endNode,
 				Direction: graph.DirectionInbound,
 				BranchQuery: func() graph.Criteria {
-					return query.And(
-						query.KindIn(query.Start(), ad.Domain, ad.OU),
-						query.KindIn(query.Relationship(), ad.Contains),
-					)
+					return query.KindIn(query.Relationship(), ad.Contains)
 				},
 				ExpansionFilter: func(segment *graph.PathSegment) bool {
 					// Check that our hash is included in the current node
 					hashes, _ := segment.Node.Properties.GetOrDefault(ad.InheritanceHashes.String(), []string{}).StringSlice()
 
-					if slices.Contains(hashes, hash) {
+					if slices.Contains(hashes, hash) && segment.Node.Kinds.ContainsOneOf(ad.Domain, ad.OU) {
 						isInheritable := true
 						// Walk back up the inheritance chain until we reach our start node, checking that inheritance is not blocked
 						segment.Path().WalkReverse(func(start, end *graph.Node, relationship *graph.Relationship) bool {
