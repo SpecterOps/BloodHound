@@ -22,8 +22,6 @@ import { extractEdgeTypes, getInitialPathFilters } from '../utils';
 type QueryKeys = ('explore-graph-query' | string | undefined)[];
 
 export type ExploreGraphQueryOptions = UseQueryOptions<
-    // TODO: does this query ever actually give us the SigmaFlatGraphData? If so, maybe we want a different type,
-    // since it's different enough?
     GraphResponse | SigmaFlatGraphData,
     unknown,
     GraphResponse | SigmaFlatGraphData,

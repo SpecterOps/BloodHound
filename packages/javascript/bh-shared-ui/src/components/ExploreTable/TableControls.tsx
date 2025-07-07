@@ -52,7 +52,7 @@ const TableControls = <TData, TValue>({
     onExpandClick,
     onManageColumnsChange,
 }: TableControlsProps<TData, TValue>) => {
-    const parsedColumns = useMemo(
+    const parsedColumns: ManageColumnsComboBoxOption[] = useMemo(
         () =>
             columns?.slice(1).map((columnDef: ColumnDef<TData, TValue>) => ({
                 id: columnDef?.id || '',

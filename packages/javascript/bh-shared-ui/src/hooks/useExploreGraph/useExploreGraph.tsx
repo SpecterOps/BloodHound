@@ -28,6 +28,11 @@ import {
     relationshipSearchQuery,
 } from './queries';
 
+type UseExploreGraphParams = {
+    includeProperties: boolean;
+    enabled: boolean;
+};
+
 export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParams>): ExploreGraphQuery {
     switch (paramOptions.searchType) {
         case 'node':
@@ -45,8 +50,13 @@ export function exploreGraphQueryFactory(paramOptions: Partial<ExploreQueryParam
     }
 }
 
+const DEFAULT_USE_EXPLORE_GRAPH_PARAMS = { includeProperties: false, enabled: true };
+
 // Hook for maintaining the top level graph query powering the explore page
-export const useExploreGraph = (includeProperties?: boolean) => {
+export const useExploreGraph = ({
+    includeProperties,
+    enabled,
+}: UseExploreGraphParams = DEFAULT_USE_EXPLORE_GRAPH_PARAMS) => {
     const params = useExploreParams();
 
     const { addNotification } = useNotifications();
@@ -66,5 +76,6 @@ export const useExploreGraph = (includeProperties?: boolean) => {
                 autoHideDuration: SNACKBAR_DURATION_LONG,
             });
         },
+        enabled,
     });
 };
