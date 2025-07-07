@@ -59,8 +59,9 @@ const EdgeMenuItems: FC<EdgeMenuItemsProps> = ({ id, pathfindingFilters }) => {
     const edgeType = id.match(RX_EDGE_TYPE)?.[1];
 
     const filterEdge = () => {
-        // edgeType will exist otherwise this method could't be executed
-        handleRemoveEdgeType(edgeType!);
+        if (edgeType) {
+            handleRemoveEdgeType(edgeType);
+        }
     };
 
     if (!edgeType) {
