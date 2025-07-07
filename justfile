@@ -18,6 +18,10 @@ set positional-arguments
 graphify-ingest path="" outfile="":
   @go run github.com/specterops/bloodhound/packages/go/stbernard graph --path={{path}} --outfile={{outfile}}
 
+[no-cd]
+analyze-graph path="" outfile="":
+  @go run github.com/specterops/bloodhound/packages/go/stbernard analyze-graph --infile={{path}} --outfile={{outfile}}
+
 # run st bernard directly
 stbernard *ARGS:
   @go tool stbernard {{ARGS}}

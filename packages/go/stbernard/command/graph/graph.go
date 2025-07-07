@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/bloodhound/packages/go/stbernard/shared"
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
@@ -128,33 +129,6 @@ func (s *command) Run() error {
 	}
 }
 
-type Node struct {
-	ID         string         `json:"id"`
-	Kinds      []string       `json:"kinds"`
-	Properties map[string]any `json:"properties"`
-}
-
-type Terminal struct {
-	MatchBy string `json:"match_by"`
-	Value   string `json:"value"`
-}
-
-type Edge struct {
-	Start      Terminal       `json:"start"`
-	End        Terminal       `json:"end"`
-	Kind       string         `json:"kind"`
-	Properties map[string]any `json:"properties"`
-}
-
-type Graph struct {
-	Nodes []Node `json:"nodes"`
-	Edges []Edge `json:"edges"`
-}
-
-type IngestFile struct {
-	Graph Graph `json:"graph"`
-}
-
 func ingestData(ctx context.Context, filepaths []string, database graph.Database) error {
 	var errs []error
 
@@ -199,19 +173,19 @@ func ingestData(ctx context.Context, filepaths []string, database graph.Database
 	return nil
 }
 
-func generateIngestFile(graph Graph) IngestFile {
-	return IngestFile{
+func generateIngestFile(graph shared.Graph) shared.GenericGraphFile {
+	return shared.GenericGraphFile{
 		Graph: graph,
 	}
 }
 
-func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, error) {
+func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (shared.Graph, error) {
 	var (
 		isAZBase bool
 		isBase   bool
 
-		graphNodes    = make([]Node, 0, len(nodes))
-		graphEdges    = make([]Edge, 0, len(edges))
+		graphNodes    = make([]shared.Node, 0, len(nodes))
+		graphEdges    = make([]shared.Edge, 0, len(edges))
 		nodeObjectIDs = make(map[graph.ID]string, len(nodes))
 	)
 
@@ -239,12 +213,12 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 
 		objectID, err := node.Properties.Get(common.ObjectID.String()).String()
 		if err != nil {
-			return Graph{}, err
+			return shared.Graph{}, err
 		}
 
 		nodeObjectIDs[node.ID] = objectID
 
-		graphNodes = append(graphNodes, Node{
+		graphNodes = append(graphNodes, shared.Node{
 			ID:         objectID,
 			Kinds:      kinds,
 			Properties: removeNullMapValues(node.Properties.Map),
@@ -252,12 +226,12 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 	}
 
 	for _, edge := range edges {
-		graphEdges = append(graphEdges, Edge{
-			Start: Terminal{
+		graphEdges = append(graphEdges, shared.Edge{
+			Start: shared.Terminal{
 				MatchBy: "id",
 				Value:   nodeObjectIDs[edge.StartID],
 			},
-			End: Terminal{
+			End: shared.Terminal{
 				MatchBy: "id",
 				Value:   nodeObjectIDs[edge.EndID],
 			},
@@ -266,7 +240,7 @@ func transformGraph(nodes []*graph.Node, edges []*graph.Relationship) (Graph, er
 		})
 	}
 
-	return Graph{
+	return shared.Graph{
 		Nodes: graphNodes,
 		Edges: graphEdges,
 	}, nil
