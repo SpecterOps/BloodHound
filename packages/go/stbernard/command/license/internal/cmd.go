@@ -131,12 +131,10 @@ func Run(env environment.Environment) error {
 		}
 
 		// Ensure that we're not attempting to scan symbolic links
-		if lstatInfo, err := os.Lstat(path); err != nil {
-			return err
-		} else if lstatInfo.Mode()&os.ModeSymlink != os.ModeSymlink && !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
-			slog.Info("rendering path to scan", slog.String("path", path))
+		if info.Mode()&os.ModeSymlink != os.ModeSymlink && !info.IsDir() && !slices.Contains(disallowedExtensions, ext) {
 			pathChan <- path
 		}
+
 		return nil
 	})
 	if err != nil {

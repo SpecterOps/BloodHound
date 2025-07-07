@@ -48,10 +48,11 @@ func (s *ExecutionResult) Error() string {
 	return "command execution failed: " + s.Command
 }
 
-func newExecutionResult(command string, args []string) *ExecutionResult {
+func newExecutionResult(command string, args []string, path string) *ExecutionResult {
 	return &ExecutionResult{
 		Command:        command,
 		Arguments:      args,
+		Path:           path,
 		StandardOutput: &bytes.Buffer{},
 		ErrorOutput:    &bytes.Buffer{},
 		CombinedOutput: &bytes.Buffer{},
@@ -62,7 +63,7 @@ func newExecutionResult(command string, args []string) *ExecutionResult {
 func prepareCommand(command string, args []string, path string, env environment.Environment) (*exec.Cmd, *ExecutionResult) {
 	var (
 		cmd    = exec.Command(command, args...)
-		result = newExecutionResult(command, args)
+		result = newExecutionResult(command, args, path)
 	)
 
 	cmd.Dir = path
@@ -99,7 +100,7 @@ func logCommand(result *ExecutionResult) func() {
 		)
 
 		if result.ReturnCode != 0 {
-			if _, err := io.Copy(os.Stderr, result.CombinedOutput); err != nil {
+			if _, err := io.Copy(os.Stderr, result.ErrorOutput); err != nil {
 				slog.Error("failed to copy result to stderr", slog.String("error", err.Error()))
 			}
 		}
