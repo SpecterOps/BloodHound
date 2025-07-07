@@ -29,10 +29,6 @@ export const areArraysSimilar = <T>(
         return false;
     }
 
-    if (sortFn && !compareFn) {
-        throw new Error('');
-    }
-
     const sortedA = sortFn ? [...a].sort(sortFn) : [...a].sort();
     const sortedB = sortFn ? [...b].sort(sortFn) : [...b].sort();
 
