@@ -14,20 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Skeleton } from '@bloodhoundenterprise/doodleui';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Skeleton } from '@mui/material';
+import { Box } from '@mui/material';
 import fileDownload from 'js-file-download';
 import { useEffect, useState } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../../commonSearchesAGT';
 import FeatureFlag from '../../../components/FeatureFlag';
 import PrebuiltSearchList from '../../../components/PrebuiltSearchList';
-import { getExportQuery, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
+import { getExportQuery, useCypherSearch, useDeleteSavedQuery, useSavedQueries } from '../../../hooks';
 import { useNotifications } from '../../../providers';
 import { QueryLineItem, QueryListSection, QuerySearchType } from '../../../types';
 import { cn } from '../../../utils';
 import QuerySearchFilter from './QuerySearchFilter';
+
 type CommonSearchesProps = {
     onSetCypherQuery: (query: string) => void;
     onPerformCypherSearch: (query: string) => void;
@@ -48,6 +50,8 @@ const InnerCommonSearches = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [platform, setPlatform] = useState('');
     const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+    const [selected, setSelected] = useState('');
+    const { cypherQuery } = useCypherSearch();
 
     const savedLineItems: QueryLineItem[] =
         userQueries.data?.map((query) => ({
@@ -76,6 +80,12 @@ const InnerCommonSearches = ({
     }, [userQueries.data]);
 
     const handleClick = (query: string) => {
+        if (selected === query) {
+            //deselect
+            setSelected('');
+        } else {
+            setSelected(query);
+        }
         // This first function is only necessary for the redux implementation and can be removed later, along with the associated prop
         onSetCypherQuery(query);
         onPerformCypherSearch(query);
@@ -129,16 +139,33 @@ const InnerCommonSearches = ({
         handleFilter('', '', []);
     };
 
-    const handleExport = (queryId: number) => {
+    const handleExport = () => {
         console.log('handleExport - commonSearches');
-        getExportQuery(queryId).then((res: any) => {
-            console.log(res);
+        if (!(selectedQuery && selectedQuery?.id)) return;
+        getExportQuery(selectedQuery.id).then((res: any) => {
             const filename =
                 res.headers['content-disposition']?.match(/^.*filename="(.*)"$/)?.[1] || `exported_queries.zip`;
-            console.log(filename);
             fileDownload(res.data, filename);
         });
     };
+
+    function getSelectedQuery() {
+        const comparator = selected ? selected : cypherQuery;
+
+        for (const item of filteredList) {
+            let result = null;
+            result = item.queries.find((query) => {
+                if (query.cypher === comparator) {
+                    return query;
+                }
+            });
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    const selectedQuery = getSelectedQuery();
 
     return (
         <div className='flex flex-col h-full'>
@@ -158,7 +185,8 @@ const InnerCommonSearches = ({
                     categories={categories}
                     searchTerm={searchTerm}
                     platform={platform}
-                    categoryFilter={categoryFilter}></QuerySearchFilter>
+                    categoryFilter={categoryFilter}
+                    selectedQuery={selectedQuery}></QuerySearchFilter>
             </div>
 
             <div className={cn('grow-1 min-h-0 overflow-auto', { hidden: !showCommonQueries })}>
@@ -167,6 +195,7 @@ const InnerCommonSearches = ({
                     clickHandler={handleClick}
                     deleteHandler={handleDeleteQuery}
                     clearFiltersHandler={handleClearFilters}
+                    selectedQuery={selectedQuery}
                 />
             </div>
         </div>

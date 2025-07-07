@@ -13,10 +13,12 @@ interface QuerySearchProps {
     searchTerm: string;
     platform: string;
     categoryFilter: string[];
+    selectedQuery: any;
 }
 
 const QuerySearchFilter = (props: QuerySearchProps) => {
-    const { queryFilterHandler, exportHandler, categories, searchTerm, platform, categoryFilter } = props;
+    const { queryFilterHandler, exportHandler, categories, searchTerm, platform, categoryFilter, selectedQuery } =
+        props;
     const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const handleInput = (val: string) => {
@@ -53,24 +55,19 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
         queryFilterHandler(searchTerm, platform, newVal);
     };
 
+    const exportEnabled = selectedQuery?.id ? true : false;
+
     return (
         <>
             <div className='mb-2'>
                 <div className='mb-4 flex w-full'>
                     <div className='flex-grow'>
-                        {/* <TextField
-                            id='query-search'
-                            label='Search'
-                            variant='standard'
-                            value={searchTerm}
-                            className='w-full'
-                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
-                        /> */}
                         <Input
                             type='text'
                             id='query-search'
+                            placeholder='Search'
                             value={searchTerm}
-                            className='w-full bg-transparent rounded-none border-t-0 border-x-0'
+                            className='w-full bg-transparent rounded-none border-neutral-dark-5 border-t-0 border-x-0'
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                     </div>
@@ -79,7 +76,12 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         <Button variant='secondary' size='medium'>
                             Import
                         </Button>
-                        <Button className='ml-2' variant='secondary' size='medium' onClick={exportHandler}>
+                        <Button
+                            disabled={!exportEnabled}
+                            className='ml-2'
+                            variant='secondary'
+                            size='medium'
+                            onClick={exportHandler}>
                             Export
                         </Button>
                         <Button className='ml-2' variant='icon'>
