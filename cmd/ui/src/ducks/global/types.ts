@@ -98,7 +98,7 @@ export type GlobalViewActionTypes =
     | SetDarkModeAction
     | SetExploreLayoutAction
     | SetIsExploreTableSelectedAction
-    | SetVisibleExploreTableColumns;
+    | SetSelectedExploreTableColumns;
 
 export interface SetDomainAction {
     type: typeof GLOBAL_SET_DOMAIN;
@@ -127,7 +127,7 @@ export interface SetIsExploreTableSelectedAction {
     isExploreTableSelected: boolean;
 }
 
-export interface SetVisibleExploreTableColumns {
+export interface SetSelectedExploreTableColumns {
     type: typeof GLOBAL_SET_SELECTED_EXPLORE_TABLE_COLUMNS;
     selectedExploreTableColumns: Record<string, boolean>;
 }
