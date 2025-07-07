@@ -35,7 +35,7 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body2'>
                 The combination of the ManageCA and ManageCertificates permissions allow the attacker to approve
-                certificate requests that were denied becuase lack of enrollment rights on the certificate template or
+                certificate requests that were denied because lack of enrollment rights on the certificate template or
                 on the enterprise CA. A common action is therefore to grant this permission, enroll in an ESC1 template
                 that the attacker does not have enrollment rights on, issue the certificate of the denied request. This
                 attack fail if role separation is enabled on the CA, as it enforces that users cannot have both ManageCA
