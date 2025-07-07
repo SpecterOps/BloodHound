@@ -44,10 +44,7 @@ export const ManageColumnsComboBox = ({
         });
     }, [allColumns, selectedColumnMap, inputValue]);
 
-    const shouldSelectAll = useMemo(
-        () => selectedColumns.length + pinnedColumns.length !== allColumns.length,
-        [selectedColumns, allColumns, pinnedColumns]
-    );
+    const shouldSelectAll = useMemo(() => selectedColumns.length !== allColumns.length, [selectedColumns, allColumns]);
 
     const { getDropdownProps, removeSelectedItem, addSelectedItem } = useMultipleSelection({
         initialSelectedItems: allColumns.filter((item) => selectedColumnsProp[item.id]),
