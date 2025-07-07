@@ -26,8 +26,11 @@ parameters:
 
 get:
   operationId: ListAssetGroupMembers
+  deprecated: true
   summary: List all asset isolation group members
-  description: List all members of an asset isolation group.
+  description: > 
+    **Deprecated**: This endpoint will no longer be supported in a future release.
+    Please use `GET /api/v2/asset-group-tags/{asset_group_tag_id}/members` or `GET /api/v2/asset-group-tags/{asset_group_tag_id}/selectors/{asset_group_tag_selector_id}/members` instead.
   tags:
     - Asset Isolation
     - Community

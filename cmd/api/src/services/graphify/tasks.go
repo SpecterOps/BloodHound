@@ -27,11 +27,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/specterops/bloodhound/bomenc"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/bomenc"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util"
 )
 
 // UpdateJobFunc is passed to the graphify service to let it tell us about the tasks as they are processed
@@ -126,9 +127,9 @@ func (s *GraphifyService) extractToTempFile(f *zip.File) (string, error) {
 	}
 }
 
-// processIngestFile reads the files at the path supplied, and returns the total number of files in the
+// ProcessIngestFile reads the files at the path supplied, and returns the total number of files in the
 // archive, the number of files that failed to ingest as JSON, and an error
-func (s *GraphifyService) processIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
+func (s *GraphifyService) ProcessIngestFile(ctx context.Context, task model.IngestTask, ingestTime time.Time) (int, int, error) {
 	adcsEnabled := false
 	if adcsFlag, err := s.db.GetFlagByKey(ctx, appcfg.FeatureAdcs); err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error getting ADCS flag: %v", err))
@@ -163,6 +164,8 @@ func (s *GraphifyService) processIngestFile(ctx context.Context, task model.Inge
 }
 
 func processSingleFile(ctx context.Context, filePath string, batch *TimestampedBatch, readOpts ReadOptions) error {
+	defer measure.ContextLogAndMeasure(ctx, slog.LevelDebug, "processing single file for ingest", slog.String("filepath", filePath))()
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		slog.ErrorContext(ctx, fmt.Sprintf("Error opening ingest file %s: %v", filePath, err))
@@ -207,7 +210,7 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 			slog.WarnContext(s.ctx, "Skipped processing of ingestTasks due to config flag.")
 			return
 		}
-		total, failed, err := s.processIngestFile(s.ctx, task, time.Now().UTC())
+		total, failed, err := s.ProcessIngestFile(s.ctx, task, time.Now().UTC())
 
 		if errors.Is(err, fs.ErrNotExist) {
 			slog.WarnContext(s.ctx, fmt.Sprintf("Did not process ingest task %d with file %s: %v", task.ID, task.FileName, err))

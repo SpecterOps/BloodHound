@@ -23,7 +23,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/database/types"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 )
 
 type AuditLogEntryStatus string
@@ -97,6 +98,10 @@ const (
 
 	AuditLogActionCreateClient       AuditLogAction = "CreateClient"
 	AuditLogActionReplaceClientToken AuditLogAction = "ReplaceClientToken"
+
+	AuditLogActionImportSavedQuery   AuditLogAction = "ImportSavedQueries"
+	AuditLogActionExportSavedQuery   AuditLogAction = "ExportSavedQuery"
+	AuditLogActionExportSavedQueries AuditLogAction = "ExportSavedQueries"
 )
 
 // TODO embed Basic into this struct instead of declaring the ID and CreatedAt fields. This will require a migration

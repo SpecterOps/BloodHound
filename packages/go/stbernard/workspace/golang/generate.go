@@ -22,15 +22,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
 
-	"github.com/specterops/bloodhound/dawgs/util/channels"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 // fileContentContainsGenerationDirective uses a bufio.Scanner to search a given reader line-by-line
@@ -118,6 +120,7 @@ func parallelGenerateModulePackages(jobC <-chan GoPackage, waitGroup *sync.WaitG
 
 // WorkspaceGenerate runs go generate ./... for all module paths passed
 func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
+	defer measure.LogAndMeasure(slog.LevelDebug, "WorkspaceGenerate")()
 	var (
 		errs     []error
 		errsLock = &sync.Mutex{}
@@ -138,7 +141,7 @@ func WorkspaceGenerate(modPaths []string, env environment.Environment) error {
 	// For each known module path attempt generation of each module package
 	for _, modPath := range modPaths {
 		if modulePackages, err := moduleListPackages(modPath); err != nil {
-			return fmt.Errorf("listing packages for module %s: %w", modPath, err)
+			return fmt.Errorf("getting module packages for %s: %w", modPath, err)
 		} else {
 			for _, modulePackage := range modulePackages {
 				if !channels.Submit(context.Background(), jobC, modulePackage) {

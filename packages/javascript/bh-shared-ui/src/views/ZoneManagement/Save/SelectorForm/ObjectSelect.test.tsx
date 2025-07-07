@@ -42,7 +42,7 @@ const server = setupServer(
     rest.post(`/api/v2/graphs/cypher`, (_, res, ctx) => {
         return res(ctx.json({ data: { nodes: testNodes } }));
     }),
-    rest.get(`/api/v2/customnode`, async (_req, res, ctx) => {
+    rest.get(`/api/v2/custom-nodes`, async (_req, res, ctx) => {
         return res(ctx.json({ data: [] }));
     })
 );

@@ -20,34 +20,42 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
+	"io/fs"
 	"os/exec"
 	"path/filepath"
-
-	"golang.org/x/mod/modfile"
+	"strings"
 )
 
-// ParseModulesAbsPaths parses the modules listed in the go.work file from the given
-// directory and returns a list of absolute paths to those modules
+// ParseModulesAbsPaths walks the filesystem looking for additional go.mod files as children of the workspace root
 func ParseModulesAbsPaths(cwd string) ([]string, error) {
-	var workfilePath = filepath.Join(cwd, "go.work")
-	// go.work files aren't particularly heavy, so we'll just read into memory
-	if data, err := os.ReadFile(workfilePath); err != nil {
-		return nil, fmt.Errorf("reading go.work file: %w", err)
-	} else if workfile, err := modfile.ParseWork(workfilePath, data, nil); err != nil {
-		return nil, fmt.Errorf("parsing go.work file: %w", err)
-	} else {
-		var (
-			modulePaths = make([]string, 0, len(workfile.Use))
-			workDir     = filepath.Dir(workfilePath)
-		)
+	var modules = make([]string, 0, 4)
 
-		for _, use := range workfile.Use {
-			modulePaths = append(modulePaths, filepath.Join(workDir, use.Path))
+	err := filepath.WalkDir(cwd, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("walking directories for go modules: %w", err)
 		}
 
-		return modulePaths, nil
+		// Skip hidden files and directories
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), ".") {
+			return filepath.SkipDir
+		}
+
+		if entry.Name() == "go.mod" {
+			absPath, err := filepath.Abs(filepath.Dir(path))
+			if err != nil {
+				return fmt.Errorf("absolute path for discovered module: %w", err)
+			}
+			modules = append(modules, absPath)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return modules, fmt.Errorf("parsing modules absolute paths: %w", err)
 	}
+
+	return modules, nil
 }
 
 func moduleListPackages(modPath string) ([]GoPackage, error) {

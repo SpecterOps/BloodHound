@@ -23,8 +23,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/stretchr/testify/require"
 )
 

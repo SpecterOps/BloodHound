@@ -26,16 +26,17 @@ import (
 	"time"
 
 	"github.com/crewjam/saml"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	dbmocks "github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/serde"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	dbmocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/serde"
+	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -82,7 +83,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 	t.Run("successfully create sso session", func(t *testing.T) {
 		var (
 			response              = httptest.NewRecorder()
-			expires               = time.Now().UTC()
+			expires               = time.Now().UTC().Add(appcfg.DefaultSessionTTLHours * time.Hour)
 			expectedCookieContent = fmt.Sprintf("token=.*; Path=/; Expires=%s; Secure; SameSite=Strict", expires.Format(http.TimeFormat))
 		)
 
@@ -93,6 +94,7 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		})
 		mockDB.EXPECT().LookupUser(gomock.Any(), username).Return(user, nil)
 		mockDB.EXPECT().CreateUserSession(gomock.Any(), gomock.Any()).Return(model.UserSession{}, nil)
+		mockDB.EXPECT().GetConfigurationParameter(gomock.Any(), appcfg.SessionTTLHours).Return(appcfg.Parameter{}, nil).AnyTimes()
 
 		principalName, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.Nil(t, err)

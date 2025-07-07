@@ -29,8 +29,8 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 const (
@@ -82,7 +82,7 @@ func (s idResolver) GetIdentity(ctx Context) (SimpleIdentity, error) {
 		return SimpleIdentity{
 			ID:    user.ID,
 			Name:  user.PrincipalName,
-			Email: user.EmailAddress.String,
+			Email: user.EmailAddress.ValueOrZero(),
 			Key:   "user_id",
 		}, nil
 	}

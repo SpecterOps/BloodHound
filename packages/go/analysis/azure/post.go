@@ -22,14 +22,14 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
@@ -132,6 +132,7 @@ func PostProcessedRelationships() []graph.Kind {
 		azure.AZMGGrantAppRoles,
 		azure.AZMGGrantRole,
 		azure.SyncedToADUser,
+		azure.AZRoleApprover,
 	}
 }
 
@@ -928,5 +929,93 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*analysis.Atom
 		}
 
 		return &operation.Stats, operation.Done()
+	}
+}
+
+// CreateAZRoleApproverEdge creates AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes.
+//
+// This function implements the AZRoleApprover edge creation logic according to the following requirements:
+//
+//  1. Identify each AZTenant labeled node in the database
+//  2. For each AZTenant, find all AZRole nodes where:
+//     - The AZRole's tenantid property matches the AZTenant's objectid property
+//     - The AZRole's isApprovalRequired property is true
+//     - The AZRole has primaryApprovers configured (user or group approvers)
+//  3. For each qualifying AZRole node:
+//     a. If primaryApprovers is empty/null:
+//     - Create AZRoleApprover edges from "Global Administrator" and "Privileged Role Administrator"
+//     roles in the same tenant to this AZRole
+//     b. If primaryApprovers contains GUIDs:
+//     - Create AZRoleApprover edges from each AZUser/AZGroup node matching those GUIDs to this AZRole
+//
+// Note: Groups for approvers can be nested as long as the root groups are not role eligible.
+// Note: If no specific approvers are selected, privileged role administrators/global administrators
+// become the default approvers (primaryApprovers array will be empty in this case).
+//
+// Returns post-processing statistics and any error encountered during processing.
+func CreateAZRoleApproverEdge(
+	ctx context.Context,
+	db graph.Database,
+) (
+	*analysis.AtomicPostProcessingStats,
+	error,
+) {
+	// Step 0: Identify each AZTenant labeled node in the database.
+	operation := analysis.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
+	tenantNodes, err := FetchTenants(ctx, db)
+	if err != nil {
+		return &operation.Stats, err
+	}
+
+	// Process each tenant to create AZRoleApprover edges for roles requiring approval
+	for _, tenantNode := range tenantNodes {
+		if err := CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
+			return &operation.Stats, err
+		}
+	}
+
+	return &operation.Stats, operation.Done()
+}
+
+func FixManagementGroupNames(ctx context.Context, db graph.Database) error {
+	if managementGroups, err := FetchManagementGroups(ctx, db); err != nil {
+		return err
+	} else if tenants, err := FetchTenants(ctx, db); err != nil {
+		return err
+	} else {
+		tenantMap := make(map[string]string)
+		for _, tenant := range tenants {
+			if id, err := tenant.Properties.Get(common.ObjectID.String()).String(); err != nil {
+				slog.ErrorContext(ctx, "Error getting tenant objectid", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
+				continue
+			} else if tenantName, err := tenant.Properties.Get(common.Name.String()).String(); err != nil {
+				slog.ErrorContext(ctx, "Error getting tenant name", slog.Int64("tenantID", tenant.ID.Int64()), slog.String("err", err.Error()))
+				continue
+			} else {
+				tenantMap[id] = tenantName
+			}
+		}
+
+		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
+			for _, managementGroup := range managementGroups {
+				if tenantId, err := managementGroup.Properties.Get(azure.TenantID.String()).String(); err != nil {
+					slog.ErrorContext(ctx, "Error getting tenantid for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
+					continue
+				} else if displayName, err := managementGroup.Properties.Get(common.DisplayName.String()).String(); err != nil {
+					slog.ErrorContext(ctx, "Error getting display name for management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()), slog.String("err", err.Error()))
+					continue
+				} else if tenantName, ok := tenantMap[tenantId]; !ok {
+					slog.WarnContext(ctx, "Could not find a tenant that matches management group", slog.Int64("managementGroupID", managementGroup.ID.Int64()))
+					continue
+				} else {
+					managementGroup.Properties.Set(common.Name.String(), strings.ToUpper(fmt.Sprintf("%s@%s", displayName, tenantName)))
+					if err := tx.UpdateNode(managementGroup); err != nil {
+						return err
+					}
+				}
+			}
+
+			return nil
+		})
 	}
 }

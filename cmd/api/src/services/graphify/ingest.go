@@ -17,6 +17,7 @@
 package graphify
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,15 +26,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/ein"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/ingest"
-	"github.com/specterops/bloodhound/src/services/upload"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/util"
 )
 
 const (
@@ -151,6 +153,7 @@ func IngestGroupData(batch *TimestampedBatch, converted ConvertedGroupData) erro
 }
 
 func IngestAzureData(batch *TimestampedBatch, converted ConvertedAzureData) error {
+	defer measure.ContextLogAndMeasure(context.TODO(), slog.LevelDebug, "ingest azure data")()
 	errs := util.NewErrorCollector()
 
 	if err := IngestNodes(batch, azure.Entity, converted.NodeProps); err != nil {
@@ -303,7 +306,8 @@ func IngestNode(batch *TimestampedBatch, baseKind graph.Kind, nextNode ein.Inges
 		nodeKinds            = mergeBaseKind(baseKind, nextNode.Labels...)
 		normalizedProperties = NormalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, batch.IngestTime)
 		nodeUpdate           = graph.NodeUpdate{
-			Node: graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
+			Node:         graph.PrepareNode(graph.AsProperties(normalizedProperties), nodeKinds...),
+			IdentityKind: baseKind,
 			IdentityProperties: []string{
 				common.ObjectID.String(),
 			},
@@ -344,7 +348,7 @@ func IngestRelationships(batch *TimestampedBatch, baseKind graph.Kind, relations
 	}
 
 	for _, update := range updates {
-		if err := batch.Batch.UpdateRelationshipBy(*update); err != nil {
+		if err := batch.Batch.UpdateRelationshipBy(update); err != nil {
 			errs.Add(err)
 		}
 	}

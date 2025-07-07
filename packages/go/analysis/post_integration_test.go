@@ -23,15 +23,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/specterops/bloodhound/analysis"
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	azureAnalysis "github.com/specterops/bloodhound/analysis/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/graphschema"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	azureAnalysis "github.com/specterops/bloodhound/packages/go/analysis/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -112,4 +113,48 @@ func TestDeleteTransitEdges(t *testing.T) {
 
 	// The DB must not return any errors
 	require.Nil(t, err)
+}
+
+func TestFixManagementGroupNames(t *testing.T) {
+	var (
+		// This creates a new live integration test context with the graph database
+		// This call will load whatever BHE configuration the environment variable `INTEGRATION_CONFIG_PATH` points to.
+		testCtx = integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+	)
+
+	// Management Group created with barebone details
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.DisplayName.String(): "MANAGEMENT GROUP",
+		common.ObjectID.String():    "1234",
+		azure.TenantID.String():     "ABC123",
+	}), azure.Entity, azure.ManagementGroup)
+
+	// Tenant
+	testCtx.NewNode(graph.AsProperties(map[string]any{
+		common.Name.String():     "SPECTERDEV",
+		common.ObjectID.String(): "ABC123",
+	}), azure.Entity, azure.Tenant)
+
+	err := azureAnalysis.FixManagementGroupNames(context.Background(), testCtx.Graph.Database)
+	require.NoError(t, err)
+
+	err = testCtx.Graph.Database.ReadTransaction(context.Background(), func(tx graph.Transaction) error {
+		return tx.Nodes().Filter(query.Kind(query.Node(), azure.ManagementGroup)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+			count := 0
+			for node := range cursor.Chan() {
+				if name, err := node.Properties.Get(common.Name.String()).String(); err != nil {
+					return err
+				} else {
+					count++
+					require.Equal(t, "MANAGEMENT GROUP@SPECTERDEV", name)
+				}
+			}
+
+			require.Equal(t, 1, count)
+
+			return nil
+		})
+	})
+
+	require.NoError(t, err)
 }

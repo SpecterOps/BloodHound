@@ -30,10 +30,10 @@ import (
 	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/bloodhoundad/azurehound/v2/models"
 	azure2 "github.com/bloodhoundad/azurehound/v2/models/azure"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 const (
@@ -735,9 +735,9 @@ func ConvertAzureManagementGroup(data models.ManagementGroup, ingestTime time.Ti
 	return IngestibleNode{
 			ObjectID: strings.ToUpper(data.Id),
 			PropertyMap: map[string]any{
-				common.Name.String():          strings.ToUpper(fmt.Sprintf("%s@%s", data.Properties.DisplayName, data.TenantName)),
 				azure.TenantID.String():       strings.ToUpper(data.TenantId),
 				common.LastCollected.String(): ingestTime,
+				common.DisplayName.String():   strings.ToUpper(data.Properties.DisplayName),
 			},
 			Labels: []graph.Kind{azure.ManagementGroup},
 		}, NewIngestibleRelationship(
@@ -1866,11 +1866,11 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	)
 
 	// Format the incoming user and group ids to uppercase string before creating our nodes
-	for i, _ := range policyAssignment.EndUserAssignmentGroupApprovers {
+	for i := range policyAssignment.EndUserAssignmentGroupApprovers {
 		policyAssignment.EndUserAssignmentGroupApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentGroupApprovers[i])
 	}
 
-	for i, _ := range policyAssignment.EndUserAssignmentUserApprovers {
+	for i := range policyAssignment.EndUserAssignmentUserApprovers {
 		policyAssignment.EndUserAssignmentUserApprovers[i] = strings.ToUpper(policyAssignment.EndUserAssignmentUserApprovers[i])
 	}
 
@@ -1897,6 +1897,7 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		return targetAZRole, rels
 	}
 
+	// TODO: Verify the edge creation here. The logic looks identical to the post processing for this edge and we could remove the edge creation here
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
 		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {

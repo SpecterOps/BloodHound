@@ -39,13 +39,13 @@ const (
 	FormParameterCode  = "code"
 
 	// Query parameters
-	QueryParameterSortBy         = "sort_by"
-	QueryParameterIncludeCounts  = "counts"
-	QueryParameterHydrateDomains = "hydrate_domains"
-	QueryParameterHydrateOUs     = "hydrate_ous"
-	QueryParameterScope          = "scope"
-	QueryParameterFindingType    = "finding"
-	QueryParameterTierId         = "tier_id"
+	QueryParameterSortBy          = "sort_by"
+	QueryParameterIncludeCounts   = "counts"
+	QueryParameterHydrateDomains  = "hydrate_domains"
+	QueryParameterHydrateOUs      = "hydrate_ous"
+	QueryParameterScope           = "scope"
+	QueryParameterFindingType     = "finding"
+	QueryParameterAssetGroupTagId = "asset_group_tag_id"
 
 	// URI path parameters
 	URIPathVariableApplicationConfigurationParameter = "parameter"

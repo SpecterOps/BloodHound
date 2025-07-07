@@ -20,9 +20,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 )
 
 func (s Client) GetAppConfigs() (appcfg.Parameters, error) {
@@ -59,7 +58,7 @@ func (s Client) GetAppConfig(parameterKey string) (appcfg.Parameters, error) {
 	}
 }
 
-func (s Client) PutAppConfig(parameter v2.AppConfigUpdateRequest) (appcfg.Parameter, error) {
+func (s Client) PutAppConfig(parameter appcfg.AppConfigUpdateRequest) (appcfg.Parameter, error) {
 	var result appcfg.Parameter
 
 	if response, err := s.Request(http.MethodPut, "/api/v2/config", nil, parameter); err != nil {

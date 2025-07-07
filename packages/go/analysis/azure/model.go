@@ -17,9 +17,9 @@
 package azure
 
 import (
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/analysis/tiering"
-	"github.com/specterops/bloodhound/dawgs/graph"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/analysis/tiering"
+	"github.com/specterops/dawgs/graph"
 )
 
 // RelatedEntityType is a type for differentiating which related entities a user wants to query for. Technically all

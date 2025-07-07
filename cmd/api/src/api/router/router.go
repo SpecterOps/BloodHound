@@ -20,11 +20,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/specterops/bloodhound/src/api/middleware"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // With takes a function returning a mux.MiddlewareFunc type and applies it the to variadic list of routes

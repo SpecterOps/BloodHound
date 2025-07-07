@@ -156,6 +156,8 @@ export const AllEdgeTypes: Category[] = [
                     AzureRelationshipKind.PrivilegedAuthAdmin,
                     AzureRelationshipKind.PrivilegedRoleAdmin,
                     AzureRelationshipKind.RunsAs,
+                    AzureRelationshipKind.AZRoleEligible,
+                    AzureRelationshipKind.AZRoleApprover,
                 ],
             },
             {

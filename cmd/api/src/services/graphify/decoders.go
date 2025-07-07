@@ -24,8 +24,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/specterops/bloodhound/dawgs/util"
-	"github.com/specterops/bloodhound/ein"
+	"github.com/specterops/bloodhound/packages/go/ein"
+	"github.com/specterops/dawgs/util"
 )
 
 type ConversionFuncWithTime[T any] func(decoded T, converted *ConvertedData, ingestTime time.Time)

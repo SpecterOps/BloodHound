@@ -23,7 +23,7 @@ import {
 } from './types';
 import { ConfigurationPayload } from './utils';
 
-export type RequestOptions = AxiosRequestConfig;
+export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
 export interface LoginRequest {
     login_method: string;
@@ -38,6 +38,7 @@ export type CreateAssetGroupTagRequest = {
     position: number | null;
     type: AssetGroupTagTypes;
     requireCertify?: boolean;
+    analysis_enabled?: boolean;
 };
 
 export type UpdateAssetGroupTagRequest = Partial<CreateAssetGroupTagRequest>;
@@ -48,10 +49,13 @@ export type PreviewSelectorsRequest = { seeds: SelectorSeedRequest[] };
 // The `selector_id` will only be available when updating an already existing selector.
 export type SelectorSeedRequest = Omit<AssetGroupTagSelectorSeed, 'selector_id'> & Partial<AssetGroupTagSelectorSeed>;
 
-export type CreateSelectorRequest = Partial<Omit<AssetGroupTagSelector, 'seeds' | 'id'> & SelectorSeedRequest>;
+export type CreateSelectorRequest = Pick<AssetGroupTagSelector, 'name'> &
+    Partial<Pick<AssetGroupTagSelector, 'description' | 'auto_certify'>> & {
+        seeds: SelectorSeedRequest[];
+    };
 
 export type UpdateSelectorRequest = Partial<
-    Omit<CreateSelectorRequest, 'id | disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
+    Omit<CreateSelectorRequest, 'id' | 'disabled_at'> & { disabled: boolean | string } & PreviewSelectorsRequest
 >;
 
 export interface CreateAssetGroupRequest {

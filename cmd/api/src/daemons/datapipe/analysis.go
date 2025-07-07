@@ -22,16 +22,16 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/specterops/bloodhound/analysis"
-	adAnalysis "github.com/specterops/bloodhound/analysis/ad"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/src/analysis/ad"
-	"github.com/specterops/bloodhound/src/analysis/azure"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/services/agi"
-	"github.com/specterops/bloodhound/src/services/dataquality"
+	"github.com/specterops/bloodhound/cmd/api/src/analysis/ad"
+	"github.com/specterops/bloodhound/cmd/api/src/analysis/azure"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dataquality"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
+	"github.com/specterops/dawgs/graph"
 )
 
 var (

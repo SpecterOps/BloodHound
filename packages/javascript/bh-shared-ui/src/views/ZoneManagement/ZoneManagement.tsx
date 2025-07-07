@@ -16,14 +16,18 @@
 
 import { Tabs, TabsList, TabsTrigger } from '@bloodhoundenterprise/doodleui';
 import { CircularProgress } from '@mui/material';
-import React, { FC, Suspense, useContext, useMemo } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import React, { FC, Suspense, useContext } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { AppNavigate } from '../../components/Navigation';
 import {
     DEFAULT_ZONE_MANAGEMENT_ROUTE,
     ROUTE_ZONE_MANAGEMENT_LABEL_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_DETAILS,
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_SUMMARY,
+    ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_OBJECT_DETAILS,
     ROUTE_ZONE_MANAGEMENT_TIER_SELECTOR_DETAILS,
@@ -36,6 +40,7 @@ import { OWNED_ID, TIER_ZERO_ID } from './utils';
 
 const Details = React.lazy(() => import('./Details/Details'));
 const Save = React.lazy(() => import('./Save'));
+const Summary = React.lazy(() => import('./Summary/Summary'));
 
 const detailsPaths = [
     ROUTE_ZONE_MANAGEMENT_TIER_DETAILS,
@@ -48,6 +53,12 @@ const detailsPaths = [
     ROUTE_ZONE_MANAGEMENT_LABEL_SELECTOR_OBJECT_DETAILS,
 ];
 
+const summaryPaths = [
+    ROUTE_ZONE_MANAGEMENT_SUMMARY,
+    ROUTE_ZONE_MANAGEMENT_SUMMARY_TIER_DETAILS,
+    ROUTE_ZONE_MANAGEMENT_SUMMARY_LABEL_DETAILS,
+];
+
 const ZoneManagement: FC = () => {
     const navigate = useAppNavigate();
     const location = useLocation();
@@ -58,23 +69,17 @@ const ZoneManagement: FC = () => {
     }
     const { savePaths, SupportLink } = context;
 
-    const childRoutes: Routable[] = useMemo(
-        () => [
-            ...detailsPaths.map((path) => ({
-                path,
-                component: Details,
-                authenticationRequired: true,
-                navigation: true,
-            })),
-            ...savePaths.map((path) => ({
-                path,
-                component: Save,
-                authenticationRequired: true,
-                navigation: true,
-            })),
-        ],
-        [savePaths]
-    );
+    const childRoutes: Routable[] = [
+        ...detailsPaths.map((path) => {
+            return { path, component: Details, authenticationRequired: true, navigation: true };
+        }),
+        ...savePaths.map((path) => {
+            return { path, component: Save, authenticationRequired: true, navigation: true };
+        }),
+        ...summaryPaths.map((path) => {
+            return { path, component: Summary, authenticationRequired: true, navigation: true };
+        }),
+    ];
 
     return (
         <main>
@@ -82,6 +87,7 @@ const ZoneManagement: FC = () => {
                 <h1 className='text-4xl font-bold pt-8'>Privilege Zone Management</h1>
                 <p className='mt-6'>
                     Use Privilege Zones to segment and organize assets based on sensitivity and access level.
+                    <br />
                     {SupportLink && <SupportLink />}
                 </p>
 
@@ -91,12 +97,10 @@ const ZoneManagement: FC = () => {
                         className={cn('w-full mt-4', { hidden: location.pathname.includes('save') })}
                         value={location.pathname.includes('label') ? 'label' : 'tier'}
                         onValueChange={(value) => {
-                            if (value === 'tier') {
-                                navigate(`/zone-management/details/${value}/${TIER_ZERO_ID}`);
-                            }
-                            if (value === 'label') {
-                                navigate(`/zone-management/details/${value}/${OWNED_ID}`);
-                            }
+                            const isSummary = location.pathname.includes('summary');
+                            const path = isSummary ? 'summary' : 'details';
+                            const id = value === 'tier' ? TIER_ZERO_ID : OWNED_ID;
+                            navigate(`/zone-management/${path}/${value}/${id}`);
                         }}>
                         <TabsList className='w-full flex justify-start'>
                             <TabsTrigger value='tier'>Tiers</TabsTrigger>
@@ -113,7 +117,7 @@ const ZoneManagement: FC = () => {
                             {childRoutes.map((route) => {
                                 return <Route path={route.path} element={<route.component />} key={route.path} />;
                             })}
-                            <Route path='*' element={<Navigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
+                            <Route path='*' element={<AppNavigate to={DEFAULT_ZONE_MANAGEMENT_ROUTE} replace />} />
                         </Routes>
                     </Suspense>
                 </div>

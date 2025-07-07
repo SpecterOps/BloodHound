@@ -38,25 +38,25 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/pquerna/otp/totp"
-	"github.com/specterops/bloodhound/bhlog"
-	"github.com/specterops/bloodhound/headers"
-	"github.com/specterops/bloodhound/mediatypes"
-	"github.com/specterops/bloodhound/src/api"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	"github.com/specterops/bloodhound/src/api/v2/apitest"
-	"github.com/specterops/bloodhound/src/api/v2/auth"
-	authz "github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/config"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/mocks"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
-	"github.com/specterops/bloodhound/src/test/must"
-	"github.com/specterops/bloodhound/src/utils"
-	"github.com/specterops/bloodhound/src/utils/test"
-	"github.com/specterops/bloodhound/src/utils/validation"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
+	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
+	authz "github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/test/must"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/bhlog"
+	"github.com/specterops/bloodhound/packages/go/headers"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -97,7 +97,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
+		WithURL(updateUserSecretPathFmt, goodUser.ID.String()).
 		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			CurrentSecret:      currentPassword,
@@ -115,7 +115,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
+		WithURL(updateUserSecretPathFmt, goodUser.ID.String()).
 		WithURLPathVars(map[string]string{"user_id": otherUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
@@ -131,7 +131,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, badUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
+		WithURL(updateUserSecretPathFmt, badUser.ID.String()).
 		WithURLPathVars(map[string]string{"user_id": badUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			Secret:             "tesT12345!@#$",
@@ -151,7 +151,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		WithContext(bhCtx).
 		WithMethod(http.MethodPut).
 		WithHeader(headers.RequestID.String(), "requestID").
-		WithURL(fmt.Sprintf(updateUserSecretPathFmt, goodUser.ID.String())). //nolint:govet // Ignore non-constant format string failure because it's test code
+		WithURL(updateUserSecretPathFmt, goodUser.ID.String()).
 		WithURLPathVars(map[string]string{"user_id": goodUser.ID.String()}).
 		WithBody(v2.SetUserSecretRequest{
 			CurrentSecret:      "wrongPassword",
@@ -310,7 +310,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), int(goodSAMLProvider.ID)).Return(nil, nil)
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(fmt.Sprintf(samlProviderPathFmt, goodSAMLProvider.ID)). //nolint:govet // Ignore non-constant format string failure because it's test code
+			WithURL(samlProviderPathFmt, goodSAMLProvider.ID).
 			WithURLPathVars(map[string]string{
 				api.URIPathVariableSAMLProviderID: fmt.Sprintf("%d", goodSAMLProvider.ID),
 			}).
@@ -325,7 +325,7 @@ func TestManagementResource_DeleteSAMLProvider(t *testing.T) {
 		mockDB.EXPECT().GetSSOProviderUsers(gomock.Any(), int(samlProviderWithUsers.ID)).Return(model.Users{samlEnabledUser}, nil)
 		test.Request(t).
 			WithMethod(http.MethodDelete).
-			WithURL(fmt.Sprintf(samlProviderPathFmt, samlProviderWithUsers.ID)). //nolint:govet // Ignore non-constant format string failure because it's test code
+			WithURL(samlProviderPathFmt, samlProviderWithUsers.ID).
 			WithURLPathVars(map[string]string{
 				api.URIPathVariableSAMLProviderID: fmt.Sprintf("%d", samlProviderWithUsers.ID),
 			}).
@@ -1353,7 +1353,7 @@ func TestCreateUser_Failure(t *testing.T) {
 					Principal:    badUser.PrincipalName,
 					FirstName:    badUser.FirstName.String,
 					LastName:     badUser.LastName.String,
-					EmailAddress: badUser.EmailAddress.String,
+					EmailAddress: badUser.EmailAddress.ValueOrZero(),
 				},
 			}},
 			api.ErrorWrapper{

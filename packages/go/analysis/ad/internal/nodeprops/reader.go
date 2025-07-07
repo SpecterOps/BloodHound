@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/common"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
 )
 
 // ReadDomainIDandNameAsString extracts the domain SID and domain name from the given node. This function is

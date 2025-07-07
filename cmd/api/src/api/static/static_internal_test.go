@@ -24,8 +24,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/vendormocks/io/fs"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/vendormocks/io/fs"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )

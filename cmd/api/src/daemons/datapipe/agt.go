@@ -23,21 +23,21 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/specterops/bloodhound/analysis"
-	"github.com/specterops/bloodhound/bhlog/measure"
-	"github.com/specterops/bloodhound/dawgs/cardinality"
-	"github.com/specterops/bloodhound/dawgs/graph"
-	"github.com/specterops/bloodhound/dawgs/ops"
-	"github.com/specterops/bloodhound/dawgs/query"
-	"github.com/specterops/bloodhound/dawgs/traversal"
-	"github.com/specterops/bloodhound/dawgs/util/channels"
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/graphschema/azure"
-	"github.com/specterops/bloodhound/graphschema/common"
-	"github.com/specterops/bloodhound/src/database"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/analysis"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/cardinality"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/specterops/dawgs/traversal"
+	"github.com/specterops/dawgs/util/channels"
 )
 
 // This is a bespoke result set to contain a dedupe'd node with source info
@@ -275,17 +275,28 @@ func fetchAllChildNodes(ctx context.Context, db graph.Database, seedNodes nodeWi
 
 // fetchADParentNodes -  fetches all parents for a single active directory node and submits any found to supplied collector ch
 func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph.Node, ch chan<- *nodeWithSource) error {
-	// MATCH (n:OU)-[:Contains*..]->(m:Base) RETURN n
-	// MATCH (n:GPO)-[:GPLink]->(m:Base) WHERE (m:Domain) OR (m:OU) RETURN n
+	// MATCH (n:Base)-[:PropagatesACEsTo*..]->(m:Base) RETURN n
 	if err := tx.BreadthFirst(ctx, traversal.Plan{
 		Root: node,
 		Driver: traversal.NewPattern().InboundWithDepth(0, 0,
 			query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.OU),
-			)).InboundWithDepth(0, 1,
+				query.Kind(query.Relationship(), ad.PropagatesACEsTo),
+				query.Kind(query.Start(), ad.Entity),
+			)).Do(func(path *graph.PathSegment) error {
+			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
+				return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
+			})
+			return nil
+		})}); err != nil {
+		return err
+	}
+
+	// MATCH (n:GPO)-[:GPOAppliesTo]->(m:Base) RETURN n
+	if err := tx.BreadthFirst(ctx, traversal.Plan{
+		Root: node,
+		Driver: traversal.NewPattern().InboundWithDepth(0, 1,
 			query.And(
-				query.Kind(query.Relationship(), ad.GPLink),
+				query.Kind(query.Relationship(), ad.GPOAppliesTo),
 				query.Kind(query.Start(), ad.GPO),
 			)).Do(func(path *graph.PathSegment) error {
 			path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
@@ -296,22 +307,6 @@ func fetchADParentNodes(ctx context.Context, tx traversal.Traversal, node *graph
 		return err
 	}
 
-	// MATCH (n:Container)-[:Contains*..]->(m:Base) AND m.isaclprotected = False RETURN n
-	if isAclProtected, err := node.Properties.Get(ad.IsACLProtected.String()).Bool(); err == nil && !isAclProtected {
-		if err := tx.BreadthFirst(ctx, traversal.Plan{
-			Root: node,
-			Driver: traversal.NewPattern().InboundWithDepth(0, 0, query.And(
-				query.Kind(query.Relationship(), ad.Contains),
-				query.Kind(query.Start(), ad.Container),
-			)).Do(func(path *graph.PathSegment) error {
-				path.WalkReverse(func(nextSegment *graph.PathSegment) bool {
-					return channels.Submit(ctx, ch, &nodeWithSource{Source: model.AssetGroupSelectorNodeSourceParent, Node: nextSegment.Node})
-				})
-				return nil
-			})}); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -576,6 +571,11 @@ func tagAssetGroupNodesForTag(ctx context.Context, db database.Database, graphDb
 			// 4. Tag the new nodes
 			newTaggedNodes.Each(func(nodeId uint64) bool {
 				node := &graph.Node{ID: graph.ID(nodeId), Properties: graph.NewProperties()}
+				// Temporarily include this for backwards compatibility with old asset group system
+				if tag.Type == model.AssetGroupTagTypeTier && tag.Position.ValueOrZero() == model.AssetGroupTierZeroPosition {
+					node.Properties.Set(common.SystemTags.String(), ad.AdminTierZero)
+				}
+
 				node.AddKinds(tagKind)
 				err = tx.UpdateNode(node)
 				return err == nil
@@ -706,6 +706,49 @@ func ClearAssetGroupTagNodeSet(ctx context.Context, graphDb graph.Database, asse
 	return nil
 }
 
+func migrateCustomObjectIdSelectorNames(ctx context.Context, db database.Database, graphDb graph.Database) error {
+	if selectorsToMigrate, err := db.GetCustomAssetGroupTagSelectorsToMigrate(ctx); err != nil {
+		return err
+	} else {
+		var countUpdated, countSkipped int
+
+		for _, selector := range selectorsToMigrate {
+			if len(selector.Seeds) > 1 {
+				slog.WarnContext(ctx, "AGT: customSelectorMigration - Captured incorrect selector to migrate", "selector", selector)
+				continue
+			} else if len(selector.Seeds) == 1 {
+				if err = graphDb.ReadTransaction(ctx, func(tx graph.Transaction) error {
+					if node, err := tx.Nodes().Filter(query.Equals(query.NodeProperty(common.ObjectID.String()), selector.Seeds[0].Value)).First(); err != nil {
+						slog.DebugContext(ctx, "AGT: customSelectorMigration - Fetch objectid err", "objectId", selector.Seeds[0].Value, "error", err)
+						countSkipped++
+					} else {
+						name, _ := node.Properties.GetWithFallback(common.Name.String(), "", common.DisplayName.String()).String()
+						if name == "" {
+							slog.DebugContext(ctx, "AGT: customSelectorMigration - No name found for node, skipping", "objectId", selector.Seeds[0].Value, "error", err)
+							countSkipped++
+							return nil
+						}
+						selector.Name = name
+						if _, err := db.UpdateAssetGroupTagSelector(ctx, model.AssetGroupActorSystem, "", selector); err != nil {
+							slog.WarnContext(ctx, "AGT: customSelectorMigration - Failed to migrate custom selector name", "selector", selector)
+							countSkipped++
+						}
+						countUpdated++
+					}
+					return nil
+				}); err != nil {
+					return err
+				}
+			}
+		}
+		if len(selectorsToMigrate) > 0 {
+			slog.InfoContext(ctx, "AGT: customSelectorMigration - Migrated custom selectors", "countFound", len(selectorsToMigrate), "countUpdated", countUpdated, "countSkipped", countSkipped)
+		}
+	}
+
+	return nil
+}
+
 // TODO Cleanup tieringEnabled after Tiering GA
 func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphDb graph.Database, additionalFilters ...graph.Criteria) []error {
 	var errors []error
@@ -716,6 +759,12 @@ func TagAssetGroupsAndTierZero(ctx context.Context, db database.Database, graphD
 			slog.Error(fmt.Sprintf("AGT: wiping old system tags: %v", err))
 			errors = append(errors, err)
 		}
+
+		if err := migrateCustomObjectIdSelectorNames(ctx, db, graphDb); err != nil {
+			slog.Error(fmt.Sprintf("AGT: migrating custom selector names failed: %v", err))
+			errors = append(errors, err)
+		}
+
 		if err := selectAssetGroupNodes(ctx, db, graphDb); err != nil {
 			slog.Error(fmt.Sprintf("AGT: selecting failed: %v", err))
 			errors = append(errors, err)

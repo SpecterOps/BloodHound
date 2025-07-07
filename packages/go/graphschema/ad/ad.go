@@ -21,7 +21,7 @@ package ad
 import (
 	"errors"
 
-	graph "github.com/specterops/bloodhound/dawgs/graph"
+	graph "github.com/specterops/dawgs/graph"
 )
 
 var (

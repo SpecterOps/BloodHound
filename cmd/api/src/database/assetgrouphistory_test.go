@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/src/database/types/null"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,7 +41,7 @@ func TestDatabase_CreateAndGetAssetGroupHistory(t *testing.T) {
 		testAssetGroupTag = 1
 	)
 
-	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor, testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
+	err := dbInst.CreateAssetGroupHistoryRecord(testCtx, testActor.ID.String(), testActor.EmailAddress.ValueOrZero(), testTarget, model.AssetGroupHistoryActionDeleteSelector, testAssetGroupTag, null.String{}, null.String{})
 	require.NoError(t, err)
 
 	record, err := dbInst.GetAssetGroupHistoryRecords(testCtx)

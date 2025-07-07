@@ -19,7 +19,7 @@ package apiclient
 import (
 	"net/http"
 
-	"github.com/specterops/bloodhound/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
 )
 
 func (s Client) Version() (map[string]any, error) {
