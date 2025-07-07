@@ -98,7 +98,7 @@ func buildModuleMainPackages(buildDir string, modPath string, version semver.Ver
 				go func(p GoPackage) {
 					defer wg.Done()
 
-					if err := cmdrunner.Run(command, args, p.Dir, env); err != nil {
+					if _, err := cmdrunner.Run(command, args, p.Dir, env); err != nil {
 						mu.Lock()
 						errs = append(errs, fmt.Errorf("go build for package %s: %w", p.Import, err))
 						mu.Unlock()

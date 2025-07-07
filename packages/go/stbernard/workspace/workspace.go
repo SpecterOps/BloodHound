@@ -51,25 +51,18 @@ func FindPaths(env environment.Environment) (WorkspacePaths, error) {
 		return WorkspacePaths{}, fmt.Errorf("getting current working directory: %w", err)
 	}
 
-	var found bool
-
-	for !found {
-		found, err = projectDirExists(cwd)
-		if err != nil {
+	for {
+		if found, err := projectDirExists(cwd); err != nil {
 			return WorkspacePaths{}, fmt.Errorf("finding project root: %w", err)
-		}
-
-		if found {
+		} else if found {
 			break
 		}
 
-		prevCwd := cwd
-
 		// Go up a directory before retrying
-		cwd = filepath.Dir(cwd)
-
-		if cwd == prevCwd {
+		if parentDir := filepath.Dir(cwd); cwd == parentDir {
 			return WorkspacePaths{}, ErrNoWorkspaceFound
+		} else {
+			cwd = parentDir
 		}
 	}
 
@@ -124,7 +117,7 @@ func GenerateSchema(cwd string, env environment.Environment) error {
 		args = append(args, "github.com/specterops/bloodhound-enterprise/cmd/schemagen")
 	}
 
-	if err := cmdrunner.Run(command, args, cwd, env); err != nil {
+	if _, err := cmdrunner.Run(command, args, cwd, env); err != nil {
 		return fmt.Errorf("running schemagen: %w", err)
 	} else {
 		return nil

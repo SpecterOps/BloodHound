@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
+	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
 // ParseModulesAbsPaths walks the filesystem looking for additional go.mod files as children of the workspace root
@@ -59,28 +61,25 @@ func ParseModulesAbsPaths(cwd string) ([]string, error) {
 }
 
 func moduleListPackages(modPath string) ([]GoPackage, error) {
-	var (
-		packages = make([]GoPackage, 0)
-	)
-
-	cmd := exec.Command("go", "list", "-json", "./...")
-	cmd.Dir = modPath
-	if out, err := cmd.StdoutPipe(); err != nil {
-		return packages, fmt.Errorf("creating stdout pipe for module %s: %w", modPath, err)
-	} else if err := cmd.Start(); err != nil {
-		return packages, fmt.Errorf("listing packages for module %s: %w", modPath, err)
+	if result, err := cmdrunner.Run("go", []string{"list", "-json", "./..."}, modPath, environment.NewEnvironment()); err != nil {
+		return nil, fmt.Errorf("running go mod list: %w", err)
 	} else {
-		decoder := json.NewDecoder(out)
+		var (
+			decoder     = json.NewDecoder(result.StandardOutput)
+			packages    []GoPackage
+			nextPackage GoPackage
+		)
+
 		for {
-			var p GoPackage
-			if err := decoder.Decode(&p); err == io.EOF {
+			if err := decoder.Decode(&nextPackage); err == io.EOF {
 				break
 			} else if err != nil {
-				return packages, fmt.Errorf("decoding package in module %s: %w", modPath, err)
+				return nil, fmt.Errorf("decoding package in module %s: %w", modPath, err)
 			}
-			packages = append(packages, p)
+
+			packages = append(packages, nextPackage)
 		}
 
-		return packages, cmd.Wait()
+		return packages, nil
 	}
 }
