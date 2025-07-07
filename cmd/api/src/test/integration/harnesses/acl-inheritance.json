@@ -64,7 +64,9 @@
         "node-color": "#fcdc00"
       },
       "labels": [],
-      "properties": {}
+      "properties": {
+        "isaclprotected": "false"
+      }
     },
     {
       "id": "n1",
@@ -72,7 +74,7 @@
         "x": -993.7239519308317,
         "y": -1609.53152582526
       },
-      "caption": "Computer 1",
+      "caption": "User 1",
       "style": {
         "border-color": "#000000",
         "node-color": "#73d8ff"
@@ -144,7 +146,7 @@
         "x": -1068.6012028589855,
         "y": -1344.4601983254329
       },
-      "caption": "Computer 2",
+      "caption": "User 2",
       "style": {
         "node-color": "#73d8ff"
       },
@@ -157,7 +159,7 @@
         "x": -1271.0964258310544,
         "y": -1157.7382230719281
       },
-      "caption": "Computer 3",
+      "caption": "User 3",
       "style": {
         "node-color": "#73d8ff"
       },
@@ -253,9 +255,9 @@
         "x": -993.7239519308317,
         "y": -823.4011040243013
       },
-      "caption": "Computer 4",
+      "caption": "Group 2",
       "style": {
-        "node-color": "#73d8ff"
+        "node-color": "#fda1ff"
       },
       "labels": [],
       "properties": {}
@@ -291,7 +293,7 @@
         "x": -1500.3654984190196,
         "y": -1609.5361303311347
       },
-      "caption": "User 1",
+      "caption": "Computer 1",
       "style": {
         "node-color": "#fb9e00"
       },
@@ -304,7 +306,64 @@
         "x": -1500.3654984190196,
         "y": -823.4011040243012
       },
-      "caption": "Group 2",
+      "caption": "Computer 2",
+      "style": {
+        "node-color": "#fe9200"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": -2590.642728189477,
+        "y": -295.4305094152187
+      },
+      "caption": "Domain 3",
+      "style": {
+        "node-color": "#a4dd00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[HASH_VALUE, ...]"
+      }
+    },
+    {
+      "id": "n19",
+      "position": {
+        "x": -2045.5041133042482,
+        "y": -295.4305094152187
+      },
+      "caption": "OU 7",
+      "style": {
+        "node-color": "#fcdc00"
+      },
+      "labels": [],
+      "properties": {
+        "inheritancehashes": "[]",
+        "isaclprotected": "true"
+      }
+    },
+    {
+      "id": "n20",
+      "position": {
+        "x": -1500.3654984190196,
+        "y": -295.4305094152187
+      },
+      "caption": "Computer 3",
+      "style": {
+        "node-color": "#fe9200"
+      },
+      "labels": [],
+      "properties": {}
+    },
+    {
+      "id": "n21",
+      "position": {
+        "x": -993.7239519308317,
+        "y": -295.4305094152187
+      },
+      "caption": "Group 3",
       "style": {
         "node-color": "#fda1ff"
       },
@@ -423,8 +482,8 @@
         "isacl": "true",
         "inheritancehash": "HASH_VALUE"
       },
-      "fromId": "n16",
-      "toId": "n1"
+      "toId": "n16",
+      "fromId": "n1"
     },
     {
       "id": "n21",
@@ -436,8 +495,8 @@
         "isacl": "false",
         "inheritancehash": "HASH_VALUE"
       },
-      "fromId": "n16",
-      "toId": "n6"
+      "toId": "n16",
+      "fromId": "n6"
     },
     {
       "id": "n22",
@@ -448,8 +507,8 @@
       "properties": {
         "isacl": "true"
       },
-      "fromId": "n16",
-      "toId": "n7"
+      "toId": "n16",
+      "fromId": "n7"
     },
     {
       "id": "n23",
@@ -467,8 +526,41 @@
         "isacl": "true",
         "inheritancehash": "HASH_VALUE"
       },
-      "fromId": "n17",
-      "toId": "n14"
+      "toId": "n17",
+      "fromId": "n14"
+    },
+    {
+      "id": "n25",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n19"
+    },
+    {
+      "id": "n26",
+      "type": "Contains",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {},
+      "fromId": "n19",
+      "toId": "n20"
+    },
+    {
+      "id": "n27",
+      "type": "ReadLAPSPassword",
+      "style": {
+        "arrow-color": "#f44e3b"
+      },
+      "properties": {
+        "isacl": "true",
+        "inheritancehash": "HASH_VALUE"
+      },
+      "fromId": "n21",
+      "toId": "n20"
     }
   ]
 }
