@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button } from '@mui/material';
+import { Button, ButtonProps } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
 import { FC, ReactNode } from 'react';
 
@@ -40,17 +40,20 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export interface GraphButtonProps {
-    onClick: (e?: any) => void;
+export interface GraphButtonProps extends ButtonProps {
     displayText: string | ReactNode;
+    onClick: (e?: any) => void;
     disabled?: boolean;
 }
 
-const GraphButton: FC<GraphButtonProps> = ({ onClick, displayText, disabled }) => {
+const GraphButton: FC<GraphButtonProps> = (props) => {
+    const { displayText } = props;
+    const attributes = { ...props };
+    delete attributes.displayText;
     const styles = useStyles();
 
     return (
-        <Button disableRipple onClick={onClick} disabled={disabled} classes={{ root: styles.button }}>
+        <Button {...attributes} disableRipple classes={{ root: styles.button }}>
             {displayText}
         </Button>
     );

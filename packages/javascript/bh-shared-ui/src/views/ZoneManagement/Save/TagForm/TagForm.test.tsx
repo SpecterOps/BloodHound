@@ -319,7 +319,7 @@ describe('Tag Form', () => {
         expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Cancel/ })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Save/ })).toBeInTheDocument();
-        expect(screen.queryByTestId('analysis_enabled')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('zone-management_save_tag-form_analysis-enabled-switch')).not.toBeInTheDocument();
     });
 
     test('clicking cancel on the form takes the user back to the page the user was on previously', async () => {
