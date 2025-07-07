@@ -30,7 +30,7 @@ interface UseExploreTableAutoDisplayParams {
      * Necessary to pass to prevent unecessary refetching, since `includeProperties` is a
      * parameter in the queryKey array, and so when it changes, we refetch the cypher query.
      */
-    includeProperties: boolean;
+    includeProperties?: boolean;
 }
 
 // This should be able to detect when the Explore Table should display automatically and when NOT to display it.
