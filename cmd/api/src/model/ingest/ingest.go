@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/specterops/bloodhound/graphschema/ad"
-	"github.com/specterops/bloodhound/mediatypes"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
 )
 

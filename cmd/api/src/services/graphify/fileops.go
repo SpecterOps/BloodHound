@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/specterops/bloodhound/src/model/ingest"
+	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 )
 
 func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {

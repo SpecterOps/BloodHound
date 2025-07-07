@@ -36,7 +36,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: "~1.23.0"
+          go-version: "~1.24.4"
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -49,8 +49,8 @@ jobs:
 
       - name: Install Deps
         run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard deps
+          go tool stbernard deps
 
       - name: Run Analysis
         run: |
-          go run github.com/specterops/bloodhound/packages/go/stbernard analysis
+          go tool stbernard analysis

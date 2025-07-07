@@ -22,15 +22,15 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/specterops/bloodhound/openapi"
-	"github.com/specterops/bloodhound/params"
-	"github.com/specterops/bloodhound/src/api"
-	"github.com/specterops/bloodhound/src/api/middleware"
-	"github.com/specterops/bloodhound/src/api/router"
-	v2 "github.com/specterops/bloodhound/src/api/v2"
-	authapi "github.com/specterops/bloodhound/src/api/v2/auth"
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
+	authapi "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/openapi"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissions auth.PermissionSet) {

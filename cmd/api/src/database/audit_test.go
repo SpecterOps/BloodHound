@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/specterops/bloodhound/src/auth"
-	"github.com/specterops/bloodhound/src/ctx"
-	"github.com/specterops/bloodhound/src/model"
-	"github.com/specterops/bloodhound/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/ctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 )
 
 func TestDatabase_ListAuditLogs(t *testing.T) {

@@ -63,7 +63,6 @@ const SummaryList: FC<SummaryListProps> = ({ onSelect, listQuery, selected, titl
                                 return (
                                     <React.Fragment key={listItem.id}>
                                         <li
-                                            key={listItem.id}
                                             onClick={() => {
                                                 onSelect(listItem.id);
                                             }}
