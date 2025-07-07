@@ -47,7 +47,10 @@ const ACLInheritance: FC<ACLInheritanceListProps> = ({ sourceDBId, targetDBId, e
 
     return (
         <>
-            <Typography variant='body2'>Maybe some text about what ACL Inheritance means:</Typography>
+            <Typography variant='body2'>
+                An ACE granting access permissions to a Domain or OU can be inherited by entities contained within them.
+                This panel lists the source object(s) for the inherited ACE.
+            </Typography>
             <Box py={1}>
                 {isLoading ? (
                     <Skeleton variant='rounded' />
