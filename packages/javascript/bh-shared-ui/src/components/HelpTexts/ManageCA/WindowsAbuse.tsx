@@ -50,7 +50,7 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body1'>Approve certificate request (pending or denied)</Typography>
             <Typography variant='body2'>
-                Certificate requsts can be approved using certutil (requires ManageCertificates):
+                Certificate requests can be approved using certutil (requires ManageCertificates):
             </Typography>
             <Typography component={'pre'}>
                 {'certutil -config "caserver.fabricam.com\\Fabricam Issuing CA" -resubmit 12345'}
