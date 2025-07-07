@@ -53,7 +53,7 @@ const Abuse: FC = () => {
             </Typography>
             <Typography variant='body1'>Approve certificate request (pending or denied)</Typography>
             <Typography variant='body2'>
-                Certificate requsts can be approved using Certipy (requires ManageCertificates):
+                Certificate requests can be approved using Certipy (requires ManageCertificates):
             </Typography>
             <Typography component={'pre'}>
                 {"certipy ca -ca 'corp-DC-CA' -issue-request 785 -username john@corp.local -password Passw0rd"}
